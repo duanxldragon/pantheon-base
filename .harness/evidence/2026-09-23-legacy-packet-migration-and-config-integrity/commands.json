@@ -105,10 +105,16 @@
       "notes": "The failure snapshot still shows the generator wizard (/system/generator) rather than the module list: the navigation had not completed when the predicate deadline expired. This is what ruled out the 'row text changed' and 'module not registered' hypotheses — the API poll above the assertion had already proven the module ready."
     },
     {
-      "command": "gh workflow run smoke-full.yml --ref <branch>",
+      "command": "gh workflow run smoke-full.yml --ref chore/2026-09-23-legacy-packets-and-config-integrity   # run 35835353920, first version of the fix",
       "cwd": "pantheon-base",
-      "status": "not-run",
-      "notes": "PENDING — not executed yet at the time this evidence file was written. The Full Smoke Suite cannot run on this host (it needs MySQL, Redis, a live backend and Vite), so the browser flow is verified by dispatching smoke-full.yml against the branch after the push. The run id, its conclusion, and the per-attempt timings of module-governance-real.spec.ts are appended here once the run finishes; until then this entry is explicitly unverified."
+      "status": "passed",
+      "notes": "The Full Smoke Suite cannot run on this host (MySQL, Redis, a live backend and Vite are all required), so the browser flow was verified by dispatching the suite. Suite result: `completed / success`. But the target spec still failed its FIRST attempt — in 5.7s instead of 66s — with the now-explicit error `page.goto: Navigation to \"http://127.0.0.1:5173/system/modules\" is interrupted by another navigation to \"http://127.0.0.1:5173/system/generator\"`, then passed `retry #1` in 6.4s (reported as `1 flaky`). That run proved the budget-sharing diagnosis and named the real mechanism, so it is kept as evidence rather than discarded."
+    },
+    {
+      "command": "gh workflow run smoke-full.yml --ref chore/2026-09-23-legacy-packets-and-config-integrity   # run 35838488292, final version of the fix",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "Suite result: `completed / success`, and the target spec is `✓  1 tests/smoke/business/generated/module-governance-real.spec.ts:123:1 › real module governance flow can generate register and purge a temporary business module (6.4s)` — first attempt, no retry, no `flaky` line anywhere in the run. Before this round the same spec failed attempt 1 at 1.1m on every observed run, green or red. The test is now deterministic rather than retry-saved."
     }
   ],
   "runtimeGap": "The Full Smoke Suite needs MySQL, Redis, a running backend and a Vite dev server, none of which are available on this host (Redis port closed, Docker daemon stopped), so the generated-smoke change could not be exercised locally at all. Type-check, eslint and the smoke coverage contract were run locally and the actual browser flow was verified by dispatching smoke-full.yml on the branch.",

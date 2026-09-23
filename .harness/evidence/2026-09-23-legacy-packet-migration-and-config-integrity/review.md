@@ -51,8 +51,16 @@ Every item traces to a deferral the previous packet named, not to new scope:
   the same code, which rules out a genuine timeout shortage.
 - **Could the smoke change mask a real regression?** The assertion is unchanged in
   what it requires (`/system/modules` URL, the `business.orderqa` row, then the
-  `待激活|已接入` text). Only the budgeting of the wait changed, and the API
-  readiness poll above it still gates the module actually being registered.
+  `待激活|已接入` text). Only the waiting strategy changed, and the API readiness
+  poll above it still gates the module actually being registered. Two runs of the
+  real suite back this: the first version of the fix still failed attempt 1 (5.7s)
+  with the navigation interrupt, the final version passes it first time (6.4s),
+  and the spec never went green on attempt 1 before this round.
+- **Does retrying the navigation reintroduce the original anti-pattern?** No. The
+  original bug was one shared 60s predicate window between a cold compile and the
+  row assertion. The navigation now has its own window, the row assertion has its
+  own, and the interrupt fails fast (seconds) rather than consuming a budget —
+  which is why the retry is cheap and bounded instead of masking slowness.
 - **Does anything here touch runtime behaviour?** No product code, no API, no
   permission, menu, i18n, schema or seed change. The only runtime-adjacent edit is
   a test's wait strategy.
@@ -88,11 +96,14 @@ None blocking. Two follow-ups worth naming rather than fixing here:
 All three in-scope deferrals are closed at their source, two of them with a guard
 that keeps the class from returning (the armed allowlist staleness rule; `verify:
 true` in both workflows). Measured evidence exists for each claim that matters:
-the lint before/after, the trace timing that identifies the smoke root cause, and
-a dispatched Full Smoke run for the browser flow. Gates green: task-packet,
-doc frontmatter/links/inventory/encoding, structure contract, golangci
-`config verify` and new-code lint, frontend type-check, eslint, smoke coverage
-contract, task-packet template. The items under Deferred stay explicitly open.
+the lint before/after for both behaviour and schema, the trace timing that
+identified the smoke root cause, and two dispatched Full Smoke runs — the first
+showing the failure move from a 60s hang to an explicit navigation interrupt, the
+second showing the spec green on its first attempt for the first time. Gates
+green: task-packet, doc frontmatter/links/inventory/encoding, structure contract,
+golangci `config verify` and new-code lint, frontend type-check, eslint, smoke
+coverage contract, task-packet template. The items under Deferred stay explicitly
+open.
 
 ## Machine Readable
 ```json
