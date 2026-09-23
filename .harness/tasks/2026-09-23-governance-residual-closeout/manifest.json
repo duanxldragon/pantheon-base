@@ -93,7 +93,8 @@
   "harnessProfile": {
     "template": "api-service",
     "overlay": "governance-ratchet",
-    "qualityProfile": "harness-governance",
+    "qualityProfile": "ci-workflow",
+    "ratchetDecision": "gate-updated",
     "portableFailureClass": "silent-green-and-stale-exemption",
     "ownerLayer": "platform",
     "coverageDimensions": [

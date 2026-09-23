@@ -34,6 +34,51 @@ const scopeIn = manifest.scope?.in?.join('; ') || 'N/A';
 const scopeOut = manifest.scope?.out?.join('; ') || 'N/A';
 const modifyFiles = manifest.expectedFiles?.modify?.join(', ') || 'N/A';
 
+// Values the governance checker validates against its enums. They were hardcoded
+// before, which made this generator unable to emit a compliant body for any
+// non-trivial change ("Quality Profile must not be none for non-trivial
+// changes"). Read them from the manifest, and fall back to the neutral value only
+// when the manifest is silent.
+const QUALITY_PROFILES = new Set([
+  'auth-security',
+  'permission-policy',
+  'i18n',
+  'ui-runtime',
+  'generator',
+  'ci-workflow',
+  'none',
+]);
+const RATCHET_DECISIONS = new Set([
+  'no-repeat-observed',
+  'guide-updated',
+  'sensor-added',
+  'gate-updated',
+  'template-updated',
+  'adapter-updated',
+  'registry-only',
+]);
+
+function resolveField(candidates, allowed, fallback) {
+  for (const candidate of candidates) {
+    const value = typeof candidate === 'string' ? candidate.trim().toLowerCase() : '';
+    if (allowed.has(value)) {
+      return value;
+    }
+  }
+  return fallback;
+}
+
+const qualityProfile = resolveField(
+  [manifest.harnessProfile?.qualityProfile, manifest.qualityProfile],
+  QUALITY_PROFILES,
+  isTrivial ? 'none' : 'ci-workflow',
+);
+const ratchetDecision = resolveField(
+  [manifest.harnessProfile?.ratchetDecision, manifest.ratchetDecision],
+  RATCHET_DECISIONS,
+  'no-repeat-observed',
+);
+
 // Generate PR body following exact template requirements
 const prBody = `## 变更摘要
 
@@ -51,8 +96,8 @@ const prBody = `## 变更摘要
 - Review Artifact：${manifest.linkage?.reviewFile || `.harness/evidence/${taskId}/review.md`}
 - OpenSpec change：none
 - Trivial change：${isTrivial ? 'yes' : 'no'}
-- Quality Profile：none
-- Ratchet Decision：no-repeat-observed
+- Quality Profile：${qualityProfile}
+- Ratchet Decision：${ratchetDecision}
 - GitHub Signal：repo-quality-gate
 
 ## Harness adoption markers
