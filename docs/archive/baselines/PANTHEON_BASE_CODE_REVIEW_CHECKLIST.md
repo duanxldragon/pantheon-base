@@ -1,3 +1,15 @@
+---
+title: Pantheon Base 企业级后台管理系统 QA 代码审查清单（历史基线）
+doc_type: Acceptance
+layer: platform
+status: Archived
+index_group: archive/baselines
+retention_reason: 已被 docs/acceptances/CODE_REVIEW_STANDARD.md 取代；保留为历史审查基线。
+linked_contracts:
+  - docs/contracts/PLATFORM_CONTRACT.md
+updated_at: 2026-09-23
+---
+
 # Pantheon Base 企业级后台管理系统 QA 代码审查清单
 
 ## 一、审查角色与目标

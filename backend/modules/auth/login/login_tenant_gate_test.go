@@ -28,7 +28,7 @@ func newAuthTenantFixture(t *testing.T) *authTenantFixture {
 	if err := db.AutoMigrate(&tenant.Membership{}, &tenant.Tenant{}); err != nil {
 		t.Fatalf("migrate tenant tables: %v", err)
 	}
-	rt := NewRuntime(db)
+	rt := NewRuntime(db, testCredentialRepo(db))
 	return &authTenantFixture{db: db, runtime: rt}
 }
 

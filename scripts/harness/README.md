@@ -33,6 +33,7 @@ node scripts/harness/check-boundaries.mjs --root .
 node scripts/harness/check-ui-quality-gate.mjs --root . --strict
 node scripts/harness/check-visual-evidence.mjs --root .
 node scripts/harness/check-feature-ledger.mjs --root . --strict
+node scripts/harness/check-generated.mjs --root . --strict
 ```
 
 ## Graph Review Tools
@@ -54,6 +55,7 @@ The following scripts are repo-specific and not part of the portable method:
 - `check-backend-dto-contract.mjs` - backend DTO contract checks.
 - `check-backend-response-contract.mjs` - backend response contract checks.
 - `check-coverage.mjs` - unit-test coverage gate (Go cover profile / vitest coverage-summary via `--format json`).
+- `check-generated.mjs` - generated-artifact marker + drift gate (REPOSITORY_LAYOUT §7).
 - `check-inheritance-contract.mjs` - base-to-ops inheritance validation.
 - `check-structure-contract.mjs` - file placement + naming against REPOSITORY_LAYOUT.md (complements check-boundaries import rules).
 - `check-ui-quality-gate.mjs` - validates the canonical UI policy, CI integration, and post-adoption UI task evidence declarations.

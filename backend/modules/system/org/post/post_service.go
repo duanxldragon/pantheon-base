@@ -527,9 +527,11 @@ func (s *PostService) listPostsForExport(query *PostListQuery) ([]SystemPost, er
 	}
 
 	sortColumn, sortDesc := normalizePostSort(query)
+	// Hard cap（与日志/角色导出对齐）：SQL LIMIT 下推，同步导出禁止无界扫描。
 	if err := db.
 		Order(clause.OrderByColumn{Column: clause.Column{Name: sortColumn}, Desc: sortDesc}).
 		Order(clause.OrderByColumn{Column: clause.Column{Name: "id"}, Desc: false}).
+		Limit(impexp.MaxExportRows()).
 		Find(&posts).Error; err != nil {
 		return nil, err
 	}

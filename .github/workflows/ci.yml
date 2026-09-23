@@ -380,8 +380,8 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
 
-      - name: Check business boundaries
-        run: node scripts/harness/check-boundaries.mjs --strict --repo pantheon-base
+      - name: Check layer boundaries
+        run: node scripts/harness/check-boundaries.mjs --strict --repo pantheon-base --baseline config/boundary-baseline.json
 
   # ============================================================
   # Phase 3c: Coverage Gate (测试覆盖率门禁，ratchet 起步)

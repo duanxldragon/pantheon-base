@@ -1,3 +1,15 @@
+---
+title: 工程师实现交接单（v0.9.0 module 重命名 + 三项门禁）
+doc_type: Remediation
+layer: platform
+status: Archived
+index_group: archive/upgrade
+retention_reason: v0.9.0 重命名整改的一次性实现交接单，已完成并作为升级迁移基线保留。
+linked_contracts:
+  - docs/contracts/PLATFORM_CONTRACT.md
+updated_at: 2026-09-23
+---
+
 # 工程师实现交接单 — pantheon-base v0.9.0 module 重命名 + 三项门禁
 
 - **发起人**: Bob (Architect)
@@ -7,7 +19,7 @@
 - **日期**: 2026-07-15
 - **仓库根**: `D:\workspace\go\pantheon-platform\pantheon-base`
 
-> 本文档是实现的**唯一权威依据**。任何与本单冲突的理解，以本单为准。详细设计请同时参考 `docs/system_design.md`。
+> 本文档是实现的**唯一权威依据**。任何与本单冲突的理解，以本单为准。详细设计请同时参考 `docs/archive/upgrade/SYSTEM_DESIGN_v0.9.0_RENAME.md`。
 
 ---
 
@@ -83,7 +95,7 @@ bash scripts/maintenance/verify-module-rename.sh   # T01 产出后存在
 | `scripts/maintenance/verify-module-rename.sh` | 验证脚本：grep 残留，输出豁免白名单外的命中数 |
 | `scripts/maintenance/README.md` | 用法说明（dry-run 流程 + 回退方法） |
 
-**已存在（无需新建）**：`docs/system_design.md` / `docs/class-diagram.mermaid` / `docs/sequence-diagram.mermaid`
+**已存在（无需新建）**：`docs/archive/upgrade/SYSTEM_DESIGN_v0.9.0_RENAME.md` / `docs/archive/upgrade/class-diagram.mermaid` / `docs/archive/upgrade/sequence-diagram.mermaid`
 
 **`rename-module.sh` 关键 sed 命令骨架**：
 ```bash

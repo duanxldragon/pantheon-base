@@ -71,7 +71,7 @@ func TestAuthHandler_LoginReturnsTenantPickerAfterPasswordVerification(t *testin
 	))
 	c.Request.Header.Set("Content-Type", "application/json")
 
-	NewAuthHandler(NewRuntime(db)).LoginHandler(c)
+	NewAuthHandler(NewRuntime(db, testCredentialRepo(db))).LoginHandler(c)
 
 	var envelope struct {
 		Code int `json:"code"`
@@ -154,7 +154,7 @@ func TestAuthHandler_LoginDoesNotExposeTenantPickerOnPasswordFailure(t *testing.
 	))
 	c.Request.Header.Set("Content-Type", "application/json")
 
-	NewAuthHandler(NewRuntime(db)).LoginHandler(c)
+	NewAuthHandler(NewRuntime(db, testCredentialRepo(db))).LoginHandler(c)
 
 	var envelope struct {
 		Code int                    `json:"code"`

@@ -1,0 +1,127 @@
+{
+  "taskId": "2026-09-22-request-path-maintenance",
+  "repo": "pantheon-base",
+  "agent": {
+    "tool": "other"
+  },
+  "commands": [
+    {
+      "command": "go build ./...",
+      "cwd": "pantheon-base/backend",
+      "status": "passed",
+      "notes": "Description: compile the whole backend after moving retention out of read paths Expected: no output / exit 0; observed exit 0"
+    },
+    {
+      "command": "go vet ./...",
+      "cwd": "pantheon-base/backend",
+      "status": "passed",
+      "notes": "Description: type-check production and test code (vet compiles _test.go too, so it catches stale references to the removed ensureAutomatic*/governSessionInventory helpers) Expected: exit 0; observed exit 0"
+    },
+    {
+      "command": "gofmt -l .",
+      "cwd": "pantheon-base/backend",
+      "status": "passed",
+      "notes": "Description: formatting gate Expected: empty; observed empty. Also formatted the two files the sibling export-and-session-pagination task left unformatted (modules/auth/session/session_helpers.go, session_model.go)."
+    },
+    {
+      "command": "go test ./pkg/maintenance",
+      "cwd": "pantheon-base/backend",
+      "status": "passed",
+      "notes": "Description: registry unit tests — interval throttle, overlap refusal, failure isolation, panic recovery, RunNow, idempotent Register, default interval, runner cancellation Expected: ok; observed ok 0.025s"
+    },
+    {
+      "command": "go test ./modules/auth/security ./modules/auth/session ./modules/system/audit ./pkg/maintenance",
+      "cwd": "pantheon-base/backend",
+      "status": "passed",
+      "notes": "Description: the four packages that own the converted retention entry points Expected: all ok; observed security 1.882s / session 3.912s / audit 6.729s / maintenance 0.025s all ok"
+    },
+    {
+      "command": "go test ./modules/auth/login -run 'TestRuntime_(ListAllSessionsDoesNotPurgeHistoricSessions|MaintenanceCleansExpiredAndIdleSessions|ListLoginLogsDoesNotPurge|RunLoginLogRetentionDeletesExpiredAndReports|CleanupHistoricSessions)' -v",
+      "cwd": "pantheon-base/backend",
+      "status": "passed",
+      "notes": "Description: flipped read-path tests (must not purge) plus the new maintenance-entry tests Expected: pass; observed 7 tests PASS"
+    },
+    {
+      "command": "go test ./modules/auth/login",
+      "cwd": "pantheon-base/backend",
+      "status": "passed",
+      "notes": "Description: full auth/login regression (the package that previously asserted list-path purging) Expected: ok; observed ok 100.373s"
+    },
+    {
+      "command": "go test ./modules/auth/... ./modules/system/... ./pkg/maintenance ./pkg/metrics",
+      "cwd": "pantheon-base/backend",
+      "status": "passed",
+      "notes": "Description: adjacent-domain regression across auth and system domains Expected: all ok; observed login 100.4s / system 8.7s / dict 8.3s / setting 13.0s / i18n 186.9s / menu 6.8s / permission 15.2s / role 20.0s / user 31.4s / dept 6.0s / post 8.2s / maintenance ok / metrics ok — no failures"
+    },
+    {
+      "command": "go test ./modules/system/audit -run 'TestAuditService_(ListOperationLogsDoesNotPurge|RunOperationLogRetentionDeletesExpired|CleanupOperationLogs)' -v",
+      "cwd": "pantheon-base/backend",
+      "status": "passed",
+      "notes": "Description: operation-log read path stays read-only, maintenance entry still purges, explicit cleanup unchanged Expected: pass; observed 4 tests PASS"
+    },
+    {
+      "command": "grep -rnE 'ensureAutomaticLoginLogRetention|ensureAutomaticOperationLogRetention|ensureAutomaticSecurityEventRetention|governSessionInventory|autoCleanupState|autoCleanupMinInterval' --include=*.go .",
+      "cwd": "pantheon-base/backend",
+      "status": "passed",
+      "notes": "Description: prove no read-path/inline retention helper survives Expected: no matches; observed no matches (exit 1)"
+    },
+    {
+      "command": "go test ./pkg/maintenance -cover",
+      "cwd": "pantheon-base/backend",
+      "status": "passed",
+      "notes": "Description: coverage of the new package for the CI coverage gate Expected: meaningful coverage; observed 89.8% of statements"
+    },
+    {
+      "command": "CC=<repo>/.tmp/mingw64/bin/gcc.exe CGO_ENABLED=1 go test -race -count=1 ./pkg/maintenance ./modules/system/audit ./modules/system/config/setting ./modules/system ./modules/platform ./cmd/server ./pkg/database ./pkg/authtoken ./internal/middleware ./modules/auth/session",
+      "cwd": "pantheon-base/backend",
+      "status": "passed",
+      "notes": "Description: race detector over the new registry (single-flight + throttle state) and every converted read path Expected: no data race; observed all ok — maintenance 1.118s / audit 11.951s / setting 12.244s / system 6.016s / platform 4.122s / cmd-server 1.141s / database 14.626s / authtoken 1.369s / middleware 2.503s / session 4.896s, no DATA RACE reports"
+    },
+    {
+      "command": "node scripts/harness/check-structure-contract.mjs --root . --strict && node scripts/harness/check-generated.mjs --root . --strict && node scripts/harness/check-doc-links.mjs --root . --strict && node scripts/harness/check-encoding.mjs --root . --strict && node scripts/frontmatter-check.mjs && node scripts/harness/check-doc-inventory.mjs --root . --strict && node scripts/harness/check-sync-drift.mjs --root . --strict",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "Description: repo governance gates affected by new files/docs Expected: all green; observed structure 0/1939, generated 0/11, doc-links 0, encoding 0/1731, frontmatter passed (266 docs), inventory 0, sync-drift 0"
+    },
+    {
+      "command": "node scripts/harness/check-boundaries.mjs --strict --repo pantheon-base --baseline config/boundary-baseline.json && node scripts/check-duplication.mjs && node scripts/harness/check-method-health.mjs --root . --strict && node scripts/harness/check-adoption.mjs --root . --strict && node scripts/harness/check-template-health.mjs --root . --strict && node scripts/harness/check-failure-registry.mjs --root . --strict && node scripts/check-task-packet-template.mjs",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "Description: layer-boundary, duplication and harness method gates Expected: exit 0; observed boundaries exit 0 (3 pre-existing stale baseline warnings caused by the uncommitted auth de-coupling work that predates this task), duplication PASS, method-health 0, adoption 0, template-health 0, failure-registry PASS, task-packet template OK"
+    }
+  ],
+  "graphChecks": {
+    "usedCodeGraph": false,
+    "affectedSubgraph": [
+      "backend/pkg/maintenance (new registry + runner)",
+      "backend/modules/auth/login + security + session retention entry points",
+      "backend/modules/system/audit operation-log retention",
+      "cmd/server maintenance runner startup"
+    ],
+    "checks": ["cycle", "hub", "call-depth", "sensitive-flow"],
+    "findings": [],
+    "notes": "pkg/maintenance imports only pkg/logging and pkg/metrics (no domain import), so no new module cycle is possible; auth/session and audit gain a leaf dependency on it. No unvalidated input reaches the new entry points — they take no request data and derive retention windows from server-side settings."
+  },
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-09-22-request-path-maintenance/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-09-22-request-path-maintenance/",
+    "reviewFile": ".harness/evidence/2026-09-22-request-path-maintenance/review.md",
+    "summaryFile": ".harness/evidence/2026-09-22-request-path-maintenance/summary.md",
+    "changeRef": "none",
+    "planRefs": [".harness/ENTERPRISE_REMEDIATION_PLAN_2026-09-22.md"]
+  },
+  "knownGaps": [
+    "Maintainer human gate pending: retention operations口径 (automatic retention runs only in the background runner) and the default maintenance interval.",
+    "No manual runtime evidence: the change is backend-only with no UI/route/menu/permission surface; package + integration tests plus the new /metrics counters stand in for it. No real server process was started.",
+    "Historical (closed 2026-09-23): go test -race was initially unavailable locally because the machine had only the Cygwin gcc (/usr/bin/gcc), which Go refuses for native Windows cgo. Closed with a project-local MinGW-w64 toolchain (niXman mingw-builds GCC 16.2.0 posix-seh-ucrt, extracted to the gitignored .tmp/mingw64, no system install, no global PATH change): go test -race passed with no data races on pkg/maintenance, modules/system/audit, modules/system/config/setting, modules/system, modules/platform, cmd/server, pkg/database, pkg/authtoken, internal/middleware, modules/auth/session and modules/auth/login (239.7s).",
+    "pantheon-ops sync deferred: ops still runs the old inline retention paths; Base-first requires propagation through a foundation release, not a manual copy.",
+    "Pre-existing, not introduced here: scripts/harness/check-task-packet.mjs reports 12 missing sections for every .harness/tasks/*/task.md, including all of the 2026-09-22 packet round and this one. That checker is not wired into CI (CI runs scripts/check-task-packet-template.mjs, which passes), so the whole packet population shares one template gap; fixing it spans all packets and belongs in its own ratchet."
+  ],
+  "environment": {
+    "os": "win32 (bash)",
+    "go": "1.26.6",
+    "dsn": "PANTHEON_TEST_DSN=<local mysql>/pantheon_base with per-test isolated databases",
+    "redis": "PANTHEON_REDIS_ADDR=127.0.0.1:6379"
+  },
+  "completedAt": "2026-09-23T10:30:00+08:00"
+}

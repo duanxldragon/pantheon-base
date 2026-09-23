@@ -51,8 +51,9 @@ Dockerfile 使用 Node.js 24 构建前端、Go 1.26.5 构建后端，最终进�
 | --- | --- |
 | `PANTHEON_ENV` | 固定为 `production` |
 | `PANTHEON_DSN` | 指向独占的 `pantheon_base` 数据库 |
-| `PANTHEON_REDIS_ADDR` | Redis 地址；认证链依赖 Redis |
+| `PANTHEON_REDIS_ADDR` | Redis 地址；认证链依赖 Redis。生产缺地址或连接失败时启动直接失败（fail-fast） |
 | `PANTHEON_REDIS_PASSWORD` | Redis 密码 |
+| `PANTHEON_REDIS_REQUIRED` | 可选；设为 `true` 时非生产环境也强制 Redis fail-fast（默认仅生产强制） |
 | `PANTHEON_INITIAL_ADMIN_PASSWORD` | 首次 seed 使用，至少 12 位 |
 | `PANTHEON_ACCESS_TOKEN_SECRET` | 至少 32 字节 |
 | `PANTHEON_REFRESH_TOKEN_SECRET` | 至少 32 字节 |
@@ -142,7 +143,8 @@ curl --fail https://<host>/api/v1/health
 4. Redis 中断会被监控捕获；
 5. `/metrics` 未匿名暴露；
 6. 动态模块注册在 production 被拒绝；
-7. 操作日志 dropped counter 未持续增长。
+7. 操作日志 dropped counter 未持续增长；
+8. `GET /api/v1/health` 返回 200 且 `database`/`migrations`/`redis` 三个依赖均为 ok（`migrations` 检查 `schema_migrations` 可读，readiness 不再只反映进程存活）。
 
 ## 8. 备份与恢复
 

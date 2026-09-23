@@ -1,3 +1,15 @@
+---
+title: 系统设计与任务分解（v0.9.0 module 重命名）
+doc_type: Design
+layer: platform
+status: Archived
+index_group: archive/upgrade
+retention_reason: v0.9.0 module 重命名的一次性系统设计，作为升级迁移基线保留，不再作为当前架构入口。
+linked_contracts:
+  - docs/contracts/PLATFORM_CONTRACT.md
+updated_at: 2026-09-23
+---
+
 # pantheon-base v0.9.0 遗留问题处理 — 系统设计与任务分解
 
 - **作者**: Bob (Architect)
@@ -153,9 +165,9 @@ coverage-gate:
 | `scripts/maintenance/rename-module.sh` | 一次性批量重命名脚本（sed 编排） |
 | `scripts/maintenance/verify-module-rename.sh` | 重命名后验证脚本 |
 | `scripts/harness/check-coverage.mjs` | 覆盖率阈值检查 |
-| `docs/system_design.md` | 本文档 |
-| `docs/class-diagram.mermaid` | 类图 |
-| `docs/sequence-diagram.mermaid` | 时序图 |
+| `docs/archive/upgrade/SYSTEM_DESIGN_v0.9.0_RENAME.md` | 本文档 |
+| `docs/archive/upgrade/class-diagram.mermaid` | 类图 |
+| `docs/archive/upgrade/sequence-diagram.mermaid` | 时序图 |
 
 #### B. 修改（Go module + 源码 import）
 
@@ -200,7 +212,7 @@ coverage-gate:
 
 ### 3. 数据结构与接口（class diagram）
 
-详见 `docs/class-diagram.mermaid`。
+详见 `docs/archive/upgrade/class-diagram.mermaid`。
 
 **核心映射关系**：
 
@@ -221,7 +233,7 @@ import 路径:    "pantheon-base/pkg/common"
 
 ### 4. 程序调用流程（sequence diagram）
 
-详见 `docs/sequence-diagram.mermaid`。四阶段：
+详见 `docs/archive/upgrade/sequence-diagram.mermaid`。四阶段：
 1. module 声明 + Go 源码批量改写
 2. 代码生成器模板更新
 3. 测试断言 + 清理脚本 + drift 脚本同步
@@ -266,9 +278,9 @@ import 路径:    "pantheon-base/pkg/common"
   - `scripts/maintenance/rename-module.sh`（新建）
   - `scripts/maintenance/verify-module-rename.sh`（新建）
   - `scripts/maintenance/README.md`（新建，说明用法）
-  - `docs/system_design.md`（本文档，新建）
-  - `docs/class-diagram.mermaid`（新建）
-  - `docs/sequence-diagram.mermaid`（新建）
+  - `docs/archive/upgrade/SYSTEM_DESIGN_v0.9.0_RENAME.md`（本文档，新建）
+  - `docs/archive/upgrade/class-diagram.mermaid`（新建）
+  - `docs/archive/upgrade/sequence-diagram.mermaid`（新建）
 - **Dependencies**: 无
 - **Priority**: P0
 - **Acceptance**: 维护者审阅通过本方案；脚本可空跑（`--dry-run`）输出影响面。

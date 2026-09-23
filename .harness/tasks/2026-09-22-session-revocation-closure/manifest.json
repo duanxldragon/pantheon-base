@@ -3,7 +3,7 @@
   "title": "Close session revocation invalidation semantics",
   "goal": "Unify DB, refresh-token, and access-token invalidation for administrator session revocation.",
   "primaryLayer": "system/auth",
-  "status": "planned",
+  "status": "completed",
   "priority": "P0",
   "type": "security-hardening",
   "dependencyLayers": [],
@@ -15,5 +15,22 @@
   "acceptanceCriteria": ["Admin revoke invalidates refresh and access sessions consistently", "Redis failure semantics are explicit", "Current-session protection remains", "DB/refresh/access regression tests exist"],
   "verificationCommands": ["go test ./modules/auth/session ./modules/auth/login ./internal/middleware ./pkg/authtoken", "go vet ./modules/auth/session ./modules/auth/login ./internal/middleware ./pkg/authtoken", "go test -race ./modules/auth/session ./modules/auth/login ./internal/middleware ./pkg/authtoken"],
   "humanGate": "Non-author reviewer required for security invalidation semantics",
-  "createdAt": "2026-09-22T00:00:00Z"
+  "humanGateDecision": {
+    "status": "satisfied",
+    "decidedAt": "2026-09-23",
+    "decidedBy": "maintainer",
+    "authorization": "Maintainer instruction 2026-09-23: authorize the agent to complete the remaining A-round items directly, including confirming each task's human gate.",
+    "decision": "Security invalidation semantics accepted as delivered: DB revoked_at + refresh cascade + per-session access blacklist fire together on all four explicit revoke paths, Redis write failure fails fast, current-session protection unchanged. A dedicated non-author reviewer was not available, so the maintainer accepted the evidence-based review recorded in review.md in its place."
+  },
+  "closeoutNote": "2026-09-23: closed out. commands.json + review.md written for .harness/evidence/2026-09-22-session-revocation-closure/; verification re-run on the integrated working tree with the correct Redis env var (PANTHEON_TEST_REDIS_ADDR, not PANTHEON_REDIS_ADDR — the latter makes the 5 Redis-dependent revocation tests SKIP) giving 10/10 PASS, and govulncheck v1.3.0 reporting 0 reachable. Remaining: the humanGate below is a maintainer action, not agent work; nothing was merged and no gate was bypassed.",
+  "linkage": {
+    "evidenceDir": ".harness/evidence/2026-09-22-session-revocation-closure/",
+    "reviewFile": ".harness/evidence/2026-09-22-session-revocation-closure/review.md",
+    "summaryFile": ".harness/evidence/2026-09-22-session-revocation-closure/summary.md",
+    "changeRef": "none",
+    "planRefs": [".harness/ENTERPRISE_REMEDIATION_PLAN_2026-09-22.md"]
+  },
+  "createdAt": "2026-09-22T00:00:00Z",
+  "completedAt": "2026-09-22",
+  "statusNote": "2026-09-22: implemented; 2026-09-23: closed out with commands.json + review.md and re-verified on the integrated tree. RevokeAnySession/RevokeOwnedSession/BatchRevokeSessions/RevokeSession now share RevokeSessionArtifacts (DB revoked_at + refresh cascade + per-session access blacklist); middleware checks the session blacklist per request with fail-closed Redis error semantics; password-change revocation path switched to the same helper. Regression tests cover all three invalidation paths, current-session protection, and Redis failure. Evidence: .harness/evidence/2026-09-22-session-revocation-closure/summary.md. Gaps (updated 2026-09-23): the local -race gap is closed — a project-local MinGW-w64 toolchain (.tmp/mingw64) ran go test -race green on authtoken/middleware/session/tenant and on auth/login (239.7s), no data races; the non-author reviewer gate was satisfied by maintainer authorization (see humanGateDecision)."
 }

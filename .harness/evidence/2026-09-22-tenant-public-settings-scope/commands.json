@@ -1,0 +1,75 @@
+{
+  "taskId": "2026-09-22-tenant-public-settings-scope",
+  "repo": "pantheon-base",
+  "agent": {
+    "tool": "other"
+  },
+  "commands": [
+    {
+      "command": "go build ./...",
+      "cwd": "pantheon-base/backend",
+      "status": "passed",
+      "notes": "Description: compile after tenant-scoping the public settings query and cache Expected: exit 0; observed exit 0"
+    },
+    {
+      "command": "go vet ./modules/system/config/setting ./internal/middleware ./pkg/tenant",
+      "cwd": "pantheon-base/backend",
+      "status": "passed",
+      "notes": "Description: vet the tenant-scope contract surface Expected: exit 0; observed exit 0"
+    },
+    {
+      "command": "PANTHEON_TEST_DSN=<local mysql> go test ./modules/system/config/setting -run 'TestPublicSettings' -count=1 -v",
+      "cwd": "pantheon-base/backend",
+      "status": "passed",
+      "notes": "Description: A/B tenant isolation, inheritance, cache, compat and invalidation tests Expected: all pass; observed 5/5 PASS — TenantOverridesResolvePerTenant, TenantWithoutOverrideInheritsGlobal, TenantCacheIsolation, CompatSeesGlobalOnly, InvalidateClearsAllTenantEntries"
+    },
+    {
+      "command": "PANTHEON_TEST_DSN=<local mysql> go test ./modules/system/config/setting -count=1",
+      "cwd": "pantheon-base/backend",
+      "status": "passed",
+      "notes": "Description: whole setting package regression Expected: ok; observed ok (no failures)"
+    },
+    {
+      "command": "PANTHEON_TEST_DSN=<local mysql> go test ./internal/middleware ./pkg/tenant -count=1",
+      "cwd": "pantheon-base/backend",
+      "status": "passed",
+      "notes": "Description: tenant context middleware and scope helper Expected: ok; observed middleware 1.487s / tenant 0.026s"
+    },
+    {
+      "command": "CC=<repo>/.tmp/mingw64/bin/gcc.exe CGO_ENABLED=1 go test -race -count=1 ./modules/system/config/setting ./pkg/tenant ./internal/middleware",
+      "cwd": "pantheon-base/backend",
+      "status": "passed",
+      "notes": "Description: race detector over the tenant-namespaced cache and the scope helpers (the fix replaced a shared *PublicSettingResp pointer with a namespaced map) Expected: no data race; observed setting 12.244s / tenant 1.091s / middleware 2.503s all ok, no DATA RACE reports"
+    }
+  ],
+  "graphChecks": {
+    "usedCodeGraph": false,
+    "affectedSubgraph": [
+      "system/config/setting public read path + process cache",
+      "system/config/setting pubsub invalidation watcher",
+      "pkg/tenant scope helpers"
+    ],
+    "checks": ["cycle", "hub", "call-depth", "sensitive-flow"],
+    "findings": [],
+    "notes": "No new package edge: the setting module already consumed pkg/tenant and the existing settings:refresh pubsub channel. The public handler switched from the unscoped service to boundService(c), so the read scope now derives from the resolved tenant context only — request parameters still cannot widen it."
+  },
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-09-22-tenant-public-settings-scope/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-09-22-tenant-public-settings-scope/",
+    "reviewFile": ".harness/evidence/2026-09-22-tenant-public-settings-scope/review.md",
+    "summaryFile": ".harness/evidence/2026-09-22-tenant-public-settings-scope/summary.md",
+    "changeRef": "none",
+    "planRefs": [".harness/ENTERPRISE_REMEDIATION_PLAN_2026-09-22.md"]
+  },
+  "knownGaps": [
+    "Human gate pending: the maintainer must confirm the tenant isolation contract for /setting/public (multi = global + current-tenant override; compat = global only).",
+    "Dual-instance runtime validation of the cross-instance pubsub cache drop was not performed (local single instance). The unit layer covers the invalidation path; the cross-instance mechanism is the same one auth already uses.",
+    "Anonymous requests to the public route see the compat/global view because the route does not mount TenantContextMiddleware; this is stated in summary.md as a deliberate boundary rather than a tested negative case."
+  ],
+  "environment": {
+    "os": "win32 (bash)",
+    "go": "1.26.6",
+    "dsn": "PANTHEON_TEST_DSN=<local mysql>/pantheon_base with per-test isolated databases"
+  },
+  "completedAt": "2026-09-23T11:05:00+08:00"
+}

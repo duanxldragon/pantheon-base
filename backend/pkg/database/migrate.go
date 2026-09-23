@@ -62,6 +62,21 @@ var currentRuntimeSchemaMarkers = append(
 	preModuleRegistrationRuntimeSchemaMarkers...,
 )
 
+// migrationsApplied reports whether the startup migration step completed
+// successfully, so the health/readiness endpoint can reflect migration state
+// instead of only process liveness. Checked lazily from the schema_migrations
+// table so restarts and multi-instance deployments stay accurate.
+func MigrationsHealthy(db *gorm.DB) bool {
+	if db == nil {
+		return false
+	}
+	var count int64
+	if err := db.Table(migrationsTableName).Count(&count).Error; err != nil {
+		return false
+	}
+	return count > 0
+}
+
 // RunMigrations executes all pending database migrations.
 // It uses the golang-migrate library with embedded SQL files.
 // Returns nil if all migrations applied successfully, or an error on failure.

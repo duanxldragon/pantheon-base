@@ -1,0 +1,65 @@
+{
+  "taskId": "2026-09-22-frontend-style-naming-alignment",
+  "repo": "pantheon-base",
+  "agent": {
+    "tool": "other",
+    "adapter": "freebuff/buffy"
+  },
+  "commands": [
+    {
+      "command": "mv frontend/src/<4 component stylesheets> to component-matching names",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Description: rename component-specific stylesheets. Expected: 4 renames. Observed: time-range-filter.css→TimeRangeFilter.css, dashboard.css→Dashboard.css (two-step mv for the case-only rename), profile.css→ProfileCenter.css, user.css→UserList.css."
+    },
+    {
+      "command": "git grep -n 'time-range-filter.css|dashboard.css|profile.css|user.css' -- 'frontend/src/**'",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Description: no leftover imports of the old filenames. Expected: none. Observed: none."
+    },
+    {
+      "command": "node node_modules/typescript/bin/tsc --noEmit -p tsconfig.app.json",
+      "cwd": "frontend",
+      "status": "passed",
+      "notes": "Description: type-check after the import updates. Expected: exit 0. Observed: exit 0, no output."
+    },
+    {
+      "command": "node node_modules/vite/bin/vite.js build",
+      "cwd": "frontend",
+      "status": "passed",
+      "notes": "Description: production build must resolve the renamed stylesheet imports. Expected: success. Observed: '✓ built in 1.03s', exit 0."
+    },
+    {
+      "command": "node node_modules/eslint/bin/eslint.js src/components/patterns/filters/TimeRangeFilter.tsx src/modules/platform/Dashboard.tsx src/modules/system/profile/ProfileCenter.tsx src/modules/system/user/UserList.tsx",
+      "cwd": "frontend",
+      "status": "passed",
+      "notes": "Description: lint the 4 changed components. Expected: exit 0. Observed: exit 0, no findings."
+    },
+    {
+      "command": "node scripts/harness/check-structure-contract.mjs --root . --strict",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Description: structure gate after REPOSITORY_LAYOUT §5.2 edit. Expected: 0 findings. Observed: 0 findings."
+    },
+    {
+      "command": "node scripts/harness/check-doc-links.mjs --root . --strict && node scripts/frontmatter-check.mjs",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Description: doc gates after the §5.2 convention edit. Expected: green. Observed: doc-links 0 findings; frontmatter-check passed (266 docs / 212 with frontmatter)."
+    }
+  ],
+  "knownGaps": [
+    "No rendered visual evidence: the change is a pure filename rename with byte-identical CSS content and unchanged BEM class names, so visual behavior is equivalent by construction.",
+    "Cross-module shared stylesheet placement (list-page.css reused by auth) is not converged; it is tracked as boundary baseline debt in config/boundary-baseline.json.",
+    "npm is unavailable on this host (WSL relay without /bin/bash); tsc/vite/eslint were invoked directly."
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-09-22-frontend-style-naming-alignment/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-09-22-frontend-style-naming-alignment/",
+    "reviewFile": ".harness/evidence/2026-09-22-frontend-style-naming-alignment/review.md",
+    "changeRef": "none",
+    "planRefs": [".harness/NAMING_AND_BOUNDARIES_REMEDIATION_PLAN_2026-09-22.md"]
+  },
+  "completedAt": "2026-09-23T00:00:00Z"
+}

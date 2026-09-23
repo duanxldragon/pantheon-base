@@ -1,0 +1,106 @@
+{
+  "taskId": "2026-09-22-frontend-style-naming-alignment",
+  "title": "Align frontend stylesheet naming",
+  "goal": "Converge component-specific and shared stylesheet naming without changing UI behavior.",
+  "primaryLayer": "platform/frontend",
+  "status": "completed",
+  "statusNote": "2026-09-23: froze the three-tier stylesheet convention in REPOSITORY_LAYOUT §5.2 (component / group-module / cross-module), then renamed 4 component-specific stylesheets to match their component: time-range-filter.css→TimeRangeFilter.css, dashboard.css→Dashboard.css (two-step mv for the case-only rename), profile.css→ProfileCenter.css, user.css→UserList.css, and updated their 4 imports. CSS content and BEM class names are byte-identical, so visual behavior is unchanged. Verified with tsc, vite build, eslint, a leftover-import grep, and the structure/doc gates. Shared stylesheet placement (list-page.css cross-module reuse) is deliberately left as boundary baseline debt.",
+  "completedAt": "2026-09-23",
+  "priority": "P2",
+  "type": "repository-hygiene",
+  "estimatedComplexity": "light",
+  "dependencyLayers": ["platform frontend (module styling)", "platform governance (naming standard)"],
+  "dependencies": {
+    "blockedBy": ["2026-09-22-naming-boundary-canonical-standard"],
+    "blocks": []
+  },
+  "scope": {
+    "in": [
+      "REPOSITORY_LAYOUT §5.2 three-tier stylesheet convention",
+      "4 component stylesheet renames + import updates"
+    ],
+    "out": [
+      "CSS content changes",
+      "BEM class renames",
+      "moving cross-module shared styles (list-page.css) — tracked as boundary baseline debt"
+    ]
+  },
+  "taskDoc": ".harness/tasks/2026-09-22-frontend-style-naming-alignment/task.md",
+  "contractAnchors": [
+    "docs/designs/REPOSITORY_LAYOUT.md",
+    "docs/frontend/COMPONENT_STYLING_GUIDE.md"
+  ],
+  "expectedFiles": {
+    "create": [
+      "frontend/src/components/patterns/filters/TimeRangeFilter.css",
+      "frontend/src/modules/platform/Dashboard.css",
+      "frontend/src/modules/system/profile/ProfileCenter.css",
+      "frontend/src/modules/system/user/UserList.css",
+      ".harness/evidence/2026-09-22-frontend-style-naming-alignment/commands.json",
+      ".harness/evidence/2026-09-22-frontend-style-naming-alignment/summary.md",
+      ".harness/evidence/2026-09-22-frontend-style-naming-alignment/review.md"
+    ],
+    "modify": [
+      "frontend/src/components/patterns/filters/TimeRangeFilter.tsx",
+      "frontend/src/modules/platform/Dashboard.tsx",
+      "frontend/src/modules/system/profile/ProfileCenter.tsx",
+      "frontend/src/modules/system/user/UserList.tsx",
+      "docs/designs/REPOSITORY_LAYOUT.md",
+      "docs/designs/REPOSITORY_LAYOUT.en.md"
+    ],
+    "doNotTouch": [
+      "frontend/src/modules/system/components/shared/list-page.css",
+      "frontend/src/modules/auth/auth.css",
+      "frontend/src/components/operational/operational.css",
+      "frontend/src/core/layout/index.css"
+    ]
+  },
+  "harnessProfile": {
+    "template": "ui-heavy-product",
+    "overlay": "style-naming",
+    "qualityProfile": "visual-equivalence",
+    "portableFailureClass": "case-sensitive-import-break",
+    "ownerLayer": "platform",
+    "coverageDimensions": ["maintainability", "runtime-quality"]
+  },
+  "verificationPlan": {
+    "commands": [
+      "tsc --noEmit -p frontend/tsconfig.app.json",
+      "vite build",
+      "eslint <4 changed components>",
+      "git grep 'time-range-filter.css|dashboard.css|profile.css|user.css' -- frontend/src",
+      "node scripts/harness/check-structure-contract.mjs --root . --strict",
+      "node scripts/harness/check-doc-links.mjs --root . --strict"
+    ],
+    "runtimeEvidence": ["type-check + production build green after the renames"]
+  },
+  "runtimeSensitive": false,
+  "evidenceRequired": ["rename list", "leftover-import check", "build result", "visual-equivalence argument", "review disposition"],
+  "humanGates": ["none required (pure rename, no visual change)"],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed"
+  ],
+  "linkage": {
+    "evidenceDir": ".harness/evidence/2026-09-22-frontend-style-naming-alignment/",
+    "reviewFile": ".harness/evidence/2026-09-22-frontend-style-naming-alignment/review.md",
+    "summaryFile": ".harness/evidence/2026-09-22-frontend-style-naming-alignment/summary.md",
+    "changeRef": "none",
+    "planRefs": [".harness/NAMING_AND_BOUNDARIES_REMEDIATION_PLAN_2026-09-22.md"]
+  },
+  "evidenceDir": ".harness/evidence/2026-09-22-frontend-style-naming-alignment",
+  "verificationCommands": [
+    "tsc --noEmit -p frontend/tsconfig.app.json",
+    "vite build",
+    "node scripts/harness/check-structure-contract.mjs --root . --strict"
+  ],
+  "acceptanceCriteria": [
+    "Component styles follow component naming",
+    "Shared styles have explicit shared location",
+    "All imports and case-sensitive paths pass"
+  ],
+  "createdAt": "2026-09-22T00:00:00Z"
+}

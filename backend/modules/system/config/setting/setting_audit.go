@@ -212,8 +212,10 @@ func (s *SettingService) ExportAudit(query *SettingAuditQuery) (*impexp.CSVFile,
 
 	db := applyAuditFilters(s.tenantAuditScope(s.db.Model(&systemSettingAuditLog{})), query)
 
+	// Hard cap（与日志/角色导出对齐）：同步导出禁止无界全表扫描，超限部分
+	// 留给显式维护或分批窗口。SQL LIMIT 下推，不让数据库返回无界结果集。
 	var rows []systemSettingAuditLog
-	if err := db.Order("id desc").Find(&rows).Error; err != nil {
+	if err := db.Order("id desc").Limit(impexp.MaxExportRows()).Find(&rows).Error; err != nil {
 		return nil, err
 	}
 

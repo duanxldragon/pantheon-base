@@ -284,12 +284,52 @@ systemctl restart pantheon-backend
 **Expected**: `200 OK` when ready to serve traffic  
 **Expected**: `503 Service Unavailable` during startup or shutdown
 
-**What it checks**:
-- Database migrations complete
-- Redis available (optional in dev, required in production per v0.11.1)
-- All modules initialized
+**What it checks** (v0.12.0, task 2026-09-22-production-redis-and-security-gates):
+- `GET /api/v1/health` is the live implementation endpoint; it reports per-dependency status for `database`, `migrations`, and `redis` and returns 503 when any checked dependency is down
+- Database connectivity (`database`)
+- Migrations applied (`migrations`: `schema_migrations` present and readable; 503 while schema bootstrap is incomplete)
+- Redis available (`redis`: `disabled` status means no address configured — non-production compat; in production the process fails fast at startup instead)
 
----
+### Production startup fail-fast (Redis)
+
+Redis stores token sessions and the revocation blacklist; it is a hard
+production dependency. Startup exits non-zero when:
+
+- `PANTHEON_ENV=production` and `PANTHEON_REDIS_ADDR` is missing, or
+- `PANTHEON_ENV=production` (or `PANTHEON_REDIS_REQUIRED=true`) and the
+  Redis connection/ping fails at init.
+
+Non-production deployments keep the legacy behavior (degrade to
+`RDB = nil`, auth endpoints fail per-request) unless
+`PANTHEON_REDIS_REQUIRED=true` is set explicitly.
+
+Reproduce the security-scan gates locally:
+
+```bash
+# Go vulnerability scan (same version as CI)
+cd backend && go run golang.org/x/vuln/cmd/govulncheck@v1.3.0 ./...
+
+# npm audit (repo root and frontend)
+npm audit --registry=https://registry.npmjs.org --audit-level=high
+cd frontend && npm audit --registry=https://registry.npmjs.org --audit-level=high
+
+# Race detector (CI: quality.yml go-race job). Needs a MinGW-w64 gcc:
+# Go refuses the Cygwin gcc with "don't use the cygwin compiler to build
+# native Windows programs; use MinGW instead". On Windows, point CC at a
+# MinGW-w64 toolchain (e.g. a portable winlibs/niXman build extracted under
+# a gitignored path) and enable CGO:
+#
+#   export CC='<toolchain>\bin\gcc.exe' CGO_ENABLED=1
+#   export PATH='<toolchain>/bin':$PATH
+#
+# Linux/macOS needs nothing extra.
+cd backend && go test -race -count=1 ./...
+
+# MySQL/Redis backed unit tests (mirrors ci.yml unit-tests services)
+PANTHEON_TEST_DSN='root:<pw>@tcp(127.0.0.1:3306)/pantheon_test?charset=utf8mb4&parseTime=true&loc=Local' \
+PANTHEON_TEST_REDIS_ADDR=127.0.0.1:6379 \
+go test -short ./...
+```
 
 ## Escalation Matrix
 

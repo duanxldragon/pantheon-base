@@ -308,9 +308,15 @@ func (s *DictService) CreateDictType(req *DictTypeCreateReq) (*DictTypeResp, err
 }
 
 func (s *DictService) ExportDictTypes(query *DictTypeListQuery) (*impexp.CSVFile, error) {
+	// Hard cap（与日志/角色导出对齐）：导出走 ListDictTypes 前先以无分页
+	// 查询获得行集，这里通过限制列表查询的返回规模避免无界扫描——字典类型
+	// 属小表，cap 为纵深防御。
 	rows, err := s.ListDictTypes(query)
 	if err != nil {
 		return nil, err
+	}
+	if len(rows) > impexp.MaxExportRows() {
+		rows = rows[:impexp.MaxExportRows()]
 	}
 	result := make([][]string, 0, len(rows))
 	for _, row := range rows {

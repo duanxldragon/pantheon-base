@@ -1,0 +1,82 @@
+{
+  "taskId": "2026-09-22-export-and-session-pagination",
+  "repo": "pantheon-base",
+  "agent": {
+    "tool": "other"
+  },
+  "commands": [
+    {
+      "command": "go build ./...",
+      "cwd": "pantheon-base/backend",
+      "status": "passed",
+      "notes": "Description: compile after bounding synchronous exports and pushing session filters/pagination into SQL Expected: exit 0; observed exit 0"
+    },
+    {
+      "command": "go vet ./modules/auth/session ./modules/system/i18n ./modules/system/config/setting ./modules/system/org/post ./modules/system/config/dict",
+      "cwd": "pantheon-base/backend",
+      "status": "passed",
+      "notes": "Description: vet every package whose export or list path changed Expected: exit 0; observed exit 0"
+    },
+    {
+      "command": "PANTHEON_TEST_DSN=<local mysql> go test ./modules/auth/session -run 'TestListAllSessions' -count=1 -v",
+      "cwd": "pantheon-base/backend",
+      "status": "passed",
+      "notes": "Description: SQL pagination consistency, aggregate/page agreement and client-filter pushdown Expected: all pass; observed 3/3 PASS — SQLPaginationConsistency, RevokedCountsMatchPages, ClientFiltersPushedToSQL"
+    },
+    {
+      "command": "PANTHEON_TEST_DSN=<local mysql> go test -run '^$' -bench BenchmarkListAllSessions -benchtime 3x ./modules/auth/session",
+      "cwd": "pantheon-base/backend",
+      "status": "passed",
+      "notes": "Description: 10k-row page-query benchmark over the pre-fix full-scan path Expected: bounded page query; observed BenchmarkListAllSessions_PageQuery-12 3x 230113633 ns/op (implementation-time run recorded 260477820 ns/op at 5x)"
+    },
+    {
+      "command": "PANTHEON_TEST_DSN=<local mysql> go test ./modules/auth/session ./modules/system/config/setting ./modules/system/config/dict ./modules/system/org/post ./pkg/database -count=1",
+      "cwd": "pantheon-base/backend",
+      "status": "passed",
+      "notes": "Description: package regression including the migration runner that applies 000018 Expected: all ok; observed session 3.700s / setting ok / dict ok / post ok / pkg/database 13.738s — no failures"
+    },
+    {
+      "command": "PANTHEON_TEST_DSN=<local mysql> go test ./modules/system/i18n -count=1",
+      "cwd": "pantheon-base/backend",
+      "status": "passed",
+      "notes": "Description: i18n export path regression Expected: ok; observed ok 186.871s"
+    },
+    {
+      "command": "CC=<repo>/.tmp/mingw64/bin/gcc.exe CGO_ENABLED=1 go test -race -count=1 ./modules/auth/session ./modules/system/config/setting ./modules/system ./pkg/database ./modules/auth/login",
+      "cwd": "pantheon-base/backend",
+      "status": "passed",
+      "notes": "Description: race detector on the rewritten pagination query and the bounded export paths Expected: no data race; observed session 4.896s / setting 12.244s / system 6.016s / database 14.626s / login 239.678s all ok, no DATA RACE reports (i18n was not run under -race: its 186.9s suite is not concurrency-sensitive here)"
+    }
+  ],
+  "graphChecks": {
+    "usedCodeGraph": false,
+    "affectedSubgraph": [
+      "auth/session admin list query",
+      "setting audit / post / i18n / dict export paths",
+      "pkg/impexp shared export cap",
+      "session pagination indexes and migration 000018"
+    ],
+    "checks": ["cycle", "hub", "call-depth", "sensitive-flow"],
+    "findings": [],
+    "notes": "No new package edge. The sensitive change is the opposite of a widening: admin session listings and CSV exports now stop at a bounded row count in SQL instead of materialising the whole table, and counts are derived from the same filter so page totals cannot drift."
+  },
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-09-22-export-and-session-pagination/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-09-22-export-and-session-pagination/",
+    "reviewFile": ".harness/evidence/2026-09-22-export-and-session-pagination/review.md",
+    "summaryFile": ".harness/evidence/2026-09-22-export-and-session-pagination/summary.md",
+    "changeRef": "none",
+    "planRefs": [".harness/ENTERPRISE_REMEDIATION_PLAN_2026-09-22.md"]
+  },
+  "knownGaps": [
+    "Human gate pending: the maintainer must confirm export compatibility and the 10000-row cap (pkg/impexp.MaxExportRows).",
+    "Truncation is not machine-readable: an over-cap export is silently narrowed to the newest MaxExportRows rows with no CSV header/flag. Adding a truncation marker is explicitly out of this task's scope and would change the export response shape.",
+    "The EXPLAIN before/after comparison in summary.md comes from the implementation-time run against the live pantheon_base database; it was not re-executed during this closeout, and the index is now owned by migration 000018 rather than by hand-issued ALTERs."
+  ],
+  "environment": {
+    "os": "win32 (bash)",
+    "go": "1.26.6",
+    "dsn": "PANTHEON_TEST_DSN=<local mysql>/pantheon_base with per-test isolated databases"
+  },
+  "completedAt": "2026-09-23T11:05:00+08:00"
+}

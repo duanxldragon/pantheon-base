@@ -77,7 +77,7 @@ func decodeHandlerResponse(t *testing.T, recorder *httptest.ResponseRecorder) (i
 func TestAuthHandler_GetCurrentUserInfo(t *testing.T) {
 	db := setupHandlerTestDB(t)
 	u := seedHandlerUser(t, db, "info_user", "pass123")
-	h := NewAuthHandler(NewRuntime(db))
+	h := NewAuthHandler(NewRuntime(db, testCredentialRepo(db)))
 
 	c, recorder := newHandlerTestContext(t)
 	c.Set("userId", u.ID)
@@ -94,7 +94,7 @@ func TestAuthHandler_GetCurrentUserInfo(t *testing.T) {
 
 func TestAuthHandler_GetCurrentUserInfoUnknownUser(t *testing.T) {
 	db := setupHandlerTestDB(t)
-	h := NewAuthHandler(NewRuntime(db))
+	h := NewAuthHandler(NewRuntime(db, testCredentialRepo(db)))
 
 	c, recorder := newHandlerTestContext(t)
 	c.Set("userId", uint64(99999))
@@ -109,7 +109,7 @@ func TestAuthHandler_GetCurrentUserInfoUnknownUser(t *testing.T) {
 func TestAuthHandler_UpdatePassword(t *testing.T) {
 	db := setupHandlerTestDB(t)
 	u := seedHandlerUser(t, db, "pwd_user", "oldpass123")
-	h := NewAuthHandler(NewRuntime(db))
+	h := NewAuthHandler(NewRuntime(db, testCredentialRepo(db)))
 
 	c, recorder := newHandlerTestContext(t)
 	c.Set("userId", u.ID)
@@ -125,7 +125,7 @@ func TestAuthHandler_UpdatePassword(t *testing.T) {
 
 func TestAuthHandler_UpdatePasswordInvalidBody(t *testing.T) {
 	db := setupHandlerTestDB(t)
-	h := NewAuthHandler(NewRuntime(db))
+	h := NewAuthHandler(NewRuntime(db, testCredentialRepo(db)))
 
 	c, recorder := newHandlerTestContext(t)
 	c.Request = httptest.NewRequest("POST", "/", strings.NewReader(`{invalid`))
@@ -140,7 +140,7 @@ func TestAuthHandler_UpdatePasswordInvalidBody(t *testing.T) {
 
 func TestAuthHandler_GetLoginLogList(t *testing.T) {
 	db := setupHandlerTestDB(t)
-	h := NewAuthHandler(NewRuntime(db))
+	h := NewAuthHandler(NewRuntime(db, testCredentialRepo(db)))
 
 	if err := db.Create(&SystemLogLogin{Username: "log_user", Status: 1, LoginTime: time.Now()}).Error; err != nil {
 		t.Fatalf("seed login log: %v", err)
@@ -161,7 +161,7 @@ func TestAuthHandler_GetLoginLogList(t *testing.T) {
 
 func TestAuthHandler_GetLoginLogListInvalidQuery(t *testing.T) {
 	db := setupHandlerTestDB(t)
-	h := NewAuthHandler(NewRuntime(db))
+	h := NewAuthHandler(NewRuntime(db, testCredentialRepo(db)))
 
 	c, recorder := newHandlerTestContext(t)
 	c.Request = httptest.NewRequest("GET", "/?status=notanumber", nil)
@@ -175,7 +175,7 @@ func TestAuthHandler_GetLoginLogListInvalidQuery(t *testing.T) {
 
 func TestAuthHandler_GetOwnLoginLogs(t *testing.T) {
 	db := setupHandlerTestDB(t)
-	h := NewAuthHandler(NewRuntime(db))
+	h := NewAuthHandler(NewRuntime(db, testCredentialRepo(db)))
 
 	if err := db.Create(&SystemLogLogin{Username: "own_user", Status: 1, LoginTime: time.Now()}).Error; err != nil {
 		t.Fatalf("seed login log: %v", err)
@@ -197,7 +197,7 @@ func TestAuthHandler_GetOwnLoginLogs(t *testing.T) {
 
 func TestAuthHandler_GetOwnLoginLogsEmptyUsername(t *testing.T) {
 	db := setupHandlerTestDB(t)
-	h := NewAuthHandler(NewRuntime(db))
+	h := NewAuthHandler(NewRuntime(db, testCredentialRepo(db)))
 
 	c, recorder := newHandlerTestContext(t)
 	c.Request = httptest.NewRequest("GET", "/", nil)
@@ -211,7 +211,7 @@ func TestAuthHandler_GetOwnLoginLogsEmptyUsername(t *testing.T) {
 
 func TestAuthHandler_GetSecurityEventList(t *testing.T) {
 	db := setupHandlerTestDB(t)
-	h := NewAuthHandler(NewRuntime(db))
+	h := NewAuthHandler(NewRuntime(db, testCredentialRepo(db)))
 
 	if err := db.Create(&SystemAuthSecurityEvent{
 		UserID:     1,
@@ -238,7 +238,7 @@ func TestAuthHandler_GetSecurityEventList(t *testing.T) {
 
 func TestAuthHandler_AcknowledgeSecurityEvent(t *testing.T) {
 	db := setupHandlerTestDB(t)
-	h := NewAuthHandler(NewRuntime(db))
+	h := NewAuthHandler(NewRuntime(db, testCredentialRepo(db)))
 
 	event := SystemAuthSecurityEvent{
 		UserID:     1,
@@ -267,7 +267,7 @@ func TestAuthHandler_AcknowledgeSecurityEvent(t *testing.T) {
 
 func TestAuthHandler_AcknowledgeSecurityEventInvalidID(t *testing.T) {
 	db := setupHandlerTestDB(t)
-	h := NewAuthHandler(NewRuntime(db))
+	h := NewAuthHandler(NewRuntime(db, testCredentialRepo(db)))
 
 	c, recorder := newHandlerTestContext(t)
 	c.Params = gin.Params{{Key: "id", Value: "abc"}}
@@ -283,7 +283,7 @@ func TestAuthHandler_AcknowledgeSecurityEventInvalidID(t *testing.T) {
 
 func TestAuthHandler_BatchAcknowledgeSecurityEvents(t *testing.T) {
 	db := setupHandlerTestDB(t)
-	h := NewAuthHandler(NewRuntime(db))
+	h := NewAuthHandler(NewRuntime(db, testCredentialRepo(db)))
 
 	events := []SystemAuthSecurityEvent{
 		{UserID: 1, Username: "batch_user", EventType: "password_wrong", Severity: "medium", MessageKey: "auth.security.event.password_wrong"},
@@ -311,7 +311,7 @@ func TestAuthHandler_BatchAcknowledgeSecurityEvents(t *testing.T) {
 
 func TestAuthHandler_CleanupSecurityEvents(t *testing.T) {
 	db := setupHandlerTestDB(t)
-	h := NewAuthHandler(NewRuntime(db))
+	h := NewAuthHandler(NewRuntime(db, testCredentialRepo(db)))
 
 	oldTime := time.Now().AddDate(0, 0, -60)
 	now := time.Now()
@@ -341,7 +341,7 @@ func TestAuthHandler_CleanupSecurityEvents(t *testing.T) {
 
 func TestAuthHandler_CleanupLoginLogs(t *testing.T) {
 	db := setupHandlerTestDB(t)
-	h := NewAuthHandler(NewRuntime(db))
+	h := NewAuthHandler(NewRuntime(db, testCredentialRepo(db)))
 
 	oldTime := time.Now().AddDate(0, 0, -60)
 	if err := db.Create(&SystemLogLogin{Username: "old_log", Status: 1, LoginTime: oldTime}).Error; err != nil {
@@ -364,7 +364,7 @@ func TestAuthHandler_CleanupLoginLogs(t *testing.T) {
 
 func TestAuthHandler_CleanupLoginLogsInvalidBody(t *testing.T) {
 	db := setupHandlerTestDB(t)
-	h := NewAuthHandler(NewRuntime(db))
+	h := NewAuthHandler(NewRuntime(db, testCredentialRepo(db)))
 
 	c, recorder := newHandlerTestContext(t)
 	c.Request = httptest.NewRequest("POST", "/", strings.NewReader(`{`))
@@ -379,7 +379,7 @@ func TestAuthHandler_CleanupLoginLogsInvalidBody(t *testing.T) {
 
 func TestAuthHandler_CleanupHistoricSessions(t *testing.T) {
 	db := setupHandlerTestDB(t)
-	h := NewAuthHandler(NewRuntime(db))
+	h := NewAuthHandler(NewRuntime(db, testCredentialRepo(db)))
 
 	u := seedHandlerUser(t, db, "cleanup_sessions_user", "pass123")
 	oldRevokedAt := time.Now().AddDate(0, 0, -60)
@@ -410,7 +410,7 @@ func TestAuthHandler_CleanupHistoricSessions(t *testing.T) {
 
 func TestAuthHandler_BatchRevokeSessions(t *testing.T) {
 	db := setupHandlerTestDB(t)
-	h := NewAuthHandler(NewRuntime(db))
+	h := NewAuthHandler(NewRuntime(db, testCredentialRepo(db)))
 
 	u := seedHandlerUser(t, db, "revoke_user", "pass123")
 	sessions := []SystemUserSession{
@@ -438,7 +438,7 @@ func TestAuthHandler_BatchRevokeSessions(t *testing.T) {
 
 func TestAuthHandler_BatchDeleteLoginLogs(t *testing.T) {
 	db := setupHandlerTestDB(t)
-	h := NewAuthHandler(NewRuntime(db))
+	h := NewAuthHandler(NewRuntime(db, testCredentialRepo(db)))
 
 	logs := []SystemLogLogin{
 		{Username: "del_log_1", Status: 1, LoginTime: time.Now()},
@@ -465,7 +465,7 @@ func TestAuthHandler_BatchDeleteLoginLogs(t *testing.T) {
 
 func TestAuthHandler_GetSessionList(t *testing.T) {
 	db := setupHandlerTestDB(t)
-	h := NewAuthHandler(NewRuntime(db))
+	h := NewAuthHandler(NewRuntime(db, testCredentialRepo(db)))
 
 	u := seedHandlerUser(t, db, "session_list_user", "pass123")
 	if err := db.Create(&SystemUserSession{
@@ -493,7 +493,7 @@ func TestAuthHandler_GetSessionList(t *testing.T) {
 
 func TestAuthHandler_RevokeAnySession(t *testing.T) {
 	db := setupHandlerTestDB(t)
-	h := NewAuthHandler(NewRuntime(db))
+	h := NewAuthHandler(NewRuntime(db, testCredentialRepo(db)))
 
 	u := seedHandlerUser(t, db, "any_revoke_user", "pass123")
 	if err := db.Create(&SystemUserSession{
@@ -520,7 +520,7 @@ func TestAuthHandler_RevokeAnySession(t *testing.T) {
 
 func TestAuthHandler_RevokeAnySessionEmptyID(t *testing.T) {
 	db := setupHandlerTestDB(t)
-	h := NewAuthHandler(NewRuntime(db))
+	h := NewAuthHandler(NewRuntime(db, testCredentialRepo(db)))
 
 	c, recorder := newHandlerTestContext(t)
 	c.Params = gin.Params{{Key: "id", Value: " "}}
@@ -535,7 +535,7 @@ func TestAuthHandler_RevokeAnySessionEmptyID(t *testing.T) {
 
 func TestAuthHandler_RevokeSession(t *testing.T) {
 	db := setupHandlerTestDB(t)
-	h := NewAuthHandler(NewRuntime(db))
+	h := NewAuthHandler(NewRuntime(db, testCredentialRepo(db)))
 
 	u := seedHandlerUser(t, db, "self_revoke_user", "pass123")
 	if err := db.Create(&SystemUserSession{
@@ -560,7 +560,7 @@ func TestAuthHandler_RevokeSession(t *testing.T) {
 
 func TestAuthHandler_GetSessions(t *testing.T) {
 	db := setupHandlerTestDB(t)
-	h := NewAuthHandler(NewRuntime(db))
+	h := NewAuthHandler(NewRuntime(db, testCredentialRepo(db)))
 
 	u := seedHandlerUser(t, db, "own_sessions_user", "pass123")
 	if err := db.Create(&SystemUserSession{
@@ -598,7 +598,7 @@ func TestAuthHandler_GetSessions(t *testing.T) {
 func TestAuthHandler_LogoutHandler(t *testing.T) {
 	db := setupHandlerTestDB(t)
 	var invalidatedToken string
-	h := NewAuthHandler(NewRuntime(db), func(token string) {
+	h := NewAuthHandler(NewRuntime(db, testCredentialRepo(db)), func(token string) {
 		invalidatedToken = token
 	})
 	rdb := setupTestRedis(t)
@@ -640,7 +640,7 @@ func TestAuthHandler_LogoutHandler(t *testing.T) {
 
 func TestAuthHandler_TouchActivity(t *testing.T) {
 	db := setupHandlerTestDB(t)
-	h := NewAuthHandler(NewRuntime(db))
+	h := NewAuthHandler(NewRuntime(db, testCredentialRepo(db)))
 
 	u := seedHandlerUser(t, db, "touch_user", "pass123")
 	if err := db.Create(&SystemUserSession{
@@ -668,7 +668,7 @@ func TestAuthHandler_TouchActivity(t *testing.T) {
 
 func TestAuthHandler_GetSecurityOverview(t *testing.T) {
 	db := setupHandlerTestDB(t)
-	h := NewAuthHandler(NewRuntime(db))
+	h := NewAuthHandler(NewRuntime(db, testCredentialRepo(db)))
 
 	u := seedHandlerUser(t, db, "overview_user", "pass12345")
 	if err := db.Create(&SystemUserSession{
@@ -713,7 +713,7 @@ func TestAuthHandler_parseRefreshTokenWithContextEmpty(t *testing.T) {
 
 func TestAuthHandler_LoginHandlerInvalidBody(t *testing.T) {
 	db := setupHandlerTestDB(t)
-	h := NewAuthHandler(NewRuntime(db))
+	h := NewAuthHandler(NewRuntime(db, testCredentialRepo(db)))
 
 	c, recorder := newHandlerTestContext(t)
 	c.Request = httptest.NewRequest("POST", "/", strings.NewReader(`{`))
@@ -728,7 +728,7 @@ func TestAuthHandler_LoginHandlerInvalidBody(t *testing.T) {
 
 func TestAuthHandler_LoginHandlerUnknownUserRecordsFailureLog(t *testing.T) {
 	db := setupHandlerTestDB(t)
-	h := NewAuthHandler(NewRuntime(db))
+	h := NewAuthHandler(NewRuntime(db, testCredentialRepo(db)))
 
 	c, recorder := newHandlerTestContext(t)
 	c.Request = httptest.NewRequest("POST", "/", strings.NewReader(`{"username":"ghost_user","password":"whatever"}`))
@@ -751,7 +751,7 @@ func TestAuthHandler_LoginHandlerUnknownUserRecordsFailureLog(t *testing.T) {
 
 func TestAuthHandler_VerifyMFAHandlerInvalidBody(t *testing.T) {
 	db := setupHandlerTestDB(t)
-	h := NewAuthHandler(NewRuntime(db))
+	h := NewAuthHandler(NewRuntime(db, testCredentialRepo(db)))
 
 	c, recorder := newHandlerTestContext(t)
 	c.Request = httptest.NewRequest("POST", "/", strings.NewReader(`{`))
@@ -766,7 +766,7 @@ func TestAuthHandler_VerifyMFAHandlerInvalidBody(t *testing.T) {
 
 func TestAuthHandler_RefreshTokenHandlerEmptyBody(t *testing.T) {
 	db := setupHandlerTestDB(t)
-	h := NewAuthHandler(NewRuntime(db))
+	h := NewAuthHandler(NewRuntime(db, testCredentialRepo(db)))
 
 	c, recorder := newHandlerTestContext(t)
 	c.Request = httptest.NewRequest("POST", "/", strings.NewReader(`{}`))
@@ -783,7 +783,7 @@ func TestAuthHandler_RefreshTokenHandlerEmptyBody(t *testing.T) {
 
 func TestAuthHandler_VerifyOperationPasswordInvalidBody(t *testing.T) {
 	db := setupHandlerTestDB(t)
-	h := NewAuthHandler(NewRuntime(db))
+	h := NewAuthHandler(NewRuntime(db, testCredentialRepo(db)))
 
 	c, recorder := newHandlerTestContext(t)
 	c.Request = httptest.NewRequest("POST", "/", strings.NewReader(`{}`))
@@ -798,7 +798,7 @@ func TestAuthHandler_VerifyOperationPasswordInvalidBody(t *testing.T) {
 
 func TestAuthHandler_ExportLoginLogsInvalidBody(t *testing.T) {
 	db := setupHandlerTestDB(t)
-	h := NewAuthHandler(NewRuntime(db))
+	h := NewAuthHandler(NewRuntime(db, testCredentialRepo(db)))
 
 	c, recorder := newHandlerTestContext(t)
 	c.Request = httptest.NewRequest("POST", "/", strings.NewReader(`{`))
@@ -813,7 +813,7 @@ func TestAuthHandler_ExportLoginLogsInvalidBody(t *testing.T) {
 
 func TestAuthHandler_ExportLoginLogsWritesCSV(t *testing.T) {
 	db := setupHandlerTestDB(t)
-	h := NewAuthHandler(NewRuntime(db))
+	h := NewAuthHandler(NewRuntime(db, testCredentialRepo(db)))
 
 	if err := db.Create(&SystemLogLogin{Username: "export_user", Status: 1, LoginTime: time.Now()}).Error; err != nil {
 		t.Fatalf("seed log: %v", err)

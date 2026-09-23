@@ -31,7 +31,7 @@ import {
   dashboardQuickActionWidgets,
   isDashboardWidgetVisible,
 } from './widgets';
-import './dashboard.css';
+import './Dashboard.css';
 
 const Row = Grid.Row;
 const Col = Grid.Col;

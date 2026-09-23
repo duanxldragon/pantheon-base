@@ -1,0 +1,73 @@
+{
+  "taskId": "2026-09-22-generated-artifact-governance",
+  "repo": "pantheon-base",
+  "agent": {
+    "tool": "other",
+    "adapter": "freebuff/buffy"
+  },
+  "commands": [
+    {
+      "command": "node scripts/harness/check-generated.mjs --root . --strict",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Description: new generated-marker gate over 11 marked artifacts + 1 JSON artifact. Expected: 0 findings, exit 0. Observed: 'Generated artifact check (strict): 0 finding(s) across 11 artifact(s)'."
+    },
+    {
+      "command": "node --test tests/scripts/harness-check-generated.test.mjs",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Description: checker unit tests (marker ok, marker missing, marker not first line, missing artifact, invalid JSON, report-only). Expected: all pass. Observed: tests 6 / pass 6 / fail 0."
+    },
+    {
+      "command": "node frontend/scripts/cleanup-generated-modules.mjs --check",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Description: existing smoke-generated-module cleanliness gate still passes after template changes. Expected: OK. Observed: '[generated-modules] OK: no generated modules found'."
+    },
+    {
+      "command": "go build ./...",
+      "cwd": "backend",
+      "status": "passed",
+      "notes": "Description: the marker comment added above `package` in two Go registries must not break the build. Expected: clean. Observed: clean; gofmt -l reports no diff."
+    },
+    {
+      "command": "node node_modules/typescript/bin/tsc --noEmit -p tsconfig.app.json",
+      "cwd": "frontend",
+      "status": "passed",
+      "notes": "Description: the marker comment added to the 8 TS generated artifacts must type-check. Expected: exit 0. Observed: exit 0, no output."
+    },
+    {
+      "command": "node scripts/harness/check-structure-contract.mjs --root . --strict",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Description: structure gate after adding scripts/harness/check-generated.mjs + tests. Expected: 0 findings. Observed: 0 findings."
+    },
+    {
+      "command": "node scripts/frontmatter-check.mjs",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Description: docs frontmatter + contract-linkage after REPOSITORY_LAYOUT edits. Expected: passed. Observed: 'Frontmatter check passed. Checked 266 docs, 208 with frontmatter.'"
+    },
+    {
+      "command": "node scripts/harness/check-doc-links.mjs --root . --strict",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Description: doc link gate. Expected: 0 findings. Observed: 0 findings."
+    }
+  ],
+  "knownGaps": [
+    "The low-code generator does not yet emit the marker into newly generated module files; the gate covers the 11 stable artifacts.",
+    "scripts/check-arch-boundaries.mjs checkGeneratedRegistry still overlaps check-generated.mjs and is not wired into CI.",
+    "npm is unavailable on this host (WSL relay without /bin/bash); node/go/tsc were invoked directly, equivalent to the package.json script targets."
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-09-22-generated-artifact-governance/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-09-22-generated-artifact-governance/",
+    "reviewFile": ".harness/evidence/2026-09-22-generated-artifact-governance/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".harness/NAMING_AND_BOUNDARIES_REMEDIATION_PLAN_2026-09-22.md"
+    ]
+  },
+  "completedAt": "2026-09-23T00:00:00Z"
+}

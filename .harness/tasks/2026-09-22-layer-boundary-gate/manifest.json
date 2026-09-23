@@ -1,0 +1,123 @@
+{
+  "taskId": "2026-09-22-layer-boundary-gate",
+  "title": "Enforce production layer dependency boundaries",
+  "goal": "Extend boundary checks beyond business imports to platform and auth production dependencies, fix the platform violation, and freeze the remaining known violations as a review-dated baseline.",
+  "primaryLayer": "platform/governance",
+  "status": "completed",
+  "statusNote": "2026-09-23: scripts/harness/check-boundaries.mjs now scans business, platform and auth production code (backend Go + frontend TS), exempts test files, and supports --baseline. The platform -> system/org/dept violation is fixed by moving the adapter to the composition root (backend/cmd/server/platform_org_governance.go). The remaining 8 known findings are frozen in config/boundary-baseline.json with reasons and reviewBy=2026-12-31; ci.yml now runs the gate with --baseline so new violations fail CI. The auth model-level coupling to system/iam/user is explicitly deferred (needs a UserReader contract) rather than rushed in this pass.",
+  "completedAt": "2026-09-23",
+  "priority": "P0",
+  "type": "quality-gate",
+  "estimatedComplexity": "moderate",
+  "technicalDebtFlag": "yes",
+  "technicalDebtNote": "auth/login and auth/security still query the user GORM model directly (system/iam/user), and 1 platform type import + 4 auth shared-CSS imports remain. All are baselined with a 2026-12-31 review date and a stated ratchet; scripts/check-arch-boundaries.mjs still overlaps the harness checker and is not wired into CI.",
+  "dependencyLayers": [
+    "platform governance (boundary rules)",
+    "backend modules platform/auth",
+    "frontend modules platform/auth"
+  ],
+  "dependencies": {
+    "blockedBy": ["2026-09-22-naming-boundary-canonical-standard"],
+    "blocks": []
+  },
+  "scope": {
+    "in": [
+      "extend check-boundaries.mjs with platform and auth rules (go + ts)",
+      "explicit test-file exemption",
+      "--baseline mechanism with stale-entry detection",
+      "fix platform -> system/org/dept via composition-root adapter",
+      "config/boundary-baseline.json with review dates",
+      "ci.yml boundary step wiring",
+      "unit tests for the checker"
+    ],
+    "out": [
+      "refactoring auth/login and auth/security off the user model (deferred ratchet)",
+      "business behavior, API, database, permission, i18n changes",
+      "retiring scripts/check-arch-boundaries.mjs"
+    ]
+  },
+  "taskDoc": ".harness/tasks/2026-09-22-layer-boundary-gate/task.md",
+  "contractAnchors": [
+    "docs/designs/REPOSITORY_LAYOUT.md",
+    "scripts/harness/check-boundaries.mjs",
+    "config/boundary-baseline.json",
+    "backend/modules/platform/routes.go",
+    "backend/cmd/server/platform_org_governance.go"
+  ],
+  "expectedFiles": {
+    "create": [
+      "backend/cmd/server/platform_org_governance.go",
+      "config/boundary-baseline.json",
+      "tests/scripts/harness-check-boundaries.test.mjs",
+      ".harness/evidence/2026-09-22-layer-boundary-gate/commands.json",
+      ".harness/evidence/2026-09-22-layer-boundary-gate/summary.md",
+      ".harness/evidence/2026-09-22-layer-boundary-gate/review.md"
+    ],
+    "modify": [
+      "scripts/harness/check-boundaries.mjs",
+      "backend/modules/platform/routes.go",
+      "backend/cmd/server/main.go",
+      ".github/workflows/ci.yml",
+      "docs/designs/REPOSITORY_LAYOUT.md",
+      "docs/designs/REPOSITORY_LAYOUT.en.md"
+    ],
+    "doNotTouch": [
+      "backend/modules/auth/login/login_service.go",
+      "backend/modules/auth/login/login_runtime.go",
+      "backend/modules/auth/security/security_service.go",
+      "backend/modules/business/**"
+    ]
+  },
+  "harnessProfile": {
+    "template": "api-service",
+    "overlay": "layer-boundary",
+    "qualityProfile": "architecture-fitness",
+    "portableFailureClass": "cross-layer-import-unenforced",
+    "ownerLayer": "platform",
+    "coverageDimensions": [
+      "architecture-fitness",
+      "maintainability",
+      "method-health"
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "go build ./...",
+      "go vet ./modules/platform/... ./cmd/server/...",
+      "go test ./modules/platform/...",
+      "node scripts/harness/check-boundaries.mjs --strict --repo pantheon-base --baseline config/boundary-baseline.json",
+      "node --test tests/scripts/harness-check-boundaries.test.mjs",
+      "node scripts/harness/check-structure-contract.mjs --root . --strict",
+      "node scripts/harness/check-doc-links.mjs --root . --strict"
+    ],
+    "runtimeEvidence": [
+      "boundary gate green with 8 baselined findings; platform package tests ok"
+    ]
+  },
+  "runtimeSensitive": false,
+  "evidenceRequired": [
+    "boundary gate output before/after",
+    "platform package test result",
+    "checker unit tests",
+    "review disposition"
+  ],
+  "humanGates": [
+    "none required (no new permission surface, behavior-equivalent platform wiring) — PR gates + non-author review"
+  ],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed"
+  ],
+  "linkage": {
+    "evidenceDir": ".harness/evidence/2026-09-22-layer-boundary-gate/",
+    "reviewFile": ".harness/evidence/2026-09-22-layer-boundary-gate/review.md",
+    "summaryFile": ".harness/evidence/2026-09-22-layer-boundary-gate/summary.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".harness/NAMING_AND_BOUNDARIES_REMEDIATION_PLAN_2026-09-22.md"
+    ]
+  }
+}

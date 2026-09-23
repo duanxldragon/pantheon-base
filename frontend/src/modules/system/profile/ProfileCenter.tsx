@@ -26,7 +26,7 @@ import {
 import { formatDateTime } from '../../../core/format/dateTime';
 import { useAuthStore } from '../../../store/useAuthStore';
 import { FormSection, PageContainer, PageLoading, SubmitBar } from '../../../components';
-import './profile.css';
+import './ProfileCenter.css';
 
 const Row = Grid.Row;
 const Col = Grid.Col;

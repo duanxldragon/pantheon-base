@@ -16,13 +16,14 @@ import (
 	"github.com/duanxldragon/pantheon-base/backend/modules/auth/mfa"
 	"github.com/duanxldragon/pantheon-base/backend/modules/auth/security"
 	"github.com/duanxldragon/pantheon-base/backend/modules/auth/session"
-	iamuser "github.com/duanxldragon/pantheon-base/backend/modules/system/iam/user"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/authsession"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/authtoken"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/common"
+	"github.com/duanxldragon/pantheon-base/backend/pkg/contracts/authuser"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/database"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/impexp"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/logging"
+	"github.com/duanxldragon/pantheon-base/backend/pkg/maintenance"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/platformprefs"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/tenant"
 
@@ -44,7 +45,6 @@ const (
 	defaultMaxActiveSessions       = authsession.DefaultMaxActiveSessionsPerUser
 	defaultLoginLogRetentionDays   = 90
 	defaultSessionRetentionDays    = authsession.DefaultSessionRetentionDays
-	autoCleanupMinInterval         = 15 * time.Minute
 )
 
 const (
@@ -74,7 +74,11 @@ const (
 
 // Runtime is the root auth service that composes sub-domain services.
 type Runtime struct {
-	db        *gorm.DB
+	db *gorm.DB
+	// userRepo is the credential port over system user state. It is injected by
+	// the composition root (backend/cmd/server/main.go) so auth never imports
+	// modules/system/iam/user (docs/designs/REPOSITORY_LAYOUT.md §8.2).
+	userRepo  authuser.Repository
 	tenantCtx *tenant.Context
 
 	// Sub-services
@@ -107,18 +111,19 @@ func (s *Runtime) WithTenantContext(ctx *tenant.Context) *Runtime {
 }
 
 // NewRuntime constructs the root auth service and its sub-services.
-func NewRuntime(db *gorm.DB) *Runtime {
+func NewRuntime(db *gorm.DB, userRepo authuser.Repository) *Runtime {
 	s := &Runtime{
-		db: db,
+		db:       db,
+		userRepo: userRepo,
 		settings: &runtimeSettingsState{
 			cache: make(map[string]int),
 		},
 	}
 
 	// Build sub-services, wiring them back through interfaces on Runtime.
-	s.loginSvc = NewLoginService(db, s, s)
+	s.loginSvc = NewLoginService(db, userRepo, s, s)
 	s.mfaSvc = mfa.NewService(db, s, s, s)
-	s.securitySvc = security.NewService(db, s)
+	s.securitySvc = security.NewService(db, userRepo, s)
 
 	// SessionService needs Runtime to implement PolicyProvider, UserRoleLoader, TokenIssuer.
 	s.sessionSvc = session.NewService(db, s, s, s)
@@ -164,8 +169,8 @@ func (s *Runtime) GetUserByID(userID uint64) (*session.UserRef, error) {
 	if s.db == nil {
 		return nil, common.ErrDatabaseNotInitialized
 	}
-	var u iamuser.SystemUser
-	if err := s.db.First(&u, userID).Error; err != nil {
+	u, err := s.userRepo.FindByID(context.Background(), userID)
+	if err != nil {
 		return nil, err
 	}
 	return &session.UserRef{ID: u.ID, Username: u.Username}, nil
@@ -260,8 +265,8 @@ func (s *Runtime) IsMFAEnabled() bool {
 // mfa.IdentityProvider implementation
 // ─────────────────────────────────────────────────────────────
 func (s *Runtime) LoadUserByID(userID uint64) (*mfa.UserRecord, error) {
-	var u iamuser.SystemUser
-	if err := s.db.First(&u, userID).Error; err != nil {
+	u, err := s.userRepo.FindByID(context.Background(), userID)
+	if err != nil {
 		return nil, err
 	}
 	return &mfa.UserRecord{
@@ -318,15 +323,15 @@ func (s *Runtime) CreateSessionForTenantWithContext(ctx context.Context, userID 
 		return nil, err
 	}
 
-	if err := s.governSessionInventory(now, policy); err != nil {
-		return nil, err
-	}
+	// Per-user overflow pruning stays inline: it is bounded by
+	// MaxActiveSessions and is part of this user's own login correctness, not a
+	// table-wide sweep. The global inventory sweep is a maintenance task.
 	if err := authsession.CleanupUserOverflowSessions(s.db, userID, now, policy.SessionIdleMinutes, maxInt(policy.MaxActiveSessions-1, 0)); err != nil {
 		return nil, err
 	}
 
-	var u iamuser.SystemUser
-	if err := s.db.First(&u, userID).Error; err != nil {
+	u, err := s.userRepo.FindByID(ctx, userID)
+	if err != nil {
 		return nil, err
 	}
 
@@ -403,15 +408,15 @@ func (s *Runtime) GetSecurityRuntimePolicy() security.AuthRuntimePolicy {
 // Runtime facade methods used by HTTP handlers and module callers.
 // ─────────────────────────────────────────────────────────────
 
-func (s *Runtime) Login(req *LoginReq) (*iamuser.SystemUser, error) {
+func (s *Runtime) Login(req *LoginReq) (*authuser.User, error) {
 	return s.loginSvc.Authenticate(req)
 }
 
-func (s *Runtime) LoginWithSource(req *LoginReq, sourceKey string) (*iamuser.SystemUser, error) {
+func (s *Runtime) LoginWithSource(req *LoginReq, sourceKey string) (*authuser.User, error) {
 	return s.loginSvc.AuthenticateWithSource(req, sourceKey)
 }
 
-func (s *Runtime) Authenticate(req *LoginReq) (*iamuser.SystemUser, error) {
+func (s *Runtime) Authenticate(req *LoginReq) (*authuser.User, error) {
 	return s.Login(req)
 }
 
@@ -443,11 +448,11 @@ func (s *Runtime) RecordLoginLog(requestID, username, ip, browser, os string, st
 	s.loginSvc.RecordLoginLog(requestID, username, ip, browser, os, status, msg)
 }
 
-func (s *Runtime) CreateMFAChallenge(currentUser *iamuser.SystemUser) (*mfa.MFAChallengeResp, error) {
+func (s *Runtime) CreateMFAChallenge(currentUser *authuser.User) (*mfa.MFAChallengeResp, error) {
 	return s.CreateMFAChallengeForTenant(currentUser, 0)
 }
 
-func (s *Runtime) CreateMFAChallengeForTenant(currentUser *iamuser.SystemUser, tenantID uint64) (*mfa.MFAChallengeResp, error) {
+func (s *Runtime) CreateMFAChallengeForTenant(currentUser *authuser.User, tenantID uint64) (*mfa.MFAChallengeResp, error) {
 	mfaUser := &mfa.UserRecord{
 		ID:       currentUser.ID,
 		Username: currentUser.Username,
@@ -572,8 +577,8 @@ func (s *Runtime) GetCurrentUserInfo(userID uint64) (*UserInfoResp, error) {
 	if s.db == nil {
 		return nil, common.ErrDatabaseNotInitialized
 	}
-	var u iamuser.SystemUser
-	if err := s.db.First(&u, userID).Error; err != nil {
+	u, err := s.userRepo.FindByID(context.Background(), userID)
+	if err != nil {
 		return nil, err
 	}
 	roles, err := s.GetUserRoles(u.ID)
@@ -601,8 +606,8 @@ func (s *Runtime) UpdateCurrentUserPreferences(userID uint64, req *UserPlatformP
 	if s.db == nil {
 		return nil, common.ErrDatabaseNotInitialized
 	}
-	var u iamuser.SystemUser
-	if err := s.db.First(&u, userID).Error; err != nil {
+	u, err := s.userRepo.FindByID(context.Background(), userID)
+	if err != nil {
 		return nil, err
 	}
 	previousPreferences := platformprefs.Parse(u.PreferenceJSON)
@@ -617,9 +622,7 @@ func (s *Runtime) UpdateCurrentUserPreferences(userID uint64, req *UserPlatformP
 		return nil, err
 	}
 	if preferenceJSON != u.PreferenceJSON {
-		if err := s.db.Model(&iamuser.SystemUser{}).
-			Where("id = ?", userID).
-			Update("preference_json", preferenceJSON).Error; err != nil {
+		if err := s.userRepo.UpdatePreferenceJSON(context.Background(), userID, preferenceJSON); err != nil {
 			return nil, err
 		}
 	}
@@ -655,11 +658,10 @@ func (s *Runtime) GetSecurityOverview(userID uint64, username, currentSessionID 
 	if s.db == nil {
 		return nil, common.ErrDatabaseNotInitialized
 	}
+	// Read path: session inventory governance is a registered maintenance
+	// task, never an inline sweep while rendering this overview.
 	policy := s.getAuthRuntimePolicy()
 	now := time.Now()
-	if err := s.governSessionInventory(now, policy); err != nil {
-		return nil, err
-	}
 
 	info, err := s.GetCurrentUserInfo(userID)
 	if err != nil {
@@ -925,14 +927,17 @@ func (s *Runtime) fetchSettingIntSliceFromDB(settingKey string, fallback []int) 
 	return normalizeRetentionDays(rawValue, fallback)
 }
 
-func (s *Runtime) governSessionInventory(now time.Time, policy authRuntimePolicy) error {
-	if err := authsession.CleanupInactiveSessions(s.db, now, policy.SessionIdleMinutes); err != nil {
-		return err
-	}
-	return authsession.PurgeHistoricSessions(s.db, now, policy.SessionRetentionDays)
+// RegisterMaintenanceTasks registers the auth-domain periodic housekeeping
+// (session inventory governance, login-log retention, security-event
+// retention) with the background maintenance registry. Registration is
+// idempotent, so repeated module wiring cannot duplicate sweeps.
+func (s *Runtime) RegisterMaintenanceTasks(reg *maintenance.Registry) {
+	s.sessionSvc.RegisterMaintenanceTasks(reg)
+	s.loginSvc.RegisterMaintenanceTasks(reg)
+	s.securitySvc.RegisterMaintenanceTasks(reg)
 }
 
-func (s *Runtime) issueTokenPair(ctx context.Context, u *iamuser.SystemUser, roles []string, sess *session.SystemUserSession) (*authtoken.Pair, error) {
+func (s *Runtime) issueTokenPair(ctx context.Context, u *authuser.User, roles []string, sess *session.SystemUserSession) (*authtoken.Pair, error) {
 	return s.issueTenantTokenPair(ctx, u.ID, u.Username, roles, sess, 0)
 }
 

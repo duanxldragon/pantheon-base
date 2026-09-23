@@ -1,0 +1,68 @@
+{
+  "taskId": "2026-09-22-layer-boundary-gate",
+  "repo": "pantheon-base",
+  "agent": {
+    "tool": "other",
+    "adapter": "freebuff/buffy"
+  },
+  "commands": [
+    {
+      "command": "go build ./...",
+      "cwd": "backend",
+      "status": "passed",
+      "notes": "Description: full backend build after moving the platform org-governance adapter to cmd/server. Expected: no errors. Observed: clean."
+    },
+    {
+      "command": "go vet ./modules/platform/... ./cmd/server/...",
+      "cwd": "backend",
+      "status": "passed",
+      "notes": "Description: vet the touched packages. Expected: clean. Observed: clean."
+    },
+    {
+      "command": "go test ./modules/platform/...",
+      "cwd": "backend",
+      "status": "passed",
+      "notes": "Description: platform package regression after the wiring change. Expected: ok. Observed: ok github.com/.../modules/platform 2.938s."
+    },
+    {
+      "command": "node scripts/harness/check-boundaries.mjs --strict --repo pantheon-base --baseline config/boundary-baseline.json",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Description: extended boundary gate with the frozen baseline. Expected: 0 unbaselined findings, exit 0. Observed: 'Boundary check (strict): 0 finding(s), 8 baselined, 0 warning(s)', Baseline review-by 2026-12-31, exit 0."
+    },
+    {
+      "command": "node --test tests/scripts/harness-check-boundaries.test.mjs",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Description: checker unit tests (rule detection, test-file exemption, baseline passthrough, stale baseline warning, new violation still fails). Expected: all pass. Observed: tests 6 / pass 6 / fail 0."
+    },
+    {
+      "command": "node scripts/harness/check-structure-contract.mjs --root . --strict",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Description: structure gate unaffected by the new backend/cmd/server file. Expected: 0 findings. Observed: 0 findings."
+    },
+    {
+      "command": "node scripts/harness/check-doc-links.mjs --root . --strict",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Description: doc link gate after editing REPOSITORY_LAYOUT{,.en}.md. Expected: 0 findings. Observed: 0 findings."
+    }
+  ],
+  "knownGaps": [
+    "auth/login, auth/login/login_runtime.go, auth/security/security_service.go still depend on the system/iam/user GORM model; baselined to 2026-12-31 pending a UserReader contract + composition-root injection.",
+    "frontend/src/modules/platform/widgets.tsx type import of system/menu/api and four auth pages importing system/components/shared/list-page.css are baselined to 2026-12-31.",
+    "scripts/check-arch-boundaries.mjs still overlaps check-boundaries.mjs and is not wired into CI; convergence is a follow-up ratchet.",
+    "npm is unavailable on this host (WSL relay without /bin/bash); equivalent node/go commands were run directly."
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-09-22-layer-boundary-gate/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-09-22-layer-boundary-gate/",
+    "reviewFile": ".harness/evidence/2026-09-22-layer-boundary-gate/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".harness/NAMING_AND_BOUNDARIES_REMEDIATION_PLAN_2026-09-22.md"
+    ]
+  },
+  "completedAt": "2026-09-23T00:00:00Z"
+}

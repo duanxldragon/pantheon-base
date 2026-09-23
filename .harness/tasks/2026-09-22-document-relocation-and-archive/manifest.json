@@ -1,0 +1,99 @@
+{
+  "taskId": "2026-09-22-document-relocation-and-archive",
+  "title": "Relocate or archive out-of-place documents",
+  "goal": "Move only verified documents into designs, contracts, operations, runbooks, or harness evidence.",
+  "primaryLayer": "platform/governance",
+  "status": "completed",
+  "statusNote": "2026-09-23: executed the minimal verified relocation set from the inventory. Archived 6 files: system_design.md + engineering_handoff.md + class/sequence diagrams to docs/archive/upgrade/, SECURITY_SCAN_REPORT.md + PANTHEON_BASE_CODE_REVIEW_CHECKLIST.md to docs/archive/baselines/. Added archive frontmatter (index_group/retention_reason/linked_contracts/status) to the 4 .md files, rewrote their internal cross-references to the new archive paths, updated fix-report.md's checklist reference, and added index entries in docs/README.md and docs/README.en.md for the KEEP_ADD_INDEX docs. High-fan-out docs (DEPLOYMENT_GUIDE, DEV_DB_INIT_GUIDE, VERSION_MANAGEMENT_GUIDE, testing-*, harness guides) were deliberately left in place.",
+  "completedAt": "2026-09-23",
+  "priority": "P2",
+  "type": "repository-hygiene",
+  "estimatedComplexity": "light",
+  "dependencyLayers": ["platform governance (document placement)"],
+  "dependencies": {
+    "blockedBy": ["2026-09-22-document-layout-inventory", "2026-09-22-naming-boundary-canonical-standard"],
+    "blocks": []
+  },
+  "scope": {
+    "in": [
+      "archive 6 low-fan-out historical docs",
+      "archive frontmatter for moved .md files",
+      "internal reference updates in moved docs",
+      "fix-report.md reference update",
+      "docs/README index entries for KEEP_ADD_INDEX docs"
+    ],
+    "out": [
+      "moving KEEP-classified high-fan-out docs",
+      "rewriting historical .harness manifests/evidence",
+      "active contract redesign"
+    ]
+  },
+  "taskDoc": ".harness/tasks/2026-09-22-document-relocation-and-archive/task.md",
+  "contractAnchors": [
+    "docs/designs/REPOSITORY_LAYOUT.md",
+    "docs/contracts/DOCUMENT_GOVERNANCE_CONTRACT.md",
+    ".harness/evidence/2026-09-22-document-layout-inventory/inventory.json"
+  ],
+  "expectedFiles": {
+    "create": [
+      "docs/archive/upgrade/SYSTEM_DESIGN_v0.9.0_RENAME.md",
+      "docs/archive/upgrade/ENGINEERING_HANDOFF_v0.9.0_RENAME.md",
+      "docs/archive/upgrade/class-diagram.mermaid",
+      "docs/archive/upgrade/sequence-diagram.mermaid",
+      "docs/archive/baselines/SECURITY_SCAN_REPORT_20260821.md",
+      "docs/archive/baselines/PANTHEON_BASE_CODE_REVIEW_CHECKLIST.md",
+      ".harness/evidence/2026-09-22-document-relocation-and-archive/commands.json",
+      ".harness/evidence/2026-09-22-document-relocation-and-archive/summary.md",
+      ".harness/evidence/2026-09-22-document-relocation-and-archive/review.md"
+    ],
+    "modify": ["docs/README.md", "docs/README.en.md", "fix-report.md"],
+    "doNotTouch": ["docs/DEPLOYMENT_GUIDE.md", "docs/DEV_DB_INIT_GUIDE.md", "docs/VERSION_MANAGEMENT_GUIDE.md", "docs/testing-*.md"]
+  },
+  "harnessProfile": {
+    "template": "custom",
+    "overlay": "docs-relocation",
+    "qualityProfile": "docs-governance",
+    "portableFailureClass": "doc-move-with-broken-links",
+    "ownerLayer": "platform",
+    "coverageDimensions": ["maintainability", "method-health"]
+  },
+  "verificationPlan": {
+    "commands": [
+      "node scripts/frontmatter-check.mjs",
+      "node scripts/harness/check-doc-frontmatter.mjs --root . --strict",
+      "node scripts/harness/check-doc-links.mjs --root . --strict",
+      "node scripts/harness/check-doc-inventory.mjs --root . --strict",
+      "node scripts/harness/check-structure-contract.mjs --root . --strict"
+    ],
+    "runtimeEvidence": ["not runtime-sensitive: documentation relocation only"]
+  },
+  "runtimeSensitive": false,
+  "evidenceRequired": ["move list", "reference update proof", "gate results", "review disposition"],
+  "humanGates": ["none required (documentation relocation + index update)"],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed"
+  ],
+  "linkage": {
+    "evidenceDir": ".harness/evidence/2026-09-22-document-relocation-and-archive/",
+    "reviewFile": ".harness/evidence/2026-09-22-document-relocation-and-archive/review.md",
+    "summaryFile": ".harness/evidence/2026-09-22-document-relocation-and-archive/summary.md",
+    "changeRef": "none",
+    "planRefs": [".harness/NAMING_AND_BOUNDARIES_REMEDIATION_PLAN_2026-09-22.md"]
+  },
+  "evidenceDir": ".harness/evidence/2026-09-22-document-relocation-and-archive",
+  "verificationCommands": [
+    "node scripts/harness/check-structure-contract.mjs --root . --strict",
+    "node scripts/harness/check-doc-links.mjs --root . --strict"
+  ],
+  "acceptanceCriteria": [
+    "All references updated",
+    "No broken links",
+    "git diff is reviewable and reversible",
+    "README indexes remain correct"
+  ],
+  "createdAt": "2026-09-22T00:00:00Z"
+}

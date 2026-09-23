@@ -108,8 +108,20 @@ Shared skills live in `../../pantheon-harness/skills/`; recommended shared skill
 
 ### 4.3 升级与运行
 
+- [部署指南](./DEPLOYMENT_GUIDE.md)
+- [开发库初始化指南](./DEV_DB_INIT_GUIDE.md)
+- [版本管理指南](./VERSION_MANAGEMENT_GUIDE.md)
 - [系统导入导出 Smoke 指南](./acceptances/SYSTEM_IMPORT_EXPORT_SMOKE_GUIDE.md)
 - [gstack Windows 使用清单](./designs/GSTACK_WINDOWS_GUIDE.md)
+
+### 4.4 测试与 Harness 指南
+
+- [测试体系优化快速启动](./testing-quick-start.md)
+- [测试使用指南](./testing-usage-guide.md)
+- [测试策略优化](./testing-strategy-optimization.md)
+- [测试实施报告](./testing-implementation-report.md)
+- [Harness 治理指南](./HARNESS_GOVERNANCE_GUIDE.md)
+- [Harness PR 生成器指南](./harness-pr-generator-guide.md)
 
 ## 6. 本地启动
 

@@ -7,18 +7,18 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 	"unicode"
 
 	"github.com/duanxldragon/pantheon-base/backend/modules/auth/session"
-	user "github.com/duanxldragon/pantheon-base/backend/modules/system/iam/user"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/authsession"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/authtoken"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/common"
 	commonsecurity "github.com/duanxldragon/pantheon-base/backend/pkg/common/security"
+	"github.com/duanxldragon/pantheon-base/backend/pkg/contracts/authuser"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/database"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/logging"
+	"github.com/duanxldragon/pantheon-base/backend/pkg/maintenance"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/tenant"
 
 	"go.uber.org/zap"
@@ -46,10 +46,9 @@ type SessionCounter interface {
 	CountActiveSessions(userID uint64, now time.Time) (int64, error)
 }
 
-// UserLoader loads a user by ID.
-type UserLoader interface {
-	LoadUserByID(userID uint64) (*user.SystemUser, error)
-}
+// UserLoader was an unused indirection over the system user model; it is
+// superseded by authuser.Repository (pkg/contracts/authuser), injected at the
+// composition root.
 
 // SecurityEventRecorder persists security events.
 type SecurityEventRecorder struct {
@@ -101,22 +100,18 @@ type AuthRuntimePolicy struct {
 
 // Service handles password management and security event tracking.
 type Service struct {
-	db        *gorm.DB
-	policy    PolicyProvider
+	db     *gorm.DB
+	policy PolicyProvider
+	// userRepo is the credential port over system user state, injected at the
+	// composition root so auth never imports modules/system/iam/user
+	// (docs/designs/REPOSITORY_LAYOUT.md §8.2).
+	userRepo  authuser.Repository
 	tenantCtx *tenant.Context
-
-	// Throttle state for automatic security-event retention cleanup so list
-	// requests do not each issue a full-table DELETE scan. Shared by pointer
-	// so request-scoped tenant facades never copy the lock.
-	autoCleanupState *autoCleanupState
 }
 
-// autoCleanupState holds the mutex-guarded retention-cleanup throttle so the
-// struct can be shallow-copied for tenant-scoped facades (vet lock-copy rule).
-type autoCleanupState struct {
-	mu                sync.Mutex
-	lastAutoCleanupAt time.Time
-}
+// SecurityEventRetentionTaskName is the maintenance registry key for the
+// periodic security-event retention sweep.
+const SecurityEventRetentionTaskName = "auth.security_event_retention"
 
 // WithTenantContext returns a copy of the service bound to the per-request
 // tenant context.
@@ -129,8 +124,8 @@ func (s *Service) WithTenantContext(ctx *tenant.Context) *Service {
 func (s *Service) scoped(db *gorm.DB) *gorm.DB { return db.Scopes(tenant.WithTenantScope(s.tenantCtx)) }
 
 // NewService creates a SecurityService.
-func NewService(db *gorm.DB, policy PolicyProvider) *Service {
-	return &Service{db: db, policy: policy}
+func NewService(db *gorm.DB, userRepo authuser.Repository, policy PolicyProvider) *Service {
+	return &Service{db: db, userRepo: userRepo, policy: policy}
 }
 
 // VerifyPasswordForOperation checks the password and issues a short-lived operation token.
@@ -148,8 +143,8 @@ func (s *Service) VerifyPasswordForOperationWithContext(ctx context.Context, use
 	if strings.TrimSpace(sessionID) == "" {
 		return "", errors.New("auth.operation.verification_mismatch")
 	}
-	var currentUser user.SystemUser
-	if err := s.db.WithContext(ctx).First(&currentUser, userID).Error; err != nil {
+	currentUser, err := s.userRepo.FindByID(ctx, userID)
+	if err != nil {
 		return "", err
 	}
 	if err := bcrypt.CompareHashAndPassword([]byte(currentUser.Password), []byte(password)); err != nil {
@@ -178,8 +173,8 @@ func (s *Service) UpdatePassword(userID uint64, currentSessionID string, req *Pa
 		return errors.New("user.update.error.password_weak")
 	}
 
-	var currentUser user.SystemUser
-	if err := s.db.First(&currentUser, userID).Error; err != nil {
+	currentUser, err := s.userRepo.FindByID(context.Background(), userID)
+	if err != nil {
 		return err
 	}
 	if err := bcrypt.CompareHashAndPassword([]byte(currentUser.Password), []byte(oldPassword)); err != nil {
@@ -196,7 +191,7 @@ func (s *Service) UpdatePassword(userID uint64, currentSessionID string, req *Pa
 	if err != nil {
 		return err
 	}
-	return s.persistPasswordUpdate(currentUser, userID, currentSessionID, string(passwordHash), policy.PasswordHistoryLimit > 0)
+	return s.persistPasswordUpdate(*currentUser, userID, currentSessionID, string(passwordHash), policy.PasswordHistoryLimit > 0)
 }
 
 // ListSecurityEvents returns paginated security events.
@@ -204,7 +199,8 @@ func (s *Service) ListSecurityEvents(query *SecurityEventQuery) (*SecurityEventP
 	if s.db == nil {
 		return nil, common.ErrDatabaseNotInitialized
 	}
-	s.ensureAutomaticSecurityEventRetention()
+	// Read path: retention is swept by the registered maintenance task, not
+	// while serving this list (task 2026-09-22-request-path-maintenance).
 	page, pageSize := normalizeSecurityEventPageQuery(query)
 	db := applySecurityEventFilters(s.scoped(s.db.Model(&SystemAuthSecurityEvent{})), query)
 
@@ -392,39 +388,37 @@ func (s *Service) BatchAcknowledgeSecurityEvents(eventIDs []uint64, actorID uint
 	return result.RowsAffected, result.Error
 }
 
-const (
-	defaultSecurityEventRetentionDays  = 180
-	securityEventAutoCleanupMinLatency = 15 * time.Minute
-)
+const defaultSecurityEventRetentionDays = 180
 
-// ensureAutomaticSecurityEventRetention deletes acknowledged events older than
+// RunSecurityEventRetention deletes acknowledged events older than
 // audit.security_event_retention_days (default 180). Pending events are never
-// swept automatically — they require an explicit acknowledgement first.
-func (s *Service) ensureAutomaticSecurityEventRetention() {
+// swept — they require an explicit acknowledgement first.
+//
+// It is a maintenance entry point: the background maintenance runner and the
+// explicit cleanup endpoint call it, request paths do not. Throttling and
+// overlap protection live in the maintenance registry.
+func (s *Service) RunSecurityEventRetention() error {
 	if s.db == nil {
-		return
+		return common.ErrDatabaseNotInitialized
 	}
 	now := time.Now()
-	state := s.autoCleanupState
-	if state == nil {
-		state = &autoCleanupState{}
-		s.autoCleanupState = state
-	}
-	state.mu.Lock()
-	if !state.lastAutoCleanupAt.IsZero() && now.Sub(state.lastAutoCleanupAt) < securityEventAutoCleanupMinLatency {
-		state.mu.Unlock()
-		return
-	}
-	state.lastAutoCleanupAt = now
-	state.mu.Unlock()
-
 	retentionDays := s.getSecurityEventRetentionDays()
 	cutoff := now.AddDate(0, 0, -retentionDays)
-	if err := s.db.
+	return s.db.
 		Where("acknowledged_at IS NOT NULL AND created_at < ?", cutoff).
-		Delete(&SystemAuthSecurityEvent{}).Error; err != nil {
-		logging.Warn("cleanup expired security events failed", zap.Error(err))
-	}
+		Delete(&SystemAuthSecurityEvent{}).Error
+}
+
+// RegisterMaintenanceTasks registers the security-event retention sweep with
+// the background maintenance registry.
+func (s *Service) RegisterMaintenanceTasks(reg *maintenance.Registry) {
+	reg.Register(maintenance.Task{
+		Name:     SecurityEventRetentionTaskName,
+		Interval: maintenance.DefaultInterval,
+		Run: func(context.Context) error {
+			return s.RunSecurityEventRetention()
+		},
+	})
 }
 
 func (s *Service) getSecurityEventRetentionDays() int {
@@ -516,7 +510,13 @@ func (s *Service) RevokeOtherSessionsForUser(tx *gorm.DB, userID uint64, current
 		Updates(map[string]interface{}{"revoked_at": &now}).Error; err != nil {
 		return err
 	}
-	session.CascadeRevokeSessionRefresh(sessionIDs...)
+	// 改密撤销与其他撤销路径同一失效语义：access token 黑名单 + refresh
+	// 级联删除。任一失败返回错误回滚事务，不让被撤销会话留下可用 token。
+	for _, sid := range sessionIDs {
+		if err := session.RevokeSessionArtifacts(sid); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
@@ -547,8 +547,8 @@ func (s *Service) passwordLastChangedAt(userID uint64) time.Time {
 	if err := s.db.Where(condUserIDEquals, userID).Order("changed_at desc, id desc").First(&row).Error; err == nil {
 		return row.ChangedAt
 	}
-	var currentUser user.SystemUser
-	if err := s.db.First(&currentUser, userID).Error; err == nil {
+	currentUser, err := s.userRepo.FindByID(context.Background(), userID)
+	if err == nil {
 		if !currentUser.UpdatedAt.IsZero() {
 			return currentUser.UpdatedAt
 		}
@@ -557,8 +557,11 @@ func (s *Service) passwordLastChangedAt(userID uint64) time.Time {
 	return time.Time{}
 }
 
-func (s *Service) persistPasswordUpdate(currentUser user.SystemUser, userID uint64, currentSessionID, passwordHash string, keepHistory bool) error {
-	return s.db.Transaction(func(tx *gorm.DB) error {
+func (s *Service) persistPasswordUpdate(currentUser authuser.User, userID uint64, currentSessionID, passwordHash string, keepHistory bool) error {
+	// RotatePassword owns the transaction and runs the auth-side writes
+	// (password history, other-session revocation) inside it, so a credential
+	// change never lands without its history row and session revocations.
+	return s.userRepo.RotatePassword(context.Background(), userID, passwordHash, func(tx *gorm.DB) error {
 		if keepHistory {
 			if err := tx.Create(&SystemUserPasswordHistory{
 				UserID:       currentUser.ID,
@@ -567,9 +570,6 @@ func (s *Service) persistPasswordUpdate(currentUser user.SystemUser, userID uint
 			}).Error; err != nil {
 				return err
 			}
-		}
-		if err := tx.Model(&currentUser).Update("password", passwordHash).Error; err != nil {
-			return err
 		}
 		return s.RevokeOtherSessionsForUser(tx, userID, currentSessionID)
 	})

@@ -1,0 +1,81 @@
+{
+  "taskId": "2026-09-22-upload-authorization-and-import-resources",
+  "repo": "pantheon-base",
+  "agent": {
+    "tool": "other"
+  },
+  "commands": [
+    {
+      "command": "go build ./...",
+      "cwd": "pantheon-base/backend",
+      "status": "passed",
+      "notes": "Description: compile after taking explicit ownership of import file handles and exposing the import caps Expected: exit 0; observed exit 0"
+    },
+    {
+      "command": "go vet ./modules/system/config/setting ./modules/system/iam/... ./modules/system/org/... ./modules/system/i18n",
+      "cwd": "pantheon-base/backend",
+      "status": "passed",
+      "notes": "Description: vet every package whose import handler changed Expected: exit 0; observed exit 0"
+    },
+    {
+      "command": "PANTHEON_TEST_DSN=<local mysql> go test ./modules/system/config/setting -run 'TestUploadContract|TestReadCSVOwnership|TestImportLimits' -count=1 -v",
+      "cwd": "pantheon-base/backend",
+      "status": "passed",
+      "notes": "Description: upload authorization contract (no-Casbin reachable / Casbin fail-closed), double-close safety, import caps Expected: all pass; observed 5/5 PASS — AuthenticatedCapabilityWithoutCasbin, CasbinGuardWouldBlock, SeedDefinesNoUploadPermissionKey, ReadCSVOwnership_DoubleCloseIsSafe, ImportLimitsAreEnforced"
+    },
+    {
+      "command": "PANTHEON_TEST_DSN=<local mysql> go test ./modules/system -run TestUploadContract_SeedDefinesNoUploadPermissionKey -count=1 -v",
+      "cwd": "pantheon-base/backend",
+      "status": "passed",
+      "notes": "Description: package-level seed drift guard proving no upload permission key exists Expected: pass; observed PASS"
+    },
+    {
+      "command": "PANTHEON_TEST_DSN=<local mysql> go test ./modules/system/config/setting ./modules/system/config/dict ./modules/system/org/post ./modules/system/org/dept ./modules/system/iam/user ./modules/system/iam/role ./modules/system/iam/permission ./modules/system ./pkg/impexp -count=1",
+      "cwd": "pantheon-base/backend",
+      "status": "passed",
+      "notes": "Description: every package touched by the explicit file-handle ownership change Expected: all ok; observed setting / dict / post / dept / iam-user / iam-role / iam-permission / system all ok, pkg/impexp ok 0.028s — no failures"
+    },
+    {
+      "command": "PANTHEON_TEST_DSN=<local mysql> go test ./modules/system/i18n -count=1",
+      "cwd": "pantheon-base/backend",
+      "status": "passed",
+      "notes": "Description: i18n import handler regression (long suite) Expected: ok; observed ok 186.871s"
+    },
+    {
+      "command": "CC=<repo>/.tmp/mingw64/bin/gcc.exe CGO_ENABLED=1 go test -race -count=1 ./modules/system/config/setting ./modules/system ./internal/middleware ./pkg/impexp",
+      "cwd": "pantheon-base/backend",
+      "status": "passed",
+      "notes": "Description: race detector over the import handlers (concurrent multipart part ownership) and the upload capability route Expected: no data race; observed setting 12.244s / system 6.016s / middleware 2.503s / pkg/impexp ok, no DATA RACE reports"
+    }
+  ],
+  "graphChecks": {
+    "usedCodeGraph": false,
+    "affectedSubgraph": [
+      "system upload route group and its authorization contract",
+      "system import handlers (dict/i18n/permission/role/user/dept/post)",
+      "pkg/impexp import caps"
+    ],
+    "checks": ["cycle", "hub", "call-depth", "sensitive-flow"],
+    "findings": [],
+    "notes": "No new package edge; pkg/impexp only gained accessors over existing constants. Sensitive flow reviewed: the upload route's authorization is now pinned by tests on both sides (route group semantics + seed), so moving it into or out of the Casbin group without updating the seed fails the suite."
+  },
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-09-22-upload-authorization-and-import-resources/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-09-22-upload-authorization-and-import-resources/",
+    "reviewFile": ".harness/evidence/2026-09-22-upload-authorization-and-import-resources/review.md",
+    "summaryFile": ".harness/evidence/2026-09-22-upload-authorization-and-import-resources/summary.md",
+    "changeRef": "none",
+    "planRefs": [".harness/ENTERPRISE_REMEDIATION_PLAN_2026-09-22.md"]
+  },
+  "knownGaps": [
+    "Human gate pending: the maintainer must confirm the upload permission semantics — /system/upload is deliberately an authenticated capability (TokenAuth + TenantContext, no Casbin) matching the seed; tightening it to e.g. system:setting:upload would require a coordinated frontend + seed change.",
+    "The end-to-end unauthorized-upload negative case (no token, 401) is not re-built at handler level; it relies on the existing TokenAuthMiddleware tests.",
+    "The i18n suite exceeds a 600s single-command budget, so the run above is the package in isolation (ok 186.9s) rather than one combined command."
+  ],
+  "environment": {
+    "os": "win32 (bash)",
+    "go": "1.26.6",
+    "dsn": "PANTHEON_TEST_DSN=<local mysql>/pantheon_base with per-test isolated databases"
+  },
+  "completedAt": "2026-09-23T11:05:00+08:00"
+}
