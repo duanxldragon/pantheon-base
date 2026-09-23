@@ -58,7 +58,7 @@ func (r *credentialRepository) ClearFailedLoginState(ctx context.Context, userID
 
 func (r *credentialRepository) UpdateFailedLoginState(ctx context.Context, userID uint64, attempts int, lockedUntil *time.Time) error {
 	return r.db.WithContext(ctx).Model(&SystemUser{}).
-		Where("id = ?", userID).
+		Where(condIDEquals, userID).
 		Updates(map[string]any{
 			"failed_login_attempts": attempts,
 			"login_locked_until":    lockedUntil,
@@ -67,13 +67,13 @@ func (r *credentialRepository) UpdateFailedLoginState(ctx context.Context, userI
 
 func (r *credentialRepository) UpdatePreferenceJSON(ctx context.Context, userID uint64, preferenceJSON string) error {
 	return r.db.WithContext(ctx).Model(&SystemUser{}).
-		Where("id = ?", userID).
+		Where(condIDEquals, userID).
 		Update("preference_json", preferenceJSON).Error
 }
 
 func (r *credentialRepository) RotatePassword(ctx context.Context, userID uint64, newHash string, inTx authuser.TxFunc) error {
 	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		if err := tx.Model(&SystemUser{}).Where("id = ?", userID).Update("password", newHash).Error; err != nil {
+		if err := tx.Model(&SystemUser{}).Where(condIDEquals, userID).Update("password", newHash).Error; err != nil {
 			return err
 		}
 		if inTx == nil {

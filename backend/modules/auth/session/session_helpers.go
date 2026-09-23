@@ -168,6 +168,16 @@ func parseSessionFilterTime(value string) (time.Time, bool) {
 	return time.Time{}, false
 }
 
+const (
+	// sessionUserAgentLowerExpr is the lower-cased user_agent expression every
+	// client-side filter matches against.
+	sessionUserAgentLowerExpr     = "LOWER(system_user_session.user_agent)"
+	sessionUserAgentLikeClause    = sessionUserAgentLowerExpr + " LIKE ?"
+	sessionUserAgentNotLikeClause = sessionUserAgentLowerExpr + " NOT LIKE ?"
+	mobileTokenPattern            = "%mobile%"
+	androidTokenPattern           = "%android%"
+)
+
 // applyAdminSessionClientFilters pushes the browser/OS/device filters into
 // SQL as user_agent LIKE conditions. The detection tokens mirror
 // DetectBrowser/DetectOS/DetectDevice in session_user_agent.go (lowercase
@@ -179,16 +189,16 @@ func applyAdminSessionClientFilters(db *gorm.DB, query *AdminSessionQuery) *gorm
 	}
 	if browser := strings.ToLower(strings.TrimSpace(query.Browser)); browser != "" && browser != "unknown" {
 		if token, ok := browserDetectionTokens[browser]; ok {
-			db = db.Where("LOWER(system_user_session.user_agent) LIKE ?", "%"+common.EscapeLikePattern(token)+"%")
+			db = db.Where(sessionUserAgentLikeClause, "%"+common.EscapeLikePattern(token)+"%")
 		} else {
-			db = db.Where("LOWER(system_user_session.user_agent) LIKE ?", "%"+common.EscapeLikePattern(browser)+"%")
+			db = db.Where(sessionUserAgentLikeClause, "%"+common.EscapeLikePattern(browser)+"%")
 		}
 	}
 	if os := strings.ToLower(strings.TrimSpace(query.OS)); os != "" && os != "unknown" {
 		if token, ok := osDetectionTokens[os]; ok {
-			db = db.Where("LOWER(system_user_session.user_agent) LIKE ?", "%"+common.EscapeLikePattern(token)+"%")
+			db = db.Where(sessionUserAgentLikeClause, "%"+common.EscapeLikePattern(token)+"%")
 		} else {
-			db = db.Where("LOWER(system_user_session.user_agent) LIKE ?", "%"+common.EscapeLikePattern(os)+"%")
+			db = db.Where(sessionUserAgentLikeClause, "%"+common.EscapeLikePattern(os)+"%")
 		}
 	}
 	if device := strings.ToLower(strings.TrimSpace(query.Device)); device != "" {
@@ -201,20 +211,19 @@ func applyAdminSessionClientFilters(db *gorm.DB, query *AdminSessionQuery) *gorm
 // DetectDevice: Android Phone requires android+mobile, Android Tablet
 // requires android without mobile, Desktop requires no mobile token.
 func applyAdminSessionDeviceFilter(db *gorm.DB, device string) *gorm.DB {
-	ua := "LOWER(system_user_session.user_agent)"
 	switch device {
 	case "android phone":
-		return db.Where(ua+" LIKE ? AND "+ua+" LIKE ?", "%android%", "%mobile%")
+		return db.Where(sessionUserAgentLikeClause+" AND "+sessionUserAgentLikeClause, androidTokenPattern, mobileTokenPattern)
 	case "android tablet":
-		return db.Where(ua+" LIKE ? AND "+ua+" NOT LIKE ?", "%android%", "%mobile%")
+		return db.Where(sessionUserAgentLikeClause+" AND "+sessionUserAgentNotLikeClause, androidTokenPattern, mobileTokenPattern)
 	case "mobile":
-		return db.Where(ua+" LIKE ?", "%mobile%")
+		return db.Where(sessionUserAgentLikeClause, mobileTokenPattern)
 	case "desktop":
-		return db.Where(ua+" NOT LIKE ?", "%mobile%")
+		return db.Where(sessionUserAgentNotLikeClause, mobileTokenPattern)
 	case "ipad", "iphone":
-		return db.Where(ua+" LIKE ?", "%"+common.EscapeLikePattern(device)+"%")
+		return db.Where(sessionUserAgentLikeClause, "%"+common.EscapeLikePattern(device)+"%")
 	default:
-		return db.Where(ua+" LIKE ?", "%"+common.EscapeLikePattern(device)+"%")
+		return db.Where(sessionUserAgentLikeClause, "%"+common.EscapeLikePattern(device)+"%")
 	}
 }
 
