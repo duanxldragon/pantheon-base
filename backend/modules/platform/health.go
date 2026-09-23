@@ -95,6 +95,7 @@ func healthHandler(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		resp := newHealthResp(c)
 		checkDatabaseHealth(c, db, &resp)
+		checkMigrationsHealth(c, db, &resp)
 		checkRedisHealth(c, &resp)
 		common.SuccessWithStatus(c, healthStatusCode(resp.Status), resp)
 	}
@@ -107,9 +108,22 @@ func newHealthResp(c *gin.Context) healthResp {
 		Timestamp: time.Now().UTC().Format(time.RFC3339),
 		RequestID: common.GetRequestID(c),
 		Dependencies: map[string]healthDependency{
-			"database": {Status: "ok"},
-			"redis":    {Status: "disabled"},
+			"database":   {Status: "ok"},
+			"migrations": {Status: "ok"},
+			"redis":      {Status: "disabled"},
 		},
+	}
+}
+
+// checkMigrationsHealth reflects migration progress so readiness fails while
+// schema bootstrap is incomplete instead of reporting a healthy-but-unusable
+// instance. Only meaningful once the database connection itself is up.
+func checkMigrationsHealth(c *gin.Context, db *gorm.DB, resp *healthResp) {
+	if db == nil || resp.Dependencies["database"].Status != "ok" {
+		return
+	}
+	if !database.MigrationsHealthy(db) {
+		markHealthDependencyDown(resp, "migrations", "migrations.incomplete", errors.New("schema_migrations empty or unreadable"))
 	}
 }
 

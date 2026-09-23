@@ -193,6 +193,10 @@ jobs:
         continue-on-error: true
         run: npm run check:harness-visual
 
+      - name: Check generated artifacts
+        id: generated-artifacts
+        run: npm run check:generated
+
       - name: Check generated modules
         id: generated-modules
         continue-on-error: true

@@ -1,0 +1,41 @@
+{
+  "taskId": "2026-09-22-document-layout-inventory",
+  "repo": "pantheon-base",
+  "agent": {
+    "tool": "other",
+    "adapter": "freebuff/buffy"
+  },
+  "commands": [
+    {
+      "command": "git grep -n -E \"docs/(system_design|engineering_handoff|DEPLOYMENT_GUIDE|DEV_DB_INIT_GUIDE|SECURITY_SCAN_REPORT)\"",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Description: reference census for the named out-of-place documents. Expected: enumerate referencing files. Observed: 16 tracked files matched; all captured into inventory.json references[]."
+    },
+    {
+      "command": "git grep -l -i <name> for each of the 17 docs root files (batched)",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Description: build a per-file reference list for every docs root candidate. Expected: complete refs. Observed: refs recorded in inventory.json; fan-out confirms DEPLOYMENT_GUIDE and DEV_DB_INIT_GUIDE are high-risk to move."
+    },
+    {
+      "command": "node -e \"JSON.parse(require('fs').readFileSync('.harness/evidence/2026-09-22-document-layout-inventory/inventory.json','utf8'))\"",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Description: inventory artifact must be valid JSON. Expected: parses. Observed: parses; 17 documents + 3 directory entries."
+    }
+  ],
+  "knownGaps": [
+    "Whether the four testing-*.md docs still describe the current test system could not be confirmed; per the plan they are kept in place with a rationale rather than archived.",
+    "HARNESS_GOVERNANCE_GUIDE.md and harness-pr-generator-guide.md cannot be archived without a doc_type that the repo's strict frontmatter taxonomy supports, so they are kept and indexed instead.",
+    "Historical .harness manifests/evidence are not rewritten; the doc-link gate does not scan .harness, so archive moves will not create gate-visible broken links."
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-09-22-document-layout-inventory/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-09-22-document-layout-inventory/",
+    "reviewFile": ".harness/evidence/2026-09-22-document-layout-inventory/review.md",
+    "changeRef": "none",
+    "planRefs": [".harness/NAMING_AND_BOUNDARIES_REMEDIATION_PLAN_2026-09-22.md"]
+  },
+  "completedAt": "2026-09-23T00:00:00Z"
+}

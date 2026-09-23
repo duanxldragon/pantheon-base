@@ -107,7 +107,10 @@ func (h *SettingHandler) UpdateSettingGroup(c *gin.Context) {
 }
 
 func (h *SettingHandler) GetPublicSettings(c *gin.Context) {
-	resp, err := h.service.GetPublicSettings()
+	// Public endpoint resolves per-request tenant context: in multi mode the
+	// response carries the tenant's overrides on top of global defaults; in
+	// compat mode the context is nil/global and behavior is unchanged.
+	resp, err := h.boundService(c).GetPublicSettings()
 	if err != nil {
 		common.Fail(c, common.CodeError, "setting.public.error")
 		return

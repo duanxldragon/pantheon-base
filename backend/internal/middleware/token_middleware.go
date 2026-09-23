@@ -124,7 +124,10 @@ func resolveTokenSession(ctx context.Context, c *gin.Context, rdb *redis.Client,
 	return sessionData, false
 }
 
-// checkTokenBlacklist 检查用户是否被强制拉黑；命中则直接 401 中断并返回 true。
+// checkTokenBlacklist 检查用户是否被强制拉黑，以及会话是否被管理员/属主撤销；
+// 命中任一黑名单则直接 401 中断并返回 true。会话黑名单覆盖撤销后 access token
+// 仍在 TTL 内可用的窗口，错误时不放行（Redis 异常按 token.invalid 处理），
+// 不允许静默形成安全假象。
 func checkTokenBlacklist(ctx context.Context, c *gin.Context, rdb *redis.Client, token string, sessionData *authtoken.SessionData) bool {
 	if rdb == nil {
 		return false
@@ -132,6 +135,24 @@ func checkTokenBlacklist(ctx context.Context, c *gin.Context, rdb *redis.Client,
 	blacklistKey := authtoken.BlacklistUserKey(sessionData.UserID)
 	val, err := rdb.Get(ctx, blacklistKey).Result()
 	if err == nil && val != "" {
+		invalidateTokenSessionCache(token)
+		common.Fail(c, common.CodeUnauthorized, "token.expired.force")
+		c.Abort()
+		return true
+	}
+	sessionBlacklistKey := authtoken.BlacklistSessionKey(sessionData.SessionID)
+	val, err = rdb.Get(ctx, sessionBlacklistKey).Result()
+	if err == redis.Nil {
+		return false
+	}
+	if err != nil {
+		// Redis 故障时按无效 token 处理，禁止因基础设施错误旁路撤销语义。
+		invalidateTokenSessionCache(token)
+		common.Fail(c, common.CodeUnauthorized, "token.invalid")
+		c.Abort()
+		return true
+	}
+	if val != "" {
 		invalidateTokenSessionCache(token)
 		common.Fail(c, common.CodeUnauthorized, "token.expired.force")
 		c.Abort()

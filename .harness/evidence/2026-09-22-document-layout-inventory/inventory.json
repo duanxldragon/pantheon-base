@@ -1,0 +1,284 @@
+{
+  "taskId": "2026-09-22-document-layout-inventory",
+  "generatedAt": "2026-09-23",
+  "scope": {
+    "in": ["docs root", "docs/reviews", "docs/operations", "docs/runbooks", "docs/designs", "docs/contracts", "docs/acceptances", ".harness evidence references", "cross-references"],
+    "out": ["moving files (this task is inventory only)"]
+  },
+  "canonicalStandard": "docs/designs/REPOSITORY_LAYOUT.md",
+  "classificationLegend": {
+    "KEEP_INDEXED": "stays in place and is already reachable from an index",
+    "KEEP_ADD_INDEX": "stays in place but needs an index entry",
+    "ARCHIVE": "move to docs/archive/* (historical, low active fan-out)",
+    "MOVE": "move to a canonical category directory and update all references"
+  },
+  "documents": [
+    {
+      "path": "docs/DEPLOYMENT_GUIDE.md",
+      "category": "operations/runbook",
+      "classification": "KEEP_ADD_INDEX",
+      "targetPath": null,
+      "referenceScope": "active+historical",
+      "references": [
+        "README.md",
+        "README.en.md",
+        "CHANGELOG.md",
+        "k8s/README.md",
+        ".github/ISSUE_TEMPLATE/question.md",
+        "backend/modules/lowcode/generator/generator_datasource_service.go",
+        "docs/reviews/PANTHEON_BASE_CROSS_REVIEW_REPORT.md",
+        "docs/reviews/pantheon-base-review-deepseek.md",
+        "docs/reviews/pantheon-base-review-glm.md",
+        "docs/reviews/pantheon-base-review-kimi.md",
+        "docs/sequence-diagram.mermaid",
+        "docs/system_design.md",
+        "docs/engineering_handoff.md",
+        "fix-report.md"
+      ],
+      "rationale": "High fan-out: referenced by README entry docs, k8s README, a GitHub issue template, a backend generator comment, and reviews. Moving it would fan out into code/CI/docs at once.",
+      "migrationRisk": "high",
+      "ownerLayer": "platform"
+    },
+    {
+      "path": "docs/DEV_DB_INIT_GUIDE.md",
+      "category": "operations/runbook",
+      "classification": "KEEP_ADD_INDEX",
+      "targetPath": null,
+      "referenceScope": "active",
+      "references": [
+        ".gitleaksignore",
+        "docs/designs/REPOSITORY_LAYOUT.md",
+        "docs/designs/REPOSITORY_LAYOUT.en.md",
+        "docs/runbooks/TENANT_MIGRATION_RUNBOOK.md",
+        "docs/system_design.md",
+        "docs/engineering_handoff.md",
+        "scripts/maintenance/README.md",
+        "scripts/maintenance/rename-module.sh",
+        "scripts/harness/check-structure-contract.mjs"
+      ],
+      "rationale": "Referenced by tooling allowlists, maintenance scripts, the structure checker whitelist, and runbooks. Stable path is load-bearing.",
+      "migrationRisk": "high",
+      "ownerLayer": "platform"
+    },
+    {
+      "path": "docs/GITHUB_GOVERNANCE_CHECKLIST.md",
+      "category": "operations/governance",
+      "classification": "KEEP_INDEXED",
+      "targetPath": null,
+      "referenceScope": "active",
+      "references": ["docs/README.md", "docs/README.en.md", "docs/harness/AI_QUALITY_GOVERNANCE.md"],
+      "rationale": "Already indexed from docs/README §4.1 and referenced by the governance policy.",
+      "migrationRisk": "medium",
+      "ownerLayer": "platform"
+    },
+    {
+      "path": "docs/GITHUB_REPOSITORY_SETUP.md",
+      "category": "operations/governance",
+      "classification": "KEEP_INDEXED",
+      "targetPath": null,
+      "referenceScope": "active",
+      "references": ["docs/README.md", "docs/README.en.md"],
+      "rationale": "Already indexed from docs/README §4.1.",
+      "migrationRisk": "low",
+      "ownerLayer": "platform"
+    },
+    {
+      "path": "docs/VERSION_MANAGEMENT_GUIDE.md",
+      "category": "operations/release",
+      "classification": "KEEP_ADD_INDEX",
+      "targetPath": null,
+      "referenceScope": "active",
+      "references": [
+        "CHANGELOG.md",
+        "docs/reviews/pantheon-base-review-deepseek.md",
+        "releases/pantheon-base-v0.11.1/release-notes.md",
+        "releases/pantheon-base-v0.11.1/upgrade-notes.md",
+        ".harness/evidence/EXECUTION_REPORT.md",
+        ".harness/evidence/frontend-design-review-summary.md",
+        ".harness/evidence/pr-body-update.md",
+        ".harness/tasks/2026-09-04-v0.11.1-release-preparation/task-manifest.md"
+      ],
+      "rationale": "Active release-management reference; referenced by immutable release artifacts, so moving it would require editing release notes.",
+      "migrationRisk": "medium",
+      "ownerLayer": "platform"
+    },
+    {
+      "path": "docs/testing-quick-start.md",
+      "category": "testing",
+      "classification": "KEEP_ADD_INDEX",
+      "targetPath": null,
+      "referenceScope": "active",
+      "references": [
+        "frontend/tests/smoke-core/README.md",
+        "docs/testing-implementation-report.md",
+        "docs/testing-usage-guide.md",
+        ".harness/tasks/test-suite-optimization/manifest.json"
+      ],
+      "rationale": "Referenced by the active smoke-core README; ownership (current vs optimization-era) cannot be confirmed, so per plan it stays in place with an index entry.",
+      "migrationRisk": "medium",
+      "ownerLayer": "platform"
+    },
+    {
+      "path": "docs/testing-strategy-optimization.md",
+      "category": "testing",
+      "classification": "KEEP_ADD_INDEX",
+      "targetPath": null,
+      "referenceScope": "active",
+      "references": [
+        "frontend/tests/smoke-core/README.md",
+        "docs/testing-implementation-report.md",
+        "docs/testing-quick-start.md",
+        "docs/testing-usage-guide.md",
+        ".harness/tasks/test-suite-optimization/manifest.json"
+      ],
+      "rationale": "Same as testing-quick-start: active smoke README reference, ownership ambiguous.",
+      "migrationRisk": "medium",
+      "ownerLayer": "platform"
+    },
+    {
+      "path": "docs/testing-usage-guide.md",
+      "category": "testing",
+      "classification": "KEEP_ADD_INDEX",
+      "targetPath": null,
+      "referenceScope": "active",
+      "references": ["docs/testing-quick-start.md", "docs/testing-implementation-report.md"],
+      "rationale": "Companion to the other testing docs; keep them together and index as a group.",
+      "migrationRisk": "low",
+      "ownerLayer": "platform"
+    },
+    {
+      "path": "docs/testing-implementation-report.md",
+      "category": "testing",
+      "classification": "KEEP_ADD_INDEX",
+      "targetPath": null,
+      "referenceScope": "historical",
+      "references": [".harness/state/2026-09-10-tenant-core-data-infrastructure/main-gate-closeout.md", "docs/testing-usage-guide.md"],
+      "rationale": "Report-style, but grouped with the other testing docs; keep to avoid splitting the set.",
+      "migrationRisk": "low",
+      "ownerLayer": "platform"
+    },
+    {
+      "path": "docs/HARNESS_GOVERNANCE_GUIDE.md",
+      "category": "harness guide",
+      "classification": "KEEP_ADD_INDEX",
+      "targetPath": null,
+      "referenceScope": "historical",
+      "references": ["CHANGELOG_v0.11.1.md", "RELEASE_PR_BODY.md", "RELEASE_v0.11.1_COMPLETE.md", "SONARCLOUD_FIX_COMPLETE_REPORT.md"],
+      "rationale": "Superseded in spirit by docs/harness/*, but its doc_type does not fit the repo's strict frontmatter taxonomy for docs/archive/*; keep and index rather than force an archive with a wrong type.",
+      "migrationRisk": "low",
+      "ownerLayer": "platform"
+    },
+    {
+      "path": "docs/harness-pr-generator-guide.md",
+      "category": "harness guide",
+      "classification": "KEEP_ADD_INDEX",
+      "targetPath": null,
+      "referenceScope": "historical",
+      "references": ["CHANGELOG_v0.11.1.md", "RELEASE_PR_BODY.md", "RELEASE_v0.11.1_COMPLETE.md", "SONARCLOUD_FIX_COMPLETE_REPORT.md"],
+      "rationale": "Same as HARNESS_GOVERNANCE_GUIDE: superseded but doc_type does not fit docs/archive/*.",
+      "migrationRisk": "low",
+      "ownerLayer": "platform"
+    },
+    {
+      "path": "docs/system_design.md",
+      "category": "one-off design (v0.9.0 module rename)",
+      "classification": "ARCHIVE",
+      "targetPath": "docs/archive/upgrade/SYSTEM_DESIGN_v0.9.0_RENAME.md",
+      "referenceScope": "historical",
+      "references": [
+        ".harness/tasks/2026-07-21-v090-module-rename/manifest.json",
+        "docs/engineering_handoff.md",
+        "docs/class-diagram.mermaid",
+        "docs/sequence-diagram.mermaid"
+      ],
+      "rationale": "Point-in-time system design for the 2026-07-15 v0.9.0 module rename; referenced only by historical harness records and the sibling handoff/mermaid files.",
+      "migrationRisk": "low",
+      "ownerLayer": "platform"
+    },
+    {
+      "path": "docs/engineering_handoff.md",
+      "category": "one-off handoff (v0.9.0 module rename)",
+      "classification": "ARCHIVE",
+      "targetPath": "docs/archive/upgrade/ENGINEERING_HANDOFF_v0.9.0_RENAME.md",
+      "referenceScope": "historical",
+      "references": [".harness/tasks/2026-07-21-v090-module-rename/manifest.json"],
+      "rationale": "Completed 2026-07-15 implementation handoff; referenced only by a historical harness manifest.",
+      "migrationRisk": "low",
+      "ownerLayer": "platform"
+    },
+    {
+      "path": "docs/class-diagram.mermaid",
+      "category": "diagram (v0.9.0)",
+      "classification": "ARCHIVE",
+      "targetPath": "docs/archive/upgrade/class-diagram.mermaid",
+      "referenceScope": "historical",
+      "references": ["docs/system_design.md", "docs/engineering_handoff.md"],
+      "rationale": "Diagram referenced only by the two archived v0.9.0 documents; move with them. Not a .md file, so no frontmatter required.",
+      "migrationRisk": "low",
+      "ownerLayer": "platform"
+    },
+    {
+      "path": "docs/sequence-diagram.mermaid",
+      "category": "diagram (v0.9.0)",
+      "classification": "ARCHIVE",
+      "targetPath": "docs/archive/upgrade/sequence-diagram.mermaid",
+      "referenceScope": "historical",
+      "references": ["docs/system_design.md", "docs/engineering_handoff.md"],
+      "rationale": "Same as class-diagram.mermaid.",
+      "migrationRisk": "low",
+      "ownerLayer": "platform"
+    },
+    {
+      "path": "docs/SECURITY_SCAN_REPORT.md",
+      "category": "assessment (point-in-time scan)",
+      "classification": "ARCHIVE",
+      "targetPath": "docs/archive/baselines/SECURITY_SCAN_REPORT_20260821.md",
+      "referenceScope": "historical",
+      "references": [
+        ".harness/evidence/2026-08-21-security-goroutine-hardening/summary.md",
+        ".harness/tasks/2026-08-21-security-goroutine-hardening/manifest.json"
+      ],
+      "rationale": "2026-08-21 one-off scan report; referenced only by the task that produced it. Baseline value only.",
+      "migrationRisk": "low",
+      "ownerLayer": "platform"
+    },
+    {
+      "path": "docs/PANTHEON_BASE_CODE_REVIEW_CHECKLIST.md",
+      "category": "acceptance (superseded checklist)",
+      "classification": "ARCHIVE",
+      "targetPath": "docs/archive/baselines/PANTHEON_BASE_CODE_REVIEW_CHECKLIST.md",
+      "referenceScope": "historical",
+      "references": [
+        "fix-report.md",
+        ".harness/evidence/2026-07-15-code-review-remediation/summary.md",
+        ".harness/tasks/2026-07-15-code-review-remediation/manifest.json"
+      ],
+      "rationale": "Superseded by docs/acceptances/CODE_REVIEW_STANDARD.md; retained as a baseline, not an active acceptance entry.",
+      "migrationRisk": "low",
+      "ownerLayer": "platform"
+    }
+  ],
+  "directories": [
+    {
+      "path": "docs/reviews",
+      "classification": "KEEP_INDEXED",
+      "rationale": "Assessment material (dated audits + external review reports). Kept as the Assessment category per DOCUMENT_GOVERNANCE_CONTRACT; not promoted to the main index."
+    },
+    {
+      "path": "docs/operations",
+      "classification": "KEEP_INDEXED",
+      "rationale": "Operations runbooks are already a canonical category (docs/README §4.3 links them indirectly via runbooks)."
+    },
+    {
+      "path": "docs/runbooks",
+      "classification": "KEEP_INDEXED",
+      "rationale": "Canonical runbook category; referenced by docs/README."
+    }
+  ],
+  "deletionCandidates": [],
+  "notes": [
+    "No document is classified for deletion: every out-of-place file has either active references or baseline/sample value.",
+    "Historical .harness task manifests and evidence are records and are intentionally not rewritten; the doc-link gate does not scan .harness, so the archived moves do not create gate-visible broken links.",
+    "fix-report.md (repository root) references the review checklist; its reference is updated by the relocation task since it is a tracked active file."
+  ]
+}

@@ -1,3 +1,15 @@
+---
+title: Pantheon Base 安全扫描报告（2026-08-21）
+doc_type: Assessment
+layer: platform
+status: Archived
+index_group: archive/baselines
+retention_reason: 一次性安全扫描基线（2026-08-21），保留作为对照锚点，当前安全状态以代码、任务证据和质量门禁为准。
+linked_contracts:
+  - docs/contracts/PLATFORM_CONTRACT.md
+updated_at: 2026-09-23
+---
+
 # Pantheon Base 安全扫描报告
 
 **扫描时间**: 2026-08-21

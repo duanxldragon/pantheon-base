@@ -17,9 +17,11 @@ import (
 	"github.com/duanxldragon/pantheon-base/backend/modules/lowcode"
 	"github.com/duanxldragon/pantheon-base/backend/modules/platform"
 	"github.com/duanxldragon/pantheon-base/backend/modules/system"
+	iamuser "github.com/duanxldragon/pantheon-base/backend/modules/system/iam/user"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/common"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/database"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/logging"
+	"github.com/duanxldragon/pantheon-base/backend/pkg/maintenance"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/metrics"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/telemetry"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/version"
@@ -98,6 +100,12 @@ func initInfrastructure() {
 
 	if redisAddr := os.Getenv("PANTHEON_REDIS_ADDR"); redisAddr != "" {
 		database.InitRedis(redisAddr, os.Getenv("PANTHEON_REDIS_PASSWORD"), 0)
+	} else if database.RequireRedis() {
+		// Redis stores token sessions and the revocation blacklist; starting
+		// without an address is only meaningful for local dev/test. Production
+		// (and any deployment that sets PANTHEON_REDIS_REQUIRED=true) must fail
+		// fast instead of serving unauthenticated-by-design requests.
+		logging.Fatal("PANTHEON_REDIS_ADDR is required (production mode or PANTHEON_REDIS_REQUIRED=true)")
 	}
 	database.InitCasbin(database.DB)
 }
@@ -146,10 +154,14 @@ func registerAPIRoutes(r *gin.Engine) {
 			Store:       middleware.NewRedisRateLimitStore(),
 		}))
 	}
-	platform.RegisterPlatformRoutes(api, database.DB)
+	platform.RegisterPlatformRoutes(api, database.DB, platformDeptGovernanceTaskLoader{db: database.DB})
 	lowcode.InitLowcodeModule(api, database.DB)
 	system.InitSystemModule(api, database.DB)
-	auth.InitAuthModule(api, database.DB)
+	// Composition root: auth consumes system user credentials through the
+	// pkg/contracts/authuser port, implemented by the module that owns the
+	// system_user table. Neither module imports the other.
+	// Boundary rule: docs/designs/REPOSITORY_LAYOUT.md §8.2.
+	auth.InitAuthModule(api, database.DB, iamuser.NewCredentialRepository(database.DB))
 	business.InitBusinessModules(api, database.DB)
 }
 
@@ -178,6 +190,17 @@ func runServer(r *gin.Engine) {
 			stop()
 		}
 	}()
+
+	// Background maintenance: retention sweeps and session inventory governance
+	// run here on their own schedule instead of inside list/read handlers
+	// (task 2026-09-22-request-path-maintenance).
+	if envFlag("PANTHEON_MAINTENANCE_ENABLED") == envFlagFalse {
+		slog.Warn("background maintenance disabled by PANTHEON_MAINTENANCE_ENABLED=false")
+	} else {
+		interval := time.Duration(envIntDefault("PANTHEON_MAINTENANCE_INTERVAL_SECONDS", int(maintenance.DefaultInterval/time.Second))) * time.Second
+		slog.Info("background maintenance enabled", "interval", interval.String())
+		go maintenance.Run(ctx, maintenance.Default(), interval)
+	}
 
 	<-ctx.Done()
 	slog.Info("shutdown signal received; draining")

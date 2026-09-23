@@ -61,7 +61,7 @@ func setupPreferenceContractRouter(t *testing.T) (*gin.Engine, *gorm.DB) {
 		t.Fatalf("seed admin binding: %v", err)
 	}
 
-	service := NewRuntime(db)
+	service := NewRuntime(db, testCredentialRepo(db))
 	handler := NewAuthHandler(service)
 
 	engine := gin.New()

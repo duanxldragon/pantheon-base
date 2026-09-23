@@ -1,0 +1,89 @@
+{
+  "taskId": "2026-09-22-session-revocation-closure",
+  "repo": "pantheon-base",
+  "agent": {
+    "tool": "other"
+  },
+  "commands": [
+    {
+      "command": "go build ./...",
+      "cwd": "pantheon-base/backend",
+      "status": "passed",
+      "notes": "Description: compile after unifying the four revocation paths Expected: exit 0; observed exit 0"
+    },
+    {
+      "command": "go vet ./modules/auth/session ./modules/auth/login ./internal/middleware ./pkg/authtoken",
+      "cwd": "pantheon-base/backend",
+      "status": "passed",
+      "notes": "Description: vet the four packages that own token invalidation Expected: exit 0; observed exit 0"
+    },
+    {
+      "command": "PANTHEON_TEST_DSN=<local mysql> PANTHEON_TEST_REDIS_ADDR=127.0.0.1:6379 go test ./modules/auth/session -run 'TestRevokeAnySession|TestRevokeOwnedSession|TestBatchRevokeSessions|TestRevokeSession|TestListAllSessions' -count=1 -v",
+      "cwd": "pantheon-base/backend",
+      "status": "passed",
+      "notes": "Description: the revocation regression suite (DB revoked_at + refresh cascade + per-session access blacklist) Expected: all pass; observed 10/10 PASS — TestRevokeAnySession_InvalidatesAccessAndRefreshTokens, _CurrentSessionProtectionUnchanged, TestRevokeOwnedSession_InvalidatesAccessAndRefreshTokens, TestBatchRevokeSessions_InvalidatesAllRevokedSessions, TestRevokeSession_InvalidatesAccessAndRefreshTokens, TestRevokeAnySession_RedisFailureReturnsError, TestRevokeSessionArtifacts_EmptySessionIDIsNoop"
+    },
+    {
+      "command": "PANTHEON_TEST_DSN=<local mysql> PANTHEON_TEST_REDIS_ADDR=127.0.0.1:6379 go test ./modules/auth/session -count=1",
+      "cwd": "pantheon-base/backend",
+      "status": "passed",
+      "notes": "Description: whole session package with Redis configured (without PANTHEON_TEST_REDIS_ADDR the 5 Redis-dependent revocation tests SKIP rather than fail — worth knowing when reading CI logs) Expected: ok; observed ok 3.700s"
+    },
+    {
+      "command": "PANTHEON_TEST_DSN=<local mysql> go test ./pkg/authtoken ./internal/middleware ./pkg/tenant ./pkg/database ./modules/platform ./cmd/server ./modules/auth/session ./modules/auth/login -count=1",
+      "cwd": "pantheon-base/backend",
+      "status": "passed",
+      "notes": "Description: adjacent-domain regression (blacklist helper, middleware gate, session/security/login paths) Expected: all ok; observed authtoken 0.031s / middleware 1.487s / tenant 0.026s / database 13.738s / platform 2.929s / cmd/server 0.037s / session 3.700s / login 81.021s — no failures"
+    },
+    {
+      "command": "go run golang.org/x/vuln/cmd/govulncheck@v1.3.0 ./...",
+      "cwd": "pantheon-base/backend",
+      "status": "passed",
+      "notes": "Description: reachability scan for the token/blacklist code path Expected: 0 reachable; observed \"Your code is affected by 0 vulnerabilities\" (1 imported + 3 required non-reachable)"
+    },
+    {
+      "command": "CC=<repo>/.tmp/mingw64/bin/gcc.exe CGO_ENABLED=1 go test -race -count=1 ./pkg/authtoken ./internal/middleware ./modules/auth/session ./pkg/tenant",
+      "cwd": "pantheon-base/backend",
+      "status": "passed",
+      "notes": "Description: race detector on the revocation paths Expected: no data race; observed ok — authtoken 1.369s / middleware 2.503s / session 4.896s / tenant 1.091s, no DATA RACE reports. Originally blocked locally (see knownGaps history): Go refuses the Cygwin gcc, so a project-local MinGW-w64 toolchain (niXman mingw-builds GCC 16.2.0, posix-seh-ucrt, extracted to the gitignored .tmp/mingw64) was used. No system install and no global PATH change."
+    },
+    {
+      "command": "CC=<repo>/.tmp/mingw64/bin/gcc.exe CGO_ENABLED=1 go test -race -count=1 ./modules/auth/login",
+      "cwd": "pantheon-base/backend",
+      "status": "passed",
+      "notes": "Description: the task's declared race command #3 includes auth/login Expected: no data race; observed ok 239.678s, no DATA RACE reports"
+    }
+  ],
+  "graphChecks": {
+    "usedCodeGraph": false,
+    "affectedSubgraph": [
+      "pkg/authtoken session blacklist",
+      "internal/middleware token blacklist gate",
+      "auth/session revoke paths",
+      "auth/security password-change session revocation"
+    ],
+    "checks": ["cycle", "hub", "call-depth", "sensitive-flow"],
+    "findings": [],
+    "notes": "RevokeSessionArtifacts is the single invalidation choke point now reached from all four revoke paths plus the password-change path; no new package edge was introduced (session and security already depended on pkg/authtoken). Sensitive flow reviewed: revocation previously relied on DB state only for admin revoke; every path now fails fast when the Redis artifacts cannot be written."
+  },
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-09-22-session-revocation-closure/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-09-22-session-revocation-closure/",
+    "reviewFile": ".harness/evidence/2026-09-22-session-revocation-closure/review.md",
+    "summaryFile": ".harness/evidence/2026-09-22-session-revocation-closure/summary.md",
+    "changeRef": "none",
+    "planRefs": [".harness/ENTERPRISE_REMEDIATION_PLAN_2026-09-22.md"]
+  },
+  "knownGaps": [
+    "Human gate still pending (per the remediation plan's unified gate): a non-author reviewer must confirm the security invalidation semantics — the agent that wrote the code cannot be its reviewer.",
+    "Historical (closed 2026-09-23): go test -race was initially blocked locally because the only compiler on the machine was /usr/bin/gcc (Cygwin), which Go refuses for native Windows cgo. Closed by extracting a project-local MinGW-w64 toolchain into the gitignored .tmp/mingw64 and running with CC/CGO_ENABLED; both race commands above now pass with no data races.",
+    "database.RDB == nil stays a no-op by design (no-Redis deployments cannot validate tokens at all); this is documented in summary.md rather than tested, because the condition requires a Redis-less process."
+  ],
+  "environment": {
+    "os": "win32 (bash)",
+    "go": "1.26.6",
+    "dsn": "PANTHEON_TEST_DSN=<local mysql>/pantheon_base with per-test isolated databases",
+    "redis": "PANTHEON_TEST_REDIS_ADDR=127.0.0.1:6379 (the env var the testredis helper actually reads)"
+  },
+  "completedAt": "2026-09-23T11:05:00+08:00"
+}

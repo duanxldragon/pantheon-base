@@ -1,0 +1,89 @@
+{
+  "taskId": "2026-09-22-document-layout-inventory",
+  "title": "Inventory document placement and references",
+  "goal": "Classify root docs and review materials before any relocation.",
+  "primaryLayer": "platform/governance",
+  "status": "completed",
+  "statusNote": "2026-09-23: produced .harness/evidence/2026-09-22-document-layout-inventory/inventory.json covering 17 out-of-place docs/ files plus docs/reviews, docs/operations and docs/runbooks. Every entry has a classification (KEEP_INDEXED / KEEP_ADD_INDEX / ARCHIVE), target path, reference list, rationale, migration risk and owner layer. 0 deletion candidates. No file was moved by this task.",
+  "completedAt": "2026-09-23",
+  "priority": "P1",
+  "type": "inventory",
+  "estimatedComplexity": "light",
+  "dependencyLayers": [
+    "platform governance (document placement)",
+    "docs/ layout"
+  ],
+  "dependencies": {
+    "blockedBy": ["2026-09-22-naming-boundary-canonical-standard"],
+    "blocks": ["2026-09-22-document-relocation-and-archive"]
+  },
+  "scope": {
+    "in": [
+      "docs root files classification",
+      "docs/reviews, docs/operations, docs/runbooks classification",
+      "reference census per candidate file",
+      "machine-readable inventory artifact"
+    ],
+    "out": ["moving files", "rewriting historical .harness records", "deleting documents"]
+  },
+  "taskDoc": ".harness/tasks/2026-09-22-document-layout-inventory/task.md",
+  "contractAnchors": [
+    "docs/designs/REPOSITORY_LAYOUT.md",
+    "docs/contracts/DOCUMENT_GOVERNANCE_CONTRACT.md",
+    "docs/README.md"
+  ],
+  "expectedFiles": {
+    "create": [
+      ".harness/evidence/2026-09-22-document-layout-inventory/inventory.json",
+      ".harness/evidence/2026-09-22-document-layout-inventory/commands.json",
+      ".harness/evidence/2026-09-22-document-layout-inventory/summary.md",
+      ".harness/evidence/2026-09-22-document-layout-inventory/review.md"
+    ],
+    "modify": [
+      ".harness/tasks/2026-09-22-document-layout-inventory/task.md",
+      ".harness/tasks/2026-09-22-document-layout-inventory/manifest.json"
+    ],
+    "doNotTouch": ["docs/**", "backend/**", "frontend/**"]
+  },
+  "harnessProfile": {
+    "template": "custom",
+    "overlay": "docs-inventory",
+    "qualityProfile": "docs-governance",
+    "portableFailureClass": "unverified-doc-relocation",
+    "ownerLayer": "platform",
+    "coverageDimensions": ["maintainability", "method-health"]
+  },
+  "verificationPlan": {
+    "commands": [
+      "git grep -n -E \"docs/(system_design|engineering_handoff|DEPLOYMENT_GUIDE|DEV_DB_INIT_GUIDE|SECURITY_SCAN_REPORT)\""
+    ],
+    "runtimeEvidence": ["not runtime-sensitive: read-only inventory"]
+  },
+  "runtimeSensitive": false,
+  "evidenceRequired": ["machine-readable inventory", "reference census", "review disposition"],
+  "humanGates": ["none required (read-only inventory)"],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed"
+  ],
+  "linkage": {
+    "evidenceDir": ".harness/evidence/2026-09-22-document-layout-inventory/",
+    "reviewFile": ".harness/evidence/2026-09-22-document-layout-inventory/review.md",
+    "summaryFile": ".harness/evidence/2026-09-22-document-layout-inventory/summary.md",
+    "changeRef": "none",
+    "planRefs": [".harness/NAMING_AND_BOUNDARIES_REMEDIATION_PLAN_2026-09-22.md"]
+  },
+  "evidenceDir": ".harness/evidence/2026-09-22-document-layout-inventory",
+  "verificationCommands": [
+    "git grep -n -E \"docs/(system_design|engineering_handoff|DEPLOYMENT_GUIDE|DEV_DB_INIT_GUIDE|SECURITY_SCAN_REPORT)\" ."
+  ],
+  "acceptanceCriteria": [
+    "Every out-of-place document has a target category or keep rationale",
+    "No referenced document is classified for deletion",
+    "Inventory is machine-readable"
+  ],
+  "createdAt": "2026-09-22T00:00:00Z"
+}

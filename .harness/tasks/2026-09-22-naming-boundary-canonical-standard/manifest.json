@@ -1,0 +1,135 @@
+{
+  "taskId": "2026-09-22-naming-boundary-canonical-standard",
+  "title": "Freeze canonical naming, layout, and layer-boundary standard",
+  "goal": "Publish one authoritative standard for repository layout, file naming, controlled exceptions, and dependency directions.",
+  "primaryLayer": "platform/governance",
+  "status": "completed",
+  "statusNote": "2026-09-23: docs/designs/REPOSITORY_LAYOUT.md (and its .en.md companion) extended into the single canonical standard with §5 file naming vocabulary, §6 document taxonomy, §7 generated-artifact rules, §8 layer dependency matrix, §9 controlled exceptions, and §10 gate mapping plus change procedure. Document-only change: no production code, no checker whitelist, no file moves. Verified with check-structure (0 findings/1939 files), task-packet template, frontmatter-check, harness doc-frontmatter strict (0 errors), doc-links (0 findings), and the structure-contract unit tests (11 pass). Unimplemented enforcement (generated marker, check:generated, platform->system / auth->iam blocking) is recorded as an explicit gap for the Wave 1 tasks.",
+  "completedAt": "2026-09-23",
+  "priority": "P1",
+  "type": "governance",
+  "estimatedComplexity": "light",
+  "technicalDebtFlag": "yes",
+  "technicalDebtNote": "The standard names enforcement that does not exist yet: the generated-file marker and check:generated drift gate are unimplemented, check-arch-boundaries.mjs is not wired into CI, and platform -> system / auth -> system/iam dependencies are still unblocked. Each is assigned to a Wave 1 task rather than silently assumed to hold.",
+  "dependencyLayers": [
+    "platform governance (repository layout, naming, boundary rules)",
+    "checker contract source for scripts/harness/check-structure-contract.mjs"
+  ],
+  "dependencies": {
+    "blockedBy": [],
+    "blocks": [
+      "2026-09-22-document-relocation-and-archive",
+      "2026-09-22-layer-boundary-gate",
+      "2026-09-22-generated-artifact-governance",
+      "2026-09-22-frontend-style-naming-alignment"
+    ]
+  },
+  "scope": {
+    "in": [
+      "docs/designs/REPOSITORY_LAYOUT.md: canonical standard sections §5-§10",
+      "file suffix vocabulary (backend Go, frontend TS/TSX, docs)",
+      "document taxonomy and directory placement",
+      "generated artifact rules (source, output, hand layer, drift, marker)",
+      "layer dependency matrix for platform/auth/system/business",
+      "controlled exceptions (auth/lowcode/generated) with owner and rationale",
+      "gate mapping and the standard-first change procedure"
+    ],
+    "out": [
+      "production code changes",
+      "checker whitelist changes",
+      "bulk file moves or document relocation",
+      "runtime behavior, API, database, permission, i18n changes"
+    ]
+  },
+  "taskDoc": ".harness/tasks/2026-09-22-naming-boundary-canonical-standard/task.md",
+  "contractAnchors": [
+    "docs/designs/REPOSITORY_LAYOUT.md",
+    "docs/contracts/DOCUMENT_GOVERNANCE_CONTRACT.md",
+    "docs/contracts/DOCUMENT_FRONTMATTER_SCHEMA.md",
+    "docs/contracts/PLATFORM_CONTRACT.md",
+    "docs/designs/MODULE_CONTRACT.md",
+    "scripts/harness/check-structure-contract.mjs",
+    "scripts/harness/check-boundaries.mjs"
+  ],
+  "expectedFiles": {
+    "create": [
+      ".harness/evidence/2026-09-22-naming-boundary-canonical-standard/commands.json",
+      ".harness/evidence/2026-09-22-naming-boundary-canonical-standard/summary.md",
+      ".harness/evidence/2026-09-22-naming-boundary-canonical-standard/review.md"
+    ],
+    "modify": [
+      "docs/designs/REPOSITORY_LAYOUT.md",
+      "docs/designs/REPOSITORY_LAYOUT.en.md",
+      ".harness/tasks/2026-09-22-naming-boundary-canonical-standard/task.md",
+      ".harness/tasks/2026-09-22-naming-boundary-canonical-standard/manifest.json"
+    ],
+    "doNotTouch": [
+      "backend/**",
+      "frontend/**",
+      "scripts/harness/check-structure-contract.mjs",
+      "scripts/harness/check-boundaries.mjs",
+      ".github/workflows/**"
+    ]
+  },
+  "harnessProfile": {
+    "template": "custom",
+    "overlay": "governance-docs",
+    "qualityProfile": "docs-governance",
+    "portableFailureClass": "unenforced-rule-presented-as-enforced",
+    "ownerLayer": "platform",
+    "coverageDimensions": [
+      "architecture-fitness",
+      "maintainability",
+      "method-health"
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "node scripts/harness/check-structure-contract.mjs --root . --strict",
+      "node scripts/check-task-packet-template.mjs",
+      "node scripts/frontmatter-check.mjs",
+      "node scripts/harness/check-doc-frontmatter.mjs --root . --strict",
+      "node scripts/harness/check-doc-links.mjs --root . --strict",
+      "node --test tests/scripts/harness-check-structure-contract.test.mjs"
+    ],
+    "runtimeEvidence": [
+      "not runtime-sensitive: documentation and governance only"
+    ]
+  },
+  "runtimeSensitive": false,
+  "evidenceRequired": [
+    "canonical standard document diff",
+    "gate/check command results",
+    "review disposition"
+  ],
+  "humanGates": [
+    "none required (documentation-only governance change) — PR gates + non-author review"
+  ],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed"
+  ],
+  "linkage": {
+    "evidenceDir": ".harness/evidence/2026-09-22-naming-boundary-canonical-standard/",
+    "reviewFile": ".harness/evidence/2026-09-22-naming-boundary-canonical-standard/review.md",
+    "summaryFile": ".harness/evidence/2026-09-22-naming-boundary-canonical-standard/summary.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".harness/NAMING_AND_BOUNDARIES_REMEDIATION_PLAN_2026-09-22.md"
+    ]
+  },
+  "evidenceDir": ".harness/evidence/2026-09-22-naming-boundary-canonical-standard",
+  "verificationCommands": [
+    "node scripts/harness/check-structure-contract.mjs --root . --strict",
+    "node scripts/check-task-packet-template.mjs"
+  ],
+  "acceptanceCriteria": [
+    "One canonical document is authoritative",
+    "Exceptions have owners and rationale",
+    "Checker update points are listed"
+  ],
+  "createdAt": "2026-09-22T00:00:00Z"
+}

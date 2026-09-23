@@ -68,7 +68,7 @@ func TestLoginService_RecordFailedLoginAttemptIncrementsCount(t *testing.T) {
 	u := seedThrottleUser(t, db, "counter_user", "rightpass")
 	policy := defaultThrottlePolicy()
 
-	locked, err := NewLoginService(db, &stubPolicyProvider{policy: policy}, nil).recordFailedLoginAttempt(&u, policy)
+	locked, err := NewLoginService(db, testCredentialRepo(db), &stubPolicyProvider{policy: policy}, nil).recordFailedLoginAttempt(loadAuthUser(t, db, u.ID), policy)
 	if err != nil {
 		t.Fatalf("record failed attempt: %v", err)
 	}
@@ -92,11 +92,11 @@ func TestLoginService_RecordFailedLoginAttemptLocksAtThreshold(t *testing.T) {
 	db := setupThrottleTestDB(t)
 	u := seedThrottleUser(t, db, "lock_user", "rightpass")
 	policy := defaultThrottlePolicy()
-	svc := NewLoginService(db, &stubPolicyProvider{policy: policy}, nil)
+	svc := NewLoginService(db, testCredentialRepo(db), &stubPolicyProvider{policy: policy}, nil)
 
 	// 4 failures: not yet locked (threshold 5)
 	for i := 0; i < 4; i++ {
-		locked, err := svc.recordFailedLoginAttempt(&u, policy)
+		locked, err := svc.recordFailedLoginAttempt(loadAuthUser(t, db, u.ID), policy)
 		if err != nil {
 			t.Fatalf("record failed attempt %d: %v", i+1, err)
 		}
@@ -106,7 +106,7 @@ func TestLoginService_RecordFailedLoginAttemptLocksAtThreshold(t *testing.T) {
 	}
 
 	// 5th failure: locked, counter reset
-	locked, err := svc.recordFailedLoginAttempt(&u, policy)
+	locked, err := svc.recordFailedLoginAttempt(loadAuthUser(t, db, u.ID), policy)
 	if err != nil {
 		t.Fatalf("record 5th failed attempt: %v", err)
 	}
@@ -140,7 +140,7 @@ func TestLoginService_RecordFailedLoginAttemptClearsExpiredLock(t *testing.T) {
 		t.Fatalf("seed expired lock: %v", err)
 	}
 
-	locked, err := NewLoginService(db, &stubPolicyProvider{policy: policy}, nil).recordFailedLoginAttempt(&u, policy)
+	locked, err := NewLoginService(db, testCredentialRepo(db), &stubPolicyProvider{policy: policy}, nil).recordFailedLoginAttempt(loadAuthUser(t, db, u.ID), policy)
 	if err != nil {
 		t.Fatalf("record failed attempt: %v", err)
 	}
@@ -163,7 +163,7 @@ func TestLoginService_RecordFailedLoginAttemptClearsExpiredLock(t *testing.T) {
 func TestLoginService_RecordSourceFailureCreatesThrottleRow(t *testing.T) {
 	db := setupThrottleTestDB(t)
 	policy := defaultThrottlePolicy()
-	svc := NewLoginService(db, &stubPolicyProvider{policy: policy}, nil)
+	svc := NewLoginService(db, testCredentialRepo(db), &stubPolicyProvider{policy: policy}, nil)
 
 	blocked, err := svc.recordSourceFailure("ip:10.0.0.1", policy, time.Now())
 	if err != nil {
@@ -191,7 +191,7 @@ func TestLoginService_RecordSourceFailureCreatesThrottleRow(t *testing.T) {
 func TestLoginService_RecordSourceFailureBlocksAtThreshold(t *testing.T) {
 	db := setupThrottleTestDB(t)
 	policy := defaultThrottlePolicy()
-	svc := NewLoginService(db, &stubPolicyProvider{policy: policy}, nil)
+	svc := NewLoginService(db, testCredentialRepo(db), &stubPolicyProvider{policy: policy}, nil)
 
 	for i := 0; i < 4; i++ {
 		blocked, err := svc.recordSourceFailure("ip:10.0.0.2", policy, time.Now())
@@ -236,7 +236,7 @@ func TestLoginService_CheckSourceThrottleBlocksWhenBlocked(t *testing.T) {
 		t.Fatalf("seed throttle: %v", err)
 	}
 
-	blocked, err := NewLoginService(db, &stubPolicyProvider{policy: policy}, nil).checkSourceThrottle("ip:10.0.0.3", policy, time.Now())
+	blocked, err := NewLoginService(db, testCredentialRepo(db), &stubPolicyProvider{policy: policy}, nil).checkSourceThrottle("ip:10.0.0.3", policy, time.Now())
 	if err != nil {
 		t.Fatalf("check source throttle: %v", err)
 	}
@@ -258,7 +258,7 @@ func TestLoginService_CheckSourceThrottleResetsExpiredBlock(t *testing.T) {
 		t.Fatalf("seed throttle: %v", err)
 	}
 
-	blocked, err := NewLoginService(db, &stubPolicyProvider{policy: policy}, nil).checkSourceThrottle("ip:10.0.0.4", policy, time.Now())
+	blocked, err := NewLoginService(db, testCredentialRepo(db), &stubPolicyProvider{policy: policy}, nil).checkSourceThrottle("ip:10.0.0.4", policy, time.Now())
 	if err != nil {
 		t.Fatalf("check source throttle: %v", err)
 	}
@@ -280,7 +280,7 @@ func TestLoginService_CheckSourceThrottleEmptyKeyOrDisabledPolicyNeverBlocks(t *
 	policy := defaultThrottlePolicy()
 
 	// Empty source key: never blocks.
-	blocked, err := NewLoginService(db, &stubPolicyProvider{policy: policy}, nil).checkSourceThrottle("  ", policy, time.Now())
+	blocked, err := NewLoginService(db, testCredentialRepo(db), &stubPolicyProvider{policy: policy}, nil).checkSourceThrottle("  ", policy, time.Now())
 	if err != nil {
 		t.Fatalf("check empty source: %v", err)
 	}
@@ -291,7 +291,7 @@ func TestLoginService_CheckSourceThrottleEmptyKeyOrDisabledPolicyNeverBlocks(t *
 	// Disabled source throttle (SourceMaxFailedAttempts <= 0): never blocks.
 	disabledPolicy := defaultThrottlePolicy()
 	disabledPolicy.SourceMaxFailedAttempts = 0
-	blocked, err = NewLoginService(db, &stubPolicyProvider{policy: disabledPolicy}, nil).checkSourceThrottle("ip:10.0.0.5", disabledPolicy, time.Now())
+	blocked, err = NewLoginService(db, testCredentialRepo(db), &stubPolicyProvider{policy: disabledPolicy}, nil).checkSourceThrottle("ip:10.0.0.5", disabledPolicy, time.Now())
 	if err != nil {
 		t.Fatalf("check disabled source throttle: %v", err)
 	}
@@ -304,7 +304,7 @@ func TestLoginService_AuthenticateWithSourcePreBlockedSourceReturnsError(t *test
 	db := setupThrottleTestDB(t)
 	u := seedThrottleUser(t, db, "blocked_user", "rightpass")
 	policy := defaultThrottlePolicy()
-	svc := NewLoginService(db, &stubPolicyProvider{policy: policy}, nil)
+	svc := NewLoginService(db, testCredentialRepo(db), &stubPolicyProvider{policy: policy}, nil)
 
 	// Pre-block the source so ensureSourceThrottleAllowed fails immediately.
 	blockedUntil := time.Now().Add(10 * time.Minute)
@@ -327,7 +327,7 @@ func TestLoginService_FailLoginSourceBlockedEmitsSecurityEvent(t *testing.T) {
 	u := seedThrottleUser(t, db, "event_user", "rightpass")
 	policy := defaultThrottlePolicy()
 	recorder := &recordingSecurityEventRecorder{}
-	svc := NewLoginService(db, &stubPolicyProvider{policy: policy}, recorder)
+	svc := NewLoginService(db, testCredentialRepo(db), &stubPolicyProvider{policy: policy}, recorder)
 
 	// Pre-block the source so recordSourceFailure reports blocked immediately.
 	blockedUntil := time.Now().Add(10 * time.Minute)
@@ -339,7 +339,7 @@ func TestLoginService_FailLoginSourceBlockedEmitsSecurityEvent(t *testing.T) {
 		t.Fatalf("seed throttle: %v", err)
 	}
 
-	err := svc.failLoginSourceBlocked(&u, "ip:10.0.0.7", policy, time.Now())
+	err := svc.failLoginSourceBlocked(loadAuthUser(t, db, u.ID), "ip:10.0.0.7", policy, time.Now())
 	if err == nil || err.Error() != "auth.login.error.source_blocked" {
 		t.Fatalf("expected source blocked error, got %v", err)
 	}
@@ -362,13 +362,13 @@ func TestLoginService_EmitSecurityEventSkippedWhenDisabledOrNoRecorder(t *testin
 	disabledPolicy := defaultThrottlePolicy()
 	disabledPolicy.SecurityEventEnabled = false
 	recorder := &recordingSecurityEventRecorder{}
-	NewLoginService(db, &stubPolicyProvider{policy: disabledPolicy}, recorder).emitSecurityEvent(&u, "password_wrong", "medium", "ip:1.1.1.1", "key", "1.1.1.1")
+	NewLoginService(db, testCredentialRepo(db), &stubPolicyProvider{policy: disabledPolicy}, recorder).emitSecurityEvent(loadAuthUser(t, db, u.ID), "password_wrong", "medium", "ip:1.1.1.1", "key", "1.1.1.1")
 	if len(recorder.events) != 0 {
 		t.Fatalf("expected no events when disabled, got %d", len(recorder.events))
 	}
 
 	// Enabled policy but nil recorder: must not panic.
-	NewLoginService(db, &stubPolicyProvider{policy: defaultThrottlePolicy()}, nil).emitSecurityEvent(&u, "password_wrong", "medium", "ip:1.1.1.1", "key", "1.1.1.1")
+	NewLoginService(db, testCredentialRepo(db), &stubPolicyProvider{policy: defaultThrottlePolicy()}, nil).emitSecurityEvent(loadAuthUser(t, db, u.ID), "password_wrong", "medium", "ip:1.1.1.1", "key", "1.1.1.1")
 }
 
 func TestLoginService_AuthenticateWithSourcePasswordMismatchRecordsFailures(t *testing.T) {
@@ -376,7 +376,7 @@ func TestLoginService_AuthenticateWithSourcePasswordMismatchRecordsFailures(t *t
 	u := seedThrottleUser(t, db, "mismatch_user", "rightpass")
 	policy := defaultThrottlePolicy()
 	recorder := &recordingSecurityEventRecorder{}
-	svc := NewLoginService(db, &stubPolicyProvider{policy: policy}, recorder)
+	svc := NewLoginService(db, testCredentialRepo(db), &stubPolicyProvider{policy: policy}, recorder)
 
 	_, err := svc.AuthenticateWithSource(&LoginReq{Username: u.Username, Password: "wrong"}, "ip:10.0.0.8")
 	if err == nil || err.Error() != "user.login.error.password_wrong" {
@@ -414,7 +414,7 @@ func TestLoginService_AuthenticateWithSourceDisabledUserFails(t *testing.T) {
 		t.Fatalf("disable user: %v", err)
 	}
 
-	_, err := NewLoginService(db, &stubPolicyProvider{policy: policy}, nil).AuthenticateWithSource(
+	_, err := NewLoginService(db, testCredentialRepo(db), &stubPolicyProvider{policy: policy}, nil).AuthenticateWithSource(
 		&LoginReq{Username: u.Username, Password: "rightpass"},
 		"ip:10.0.0.9",
 	)
@@ -434,7 +434,7 @@ func TestLoginService_AuthenticateWithSourceLockedUserFails(t *testing.T) {
 		t.Fatalf("lock user: %v", err)
 	}
 
-	_, err := NewLoginService(db, &stubPolicyProvider{policy: policy}, nil).AuthenticateWithSource(
+	_, err := NewLoginService(db, testCredentialRepo(db), &stubPolicyProvider{policy: policy}, nil).AuthenticateWithSource(
 		&LoginReq{Username: u.Username, Password: "rightpass"},
 		"ip:10.0.0.10",
 	)
@@ -456,7 +456,7 @@ func TestLoginService_AuthenticateWithSourceSuccessClearsFailedState(t *testing.
 		t.Fatalf("seed failed state: %v", err)
 	}
 
-	current, err := NewLoginService(db, &stubPolicyProvider{policy: policy}, nil).AuthenticateWithSource(
+	current, err := NewLoginService(db, testCredentialRepo(db), &stubPolicyProvider{policy: policy}, nil).AuthenticateWithSource(
 		&LoginReq{Username: u.Username, Password: "rightpass"},
 		"",
 	)
@@ -483,7 +483,7 @@ func TestLoginService_AuthenticateWithSourceEmptyUsernameCountsSourceFailure(t *
 	db := setupThrottleTestDB(t)
 	policy := defaultThrottlePolicy()
 	recorder := &recordingSecurityEventRecorder{}
-	svc := NewLoginService(db, &stubPolicyProvider{policy: policy}, recorder)
+	svc := NewLoginService(db, testCredentialRepo(db), &stubPolicyProvider{policy: policy}, recorder)
 
 	_, err := svc.AuthenticateWithSource(&LoginReq{Username: "   ", Password: "x"}, "ip:10.0.0.11")
 	if err == nil || err.Error() != "user.login.error.not_found" {
@@ -500,7 +500,7 @@ func TestLoginService_AuthenticateWithSourceEmptyUsernameCountsSourceFailure(t *
 }
 
 func TestLoginService_AuthenticateWithSourceNilDBReturnsError(t *testing.T) {
-	_, err := NewLoginService(nil, &stubPolicyProvider{policy: defaultThrottlePolicy()}, nil).AuthenticateWithSource(
+	_, err := NewLoginService(nil, testCredentialRepo(nil), &stubPolicyProvider{policy: defaultThrottlePolicy()}, nil).AuthenticateWithSource(
 		&LoginReq{Username: "x", Password: "y"},
 		"ip:10.0.0.12",
 	)

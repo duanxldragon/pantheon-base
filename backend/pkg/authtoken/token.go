@@ -234,10 +234,21 @@ func sessionRefreshIndexKey(sessionID string) string {
 // internal/middleware/token_middleware.go (TokenAuthMiddleware).
 const blacklistPrefix = "blacklist:"
 
+// blacklistSessionPrefix marks revoked sessions so their still-valid access
+// tokens are rejected before reaching the handler. Checked on every
+// authenticated request alongside the per-user blacklist.
+const blacklistSessionPrefix = "blacklist:session:"
+
 // BlacklistUserKey builds the Redis key TokenAuthMiddleware checks on every
 // authenticated request.
 func BlacklistUserKey(userID uint64) string {
 	return blacklistPrefix + strconv.FormatUint(userID, 10)
+}
+
+// BlacklistSessionKey builds the Redis key for the per-session blacklist
+// entry written when a session is revoked administratively or by its owner.
+func BlacklistSessionKey(sessionID string) string {
+	return blacklistSessionPrefix + sessionID
 }
 
 // BlacklistUser force-expires every live access token of a user by writing the
@@ -249,6 +260,17 @@ func BlacklistUser(ctx context.Context, rdb *redis.Client, userID uint64) error 
 		return nil
 	}
 	return rdb.Set(ctx, BlacklistUserKey(userID), "1", AccessTokenTTL+time.Minute).Err()
+}
+
+// BlacklistSession force-expires every live access token of one session by
+// writing the per-session blacklist key. TTL covers the remaining access token
+// life (AccessTokenTTL) plus the same margin BlacklistUser applies for the
+// middleware's in-memory session cache and clock skew.
+func BlacklistSession(ctx context.Context, rdb *redis.Client, sessionID string) error {
+	if rdb == nil || sessionID == "" {
+		return nil
+	}
+	return rdb.Set(ctx, BlacklistSessionKey(sessionID), "1", AccessTokenTTL+time.Minute).Err()
 }
 
 // RevokeSessionRefresh cascade-deletes the refresh token bound to a session,

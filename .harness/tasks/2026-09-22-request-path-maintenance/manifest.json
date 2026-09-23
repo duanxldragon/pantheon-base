@@ -3,17 +3,138 @@
   "title": "Move retention and session governance out of read paths",
   "goal": "Remove synchronous cleanup and purge work from ordinary list requests.",
   "primaryLayer": "platform/reliability",
-  "status": "planned",
+  "status": "completed",
+  "statusNote": "2026-09-23: implemented; 2026-09-23: closed out with commands.json + summary.md + review.md and re-verified on the integrated tree. New backend/pkg/maintenance registry (interval throttle, single-flight overlap refusal, per-task failure isolation + panic recovery, zap logs, pantheon_maintenance_runs_total{task,outcome} / _duration_seconds) runs from cmd/server behind PANTHEON_MAINTENANCE_ENABLED (default true) and PANTHEON_MAINTENANCE_INTERVAL_SECONDS (default 900). Four retention sweeps moved off read paths to registered tasks: auth.session_inventory, auth.login_log_retention, auth.security_event_retention, audit.operation_log_retention; the three self-rolled throttle states were deleted, and per-user CleanupUserOverflowSessions (max_active_sessions_per_user) stays inline. Explicit cleanup endpoints unchanged. Read-path tests were flipped to assert no-purge plus new maintenance-entry tests; pkg/maintenance unit tests cover throttle/overlap/failure/panic. go build, go vet, gofmt, and auth+system package suites all green; grep shows no residual ensureAutomatic*/governSessionInventory callers. Evidence: .harness/evidence/2026-09-22-request-path-maintenance/. Gaps (updated 2026-09-23): the retention-operations and interval gate is satisfied by the maintainer via humanGateDecision; the local -race gap is closed (project-local MinGW-w64 toolchain in .tmp/mingw64 ran go test -race green on pkg/maintenance and the touched auth/system packages, no data races); pantheon-ops sync stays deferred to the foundation release per Base-first.",
+  "completedAt": "2026-09-23",
+  "humanGateDecision": {
+    "status": "satisfied",
+    "decidedAt": "2026-09-23",
+    "decidedBy": "maintainer",
+    "authorization": "Maintainer instruction 2026-09-23: authorize the agent to complete the remaining A-round items directly, including confirming each task's human gate.",
+    "decision": "Retention operations confirmed: automatic retention and session inventory governance run only on the background maintenance runner, read/list/export paths never purge, and the four explicit cleanup endpoints remain the manual path. Default interval accepted as PANTHEON_MAINTENANCE_INTERVAL_SECONDS=900 (15 min), overridable or disabled via PANTHEON_MAINTENANCE_ENABLED=false."
+  },
+  "closeoutNote": "2026-09-23: closed out in the same pass as the other five 2026-09-22 remediation packets — commands.json/summary.md/review.md all present and passing the evidence/review gates. Remaining: the humanGates entry (retention operations口径 + default maintenance interval) is a maintainer action; nothing was merged and no gate was bypassed.",
   "priority": "P1",
   "type": "reliability-hardening",
+  "estimatedComplexity": "moderate",
+  "technicalDebtFlag": "yes",
+  "technicalDebtNote": "The maintenance runner is in-process only: there is no distributed lock, so a multi-replica deployment runs each sweep on every replica. The sweeps are idempotent conditional DELETEs so this is bandwidth, not correctness, but a single-flight/leader mechanism is the future ratchet. Exposing the registry through an admin endpoint (instead of reusing the four cleanup endpoints) was deliberately not added to avoid a new permission/i18n/menu surface.",
   "dependencyLayers": ["system/auth", "system/audit"],
-  "blockedBy": ["2026-09-22-export-and-session-pagination"],
-  "blocks": [],
+  "dependencies": {
+    "blockedBy": ["2026-09-22-export-and-session-pagination"],
+    "blocks": []
+  },
+  "scope": {
+    "in": [
+      "session inventory governance entry point (auth.session_inventory)",
+      "login-log retention entry point (auth.login_log_retention)",
+      "security-event retention entry point (auth.security_event_retention)",
+      "operation-log retention entry point (audit.operation_log_retention)",
+      "backend/pkg/maintenance registry, runner, metrics and tests",
+      "cmd/server runner startup + PANTHEON_MAINTENANCE_* env switches",
+      "docs/designs/AUTH_MODULE_DESIGN.md maintenance model section"
+    ],
+    "out": [
+      "retention policy reduction",
+      "new admin maintenance route / permission / menu / i18n surface",
+      "object-storage or retention-policy redesign",
+      "pantheon-ops synchronization (foundation release)"
+    ]
+  },
   "taskDoc": ".harness/tasks/2026-09-22-request-path-maintenance/task.md",
-  "evidenceDir": ".harness/evidence/2026-09-22-request-path-maintenance",
-  "scope": {"in": ["session inventory governance", "login/operation log retention", "maintenance trigger and metrics"], "out": ["retention policy reduction"]},
-  "acceptanceCriteria": ["List requests do not purge", "Maintenance is throttled and observable", "Retention remains executable explicitly", "Failure is visible"],
-  "verificationCommands": ["go test ./modules/auth/session ./modules/auth/login ./modules/system/audit", "go vet ./modules/auth/session ./modules/auth/login ./modules/system/audit"],
-  "humanGate": "Maintainer confirmation of retention operations",
-  "createdAt": "2026-09-22T00:00:00Z"
+  "contractAnchors": [
+    "docs/designs/AUTH_MODULE_DESIGN.md",
+    ".harness/ENTERPRISE_REMEDIATION_PLAN_2026-09-22.md",
+    "backend/pkg/maintenance/maintenance.go",
+    "backend/modules/auth/session/session_service.go",
+    "backend/modules/auth/login/login_service.go",
+    "backend/modules/auth/security/security_service.go",
+    "backend/modules/system/audit/audit_service.go",
+    "backend/cmd/server/main.go"
+  ],
+  "expectedFiles": {
+    "create": [
+      "backend/pkg/maintenance/maintenance.go",
+      "backend/pkg/maintenance/defaults.go",
+      "backend/pkg/maintenance/maintenance_test.go",
+      ".harness/evidence/2026-09-22-request-path-maintenance/commands.json",
+      ".harness/evidence/2026-09-22-request-path-maintenance/summary.md",
+      ".harness/evidence/2026-09-22-request-path-maintenance/review.md"
+    ],
+    "modify": [
+      "backend/pkg/metrics/prometheus.go",
+      "backend/modules/auth/session/session_service.go",
+      "backend/modules/auth/login/login_service.go",
+      "backend/modules/auth/login/login_runtime.go",
+      "backend/modules/auth/security/security_service.go",
+      "backend/modules/system/audit/audit_service.go",
+      "backend/modules/auth/module.go",
+      "backend/modules/system/system_modules.go",
+      "backend/cmd/server/main.go",
+      "backend/modules/auth/login/login_runtime_test.go",
+      "backend/modules/auth/security/security_event_governance_test.go",
+      "backend/modules/system/audit/audit_cleanup_test.go",
+      "docs/designs/AUTH_MODULE_DESIGN.md",
+      ".env.example"
+    ],
+    "doNotTouch": [
+      "frontend/**",
+      "backend/modules/business/**",
+      "permission / menu / i18n seeds"
+    ]
+  },
+  "harnessProfile": {
+    "template": "api-service",
+    "overlay": "reliability",
+    "qualityProfile": "runtime-hardening",
+    "portableFailureClass": "request-path-side-effect",
+    "ownerLayer": "platform",
+    "coverageDimensions": [
+      "reliability",
+      "observability",
+      "maintainability"
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "go build ./...",
+      "go vet ./...",
+      "gofmt -l .",
+      "go test ./pkg/maintenance",
+      "go test ./modules/auth/session ./modules/auth/login ./modules/system/audit"
+    ],
+    "runtimeEvidence": [
+      "Read-path tests assert list/export no longer delete rows; maintenance entry tests assert the sweep still enforces the retention window",
+      "pantheon_maintenance_runs_total{task,outcome} + pantheon_maintenance_duration_seconds exposed from the new registry"
+    ]
+  },
+  "runtimeSensitive": true,
+  "runtimeTraces": [
+    "No live process/browser trace was produced: the change has no UI or route surface; the runtime-sensitive signal is the read-path write-side-effect removal, proven by package tests against a real MySQL instance."
+  ],
+  "evidenceRequired": [
+    "go build / vet / gofmt output",
+    "affected package test results (auth session/login/security, system audit, pkg/maintenance)",
+    "flipped read-path + new maintenance-entry tests",
+    "review disposition"
+  ],
+  "humanGates": [
+    "Maintainer confirmation of retention operations: accept that automatic retention runs only in the background runner and confirm the default interval"
+  ],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed"
+  ],
+  "linkage": {
+    "evidenceDir": ".harness/evidence/2026-09-22-request-path-maintenance/",
+    "reviewFile": ".harness/evidence/2026-09-22-request-path-maintenance/review.md",
+    "summaryFile": ".harness/evidence/2026-09-22-request-path-maintenance/summary.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".harness/ENTERPRISE_REMEDIATION_PLAN_2026-09-22.md"
+    ]
+  }
 }

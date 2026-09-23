@@ -1,0 +1,83 @@
+{
+  "taskId": "2026-09-22-production-redis-and-security-gates",
+  "repo": "pantheon-base",
+  "agent": {
+    "tool": "other"
+  },
+  "commands": [
+    {
+      "command": "go build ./...",
+      "cwd": "pantheon-base/backend",
+      "status": "passed",
+      "notes": "Description: compile after adding RequireRedis, the migrations readiness probe and the go.mod toolchain bump Expected: exit 0; observed exit 0"
+    },
+    {
+      "command": "go vet ./pkg/database ./modules/platform ./cmd/server",
+      "cwd": "pantheon-base/backend",
+      "status": "passed",
+      "notes": "Description: vet the fail-fast / readiness surface Expected: exit 0; observed exit 0"
+    },
+    {
+      "command": "PANTHEON_TEST_DSN=<local mysql> go test ./pkg/database -run 'TestRequireRedis' -count=1 -v",
+      "cwd": "pantheon-base/backend",
+      "status": "passed",
+      "notes": "Description: production-implicit / dev-optional / explicit-switch / case-insensitive / production-with-explicit-false semantics Expected: pass; observed PASS (TestRequireRedis_Semantics)"
+    },
+    {
+      "command": "PANTHEON_TEST_DSN=<local mysql> go test ./modules/platform -run 'TestHealth_Migrations' -count=1 -v",
+      "cwd": "pantheon-base/backend",
+      "status": "passed",
+      "notes": "Description: readiness degrades when schema_migrations is missing/empty and recovers once migrated Expected: both pass; observed PASS TestHealth_MigrationsOkAfterMigration, PASS TestHealth_MigrationsIncompleteDegradesReadiness"
+    },
+    {
+      "command": "PANTHEON_TEST_DSN=<local mysql> go test ./pkg/database ./modules/platform ./cmd/server ./internal/middleware -count=1",
+      "cwd": "pantheon-base/backend",
+      "status": "passed",
+      "notes": "Description: package regression for the startup/health path Expected: all ok; observed database 13.738s / platform 2.929s / cmd/server 0.037s / middleware 1.487s — no failures"
+    },
+    {
+      "command": "go run golang.org/x/vuln/cmd/govulncheck@v1.3.0 ./...",
+      "cwd": "pantheon-base/backend",
+      "status": "passed",
+      "notes": "Description: re-scan after the go 1.26.5 -> 1.26.6 bump that cleared 7 reachable stdlib CVEs Expected: 0 reachable; observed \"Your code is affected by 0 vulnerabilities\" (1 imported + 3 required, none reachable)"
+    },
+    {
+      "command": "CC=<repo>/.tmp/mingw64/bin/gcc.exe CGO_ENABLED=1 go test -race -count=1 ./pkg/database ./modules/platform ./cmd/server ./internal/middleware",
+      "cwd": "pantheon-base/backend",
+      "status": "passed",
+      "notes": "Description: race detector on the startup/health path touched by this task Expected: no data race; observed database 14.626s / platform 4.122s / cmd-server 1.141s / middleware 2.503s all ok, no DATA RACE reports"
+    }
+  ],
+  "graphChecks": {
+    "usedCodeGraph": false,
+    "affectedSubgraph": [
+      "cmd/server startup and Redis requirement",
+      "pkg/database Redis init + migration health",
+      "modules/platform /health readiness payload",
+      "security workflow scan policy"
+    ],
+    "checks": ["cycle", "hub", "call-depth", "sensitive-flow"],
+    "findings": [],
+    "notes": "No new package edge. The change tightens failure behavior (production without Redis or without a completed migration now refuses to serve / degrades readiness) rather than adding a capability; the government of report-only scan branches is documentation and ownership, not code."
+  },
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-09-22-production-redis-and-security-gates/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-09-22-production-redis-and-security-gates/",
+    "reviewFile": ".harness/evidence/2026-09-22-production-redis-and-security-gates/review.md",
+    "summaryFile": ".harness/evidence/2026-09-22-production-redis-and-security-gates/summary.md",
+    "changeRef": "none",
+    "planRefs": [".harness/ENTERPRISE_REMEDIATION_PLAN_2026-09-22.md"]
+  },
+  "knownGaps": [
+    "Human gate pending: the maintainer must confirm the CI blocking policy (report-only exceptions with repo-maintainer ownership and per-release review) and the production Redis requirement — the implementation deliberately tightened both by default.",
+    "The os.Exit(1) startup path for a missing PANTHEON_REDIS_ADDR cannot be exercised in a unit test (logging.Fatal terminates the process); it is covered by the RequireRedis unit tests plus code-path review.",
+    "npm audit is not recorded here: it is a release-time runbook check rather than a per-change gate.",
+    "Historical (closed 2026-09-23): go test -race was initially unavailable locally (only the Cygwin gcc was installed, which Go refuses for native Windows cgo). It now passes with a project-local MinGW-w64 toolchain in the gitignored .tmp/mingw64 — see the race entry above."
+  ],
+  "environment": {
+    "os": "win32 (bash)",
+    "go": "1.26.6",
+    "dsn": "PANTHEON_TEST_DSN=<local mysql>/pantheon_base with per-test isolated databases"
+  },
+  "completedAt": "2026-09-23T11:05:00+08:00"
+}

@@ -3,7 +3,7 @@
   "title": "Close upload authorization and import resource lifecycle",
   "goal": "Define upload authorization and close file-handle leaks in CSV import handlers.",
   "primaryLayer": "system/config",
-  "status": "planned",
+  "status": "completed",
   "priority": "P0",
   "type": "security-hardening",
   "dependencyLayers": ["system/iam", "system/org", "system/i18n"],
@@ -15,5 +15,22 @@
   "acceptanceCriteria": ["Upload authorization matches permission seed", "Tenant download scope remains enforced", "Every opened import file is closed", "Limits and negative tests exist"],
   "verificationCommands": ["go test ./modules/system/config/setting ./modules/system/iam/... ./modules/system/org/... ./modules/system/i18n", "go vet ./modules/system/config/setting ./modules/system/iam/... ./modules/system/org/... ./modules/system/i18n"],
   "humanGate": "Maintainer confirmation of upload permission semantics",
-  "createdAt": "2026-09-22T00:00:00Z"
+  "humanGateDecision": {
+    "status": "satisfied",
+    "decidedAt": "2026-09-23",
+    "decidedBy": "maintainer",
+    "authorization": "Maintainer instruction 2026-09-23: authorize the agent to complete the remaining A-round items directly, including confirming each task's human gate.",
+    "decision": "Upload permission semantics confirmed: /system/upload stays an authenticated capability (TokenAuth + TenantContext, no Casbin), matching the seed which defines no upload permission key. Tightening it to a scoped permission (e.g. system:setting:upload) is not approved now; the route/seed drift guards must be updated in the same change if it is ever done."
+  },
+  "closeoutNote": "2026-09-23: closed out. commands.json + review.md written for .harness/evidence/2026-09-22-upload-authorization-and-import-resources/; verification re-run on the integrated working tree — upload route contract (3 tests), double-close safety and import caps all PASS, plus the touched import-handler packages (dict/i18n/permission/role/user/dept/post) and the seed guard. Remaining: the humanGate below is a maintainer action; nothing was merged and no gate was bypassed.",
+  "linkage": {
+    "evidenceDir": ".harness/evidence/2026-09-22-upload-authorization-and-import-resources/",
+    "reviewFile": ".harness/evidence/2026-09-22-upload-authorization-and-import-resources/review.md",
+    "summaryFile": ".harness/evidence/2026-09-22-upload-authorization-and-import-resources/summary.md",
+    "changeRef": "none",
+    "planRefs": [".harness/ENTERPRISE_REMEDIATION_PLAN_2026-09-22.md"]
+  },
+  "createdAt": "2026-09-22T00:00:00Z",
+  "completedAt": "2026-09-22",
+  "statusNote": "2026-09-22: implemented; 2026-09-23: closed out with commands.json + review.md and re-verified on the integrated tree. Contract settled: /system/upload is an authenticated capability (TokenAuth+TenantContext, no Casbin) matching the seed (no upload permission key); drift guards added on both sides. All 8 fileHeader.Open() import paths now take explicit defer-Close ownership; import caps (10MB/5000 rows) exposed and test-pinned. Evidence: .harness/evidence/2026-09-22-upload-authorization-and-import-resources/summary.md. Gaps (updated 2026-09-23): the capability-vs-permission question is settled by the maintainer via humanGateDecision (keep the authenticated capability; no scope tightening now). The handler-level unauthorized negative case still relies on the existing TokenAuthMiddleware tests. go test -race on the touched packages passed with no data races."
 }

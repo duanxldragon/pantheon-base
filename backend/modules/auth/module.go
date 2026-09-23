@@ -9,14 +9,20 @@ import (
 	"github.com/duanxldragon/pantheon-base/backend/internal/middleware"
 	"github.com/duanxldragon/pantheon-base/backend/modules/auth/login"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/contracts"
+	"github.com/duanxldragon/pantheon-base/backend/pkg/contracts/authuser"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/database"
+	"github.com/duanxldragon/pantheon-base/backend/pkg/maintenance"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/tenant"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
 
-func InitAuthModule(r *gin.RouterGroup, db *gorm.DB) {
+// InitAuthModule wires the auth domain. userRepo is the credential port over
+// system user state, built by the composition root
+// (backend/cmd/server/main.go) and injected here so auth never imports
+// modules/system/iam/user (docs/designs/REPOSITORY_LAYOUT.md §8.2).
+func InitAuthModule(r *gin.RouterGroup, db *gorm.DB, userRepo authuser.Repository) {
 	tenantModeLoader := tenant.NewModeLoader(func() string {
 		if db == nil {
 			return tenant.ModeCompat
@@ -27,7 +33,7 @@ func InitAuthModule(r *gin.RouterGroup, db *gorm.DB) {
 		}
 		return value
 	}, int64(5*time.Second))
-	authSvc := login.NewRuntime(db)
+	authSvc := login.NewRuntime(db, userRepo)
 	authHandler := login.NewAuthHandler(authSvc, middleware.InvalidateTokenAuthCache)
 	loginRateLimiter := middleware.RateLimiter(middleware.RateLimiterConfig{
 		MaxRequests: publicAuthRateLimitMax(5, 120),
@@ -47,6 +53,11 @@ func InitAuthModule(r *gin.RouterGroup, db *gorm.DB) {
 		KeyFunc:     publicAuthRateLimitKey,
 		Store:       middleware.NewRedisRateLimitStore(),
 	})
+
+	// Auth-domain maintenance (session inventory governance, login-log and
+	// security-event retention) runs on the background maintenance runner, not
+	// on list/export request paths (task 2026-09-22-request-path-maintenance).
+	authSvc.RegisterMaintenanceTasks(maintenance.Default())
 
 	contracts.RegisterRuntimeSettingReloader("system/auth", authSvc.ReloadSettings)
 

@@ -1,0 +1,61 @@
+{
+  "taskId": "2026-09-22-naming-boundary-canonical-standard",
+  "repo": "pantheon-base",
+  "agent": {
+    "tool": "other",
+    "adapter": "freebuff/buffy"
+  },
+  "commands": [
+    {
+      "command": "node scripts/harness/check-structure-contract.mjs --root . --strict",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Description: structure + naming gate, contract source is REPOSITORY_LAYOUT.md §2/§5. Expected: 0 findings. Observed: 'Structure contract check (strict): 0 finding(s) across 1939 tracked file(s)'."
+    },
+    {
+      "command": "node scripts/check-task-packet-template.mjs",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Description: task-packet template presence/linkage gate. Expected: OK. Observed: 'OK pantheon-base task-packet template is present and linked'."
+    },
+    {
+      "command": "node scripts/frontmatter-check.mjs",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Description: repo strict docs frontmatter + contract-linkage check (the npm run check:docs-frontmatter target). Expected: passed. Observed: 'Frontmatter check passed. Checked 266 docs, 208 with frontmatter.'"
+    },
+    {
+      "command": "node scripts/harness/check-doc-frontmatter.mjs --root . --strict",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Description: harness frontmatter gate. Expected: 0 errors. Observed: exit 0; only pre-existing 'legacy metadata' warnings on already-shipped docs/harness/*.en.md files, none introduced by this change."
+    },
+    {
+      "command": "node scripts/harness/check-doc-links.mjs --root . --strict",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Description: internal doc link resolution across docs/, .agents/, scripts/harness/, config/. Expected: 0 findings. Observed: 'Docs link check (strict): 0 finding(s)' — all new cross-links in REPOSITORY_LAYOUT{,.en}.md resolve."
+    },
+    {
+      "command": "node --test tests/scripts/harness-check-structure-contract.test.mjs",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Description: unit tests for the structure-contract checker. Expected: all pass. Observed: tests 11 / pass 11 / fail 0."
+    }
+  ],
+  "knownGaps": [
+    "Generated-file marker, npm run check:generated, and check-arch-boundaries.mjs CI wiring are specified in the standard but not implemented; assigned to Wave 1 task 2026-09-22-generated-artifact-governance.",
+    "platform -> system and auth -> system/iam production violations are documented as unblocked gaps; baselining and closure are assigned to Wave 1 task 2026-09-22-layer-boundary-gate.",
+    "This host resolves npm to a WSL relay without /bin/bash, so npm run <script> could not execute; the equivalent node invocations of the exact package.json script targets were run instead."
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-09-22-naming-boundary-canonical-standard/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-09-22-naming-boundary-canonical-standard/",
+    "reviewFile": ".harness/evidence/2026-09-22-naming-boundary-canonical-standard/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".harness/NAMING_AND_BOUNDARIES_REMEDIATION_PLAN_2026-09-22.md"
+    ]
+  },
+  "completedAt": "2026-09-23T00:00:00Z"
+}

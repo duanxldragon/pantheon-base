@@ -80,6 +80,18 @@ For Chinese-first onboarding, read:
 - [AI_QUALITY_GOVERNANCE.md](./harness/AI_QUALITY_GOVERNANCE.md)
 - [../SECURITY.md](../SECURITY.md): security reporting policy
 
+### Operations and guides
+
+- [DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md)
+- [DEV_DB_INIT_GUIDE.md](./DEV_DB_INIT_GUIDE.md)
+- [VERSION_MANAGEMENT_GUIDE.md](./VERSION_MANAGEMENT_GUIDE.md)
+- [testing-quick-start.md](./testing-quick-start.md)
+- [testing-usage-guide.md](./testing-usage-guide.md)
+- [testing-strategy-optimization.md](./testing-strategy-optimization.md)
+- [testing-implementation-report.md](./testing-implementation-report.md)
+- [HARNESS_GOVERNANCE_GUIDE.md](./HARNESS_GOVERNANCE_GUIDE.md)
+- [harness-pr-generator-guide.md](./harness-pr-generator-guide.md)
+
 Directory responsibilities: `docs/harness/` contains reviewable, versioned Harness methods, contracts, and task-packet specifications. `.harness/` contains machine-readable task state, execution evidence, and runtime artifacts. They are intentionally separate because the checkers and delivery workflow consume them independently.
 
 ## Notes

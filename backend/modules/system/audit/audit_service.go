@@ -1,21 +1,20 @@
 package system
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/duanxldragon/pantheon-base/backend/pkg/common"
 	"sort"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/duanxldragon/pantheon-base/backend/internal/middleware"
+	"github.com/duanxldragon/pantheon-base/backend/pkg/common"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/impexp"
-	"github.com/duanxldragon/pantheon-base/backend/pkg/logging"
+	"github.com/duanxldragon/pantheon-base/backend/pkg/maintenance"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/tenant"
 
-	"go.uber.org/zap"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -23,10 +22,12 @@ import (
 const errCleanupRangeInvalid = "audit.operation_log.cleanup.range_invalid"
 
 type AuditService struct {
-	db              *gorm.DB
-	lastCleanupAtMu sync.Mutex
-	lastCleanupAt   map[string]time.Time
+	db *gorm.DB
 }
+
+// OperationLogRetentionTaskName is the maintenance registry key for the
+// periodic operation-log retention sweep.
+const OperationLogRetentionTaskName = "audit.operation_log_retention"
 
 // applyTenantScope enforces the audit read/delete boundary (queue-5 audit
 // slice, contract §3.3/§7): in multi mode every query is pinned to the request
@@ -38,15 +39,11 @@ func (s *AuditService) applyTenantScope(db *gorm.DB, ctx *tenant.Context) *gorm.
 }
 
 func NewAuditService(db *gorm.DB) *AuditService {
-	return &AuditService{
-		db:            db,
-		lastCleanupAt: make(map[string]time.Time),
-	}
+	return &AuditService{db: db}
 }
 
 const (
 	defaultOperationLogRetentionDays = 180
-	auditAutoCleanupMinInterval      = 15 * time.Minute
 	maxOperationLogPageSize          = 100
 	maxOperationLogExportRows        = 10000
 )
@@ -73,8 +70,7 @@ func (s *AuditService) ListOperationLogs(query *OperationLogQuery, ctx *tenant.C
 	if s.db == nil {
 		return nil, common.ErrDatabaseNotInitialized
 	}
-	s.ensureAutomaticOperationLogRetention()
-
+	// Read path: retention runs as a registered maintenance task, not inline.
 	page, pageSize := normalizeOperationLogPageQuery(query)
 
 	db := s.applyTenantScope(s.db.Model(&middleware.SystemLogOper{}), ctx)
@@ -121,7 +117,6 @@ func (s *AuditService) GetOperationLog(logID uint64, ctx *tenant.Context) (*Oper
 	if s.db == nil {
 		return nil, common.ErrDatabaseNotInitialized
 	}
-	s.ensureAutomaticOperationLogRetention()
 
 	var row middleware.SystemLogOper
 	if err := s.applyTenantScope(s.db, ctx).First(&row, logID).Error; err != nil {
@@ -136,7 +131,6 @@ func (s *AuditService) ExportOperationLogs(query *OperationLogQuery, ctx *tenant
 	if s.db == nil {
 		return nil, common.ErrDatabaseNotInitialized
 	}
-	s.ensureAutomaticOperationLogRetention()
 
 	rows, err := s.listOperationLogsForExport(query, ctx)
 	if err != nil {
@@ -299,29 +293,33 @@ func normalizeRetentionOptions(values, fallback []int) []int {
 	return normalized
 }
 
-func (s *AuditService) ensureAutomaticOperationLogRetention() {
+// RunOperationLogRetention deletes operation logs older than
+// audit.operation_log_retention_days (default 180).
+//
+// It is a maintenance entry point: the background maintenance runner and the
+// explicit cleanup endpoint call it, request paths do not. Throttling and
+// overlap protection live in the maintenance registry.
+func (s *AuditService) RunOperationLogRetention() error {
 	if s.db == nil {
-		return
+		return common.ErrDatabaseNotInitialized
 	}
-
 	now := time.Now()
-	s.lastCleanupAtMu.Lock()
-	lastRun := s.lastCleanupAt["operation_log_retention"]
-	if !lastRun.IsZero() && now.Sub(lastRun) < auditAutoCleanupMinInterval {
-		s.lastCleanupAtMu.Unlock()
-		return
-	}
-	s.lastCleanupAt["operation_log_retention"] = now
-	s.lastCleanupAtMu.Unlock()
-
 	retentionDays := s.getRetentionDaysFromSetting("audit.operation_log_retention_days", defaultOperationLogRetentionDays)
 	if retentionDays <= 0 {
 		retentionDays = defaultOperationLogRetentionDays
 	}
 	cutoff := now.AddDate(0, 0, -retentionDays)
-	if err := s.db.Where("oper_time < ?", cutoff).Delete(&middleware.SystemLogOper{}).Error; err != nil {
-		logging.Warn("cleanup expired operation logs failed", zap.Error(err))
-	}
+	return s.db.Where("oper_time < ?", cutoff).Delete(&middleware.SystemLogOper{}).Error
+}
+
+// RegisterMaintenanceTasks registers the operation-log retention sweep with
+// the background maintenance registry.
+func (s *AuditService) RegisterMaintenanceTasks(reg *maintenance.Registry) {
+	reg.Register(maintenance.Task{
+		Name:     OperationLogRetentionTaskName,
+		Interval: maintenance.DefaultInterval,
+		Run:      func(context.Context) error { return s.RunOperationLogRetention() },
+	})
 }
 
 func (s *AuditService) getRetentionDaysFromSetting(settingKey string, fallback int) int {

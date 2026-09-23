@@ -177,6 +177,15 @@ func TestRegisterHealthRoutes_RedisFailureUsesStablePublicMessage(t *testing.T) 
 func TestRegisterHealthRoutes_ReturnsDependencyState(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	db := testmysql.Open(t)
+	// Readiness now reflects migration state (task
+	// 2026-09-22-production-redis-and-security-gates); seed the migrations
+	// table so this test keeps exercising the healthy path.
+	if err := db.Exec("CREATE TABLE IF NOT EXISTS schema_migrations (version bigint NOT NULL, dirty tinyint(1) NOT NULL DEFAULT 0, PRIMARY KEY (version))").Error; err != nil {
+		t.Fatalf("create schema_migrations: %v", err)
+	}
+	if err := db.Exec("INSERT INTO schema_migrations (version, dirty) VALUES (1, 0)").Error; err != nil {
+		t.Fatalf("seed schema_migrations: %v", err)
+	}
 
 	engine := gin.New()
 	engine.Use(middleware.RequestContextMiddleware())

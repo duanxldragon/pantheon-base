@@ -29,7 +29,9 @@ func (s *I18nService) Export(query *I18nQuery) (*impexp.CSVFile, error) {
 	}
 
 	var rows []SystemI18n
-	if err := db.Order("locale ASC").Order("module ASC").Order("`key` ASC").Find(&rows).Error; err != nil {
+	// Hard cap（与日志/角色导出对齐）：SQL LIMIT 下推，同步导出禁止无界扫描。
+	if err := db.Order("locale ASC").Order("module ASC").Order("`key` ASC").
+		Limit(impexp.MaxExportRows()).Find(&rows).Error; err != nil {
 		return nil, err
 	}
 

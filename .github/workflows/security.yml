@@ -94,9 +94,13 @@ jobs:
           echo "| npm audit (root) | $NPM_AUDIT_ROOT_RESULT |" >> "$GITHUB_STEP_SUMMARY"
           echo "| npm audit (frontend) | $NPM_AUDIT_FRONTEND_RESULT |" >> "$GITHUB_STEP_SUMMARY"
           
-          # PR/merge_group: report-only mode until existing issues are remediated
+          # PR/merge_group: report-only mode until existing issues are remediated.
+          # Governance: this is a time-boxed exception tracked by the maintainer
+          # (owner: repo maintainers; review every release). Failures stay visible
+          # in the step summary and downloadable artifacts; the main/release push
+          # path below still enforces, so a red report cannot reach main silently.
           if [ "$EVENT_NAME" = "pull_request" ] || [ "$EVENT_NAME" = "merge_group" ]; then
-            echo "Report-only mode for PR/merge_group"
+            echo "Report-only mode for PR/merge_group (exception owner: repo maintainers; re-review each release)"
             exit 0
           fi
           
@@ -222,9 +226,11 @@ jobs:
           echo "" >> "$GITHUB_STEP_SUMMARY"
           echo "Result: $ZIZMOR_RESULT" >> "$GITHUB_STEP_SUMMARY"
           
-          # PR/merge_group: report-only until issues are remediated
+          # PR/merge_group: report-only until issues are remediated.
+          # Same governance as the dependency gate: exception owned by repo
+          # maintainers, re-reviewed each release; push-to-main still enforces.
           if [ "$EVENT_NAME" = "pull_request" ] || [ "$EVENT_NAME" = "merge_group" ]; then
-            echo "Report-only mode for PR/merge_group"
+            echo "Report-only mode for PR/merge_group (exception owner: repo maintainers; re-review each release)"
             exit 0
           fi
           

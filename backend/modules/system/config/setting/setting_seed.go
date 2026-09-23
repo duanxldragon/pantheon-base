@@ -217,7 +217,7 @@ func (s *SettingService) invalidateSettingCache() {
 	defer s.cache.mu.Unlock()
 	s.cache.listCache = make(map[string][]SettingResp)
 	s.cache.groupCache = make(map[string]*SettingGroupResp)
-	s.cache.publicCache = nil
+	s.cache.publicCache = make(map[string]*PublicSettingResp)
 }
 
 // invalidateSettingCacheForGroup invalidates only the cache entries
@@ -232,8 +232,10 @@ func (s *SettingService) invalidateSettingCacheForGroup(groupKey string) {
 	// Since listCache may be keyed by various criteria, safest to clear it all
 	// (listCache is typically small and rebuilt quickly on demand).
 	s.cache.listCache = make(map[string][]SettingResp)
-	// If the group contains public settings, publicCache must also be invalidated
-	s.cache.publicCache = nil
+	// If the group contains public settings, every tenant-namespaced public
+	// cache entry must be invalidated (the group key does not tell us which
+	// tenants hold overrides).
+	s.cache.publicCache = make(map[string]*PublicSettingResp)
 }
 
 // settingGroupCacheKey namespaces the group cache per tenant (multi mode) so

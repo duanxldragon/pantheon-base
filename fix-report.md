@@ -1,7 +1,7 @@
 # Pantheon Base 代码审查修复报告 (fix-report)
 
 - **日期**: 2026-07-15
-- **审查依据**: `docs/PANTHEON_BASE_CODE_REVIEW_CHECKLIST.md`
+- **审查依据**: `docs/archive/baselines/PANTHEON_BASE_CODE_REVIEW_CHECKLIST.md`（原 `docs/PANTHEON_BASE_CODE_REVIEW_CHECKLIST.md`，已被 `docs/acceptances/CODE_REVIEW_STANDARD.md` 取代）
 - **分支**: `main`（未提交，工作区变更待人工确认后提交）
 - **变更规模**: 40 文件修改 + 4 新增文件，+590 / -150 行
 

@@ -17,6 +17,7 @@ import (
 	post "github.com/duanxldragon/pantheon-base/backend/modules/system/org/post"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/contracts"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/database"
+	"github.com/duanxldragon/pantheon-base/backend/pkg/maintenance"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/tenant"
 	uploadpkg "github.com/duanxldragon/pantheon-base/backend/pkg/upload"
 
@@ -91,6 +92,10 @@ func newSystemModuleDependencies(db *gorm.DB) *systemModuleDependencies {
 	uploadSvc := uploadpkg.NewService(settingSvc)
 	i18nSvc := i18n.NewI18nService(db)
 	auditSvc := audit.NewAuditService(db)
+	// Register the operation-log retention sweep with the background
+	// maintenance runner instead of purging inline on list/export requests
+	// (task 2026-09-22-request-path-maintenance).
+	auditSvc.RegisterMaintenanceTasks(maintenance.Default())
 
 	return &systemModuleDependencies{
 		db:                 db,
@@ -322,8 +327,16 @@ func initConfigModules(deps *systemModuleDependencies) []contracts.BackendModule
 			},
 		},
 		contracts.FuncModule{
-			ModuleName:    "setting",
-			MigrateFunc:   func(_ *gorm.DB) error { return deps.settingSvc.Migrate() },
+			ModuleName: "setting",
+			MigrateFunc: func(_ *gorm.DB) error {
+				if err := deps.settingSvc.Migrate(); err != nil {
+					return err
+				}
+				// Cross-instance invalidation: drop this process's setting
+				// caches whenever any instance publishes settings:refresh.
+				deps.settingSvc.WatchSettingsInvalidation()
+				return nil
+			},
 			BootstrapFunc: func(_ *gorm.DB) error { return deps.settingSvc.Bootstrap() },
 			SeedMenusFunc: seedSettingModuleMenus,
 			Register: func(r *gin.RouterGroup) {

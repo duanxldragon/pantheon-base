@@ -1,0 +1,64 @@
+{
+  "taskId": "2026-09-22-document-relocation-and-archive",
+  "repo": "pantheon-base",
+  "agent": {
+    "tool": "other",
+    "adapter": "freebuff/buffy"
+  },
+  "commands": [
+    {
+      "command": "mv docs/<6 historical files> docs/archive/{upgrade,baselines}/",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Description: execute the archive moves decided by the inventory (no blind moves). Expected: 6 moves. Observed: 4 files to docs/archive/upgrade/, 2 to docs/archive/baselines/."
+    },
+    {
+      "command": "grep -n \"docs/system_design.md|docs/class-diagram.mermaid|docs/sequence-diagram.mermaid\" docs/archive/upgrade/*.md",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Description: prove moved docs no longer reference their old paths. Expected: no matches. Observed: 'none' after the path-rewrite sed."
+    },
+    {
+      "command": "node scripts/frontmatter-check.mjs",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Description: strict docs frontmatter + archive index_group/retention_reason/linked_contracts + README main-entry checks. Expected: passed. Observed: 'Frontmatter check passed. Checked 266 docs, 212 with frontmatter' (was 208 before the 4 archived .md files gained frontmatter)."
+    },
+    {
+      "command": "node scripts/harness/check-doc-frontmatter.mjs --root . --strict",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Description: harness frontmatter gate. Expected: 0 errors. Observed: exit 0; only pre-existing legacy-metadata warnings."
+    },
+    {
+      "command": "node scripts/harness/check-doc-links.mjs --root . --strict",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Description: internal doc link resolution after the moves and README index additions. Expected: 0 findings. Observed: 0 findings."
+    },
+    {
+      "command": "node scripts/harness/check-doc-inventory.mjs --root . --strict",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Description: harness script inventory must list check-generated.mjs. Expected: 0 findings. Observed: 0 findings after adding it to scripts/harness/README{,.zh}.md."
+    },
+    {
+      "command": "node scripts/harness/check-structure-contract.mjs --root . --strict",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Description: structure gate unaffected. Expected: 0 findings. Observed: 0 findings."
+    }
+  ],
+  "knownGaps": [
+    "Historical .harness manifests/evidence still contain the pre-move doc paths; they are records and are not scanned by check-doc-links.",
+    "Four testing-*.md docs and two harness guides remain in the docs root per the inventory's KEEP_ADD_INDEX classification."
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-09-22-document-relocation-and-archive/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-09-22-document-relocation-and-archive/",
+    "reviewFile": ".harness/evidence/2026-09-22-document-relocation-and-archive/review.md",
+    "changeRef": "none",
+    "planRefs": [".harness/NAMING_AND_BOUNDARIES_REMEDIATION_PLAN_2026-09-22.md"]
+  },
+  "completedAt": "2026-09-23T00:00:00Z"
+}

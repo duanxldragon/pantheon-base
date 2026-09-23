@@ -2,18 +2,19 @@
 package login
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/duanxldragon/pantheon-base/backend/modules/auth/security"
-	user "github.com/duanxldragon/pantheon-base/backend/modules/system/iam/user"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/authsession"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/common"
+	"github.com/duanxldragon/pantheon-base/backend/pkg/contracts/authuser"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/impexp"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/logging"
+	"github.com/duanxldragon/pantheon-base/backend/pkg/maintenance"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/tenant"
 
 	"go.uber.org/zap"
@@ -33,23 +34,19 @@ type SecurityEventRecorder interface {
 
 // LoginService handles credential authentication and login throttling.
 type LoginService struct {
-	db        *gorm.DB
-	policy    PolicyProvider
+	db     *gorm.DB
+	policy PolicyProvider
+	// userRepo is the credential port over system user state. It is injected at
+	// the composition root so auth never imports modules/system/iam/user
+	// (docs/designs/REPOSITORY_LAYOUT.md §8.2).
+	userRepo  authuser.Repository
 	recorder  SecurityEventRecorder
 	tenantCtx *tenant.Context
-
-	// Throttle state for automatic retention cleanup: without it every
-	// RecordLoginLog/List/Export issues a full-table DELETE scan. Shared by
-	// pointer so request-scoped tenant facades never copy the lock.
-	autoCleanupState *autoCleanupState
 }
 
-// autoCleanupState holds the mutex-guarded retention-cleanup throttle so the
-// struct can be shallow-copied for tenant-scoped facades (vet lock-copy rule).
-type autoCleanupState struct {
-	mu                sync.Mutex
-	lastAutoCleanupAt time.Time
-}
+// LoginLogRetentionTaskName is the maintenance registry key for the periodic
+// login-log retention sweep.
+const LoginLogRetentionTaskName = "auth.login_log_retention"
 
 func (s *LoginService) WithTenantContext(ctx *tenant.Context) *LoginService {
 	clone := *s
@@ -61,18 +58,19 @@ func (s *LoginService) scoped(db *gorm.DB) *gorm.DB {
 	return db.Scopes(tenant.WithTenantScope(s.tenantCtx))
 }
 
-// NewLoginService creates a LoginService with the given DB and policy provider.
-func NewLoginService(db *gorm.DB, policy PolicyProvider, recorder SecurityEventRecorder) *LoginService {
-	return &LoginService{db: db, policy: policy, recorder: recorder}
+// NewLoginService creates a LoginService with the given DB, credential port and
+// policy provider.
+func NewLoginService(db *gorm.DB, userRepo authuser.Repository, policy PolicyProvider, recorder SecurityEventRecorder) *LoginService {
+	return &LoginService{db: db, userRepo: userRepo, policy: policy, recorder: recorder}
 }
 
 // Authenticate verifies username/password and returns the user if valid.
-func (s *LoginService) Authenticate(req *LoginReq) (*user.SystemUser, error) {
+func (s *LoginService) Authenticate(req *LoginReq) (*authuser.User, error) {
 	return s.AuthenticateWithSource(req, "")
 }
 
 // AuthenticateWithSource verifies credentials with source/IP throttling.
-func (s *LoginService) AuthenticateWithSource(req *LoginReq, sourceKey string) (*user.SystemUser, error) {
+func (s *LoginService) AuthenticateWithSource(req *LoginReq, sourceKey string) (*authuser.User, error) {
 	if s.db == nil {
 		return nil, common.ErrDatabaseNotInitialized
 	}
@@ -111,26 +109,28 @@ func (s *LoginService) ensureSourceThrottleAllowed(sourceKey string, policy Runt
 	return nil
 }
 
-func (s *LoginService) loadLoginUser(username, sourceKey string, policy RuntimePolicy, now time.Time) (*user.SystemUser, error) {
+func (s *LoginService) loadLoginUser(username, sourceKey string, policy RuntimePolicy, now time.Time) (*authuser.User, error) {
 	if username == "" {
 		_ = s.failLoginSourceBlocked(nil, sourceKey, policy, now)
 		return nil, errors.New(errUserNotFound)
 	}
-	var currentUser user.SystemUser
-	result := s.db.Where("username = ?", username).First(&currentUser)
-	if result.Error == nil {
-		return &currentUser, nil
+	// The login path is reached from handlers that do not thread a request
+	// context into Authenticate; keep the pre-port behavior (no per-request
+	// context) rather than widening the login facade signature.
+	currentUser, err := s.userRepo.FindByUsername(context.Background(), username)
+	if err == nil {
+		return currentUser, nil
 	}
-	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+	if errors.Is(err, gorm.ErrRecordNotFound) {
 		if err := s.failLoginSourceBlocked(nil, sourceKey, policy, now); err != nil {
 			return nil, err
 		}
 		return nil, errors.New(errUserNotFound)
 	}
-	return nil, result.Error
+	return nil, err
 }
 
-func (s *LoginService) ensureUserAvailable(currentUser *user.SystemUser, sourceKey string, policy RuntimePolicy, now time.Time) error {
+func (s *LoginService) ensureUserAvailable(currentUser *authuser.User, sourceKey string, policy RuntimePolicy, now time.Time) error {
 	if currentUser.Status == common.StatusDisabled {
 		if err := s.failLoginSourceBlocked(currentUser, sourceKey, policy, now); err != nil {
 			return err
@@ -146,7 +146,7 @@ func (s *LoginService) ensureUserAvailable(currentUser *user.SystemUser, sourceK
 	return nil
 }
 
-func (s *LoginService) handlePasswordMismatch(currentUser *user.SystemUser, sourceKey string, policy RuntimePolicy, now time.Time) error {
+func (s *LoginService) handlePasswordMismatch(currentUser *authuser.User, sourceKey string, policy RuntimePolicy, now time.Time) error {
 	locked, err := s.recordFailedLoginAttempt(currentUser, policy)
 	if err != nil {
 		return err
@@ -171,12 +171,7 @@ func (s *LoginService) clearFailedLoginState(userID uint64) error {
 	if s.db == nil {
 		return common.ErrDatabaseNotInitialized
 	}
-	return s.db.Model(&user.SystemUser{}).
-		Where("id = ? AND (failed_login_attempts <> 0 OR login_locked_until IS NOT NULL)", userID).
-		Updates(map[string]any{
-			"failed_login_attempts": 0,
-			"login_locked_until":    nil,
-		}).Error
+	return s.userRepo.ClearFailedLoginState(context.Background(), userID)
 }
 
 // ListOwnLoginLogs returns login logs for a specific username.
@@ -188,8 +183,11 @@ func (s *LoginService) ListOwnLoginLogs(username string, query *LoginLogQuery) (
 }
 
 // ListLoginLogs returns all login logs.
+//
+// Read path: retention is a maintenance concern, so this handler never issues
+// the retention DELETE (task 2026-09-22-request-path-maintenance). An operator
+// who needs to purge immediately uses the explicit cleanup endpoint.
 func (s *LoginService) ListLoginLogs(query *LoginLogQuery) (*LoginLogPageResp, error) {
-	s.ensureAutomaticLoginLogRetention()
 	return s.listLoginLogs(query, "")
 }
 
@@ -264,7 +262,6 @@ func (s *LoginService) ExportLoginLogs(query *LoginLogQuery) (*impexp.CSVFile, e
 	if s.db == nil {
 		return nil, common.ErrDatabaseNotInitialized
 	}
-	s.ensureAutomaticLoginLogRetention()
 
 	logs, err := s.listLoginLogsForExport(query)
 	if err != nil {
@@ -332,7 +329,6 @@ func (s *LoginService) listLoginLogsForExport(query *LoginLogQuery) ([]SystemLog
 	if s.db == nil {
 		return nil, common.ErrDatabaseNotInitialized
 	}
-	s.ensureAutomaticLoginLogRetention()
 
 	var logs []SystemLogLogin
 	// Reuse the exact list-scope filters (username/keyword/status AND the
@@ -382,7 +378,6 @@ func (s *LoginService) RecordLoginLog(requestID, username, ip, browser, os strin
 	if s.db == nil {
 		return
 	}
-	s.ensureAutomaticLoginLogRetention()
 
 	loginLog := SystemLogLogin{
 		TenantID:      tenantIDFromContext(s.tenantCtx),
@@ -409,57 +404,60 @@ func tenantIDFromContext(ctx *tenant.Context) uint64 {
 	return tenant.PlatformGlobalTenantID
 }
 
-func (s *LoginService) ensureAutomaticLoginLogRetention() {
+// RunLoginLogRetention deletes login logs older than the configured retention
+// window.
+//
+// It is a maintenance entry point: the background maintenance runner and the
+// explicit cleanup endpoint call it, request paths do not. Throttling and
+// overlap protection live in the maintenance registry, so this always does
+// the sweep when invoked and returns its failure instead of swallowing it.
+func (s *LoginService) RunLoginLogRetention() error {
 	if s.db == nil {
-		return
+		return common.ErrDatabaseNotInitialized
 	}
-	now := time.Now()
-	state := s.autoCleanupState
-	if state == nil {
-		state = &autoCleanupState{}
-		s.autoCleanupState = state
-	}
-	state.mu.Lock()
-	if !state.lastAutoCleanupAt.IsZero() && now.Sub(state.lastAutoCleanupAt) < autoCleanupMinInterval {
-		state.mu.Unlock()
-		return
-	}
-	state.lastAutoCleanupAt = now
-	state.mu.Unlock()
-
 	policy := s.policy.GetRuntimePolicy()
-	cutoff := now.AddDate(0, 0, -maxInt(policy.LoginLogRetentionDays, 1))
-	if err := s.db.Where("login_time < ?", cutoff).Delete(&SystemLogLogin{}).Error; err != nil {
-		logging.Warn("cleanup expired login logs failed", zap.Error(err))
-	}
+	cutoff := time.Now().AddDate(0, 0, -maxInt(policy.LoginLogRetentionDays, 1))
+	return s.db.Where("login_time < ?", cutoff).Delete(&SystemLogLogin{}).Error
 }
 
-func (s *LoginService) recordFailedLoginAttempt(currentUser *user.SystemUser, policy RuntimePolicy) (bool, error) {
+// RegisterMaintenanceTasks registers the login-log retention sweep with the
+// background maintenance registry.
+func (s *LoginService) RegisterMaintenanceTasks(reg *maintenance.Registry) {
+	reg.Register(maintenance.Task{
+		Name:     LoginLogRetentionTaskName,
+		Interval: maintenance.DefaultInterval,
+		Run: func(context.Context) error {
+			return s.RunLoginLogRetention()
+		},
+	})
+}
+
+func (s *LoginService) recordFailedLoginAttempt(currentUser *authuser.User, policy RuntimePolicy) (bool, error) {
 	if s.db == nil || currentUser == nil {
 		return false, common.ErrDatabaseNotInitialized
 	}
+	now := time.Now()
 	nextAttempts := currentUser.FailedLoginAttempts + 1
-	updates := map[string]any{"failed_login_attempts": nextAttempts}
-	if currentUser.LoginLockedUntil != nil && currentUser.LoginLockedUntil.Before(time.Now()) {
-		updates["login_locked_until"] = nil
+	// An expired lock is cleared by this same write: the ported repository
+	// always writes login_locked_until, so a nil lockedUntil means "no lock".
+	var lockedUntil *time.Time
+	if currentUser.LoginLockedUntil != nil && currentUser.LoginLockedUntil.Before(now) {
 		currentUser.LoginLockedUntil = nil
 	}
 	if policy.MaxFailedAttempts > 0 && nextAttempts >= policy.MaxFailedAttempts {
-		lockUntil := time.Now().Add(time.Duration(maxInt(policy.LockMinutes, 1)) * time.Minute)
-		updates["failed_login_attempts"] = 0
-		updates["login_locked_until"] = &lockUntil
+		lockUntil := now.Add(time.Duration(maxInt(policy.LockMinutes, 1)) * time.Minute)
+		lockedUntil = &lockUntil
 		currentUser.FailedLoginAttempts = 0
 		currentUser.LoginLockedUntil = &lockUntil
-		if err := s.db.Model(currentUser).Updates(updates).Error; err != nil {
-			return false, err
-		}
-		return true, nil
+	} else {
+		currentUser.FailedLoginAttempts = nextAttempts
 	}
-	currentUser.FailedLoginAttempts = nextAttempts
-	if err := s.db.Model(currentUser).Updates(updates).Error; err != nil {
+	if err := s.userRepo.UpdateFailedLoginState(
+		context.Background(), currentUser.ID, currentUser.FailedLoginAttempts, lockedUntil,
+	); err != nil {
 		return false, err
 	}
-	return false, nil
+	return lockedUntil != nil, nil
 }
 
 func (s *LoginService) checkSourceThrottle(sourceKey string, policy RuntimePolicy, now time.Time) (bool, error) {
@@ -490,7 +488,7 @@ func (s *LoginService) checkSourceThrottle(sourceKey string, policy RuntimePolic
 	return false, nil
 }
 
-func (s *LoginService) failLoginSourceBlocked(currentUser *user.SystemUser, sourceKey string, policy RuntimePolicy, now time.Time) error {
+func (s *LoginService) failLoginSourceBlocked(currentUser *authuser.User, sourceKey string, policy RuntimePolicy, now time.Time) error {
 	blocked, err := s.recordSourceFailure(sourceKey, policy, now)
 	if err != nil {
 		return err
@@ -568,7 +566,7 @@ func (s *LoginService) isSourceThrottleWindowExpired(windowStartedAt *time.Time,
 	return windowStartedAt.Add(time.Duration(windowMinutes) * time.Minute).Before(now)
 }
 
-func (s *LoginService) emitSecurityEvent(currentUser *user.SystemUser, eventType, severity, sourceKey, messageKey, ip string) {
+func (s *LoginService) emitSecurityEvent(currentUser *authuser.User, eventType, severity, sourceKey, messageKey, ip string) {
 	if s.recorder == nil || !s.policy.GetRuntimePolicy().SecurityEventEnabled {
 		return
 	}

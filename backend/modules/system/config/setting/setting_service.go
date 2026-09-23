@@ -10,8 +10,10 @@ import (
 	"github.com/duanxldragon/pantheon-base/backend/pkg/common"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/contracts"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/database"
+	"github.com/duanxldragon/pantheon-base/backend/pkg/logging"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/tenant"
 
+	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
 
@@ -27,8 +29,15 @@ type settingCacheState struct {
 	mu          sync.RWMutex
 	listCache   map[string][]SettingResp
 	groupCache  map[string]*SettingGroupResp
-	publicCache *PublicSettingResp
+	publicCache map[string]*PublicSettingResp
+	// watcherOnce guards the cross-instance invalidation goroutine so repeated
+	// wiring (module re-register, tests) never spawns duplicate subscribers.
+	watcherOnce sync.Once
 }
+
+// settingsRefreshChannel is the pubsub channel also published by
+// notifyRuntimeSettingsChanged; keep both in sync.
+const settingsRefreshChannel = "settings:refresh"
 
 // SettingService serves platform/system settings with per-request tenant
 // scoping.
@@ -82,8 +91,9 @@ func NewSettingService(db *gorm.DB) *SettingService {
 	return &SettingService{
 		db: db,
 		cache: &settingCacheState{
-			listCache:  make(map[string][]SettingResp),
-			groupCache: make(map[string]*SettingGroupResp),
+			listCache:   make(map[string][]SettingResp),
+			groupCache:  make(map[string]*SettingGroupResp),
+			publicCache: make(map[string]*PublicSettingResp),
 		},
 	}
 }
@@ -96,6 +106,35 @@ func (s *SettingService) Migrate() error {
 		return err
 	}
 	return s.Bootstrap()
+}
+
+// WatchSettingsInvalidation subscribes to the cross-instance "settings:refresh"
+// pubsub channel and clears this process's setting caches on every message, so
+// an instance that did not serve the mutating request still drops its
+// process-local cache (public/list/group). Idempotent; a no-op without Redis
+// (single-instance or no-Redis deployments have nothing to sync).
+func (s *SettingService) WatchSettingsInvalidation() {
+	if database.RDB == nil || s.cache == nil {
+		return
+	}
+	s.cache.watcherOnce.Do(func() {
+		go func() {
+			defer func() {
+				if r := recover(); r != nil {
+					logging.Error("settings invalidation watcher panic", zap.Any("panic", r))
+				}
+			}()
+			for {
+				pubsub := database.RDB.Subscribe(context.TODO(), settingsRefreshChannel)
+				for range pubsub.Channel() {
+					s.invalidateSettingCache()
+				}
+				_ = pubsub.Close()
+				logging.Warn("settings invalidation channel closed, reconnecting in 5s")
+				time.Sleep(5 * time.Second)
+			}
+		}()
+	})
 }
 
 func (s *SettingService) Bootstrap() error {
@@ -357,15 +396,27 @@ func (s *SettingService) GetPublicSettings() (*PublicSettingResp, error) {
 		return nil, common.ErrDatabaseNotInitialized
 	}
 
+	// Cache key is tenant-namespaced in multi mode (same canary pattern as
+	// list/group caches) so tenant A/B never read each other's public rows
+	// through the process-local cache.
+	cacheKey := s.publicSettingsCacheKey()
+
 	s.cache.mu.RLock()
-	if s.cache.publicCache != nil {
+	if cached, ok := s.cache.publicCache[cacheKey]; ok && cached != nil {
 		s.cache.mu.RUnlock()
-		return clonePublicSettingResp(s.cache.publicCache), nil
+		return clonePublicSettingResp(cached), nil
 	}
 	s.cache.mu.RUnlock()
 
+	// Tenant-scoped read (contract §3.3): multi mode resolves global defaults
+	// plus the request tenant's overrides; compat sees global rows only.
+	// Ordering by tenant_id ascending makes the last row per key the tenant
+	// override (same resolution rule as GetByKey).
 	var rows []SystemSetting
-	if err := s.db.Model(&SystemSetting{}).Where("is_public = ? AND is_encrypted = ?", 1, 0).Order("id asc").Find(&rows).Error; err != nil {
+	if err := s.tenantScope()(s.db.Model(&SystemSetting{})).
+		Where("is_public = ? AND is_encrypted = ?", 1, 0).
+		Order("tenant_id asc, id asc").
+		Find(&rows).Error; err != nil {
 		return nil, err
 	}
 
@@ -376,9 +427,18 @@ func (s *SettingService) GetPublicSettings() (*PublicSettingResp, error) {
 
 	resp := &PublicSettingResp{Settings: settings}
 	s.cache.mu.Lock()
-	s.cache.publicCache = clonePublicSettingResp(resp)
+	s.cache.publicCache[cacheKey] = clonePublicSettingResp(resp)
 	s.cache.mu.Unlock()
 	return clonePublicSettingResp(resp), nil
+}
+
+// publicSettingsCacheKey namespaces the public settings cache per tenant
+// (multi mode). Compat and platform-global share the legacy base key.
+func (s *SettingService) publicSettingsCacheKey() string {
+	if s.tenantCtx == nil || !s.tenantCtx.IsMulti() {
+		return "public"
+	}
+	return "t" + strconv.FormatUint(s.tenantCtx.TenantID, 10) + ":public"
 }
 
 func (s *SettingService) GetOverview() (*SettingOverviewResp, error) {
@@ -647,7 +707,7 @@ func (s *SettingService) notifyRuntimeSettingsChanged() error {
 		return err
 	}
 	if database.RDB != nil {
-		_ = database.RDB.Publish(context.TODO(), "settings:refresh", "updated").Err()
+		_ = database.RDB.Publish(context.TODO(), settingsRefreshChannel, "updated").Err()
 	}
 	return nil
 }
