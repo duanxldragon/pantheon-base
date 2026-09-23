@@ -26,7 +26,7 @@ node scripts/harness/check-sync-drift.mjs --root . --strict
 node scripts/harness/check-encoding.mjs --root . --strict
 node scripts/harness/check-review.mjs --root . --strict
 node scripts/harness/check-runtime-evidence.mjs --root . --strict
-node scripts/harness/check-task-packet.mjs --root .
+node scripts/harness/check-task-packet.mjs --root .   # template-format docs; legacy docs are listed in config/task-packet-legacy-docs.json
 node scripts/harness/check-evidence.mjs --root . --strict
 node scripts/harness/check-failure-registry.mjs --root . --strict
 node scripts/harness/check-boundaries.mjs --root .

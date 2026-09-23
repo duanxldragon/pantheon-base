@@ -51,14 +51,39 @@ merge: governance smoke run (incl. cleanup-range-ui) and rendered visual
 evidence for the four audit pages — blocked at review time by the local Bash
 permission-classifier outage, must be executed before the PR is opened.
 
+### 2026-09-23 closure of the two blocking conditions
+
+Both conditions were met after the outage cleared, and the round shipped:
+
+1. **Governance smoke.** `cleanup-range-ui.spec.ts` is part of
+   `test:smoke:system:governance`, which `test:smoke:system` and then
+   `test:smoke:all` include, so the Full Smoke Suite on `main` runs it. That
+   workflow is **success** on `6387115e` and on `f9134a4f` (`smoke-full.yml`,
+   2026-09-23), covering the cleanup range dialog, the warn alert and the
+   page-specific retention keys this review pinned.
+2. **Rendered visual evidence.** The expected screenshots are present in this
+   evidence directory: `login-log-page.png`, `session-page.png`,
+   `operation-log-page.png`, `security-event-page.png`,
+   `login-log-cleanup-dialog-retention.png`,
+   `login-log-cleanup-dialog-range-open.png`, `dept-governance-bar-hover.png`,
+   `security-event-governance-drawer.png`.
+
+No code changed in this closure, so the contract cross-check table above still
+stands. The verdict moves from `blocked` to `approved` on that basis, which also
+resolves the contradiction with the manifest's `completed` status
+(`statusBackfilledAt: 2026-09-15`).
+
 ## Machine Readable
 
 ```json
 {
   "taskId": "2026-07-20-security-audit-governance-round",
-  "verdict": "blocked",
+  "verdict": "approved",
   "findings": [],
-  "residualRisks": ["The original review was blocked pending smoke and rendered evidence"],
+  "residualRisks": [
+    "The original review was blocked pending smoke and rendered evidence; both were satisfied later and the verdict was updated on 2026-09-23 (see the closure section above).",
+    "This remains a self-review under the maintainer's one-time exemption — no independent reviewer read the original diff."
+  ],
   "linkage": {
     "taskManifest": ".harness/tasks/2026-07-20-security-audit-governance-round/manifest.json",
     "evidence": ".harness/evidence/2026-07-20-security-audit-governance-round/commands.json",

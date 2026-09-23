@@ -1,0 +1,149 @@
+{
+  "taskId": "2026-09-23-governance-residual-closeout",
+  "status": "verified",
+  "commands": [
+    {
+      "command": "git grep -n \"DHCCdhcc2025\\|DHCCroot\"",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "No matches in tracked files: both dev credentials are gone from docs and from the historical evidence transcripts. Worktree-only copies remain in the gitignored .env.test, dist/ and pantheon-ops/.foundation/ (release payloads built before this fix)."
+    },
+    {
+      "command": "cd backend && go build ./... && go vet ./... && gofmt -l .",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "No output from gofmt."
+    },
+    {
+      "command": "cd backend && go test -count=1 ./pkg/testredis/ ./pkg/database/... ./modules/auth/login/... ./modules/auth/session/...",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "ok testredis 0.023s, database 13.012s, auth/login 80.580s, auth/session 4.036s. Run with a local MySQL DSN read from the gitignored .env.test; REDIS was deliberately unset, so the Redis-backed session cases skipped (see the two probes below for the behaviour under configuration)."
+    },
+    {
+      "command": "cd backend && PANTHEON_REDIS_ADDR=127.0.0.1:6399 go test -run TestRevokeSessionRefreshCascadesTokenDeletion -v ./pkg/authtoken/   # PANTHEON_TEST_REDIS_ADDR and REDIS_ADDR unset",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "BEFORE this change the same invocation reported `--- SKIP` (addr not configured). Now: `ping redis at 127.0.0.1:6399 (from PANTHEON_REDIS_ADDR): connectex: No connection could be made` and `--- FAIL`. The test is running against the runtime-named variable instead of silently skipping; the port is closed on purpose to prove the variable is consumed."
+    },
+    {
+      "command": "cd backend && PANTHEON_TEST_REDIS_REQUIRED=1 go test -run TestRevokeSessionRefreshCascadesTokenDeletion -v ./pkg/authtoken/   # no address variable set",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "`redis is required (PANTHEON_TEST_REDIS_REQUIRED is set) but none of PANTHEON_TEST_REDIS_ADDR, PANTHEON_REDIS_ADDR, REDIS_ADDR is configured; a misconfigured variable would otherwise skip this test silently` then `--- FAIL`. Fail-loudly path confirmed."
+    },
+    {
+      "command": "cd frontend && node --test scripts/database-import-qa-setup.test.mjs",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "7 pass / 0 fail. Includes the two new cases: the fallback list is the documented placeholder only, and probe candidates come from PANTHEON_SMOKE_MYSQL_PASSWORD_CANDIDATES."
+    },
+    {
+      "command": "node scripts/harness/check-boundaries.mjs --strict --repo pantheon-base --baseline config/boundary-baseline.json",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "`Boundary check (strict): 0 finding(s), 5 baselined, 0 stale baselined, 0 warning(s)`. Was 4 warnings / 3 stale entries before. The five remaining entries are the platform type import and the four auth shared-CSS imports, all still reviewable until 2026-12-31."
+    },
+    {
+      "command": "cp config/boundary-baseline.json .tmp/probe.json && node -e \"add a stale auth->iam/user entry\" && node scripts/harness/check-boundaries.mjs --strict --repo pantheon-base --baseline .tmp/probe.json",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "Negative probe: `1 stale baselined, 1 warning` and exit code 1; the same file without --strict exits 0. A stale entry can no longer sit there whitelisting a reintroduced import."
+    },
+    {
+      "command": "printf 'package probe\\nimport (_ \".../modules/system/org/dept\")\\n' > backend/modules/system/iam/probe_boundary_tmp.go && node scripts/harness/check-boundaries.mjs --strict --repo pantheon-base",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "Negative probe for the ported rule: reports `system/iam must not import another system subdomain's packages (wire them at backend/modules/system/system_modules.go instead)`. The probe file was removed afterwards; the tree reports 0 findings. This replaces the deleted checker's checkSystemCrossDependency, whose service|repository|handler pattern never matched the actual layout (no such directories exist)."
+    },
+    {
+      "command": "node scripts/harness/check-task-packet.mjs --root .",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "`11 file(s), 0 error(s), 0 warning(s)` + `17 legacy doc(s) skipped via config/task-packet-legacy-docs.json`. Before: `28 file(s), 166 error(s), 47 warning(s)` on history alone."
+    },
+    {
+      "command": "node scripts/harness/check-task-packet.mjs --root . --include-legacy",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "Still reproduces the pre-change report (28 files / 166 errors) so the legacy set stays inspectable rather than hidden."
+    },
+    {
+      "command": "node scripts/harness/check-task-packet.mjs --root . --legacy .tmp/legacy-probe.json   # allowlist with a nonexistent doc",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "Negative probe: `1 stale legacy allowlist entr(ies)` and exit code 1, so the exemption list must shrink as docs are migrated."
+    },
+    {
+      "command": "node --test tests/scripts/generated-marker-consistency.test.mjs tests/scripts/harness-check-task-packet-context.test.mjs",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "2/2 and 2/2 pass. The marker test pins the sentence across the generator, the reset tooling and the gate, and asserts generateAll() routes every file through the marker helper. The task-packet tests are the pre-existing regression pair for the checker that was changed."
+    },
+    {
+      "command": "cd frontend && node ./scripts/run-generator-quality-contract-test.mjs",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "8 pass / 0 fail (4 pre-existing + 4 new marker cases). Every exported file's first line is `// Code generated by pantheon low-code generator. DO NOT EDIT.`, applied once, on a comment-capable extension."
+    },
+    {
+      "command": "node scripts/harness/check-generated.mjs --root . --strict && node scripts/harness/check-structure-contract.mjs --root . --strict",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "`Generated artifact check (strict): 0 finding(s) across 11 artifact(s)`; structure contract 0 findings."
+    },
+    {
+      "command": "node scripts/harness/check-doc-links.mjs --root . --strict && node scripts/harness/check-doc-inventory.mjs --root . --strict && node scripts/harness/check-encoding.mjs --root . --strict && node scripts/harness/check-failure-registry.mjs --root . --strict && node scripts/check-task-packet-template.mjs && node scripts/frontmatter-check.mjs",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "All pass. Run after the doc and evidence edits, so the credential redactions did not break links, inventory, frontmatter or encoding."
+    },
+    {
+      "command": "cd frontend && ./node_modules/.bin/tsc -b && node ./scripts/check-import-path-case.mjs && ../.tmp/bin/golangci-lint.exe run --new-from-rev=origin/main ./...",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "tsc exit 0; import path case guard passed for 247 source files; golangci-lint `0 issues` on new code."
+    },
+    {
+      "command": "node --test tests/scripts/quality-workflow.test.mjs tests/scripts/ci-workflow-dispatch.test.mjs",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "6/6 pass after the quality.yml and ci.yml env edits — the workflow governance tests still hold, and both new steps run before the `Enforce harness governance gate` step."
+    },
+    {
+      "command": "gh run list --branch main --limit 7",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "Baseline before this round: main f9134a4f shows CI, Code Quality Gates, Security Gates, Core Smoke Tests, Full Smoke Suite and Release Gate all success. This is also the evidence that closed the 2026-07-20 blocked review (its governance smoke spec is part of test:smoke:all)."
+    },
+    {
+      "command": "cd ../pantheon-ops && cat .foundation/foundation-release.lock.json && git status --short | wc -l",
+      "cwd": "pantheon-ops",
+      "status": "not-run",
+      "notes": "Deferred, not executed. The lock consumes pantheon-base-v0.12.1 (baseCommit 884465c0, an ancestor of base main, 31 commits behind) and its own pendingWork already records baseline-swap as blocked by uncommitted changes from another session; ops currently reports 269 changed entries. Swapping the baseline over that tree would mix lineage and could destroy work this round does not own, so the sync is deferred to the next foundation release."
+    }
+  ],
+  "runtimeGap": "No Redis server is running on this host (port 6379 closed; the Docker daemon is stopped), so the Redis-backed session tests skipped in the suite run. The helper's variable-name acceptance and its fail-loudly path were therefore proven with the two targeted probes above rather than by a full Redis-backed run; CI provisions Redis and now sets PANTHEON_TEST_REDIS_REQUIRED, which is where the complete path executes.",
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-09-23-governance-residual-closeout/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-09-23-governance-residual-closeout/",
+    "reviewFile": ".harness/evidence/2026-09-23-governance-residual-closeout/review.md",
+    "summaryFile": ".harness/evidence/2026-09-23-governance-residual-closeout/summary.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".harness/NAMING_AND_BOUNDARIES_REMEDIATION_PLAN_2026-09-22.md"
+    ]
+  },
+  "repo": "pantheon-base",
+  "agent": {
+    "tool": "claude-code",
+    "note": "Executed on Windows under Git Bash (Cygwin); the repo-local MinGW-w64 toolchain in the gitignored .tmp/ was used for cgo/race work in the 2026-09-22 round and is not needed by this round's commands."
+  },
+  "knownGaps": [
+    "No Redis server was available locally, so the Redis-backed cases ran as skips; the helper contract was proven by targeted probes instead.",
+    "The 17 pre-template task docs remain in config/task-packet-legacy-docs.json pending migration or deletion.",
+    "The generator still does not write the marker into the 11 stable artifacts it rewrites; check:generated continues to cover them by name.",
+    "pantheon-ops synchronization is deferred with its blocker recorded; the three shared artifacts this round changes reach ops with the next foundation release.",
+    "Pre-existing release payloads under pantheon-base/dist/ and pantheon-ops/.foundation/releases/ were built before the credential removal and still contain the old password inside the gitignored bundles."
+  ]
+}

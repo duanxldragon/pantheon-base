@@ -209,7 +209,7 @@ FilterPanel vs SearchToolbar 探针、暗色可用性探针）。
 ```bash
 # 端口找 PID：netstat -ano | grep -E ":(18080|15173|28080|25173)" ；taskkill //PID <pid> //F
 # ops PID 也记录在 %TEMP%/pantheon-ops-ui-test.pids.json
-mysql -h 127.0.0.1 -u root -p'DHCCroot@2025' -e "DROP DATABASE pantheon_ui_test; DROP DATABASE pantheon_ops_ui_test"
+mysql -h 127.0.0.1 -u root -p'<redacted-mysql-password>' -e "DROP DATABASE pantheon_ui_test; DROP DATABASE pantheon_ops_ui_test"
 rm "$TEMP/pantheon-base-ui-test.exe" "$TEMP/pantheon-ops-ui-test.exe"
 rm -rf pantheon-base/frontend/.tmp-capture pantheon-ops/frontend/.tmp-capture
 # 复核：8080/5173 用户实例仍在，pantheon/pantheon_base/pantheon_ops 库未动
@@ -219,11 +219,11 @@ rm -rf pantheon-base/frontend/.tmp-capture pantheon-ops/frontend/.tmp-capture
 
 ```bash
 # 1. 建库
-mysql -h 127.0.0.1 -u root -p'DHCCroot@2025' -e "CREATE DATABASE IF NOT EXISTS pantheon_ui_test CHARACTER SET utf8mb4"
+mysql -h 127.0.0.1 -u root -p'<redacted-mysql-password>' -e "CREATE DATABASE IF NOT EXISTS pantheon_ui_test CHARACTER SET utf8mb4"
 # 2. base 后端（不设 GIN_MODE=release）
 cd pantheon-base/backend && go build -o /tmp/pantheon-ui-test.exe ./cmd/server
-PANTHEON_DSN='root:DHCCroot@2025@tcp(127.0.0.1:3306)/pantheon_ui_test?charset=utf8mb4&parseTime=True&loc=Local' \
-PANTHEON_PORT=18080 PANTHEON_REDIS_ADDR=127.0.0.1:6379 PANTHEON_REDIS_PASSWORD=DHCCdhcc2025 /tmp/pantheon-ui-test.exe &
+PANTHEON_DSN='root:<redacted-mysql-password>@tcp(127.0.0.1:3306)/pantheon_ui_test?charset=utf8mb4&parseTime=True&loc=Local' \
+PANTHEON_PORT=18080 PANTHEON_REDIS_ADDR=127.0.0.1:6379 PANTHEON_REDIS_PASSWORD=<redacted-redis-password> /tmp/pantheon-ui-test.exe &
 # 3. base 前端
 cd pantheon-base/frontend && PANTHEON_API_PROXY_TARGET=http://127.0.0.1:18080 npx vite --port 15173 --strictPort &
 # 4. 全页走查（18 页 + 布局守卫 + findings.json）

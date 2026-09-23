@@ -65,10 +65,17 @@ updated_at: 2026-09-22
 
 显式残余 gap：
 
-- `auth/login`、`auth/login/login_runtime.go`、`auth/security/security_service.go` 对
-  `system/iam/user` 的模型级依赖冻结在 `config/boundary-baseline.json`（需 `UserReader` 契约）。
+- ~~`auth/login`、`auth/login/login_runtime.go`、`auth/security/security_service.go` 对
+  `system/iam/user` 的模型级依赖冻结在 `config/boundary-baseline.json`（需 `UserReader` 契约）。~~
+  **2026-09-23 关闭**：`pkg/contracts/authuser` 端口落地，生产代码已不再 import `system/iam/user`；
+  基线中 3 条条目成为 stale，已删除，并由 `check-boundaries --strict` 的 stale 检测兜住回归。
 - 生成器尚未对新产出的模块文件写标记；门禁当前覆盖 11 个稳定产物。
-- `scripts/check-arch-boundaries.mjs` 未接入 CI，与 `check-boundaries.mjs` 职责重叠。
+- ~~`scripts/check-arch-boundaries.mjs` 未接入 CI，与 `check-boundaries.mjs` 职责重叠。~~
+  **2026-09-23 关闭**：脚本已删除（它依赖外部 `rg`、`checkGeneratedRegistry` 与
+  `check-generated.mjs` 重复，`checkSystemCrossDependency` 找的是不存在的
+  `service|repository|handler` 目录，属死规则）。其中唯一有效的意图已按真实不变量
+  移植到 `check-boundaries.mjs`：`system/*` 子域内部不得互相 import，只能在
+  `backend/modules/system/system_modules.go` 组合根接线。
 - `docs/` 根部保留 4 个 `testing-*.md` 与 2 个 harness 指南（盘点判定 KEEP_ADD_INDEX）。
 
 ## 非目标

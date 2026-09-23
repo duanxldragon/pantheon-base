@@ -331,6 +331,30 @@ PANTHEON_TEST_REDIS_ADDR=127.0.0.1:6379 \
 go test -short ./...
 ```
 
+### Redis-backed tests
+
+`pkg/testredis.Open` accepts three address variables, in priority order:
+`PANTHEON_TEST_REDIS_ADDR`, then `PANTHEON_REDIS_ADDR` (the runtime variable the
+server itself reads), then `REDIS_ADDR`; the password resolves the same way over
+`PANTHEON_TEST_REDIS_PASSWORD` / `PANTHEON_REDIS_PASSWORD` / `REDIS_PASSWORD`.
+
+When no address resolves, `Open` **skips** by default, so a bare checkout can
+still run `go test ./...`. That default is how a green run can mean "nothing ran":
+setting only a mistyped or renamed variable produces a skip, not a failure. Every
+job that provisions Redis therefore also sets `PANTHEON_TEST_REDIS_REQUIRED=true`,
+which turns the missing-address case into a hard failure naming the variables it
+looked for. Keep that pairing when adding a new Redis-backed job:
+
+```yaml
+PANTHEON_TEST_REDIS_ADDR: 127.0.0.1:6379
+PANTHEON_TEST_REDIS_REQUIRED: "true"
+```
+
+A resolved address that refuses the connection always fails (never skips), and
+`pkg/testredis/redis_test.go` pins both the accepted variable names and the
+fail/skip decision, so dropping a name or the required-flag check breaks a test.
+```
+
 ## Escalation Matrix
 
 | Issue Severity | Response Time | Escalation Path |

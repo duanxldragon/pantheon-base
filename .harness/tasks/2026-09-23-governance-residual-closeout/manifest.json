@@ -1,0 +1,152 @@
+{
+  "taskId": "2026-09-23-governance-residual-closeout",
+  "title": "Close out the governance residuals carried by the 2026-09-22 remediation rounds",
+  "goal": "Clear the residual gaps the 2026-09-22 rounds left behind and could not close inside their own scope: two committed credentials, a Redis test helper that let a required CI gate go green while skipping, a boundary baseline whose stale entries could silently whitelist a reintroduced import, a dead unwired architecture checker, a task-packet checker that reported 166 errors on history, and a generator that produced modules the check:generated gate could not identify. Record pantheon-ops synchronization as an explicit deferral with its real blocker.",
+  "primaryLayer": "platform",
+  "status": "completed",
+  "statusNote": "2026-09-23: each residual fixed at its source with a ratchet where the class can recur (Redis env contract, stale-baseline failure, legacy-allowlist staleness, marker consistency). pantheon-ops sync stays deferred: the ops working tree carries 269 uncommitted files from another session and .foundation/foundation-release.lock.json already records baseline-swap as blocked on exactly that, so swapping over it would mix lineage.",
+  "completedAt": "2026-09-23",
+  "priority": "P1",
+  "type": "governance-ratchet",
+  "estimatedComplexity": "medium",
+  "technicalDebtFlag": "yes",
+  "technicalDebtNote": "Three gaps remain real and are untouched here: the low-code generator still does not write the marker into the 11 stable artifacts it rewrites (only into the module files it generates), so check:generated covers those 11 by name rather than by marker; 17 pre-template task docs stay in config/task-packet-legacy-docs.json until someone migrates or deletes them; and pantheon-ops is 31+ commits behind the v0.12.1 lock it consumes.",
+  "dependencyLayers": [
+    "platform governance tooling (harness checkers, CI workflow env)",
+    "backend pkg/testredis + affected test packages",
+    "frontend low-code generator export path",
+    "docs and evidence records"
+  ],
+  "dependencies": {
+    "blockedBy": [],
+    "blocks": [
+      "pantheon-ops foundation sync (needs the next foundation release cut from this state)"
+    ]
+  },
+  "scope": {
+    "in": [
+      "remove the committed Redis and MySQL dev credentials from docs/README.md, two evidence transcripts and the QA-setup script fallback list",
+      "make pkg/testredis accept the runtime env var names and add PANTHEON_TEST_REDIS_REQUIRED so a misconfigured job fails instead of skipping",
+      "point the quality.yml backend-tests job at the test Redis variable and set the required flag in both Go test jobs",
+      "delete the three stale auth -> system/iam/user entries from config/boundary-baseline.json and make stale entries fail check-boundaries --strict",
+      "delete scripts/check-arch-boundaries.mjs and port its only live invariant into check-boundaries.mjs",
+      "give check-task-packet.mjs a legacy allowlist with staleness detection and wire it into the docs-governance job",
+      "mark every file the low-code generator exports and guard the marker sentence against the gate",
+      "close the 2026-07-20 review verdict that contradicted its completed manifest"
+    ],
+    "out": [
+      "any change to runtime behaviour, API, permissions, menus, i18n, database or seed",
+      "migrating the 17 pre-template task docs",
+      "pantheon-ops baseline swap (deferred with a recorded blocker)",
+      "the flaky full-smoke generator suite and the .golangci.yml v2 key drift"
+    ]
+  },
+  "taskDoc": ".harness/tasks/2026-09-23-governance-residual-closeout/task.md",
+  "contractAnchors": [
+    "scripts/harness/check-boundaries.mjs",
+    "scripts/harness/check-task-packet.mjs",
+    "scripts/harness/check-generated.mjs",
+    "config/boundary-baseline.json",
+    "backend/pkg/testredis/redis.go",
+    "docs/operations/RUNBOOK.md",
+    ".github/workflows/quality.yml"
+  ],
+  "expectedFiles": {
+    "create": [
+      "backend/pkg/testredis/redis_test.go",
+      "config/task-packet-legacy-docs.json",
+      "tests/scripts/generated-marker-consistency.test.mjs",
+      "frontend/tests/generator/generator-quality-contract.test.ts",
+      ".harness/tasks/2026-09-23-governance-residual-closeout/manifest.json",
+      ".harness/tasks/2026-09-23-governance-residual-closeout/task.md",
+      ".harness/evidence/2026-09-23-governance-residual-closeout/commands.json",
+      ".harness/evidence/2026-09-23-governance-residual-closeout/summary.md",
+      ".harness/evidence/2026-09-23-governance-residual-closeout/review.md"
+    ],
+    "modify": [
+      "config/boundary-baseline.json",
+      "scripts/harness/check-boundaries.mjs",
+      "scripts/harness/check-task-packet.mjs",
+      "scripts/harness/README.md",
+      "backend/pkg/testredis/redis.go",
+      "docs/README.md",
+      "docs/operations/RUNBOOK.md",
+      "frontend/scripts/database-import-qa-setup.mjs",
+      "frontend/scripts/database-import-qa-setup.test.mjs",
+      "frontend/src/modules/lowcode/generator/exporter.ts",
+      "frontend/tests/generator/generator-quality-contract.test.ts",
+      "tests/scripts/generated-marker-consistency.test.mjs",
+      ".github/workflows/ci.yml",
+      ".github/workflows/quality.yml",
+      ".harness/NAMING_AND_BOUNDARIES_REMEDIATION_PLAN_2026-09-22.md",
+      ".harness/evidence/2026-07-20-security-audit-governance-round/review.md",
+      ".harness/evidence/ui-cross-review-20260726/report.md",
+      ".harness/evidence/2026-09-08-p1-test-coverage-phase1/test-summary.md"
+    ],
+    "doNotTouch": [
+      "backend/modules/business/**",
+      "backend/modules/system/**",
+      "frontend/src/modules/*/**",
+      "admin SQL, seeds, permission matrix and i18n resources"
+    ]
+  },
+  "harnessProfile": {
+    "template": "api-service",
+    "overlay": "governance-ratchet",
+    "qualityProfile": "harness-governance",
+    "portableFailureClass": "silent-green-and-stale-exemption",
+    "ownerLayer": "platform",
+    "coverageDimensions": [
+      "architecture-fitness",
+      "maintainability",
+      "runtime-evidence"
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "cd backend && go build ./... && go vet ./... && gofmt -l .",
+      "cd backend && go test -count=1 ./pkg/testredis/ ./pkg/database/... ./modules/auth/login/... ./modules/auth/session/...",
+      "node scripts/harness/check-boundaries.mjs --strict --repo pantheon-base --baseline config/boundary-baseline.json",
+      "node scripts/harness/check-task-packet.mjs --root . && node scripts/harness/check-task-packet.mjs --root . --include-legacy",
+      "node --test tests/scripts/generated-marker-consistency.test.mjs tests/scripts/harness-check-task-packet-context.test.mjs",
+      "node frontend/scripts/run-generator-quality-contract-test.mjs",
+      "node scripts/harness/check-evidence.mjs && node scripts/harness/check-review.mjs",
+      "cd frontend && node -e \"require('./package.json')\" && node ./scripts/check-import-path-case.mjs"
+    ],
+    "runtimeEvidence": [
+      "testredis fail-loudly proof: PANTHEON_TEST_REDIS_REQUIRED=1 with no address fails the test instead of skipping",
+      "testredis var-name proof: with only PANTHEON_REDIS_ADDR set and a closed port the test now runs and reports the address source, where it previously skipped",
+      "check-boundaries negative proof: a probe import system/iam -> system/org/dept is reported as a finding",
+      "check-boundaries stale-baseline negative proof: a stale entry makes --strict exit 1 while report-only stays 0",
+      "check-task-packet negative proof: a stale legacy allowlist entry exits 1"
+    ]
+  },
+  "runtimeSensitive": false,
+  "evidenceRequired": [
+    "credential sweep showing no committed dev credential remains",
+    "testredis before/after behaviour for the runtime env var name and the required flag",
+    "boundary gate output after the stale entries were removed, plus the two negative probes",
+    "task-packet checker output for default, --include-legacy and a stale allowlist",
+    "generator marker test output and the check:generated run",
+    "review disposition incl. the ops-sync deferral"
+  ],
+  "humanGates": [
+    "none required (no permission, API, retention, menu or data surface changed) — PR gates plus non-author review"
+  ],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed"
+  ],
+  "linkage": {
+    "evidenceDir": ".harness/evidence/2026-09-23-governance-residual-closeout/",
+    "reviewFile": ".harness/evidence/2026-09-23-governance-residual-closeout/review.md",
+    "summaryFile": ".harness/evidence/2026-09-23-governance-residual-closeout/summary.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".harness/NAMING_AND_BOUNDARIES_REMEDIATION_PLAN_2026-09-22.md"
+    ]
+  }
+}

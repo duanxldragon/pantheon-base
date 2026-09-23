@@ -132,6 +132,13 @@ jobs:
       - name: Check task packet template
         run: npm run check:task-packet-template
 
+      - name: Check task packets
+        # Validates docs/harness/tasks/*.task.md against the section template.
+        # Docs written before the template existed are listed in
+        # config/task-packet-legacy-docs.json, so this gate is green today while a
+        # current-format doc that drifts (or a stale allowlist entry) fails it.
+        run: npm run check:task-packet
+
       - name: Check PR governance template
         run: npm run check:pr-governance
 
@@ -196,6 +203,11 @@ jobs:
       - name: Check generated artifacts
         id: generated-artifacts
         run: npm run check:generated
+
+      - name: Check generated artifact marker consistency
+        # The marker sentence is declared in the generator, the reset tooling and
+        # the gate; this guards against a silent edit on one side.
+        run: npm run test:generated-marker
 
       - name: Check generated modules
         id: generated-modules
@@ -336,7 +348,12 @@ jobs:
           --health-retries=12
     env:
       PANTHEON_TEST_DSN: "root:root@tcp(127.0.0.1:3306)/pantheon_base?charset=utf8mb4&parseTime=True&loc=UTC"
-      PANTHEON_REDIS_ADDR: 127.0.0.1:6379
+      # This job only runs `go test` (no server), so it needs the test variable
+      # name that pkg/testredis reads. PANTHEON_REDIS_ADDR alone used to make
+      # every Redis-backed test in this required gate skip silently — see
+      # docs/operations/RUNBOOK.md §Redis-backed tests.
+      PANTHEON_TEST_REDIS_ADDR: 127.0.0.1:6379
+      PANTHEON_TEST_REDIS_REQUIRED: "true"
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
