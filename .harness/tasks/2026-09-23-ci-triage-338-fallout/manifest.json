@@ -1,0 +1,139 @@
+{
+  "taskId": "2026-09-23-ci-triage-338-fallout",
+  "title": "Repair the CI fallout of the 2026-09-22 remediation merge",
+  "goal": "Clear the gate failures the #338 merge exposed — the Linux-only frontend path-case build break, nine golangci-lint findings on newly added lines, and five SonarCloud smells blocking the main Release Gate — and add a local guard so a case-only import drift can no longer reach CI.",
+  "primaryLayer": "system/auth",
+  "status": "completed",
+  "statusNote": "2026-09-23: ci.yml/quality.yml on PR #338 caught two real defects (Frontend Contract build, Go Lint new-code gate); the merge then turned the main Release Gate red on 5 SonarCloud issues. The frontend path-case repair and the nine lint findings shipped in #338 (474d1f65); the five SonarCloud smells ship in #339 (5544e4be) with a new SQL clause test. The new prebuild guard makes case-only import drift fail locally instead of only on Linux.",
+  "completedAt": "2026-09-23",
+  "priority": "P0",
+  "type": "quality-gate",
+  "estimatedComplexity": "small",
+  "technicalDebtFlag": "yes",
+  "technicalDebtNote": "Full Smoke Suite is flaky on main (business/generated/module-governance-real.spec.ts hit a 60s predicate timeout on commit 2b1cba31 at 21:37 while the same commit passed at 08:17) and waits, and the .golangci.yml input still carries keys golangci-lint v2 rejects (goconst.ignore-tests, issues.exclusions, output.sort-results) so test-file exclusions silently do not apply; both are untouched here.",
+  "dependencyLayers": [
+    "frontend platform tooling (prebuild gate chain)",
+    "backend modules/auth/session",
+    "backend modules/system/iam + system/config"
+  ],
+  "dependencies": {
+    "blockedBy": [],
+    "blocks": []
+  },
+  "scope": {
+    "in": [
+      "rename frontend dashboard.css to Dashboard.css in git so the PascalCase import resolves on Linux",
+      "update the shell visual contract checker and theme-token docs that pinned the old name",
+      "fix nine golangci-lint findings on lines added by the 2026-09-22 rounds (goconst, gosec G115, revive, staticcheck QF1011, unconvert, two unused symbols)",
+      "add frontend/scripts/check-import-path-case.mjs and wire it into the prebuild gate chain",
+      "clear the five SonarCloud smells blocking the main Release Gate (session user_agent clause literals, id = ? literal, single-use variable)",
+      "pin the admin session device-filter SQL with a rendered-predicate test"
+    ],
+    "out": [
+      "changing which sessions the admin filters select (rendered SQL proven byte-identical)",
+      "retention policy, API, permission, menu or i18n changes",
+      "fixing the flaky full-smoke generator suite",
+      "repairing the .golangci.yml v2 key drift",
+      "pantheon-ops sync"
+    ]
+  },
+  "taskDoc": ".harness/tasks/2026-09-23-ci-triage-338-fallout/task.md",
+  "contractAnchors": [
+    ".github/workflows/ci.yml",
+    ".github/workflows/quality.yml",
+    "frontend/package.json",
+    "frontend/scripts/check-shell-visual-contract.mjs",
+    "backend/modules/auth/session/session_helpers.go",
+    "backend/modules/auth/session/session_user_agent.go",
+    "backend/modules/system/iam/user/user_username.go",
+    "docs/designs/THEME_TOKENS_REFERENCE.md"
+  ],
+  "expectedFiles": {
+    "create": [
+      "frontend/scripts/check-import-path-case.mjs",
+      "backend/modules/auth/session/session_client_filter_sql_test.go",
+      ".harness/tasks/2026-09-23-ci-triage-338-fallout/task.md",
+      ".harness/tasks/2026-09-23-ci-triage-338-fallout/manifest.json",
+      ".harness/evidence/2026-09-23-ci-triage-338-fallout/commands.json",
+      ".harness/evidence/2026-09-23-ci-triage-338-fallout/summary.md",
+      ".harness/evidence/2026-09-23-ci-triage-338-fallout/review.md"
+    ],
+    "modify": [
+      "frontend/src/modules/platform/Dashboard.tsx",
+      "frontend/package.json",
+      "frontend/scripts/check-shell-visual-contract.mjs",
+      "docs/designs/THEME_TOKENS_REFERENCE.md",
+      "docs/designs/THEME_TOKENS_REFERENCE.en.md",
+      "backend/modules/auth/session/session_helpers.go",
+      "backend/modules/auth/session/session_pagination_test.go",
+      "backend/modules/auth/session/session_revocation_closure_test.go",
+      "backend/modules/auth/login/login_runtime.go",
+      "backend/modules/system/iam/user/auth_repository.go",
+      "backend/modules/system/iam/user/auth_repository_test.go",
+      "backend/modules/system/config/setting/setting_public_tenant_scope_test.go",
+      "backend/modules/system/config/setting/upload_authorization_contract_test.go",
+      "backend/pkg/database/migrate.go",
+      "backend/pkg/database/redis.go"
+    ],
+    "doNotTouch": [
+      "backend/modules/business/**",
+      "config/boundary-baseline.json",
+      ".golangci.yml",
+      ".github/workflows/**"
+    ]
+  },
+  "harnessProfile": {
+    "template": "api-service",
+    "overlay": "ci-triage",
+    "qualityProfile": "ci-workflow",
+    "portableFailureClass": "case-insensitive-path-drift",
+    "ownerLayer": "platform",
+    "coverageDimensions": [
+      "maintainability",
+      "architecture-fitness",
+      "runtime-evidence"
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "node frontend/scripts/check-import-path-case.mjs",
+      "cd frontend && ./node_modules/.bin/tsc -b && ./node_modules/.bin/vite build",
+      "cd backend && ../.tmp/bin/golangci-lint.exe run --new-from-rev=origin/main ./...",
+      "cd backend && go build ./... && go vet ./... && gofmt -l .",
+      "cd backend && go test -count=1 ./modules/auth/session/... ./modules/system/iam/user/... ./modules/system/config/setting/...",
+      "node scripts/harness/check-evidence.mjs",
+      "node scripts/harness/check-review.mjs"
+    ],
+    "runtimeEvidence": [
+      "PR #338 checks 27 pass / 0 fail after the path-case and lint repair",
+      "main push 6387115e: CI, Code Quality Gates, Security Gates, Core Smoke Tests, Full Smoke Suite all success; Release Gate failed only on the SonarCloud issue count"
+    ]
+  },
+  "runtimeSensitive": false,
+  "evidenceRequired": [
+    "before/after CI check table for PR #338",
+    "Release Gate failure excerpt naming the five SonarCloud issues",
+    "negative test proving the new case guard catches the drift",
+    "golangci-lint --new-from-rev and affected-package test results",
+    "review disposition"
+  ],
+  "humanGates": [
+    "none required (no permission, API, retention or menu surface changed) — PR gates plus non-author review"
+  ],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed"
+  ],
+  "linkage": {
+    "evidenceDir": ".harness/evidence/2026-09-23-ci-triage-338-fallout/",
+    "reviewFile": ".harness/evidence/2026-09-23-ci-triage-338-fallout/review.md",
+    "summaryFile": ".harness/evidence/2026-09-23-ci-triage-338-fallout/summary.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".harness/ENTERPRISE_REMEDIATION_PLAN_2026-09-22.md"
+    ]
+  }
+}
