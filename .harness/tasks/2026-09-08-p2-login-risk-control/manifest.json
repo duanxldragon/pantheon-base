@@ -4,7 +4,7 @@
   "goal": "Design risk-based adaptive authentication: risk scoring (device/geo/behavior/IP/failures), device fingerprinting, impossible-travel detection, and step-up actions (MFA, email verification, block).",
   "primaryLayer": "system/auth",
   "priority": "P2",
-  "status": "done",
+  "status": "completed",
   "statusNote": "Design stage closed 2026-09-08 (3h of 12h estimated). Runtime implementation NOT started: risk engine, device fingerprint collection, geo tracking and adaptive login flow remain open and are not tracked by any other task dir. Treat as explicit gap for any enterprise security roadmap review.",
   "completedAt": "2026-09-08",
   "createdAt": "2026-09-08",

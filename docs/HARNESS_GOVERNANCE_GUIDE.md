@@ -19,6 +19,7 @@ Docs Governance 检查反复失败，原因是 PR body 格式复杂且 manifest.
 {
   "taskId": "task-id",
   "title": "Task title",
+  "status": "completed | planned | in-progress | abandoned",
   "goal": "明确的目标描述",
   "primaryLayer": "frontend|backend|platform|system",
   "dependencyLayers": [],
@@ -139,6 +140,10 @@ chmod +x .git/hooks/pre-push
 - ✅ 所有 evidence 文件存在
 - ✅ manifest.json 包含必需字段
 - ✅ 文件结构完整
+
+> `status` 是可选字段。一旦写了，就必须是 `planned | in-progress | completed | abandoned`
+> 之一：schema（`scripts/task-manifest.mjs`）会拒绝 `done` / `complete` 之类的同义漂移，
+> 以免将来任何 `status === 'completed'` 的查询静默漏掉已关闭的 packet。
 
 ### 5. 常见问题
 

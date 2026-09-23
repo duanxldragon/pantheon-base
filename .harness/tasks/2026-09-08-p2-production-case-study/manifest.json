@@ -4,7 +4,7 @@
   "goal": "Create the case studies documentation infrastructure: index with contribution guide and a comprehensive case study template, ready to receive production deployment write-ups.",
   "primaryLayer": "docs",
   "priority": "P2",
-  "status": "done",
+  "status": "completed",
   "statusNote": "Infrastructure closed 2026-09-08 (3h of 8h estimated): docs/case-studies/ README + TEMPLATE in place. No case study has been published yet (count 0); publishing depends on real production deployments and is intentionally deferred.",
   "completedAt": "2026-09-08",
   "createdAt": "2026-09-08",

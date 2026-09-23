@@ -3,7 +3,7 @@
   "title": "Tenant Contract Design",
   "goal": "Freeze tenant master, membership, trusted context, resource scopes, Casbin domain, and single-tenant compatibility semantics before implementation.",
   "primaryLayer": "platform",
-  "status": "done",
+  "status": "completed",
   "priority": "critical",
   "estimatedComplexity": "complex",
   "technicalDebtFlag": "yes",

@@ -3,7 +3,7 @@
   "title": "Tenant Canary Slice",
   "goal": "Implement one feature-flagged tenant-aware vertical slice and prove two-tenant isolation across CRUD, batch, export, audit and side effects.",
   "primaryLayer": "system/config",
-  "status": "done",
+  "status": "completed",
   "priority": "critical",
   "estimatedComplexity": "epic",
   "technicalDebtFlag": "yes",

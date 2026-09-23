@@ -3,7 +3,7 @@
   "title": "Tenant-Ready Guardrails",
   "goal": "Remove the unsupported generator tenant capability, add tenant-readiness checks, and reconcile the coverage measurement baseline without changing single-tenant runtime behavior.",
   "primaryLayer": "platform",
-  "status": "done",
+  "status": "completed",
   "statusNote": "2026-09-10: implemented and verified in-session; evidence at .harness/evidence/2026-09-10-tenant-ready-guardrails/. Explicit gaps G0 (no browser visual evidence for option removal), G1 (first CI run to confirm threshold 50), G2 (repo variable COVERAGE_THRESHOLD may override default).",
   "priority": "critical",
   "estimatedComplexity": "moderate",

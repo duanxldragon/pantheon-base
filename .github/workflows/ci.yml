@@ -186,6 +186,10 @@ jobs:
           npm run test:foundation-release
           npm run test:release-gate-workflow
           npm run test:ci-bench-perf-smoke-workflow
+          # Catch-all for tests/scripts/**: before this existed only the four
+          # scripts above ran, so a newly added governance test (or a rule
+          # change that invalidated one) could sit unrun indefinitely.
+          npm run test:scripts
 
   # ============================================================
   # Phase 2b: Frontend Unit Tests (Vitest + coverage)
