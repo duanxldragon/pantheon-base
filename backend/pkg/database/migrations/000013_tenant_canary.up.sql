@@ -24,9 +24,25 @@ CREATE TABLE IF NOT EXISTS `tenants` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- Global placeholder: owns the compat-mode population (id=0, never login-able).
+-- Replayed upgrade windows can carry a dev-seeded `__global__` row whose id is
+-- NOT 0 (auto-increment assignment); inserting id=0 then collides on the
+-- unique `code` index (1062). Normalize first: if the id=0 slot is free but
+-- the code is taken, adopt that row onto id=0; only then insert-if-missing
+-- on either identity. (Guarded via PREPARE, same pattern as 000014+.)
+SET @placeholder_id0 := (SELECT COUNT(*) FROM `tenants` WHERE `id` = 0);
+SET @placeholder_code := (SELECT COUNT(*) FROM `tenants` WHERE `code` = '__global__');
+SET @adopt_placeholder_stmt := IF(
+  @placeholder_id0 = 0 AND @placeholder_code > 0,
+  'UPDATE `tenants` SET `id` = 0 WHERE `code` = ''__global__''',
+  'SELECT 1'
+);
+PREPARE adopt_placeholder_stmt FROM @adopt_placeholder_stmt;
+EXECUTE adopt_placeholder_stmt;
+DEALLOCATE PREPARE adopt_placeholder_stmt;
+
 INSERT INTO `tenants` (`id`, `code`, `name`, `status`)
 SELECT 0, '__global__', 'Platform Global', 'archived'
-WHERE NOT EXISTS (SELECT 1 FROM `tenants` WHERE `id` = 0);
+WHERE NOT EXISTS (SELECT 1 FROM `tenants` WHERE `id` = 0 OR `code` = '__global__');
 ALTER TABLE `tenants` AUTO_INCREMENT = 1;
 
 CREATE TABLE IF NOT EXISTS `tenant_memberships` (

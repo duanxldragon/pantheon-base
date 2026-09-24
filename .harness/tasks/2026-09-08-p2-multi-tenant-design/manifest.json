@@ -1,0 +1,124 @@
+{
+  "taskId": "2026-09-08-p2-multi-tenant-design",
+  "title": "P2 Multi-Tenant Design (design only)",
+  "goal": "Deliver the tenant isolation and tenant DB routing design as a design-only track, with a recorded supersession path into the frozen tenant contract that the implementation queue consumes.",
+  "primaryLayer": "platform",
+  "status": "completed",
+  "statusNote": "2026-09-24 back-filled. The design exists as docs/designs/MULTI_TENANT_DESIGN.md with Status 'Superseded by docs/contracts/TENANT_CONTRACT_V1.md' (frozen); implementation followed through the completed 2026-09-10 tenant-* packets and migrations 000013-000017, with k8s/ manifests present. Master plan scoped this as design only — no code belongs to this packet.",
+  "completedAt": "2026-09-24",
+  "priority": "P2",
+  "type": "design",
+  "estimatedComplexity": "medium",
+  "technicalDebtFlag": "no",
+  "technicalDebtNote": "none",
+  "dependencyLayers": [
+    "platform governance tooling",
+    "backend-services",
+    "backend-repositories"
+  ],
+  "dependencies": {
+    "blockedBy": [],
+    "blocks": [
+      "2026-09-10 tenant implementation queue (already completed independently)"
+    ]
+  },
+  "scope": {
+    "in": [
+      "tenant isolation design and tenant DB routing considerations (design only)",
+      "supersession linkage from the design doc to the frozen contract",
+      "evidence that the design track is closed"
+    ],
+    "out": [
+      "tenant implementation (own packets, completed)",
+      "schema, permission, menu or API changes",
+      "re-opening the frozen contract"
+    ],
+    "create": [
+      ".harness/tasks/2026-09-08-p2-multi-tenant-design/task.md",
+      ".harness/tasks/2026-09-08-p2-multi-tenant-design/manifest.json",
+      ".harness/evidence/2026-09-08-p2-multi-tenant-design/commands.json",
+      ".harness/evidence/2026-09-08-p2-multi-tenant-design/summary.md",
+      ".harness/evidence/2026-09-08-p2-multi-tenant-design/review.md"
+    ],
+    "modify": [],
+    "doNotTouch": [
+      "docs/contracts/TENANT_CONTRACT_V1.md",
+      "backend/modules/**",
+      "frontend/src/**",
+      "database migrations"
+    ]
+  },
+  "taskDoc": ".harness/tasks/2026-09-08-p2-multi-tenant-design/task.md",
+  "contractAnchors": [
+    "docs/designs/MULTI_TENANT_DESIGN.md",
+    "docs/contracts/TENANT_CONTRACT_V1.md",
+    "docs/runbooks/TENANT_MIGRATION_RUNBOOK.md",
+    ".harness/tasks/TASK_MASTER_PLAN.md"
+  ],
+  "expectedFiles": {
+    "create": [
+      ".harness/tasks/2026-09-08-p2-multi-tenant-design/task.md",
+      ".harness/tasks/2026-09-08-p2-multi-tenant-design/manifest.json",
+      ".harness/evidence/2026-09-08-p2-multi-tenant-design/commands.json",
+      ".harness/evidence/2026-09-08-p2-multi-tenant-design/summary.md",
+      ".harness/evidence/2026-09-08-p2-multi-tenant-design/review.md"
+    ],
+    "modify": [],
+    "doNotTouch": [
+      "docs/contracts/TENANT_CONTRACT_V1.md",
+      "backend/modules/**",
+      "frontend/src/**",
+      "database migrations"
+    ]
+  },
+  "harnessProfile": {
+    "template": "api-service",
+    "overlay": "design-first",
+    "qualityProfile": "contract-design",
+    "ratchetDecision": "gate-updated",
+    "portableFailureClass": "architecture-drift",
+    "ownerLayer": "platform",
+    "coverageDimensions": [
+      "architecture-fitness",
+      "behaviour",
+      "maintainability"
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "grep -n Superseded docs/designs/MULTI_TENANT_DESIGN.md",
+      "ls docs/contracts/TENANT_CONTRACT_V1.md docs/runbooks/TENANT_MIGRATION_RUNBOOK.md k8s/",
+      "ls .harness/tasks/2026-09-10-tenant-*/manifest.json",
+      "node scripts/harness/check-task-packet.mjs --root . .harness/tasks/2026-09-08-p2-multi-tenant-design/task.md"
+    ],
+    "runtimeEvidence": [
+      "MULTI_TENANT_DESIGN.md Status line naming TENANT_CONTRACT_V1 as superseder",
+      "seven completed 2026-09-10 tenant-* packets plus migrations 000013-000017"
+    ]
+  },
+  "runtimeSensitive": false,
+  "evidenceRequired": [
+    "supersession line from the design doc",
+    "list of completed tenant implementation packets",
+    "review disposition confirming design-only scope"
+  ],
+  "humanGates": [
+    "none required (design accounting only; the frozen contract was gated by its own tenant packets) — evidence review only"
+  ],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed"
+  ],
+  "linkage": {
+    "evidenceDir": ".harness/evidence/2026-09-08-p2-multi-tenant-design/",
+    "reviewFile": ".harness/evidence/2026-09-08-p2-multi-tenant-design/review.md",
+    "summaryFile": ".harness/evidence/2026-09-08-p2-multi-tenant-design/summary.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".harness/tasks/TASK_MASTER_PLAN.md"
+    ]
+  }
+}

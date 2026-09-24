@@ -1,0 +1,124 @@
+{
+  "taskId": "2026-09-08-p2-test-coverage-phase2",
+  "title": "P2 Test Coverage Phase 2 - System Domain",
+  "goal": "Raise and verify Phase 2 automated test coverage for the system domain (org, i18n, dict, setting) to 40%+ each and overall backend coverage to 40%+, with the achieved level protected by the CI coverage gate.",
+  "primaryLayer": "platform",
+  "status": "completed",
+  "statusNote": "2026-09-24 back-filled. The packet directory was never created on 2026-09-08; the coverage targets were already met by the DB-backed suite: org 62.2%, i18n 68.7%, dict 45.3%, setting 62.8%, overall 56.0% (backend/coverage_p2.txt), with ci.yml:431 enforcing check-coverage --threshold 50. Pure accounting, no code change belongs to this packet.",
+  "completedAt": "2026-09-24",
+  "priority": "P2",
+  "type": "test-coverage",
+  "estimatedComplexity": "medium",
+  "technicalDebtFlag": "no",
+  "technicalDebtNote": "The generator package (26.3%) stays below any phase target; it is covered dynamically-module-side work and is tracked by the phase-3 packet instead of this one.",
+  "dependencyLayers": [
+    "go-testing",
+    "backend-services",
+    "backend-repositories"
+  ],
+  "dependencies": {
+    "blockedBy": [
+      "2026-09-08-p1-test-coverage-phase1"
+    ],
+    "blocks": [
+      "2026-09-08-p2-test-coverage-phase3"
+    ]
+  },
+  "scope": {
+    "in": [
+      "org, i18n, dict, setting coverage measurement against the 40% phase-2 targets",
+      "overall backend coverage against the 40% phase-2 target",
+      "evidence linking the CI coverage gate as the ratchet"
+    ],
+    "out": [
+      "writing new tests in this retroactive packet",
+      "raising the CI coverage threshold",
+      "frontend coverage"
+    ],
+    "create": [
+      ".harness/tasks/2026-09-08-p2-test-coverage-phase2/task.md",
+      ".harness/tasks/2026-09-08-p2-test-coverage-phase2/manifest.json",
+      ".harness/evidence/2026-09-08-p2-test-coverage-phase2/commands.json",
+      ".harness/evidence/2026-09-08-p2-test-coverage-phase2/summary.md",
+      ".harness/evidence/2026-09-08-p2-test-coverage-phase2/review.md"
+    ],
+    "modify": [],
+    "doNotTouch": [
+      "backend/modules/** production logic",
+      ".github/workflows/ci.yml coverage threshold",
+      "frontend code"
+    ]
+  },
+  "taskDoc": ".harness/tasks/2026-09-08-p2-test-coverage-phase2/task.md",
+  "contractAnchors": [
+    ".harness/tasks/TASK_MASTER_PLAN.md",
+    "scripts/harness/check-coverage.mjs",
+    ".github/workflows/ci.yml",
+    ".harness/tasks/2026-09-08-p1-test-coverage-phase1/manifest.json"
+  ],
+  "expectedFiles": {
+    "create": [
+      ".harness/tasks/2026-09-08-p2-test-coverage-phase2/task.md",
+      ".harness/tasks/2026-09-08-p2-test-coverage-phase2/manifest.json",
+      ".harness/evidence/2026-09-08-p2-test-coverage-phase2/commands.json",
+      ".harness/evidence/2026-09-08-p2-test-coverage-phase2/summary.md",
+      ".harness/evidence/2026-09-08-p2-test-coverage-phase2/review.md"
+    ],
+    "modify": [],
+    "doNotTouch": [
+      "backend/modules/** production logic",
+      ".github/workflows/ci.yml coverage threshold",
+      "frontend code"
+    ]
+  },
+  "harnessProfile": {
+    "template": "api-service",
+    "overlay": "test-coverage-improvement",
+    "qualityProfile": "test-baseline",
+    "ratchetDecision": "coverage-increase",
+    "portableFailureClass": "quality-debt",
+    "ownerLayer": "platform",
+    "coverageDimensions": [
+      "behaviour",
+      "maintainability",
+      "runtime-quality"
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "cd backend && go tool cover -func=coverage_p2.txt | tail -1",
+      "cd backend && awk statement-weighted aggregation over coverage_p2.txt grouped by module",
+      "node scripts/harness/check-coverage.mjs backend/coverage.txt --threshold 50",
+      "node scripts/harness/check-task-packet.mjs --root . .harness/tasks/2026-09-08-p2-test-coverage-phase2/task.md"
+    ],
+    "runtimeEvidence": [
+      "per-module aggregation output: org 62.2%, i18n 68.7%, dict 45.3%, setting 62.8%, overall 56.0%",
+      "ci.yml:431 coverage gate wired at threshold 50 with the 2026-09-10 reconciliation comment"
+    ]
+  },
+  "runtimeSensitive": false,
+  "evidenceRequired": [
+    "per-module coverage aggregation output",
+    "CI coverage-gate line",
+    "review disposition"
+  ],
+  "humanGates": [
+    "none required (retroactive packet; no production, permission, menu, i18n or database change) — evidence review only"
+  ],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed"
+  ],
+  "linkage": {
+    "evidenceDir": ".harness/evidence/2026-09-08-p2-test-coverage-phase2/",
+    "reviewFile": ".harness/evidence/2026-09-08-p2-test-coverage-phase2/review.md",
+    "summaryFile": ".harness/evidence/2026-09-08-p2-test-coverage-phase2/summary.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".harness/tasks/TASK_MASTER_PLAN.md"
+    ]
+  }
+}

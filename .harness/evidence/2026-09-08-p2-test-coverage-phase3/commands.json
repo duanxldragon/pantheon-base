@@ -1,0 +1,61 @@
+{
+  "taskId": "2026-09-08-p2-test-coverage-phase3",
+  "status": "verified",
+  "commands": [
+    {
+      "command": "cd backend && go tool cover -func=coverage_lc.txt | tail -1",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "total: (statements) 58.3% for the platform+lowcode profile — clears the 50% overall phase-3 target."
+    },
+    {
+      "command": "awk statement-weighted group aggregation over backend/coverage_lc.txt (lowcode vs platform dirs)",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "lowcode (modules/lowcode/**) 56.3% (1039/1844) — dynamicmodule 69.2% (895/1294), generator 26.3% (144/548), lowcode.go 0/2; platform (modules/platform/**) 75.2% (161/214). Both layer aggregates clear the 30% phase-3 bar."
+    },
+    {
+      "command": "cd backend && go tool cover -func=coverage_p2.txt | tail -1",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "Whole-repo cross-check: total 56.0% — the 50% overall floor holds on the broad profile too, not only on the phase-scoped one."
+    },
+    {
+      "command": "cd backend && go tool cover -func=coverage_lc.txt > cov_func_lc.txt && cd .. && node scripts/harness/check-coverage.mjs backend/cov_func_lc.txt --threshold 50",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "`OK: total coverage 58.3% meets threshold 50%`; the per-package table names the residual explicitly: generator 28.0% func-average (below threshold) against dynamicmodule 74.4% and platform 78.0%."
+    },
+    {
+      "command": "grep -n check-coverage .github/workflows/ci.yml",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "Line 431 wires `check-coverage.mjs backend/coverage.txt --threshold 50` on every CI run — the ratchet protecting the overall floor this packet verifies."
+    },
+    {
+      "command": "writing generator tests / raising the threshold in this packet",
+      "cwd": "pantheon-base",
+      "status": "not-run",
+      "notes": "Deliberately out of scope: retroactive accounting packet (scope.out excludes writing tests and changing CI thresholds). The generator residual is named in technicalDebtNote and knownGaps instead of being papered over."
+    }
+  ],
+  "runtimeGap": "Profiles are local 2026-09-24 artifacts from DB-backed runs (gitignored .env.test DSN), deleted in cleanup with numbers recorded here; ci.yml:431 provides continuous enforcement. Full-repo single-invocation profiling timed out at 600s earlier in the session, so group aggregation over the produced profiles was used.",
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-09-08-p2-test-coverage-phase3/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-09-08-p2-test-coverage-phase3/",
+    "reviewFile": ".harness/evidence/2026-09-08-p2-test-coverage-phase3/review.md",
+    "summaryFile": ".harness/evidence/2026-09-08-p2-test-coverage-phase3/summary.md",
+    "changeRef": "none",
+    "planRefs": [".harness/tasks/TASK_MASTER_PLAN.md"]
+  },
+  "repo": "pantheon-base",
+  "agent": {
+    "tool": "other",
+    "note": "Executed on Windows under Git Bash with node v24; profiles produced from DB-backed go test runs against the gitignored .env.test DSN. Accounting-only packet: no source file outside this packet's directory was modified."
+  },
+  "knownGaps": [
+    "backend/modules/lowcode/generator sits at 26.3% statements (28.0% func-average) — below the 30% bar standalone; the phase-3 target was per-layer and is met by the lowcode aggregate (56.3%), but clearing the package itself needs dedicated generator tests in a future packet.",
+    "modules/lowcode/lowcode.go (2 statements) and routes/handler wiring files sit at 0% — small wiring surface inside a passing aggregate.",
+    "Coverage figures are a 2026-09-24 local snapshot; continuous enforcement is ci.yml:431 at threshold 50 (overall floor only, not per-layer)."
+  ]
+}

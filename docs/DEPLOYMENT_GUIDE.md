@@ -63,6 +63,12 @@ Dockerfile 使用 Node.js 24 构建前端、Go 1.26.5 构建后端，最终进�
 | `PANTHEON_ALLOWED_ORIGINS` | 明确列出生产前端 origin |
 | `PANTHEON_ENABLE_DYNAMIC_MODULES` | 固定为 `false` |
 
+生产环境还必须在**系统设置**（非环境变量）中开启登录二次验证基线：
+
+| 设置键 | 生产要求 | 说明 |
+| --- | --- | --- |
+| `login.mfa_enabled` | 必须为 `true`（即 `mfa_enabled=1`） | 种子默认值 `false` 仅供开发环境；生产部署基线要求显式开启 TOTP 二次验证（见第 7 节发布验证第 9 项）。未开启视为发布不通过。 |
+
 可从 `.env.example` 复制变量名，但必须通过集群 Secret、Vault 或等价密钥系统注入真实值。不要提交生产 `.env`、DSN、密码或 token。
 
 示例 DSN：
@@ -144,7 +150,8 @@ curl --fail https://<host>/api/v1/health
 5. `/metrics` 未匿名暴露；
 6. 动态模块注册在 production 被拒绝；
 7. 操作日志 dropped counter 未持续增长；
-8. `GET /api/v1/health` 返回 200 且 `database`/`migrations`/`redis` 三个依赖均为 ok（`migrations` 检查 `schema_migrations` 可读，readiness 不再只反映进程存活）。
+8. `GET /api/v1/health` 返回 200 且 `database`/`migrations`/`redis` 三个依赖均为 ok（`migrations` 检查 `schema_migrations` 可读，readiness 不再只反映进程存活）；
+9. 系统设置中 `login.mfa_enabled` 为 `true`（生产 MFA 部署基线，见第 4 节）；若为 `false`，必须在本次发布内开启或记录经批准的豁免。
 
 ## 8. 备份与恢复
 

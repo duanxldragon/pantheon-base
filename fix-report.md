@@ -141,6 +141,18 @@ UI 变更说明（impeccable 门禁）：本轮 4 处 CSS 修复均为「硬编�
 30. **生成器私网数据源默认拒绝** — `generator_datasource_service.go`、`docs/DEPLOYMENT_GUIDE.md`
     默认值翻转为拒绝 RFC1918 私网地址（SSRF 最小面原则），需 `PANTHEON_GENERATOR_DATASOURCE_ALLOW_PRIVATE=true` 显式放行；环境变量已写入部署指南可选配置表。测试同步更新：默认拒绝 + opt-in 放行两个用例。
 
+### 关闭状态（2026-09-24 更新）
+
+| # | 人工介入项 | 状态 | 关闭依据 |
+| --- | --- | --- | --- |
+| 1 | 【P1-架构】`business/*` 边界静态阻断门禁 | ✅ 已关闭 | `2026-09-22-layer-boundary-gate`：`ci.yml:389` 以 `check-boundaries --strict --repo pantheon-base --baseline config/boundary-baseline.json` 阻断，stale 基线条目同镜失败；depguard 由 `check-boundaries` 的 import 规则替代 |
+| 2 | 【P1-产品】生产 `mfa_enabled=1` 部署基线 | ✅ 已关闭 | `2026-09-24-fix-report-residual-closeout`：`docs/DEPLOYMENT_GUIDE.md` 第 4 节将 `login.mfa_enabled=true` 列为生产必选项，第 7 节发布验证新增第 9 项强制核验；种子默认 `false` 保留给开发环境 |
+| 3 | 【P2-工程】测试覆盖率门禁 | ✅ 已关闭 | `ci.yml:431` `check-coverage.mjs --threshold 50`（2026-09-10 对账 DB-backed 55.6% 后设定，实测 overall 56.0%） |
+| 4 | 【P2-工程】四主题截图基线 | ✅ 已关闭 | `2026-09-24-fix-report-residual-closeout`：`frontend/tests/visual/theme-baseline.spec.ts` 覆盖 indigo/emerald/violet/slate 四主题登录页截图基线；2026-09-24 维护者触点③验收通过（`.harness/evidence/2026-09-24-fix-report-residual-closeout/visual-acceptance.md`） |
+| 5 | 【P3-治理】`system_i18n` 无 `updated_by` | ✅ 已关闭 | `2026-09-24-fix-report-residual-closeout`：迁移 `000019_i18n_updated_by`（含 `currentRuntimeSchemaMarkers` 接入与 `000012` 回放幂等加固）+ 模型/响应字段 + Create/Update/Import/SyncMissingKeys 审计写入 + DB 测试 |
+
+逐项证据见 `.harness/evidence/2026-09-24-fix-report-residual-closeout/`。
+
 ### 建议 roadmap
 
 - **v0.9.x（本轮变更提交）**: 提交本报告全部修复（含已实施的原 Top 3 决策项 #28-30）。

@@ -108,12 +108,13 @@ Based on the 6-AI cross-review report, **15 actionable tasks** have been generat
 - **Effort**: 24 hours
 - **Target**: Org/I18n/Dict/Setting modules 40%, Overall 40%
 - **Blocked By**: P1-1 (Coverage Phase 1)
+- **Status**: ✅ Completed (2026-09-24) — packet `2026-09-08-p2-test-coverage-phase2`. Measured: org 62.2%, i18n 68.7%, dict 45.3%, setting 62.8%; overall 56.0% — all ≥ 40% target.
 
 ### 2. Multi-Tenant Design
 - **ID**: `2026-09-08-p2-multi-tenant-design`
 - **Effort**: 16 hours
 - **Files**: Tenant isolation design, tenant DB routing
-- **Status**: Design only, not implementation
+- **Status**: ✅ Completed (2026-09-24, design scope) — packet `2026-09-08-p2-multi-tenant-design`. Design delivered as `docs/designs/MULTI_TENANT_DESIGN.md`, superseded by frozen `docs/contracts/TENANT_CONTRACT_V1.md`; deployment manifests under `k8s/`.
 
 ### 3. Login Risk Control
 - **ID**: `2026-09-08-p2-login-risk-control`
@@ -125,13 +126,14 @@ Based on the 6-AI cross-review report, **15 actionable tasks** have been generat
 - **ID**: `2026-09-08-p2-community-building`
 - **Effort**: 4 hours
 - **Files**: `CONTRIBUTING.md`, `.github/ISSUE_TEMPLATE/`
-- **Status**: Can start anytime
+- **Status**: ✅ Completed (2026-09-24) — packet `2026-09-08-p2-community-building`. `CONTRIBUTING.md` + `.github/ISSUE_TEMPLATE/` (3 templates) in place.
 
 ### 5. Test Coverage Phase 3 - Platform & Lowcode
 - **ID**: `2026-09-08-p2-test-coverage-phase3`
 - **Effort**: 16 hours
 - **Target**: Platform/Lowcode 30%, Overall 50%
 - **Blocked By**: P2-1 (Coverage Phase 2)
+- **Status**: ✅ Completed (2026-09-24) — packet `2026-09-08-p2-test-coverage-phase3`. Measured: platform aggregate 75.2%, lowcode aggregate 56.3%, overall 56.0% — all ≥ target (30%/30%/50%).
 
 ### 6. Production Case Study Documentation
 - **ID**: `2026-09-08-p2-production-case-study`

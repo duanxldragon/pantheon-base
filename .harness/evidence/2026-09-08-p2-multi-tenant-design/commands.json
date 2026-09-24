@@ -1,0 +1,55 @@
+{
+  "taskId": "2026-09-08-p2-multi-tenant-design",
+  "status": "verified",
+  "commands": [
+    {
+      "command": "grep -n 'Status\\|Superseded' docs/designs/MULTI_TENANT_DESIGN.md | head -2",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "**Status**: Superseded by contract V1 — see TENANT_CONTRACT_V1 (frozen) and TENANT_MIGRATION_RUNBOOK; the design doc remains background material for Phase 2/3 deployment models and the contract wins on conflict. The design-only track therefore has a recorded, frozen successor."
+    },
+    {
+      "command": "ls -d docs/contracts/TENANT_CONTRACT_V1.md docs/runbooks/TENANT_MIGRATION_RUNBOOK.md k8s/",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "All three successor artifacts exist: the frozen contract, the migration runbook (19966 bytes, 2026-09-18) and the k8s/ deployment manifests directory — the design's deliverables were carried forward rather than left as prose."
+    },
+    {
+      "command": "ls .harness/tasks/ | grep 2026-09-10-tenant",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "Seven completed implementation packets: tenant-canary-slice, tenant-contract-design, tenant-core-auth-iam, tenant-core-data-infrastructure, tenant-migration-runbook, tenant-ready-guardrails, tenant-verification-and-gray — the implementation side of the design was executed under its own governance, exactly as the design-only scoping required."
+    },
+    {
+      "command": "ls backend/pkg/database/migrations/ | grep -E '^00001[3-7]'",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "Migrations 000013 (tenant canary), 000014 (tenant settings), 000015 (tenant auth logs), 000016 (tenant mfa challenge), 000017 (tenant session/oper logs) — up and down files all present; 000013/000014 were additionally hardened and replay-proven by this round's closeout packet."
+    },
+    {
+      "command": "writing implementation code in this packet",
+      "cwd": "pantheon-base",
+      "status": "not-run",
+      "notes": "Deliberately out of scope: the master plan scoped P2-2 as 'Design only, not implementation' and the packet's scope.out excludes tenant implementation, schema changes and re-opening the frozen contract. Implementation was done by the 2026-09-10 tenant-* packets listed above."
+    }
+  ],
+  "runtimeGap": "None — documentary verification only; every assertion is a file listing or a grep against tracked content, reproducible without any service running.",
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-09-08-p2-multi-tenant-design/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-09-08-p2-multi-tenant-design/",
+    "reviewFile": ".harness/evidence/2026-09-08-p2-multi-tenant-design/review.md",
+    "summaryFile": ".harness/evidence/2026-09-08-p2-multi-tenant-design/summary.md",
+    "changeRef": "none",
+    "planRefs": [".harness/tasks/TASK_MASTER_PLAN.md"]
+  },
+  "repo": "pantheon-base",
+  "agent": {
+    "tool": "other",
+    "note": "Executed on Windows under Git Bash; documentary accounting only — no file outside this packet's directory was modified, and the frozen contract was read but not touched."
+  },
+  "knownGaps": [
+    "Design supersession is a documentation state, not an executed proof: nothing this round re-validates the design against the contract line by line — the contract's own packets (tenant-contract-design, tenant-verification-and-gray) carry that verification.",
+    "The superseded MULTI_TENANT_DESIGN.md intentionally remains in tree as background material; readers must follow TENANT_CONTRACT_V1 on conflict, as its Status line states.",
+    "Phase 2/3 deployment models discussed in the design doc (DB-per-tenant routing etc.) are future scope gated by the contract's evolution process, outside this design-only packet."
+  ]
+}
