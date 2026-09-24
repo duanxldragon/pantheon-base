@@ -88,3 +88,59 @@ test('report-only mode exits 0 even with findings', () => {
   assert.equal(result.status, 0);
   assert.match(result.stdout, /finding\(s\)/);
 });
+
+test('flags a dynamically discovered generated module file missing the marker', () => {
+  const { root, write } = createRoot();
+  write('backend/modules/business/order/order_model.go', 'package order\n');
+  const result = run(root);
+  assert.equal(result.status, 1);
+  const body = JSON.parse(result.stdout);
+  assert.equal(body.findings[0].rule, 'generated-marker-missing');
+  assert.equal(body.findings[0].file, 'backend/modules/business/order/order_model.go');
+});
+
+test('flags a generated frontend module file missing the marker', () => {
+  const { root, write } = createRoot();
+  write('frontend/src/modules/business/order/api.ts', "export const endpoint = '/business/order';\n");
+  const result = run(root);
+  assert.equal(result.status, 1);
+  const body = JSON.parse(result.stdout);
+  assert.equal(body.findings[0].rule, 'generated-marker-missing');
+  assert.equal(body.findings[0].file, 'frontend/src/modules/business/order/api.ts');
+});
+
+test('flags an unparseable generated module schema JSON', () => {
+  const { root, write } = createRoot();
+  write('schema/generated/business/order.json', '{ not json');
+  const result = run(root);
+  assert.equal(result.status, 1);
+  const body = JSON.parse(result.stdout);
+  assert.equal(body.findings[0].rule, 'generated-artifact-invalid');
+  assert.equal(body.findings[0].file, 'schema/generated/business/order.json');
+});
+
+test('accepts marked generated module files and parseable schema JSON', () => {
+  const { root, write } = createRoot();
+  write('backend/modules/business/order/order_model.go', `// ${MARKER}\n\npackage order\n`);
+  write('frontend/src/modules/business/order/api.ts', `// ${MARKER}\n\nexport const x = {};\n`);
+  write('schema/generated/business/order.json', JSON.stringify({ name: 'order', scope: 'business' }));
+  const result = run(root);
+  assert.equal(result.status, 0, result.stdout);
+  const body = JSON.parse(result.stdout);
+  assert.equal(body.findingCount, 0);
+  // 10 stable marked + 1 registry (MARKED) + feature-ledger + 3 discovered.
+  assert.equal(body.checkedCount, MARKED.length + 1 + 3);
+});
+
+test('ignores hand-written files outside the generator-owned business scope', () => {
+  const { root, write } = createRoot();
+  write('backend/modules/system/i18n/i18n_model.go', 'package system\n');
+  write('frontend/src/modules/system/i18n/api.ts', "export const endpoint = '/system/i18n';\n");
+  write('schema/generated/feature-ledger-extra.json', '{"unexpected": true}');
+  const result = run(root);
+  // system-scope sources are hand-written (no marker expected); the stray JSON
+  // sits directly in schema/generated/ (not a scope dir), so only the stable
+  // artifacts are checked and everything passes.
+  assert.equal(result.status, 0, result.stdout);
+  assert.equal(JSON.parse(result.stdout).findingCount, 0);
+});

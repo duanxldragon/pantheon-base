@@ -69,7 +69,12 @@ updated_at: 2026-09-22
   `system/iam/user` 的模型级依赖冻结在 `config/boundary-baseline.json`（需 `UserReader` 契约）。~~
   **2026-09-23 关闭**：`pkg/contracts/authuser` 端口落地，生产代码已不再 import `system/iam/user`；
   基线中 3 条条目成为 stale，已删除，并由 `check-boundaries --strict` 的 stale 检测兜住回归。
-- 生成器尚未对新产出的模块文件写标记；门禁当前覆盖 11 个稳定产物。
+- ~~生成器尚未对新产出的模块文件写标记；门禁当前覆盖 11 个稳定产物。~~
+  **2026-09-24 关闭**：标记写入已由 2026-09-23 落地（exporter 导出层统一打标）；
+  `check-generated` 现动态发现 `backend|frontend/**/modules/business/<module>/` 文本产物
+  与 `schema/generated/<scope>/*.json`，与 11 个稳定产物一并 `--strict` 校验，
+  负例测试见 `tests/scripts/harness-check-generated.test.mjs`（task
+  `2026-09-24-fix-report-residual-closeout`）。
 - ~~`scripts/check-arch-boundaries.mjs` 未接入 CI，与 `check-boundaries.mjs` 职责重叠。~~
   **2026-09-23 关闭**：脚本已删除（它依赖外部 `rg`、`checkGeneratedRegistry` 与
   `check-generated.mjs` 重复，`checkSystemCrossDependency` 找的是不存在的

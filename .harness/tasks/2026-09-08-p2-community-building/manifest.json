@@ -1,0 +1,115 @@
+{
+  "taskId": "2026-09-08-p2-community-building",
+  "title": "P2 Community Building (CONTRIBUTING.md + Issue Templates)",
+  "goal": "Ship the community contribution surface the master plan asks for: CONTRIBUTING.md plus the GitHub issue-template set, and close the line item against its original definition of done.",
+  "primaryLayer": "platform",
+  "status": "completed",
+  "statusNote": "2026-09-24 back-filled. CONTRIBUTING.md and .github/ISSUE_TEMPLATE/{bug_report,feature_request,question}.md all exist as specified by TASK_MASTER_PLAN.md P2-4; verification listing captured in evidence. Pure accounting, no file change belongs to this packet.",
+  "completedAt": "2026-09-24",
+  "priority": "P2",
+  "type": "governance-documentation",
+  "estimatedComplexity": "low",
+  "technicalDebtFlag": "no",
+  "technicalDebtNote": "none",
+  "dependencyLayers": [
+    "platform governance tooling"
+  ],
+  "dependencies": {
+    "blockedBy": [],
+    "blocks": []
+  },
+  "scope": {
+    "in": [
+      "verification that CONTRIBUTING.md exists and covers the contribution workflow",
+      "verification that the issue-template set exists (bug, feature, question)",
+      "evidence closing the master-plan line item"
+    ],
+    "out": [
+      "CODE_OF_CONDUCT, PR templates or Discussions automation (not in the master-plan item)",
+      "code, gate or docs-index changes",
+      "pantheon-ops side templates"
+    ],
+    "create": [
+      ".harness/tasks/2026-09-08-p2-community-building/task.md",
+      ".harness/tasks/2026-09-08-p2-community-building/manifest.json",
+      ".harness/evidence/2026-09-08-p2-community-building/commands.json",
+      ".harness/evidence/2026-09-08-p2-community-building/summary.md",
+      ".harness/evidence/2026-09-08-p2-community-building/review.md"
+    ],
+    "modify": [],
+    "doNotTouch": [
+      "CONTRIBUTING.md content",
+      ".github/ISSUE_TEMPLATE/**",
+      "CI workflows"
+    ]
+  },
+  "taskDoc": ".harness/tasks/2026-09-08-p2-community-building/task.md",
+  "contractAnchors": [
+    "CONTRIBUTING.md",
+    ".github/ISSUE_TEMPLATE/bug_report.md",
+    ".github/ISSUE_TEMPLATE/feature_request.md",
+    ".github/ISSUE_TEMPLATE/question.md",
+    ".harness/tasks/TASK_MASTER_PLAN.md"
+  ],
+  "expectedFiles": {
+    "create": [
+      ".harness/tasks/2026-09-08-p2-community-building/task.md",
+      ".harness/tasks/2026-09-08-p2-community-building/manifest.json",
+      ".harness/evidence/2026-09-08-p2-community-building/commands.json",
+      ".harness/evidence/2026-09-08-p2-community-building/summary.md",
+      ".harness/evidence/2026-09-08-p2-community-building/review.md"
+    ],
+    "modify": [],
+    "doNotTouch": [
+      "CONTRIBUTING.md content",
+      ".github/ISSUE_TEMPLATE/**",
+      "CI workflows"
+    ]
+  },
+  "harnessProfile": {
+    "template": "custom",
+    "overlay": "community-surface",
+    "qualityProfile": "documentation",
+    "ratchetDecision": "no-ratchet",
+    "portableFailureClass": "documentation-gap",
+    "ownerLayer": "platform",
+    "coverageDimensions": [
+      "maintainability",
+      "architecture-fitness"
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "ls CONTRIBUTING.md .github/ISSUE_TEMPLATE/",
+      "head -20 CONTRIBUTING.md",
+      "node scripts/harness/check-task-packet.mjs --root . .harness/tasks/2026-09-08-p2-community-building/task.md"
+    ],
+    "runtimeEvidence": [
+      "listing: CONTRIBUTING.md plus bug_report.md, feature_request.md, question.md"
+    ]
+  },
+  "runtimeSensitive": false,
+  "evidenceRequired": [
+    "file listing proving the deliverables exist",
+    "review disposition confirming the line item is closed as specified"
+  ],
+  "humanGates": [
+    "none required (documentation surface already present; no production change) — evidence review only"
+  ],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed"
+  ],
+  "linkage": {
+    "evidenceDir": ".harness/evidence/2026-09-08-p2-community-building/",
+    "reviewFile": ".harness/evidence/2026-09-08-p2-community-building/review.md",
+    "summaryFile": ".harness/evidence/2026-09-08-p2-community-building/summary.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".harness/tasks/TASK_MASTER_PLAN.md"
+    ]
+  }
+}

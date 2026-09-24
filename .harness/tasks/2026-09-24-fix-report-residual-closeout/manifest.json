@@ -1,0 +1,209 @@
+{
+  "taskId": "2026-09-24-fix-report-residual-closeout",
+  "title": "Close the fix-report manual-intervention items and the 2026-09-22 residual gaps",
+  "goal": "Land every remaining fix-report §四 item an agent can close (MFA deployment baseline, system_i18n updated_by attribution with migration 000019, four-theme screenshot baseline) plus the recorded residual gaps (stale business-generated smoke spec, check-generated blind spot for dynamic module artifacts, docs index recheck), and 核销 the two items already closed by earlier packets with their evidence.",
+  "primaryLayer": "system/config",
+  "status": "completed",
+  "statusNote": "2026-09-24: all in-scope items closed with green standard gates and evidence in .harness/evidence/2026-09-24-fix-report-residual-closeout/; four-theme visual acceptance signed off at maintainer touchpoint 3 (visual-acceptance.md); four human gates stay deferred by definition (see review.md Deferred section).",
+  "completedAt": "2026-09-24",
+  "priority": "P1",
+  "type": "governance-ratchet",
+  "estimatedComplexity": "medium",
+  "technicalDebtFlag": "yes",
+  "technicalDebtNote": "FillMissingLocales/HydrateBuiltinLocales rows carry no updated_by (system-origin, traced by the operation log); the CSV export does not surface the new column; the four human gates stay deferred by definition.",
+  "dependencyLayers": [
+    "platform governance tooling",
+    "backend-services",
+    "backend-repositories",
+    "backend/testing"
+  ],
+  "dependencies": {
+    "blockedBy": [
+      "2026-09-22-layer-boundary-gate",
+      "2026-09-22-generated-artifact-governance",
+      "2026-09-23-governance-residual-closeout"
+    ],
+    "blocks": [
+      "2026-09-08-p2-test-coverage-phase2 (accounting closes alongside)",
+      "2026-09-08-p2-test-coverage-phase3 (accounting closes alongside)"
+    ]
+  },
+  "scope": {
+    "in": [
+      "DEPLOYMENT_GUIDE.md production login.mfa_enabled=true baseline (§4 note + §7 checklist)",
+      "system_i18n.updated_by: migration 000019 guarded up/down, currentRuntimeSchemaMarkers entry, system_init.sql parity, 000012 replay-idempotency guard, model + I18nResp field, actor writes in Create/Update/Import/SyncMissingKeys, handler wiring, DB-backed tests",
+      "four-theme visual baseline spec with snapshots (indigo/emerald/violet/slate)",
+      "核销 of fix-report §四.1 boundary gate and §四.3 coverage gate via existing ci.yml evidence",
+      "business-generated-basic.spec.ts rewrite against the nav menu tree API",
+      "check-generated.mjs extension covering schema/generated/<scope>/*.json and generated business module files, with tests",
+      "docs README index recheck"
+    ],
+    "out": [
+      "human gates: G2 recovery drill, G3 sizing, v0.12.0 release, state-file close-out checkboxes",
+      "changing the login.mfa_enabled seed default",
+      "updated_by on FillMissingLocales/HydrateBuiltinLocales writers",
+      "CSV export column additions",
+      "17 pre-template task docs migration, pantheon-ops sync, business/* runtime behavior"
+    ],
+    "create": [
+      "backend/pkg/database/migrations/000019_i18n_updated_by.up.sql",
+      "backend/pkg/database/migrations/000019_i18n_updated_by.down.sql",
+      "frontend/tests/visual/theme-baseline.spec.ts",
+      ".harness/tasks/2026-09-24-fix-report-residual-closeout/task.md",
+      ".harness/tasks/2026-09-24-fix-report-residual-closeout/manifest.json",
+      ".harness/evidence/2026-09-24-fix-report-residual-closeout/commands.json",
+      ".harness/evidence/2026-09-24-fix-report-residual-closeout/summary.md",
+      ".harness/evidence/2026-09-24-fix-report-residual-closeout/review.md"
+    ],
+    "modify": [
+      "docs/DEPLOYMENT_GUIDE.md",
+      "fix-report.md",
+      "backend/pkg/database/migrations/000012_high_traffic_indexes.up.sql",
+      "backend/pkg/database/migrations/000012_high_traffic_indexes.down.sql",
+      "backend/pkg/database/migrate.go",
+      "backend/pkg/database/migrate_test.go",
+      "backend/database/system_init.sql",
+      "backend/modules/system/i18n/i18n_model.go",
+      "backend/modules/system/i18n/i18n_handler.go",
+      "backend/modules/system/i18n/i18n_service.go",
+      "backend/modules/system/i18n/i18n_export.go",
+      "backend/modules/system/i18n/i18n_helper.go",
+      "backend/modules/system/i18n/i18n_service_test.go",
+      "frontend/tests/smoke-core/business-generated-basic.spec.ts",
+      "scripts/harness/check-generated.mjs",
+      "tests/scripts/harness-check-generated.test.mjs",
+      "docs/designs/REPOSITORY_LAYOUT.md",
+      "docs/designs/REPOSITORY_LAYOUT.en.md",
+      ".harness/NAMING_AND_BOUNDARIES_REMEDIATION_PLAN_2026-09-22.md"
+    ],
+    "doNotTouch": [
+      "backend/modules/business/** runtime behavior",
+      "backend/modules/system/config/setting/setting_seed.go mfa default",
+      ".github/workflows/* thresholds",
+      "docs/contracts/TENANT_CONTRACT_V1.md",
+      "config/task-packet-legacy-docs.json entries"
+    ]
+  },
+  "taskDoc": ".harness/tasks/2026-09-24-fix-report-residual-closeout/task.md",
+  "contractAnchors": [
+    "fix-report.md",
+    "docs/DEPLOYMENT_GUIDE.md",
+    "backend/pkg/database/migrations/000018_session_pagination_indexes.up.sql",
+    "backend/pkg/database/migrate.go",
+    "scripts/harness/check-generated.mjs",
+    "frontend/tests/visual/visual-baseline.spec.ts",
+    "frontend/tests/smoke-core/business-generated-basic.spec.ts",
+    "docs/README.md"
+  ],
+  "expectedFiles": {
+    "create": [
+      "backend/pkg/database/migrations/000019_i18n_updated_by.up.sql",
+      "backend/pkg/database/migrations/000019_i18n_updated_by.down.sql",
+      "frontend/tests/visual/theme-baseline.spec.ts",
+      ".harness/tasks/2026-09-24-fix-report-residual-closeout/task.md",
+      ".harness/tasks/2026-09-24-fix-report-residual-closeout/manifest.json",
+      ".harness/evidence/2026-09-24-fix-report-residual-closeout/commands.json",
+      ".harness/evidence/2026-09-24-fix-report-residual-closeout/summary.md",
+      ".harness/evidence/2026-09-24-fix-report-residual-closeout/review.md"
+    ],
+    "modify": [
+      "docs/DEPLOYMENT_GUIDE.md",
+      "fix-report.md",
+      "backend/pkg/database/migrations/000012_high_traffic_indexes.up.sql",
+      "backend/pkg/database/migrations/000012_high_traffic_indexes.down.sql",
+      "backend/pkg/database/migrate.go",
+      "backend/pkg/database/migrate_test.go",
+      "backend/database/system_init.sql",
+      "backend/modules/system/i18n/i18n_model.go",
+      "backend/modules/system/i18n/i18n_handler.go",
+      "backend/modules/system/i18n/i18n_service.go",
+      "backend/modules/system/i18n/i18n_export.go",
+      "backend/modules/system/i18n/i18n_helper.go",
+      "backend/modules/system/i18n/i18n_service_test.go",
+      "frontend/tests/smoke-core/business-generated-basic.spec.ts",
+      "scripts/harness/check-generated.mjs",
+      "tests/scripts/harness-check-generated.test.mjs",
+      "docs/designs/REPOSITORY_LAYOUT.md",
+      "docs/designs/REPOSITORY_LAYOUT.en.md",
+      ".harness/NAMING_AND_BOUNDARIES_REMEDIATION_PLAN_2026-09-22.md"
+    ],
+    "doNotTouch": [
+      "backend/modules/business/** runtime behavior",
+      "backend/modules/system/config/setting/setting_seed.go mfa default",
+      ".github/workflows/* thresholds",
+      "docs/contracts/TENANT_CONTRACT_V1.md",
+      "config/task-packet-legacy-docs.json entries"
+    ]
+  },
+  "harnessProfile": {
+    "template": "api-service",
+    "overlay": "governance-ratchet",
+    "qualityProfile": "ci-workflow",
+    "ratchetDecision": "gate-updated",
+    "portableFailureClass": "silent-green-and-stale-exemption",
+    "ownerLayer": "platform",
+    "coverageDimensions": [
+      "behaviour",
+      "maintainability",
+      "architecture-fitness",
+      "runtime-quality"
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "cd backend && go build ./... && go vet ./... && gofmt -l .",
+      "cd backend && go test -count=1 ./modules/system/i18n/... ./pkg/database/...",
+      "node scripts/harness/check-boundaries.mjs --strict --repo pantheon-base --baseline config/boundary-baseline.json",
+      "node scripts/harness/check-generated.mjs --root . --strict",
+      "node --test tests/scripts/harness-check-generated.test.mjs tests/scripts/generated-marker-consistency.test.mjs",
+      "node scripts/harness/check-structure-contract.mjs --root . --strict",
+      "node scripts/harness/check-doc-links.mjs --root . --strict && node scripts/harness/check-doc-inventory.mjs --root . --strict && node scripts/harness/check-encoding.mjs --root . --strict && node scripts/harness/check-failure-registry.mjs --root . --strict && node scripts/frontmatter-check.mjs",
+      "node scripts/harness/check-task-packet.mjs --root .",
+      "node scripts/harness/check-evidence.mjs && node scripts/harness/check-review.mjs",
+      "cd frontend && npx tsc -b",
+      "cd frontend && npx playwright test -c playwright.visual.config.ts tests/visual/theme-baseline.spec.ts --update-snapshots"
+    ],
+    "runtimeEvidence": [
+      "migrate tests: marker-driven replay of 8..19 applies 000019 and stays idempotent with the hardened 000012",
+      "i18n tests: updated_by written on Create/Update/Import/SyncMissingKeys",
+      "check-generated negative probes: unmarked generated module file and unparseable schema JSON fail --strict",
+      "four-theme snapshots generated or explicit runtime gap recorded",
+      "smoke spec run against the live stack or explicit runtime gap recorded"
+    ]
+  },
+  "runtimeSensitive": true,
+  "evidenceRequired": [
+    "migration replay proof and migrate test output",
+    "i18n DB-backed test output for updated_by",
+    "DEPLOYMENT_GUIDE diff for the MFA baseline",
+    "four-theme snapshot run output or runtime gap",
+    "check-generated negative probes",
+    "smoke-spec rewrite run or runtime gap",
+    "docs-index recheck result",
+    "review disposition listing deferred human gates"
+  ],
+  "humanGates": [
+    "G2 recovery drill (DBA) — deferred",
+    "production G3 sizing — deferred",
+    "v0.12.0 release cut — deferred",
+    "state-file close-out checkboxes — deferred",
+    "final visual acceptance of four-theme baselines — maintainer touchpoint ③: ✅ passed 2026-09-24, sign-off in .harness/evidence/2026-09-24-fix-report-residual-closeout/visual-acceptance.md"
+  ],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed"
+  ],
+  "linkage": {
+    "evidenceDir": ".harness/evidence/2026-09-24-fix-report-residual-closeout/",
+    "reviewFile": ".harness/evidence/2026-09-24-fix-report-residual-closeout/review.md",
+    "summaryFile": ".harness/evidence/2026-09-24-fix-report-residual-closeout/summary.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".harness/NAMING_AND_BOUNDARIES_REMEDIATION_PLAN_2026-09-22.md",
+      "fix-report.md"
+    ]
+  }
+}

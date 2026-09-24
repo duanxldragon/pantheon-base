@@ -58,6 +58,16 @@ var preModuleRegistrationRuntimeSchemaMarkers = append(
 var currentRuntimeSchemaMarkers = append(
 	[]schemaColumnMarker{
 		{table: "system_module_registration", column: "table_name"},
+		// Migration 000019 adds system_i18n.updated_by. The marker is required:
+		// looksLikeCurrentRuntimeSchema otherwise judges every marker-complete
+		// database as fully current and bootstraps schema_migrations to latest,
+		// which would skip 000019 forever and leave the runtime
+		// "UPDATE system_i18n SET updated_by = ?" failing on every existing DB.
+		// A DB missing this marker fails the current-check, falls through to the
+		// preModuleRegistration check (whose markers it still has) and rewinds to
+		// v7, replaying 8..19 — every file in that window is guarded, with 000012
+		// hardened in the same change precisely because of this replay.
+		{table: "system_i18n", column: "updated_by"},
 	},
 	preModuleRegistrationRuntimeSchemaMarkers...,
 )

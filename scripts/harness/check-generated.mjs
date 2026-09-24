@@ -8,7 +8,10 @@
  * a manual edit (or a hand-written registry) is detectable. The matching reset
  * templates live in frontend/scripts/cleanup-generated-modules.mjs — keep the
  * marker string and the artifact list in sync with that script and with
- * REPOSITORY_LAYOUT.md §7.2.
+ * REPOSITORY_LAYOUT.md §7.2. Beyond the stable artifacts, generated module trees
+ * (the business scope directories under backend and frontend modules) and
+ * per-scope schema JSON (schema/generated/<scope>/<name>.json) are discovered
+ * dynamically.
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -36,6 +39,79 @@ const MARKED_ARTIFACTS = [
 // JSON artifacts cannot carry a comment marker; they are identified by path and
 // shape instead.
 const JSON_ARTIFACTS = ['schema/generated/feature-ledger.json'];
+
+// Dynamic discovery: beyond the stable artifacts above, the generator owns whole
+// trees that only exist once a module has been generated. Ownership mirrors
+// frontend/scripts/cleanup-generated-modules.mjs: the business scope directories
+// (module files must carry the first-line marker) and per-scope module schema JSON
+// under schema/generated/<scope>/<name>.json (parseability only). Absent or empty
+// directories contribute zero artifacts, so a clean repo stays green.
+const GENERATED_MODULE_ROOTS = [
+  { relativeDir: 'backend/modules/business', textExtensions: ['.go'] },
+  { relativeDir: 'frontend/src/modules/business', textExtensions: ['.ts', '.tsx'] },
+];
+const SCHEMA_GENERATED_DIR = 'schema/generated';
+
+function toRepoRelative(root, absolutePath) {
+  return path.relative(root, absolutePath).split(path.sep).join('/');
+}
+
+function listSubdirectories(absolutePath) {
+  if (!fs.existsSync(absolutePath)) {
+    return [];
+  }
+  return fs
+    .readdirSync(absolutePath, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => path.join(absolutePath, entry.name))
+    .sort();
+}
+
+function walkFiles(absolutePath) {
+  if (!fs.existsSync(absolutePath)) {
+    return [];
+  }
+  const files = [];
+  for (const entry of fs.readdirSync(absolutePath, { withFileTypes: true })) {
+    const entryPath = path.join(absolutePath, entry.name);
+    if (entry.isDirectory()) {
+      files.push(...walkFiles(entryPath));
+    } else if (entry.isFile()) {
+      files.push(entryPath);
+    }
+  }
+  return files;
+}
+
+function discoverGeneratedArtifacts(root) {
+  const marked = [];
+  const jsonArtifacts = [];
+
+  for (const { relativeDir, textExtensions } of GENERATED_MODULE_ROOTS) {
+    for (const moduleDir of listSubdirectories(path.join(root, relativeDir))) {
+      for (const file of walkFiles(moduleDir)) {
+        if (textExtensions.some((extension) => file.endsWith(extension))) {
+          marked.push(toRepoRelative(root, file));
+        } else if (file.endsWith('.json')) {
+          jsonArtifacts.push(toRepoRelative(root, file));
+        }
+      }
+    }
+  }
+
+  // Module schema files written by writeGeneratedModuleSchemaFile. The scope
+  // subdirectories are walked, not the schema/generated root, so the stable
+  // feature-ledger.json stays owned by JSON_ARTIFACTS without double counting.
+  for (const scopeDir of listSubdirectories(path.join(root, SCHEMA_GENERATED_DIR))) {
+    for (const file of walkFiles(scopeDir)) {
+      if (file.endsWith('.json')) {
+        jsonArtifacts.push(toRepoRelative(root, file));
+      }
+    }
+  }
+
+  return { marked: marked.sort(), json: jsonArtifacts.sort() };
+}
 
 function parseArgs(argv) {
   const options = { json: false, strict: false, help: false, root: DEFAULT_ROOT };
@@ -99,11 +175,15 @@ function main() {
   if (options.help) return printHelp(), 0;
 
   const findings = [];
-  for (const relativePath of MARKED_ARTIFACTS) {
+  const discovered = discoverGeneratedArtifacts(options.root);
+  const markedArtifacts = [...MARKED_ARTIFACTS, ...discovered.marked];
+  const jsonArtifacts = [...JSON_ARTIFACTS, ...discovered.json];
+  const checkedCount = markedArtifacts.length + jsonArtifacts.length;
+  for (const relativePath of markedArtifacts) {
     const finding = checkMarkedArtifact(options.root, relativePath);
     if (finding) findings.push(finding);
   }
-  for (const relativePath of JSON_ARTIFACTS) {
+  for (const relativePath of jsonArtifacts) {
     const finding = checkJsonArtifact(options.root, relativePath);
     if (finding) findings.push(finding);
   }
@@ -111,14 +191,14 @@ function main() {
   if (options.json) {
     console.log(
       JSON.stringify(
-        { mode: options.strict ? 'strict' : 'report-only', checkedCount: MARKED_ARTIFACTS.length + JSON_ARTIFACTS.length, findingCount: findings.length, findings },
+        { mode: options.strict ? 'strict' : 'report-only', checkedCount, findingCount: findings.length, findings },
         null,
         2,
       ),
     );
   } else {
     console.log(
-      `Generated artifact check (${options.strict ? 'strict' : 'report-only'}): ${findings.length} finding(s) across ${MARKED_ARTIFACTS.length + JSON_ARTIFACTS.length} artifact(s)`,
+      `Generated artifact check (${options.strict ? 'strict' : 'report-only'}): ${findings.length} finding(s) across ${checkedCount} artifact(s)`,
     );
     for (const finding of findings) {
       console.log(`finding: ${finding.file} [${finding.rule}]`);

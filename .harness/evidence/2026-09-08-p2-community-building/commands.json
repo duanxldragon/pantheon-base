@@ -1,0 +1,49 @@
+{
+  "taskId": "2026-09-08-p2-community-building",
+  "status": "verified",
+  "commands": [
+    {
+      "command": "ls CONTRIBUTING.md .github/ISSUE_TEMPLATE/",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "CONTRIBUTING.md present; .github/ISSUE_TEMPLATE/ contains exactly the three templates the master plan names: bug_report.md, feature_request.md, question.md."
+    },
+    {
+      "command": "head -12 CONTRIBUTING.md",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "Bilingual document (Chinese version linked from the top) with Code of Conduct, Getting Started, How to Contribute and Development Workflow sections — a real contribution workflow, not a placeholder stub."
+    },
+    {
+      "command": "grep -n 'Community Building' .harness/tasks/TASK_MASTER_PLAN.md",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "P2-4 line item present ('CONTRIBUTING.md + Issue Templates', effort 4h, 'Can start anytime') — the definition of done this packet closes against; the plan now marks it Completed with this packet's ID."
+    },
+    {
+      "command": "modifying CONTRIBUTING.md, the templates or CI in this packet",
+      "cwd": "pantheon-base",
+      "status": "not-run",
+      "notes": "Deliberately out of scope: the packet's scope.out freezes CONTRIBUTING.md content, .github/ISSUE_TEMPLATE/** and CI workflows — the deliverables already exist as originally shipped, and the DoD is existence plus workflow coverage, not a rewrite. CODE_OF_CONDUCT/PR templates/Discussions automation were never part of the master-plan item."
+    }
+  ],
+  "runtimeGap": "None — documentary verification (ls/head/grep) against tracked files, reproducible without any service running.",
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-09-08-p2-community-building/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-09-08-p2-community-building/",
+    "reviewFile": ".harness/evidence/2026-09-08-p2-community-building/review.md",
+    "summaryFile": ".harness/evidence/2026-09-08-p2-community-building/summary.md",
+    "changeRef": "none",
+    "planRefs": [".harness/tasks/TASK_MASTER_PLAN.md"]
+  },
+  "repo": "pantheon-base",
+  "agent": {
+    "tool": "other",
+    "note": "Executed on Windows under Git Bash; documentary accounting only — no file outside this packet's directory was modified."
+  },
+  "knownGaps": [
+    "Existence and workflow coverage were reviewed; the template *wording* was not re-edited this round (frozen by scope.out) — a content pass would be a separate, explicit task.",
+    "CODE_OF_CONDUCT.md, a PR template and Discussions automation are not covered — they were never part of the master-plan P2-4 item.",
+    "The community surface has no automation gate (no link checker on the templates); doc-links covers docs/ but .github/ content is only as good as its last human edit."
+  ]
+}
