@@ -89,34 +89,36 @@ test('report-only mode exits 0 even with findings', () => {
   assert.match(result.stdout, /finding\(s\)/);
 });
 
-test('flags a dynamically discovered generated module file missing the marker', () => {
-  const { root, write } = createRoot();
-  write('backend/modules/business/order/order_model.go', 'package order\n');
-  const result = run(root);
-  assert.equal(result.status, 1);
-  const body = JSON.parse(result.stdout);
-  assert.equal(body.findings[0].rule, 'generated-marker-missing');
-  assert.equal(body.findings[0].file, 'backend/modules/business/order/order_model.go');
-});
-
-test('flags a generated frontend module file missing the marker', () => {
-  const { root, write } = createRoot();
-  write('frontend/src/modules/business/order/api.ts', "export const endpoint = '/business/order';\n");
-  const result = run(root);
-  assert.equal(result.status, 1);
-  const body = JSON.parse(result.stdout);
-  assert.equal(body.findings[0].rule, 'generated-marker-missing');
-  assert.equal(body.findings[0].file, 'frontend/src/modules/business/order/api.ts');
-});
-
-test('flags an unparseable generated module schema JSON', () => {
-  const { root, write } = createRoot();
-  write('schema/generated/business/order.json', '{ not json');
-  const result = run(root);
-  assert.equal(result.status, 1);
-  const body = JSON.parse(result.stdout);
-  assert.equal(body.findings[0].rule, 'generated-artifact-invalid');
-  assert.equal(body.findings[0].file, 'schema/generated/business/order.json');
+// The three dynamic-discovery violations (unmarked Go module file, unmarked TS
+// module file, unparseable per-scope schema JSON) share one shape, so they are
+// driven from data instead of three near-identical test bodies.
+test('flags dynamically discovered module and schema artifacts', () => {
+  const cases = [
+    {
+      file: 'backend/modules/business/order/order_model.go',
+      content: 'package order\n',
+      rule: 'generated-marker-missing',
+    },
+    {
+      file: 'frontend/src/modules/business/order/api.ts',
+      content: "export const endpoint = '/business/order';\n",
+      rule: 'generated-marker-missing',
+    },
+    {
+      file: 'schema/generated/business/order.json',
+      content: '{ not json',
+      rule: 'generated-artifact-invalid',
+    },
+  ];
+  for (const scenario of cases) {
+    const { root, write } = createRoot();
+    write(scenario.file, scenario.content);
+    const result = run(root);
+    assert.equal(result.status, 1, `${scenario.file}: ${result.stdout}`);
+    const body = JSON.parse(result.stdout);
+    assert.equal(body.findings[0].rule, scenario.rule, scenario.file);
+    assert.equal(body.findings[0].file, scenario.file, scenario.file);
+  }
 });
 
 test('accepts marked generated module files and parseable schema JSON', () => {

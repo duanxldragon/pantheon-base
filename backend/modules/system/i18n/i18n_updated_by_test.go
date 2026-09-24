@@ -1,16 +1,30 @@
 package system
 
-import "testing"
+import (
+	"testing"
 
-// TestI18nService_WritesUpdatedByOnUserFacingPaths pins the operator-attribution
-// contract (fix-report §4.5): every user-facing dynamic write path stamps
-// updated_by, later writes overwrite it, and the API response surfaces it.
-func TestI18nService_WritesUpdatedByOnUserFacingPaths(t *testing.T) {
+	"gorm.io/gorm"
+)
+
+// newAttributionTestService owns the service bootstrap shared by the
+// attribution tests so the setup does not restate the per-test scaffold that
+// the rest of this package's suite already established.
+func newAttributionTestService(t *testing.T) (*I18nService, *gorm.DB) {
+	t.Helper()
+
 	db := newI18nTestDB(t)
 	service := NewI18nService(db)
 	if err := service.Migrate(); err != nil {
 		t.Fatalf("migrate: %v", err)
 	}
+	return service, db
+}
+
+// TestI18nService_WritesUpdatedByOnUserFacingPaths pins the operator-attribution
+// contract (fix-report §4.5): every user-facing dynamic write path stamps
+// updated_by, later writes overwrite it, and the API response surfaces it.
+func TestI18nService_WritesUpdatedByOnUserFacingPaths(t *testing.T) {
+	service, db := newAttributionTestService(t)
 
 	// Create carries the actor into the row and the response.
 	created, err := service.Create(&I18nCreateReq{
