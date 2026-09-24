@@ -161,7 +161,7 @@ func (s *I18nService) buildI18nImportRows(records [][]string, headerIndex map[st
 	return rows
 }
 
-func (s *I18nService) applyI18nImportRows(tx *gorm.DB, rows []i18nValidatedImportRow, result *impexp.ImportResult) error {
+func (s *I18nService) applyI18nImportRows(tx *gorm.DB, rows []i18nValidatedImportRow, updatedBy string, result *impexp.ImportResult) error {
 	for _, row := range rows {
 		var existing SystemI18n
 		err := tx.Where("locale = ? AND `key` = ?", row.locale, row.key).First(&existing).Error
@@ -176,18 +176,20 @@ func (s *I18nService) applyI18nImportRows(tx *gorm.DB, rows []i18nValidatedImpor
 				"group_name": row.group,
 				"value":      row.value,
 				"remark":     row.remark,
+				"updated_by": updatedBy,
 			}).Error; err != nil {
 				return err
 			}
 			result.Updated++
 		case errors.Is(err, gorm.ErrRecordNotFound):
 			if err := tx.Create(&SystemI18n{
-				Module: row.module,
-				Group:  row.group,
-				Key:    row.key,
-				Locale: row.locale,
-				Value:  row.value,
-				Remark: row.remark,
+				Module:    row.module,
+				Group:     row.group,
+				Key:       row.key,
+				Locale:    row.locale,
+				Value:     row.value,
+				Remark:    row.remark,
+				UpdatedBy: updatedBy,
 			}).Error; err != nil {
 				return err
 			}
@@ -200,7 +202,8 @@ func (s *I18nService) applyI18nImportRows(tx *gorm.DB, rows []i18nValidatedImpor
 }
 
 // Import 批量导入 i18n 词条记录，逐行校验并返回导入结果（含逐行错误）。
-func (s *I18nService) Import(records [][]string) (*impexp.ImportResult, error) {
+// updatedBy 记录触发导入的操作者（handler 从认证上下文注入），写入新建与被更新行的 updated_by。
+func (s *I18nService) Import(records [][]string, updatedBy string) (*impexp.ImportResult, error) {
 	result := &impexp.ImportResult{
 		Applied: false,
 		Errors:  []impexp.ImportError{},
@@ -225,7 +228,7 @@ func (s *I18nService) Import(records [][]string) (*impexp.ImportResult, error) {
 	}
 
 	if err := s.db.Transaction(func(tx *gorm.DB) error {
-		return s.applyI18nImportRows(tx, rows, result)
+		return s.applyI18nImportRows(tx, rows, updatedBy, result)
 	}); err != nil {
 		return nil, err
 	}

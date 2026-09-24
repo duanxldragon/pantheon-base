@@ -72,7 +72,13 @@
 
 ### 残余 gap
 
-- `business-generated-basic.spec.ts` 未重写 (CI 失败集无此文件, 本地 3 skipped 为低代码环境依赖), 后续按需对齐
+- `business-generated-basic.spec.ts` **已重写并实证 (2026-09-24, closeout)**: 菜单发现从过时 DOM 选择器
+  (`.arco-menu-item:has-text("业务")`, 与 SubMenu 分组 IA 不匹配) 换为 `GET /system/menu/tree?scope=nav`
+  API 事实探测 (`business.` module / `/business/` path 前缀契约)。本地真栈实跑 (backend@8080 真实库 +
+  smoke vite + admin 登录) 结果 3 skipped, skip 原因精确为 "No business modules exist in the current
+  database" — 判定路径由『选择器在有/无业务模块时都可能误判』变为确定性 API 事实判定;
+  CI 同为无业务模块 seed 库, 语义与 2026-09-10 修复基线 (3 skipped) 一致。见
+  `.harness/evidence/2026-09-24-fix-report-residual-closeout/`。
 
 ---
 

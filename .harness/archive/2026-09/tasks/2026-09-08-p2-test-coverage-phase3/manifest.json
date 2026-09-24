@@ -1,0 +1,125 @@
+{
+  "taskId": "2026-09-08-p2-test-coverage-phase3",
+  "title": "P2 Test Coverage Phase 3 - Platform & Lowcode",
+  "goal": "Raise and verify Phase 3 automated test coverage for the platform layer and low-code packages to 30%+ each and overall backend coverage to 50%+, with the overall floor protected by the CI coverage gate.",
+  "primaryLayer": "platform",
+  "status": "completed",
+  "statusNote": "2026-09-24 back-filled. Targets met by the DB-backed profiles: platform 75.2%, lowcode aggregate 56.4% (dynamicmodule 69.2 / generator 26.3), overall 56.0% (coverage_p2.txt) and 58.3% (coverage_lc.txt), with ci.yml:431 enforcing threshold 50. Generator 26.3% is the documented residual inside the met layer aggregate.",
+  "completedAt": "2026-09-24",
+  "priority": "P2",
+  "type": "test-coverage",
+  "estimatedComplexity": "medium",
+  "technicalDebtFlag": "yes",
+  "technicalDebtNote": "backend/modules/lowcode/generator sits at 26.3% statements; the phase-3 target is per-layer and met via the lowcode aggregate (56.4%), but the generator package itself would need dedicated tests to clear 30% standalone.",
+  "dependencyLayers": [
+    "go-testing",
+    "backend-services",
+    "backend-repositories"
+  ],
+  "dependencies": {
+    "blockedBy": [
+      "2026-09-08-p2-test-coverage-phase2"
+    ],
+    "blocks": []
+  },
+  "scope": {
+    "in": [
+      "platform and lowcode coverage measurement against the 30% phase-3 targets",
+      "overall backend coverage against the 50% phase-3 target",
+      "evidence linking the CI coverage gate as the ratchet",
+      "recording the generator package residual"
+    ],
+    "out": [
+      "writing new tests in this retroactive packet",
+      "raising the CI coverage threshold beyond 50",
+      "frontend coverage"
+    ],
+    "create": [
+      ".harness/tasks/2026-09-08-p2-test-coverage-phase3/task.md",
+      ".harness/tasks/2026-09-08-p2-test-coverage-phase3/manifest.json",
+      ".harness/evidence/2026-09-08-p2-test-coverage-phase3/commands.json",
+      ".harness/evidence/2026-09-08-p2-test-coverage-phase3/summary.md",
+      ".harness/evidence/2026-09-08-p2-test-coverage-phase3/review.md"
+    ],
+    "modify": [],
+    "doNotTouch": [
+      "backend/modules/** production logic",
+      ".github/workflows/ci.yml coverage threshold",
+      "frontend code"
+    ]
+  },
+  "taskDoc": ".harness/tasks/2026-09-08-p2-test-coverage-phase3/task.md",
+  "contractAnchors": [
+    ".harness/tasks/TASK_MASTER_PLAN.md",
+    "scripts/harness/check-coverage.mjs",
+    ".github/workflows/ci.yml",
+    ".harness/tasks/2026-09-08-p2-test-coverage-phase2/manifest.json"
+  ],
+  "expectedFiles": {
+    "create": [
+      ".harness/tasks/2026-09-08-p2-test-coverage-phase3/task.md",
+      ".harness/tasks/2026-09-08-p2-test-coverage-phase3/manifest.json",
+      ".harness/evidence/2026-09-08-p2-test-coverage-phase3/commands.json",
+      ".harness/evidence/2026-09-08-p2-test-coverage-phase3/summary.md",
+      ".harness/evidence/2026-09-08-p2-test-coverage-phase3/review.md"
+    ],
+    "modify": [],
+    "doNotTouch": [
+      "backend/modules/** production logic",
+      ".github/workflows/ci.yml coverage threshold",
+      "frontend code"
+    ]
+  },
+  "harnessProfile": {
+    "template": "api-service",
+    "overlay": "test-coverage-improvement",
+    "qualityProfile": "test-baseline",
+    "ratchetDecision": "coverage-increase",
+    "portableFailureClass": "quality-debt",
+    "ownerLayer": "platform",
+    "coverageDimensions": [
+      "behaviour",
+      "maintainability",
+      "runtime-quality"
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "cd backend && go tool cover -func=coverage_p2.txt | tail -1",
+      "cd backend && go tool cover -func=coverage_lc.txt | tail -1",
+      "cd backend && awk statement-weighted aggregation over both profiles grouped by platform/lowcode",
+      "node scripts/harness/check-coverage.mjs backend/coverage.txt --threshold 50",
+      "node scripts/harness/check-task-packet.mjs --root . .harness/tasks/2026-09-08-p2-test-coverage-phase3/task.md"
+    ],
+    "runtimeEvidence": [
+      "platform 75.2%, lowcode aggregate 56.4%, generator 26.3%, overall 56.0% / 58.3%",
+      "ci.yml:431 coverage gate wired at threshold 50"
+    ]
+  },
+  "runtimeSensitive": false,
+  "evidenceRequired": [
+    "per-group coverage aggregation output for platform and lowcode",
+    "both profile totals",
+    "CI coverage-gate line",
+    "review disposition naming the generator residual"
+  ],
+  "humanGates": [
+    "none required (retroactive packet; no production, permission, menu, i18n or database change) — evidence review only"
+  ],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed"
+  ],
+  "linkage": {
+    "evidenceDir": ".harness/evidence/2026-09-08-p2-test-coverage-phase3/",
+    "reviewFile": ".harness/evidence/2026-09-08-p2-test-coverage-phase3/review.md",
+    "summaryFile": ".harness/evidence/2026-09-08-p2-test-coverage-phase3/summary.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".harness/tasks/TASK_MASTER_PLAN.md"
+    ]
+  }
+}

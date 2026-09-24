@@ -4,6 +4,20 @@ import path from 'node:path';
 export const TASK_MANIFEST_ROOT = '.harness/tasks';
 export const TASK_MANIFEST_FILE = 'manifest.json';
 
+// Canonical lifecycle vocabulary for the optional `status` field on
+// .harness/tasks/<task-id>/manifest.json. The field is metadata, not a
+// required field, but when present it must use one of these values so packet
+// state stays greppable across the repo. Before this check existed the
+// vocabulary had drifted to `done` / `complete` / `complete-with-explicit-gates`
+// (2026-09-23), which would have silently broken any future `status ===
+// 'completed'` query.
+export const TASK_MANIFEST_STATUSES = new Set([
+  'planned',
+  'in-progress',
+  'completed',
+  'abandoned',
+]);
+
 function isNonEmptyString(value) {
   return typeof value === 'string' && value.trim() !== '';
 }
@@ -373,6 +387,18 @@ export function validateTaskManifest(payload, options = {}) {
 
   if ('runtimeSensitive' in payload && typeof payload.runtimeSensitive !== 'boolean') {
     errors.push('taskManifest.runtimeSensitive must be a boolean when present.');
+  }
+
+  if ('status' in payload && payload.status !== null) {
+    assertNonEmptyString(payload.status, 'taskManifest.status', errors);
+    if (
+      isNonEmptyString(payload.status) &&
+      !TASK_MANIFEST_STATUSES.has(payload.status.trim())
+    ) {
+      errors.push(
+        `taskManifest.status must be one of: ${Array.from(TASK_MANIFEST_STATUSES).join(', ')} (got "${payload.status}").`,
+      );
+    }
   }
 
   for (const [key, label] of [

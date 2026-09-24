@@ -1,0 +1,61 @@
+{
+  "taskId": "2026-09-08-p2-test-coverage-phase2",
+  "status": "verified",
+  "commands": [
+    {
+      "command": "cd backend && go tool cover -func=coverage_p2.txt | tail -1",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "total: (statements) 56.0% for the whole-repo DB-backed profile — clears the 40% overall phase-2 target with 16 points of margin."
+    },
+    {
+      "command": "awk statement-weighted dir aggregation over backend/coverage_p2.txt (org/i18n/dict/setting dirs)",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "modules/system/org/dept 62.8% (595/948), modules/system/org/post 61.2% (298/487) -> org weighted 62.2% (893/1435); modules/system/i18n 68.7% (1014/1476); modules/system/config/dict 45.3% (433/955); modules/system/config/setting 62.8% (492/783). Every phase-2 domain clears the 40% target; dict at 45.3% is the closest."
+    },
+    {
+      "command": "cd backend && go tool cover -func=coverage_p2.txt > cov_func_p2.txt && cd .. && node scripts/harness/check-coverage.mjs backend/cov_func_p2.txt --threshold 50",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "`OK: total coverage 56.0% meets threshold 50%` — the CI gate (ci.yml:431) executed locally against the same profile, proving the ratchet that now protects the achieved level. Per-package table in the run output also shows the weakest packages (auth/oidc 0%, generator 28% func-average) so regressions are attributable."
+    },
+    {
+      "command": "grep -n check-coverage .github/workflows/ci.yml",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "Line 431: `node scripts/harness/check-coverage.mjs backend/coverage.txt --threshold ${{ vars.COVERAGE_THRESHOLD || '50' }}` — the gate is wired on every CI run, so this packet's closure rests on continuous enforcement, not on a one-off measurement."
+    },
+    {
+      "command": "cd backend && go test -count=1 -short -coverprofile ./...",
+      "cwd": "pantheon-base",
+      "status": "failed",
+      "notes": "Attempted earlier in the session for fresh profiling; exceeded the 600s command timeout on this host. The already-produced domain profile plus per-package test runs (database ok 13.4s, i18n ok 121.3s in the closeout packet) stand in for it; CI shards the suites."
+    },
+    {
+      "command": "writing new tests / raising the threshold in this packet",
+      "cwd": "pantheon-base",
+      "status": "not-run",
+      "notes": "Deliberately out of scope: this is a retroactive accounting packet (scope.out excludes writing tests and changing CI thresholds). The targets were already met by suites that other packets built."
+    }
+  ],
+  "runtimeGap": "Coverage profiles are local 2026-09-24 artifacts from DB-backed runs against the gitignored .env.test DSN; they are deleted in cleanup, with the numbers recorded here. Continuous enforcement belongs to ci.yml:431. Full-repo single-invocation profiling timed out at 600s, so per-domain aggregation over the produced profiles was used.",
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-09-08-p2-test-coverage-phase2/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-09-08-p2-test-coverage-phase2/",
+    "reviewFile": ".harness/evidence/2026-09-08-p2-test-coverage-phase2/review.md",
+    "summaryFile": ".harness/evidence/2026-09-08-p2-test-coverage-phase2/summary.md",
+    "changeRef": "none",
+    "planRefs": [".harness/tasks/TASK_MASTER_PLAN.md"]
+  },
+  "repo": "pantheon-base",
+  "agent": {
+    "tool": "other",
+    "note": "Executed on Windows under Git Bash with node v24; profiles produced from DB-backed go test runs using the gitignored .env.test local MySQL DSN. Accounting-only packet: no source file outside this packet's directory was modified."
+  },
+  "knownGaps": [
+    "The measurement is a 2026-09-24 local snapshot; the CI threshold at line 431 is the continuing guard, not this number.",
+    "config/dict at 45.3% clears the 40% bar but is the weakest phase-2 domain — it has 5.3 points of headroom before the bar, which the CI gate would catch as a regression only against 50 overall, not against 40 per domain.",
+    "backend/modules/lowcode/generator (26.3% statements) is outside the phase-2 scope and tracked by the phase-3 packet."
+  ]
+}

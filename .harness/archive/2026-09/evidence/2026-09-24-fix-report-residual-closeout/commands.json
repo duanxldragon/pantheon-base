@@ -1,0 +1,177 @@
+{
+  "taskId": "2026-09-24-fix-report-residual-closeout",
+  "status": "verified",
+  "commands": [
+    {
+      "command": "cd backend && gofmt -l . && go build ./... && go vet ./...",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "gofmt produced no output; build and vet both clean across the whole backend module after the i18n, migrate and migration-file edits."
+    },
+    {
+      "command": "cd backend && go test -count=1 ./pkg/database/",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "ok github.com/.../pkg/database 13.426s against the local MySQL DSN from the gitignored .env.test. Includes the four tests written or extended by this round: TestRunMigrationsReplaysToBackfillI18nUpdatedBy (marker-driven v7->19 replay applies 000019 and is idempotent), TestRunMigrationsReplaysLegacyModuleRegistrationCopyAcrossCollations (000008 guard), TestRunMigrationsAdoptsDevSeededGlobalTenantPlaceholder (000013 id=0 adoption), TestRunMigrationsRepairsDirtyCurrentSchemaVersion (pre-existing dirty-repair path)."
+    },
+    {
+      "command": "cd backend && go test -count=1 ./modules/system/i18n/",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "ok github.com/.../modules/system/i18n 121.3s, DB-backed. Covers updated_by writes on Create/Update (service + handler username injection), Import (applyI18nImportRows) and SyncMissingKeys via i18n_updated_by_test.go plus the extended service tests."
+    },
+    {
+      "command": "# inline lifecycle: source .env.test; start ./backend/pantheon_srv.exe; poll http://127.0.0.1:8080; SQL asserts; kill server",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "Real-database migration chain: server log shows `database migrations: repaired dirty current schema migration state version=7`, `all migrations applied successfully`, `starting server port=8080`. SQL afterwards: `SELECT version, dirty FROM schema_migrations` -> 19 / 0; `SHOW COLUMNS FROM system_i18n LIKE 'updated_by'` -> updated_by varchar(64) NULL; `SELECT COUNT(*) FROM tenants WHERE id=0 AND code='__global__'` -> 1. Replaying 8..19 against the real dev database exposed and forced fixes for three replay-window defects, each with a regression test: 000012 rebuilt indexes without an idempotency guard, 000008 compared a utf8mb4_general_ci legacy table against the 0900_ai_ci target, and 000013 collided on idx_tenants_code when the dev-seeded `__global__` row had id!=0 (now adopted onto id=0 before the guarded insert)."
+    },
+    {
+      "command": "cd frontend && ./node_modules/.bin/playwright test -c playwright.visual.config.ts tests/visual/theme-baseline.spec.ts --update-snapshots",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "4 passed; generated login-theme-{indigo,emerald,violet,slate}-win32.png under frontend/tests/visual/theme-baseline.spec.ts-snapshots/ (desktop-light project, pantheon_theme primed in localStorage before the app boots)."
+    },
+    {
+      "command": "cd frontend && ./node_modules/.bin/playwright test -c playwright.visual.config.ts tests/visual/theme-baseline.spec.ts",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "4 passed on a stability re-run without --update-snapshots, so the four baselines are deterministic, not one-shot renders."
+    },
+    {
+      "command": "# inline lifecycle: source .env.test; start backend; then cd frontend && ./node_modules/.bin/playwright test tests/smoke-core/business-generated-basic.spec.ts",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "SERVER_READY, then 3 skipped with the rewritten probe deciding honestly: login works against the real stack, GET /system/menu/tree?scope=nav returns no `business.` / `/business/` node (schema/generated/business is empty and the database has no dynamic-module table or business menu), so each test skips with `No business modules exist in the current database` instead of misreading stale DOM. SMOKE_RC=0."
+    },
+    {
+      "command": "# inline lifecycle: source .env.test; start backend; cd frontend && node scripts/run-smoke-suite.mjs --host 127.0.0.1 --port 5173 --cleanup-fixtures all --config playwright.config.ts -- <9 smoke-core specs> --workers=1",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "26 passed / 3 skipped in 2.0m, SMOKE_CORE_RC=0, fixture cleanup complete (0 stray users/roles/depts). The rewrite integrates with the whole core suite. auth-tenant-picker refreshes two screenshots inside .harness/evidence/2026-09-10-tenant-verification-and-gray/ as its normal artifact behaviour; those two historical pngs were restored with git checkout so this round does not rewrite another task's evidence."
+    },
+    {
+      "command": "cd frontend && ./node_modules/.bin/tsc -b && ./node_modules/.bin/eslint . --max-warnings=0 && ./node_modules/.bin/vite build",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "TSC_OK, LINT_OK, VITE_BUILD_OK — covers the new theme-baseline spec and the rewritten smoke spec."
+    },
+    {
+      "command": "node --test tests/scripts/*.test.mjs",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "129 pass / 0 fail, including harness-check-generated.test.mjs (11 pass, extended expectations) and generated-marker-consistency.test.mjs (marker sentence pinned across generator, cleanup tooling and gate). Directory form `node --test tests/scripts/` fails with MODULE_NOT_FOUND on Node 24; the glob form used by package.json is the supported invocation."
+    },
+    {
+      "command": "node scripts/harness/check-boundaries.mjs --strict --repo pantheon-base --baseline config/boundary-baseline.json",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "`Boundary check (strict): 0 finding(s), 5 baselined, 0 stale baselined, 0 warning(s)`, baseline review-by 2026-12-31. This is fix-report item 1 (business/* boundary gate) re-verified from ci.yml:389."
+    },
+    {
+      "command": "node scripts/harness/check-generated.mjs --root . --strict",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "`Generated artifact check (strict): 0 finding(s) across 11 artifact(s)` on the clean tree after the extension covering generated module trees (backend/modules/business/**, frontend/src/modules/business/**) and schema/generated/<scope>/**/*.json."
+    },
+    {
+      "command": "# negative probes: create backend/modules/business/probe_mod/probe.go without marker + schema/generated/business/probe.json with broken JSON, run check-generated --strict, then delete both",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "Probe run: `2 finding(s) across 13 artifact(s)`, exit 1 — [generated-marker-missing] on the generated module file and [generated-artifact-invalid] on the unparseable schema JSON, i.e. both new discovery paths fire. After removal: `0 finding(s) across 11 artifact(s)`, exit 0; git status shows no probe leftovers."
+    },
+    {
+      "command": "node --test tests/scripts/harness-check-generated.test.mjs",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "11 pass / 0 fail — the checker's test expectations were extended together with the checker so the new coverage is pinned, not incidental."
+    },
+    {
+      "command": "node scripts/harness/check-task-packet.mjs --root .",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "[PASS] for every docs/harness/tasks/*.task.md. The directory-layout packets under .harness/tasks/<id>/task.md (all 119 of them, this round's five included) are outside this checker's scan surface — a pre-existing layout split recorded in knownGaps, not a regression of this round."
+    },
+    {
+      "command": "node scripts/frontmatter-check.mjs && node scripts/harness/check-doc-links.mjs --root . --strict && node scripts/harness/check-doc-inventory.mjs --root . --strict && node scripts/harness/check-encoding.mjs --root . --strict && node scripts/harness/check-failure-registry.mjs --root . --strict && node scripts/harness/check-structure-contract.mjs --root . --strict && node frontend/scripts/cleanup-generated-modules.mjs --check",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "Frontmatter: 266 docs checked, 212 with frontmatter. Doc-links 0 findings. Inventory 0 findings. Encoding 0 findings across 1838 files. Failure-registry PASS. Structure contract 0 findings across 2039 tracked files. generated-modules --check: `OK: no generated modules found` (hand-written trees stay outside the generated-module cleanup)."
+    },
+    {
+      "command": "cd backend && ../.tmp/bin/golangci-lint.exe run --new-from-rev=origin/main ./...",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "`0 issues.` on new code. An earlier invocation from the repo root reported a typechecking error (`directory prefix . does not contain main module`) because go.mod lives in backend/ — that run checked nothing and is superseded by this one."
+    },
+    {
+      "command": "cd backend && go tool cover -func=coverage_p2.txt > cov_func_p2.txt && cd .. && node scripts/harness/check-coverage.mjs backend/cov_func_p2.txt --threshold 50",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "`OK: total coverage 56.0% meets threshold 50%` — executes locally the same gate ci.yml:431 wires as `check-coverage.mjs backend/coverage.txt --threshold 50` (fix-report item 3)."
+    },
+    {
+      "command": "cd backend && go tool cover -func=coverage_lc.txt > cov_func_lc.txt && cd .. && node scripts/harness/check-coverage.mjs backend/cov_func_lc.txt --threshold 50",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "`OK: total coverage 58.3% meets threshold 50%` for the platform+lowcode profile backing the phase-3 accounting."
+    },
+    {
+      "command": "awk dir-level statement-weighted aggregation over backend/coverage_p2.txt and backend/coverage_lc.txt",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "coverage_p2.txt: org/dept 62.8% (595/948), org/post 61.2% (298/487) -> org weighted 62.2%; system/i18n 68.7% (1014/1476); config/dict 45.3% (433/955); config/setting 62.8% (492/783); overall 9326/16634 = 56.1% raw, `go tool cover -func` total 56.0%. coverage_lc.txt: lowcode 56.3% (1039/1844), platform 75.2% (161/214), total 58.3%. Profiles were produced earlier this round from the DB-backed suites and are deleted in cleanup; CI keeps the floor enforced."
+    },
+    {
+      "command": "grep -n 'testing-\\|HARNESS_GOVERNANCE\\|harness-pr-generator' docs/README.md docs/README.en.md",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "docs/README.md lists all four testing-*.md guides plus HARNESS_GOVERNANCE_GUIDE and harness-pr-generator-guide (lines 119-124); docs/README.en.md carries the same six entries (lines 88-93). Gap 3 of the residual list was already satisfied — recheck only, no edit needed."
+    },
+    {
+      "command": "git status --short",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "23 modified tracked files plus the five new packet directories, i18n test, migrations 000019 pair, theme spec + snapshots directory; NO_DELETIONS; the two refreshed historical pngs were restored; probe and generated-module check trees clean."
+    },
+    {
+      "command": "cd backend && go test -count=1 -short -coverprofile ./...",
+      "cwd": "pantheon-base",
+      "status": "failed",
+      "notes": "Attempted earlier this round for coverage gathering; exceeded the 600s command timeout on this Windows host. Superseded by per-package runs (database, i18n above) and the already-produced domain profiles — no gate depends on this single invocation, CI runs the suites in shards."
+    },
+    {
+      "command": "gh run list / remote CI workflows",
+      "cwd": "pantheon-base",
+      "status": "not-run",
+      "notes": "No remote CI was triggered from this session (no push, per the no-side-effects rule). The local gate set above is the standard depth confirmed by the maintainer; CI will re-execute the same checks on the eventual push."
+    }
+  ],
+  "runtimeGap": "Background processes cannot outlive a command on this host (the Windows Job Object reaps children when the shell exits), so backend, vite and Playwright ran inside single inline shell commands with explicit start/poll/kill lifecycle instead of detached daemons. Full-repo `go test ./... -coverprofile` exceeded the 600s command timeout, so affected packages were executed individually. The WSL relay intermittently swallowed npm/npx output; direct node and ./node_modules/.bin invocations were used and always checked for exit codes. MySQL and Redis at 127.0.0.1 were reachable (Redis confirmed by TCP probe and by a real login creating a session), so DB-backed tests and the real-stack smoke ran for real rather than being recorded as gaps.",
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-09-24-fix-report-residual-closeout/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-09-24-fix-report-residual-closeout/",
+    "reviewFile": ".harness/evidence/2026-09-24-fix-report-residual-closeout/review.md",
+    "summaryFile": ".harness/evidence/2026-09-24-fix-report-residual-closeout/summary.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".harness/NAMING_AND_BOUNDARIES_REMEDIATION_PLAN_2026-09-22.md",
+      "fix-report.md"
+    ]
+  },
+  "repo": "pantheon-base",
+  "agent": {
+    "tool": "other",
+    "note": "Executed on Windows under Git Bash with node v24; golangci-lint from the repo-local gitignored .tmp/bin; DB-backed tests read the gitignored .env.test (local MySQL + Redis). No file outside pantheon-base was modified."
+  },
+  "knownGaps": [
+    "The three business smoke cases skip whenever the database has no generated business module (true locally and in CI, matching the 2026-09-10 baseline of 3 skipped); the rewrite made the decision deterministic via the menu-tree API rather than removing the dependency on module data.",
+    "Four-theme snapshots carry the win32 platform suffix; a visual run on another OS must regenerate its platform set with --update-snapshots, same mechanism as the pre-existing login snapshots.",
+    ".harness/tasks/<id>/task.md directory packets (119 files including this round's five) are outside check-task-packet's scan surface, which reads docs/harness/tasks/*.task.md only — a pre-existing layout split inherited by this round.",
+    "updated_by is deliberately not written by FillMissingLocales/HydrateBuiltinLocales (system-origin rows, traced via the operation log) and the CSV export does not surface the column; both recorded as the packet's technicalDebtNote rather than silent omissions.",
+    "Four human gates stay deferred by definition: G2 recovery drill (DBA), production G3 sizing, v0.12.0 release cut, state-file close-out checkboxes; the four-theme visual acceptance (maintainer touchpoint 3) was signed off on 2026-09-24 - see visual-acceptance.md.",
+    "Coverage profiles (backend/coverage_p2.txt, coverage_lc.txt, coverage_phase2.txt, cov_func_*.txt) are transient local artifacts deleted in cleanup; the numbers live in this evidence and continuous enforcement is ci.yml:431.",
+    "backend/modules/lowcode/generator sits at 26.3% statements — a documented residual tracked by the 2026-09-08-p2-test-coverage-phase3 packet, not this one.",
+    "No remote CI ran this round (no push from this session); the local gate set is the standard depth, and CI re-executes it on push."
+  ]
+}

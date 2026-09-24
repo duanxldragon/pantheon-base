@@ -88,3 +88,61 @@ test('report-only mode exits 0 even with findings', () => {
   assert.equal(result.status, 0);
   assert.match(result.stdout, /finding\(s\)/);
 });
+
+// The three dynamic-discovery violations (unmarked Go module file, unmarked TS
+// module file, unparseable per-scope schema JSON) share one shape, so they are
+// driven from data instead of three near-identical test bodies.
+test('flags dynamically discovered module and schema artifacts', () => {
+  const cases = [
+    {
+      file: 'backend/modules/business/order/order_model.go',
+      content: 'package order\n',
+      rule: 'generated-marker-missing',
+    },
+    {
+      file: 'frontend/src/modules/business/order/api.ts',
+      content: "export const endpoint = '/business/order';\n",
+      rule: 'generated-marker-missing',
+    },
+    {
+      file: 'schema/generated/business/order.json',
+      content: '{ not json',
+      rule: 'generated-artifact-invalid',
+    },
+  ];
+  for (const scenario of cases) {
+    const { root, write } = createRoot();
+    write(scenario.file, scenario.content);
+    const result = run(root);
+    assert.equal(result.status, 1, `${scenario.file}: ${result.stdout}`);
+    const body = JSON.parse(result.stdout);
+    assert.equal(body.findings[0].rule, scenario.rule, scenario.file);
+    assert.equal(body.findings[0].file, scenario.file, scenario.file);
+  }
+});
+
+test('accepts marked generated module files and parseable schema JSON', () => {
+  const { root, write } = createRoot();
+  write('backend/modules/business/order/order_model.go', `// ${MARKER}\n\npackage order\n`);
+  write('frontend/src/modules/business/order/api.ts', `// ${MARKER}\n\nexport const x = {};\n`);
+  write('schema/generated/business/order.json', JSON.stringify({ name: 'order', scope: 'business' }));
+  const result = run(root);
+  assert.equal(result.status, 0, result.stdout);
+  const body = JSON.parse(result.stdout);
+  assert.equal(body.findingCount, 0);
+  // 10 stable marked + 1 registry (MARKED) + feature-ledger + 3 discovered.
+  assert.equal(body.checkedCount, MARKED.length + 1 + 3);
+});
+
+test('ignores hand-written files outside the generator-owned business scope', () => {
+  const { root, write } = createRoot();
+  write('backend/modules/system/i18n/i18n_model.go', 'package system\n');
+  write('frontend/src/modules/system/i18n/api.ts', "export const endpoint = '/system/i18n';\n");
+  write('schema/generated/feature-ledger-extra.json', '{"unexpected": true}');
+  const result = run(root);
+  // system-scope sources are hand-written (no marker expected); the stray JSON
+  // sits directly in schema/generated/ (not a scope dir), so only the stable
+  // artifacts are checked and everything passes.
+  assert.equal(result.status, 0, result.stdout);
+  assert.equal(JSON.parse(result.stdout).findingCount, 0);
+});

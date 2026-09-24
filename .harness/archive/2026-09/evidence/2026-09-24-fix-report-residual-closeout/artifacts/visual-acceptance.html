@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>四主题视觉基线 · 最终视觉验收</title>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 40px 32px 64px;
+    font-family: "Segoe UI", "Microsoft YaHei", system-ui, sans-serif;
+    background: #f6f7f9; color: #1f2329;
+  }
+  .wrap { max-width: 1280px; margin: 0 auto; }
+  header { border-bottom: 1px solid #dcdfe5; padding-bottom: 20px; margin-bottom: 28px; }
+  h1 { font-size: 22px; margin: 0 0 8px; }
+  .meta { font-size: 13px; color: #5c6370; line-height: 1.8; }
+  .meta code { background: #eceef1; padding: 1px 6px; border-radius: 4px; font-size: 12px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(440px, 1fr)); gap: 24px; }
+  .card { background: #fff; border: 1px solid #dcdfe5; border-radius: 10px; overflow: hidden; }
+  .card h2 { font-size: 15px; margin: 0; padding: 12px 16px; border-bottom: 1px solid #eceef1; display: flex; align-items: center; gap: 10px; }
+  .dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; border: 1px solid rgba(0,0,0,.15); }
+  .dot.indigo { background: #4f6ef7; } .dot.emerald { background: #10b981; }
+  .dot.violet { background: #8b5cf6; } .dot.slate { background: #64748b; }
+  .card .file { font-size: 11px; color: #8a919c; padding: 8px 16px 0; font-family: Consolas, monospace; }
+  .card img { width: 100%; display: block; background: #fff; }
+  section { margin-top: 36px; background: #fff; border: 1px solid #dcdfe5; border-radius: 10px; padding: 20px 24px; }
+  section h3 { font-size: 15px; margin: 0 0 12px; }
+  ul { margin: 0; padding-left: 20px; line-height: 2; font-size: 14px; }
+  .cmd { background: #1f2329; color: #e6e9ee; font-family: Consolas, monospace; font-size: 12.5px;
+         padding: 12px 16px; border-radius: 8px; margin-top: 10px; overflow-x: auto; white-space: pre; }
+  footer { margin-top: 28px; font-size: 12.5px; color: #5c6370; line-height: 1.9; }
+  footer code { background: #eceef1; padding: 1px 6px; border-radius: 4px; font-size: 11.5px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>四主题登录页基线 · 最终视觉验收（维护者触点 ③）</h1>
+    <div class="meta">
+      task <code>2026-09-24-fix-report-residual-closeout</code> · fix-report §四.4 · 状态 ⏳ 待验收 · 发出日期 2026-09-24<br>
+      生成：<code>frontend/tests/visual/theme-baseline.spec.ts</code>（@theme:* ×4，仅 desktop-light · 1440×900 · Chromium 执行一次）·
+      注入 <code>localStorage pantheon_theme</code> 并断言 <code>html[data-pantheon-theme]</code> 后截图 ·
+      比较阈值 <code>maxDiffPixelRatio 0.01</code> / <code>animations disabled</code>
+    </div>
+  </header>
+
+  <div class="grid">
+    <div class="card">
+      <h2><span class="dot indigo"></span>indigo（默认主题）</h2>
+      <div class="file">login-theme-indigo-win32.png · 预期：靛蓝主色系</div>
+      <img src="../../../../frontend/tests/visual/theme-baseline.spec.ts-snapshots/login-theme-indigo-win32.png" alt="indigo theme login baseline">
+    </div>
+    <div class="card">
+      <h2><span class="dot emerald"></span>emerald</h2>
+      <div class="file">login-theme-emerald-win32.png · 预期：翠绿主色系</div>
+      <img src="../../../../frontend/tests/visual/theme-baseline.spec.ts-snapshots/login-theme-emerald-win32.png" alt="emerald theme login baseline">
+    </div>
+    <div class="card">
+      <h2><span class="dot violet"></span>violet</h2>
+      <div class="file">login-theme-violet-win32.png · 预期：紫色主色系</div>
+      <img src="../../../../frontend/tests/visual/theme-baseline.spec.ts-snapshots/login-theme-violet-win32.png" alt="violet theme login baseline">
+    </div>
+    <div class="card">
+      <h2><span class="dot slate"></span>slate</h2>
+      <div class="file">login-theme-slate-win32.png · 预期：石板灰蓝主色系</div>
+      <img src="../../../../frontend/tests/visual/theme-baseline.spec.ts-snapshots/login-theme-slate-win32.png" alt="slate theme login baseline">
+    </div>
+  </div>
+
+  <section>
+    <h3>通过标准</h3>
+    <ul>
+      <li>四张图分别呈现对应主题主色系；按钮、链接、focus 态、卡片<b>无混色残留</b>（仍见默认主题色即为不通过）</li>
+      <li>登录卡片、背景与输入框 focus 边框随主题一致变化</li>
+      <li>中文文案与布局在四主题间无非预期差异</li>
+      <li>复跑 0 mismatch（2026-09-24 已做过一次稳定性复跑：4 passed）</li>
+    </ul>
+    <div class="cmd">cd frontend &amp;&amp; ./node_modules/.bin/playwright test -c playwright.visual.config.ts tests/visual/theme-baseline.spec.ts</div>
+  </section>
+
+  <footer>
+    签核记录：<code>.harness/evidence/2026-09-24-fix-report-residual-closeout/visual-acceptance.md</code>（通过 / 有条件通过 / 打回，结论回填 manifest humanGates 与 review.md）。<br>
+    已知边界：快照为 win32 平台（其他平台用 <code>--update-snapshots</code> 重建）；深色与移动端项目不含本 spec 用例（无 @dark/@mobile 标签，设计内行为）；其余页面沿用 <code>visual-baseline.spec.ts</code>。
+  </footer>
+</div>
+</body>
+</html>

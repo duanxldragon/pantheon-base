@@ -29,8 +29,22 @@ function run(root, extra = []) {
   );
 }
 
+function runLoose(root, extra = []) {
+  return spawnSync(
+    process.execPath,
+    [SCRIPT, '--json', '--root', root, '--repo', 'pantheon-base', ...extra],
+    { encoding: 'utf8' },
+  );
+}
+
 function parse(result) {
   return JSON.parse(result.stdout);
+}
+
+function writeBaseline(root, entries) {
+  const baseline = path.join(root, 'config', 'boundary-baseline.json');
+  fs.mkdirSync(path.dirname(baseline), { recursive: true });
+  fs.writeFileSync(baseline, JSON.stringify({ entries }));
 }
 
 test('flags a platform production import of a system module', () => {
@@ -95,23 +109,30 @@ test('a baselined finding does not fail strict mode', () => {
   assert.equal(body.baselinedCount, 1);
 });
 
-test('a stale baseline entry is reported as a warning', () => {
+// A stale entry is not harmless bookkeeping: it still whitelists its
+// file/import pair, so --strict fails on it (see check-boundaries.mjs help).
+test('a stale baseline entry fails strict mode', () => {
   const { root, write } = createRepo();
   write('backend/modules/platform/routes.go', 'package platform\n');
-  const baseline = path.join(root, 'config', 'boundary-baseline.json');
-  fs.mkdirSync(path.dirname(baseline), { recursive: true });
-  fs.writeFileSync(
-    baseline,
-    JSON.stringify({
-      entries: [
-        { file: 'backend/modules/platform/gone.go', importPath: 'github.com/x/backend/modules/system/iam/user', reason: 'no longer present' },
-      ],
-    }),
-  );
+  writeBaseline(root, [
+    { file: 'backend/modules/platform/gone.go', importPath: 'github.com/x/backend/modules/system/iam/user', reason: 'no longer present' },
+  ]);
   const result = run(root, ['--baseline', 'config/boundary-baseline.json']);
-  assert.equal(result.status, 0, result.stdout);
+  assert.equal(result.status, 1, result.stdout);
   const body = parse(result);
+  assert.equal(body.staleCount, 1);
   assert.match(body.results[0].warnings.join('\n'), /stale/);
+});
+
+test('a stale baseline entry only warns outside strict mode', () => {
+  const { root, write } = createRepo();
+  write('backend/modules/platform/routes.go', 'package platform\n');
+  writeBaseline(root, [
+    { file: 'backend/modules/platform/gone.go', importPath: 'github.com/x/backend/modules/system/iam/user', reason: 'no longer present' },
+  ]);
+  const result = runLoose(root, ['--baseline', 'config/boundary-baseline.json']);
+  assert.equal(result.status, 0, result.stdout);
+  assert.match(parse(result).results[0].warnings.join('\n'), /stale/);
 });
 
 test('a new violation alongside a baseline still fails strict mode', () => {

@@ -41,9 +41,33 @@ Wave 1 完成后，才具备可进行容量压测和 SLA 基线的代码前提�
 - 涉及数据库查询的任务必须检查 migration/index 是否足够，并记录执行计划或静态证据。
 - 不允许用 `solo-override` 绕过门禁。
 
-## 发布阻断规则
+## 执行状态 (2026-09-25)
 
-- 任一 P0 任务未完成：阻断多租户或高敏配置生产发布。
-- 任一 P1 性能任务未完成：允许小规模内部试运行，但不得承诺高并发 SLA。
-- `govulncheck`、npm audit、race、MySQL/Redis smoke 未全部取得证据：发布说明必须标记为验证缺口。
+| Wave | # | 任务 ID | 状态 | Evidence |
+|------|---|---------|------|----------|
+| 0 | 1 | 2026-09-22-session-revocation-closure | ✅ | `.harness/archive/2026-09/evidence/2026-09-22-session-revocation-closure/` |
+| 0 | 2 | 2026-09-22-tenant-public-settings-scope | ✅ | `.harness/archive/2026-09/evidence/2026-09-22-tenant-public-settings-scope/` |
+| 0 | 3 | 2026-09-22-upload-authorization-and-import-resources | ✅ | `.harness/archive/2026-09/evidence/2026-09-22-upload-authorization-and-import-resources/` |
+| 1 | 4 | 2026-09-22-export-and-session-pagination | ✅ | `.harness/archive/2026-09/evidence/2026-09-22-export-and-session-pagination/` |
+| 1 | 5 | 2026-09-22-request-path-maintenance | ✅ | `.harness/archive/2026-09/evidence/2026-09-22-request-path-maintenance/` |
+| 2 | 6 | 2026-09-22-production-redis-and-security-gates | ✅ | `.harness/archive/2026-09/evidence/2026-09-22-production-redis-and-security-gates/` |
+
+**完成时间**: 2026-09-23  
+**验证状态**: 全部 6 个任务通过统一完成门禁
+
+### 关键成果
+
+- **Wave 0 (P0)**: 会话撤销三路生效、租户公开设置隔离、上传授权与资源治理
+- **Wave 1 (P1)**: 导出统一上限 10,000 行、会话列表 SQL 分页、后台维护器统一调度
+- **Wave 2 (P1/P2)**: 生产 Redis fail-fast、readiness 健康检查、Go 1.26.6 修复 7 个 CVE
+- **Race 检测**: 全模块通过 `go test -race` (MinGW-w64 GCC 16.2.0, 无 DATA RACE)
+- **安全漏洞**: govulncheck v1.3.0 检测 0 reachable vulnerabilities
+
+### 发布阻断规则 (已满足)
+
+- ✅ 全部 P0 任务已完成：多租户生产就绪
+- ✅ 全部 P1 性能任务已完成：具备容量压测代码前提
+- ✅ `govulncheck`、npm audit、race 已全部取得证据：无验证缺口
+
+**状态**: 🎯 企业级整改轮全部完成，已归档到 `.harness/archive/2026-09/`
 

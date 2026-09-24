@@ -1,0 +1,66 @@
+{
+  "taskId": "2026-09-08-p2-login-risk-control",
+  "title": "P2-3 Login Risk Control",
+  "goal": "Design risk-based adaptive authentication: risk scoring (device/geo/behavior/IP/failures), device fingerprinting, impossible-travel detection, and step-up actions (MFA, email verification, block).",
+  "primaryLayer": "system/auth",
+  "priority": "P2",
+  "status": "completed",
+  "statusNote": "Design stage closed 2026-09-08 (3h of 12h estimated). Runtime implementation NOT started: risk engine, device fingerprint collection, geo tracking and adaptive login flow remain open and are not tracked by any other task dir. Treat as explicit gap for any enterprise security roadmap review.",
+  "completedAt": "2026-09-08",
+  "createdAt": "2026-09-08",
+  "source": "cross-review-report",
+  "layer": "auth/design",
+  "estimatedEffort": "12 hours total (actual 3 hours, design phase only)",
+  "blockedBy": [],
+  "relatedTasks": [
+    "2026-09-08-p1-sso-oidc-design",
+    "2026-09-08-p0-csp-hsts-implementation"
+  ],
+  "scope": {
+    "in": [
+      "risk scoring model across 5 factor categories (100 points)",
+      "risk thresholds and adaptive actions (allow / MFA / MFA+email / block+alert)",
+      "device fingerprinting design (client-side attributes)",
+      "geographic tracking and impossible travel detection",
+      "security event logging and API endpoint specification"
+    ],
+    "out": [
+      "runtime implementation (deferred, unowned)",
+      "third-party IP reputation service integration",
+      "frontend risk challenge UX"
+    ],
+    "create": [
+      "docs/designs/LOGIN_RISK_CONTROL_DESIGN.md",
+      ".harness/tasks/2026-09-08-p2-login-risk-control/manifest.json",
+      ".harness/evidence/2026-09-08-p2-login-risk-control/completion.md"
+    ],
+    "modify": [],
+    "doNotTouch": [
+      "backend source (design only)",
+      "frontend source",
+      "database migrations"
+    ]
+  },
+  "successCriteria": [
+    "Design document covers scoring model, thresholds, fingerprinting, geo anomalies, adaptive authentication and testing strategy",
+    "Implementation path documented for future execution"
+  ],
+  "humanGates": [
+    "Design approval before any implementation work"
+  ],
+  "verification": {
+    "commands": [],
+    "manualChecks": [
+      "docs/designs/LOGIN_RISK_CONTROL_DESIGN.md present (800+ lines)"
+    ]
+  },
+  "reconciliation": "2026-09-15: manifest backfilled from evidence; verified docs/designs/LOGIN_RISK_CONTROL_DESIGN.md exists in repo. Task dir was empty; evidence shows design-only completion. Status set to done at design stage with runtime implementation recorded as explicit gap in statusNote.",
+  "linkage": {
+    "evidenceDir": ".harness/evidence/2026-09-08-p2-login-risk-control/",
+    "reviewFile": ".harness/evidence/2026-09-08-p2-login-risk-control/completion.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".harness/tasks/TASK_MASTER_PLAN.md"
+    ]
+  }
+}
