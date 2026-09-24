@@ -72,6 +72,7 @@ test.describe('Business Generated Basic @priority:high @smoke:core', () => {
     await page.goto('/dashboard', { waitUntil: 'domcontentloaded' });
 
     const targetPath = await probeBusinessMenuPath(page);
+    // reason: probeBusinessMenuPath returned null - this database has no generated business module to exercise (honest skip).
     test.skip(targetPath === null, 'No business modules exist in the current database');
     if (targetPath === null) {
       return; // unreachable at runtime; satisfies TypeScript narrowing
@@ -94,6 +95,7 @@ test.describe('Business Generated Basic @priority:high @smoke:core', () => {
     await page.goto('/dashboard', { waitUntil: 'domcontentloaded' });
 
     const targetPath = await probeBusinessMenuPath(page);
+    // reason: probeBusinessMenuPath returned null - this database has no generated business module to exercise (honest skip).
     test.skip(targetPath === null, 'No business modules exist in the current database');
     if (targetPath === null) {
       return;
@@ -118,6 +120,7 @@ test.describe('Business Generated Basic @priority:high @smoke:core', () => {
     await page.goto('/dashboard', { waitUntil: 'domcontentloaded' });
 
     const targetPath = await probeBusinessMenuPath(page);
+    // reason: probeBusinessMenuPath returned null - this database has no generated business module to exercise (honest skip).
     test.skip(targetPath === null, 'No business modules exist in the current database');
     if (targetPath === null) {
       return;
