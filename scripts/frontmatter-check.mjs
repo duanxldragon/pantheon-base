@@ -21,6 +21,7 @@ const ALLOWED_DOC_TYPES = new Set([
   'Assessment',
   'Remediation',
   'Acceptance',
+  'Plan',
 ]);
 const ALLOWED_STATUSES = new Set([
   'Draft',
