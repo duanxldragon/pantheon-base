@@ -349,8 +349,9 @@ func resolveCustomDataScopeDeptIDs(policies []SystemRoleDataScope) []uint64 {
 }
 
 func hasAdminRole(roleKeys []string) bool {
+	const adminRoleKey = "admin"
 	for _, roleKey := range roleKeys {
-		if strings.TrimSpace(roleKey) == "admin" {
+		if strings.TrimSpace(roleKey) == adminRoleKey {
 			return true
 		}
 	}
