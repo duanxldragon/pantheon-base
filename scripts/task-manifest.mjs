@@ -3,6 +3,8 @@ import path from 'node:path';
 
 export const TASK_MANIFEST_ROOT = '.harness/tasks';
 export const TASK_MANIFEST_FILE = 'manifest.json';
+export const TASK_ARCHIVE_ROOT = '.harness/archive';
+const ARCHIVE_TASKS_DIRNAME = 'tasks';
 
 // Canonical lifecycle vocabulary for the optional `status` field on
 // .harness/tasks/<task-id>/manifest.json. The field is metadata, not a
@@ -92,9 +94,47 @@ export function listTaskManifestPaths(rootDir) {
 
 export function extractTaskIdFromManifestPath(value) {
   const match = normalizeRepoRelativePath(value).match(
-    /^\.harness\/tasks\/(.+)\/manifest\.json$/i,
+    /^\.harness\/(?:archive\/\d{4}-\d{2}\/)?tasks\/(.+)\/manifest\.json$/i,
   );
   return match ? match[1] : null;
+}
+
+// Task archives keep manifests under `.harness/archive/<YYYY-MM>/tasks/...`.
+// Docs and evidence reference the canonical `.harness/tasks/<task-id>` address,
+// so once a task is archived the physical manifest moves while the reference
+// stays valid. Resolution falls back to the newest archive month instead of
+// forcing every archived doc to be rewritten each archiving round.
+export function findArchivedTaskManifestPath(rootDir, taskId) {
+  if (!taskId || typeof taskId !== 'string' || taskId.trim() === '') {
+    return null;
+  }
+
+  const archiveRoot = path.join(rootDir, TASK_ARCHIVE_ROOT);
+  if (!fs.existsSync(archiveRoot)) {
+    return null;
+  }
+
+  const archiveMonths = fs
+    .readdirSync(archiveRoot, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => entry.name)
+    .filter((month) => /^\d{4}-\d{2}$/.test(month))
+    .sort((left, right) => right.localeCompare(left));
+
+  for (const month of archiveMonths) {
+    const candidate = path.join(
+      archiveRoot,
+      month,
+      ARCHIVE_TASKS_DIRNAME,
+      taskId,
+      TASK_MANIFEST_FILE,
+    );
+    if (fs.existsSync(candidate)) {
+      return `${TASK_ARCHIVE_ROOT}/${month}/${ARCHIVE_TASKS_DIRNAME}/${taskId}/${TASK_MANIFEST_FILE}`;
+    }
+  }
+
+  return null;
 }
 
 export function resolveRepoPath(rootDir, relativePath) {
@@ -420,26 +460,33 @@ export function validateTaskManifest(payload, options = {}) {
 
 export function readTaskManifest(rootDir, reference) {
   const normalizedReference = normalizeRepoRelativePath(reference);
-  const manifestPath = extractTaskIdFromManifestPath(normalizedReference)
+  const referenceTaskId = extractTaskIdFromManifestPath(normalizedReference);
+  const manifestPath = referenceTaskId
     ? normalizedReference
     : buildTaskManifestPath(normalizedReference);
   const absolutePath = resolveRepoPath(rootDir, manifestPath);
 
-  if (!absolutePath || !fs.existsSync(absolutePath)) {
+  const resolvedPath =
+    absolutePath && fs.existsSync(absolutePath)
+      ? manifestPath
+      : findArchivedTaskManifestPath(rootDir, referenceTaskId ?? normalizedReference) ?? manifestPath;
+  const resolvedAbsolute = resolveRepoPath(rootDir, resolvedPath);
+
+  if (!resolvedAbsolute || !fs.existsSync(resolvedAbsolute)) {
     throw new Error(`task manifest does not exist: ${manifestPath}`);
   }
 
   let payload;
   try {
-    payload = JSON.parse(fs.readFileSync(absolutePath, 'utf8'));
+    payload = JSON.parse(fs.readFileSync(resolvedAbsolute, 'utf8'));
   } catch (error) {
-    throw new Error(`task manifest is not valid JSON: ${manifestPath}: ${error.message}`);
+    throw new Error(`task manifest is not valid JSON: ${resolvedPath}: ${error.message}`);
   }
 
   return {
-    path: manifestPath,
-    absolutePath,
-    payload: validateTaskManifest(payload, { manifestPath }),
+    path: resolvedPath,
+    absolutePath: resolvedAbsolute,
+    payload: validateTaskManifest(payload, { manifestPath: resolvedPath }),
   };
 }
 

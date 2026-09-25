@@ -14,6 +14,7 @@ const ALLOWED_DOC_TYPES = new Set([
   'Assessment',
   'Remediation',
   'Acceptance',
+  'Plan',
   'Method',
   'Playbook',
   'Policy',

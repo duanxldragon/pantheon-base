@@ -15,10 +15,14 @@ Pantheon Platform 是一个面向企业后台的模块化单体底座，沉淀�
 | Shell/Harness 基线版本 | `1.4.0`（见 [VERSION](./VERSION) / [SHELL_VERSION.json](./SHELL_VERSION.json)） |
 | 部署文档 | [docs/DEPLOYMENT_GUIDE.md](./docs/DEPLOYMENT_GUIDE.md)（MySQL 8、Redis 7、迁移 + runtime seed、健康检查、遥测、备份恢复与 schema-aware 回滚） |
 | 变更记录 | [CHANGELOG.md](./CHANGELOG.md) |
+| **任务状态** | [.harness/STATUS.md](./.harness/STATUS.md) — 当前任务状态总览 |
+| **归档记录** | [.harness/ARCHIVE.md](./.harness/ARCHIVE.md) — 72 个已完成任务归档索引 |
 
 交付审计说明：`pantheon-base-v0.11.0` 的 GitHub Release 精确指向 Base commit `c907db507f1c71933d4324560eec499e3f6662cf`，并已通过 Full Smoke、SonarCloud、CodeQL、Dependabot、CI 与 Release Gate。发布资产包含 foundation bundle、仓库快照、manifest 及对应 SHA-256 sidecar。本版本引入企业级前端设计系统工程框架（5 文档、3,325 行），Token 扩展 +109%（32 → 67）、间距覆盖 +225%（8 → 26）、9 个语义化容器 token 及自动化迁移工具，100% 向后兼容。`pantheon-ops` 的消费升级另行安排，当前不把任何 consumer lock 声明为已更新。
 
 V1.0 覆盖：认证与会话治理（登录日志 / 会话 / 操作日志 / 安全事件四页，手动清理 + 自动保留双轨）、IAM 与组织、配置与字典、i18n、统一 SearchToolbar / 治理栏页面骨架、受控低代码生成链路，以及 encoding / UI / visual / structure 四类机械 CI 门禁。
+
+**最新进展**（2026-09-25）：已完成两轮企业级整改（命名与边界整改 6/6、企业级整改 6/6），关闭所有 P0/P1 安全边界和生产规模问题。全模块通过 `-race` 检测，govulncheck 0 可达漏洞，Core Smoke 279 个用例全部通过。详见 [.harness/STATUS.md](./.harness/STATUS.md)。
 
 ## 项目定位
 
@@ -179,13 +183,42 @@ npm run release:foundation:publish -- --release-version pantheon-base-vX.Y.Z --r
 
 ## 代码质量与安全门禁
 
-当前仓库只保留 GitHub-native 合并门禁：
+### GitHub Required Checks (main 分支合并门禁)
 
-- `Quality Gates`：文档治理、前端契约、后端测试、重复率与轻量 smoke
-- `Security Gates`：secret scan、workflow posture、dependency reports、CodeQL scan 与 CodeQL alert gate
+**Quality Gates** ✅:
+- 文档治理: `frontmatter-check`, `check-doc-links`, `check-doc-inventory`
+- 前端契约: `check-structure-contract --strict`, `check-boundaries --baseline`, `check-generated --strict`
+- 后端测试: `go test ./...`, `go vet ./...`, `go test -race` (CI)
+- 编码规范: `check-encoding --strict`, `check-duplication`
+- Smoke 测试: Core Smoke Tests (23 passed, 3 skipped)
 
-SonarCloud 不是 `main` 合并的 required check，但 foundation release gate 仍要求 `SonarCloud Code Analysis`。
-CodeQL 是唯一主安全信号。代码质量由 GitHub required checks、CodeQL、分支保护和可选的 Copilot review 共同兜底。仓库已有作用于 `main` 的 active ruleset，但当前只要求 `Quality Gates`，尚未把 `Security Gates` 和 conversation resolution 纳入强制条件；认证交付前必须补齐并核验该 ruleset。更完整的策略见 [代码质量与安全治理策略](./docs/designs/QUALITY_AND_SECURITY_STRATEGY.md)。
+**Security Gates** ✅:
+- Secret 扫描: `gitleaks` (fail-closed)
+- Workflow 安全: `zizmor` (high/critical fail-closed)
+- CodeQL 扫描: CodeQL Analysis + Alert Gate
+- 依赖漏洞: Dependency vulnerabilities (report-only, release 时复审)
+
+### Release Gate (Foundation Release 额外要求)
+
+- ✅ SonarCloud Code Analysis (非 main 合并必需，release 时必需)
+- ✅ govulncheck v1.3.0 (当前 0 reachable vulnerabilities)
+- ✅ npm audit (root + frontend)
+- ✅ Full Smoke Suite (platform + system + business)
+
+### 企业级整改完成 (2026-09-22)
+
+已完成两轮整改共 12 个任务：
+- **命名与边界整改** (6/6): auth 模块解耦、边界门禁、生成器治理、文档整理
+- **企业级整改** (6/6): 会话撤销闭环、租户隔离、导出分页、后台维护器、Redis fail-fast
+
+关键成果：
+- Go 1.26.6 修复 7 个 stdlib CVE
+- 统一导出上限 10,000 行，会话列表 SQL 分页 + 索引优化
+- 保留操作移出读路径，后台维护器 (`pkg/maintenance`) 统一调度
+- 全模块 `-race` 检测通过 (无 DATA RACE)
+- Core Smoke 279 个用例全部通过
+
+更完整的策略见 [代码质量与安全治理策略](./docs/designs/QUALITY_AND_SECURITY_STRATEGY.md) 和 [.harness/STATUS.md](./.harness/STATUS.md)。
 
 ## 权限模型摘要
 

@@ -13,6 +13,7 @@ const DOC_TYPES_REQUIRING_CONTRACTS = new Set([
   'Assessment',
   'Remediation',
   'Acceptance',
+  'Plan',
 ]);
 const ALLOWED_DOC_TYPES = new Set([
   'Contract',
@@ -20,6 +21,7 @@ const ALLOWED_DOC_TYPES = new Set([
   'Assessment',
   'Remediation',
   'Acceptance',
+  'Plan',
 ]);
 const ALLOWED_STATUSES = new Set([
   'Draft',

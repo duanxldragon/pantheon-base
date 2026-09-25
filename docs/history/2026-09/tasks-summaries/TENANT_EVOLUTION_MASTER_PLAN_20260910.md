@@ -4,6 +4,8 @@ doc_type: Plan
 layer: platform
 status: Active
 updated_at: 2026-09-15
+linked_contracts:
+  - docs/contracts/TENANT_CONTRACT_V1.md
 ---
 
 # Pantheon Base 租户演进任务分解与开发计划

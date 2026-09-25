@@ -1,0 +1,72 @@
+{
+  "taskId": "2026-09-24-production-readiness-audit",
+  "repo": "pantheon-base",
+  "agent": {
+    "tool": "other",
+    "adapter": "codebuff"
+  },
+  "completedAt": "2026-09-24",
+  "status": "verified",
+  "commands": [
+    {
+      "command": "go test ./...",
+      "cwd": "backend",
+      "status": "passed",
+      "notes": "All backend packages green."
+    },
+    {
+      "command": "go vet ./...",
+      "cwd": "backend",
+      "status": "passed"
+    },
+    {
+      "command": "npm run type-check",
+      "cwd": "frontend",
+      "status": "passed"
+    },
+    {
+      "command": "npm run lint",
+      "cwd": "frontend",
+      "status": "passed"
+    },
+    {
+      "command": "npm run build",
+      "cwd": "frontend",
+      "status": "passed",
+      "notes": "Vite emitted __dirname/native config warning."
+    },
+    {
+      "command": "npm audit --audit-level=high",
+      "cwd": "frontend",
+      "status": "passed",
+      "notes": "0 vulnerabilities."
+    },
+    {
+      "command": "codegraph status .",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "805 files, 12,939 nodes, 29,055 edges; index up to date."
+    },
+    {
+      "command": "git status --porcelain",
+      "cwd": "pantheon-ops",
+      "status": "failed",
+      "notes": "269 entries; foundation-release.lock.json, business-overlay.json and overlay rebuild scripts absent from the ops working tree. Recorded as the inheritance blocker, not a tool failure."
+    }
+  ],
+  "knownGaps": [
+    "No formal foundation release matches this remediation round; v0.13.0 is still in preparation and README still declares pantheon-base-v0.11.0 as the latest published release.",
+    "Ops HEAD lock still points at pantheon-base-v0.10.25 and the lock baseCommit does not match the base manifest; ops consumption sync is blocked until the next release.",
+    "Cross-instance pubsub invalidation, capacity/latency SLA baseline and CI-integrated MySQL/Redis smoke remain runtime-verification gaps."
+  ],
+  "linkage": {
+    "evidenceDir": ".harness/evidence/2026-09-24-production-readiness-audit/",
+    "taskManifest": ".harness/tasks/2026-09-24-production-readiness-audit/manifest.json",
+    "reviewFile": ".harness/evidence/2026-09-24-production-readiness-audit/review.md",
+    "summaryFile": ".harness/evidence/2026-09-24-production-readiness-audit/summary.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".harness/RELEASE_v0.13.0_PREP.md"
+    ]
+  }
+}

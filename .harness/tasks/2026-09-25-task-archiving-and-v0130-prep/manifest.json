@@ -1,0 +1,59 @@
+{
+  "taskId": "2026-09-25-task-archiving-and-v0130-prep",
+  "title": "Archive completed harness tasks and prepare the v0.13.0 foundation release",
+  "goal": "Archive all completed 2026-07..2026-09 tasks with their evidence, move historical summary docs into docs/history, establish the STATUS/ARCHIVE governance docs, and stage the v0.13.0 release preparation on top of v0.12.1.",
+  "primaryLayer": "governance",
+  "status": "completed",
+  "statusNote": "2026-09-25: 116 tasks archived (Jul 27 / Aug 23 / Sep 66), active task list emptied, summary docs moved to docs/history/2026-09/tasks-summaries, RELEASE_v0.13.0_PREP.md created; PR #347 governance remediation (Plan doc type, S1192 const extraction, audit evidence backfill) landed on the same branch.",
+  "completedAt": "2026-09-25",
+  "priority": "P2",
+  "type": "governance-ratchet",
+  "estimatedComplexity": "medium",
+  "scope": {
+    "in": [
+      "archive completed .harness/tasks/ directories with matching evidence into .harness/archive/{2026-07,2026-08,2026-09}/",
+      "move tasks-summaries markdown files to docs/history/2026-09/tasks-summaries/",
+      "create .harness/STATUS.md, .harness/ARCHIVE.md and RELEASE_v0.13.0_PREP.md",
+      "back-fill the 2026-09-24 production-readiness audit evidence",
+      "PR #347 governance remediation: frontmatter Plan doc type, S1192 const extraction in data_scope_middleware.go"
+    ],
+    "out": [
+      "cutting the actual v0.13.0 tag or GitHub Release",
+      "pantheon-ops foundation release consumption sync",
+      "changing any CI gate threshold or workflow trigger",
+      "business/* runtime behavior"
+    ]
+  },
+  "harnessProfile": {
+    "template": "api-service",
+    "overlay": "governance-ratchet",
+    "qualityProfile": "ci-workflow",
+    "ratchetDecision": "registry-only",
+    "ownerLayer": "platform"
+  },
+  "verificationPlan": {
+    "commands": [
+      "node scripts/harness/check-doc-frontmatter.mjs",
+      "cd backend && go build ./internal/middleware/ && go vet ./internal/middleware/",
+      "node scripts/harness/check-evidence.mjs --strict",
+      "node scripts/harness/check-review.mjs --strict",
+      "node scripts/harness/check-task-packet.mjs --root .",
+      "node scripts/check-pr-governance.mjs --help"
+    ],
+    "runtimeEvidence": [
+      "116 archived task summaries counted via find .harness/archive -name summary.md"
+    ]
+  },
+  "runtimeSensitive": false,
+  "linkage": {
+    "evidenceDir": ".harness/evidence/2026-09-25-task-archiving-and-v0130-prep/",
+    "reviewFile": ".harness/evidence/2026-09-25-task-archiving-and-v0130-prep/review.md",
+    "summaryFile": ".harness/evidence/2026-09-25-task-archiving-and-v0130-prep/summary.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".harness/RELEASE_v0.13.0_PREP.md",
+      ".harness/ACTIVE_TASKS_REVIEW_2026-09-25.md",
+      ".harness/evidence/2026-09-24-production-readiness-audit/summary.md"
+    ]
+  }
+}
