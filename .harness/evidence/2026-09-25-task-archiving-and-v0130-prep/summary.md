@@ -1,6 +1,6 @@
 # Evidence Summary: 任务归档和 v0.13.0 准备
 
-**Task ID**: 2026-09-25-task-archiving-and-v0.13.0-prep  
+**Task ID**: 2026-09-25-task-archiving-and-v0130-prep (原 id 含点号，已按 normalized task-id 规则重命名为 v0130)  
 **Date**: 2026-09-25
 
 ## 完成验证

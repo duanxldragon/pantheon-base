@@ -1,0 +1,52 @@
+{
+  "taskId": "2026-09-24-production-readiness-audit",
+  "title": "Pantheon Base production delivery readiness audit",
+  "goal": "Audit the whole pantheon-base repo for security, quality, performance and pantheon-ops inheritance readiness, and record whether the current state can ship as a formal foundation release.",
+  "primaryLayer": "governance",
+  "status": "completed",
+  "statusNote": "2026-09-24: audit completed with verdict 'candidate delivery, not yet a formal foundation release'; blockers recorded in summary.md (missing release, ops lock drift) and all standard verification commands passed.",
+  "completedAt": "2026-09-24",
+  "priority": "P1",
+  "type": "audit",
+  "estimatedComplexity": "medium",
+  "scope": {
+    "in": [
+      "backend go test / go vet full pass",
+      "frontend type-check / lint / build / npm audit",
+      "frontend prebuild contract checks",
+      "CodeGraph index health",
+      "pantheon-ops inheritance lock and working-tree assessment"
+    ],
+    "out": [
+      "remediating the findings inside the audit itself",
+      "cutting the foundation release",
+      "fixing pantheon-ops working tree"
+    ]
+  },
+  "harnessProfile": {
+    "template": "api-service",
+    "overlay": "governance-ratchet",
+    "qualityProfile": "ci-workflow",
+    "ownerLayer": "platform"
+  },
+  "verificationPlan": {
+    "commands": [
+      "cd backend && go test ./... && go vet ./...",
+      "cd frontend && npm run type-check && npm run lint && npm run build",
+      "codegraph status ."
+    ],
+    "runtimeEvidence": [
+      "audit verdict recorded in .harness/evidence/2026-09-24-production-readiness-audit/summary.md"
+    ]
+  },
+  "runtimeSensitive": false,
+  "linkage": {
+    "evidenceDir": ".harness/evidence/2026-09-24-production-readiness-audit/",
+    "reviewFile": ".harness/evidence/2026-09-24-production-readiness-audit/review.md",
+    "summaryFile": ".harness/evidence/2026-09-24-production-readiness-audit/summary.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".harness/RELEASE_v0.13.0_PREP.md"
+    ]
+  }
+}
