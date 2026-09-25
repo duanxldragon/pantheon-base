@@ -49,3 +49,19 @@ ls .harness/evidence/ | wc -l
 ## 结论
 
 ✅ 任务归档和 v0.13.0 准备工作已完成，等待 CI 通过后合并。
+
+### 后续修复 (2026-09-25)
+
+归档把 116 个 manifest 移入 `.harness/archive/` 后，Docs Governance 的 task packet 检查对 28 个 `docs/harness/tasks/*.task.md` 报 "task manifest does not exist"（PR #347 Docs Governance + Quality Gates 红灯）。
+
+修复：`scripts/task-manifest.mjs` 的 `readTaskManifest` 增加 archive 兜底（canonical 路径缺失时回退到 `.harness/archive/<month>/tasks/<id>/manifest.json`，taskId 交叉校验保持生效），新增 `tests/scripts/task-manifest-archive.test.mjs`（9 个用例）。
+
+验证：
+```bash
+node --test "tests/scripts/*.test.mjs"   # 136 passed
+node scripts/harness/check-task-packet.mjs --root .   # 0 error(s)
+node scripts/harness/check-evidence.mjs --strict      # PASS
+node scripts/harness/check-review.mjs --strict        # PASS
+```
+
+CI（commit 4f5f01eb）：Docs Governance 转 pass，无失败检查，等待 Smoke Sanity 收尾。
