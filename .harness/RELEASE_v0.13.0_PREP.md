@@ -1,20 +1,20 @@
 # Pantheon Base v0.13.0 Release 准备
 
 **日期**: 2026-09-25  
-**基础版本**: v0.12.1  
-**状态**: 准备中
+**候选基线**: 当前 `main` 的企业级整改收口工作线（仓库无可消费的 v0.12.1 tag）
+**状态**: 仓库内准备已完成；等待 hosted release gate、正式 tag 和维护者发布
 
 ---
 
 ## Release 概述
 
-v0.13.0 是任务治理和归档系统完善后的版本，基于 v0.12.1 的企业级整改成果。
+v0.13.0 是任务治理和归档系统完善后的候选版本，包含企业级整改收口成果。
 
 ### 版本定位
 
 - **类型**: Minor Release (治理增强)
 - **目标**: 任务治理体系完善 + 文档系统健全
-- **兼容性**: 向后兼容 v0.12.1
+- **兼容性**: 保持现有 foundation release 消费契约
 
 ---
 
@@ -34,7 +34,7 @@ v0.13.0 是任务治理和归档系统完善后的版本，基于 v0.12.1 的企
 - `.harness/FINAL_SUMMARY.md` - 最终总结
 - `.harness/EXECUTION_REPORT.md` - 执行报告
 
-### 2. 继承 v0.12.1 特性
+### 2. 继承企业级整改特性
 
 **命名与边界整改 (6/6)**:
 - auth 模块解耦
@@ -54,7 +54,7 @@ v0.13.0 是任务治理和归档系统完善后的版本，基于 v0.12.1 的企
 
 ---
 
-## 变更内容 (v0.12.1 → v0.13.0)
+## 变更内容 (企业级整改收口 → v0.13.0)
 
 ### 新增
 
@@ -72,13 +72,13 @@ v0.13.0 是任务治理和归档系统完善后的版本，基于 v0.12.1 的企
 
 ## Breaking Changes
 
-无。本版本 100% 向后兼容 v0.12.1。
+无。本候选版本保持现有 API、数据库和配置兼容性。
 
 ---
 
 ## Migration Guide
 
-### 从 v0.12.1 升级
+### 从当前 foundation release 升级
 
 ```bash
 # 1. 停止服务
@@ -103,29 +103,28 @@ curl http://localhost:8080/api/v1/health
 
 ### Pre-release
 
-- [ ] 验证版本继承
-  - [ ] 确认基于 v0.12.1
-  - [ ] 验证所有门禁通过
-  - [ ] 确认无新增代码变更
+- [x] 验证版本继承
+  - [x] 以当前候选提交 `e861e3c2d065c774e5ac73ce0cf440806005e88e` 固定 manifest
+  - [x] 记录本地审计与归档 evidence
+  - [x] 确认候选不声明 hosted gate 或 Ops 已同步
 
-- [ ] 文档检查
-  - [ ] CHANGELOG.md 更新
-  - [ ] README.md 版本更新
-  - [ ] 归档文档完整
+- [x] 文档检查
+  - [x] CHANGELOG.md 更新
+  - [x] release notes / upgrade notes / consumer impact 完整
+  - [x] 归档文档与状态入口完整
 
-- [ ] 版本标记
-  - [ ] 更新 VERSION 文件 (0.13.0)
-  - [ ] 创建 release notes
+- [x] 版本标记准备
+  - [x] 创建 `releases/pantheon-base-v0.13.0/manifest.json`
+  - [x] 创建 release notes、verification summary 和 consumer notes
+  - [ ] 创建正式 Git tag（需 hosted checks 通过后由维护者执行）
 
 ### Release
 
-- [ ] 拉取远程最新代码
-  - [ ] `git pull origin main --rebase`
-  - [ ] 解决任何冲突
-  
-- [ ] 创建发布分支
-  - [ ] `git checkout -b release/0.13`
-  - [ ] `git push origin release/0.13`
+- [ ] 合入 `main` 并确认工作树干净
+  - [ ] 所有规划任务为 `completed`
+  - [ ] 本地 required checks 全部通过
+  - [ ] GitHub required checks 全部成功
+  - [ ] 本地和远端仅保留 `main` 分支
 
 - [ ] 创建 Git tag
   - [ ] `git tag -a pantheon-base-v0.13.0 -m "Release v0.13.0"`
@@ -149,7 +148,7 @@ curl http://localhost:8080/api/v1/health
 
 **发布日期**: 2026-09-XX
 
-Pantheon Base v0.13.0 在 v0.12.1 企业级整改成果基础上，完善了任务治理体系和文档系统。
+Pantheon Base v0.13.0 在企业级整改收口成果基础上，完善了任务治理体系和文档系统。
 
 #### 🎯 核心改进
 
@@ -164,7 +163,7 @@ Pantheon Base v0.13.0 在 v0.12.1 企业级整改成果基础上，完善了任�
 - ✅ 归档索引系统
 - ✅ 执行报告和总结
 
-**继承特性** (来自 v0.12.1):
+**继承特性** (来自企业级整改收口):
 - ✅ 命名与边界整改 6/6
 - ✅ 企业级整改 6/6
 - ✅ Core Smoke 279 用例
@@ -179,7 +178,7 @@ Pantheon Base v0.13.0 在 v0.12.1 企业级整改成果基础上，完善了任�
 
 #### 🔧 兼容性
 
-100% 向后兼容 v0.12.1，无 breaking changes，无需数据库迁移。
+保持现有 foundation release 消费契约，无 breaking changes，无需数据库迁移。
 
 #### 📖 文档
 
@@ -193,9 +192,9 @@ Pantheon Base v0.13.0 在 v0.12.1 企业级整改成果基础上，完善了任�
 
 - **2026-09-25**: 归档完成，准备发布
 - **2026-09-26**: 同步远程，解决冲突
-- **2026-09-27**: 创建 release
-- **2026-09-28**: Post-release 验证
+- **待门禁通过**: 创建 release
+- **发布后**: 验证资产并更新 Ops 消费锁
 
 ---
 
-**下一步**: 拉取远程更新 → 解决冲突 → 创建 release
+**剩余门禁**: 在干净的 `main` 上运行 hosted required checks，创建不可变 tag/GitHub Release，然后在干净的 `pantheon-ops` 工作树执行消费升级和业务 smoke。仓库内准备工作已完成。

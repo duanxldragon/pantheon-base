@@ -1,11 +1,11 @@
 ---
 title: Pantheon Base 租户演进任务分解与开发计划
-doc_type: Plan
+doc_type: Guide
 layer: platform
 status: Active
 updated_at: 2026-09-15
 linked_contracts:
-  - docs/contracts/TENANT_CONTRACT_V1.md
+  - ../../../contracts/TENANT_CONTRACT_V1.md
 ---
 
 # Pantheon Base 租户演进任务分解与开发计划
@@ -16,8 +16,8 @@ linked_contracts:
 >
 > **2026-09-11 执行对账**：队列 0--3 已完成（manifest 均为 `done`，evidence 齐全）——
 > 任务 0 `tenant-ready-guardrails`（伪能力下线 + 就绪检查 + CI DB-backed 覆盖率对账，阈值 11→50，维护者已批准口径）；
-> 任务 1 `tenant-contract-design`（[合同 V1 冻结](../../docs/contracts/TENANT_CONTRACT_V1.md)）；
-> 任务 2 `tenant-migration-runbook`（[Runbook](../../docs/runbooks/TENANT_MIGRATION_RUNBOOK.md) + 副本三类演练通过，生产执行待 G1--G4）；
+> 任务 1 `tenant-contract-design`（[合同 V1 冻结](../../../contracts/TENANT_CONTRACT_V1.md)）；
+> 任务 2 `tenant-migration-runbook`（[Runbook](../../../runbooks/TENANT_MIGRATION_RUNBOOK.md) + 副本三类演练通过，生产执行待 G1--G4）；
 > 任务 3 `tenant-canary-slice`（dict 资源垂直切片，flag `platform.tenant_mode` 默认 `compat`，10 项双租户 hostile tests 全绿，flag-off 回归通过）。
 > 下一步为队列 4--6（core-auth-iam / core-data-infrastructure / verification-and-gray），开工前提：canary 隔离 evidence 的维护者 review（"canary 放量" gate）。
 >

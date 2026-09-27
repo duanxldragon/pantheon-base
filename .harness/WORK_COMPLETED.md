@@ -113,12 +113,12 @@ ls docs/history/2026-09/ | wc -l                   # 应返回 8 或 9
 
 ## 下一步建议
 
-1. **v0.12.0 Release 准备**
+1. **v0.13.0 Release 准备**
    - 打包企业级整改成果
    - 创建 foundation bundle
 
 2. **pantheon-ops 同步**
-   - 等待 v0.12.0 发布后同步
+   - 等待 v0.13.0 发布后同步
 
 3. **补充验证**
    - 容量压测建立 SLA 基线

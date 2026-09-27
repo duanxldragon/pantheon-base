@@ -118,7 +118,7 @@ CI 同样执行 `-race`，双重覆盖。
 | 版本 | 状态 | 发布时间 | 关键内容 |
 |------|------|----------|----------|
 | v0.11.0 | ✅ 已发布 | 2026-09-08 | 企业级前端设计系统工程框架，Token 扩展 +109% |
-| v0.12.0 | 🚧 规划中 | TBD | 企业级整改轮全部落地，生产就绪增强 |
+| v0.13.0 | 🟡 候选准备完成 | 2026-09-27（待发布） | 治理归档、企业级整改收口、foundation release 元数据 |
 | v1.0 | ✅ 已发布 | 2026-07-21 | 认证、IAM、组织、配置、审计、i18n、低代码生成链路 |
 
 ### 显式残余 Gap
@@ -133,10 +133,7 @@ CI 同样执行 `-race`，双重覆盖。
 
 #### 文档残余
 
-以下文档尚未完全清理或归档：
-
-1. `.harness/tasks/` 下历史任务（2026-07 ~ 2026-08）待归档
-2. 根目录散落的历史总结文档 (FINAL_*.md, TASK_*.md 等) 待清理或移入 docs/history/
+历史任务和总结文档已完成归档；当前仅保留 release gate 追踪 manifest。后续新增阶段性材料必须进入对应 evidence 或 `docs/history/`，不得回写已完成任务状态。
 
 #### Ops 同步
 
@@ -156,10 +153,10 @@ CI 同样执行 `-race`，双重覆盖。
 
 ### 下一步行动
 
-1. **归档历史任务**: 将 2026-07 ~ 2026-09 已完成任务移入 archive/
-2. **文档清理**: 移除或归档根目录散落的历史总结文档
-3. **更新 README**: 反映最新的门禁状态、版本信息和完成的整改轮次
-4. **准备 v0.12.0**: 打包企业级整改成果，准备 foundation release
+1. **完成 hosted release gate**: 在干净 `main` 上复跑 required checks
+2. **发布 v0.13.0**: 创建不可变 tag 和 GitHub Release
+3. **执行 Ops 消费升级**: 在干净工作树更新 lock、重建 snapshot 并运行业务 smoke
+4. **补充运行态证据**: 多实例缓存失效、容量尾延迟和 CI MySQL/Redis smoke
 
 ---
 
@@ -167,6 +164,6 @@ CI 同样执行 `-race`，双重覆盖。
 
 - 整改计划: `.harness/ENTERPRISE_REMEDIATION_PLAN_2026-09-22.md`, `.harness/NAMING_AND_BOUNDARIES_REMEDIATION_PLAN_2026-09-22.md`
 - Smoke 分诊: `.harness/CORE_SMOKE_TRIAGE.md`
-- 发布指南: `.harness/RELEASE_v0.12.0_GUIDE.md`
+- 发布准备: `.harness/RELEASE_v0.13.0_PREP.md`
 - 文档入口: `docs/README.md`, `DESIGN.md`, `AGENTS.md`
 - 门禁脚本: `scripts/harness/check-*.mjs`

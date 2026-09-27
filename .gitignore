@@ -63,6 +63,10 @@ frontend/coverage/
 frontend/.vite/
 dist/
 releases/
+!releases/
+releases/*/
+!releases/pantheon-base-v0.13.0/
+!releases/pantheon-base-v0.13.0/*
 
 # Test artifacts
 playwright-report/
