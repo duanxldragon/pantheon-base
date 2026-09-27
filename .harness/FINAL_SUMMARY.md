@@ -15,7 +15,7 @@
 | 工作项 | 状态 | 数量/详情 |
 |--------|------|-----------|
 | 任务状态检查 | ✅ | 两轮整改 12/12 完成 |
-| 任务归档 | ✅ | 72 个任务，425 个文件 |
+| 任务归档 | ✅ | 116 个任务，证据链已归档 |
 | Evidence 归档 | ✅ | 77 个 evidence 文件夹 |
 | 新建文档 | ✅ | 5 个状态和索引文档 |
 | 更新文档 | ✅ | 2 个主要文档 |
@@ -84,14 +84,14 @@
 
 ### 状态追踪
 - `.harness/STATUS.md` - **主文档**: 当前任务状态、门禁状态、显式 Gap
-- `.harness/ARCHIVE.md` - **归档索引**: 72 个任务的月度归档
+- `.harness/ARCHIVE.md` - **归档索引**: 116 个任务的月度归档
 - `README.md` - **项目主页**: 版本、部署、快速开始
 
 ### 计划与证据
 - `.harness/ENTERPRISE_REMEDIATION_PLAN_2026-09-22.md` - 企业级整改 (已完成)
 - `.harness/NAMING_AND_BOUNDARIES_REMEDIATION_PLAN_2026-09-22.md` - 命名整改 (已完成)
 - `.harness/CORE_SMOKE_TRIAGE.md` - Core Smoke 修复 (已完成)
-- `.harness/archive/` - 72 个任务的完整证据
+- `.harness/archive/` - 116 个任务的完整证据
 
 ### 历史文档
 - `docs/history/2026-09/` - 8 个历史总结文档
@@ -109,7 +109,7 @@
 
 ## 📋 下一步建议
 
-1. **v0.12.0 Release**
+1. **v0.13.0 Release**
    - 打包企业级整改成果
    - 创建 foundation bundle
    - 同步 pantheon-ops

@@ -2,7 +2,7 @@
 
 本 runbook 是 `2026-09-10-tenant-migration-runbook` 任务的冻结交付物，为 [租户合同 V1](../contracts/TENANT_CONTRACT_V1.md) 定义的共享 schema MVP 提供可演练、可回滚的迁移程序。
 
-> **生产执行禁令**：本 runbook 已在副本完成三类演练（成功 / 冲突 / 失败回滚，见 [演练日志](../../.harness/evidence/2026-09-10-tenant-migration-runbook/rehearsal-log.md)），
+> **生产执行禁令**：本 runbook 已在副本完成三类演练（成功 / 冲突 / 失败回滚，见 [演练日志](../../.harness/archive/2026-09/evidence/2026-09-10-tenant-migration-runbook/rehearsal-log.md)），
 > 但 **任何生产 DDL、回填、NOT NULL/唯一索引变更都必须等待 human gate 放行**
 > （备份 RPO/RTO 确认 + 生产维护窗口审批，见本文 §8）。在此之前只允许副本/预发执行。
 
@@ -246,7 +246,7 @@ CREATE TABLE tenant_memberships ( ... ); -- 合同 §2.2, UK(tenant_id,user_id)
 ### 6.3 演练证据
 
 三类演练（成功 / 冲突 / 失败回滚）已完成于副本 `tenant_rehearsal`，
-完整日志与恢复验证见 [rehearsal-log.md](../../.harness/evidence/2026-09-10-tenant-migration-runbook/rehearsal-log.md)。
+完整日志与恢复验证见 [rehearsal-log.md](../../.harness/archive/2026-09/evidence/2026-09-10-tenant-migration-runbook/rehearsal-log.md)。
 
 ---
 

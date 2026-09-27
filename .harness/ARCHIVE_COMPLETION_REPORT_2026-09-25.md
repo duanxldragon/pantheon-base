@@ -148,8 +148,8 @@
 ## 下一步建议
 
 1. **清理根目录**: 移除或归档散落的历史总结文档 (FINAL_*.md, TASK_*.md 等)
-2. **准备 v0.12.0**: 打包企业级整改成果，准备下一个 foundation release
-3. **Ops 同步**: 发布 v0.12.0 后同步 pantheon-ops
+2. **准备 v0.13.0**: 打包企业级整改成果，准备下一个 foundation release
+3. **Ops 同步**: 发布 v0.13.0 后同步 pantheon-ops
 4. **补充验证**: 容量压测建立 SLA 基线、CI 集成 smoke 测试
 
 ## 验证

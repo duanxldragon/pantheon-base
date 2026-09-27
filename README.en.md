@@ -12,13 +12,13 @@ The project is not intended to be just a login shell plus CRUD scaffolding. Its 
 
 | Item | Value |
 | --- | --- |
-| Current published foundation release | [`pantheon-base-v0.11.0`](https://github.com/duanxldragon/pantheon-base/releases/tag/pantheon-base-v0.11.0) (`release/0.11`) |
+| Current pending foundation release | `pantheon-base-v0.13.0` (candidate; formal tag/release requires hosted gates) |
 | Product milestone | **V1.0** (released 2026-07-21) |
 | Shell/Harness baseline | `1.4.0` (see [VERSION](./VERSION) / [SHELL_VERSION.json](./SHELL_VERSION.json)) |
 | Deployment guide | [docs/DEPLOYMENT_GUIDE.md](./docs/DEPLOYMENT_GUIDE.md) (MySQL 8, Redis 7, migrations + runtime seed, health checks, telemetry, backup/restore, and schema-aware rollback) |
 | Changelog | [CHANGELOG.md](./CHANGELOG.md) |
 
-Delivery-audit note: the GitHub Release for `pantheon-base-v0.11.0` points exactly to Base commit `c907db507f1c71933d4324560eec499e3f6662cf` and passed Full Smoke, SonarCloud, CodeQL, Dependabot, CI, and the Release Gate. Published assets include the foundation bundle, repository snapshot, manifest, and SHA-256 sidecars. This release introduces an enterprise-grade frontend design system engineering framework (5 documents, 3,325 lines), with token expansion +109% (32 → 67), spacing coverage +225% (8 → 26), 9 semantic container tokens, automated migration tooling, and 100% backward compatibility. The `pantheon-ops` consumption upgrade is scheduled separately; no consumer lock is claimed as updated here.
+Delivery status: v0.13.0 local release metadata, archive evidence, and candidate notes are ready. The formal foundation bundle, GitHub Release, and `pantheon-ops` consumption upgrade remain gated on fresh hosted required checks. No consumer lock is claimed as updated here.
 
 V1.0 covers: auth & session governance (login-log / session / operation-log / security-event consoles with manual cleanup + automatic retention), IAM & organization, configuration & dictionaries, i18n, the unified SearchToolbar / governance-bar page skeleton, the controlled low-code generation pipeline, and the four mechanical CI gates (encoding / UI / visual / structure).
 
@@ -148,9 +148,9 @@ npm run test:smoke:platform
 npm run test:smoke:system
 npm run test:smoke:all
 # Illustrative next-release placeholders only; replace the version and candidate commit before use
-npm run release:foundation:manifest -- --release-version pantheon-base-vX.Y.Z --release-line release/0.10 --base-commit <40-char-commit>
-npm run release:foundation:cut -- --release-version pantheon-base-vX.Y.Z --release-line release/0.10 --base-commit <40-char-commit>
-npm run release:foundation:publish -- --release-version pantheon-base-vX.Y.Z --release-line release/0.10 --base-commit <40-char-commit>
+npm run release:foundation:manifest -- --release-version pantheon-base-v0.13.0 --release-line release/0.13 --base-commit <40-char-commit>
+npm run release:foundation:cut -- --release-version pantheon-base-v0.13.0 --release-line release/0.13 --base-commit <40-char-commit>
+npm run release:foundation:publish -- --release-version pantheon-base-v0.13.0 --release-line release/0.13 --base-commit <40-char-commit>
 ```
 
 ## Quality and Security Gates
