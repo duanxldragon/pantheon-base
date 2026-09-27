@@ -2,7 +2,7 @@
 
 **日期**: 2026-09-25  
 **候选基线**: 当前 `main` 的企业级整改收口工作线（仓库无可消费的 v0.12.1 tag）
-**状态**: 仓库内准备已完成；等待 hosted release gate、正式 tag 和维护者发布
+**状态**: 已完成 hosted release gate、正式 tag 和 GitHub Release 发布；Ops 消费同步单独跟进
 
 ---
 
@@ -104,9 +104,9 @@ curl http://localhost:8080/api/v1/health
 ### Pre-release
 
 - [x] 验证版本继承
-  - [x] 以当前候选提交 `e861e3c2d065c774e5ac73ce0cf440806005e88e` 固定 manifest
+  - [x] 以已通过 Release Gate 的提交 `c254e4c8c63f4409d49752eedb097291627d0b82` 固定 manifest
   - [x] 记录本地审计与归档 evidence
-  - [x] 确认候选不声明 hosted gate 或 Ops 已同步
+  - [x] 确认 release 已通过 hosted gate；Ops 同步仍单独跟踪
 
 - [x] 文档检查
   - [x] CHANGELOG.md 更新
@@ -127,8 +127,8 @@ curl http://localhost:8080/api/v1/health
   - [ ] 本地和远端仅保留 `main` 分支
 
 - [ ] 创建 Git tag
-  - [ ] `git tag -a pantheon-base-v0.13.0 -m "Release v0.13.0"`
-  - [ ] `git push origin pantheon-base-v0.13.0`
+  - [x] 创建并推送 `pantheon-base-v0.13.0` 不可变 tag
+  - [x] 创建 GitHub Release 并上传 foundation bundle、repo snapshot 和 SHA-256 校验文件
 
 - [ ] 创建 GitHub Release
   - [ ] Release notes

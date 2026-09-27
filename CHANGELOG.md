@@ -6,20 +6,20 @@ Pantheon Base 方法追踪记录。方法论本体位于 `pantheon-harness`。
 
 ---
 
-## [pantheon-base-v0.13.0] — release candidate metadata (2026-09-27)
+## [pantheon-base-v0.13.0] — published (2026-09-27)
 
-> Candidate metadata is prepared locally. The immutable tag, hosted release gates, and GitHub Release are still pending publication.
+> Published as immutable tag `pantheon-base-v0.13.0` after the hosted Release Gate, CI, security, and smoke checks passed on source commit `c254e4c8c63f4409d49752eedb097291627d0b82`.
 
 ### Added
 - Foundation release metadata, verification boundary, upgrade notes, and consumer impact notes for the v0.13.0 governance release.
 - Durable task archive and status entry points for the completed Harness work.
 
 ### Changed
-- Recorded the September enterprise remediation and governance closeout as the candidate release scope.
+- Recorded the September enterprise remediation and governance closeout as the v0.13.0 release scope.
 
 ### Verification
 - Repository-local production-readiness audit and task-archive evidence are linked from `releases/pantheon-base-v0.13.0/verification-summary.json`.
-- Hosted release checks and `pantheon-ops` consumption remain explicit release gates.
+- Hosted release checks passed; `pantheon-ops` consumption remains a separate consumer upgrade follow-up.
 
 ## [pantheon-base-v0.11.1] — 2026-09-04
 
