@@ -1,11 +1,11 @@
 ---
 title: Pantheon Base 租户演进任务分解与开发计划
-doc_type: Guide
+doc_type: Design
 layer: platform
 status: Active
 updated_at: 2026-09-15
 linked_contracts:
-  - ../../../contracts/TENANT_CONTRACT_V1.md
+  - docs/contracts/TENANT_CONTRACT_V1.md
 ---
 
 # Pantheon Base 租户演进任务分解与开发计划
