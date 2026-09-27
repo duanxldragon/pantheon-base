@@ -10,7 +10,7 @@ Pantheon Platform 是一个面向企业后台的模块化单体底座，沉淀�
 
 | 项 | 值 |
 | --- | --- |
-| 当前待发布的 foundation release | `pantheon-base-v0.13.0`（候选，正式 tag/Release 需 hosted gates 通过） |
+| 当前 foundation release | [`pantheon-base-v0.13.0`](https://github.com/duanxldragon/pantheon-base/releases/tag/pantheon-base-v0.13.0)（已发布） |
 | 产品里程碑 | **V1.0**（2026-07-21 发布） |
 | Shell/Harness 基线版本 | `1.4.0`（见 [VERSION](./VERSION) / [SHELL_VERSION.json](./SHELL_VERSION.json)） |
 | 部署文档 | [docs/DEPLOYMENT_GUIDE.md](./docs/DEPLOYMENT_GUIDE.md)（MySQL 8、Redis 7、迁移 + runtime seed、健康检查、遥测、备份恢复与 schema-aware 回滚） |
@@ -18,7 +18,7 @@ Pantheon Platform 是一个面向企业后台的模块化单体底座，沉淀�
 | **任务状态** | [.harness/STATUS.md](./.harness/STATUS.md) — 当前任务状态总览 |
 | **归档记录** | [.harness/ARCHIVE.md](./.harness/ARCHIVE.md) — 116 个已完成任务归档索引 |
 
-交付状态说明：v0.13.0 的本地发布元数据、归档证据和候选说明已经准备完成；正式 foundation bundle、GitHub Release 与 `pantheon-ops` 消费升级必须等待 hosted required checks 全绿后执行。当前不把任何 consumer lock 声明为已更新。
+交付状态说明：v0.13.0 foundation bundle、不可变 tag、GitHub Release 和 hosted required checks 均已完成。`pantheon-ops` 的 consumer lock、继承快照和业务 smoke 仍需在 Ops 仓库单独完成并验证。
 
 V1.0 覆盖：认证与会话治理（登录日志 / 会话 / 操作日志 / 安全事件四页，手动清理 + 自动保留双轨）、IAM 与组织、配置与字典、i18n、统一 SearchToolbar / 治理栏页面骨架、受控低代码生成链路，以及 encoding / UI / visual / structure 四类机械 CI 门禁。
 

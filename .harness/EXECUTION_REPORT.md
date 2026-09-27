@@ -216,7 +216,7 @@ docs/history/2026-09/
    - 准备 release notes
 
 2. **pantheon-ops 同步**
-   - 等待 v0.13.0 发布
+   - v0.13.0 已发布，Ops 消费同步列为后续任务
    - 同步维护器、安全增强等特性
    - 验证 consumer overlay 机制
 
