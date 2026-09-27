@@ -3,7 +3,7 @@
   "releaseVersion": "pantheon-base-v0.13.0",
   "releaseStatus": "candidate-not-published",
   "releaseLine": "release/0.13",
-  "baseCommit": "c4819c7d2514901a26fd780d8cf2f4b8ead095f8",
+  "baseCommit": "c254e4c8c63f4409d49752eedb097291627d0b82",
   "createdAt": "2026-09-27T00:00:00Z",
   "sourceRepo": "pantheon-base",
   "consumerMode": "foundation-release-consumer",
