@@ -13,14 +13,11 @@ The project is not intended to be just a login shell plus CRUD scaffolding. Its 
 | Item | Value |
 | --- | --- |
 | Current foundation release | [`pantheon-base-v0.13.0`](https://github.com/duanxldragon/pantheon-base/releases/tag/pantheon-base-v0.13.0) (published) |
-| Product milestone | **V1.0** (released 2026-07-21) |
 | Shell/Harness baseline | `1.4.0` (see [VERSION](./VERSION) / [SHELL_VERSION.json](./SHELL_VERSION.json)) |
 | Deployment guide | [docs/DEPLOYMENT_GUIDE.md](./docs/DEPLOYMENT_GUIDE.md) (MySQL 8, Redis 7, migrations + runtime seed, health checks, telemetry, backup/restore, and schema-aware rollback) |
 | Changelog | [CHANGELOG.md](./CHANGELOG.md) |
 
 Delivery status: the v0.13.0 foundation bundle, immutable tag, GitHub Release, and hosted required checks are complete. The `pantheon-ops` consumer lock, inheritance snapshot, and business smoke validation remain a separate consumer-repository follow-up.
-
-V1.0 covers: auth & session governance (login-log / session / operation-log / security-event consoles with manual cleanup + automatic retention), IAM & organization, configuration & dictionaries, i18n, the unified SearchToolbar / governance-bar page skeleton, the controlled low-code generation pipeline, and the four mechanical CI gates (encoding / UI / visual / structure).
 
 ## Positioning
 
