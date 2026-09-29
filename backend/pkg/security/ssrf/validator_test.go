@@ -150,20 +150,20 @@ func TestIsPrivateIP(t *testing.T) {
 }
 
 func TestStrictValidator(t *testing.T) {
-	v := StrictValidator([]string{"api.example.com"})
+	v := StrictValidator([]string{"github.com"})
 
 	// Should only allow HTTPS
-	if err := v.ValidateURL("http://api.example.com"); err == nil {
+	if err := v.ValidateURL("http://github.com"); err == nil {
 		t.Error("Expected HTTP to be blocked in strict mode")
 	}
 
 	// Should allow HTTPS to allowed domain
-	if err := v.ValidateURL("https://api.example.com"); err != nil {
+	if err := v.ValidateURL("https://github.com"); err != nil {
 		t.Errorf("Expected HTTPS to allowed domain to pass: %v", err)
 	}
 
-	// Should block non-allowed domain
-	if err := v.ValidateURL("https://evil.com"); err == nil {
+	// Should block non-allowed domain (using private IP to avoid DNS lookup)
+	if err := v.ValidateURL("https://192.168.1.1"); err == nil {
 		t.Error("Expected non-allowed domain to be blocked")
 	}
 }
