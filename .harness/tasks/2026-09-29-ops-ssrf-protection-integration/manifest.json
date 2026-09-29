@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "taskId": "2026-09-29-ops-ssrf-protection-integration",
+  "title": "Integrate SSRF protection from pantheon-base v0.13.1",
+  "status": "completed",
+  "priority": "P0",
+  "deliveryTier": "L2",
+  "primaryLayer": "business/observability, business/cicd",
+  "qualityProfiles": ["auth-security", "runtime-quality"],
+  "ratchetDecision": "gate-updated",
+  "goal": "Apply SSRF middleware from pantheon-base v0.13.1 to all 5 identified network request surfaces in ops business modules",
+  "scope": {
+    "in": [
+      "upgrade pantheon-base dependency from v0.12.1 to v0.13.1",
+      "integrate ssrf.Validator into observability datasource service",
+      "integrate ssrf.Validator into notification webhook service",
+      "integrate ssrf.Validator into ArgoCD client",
+      "integrate ssrf.Validator into K8s cluster service",
+      "integrate ssrf.Validator into SMTP email service",
+      "add unit tests for SSRF validation in each integration point",
+      "update API documentation with SSRF validation behavior"
+    ],
+    "out": [
+      "changing Base SSRF middleware implementation",
+      "adding new business features unrelated to SSRF",
+      "production deployment or credential changes",
+      "multi-tenant migration work"
+    ]
+  },
+  "taskDoc": "docs/harness/tasks/2026-09-29-ops-ssrf-protection-integration.task.md",
+  "statusDoc": ".harness/tasks/2026-09-29-ops-ssrf-protection-integration/STATUS.md",
+  "parent": "2026-09-28-ops-delivery-readiness-gap-closure",
+  "parentSubtask": "D2",
+  "linkage": {
+    "taskId": "2026-09-29-ops-ssrf-protection-integration",
+    "changeRef": "TBD",
+    "taskPacket": "docs/harness/tasks/2026-09-29-ops-ssrf-protection-integration.task.md",
+    "evidenceDir": ".harness/evidence/2026-09-29-ops-ssrf-protection-integration/",
+    "reviewFile": ".harness/evidence/2026-09-29-ops-ssrf-protection-integration/review.md",
+    "summaryFile": ".harness/evidence/2026-09-29-ops-ssrf-protection-integration/summary.md",
+    "baseRelease": "pantheon-base-v0.13.1",
+    "baseSSRFPackage": "backend/pkg/security/ssrf"
+  },
+  "verificationPlan": {
+    "backend": [
+      "go test ./backend/modules/business/observability/...",
+      "go test ./backend/modules/business/cicd/...",
+      "go test ./backend/modules/business/k8s/...",
+      "go test -count=1 ./...",
+      "go vet ./..."
+    ],
+    "integration": [
+      "verify SSRF validation rejects private IPs",
+      "verify SSRF validation rejects cloud metadata endpoints",
+      "verify SSRF validation rejects localhost",
+      "verify SSRF validation allows public endpoints",
+      "verify error messages are informative"
+    ]
+  }
+}
