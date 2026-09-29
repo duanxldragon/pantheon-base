@@ -201,14 +201,14 @@ func (v *Validator) checkPrivateIP(hostname string) error {
 func isPrivateIP(ip net.IP) bool {
 	// IPv4 private ranges
 	privateIPv4Ranges := []string{
-		"10.0.0.0/8",        // Private network
-		"172.16.0.0/12",     // Private network
-		"192.168.0.0/16",    // Private network
-		"127.0.0.0/8",       // Loopback
-		"169.254.0.0/16",    // Link-local (AWS metadata)
-		"0.0.0.0/8",         // Current network
-		"224.0.0.0/4",       // Multicast
-		"240.0.0.0/4",       // Reserved
+		"10.0.0.0/8",         // Private network
+		"172.16.0.0/12",      // Private network
+		"192.168.0.0/16",     // Private network
+		"127.0.0.0/8",        // Loopback
+		"169.254.0.0/16",     // Link-local (AWS metadata)
+		"0.0.0.0/8",          // Current network
+		"224.0.0.0/4",        // Multicast
+		"240.0.0.0/4",        // Reserved
 		"255.255.255.255/32", // Broadcast
 	}
 

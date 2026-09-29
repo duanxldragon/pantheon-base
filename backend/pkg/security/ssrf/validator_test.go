@@ -51,15 +51,15 @@ func TestValidateURL_PrivateIP(t *testing.T) {
 		url     string
 		wantErr bool
 	}{
-		{"http://127.0.0.1", true},         // Loopback
-		{"http://localhost", true},         // Localhost
-		{"http://10.0.0.1", true},          // Private
-		{"http://172.16.0.1", true},        // Private
-		{"http://192.168.1.1", true},       // Private
-		{"http://169.254.169.254", true},   // AWS metadata
-		{"http://8.8.8.8", false},          // Public (Google DNS)
-		{"http://1.1.1.1", false},          // Public (Cloudflare DNS)
-		{"http://example.com", false},      // Public domain
+		{"http://127.0.0.1", true},       // Loopback
+		{"http://localhost", true},       // Localhost
+		{"http://10.0.0.1", true},        // Private
+		{"http://172.16.0.1", true},      // Private
+		{"http://192.168.1.1", true},     // Private
+		{"http://169.254.169.254", true}, // AWS metadata
+		{"http://8.8.8.8", false},        // Public (Google DNS)
+		{"http://1.1.1.1", false},        // Public (Cloudflare DNS)
+		{"http://example.com", false},    // Public domain
 	}
 
 	for _, tt := range tests {
@@ -120,8 +120,8 @@ func TestValidateURL_Port(t *testing.T) {
 
 func TestIsPrivateIP(t *testing.T) {
 	tests := []struct {
-		ip      string
-		want    bool
+		ip   string
+		want bool
 	}{
 		{"127.0.0.1", true},
 		{"10.0.0.1", true},
