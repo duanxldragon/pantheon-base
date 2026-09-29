@@ -1,0 +1,54 @@
+{
+  "taskId": "2026-09-29-v0140-release-completion",
+  "title": "Complete v0.14.0 multi-tenant release publication",
+  "goal": "Land the missing test-dependency fix and stale manifest status sync, then publish the pantheon-base-v0.14.0 tag and GitHub Release the README already references",
+  "primaryLayer": "platform",
+  "status": "completed",
+  "statusNote": "2026-09-29: dependency fix and manifest sync verified locally; PR-based merge and tag publication pending hosted required checks",
+  "priority": "P1",
+  "type": "release-completion",
+  "scope": {
+    "in": [
+      "missing test dependency declarations in backend/go.mod",
+      "stale manifest status sync for 2026-09-29-ops-ssrf-protection-integration",
+      "v0.14.0 tag and GitHub Release publication"
+    ],
+    "out": [
+      "product code behavior changes",
+      "SSRF middleware implementation changes",
+      "pantheon-ops repository changes",
+      "new feature work beyond release completion"
+    ]
+  },
+  "harnessProfile": {
+    "template": "api-service",
+    "overlay": "pantheon-base",
+    "qualityProfile": "ci-workflow",
+    "ownerLayer": "platform"
+  },
+  "verificationPlan": {
+    "commands": [
+      "cd backend && go mod tidy",
+      "cd backend && go vet ./pkg/... ./modules/system/iam/...",
+      "cd backend && go test -count=1 ./modules/system/iam/tenant/",
+      "node scripts/check-pr-governance.mjs",
+      "node scripts/harness/check-task-packet.mjs --root .",
+      "node scripts/harness/check-structure-contract.mjs --root . --strict",
+      "node scripts/frontmatter-check.mjs"
+    ],
+    "runtimeEvidence": [
+      "go mod tidy clean with no go.sum churn",
+      "go vet and tenant package test compilation passed",
+      "governance, task-packet, structure, and frontmatter gates green locally"
+    ]
+  },
+  "runtimeSensitive": false,
+  "linkage": {
+    "evidenceDir": ".harness/evidence/2026-09-29-v0140-release-completion/",
+    "reviewFile": ".harness/evidence/2026-09-29-v0140-release-completion/review.md",
+    "summaryFile": ".harness/evidence/2026-09-29-v0140-release-completion/summary.md",
+    "changeRef": "PR: v0.14.0 release completion",
+    "planRefs": [],
+    "relatedTasks": ["2026-09-29-ops-ssrf-protection-integration", "2026-09-28-base-ssrf-protection"]
+  }
+}
