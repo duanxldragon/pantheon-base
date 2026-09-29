@@ -58,6 +58,7 @@ import { clearPantheonThemePreference } from '../theme/theme';
 import { usePantheonColorMode, type PantheonColorMode } from '../theme/colorMode';
 import { AppModal, shouldShowIdentityLabel, UserAvatarContent } from '../../components';
 import { getDashboardSummary, type DashboardSummary } from '../../modules/platform/api';
+import { resolveRouteWarmData } from '../router/prefetch';
 import { clearClientAuthSession } from '../auth/clientSession';
 import {
   getBrandInitial,
@@ -555,7 +556,9 @@ function computeTabMove(tabs: OpenedPageTab[], dragPath: string, targetPath: str
 
 async function fetchNoticeSummarySafely(): Promise<DashboardSummary | null> {
   try {
-    return await getDashboardSummary();
+    // Share the same 30s-cached promise the Dashboard page uses so the shell
+    // notice center and /dashboard never issue duplicate summary requests.
+    return await resolveRouteWarmData('/dashboard', 'summary', () => getDashboardSummary());
   } catch {
     return null;
   }

@@ -439,6 +439,8 @@ const SecurityCenter: React.FC = () => {
       passwordForm.resetFields();
       message.success(t('system.profile.passwordSuccess'));
       await loadSecurityContext();
+    } catch {
+      message.error(t('common.actionFailed'));
     } finally {
       setSavingPassword(false);
     }
@@ -450,6 +452,8 @@ const SecurityCenter: React.FC = () => {
       await revokeSession(sessionId);
       message.success(t('auth.session.revokeSuccess'));
       await loadSecurityContext();
+    } catch {
+      message.error(t('common.actionFailed'));
     } finally {
       setRevokingSessionId(null);
     }
