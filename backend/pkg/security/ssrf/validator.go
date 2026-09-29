@@ -99,7 +99,10 @@ func (v *Validator) ValidateURL(rawURL string) error {
 }
 
 // CreateHTTPClient creates an HTTP client with SSRF protection
-func (v *Validator) CreateHTTPClient() *http.Client {
+func (v *Validator) CreateHTTPClient(timeout time.Duration) *http.Client {
+	if timeout > 0 {
+		v.Timeout = timeout
+	}
 	transport := &http.Transport{
 		DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
 			// Extract hostname from addr (format: "host:port")
@@ -248,7 +251,7 @@ func (v *Validator) SafeRequest(ctx context.Context, method, rawURL string, body
 	}
 
 	// Create safe HTTP client
-	client := v.CreateHTTPClient()
+	client := v.CreateHTTPClient(v.Timeout)
 
 	// Create request
 	req, err := http.NewRequestWithContext(ctx, method, rawURL, nil)
