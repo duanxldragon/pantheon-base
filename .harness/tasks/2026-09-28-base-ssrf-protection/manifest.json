@@ -1,0 +1,23 @@
+{
+  "taskId": "2026-09-28-base-ssrf-protection",
+  "title": "Add SSRF Protection Middleware to Base",
+  "description": "Implement comprehensive SSRF protection middleware in pantheon-base to support ops delivery readiness",
+  "createdAt": "2026-09-28T18:00:00Z",
+  "status": "completed",
+  "type": "feature",
+  "priority": "high",
+  "tags": ["security", "ssrf", "middleware", "base"],
+  "relatedTasks": ["2026-09-28-ops-delivery-readiness-gap-closure"],
+  "scope": {
+    "layers": ["platform/security"],
+    "modules": ["backend/pkg/security/ssrf"],
+    "changeType": "addition"
+  },
+  "deliverables": [
+    "SSRF validator with IP/domain validation",
+    "DNS rebinding protection",
+    "HTTP client factory",
+    "Comprehensive test suite (8 tests)",
+    "Integration documentation"
+  ]
+}
