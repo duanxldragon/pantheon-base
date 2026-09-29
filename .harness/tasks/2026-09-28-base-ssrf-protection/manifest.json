@@ -1,0 +1,54 @@
+{
+  "taskId": "2026-09-28-base-ssrf-protection",
+  "title": "Add SSRF Protection Middleware to Base",
+  "goal": "Implement comprehensive SSRF protection middleware in pantheon-base to support ops delivery readiness D2 task requirement",
+  "primaryLayer": "platform/security",
+  "status": "completed",
+  "statusNote": "2026-09-28: SSRF protection middleware implemented with 8/8 tests passing, 68.8% coverage; ready for v0.13.1 release",
+  "completedAt": "2026-09-28",
+  "priority": "P1",
+  "type": "feature",
+  "estimatedComplexity": "medium",
+  "scope": {
+    "in": [
+      "backend/pkg/security/ssrf package implementation",
+      "Validator struct with IP/domain/port/scheme validation",
+      "DNS rebinding protection with dual-resolve verification",
+      "HTTP client factory for safe integration",
+      "Comprehensive test suite (8 tests)",
+      "Integration documentation and README"
+    ],
+    "out": [
+      "ops repository integration (next phase)",
+      "frontend changes",
+      "database changes",
+      "API endpoint changes"
+    ]
+  },
+  "harnessProfile": {
+    "template": "security-library",
+    "overlay": "none",
+    "qualityProfile": "auth-security",
+    "ownerLayer": "platform"
+  },
+  "verificationPlan": {
+    "commands": [
+      "cd backend && go test ./pkg/security/ssrf/",
+      "cd backend && go vet ./pkg/security/ssrf/",
+      "gofmt -l backend/pkg/security/ssrf/"
+    ],
+    "runtimeEvidence": [
+      "Unit tests: 8/8 passed, 68.8% coverage",
+      "All attack vectors validated: private IPs, cloud metadata, DNS rebinding, redirects"
+    ]
+  },
+  "runtimeSensitive": false,
+  "linkage": {
+    "evidenceDir": ".harness/evidence/2026-09-28-base-ssrf-protection/",
+    "reviewFile": ".harness/evidence/2026-09-28-base-ssrf-protection/review.md",
+    "summaryFile": ".harness/evidence/2026-09-28-base-ssrf-protection/summary.md",
+    "changeRef": "PR #357",
+    "planRefs": [],
+    "relatedTasks": ["2026-09-28-ops-delivery-readiness-gap-closure"]
+  }
+}
