@@ -85,10 +85,62 @@ DEALLOCATE PREPARE dept_ancestors_drop_col_stmt;
 -- Phase 1.4: Configuration Tables
 -- ============================================================================
 
-ALTER TABLE `system_setting`
-  DROP INDEX `uk_system_setting_tenant_key`,
-  ADD UNIQUE INDEX `idx_system_setting_setting_key` (`setting_key`),
-  DROP COLUMN `tenant_id`;
+-- system_setting rollback: guarded because the tenant_id column and composite
+-- key may have been applied earlier by 000014_tenant_settings.
+SET @setting_table_exists := (
+  SELECT COUNT(*)
+  FROM information_schema.tables
+  WHERE table_schema = DATABASE()
+    AND table_name = 'system_setting'
+);
+SET @setting_new_uk := (
+  SELECT COUNT(*)
+  FROM information_schema.statistics
+  WHERE table_schema = DATABASE()
+    AND table_name = 'system_setting'
+    AND index_name = 'uk_system_setting_tenant_key'
+);
+SET @setting_old_uk := (
+  SELECT COUNT(*)
+  FROM information_schema.statistics
+  WHERE table_schema = DATABASE()
+    AND table_name = 'system_setting'
+    AND index_name = 'idx_system_setting_setting_key'
+);
+SET @setting_tenant_col := (
+  SELECT COUNT(*)
+  FROM information_schema.columns
+  WHERE table_schema = DATABASE()
+    AND table_name = 'system_setting'
+    AND column_name = 'tenant_id'
+);
+
+SET @setting_drop_new_uk_stmt := IF(
+  @setting_table_exists > 0 AND @setting_new_uk > 0 AND @setting_old_uk = 0,
+  'ALTER TABLE `system_setting` DROP INDEX `uk_system_setting_tenant_key`',
+  'SELECT 1'
+);
+PREPARE setting_drop_new_uk_stmt FROM @setting_drop_new_uk_stmt;
+EXECUTE setting_drop_new_uk_stmt;
+DEALLOCATE PREPARE setting_drop_new_uk_stmt;
+
+SET @setting_add_old_uk_stmt := IF(
+  @setting_table_exists > 0 AND @setting_old_uk = 0,
+  'ALTER TABLE `system_setting` ADD UNIQUE INDEX `idx_system_setting_setting_key` (`setting_key`)',
+  'SELECT 1'
+);
+PREPARE setting_add_old_uk_stmt FROM @setting_add_old_uk_stmt;
+EXECUTE setting_add_old_uk_stmt;
+DEALLOCATE PREPARE setting_add_old_uk_stmt;
+
+SET @setting_drop_col_stmt := IF(
+  @setting_table_exists > 0 AND @setting_tenant_col > 0,
+  'ALTER TABLE `system_setting` DROP COLUMN `tenant_id`',
+  'SELECT 1'
+);
+PREPARE setting_drop_col_stmt FROM @setting_drop_col_stmt;
+EXECUTE setting_drop_col_stmt;
+DEALLOCATE PREPARE setting_drop_col_stmt;
 
 -- ============================================================================
 -- Phase 1.3: Relationship Tables
@@ -130,15 +182,126 @@ ALTER TABLE `system_role_menu`
 -- Phase 1.2: Organization Structure Tables
 -- ============================================================================
 
-ALTER TABLE `system_post`
-  DROP INDEX `uk_system_post_tenant_code`,
-  ADD UNIQUE INDEX `idx_system_post_post_code` (`post_code`),
-  DROP COLUMN `tenant_id`;
+-- system_post / system_dept rollback: guarded because the dept_code column and
+-- its unique index were removed by 000005 under the runtime schema contract, so
+-- the legacy (tenant_id, dept_code) / dept_code-only indexes may not exist.
+SET @post_table_exists := (
+  SELECT COUNT(*)
+  FROM information_schema.tables
+  WHERE table_schema = DATABASE()
+    AND table_name = 'system_post'
+);
+SET @post_old_uk := (
+  SELECT COUNT(*)
+  FROM information_schema.statistics
+  WHERE table_schema = DATABASE()
+    AND table_name = 'system_post'
+    AND index_name = 'uk_system_post_tenant_code'
+);
+SET @post_legacy_uk := (
+  SELECT COUNT(*)
+  FROM information_schema.statistics
+  WHERE table_schema = DATABASE()
+    AND table_name = 'system_post'
+    AND index_name = 'idx_system_post_post_code'
+);
+SET @post_tenant_col := (
+  SELECT COUNT(*)
+  FROM information_schema.columns
+  WHERE table_schema = DATABASE()
+    AND table_name = 'system_post'
+    AND column_name = 'tenant_id'
+);
 
-ALTER TABLE `system_dept`
-  DROP INDEX `uk_system_dept_tenant_code`,
-  ADD UNIQUE INDEX `idx_system_dept_dept_code` (`dept_code`),
-  DROP COLUMN `tenant_id`;
+SET @post_drop_new_uk_stmt := IF(
+  @post_table_exists > 0 AND @post_old_uk > 0,
+  'ALTER TABLE `system_post` DROP INDEX `uk_system_post_tenant_code`',
+  'SELECT 1'
+);
+PREPARE post_drop_new_uk_stmt FROM @post_drop_new_uk_stmt;
+EXECUTE post_drop_new_uk_stmt;
+DEALLOCATE PREPARE post_drop_new_uk_stmt;
+
+SET @post_add_legacy_uk_stmt := IF(
+  @post_table_exists > 0 AND @post_legacy_uk = 0,
+  'ALTER TABLE `system_post` ADD UNIQUE INDEX `idx_system_post_post_code` (`post_code`)',
+  'SELECT 1'
+);
+PREPARE post_add_legacy_uk_stmt FROM @post_add_legacy_uk_stmt;
+EXECUTE post_add_legacy_uk_stmt;
+DEALLOCATE PREPARE post_add_legacy_uk_stmt;
+
+SET @post_drop_col_stmt := IF(
+  @post_table_exists > 0 AND @post_tenant_col > 0,
+  'ALTER TABLE `system_post` DROP COLUMN `tenant_id`',
+  'SELECT 1'
+);
+PREPARE post_drop_col_stmt FROM @post_drop_col_stmt;
+EXECUTE post_drop_col_stmt;
+DEALLOCATE PREPARE post_drop_col_stmt;
+
+SET @dept_table_exists := (
+  SELECT COUNT(*)
+  FROM information_schema.tables
+  WHERE table_schema = DATABASE()
+    AND table_name = 'system_dept'
+);
+SET @dept_new_uk := (
+  SELECT COUNT(*)
+  FROM information_schema.statistics
+  WHERE table_schema = DATABASE()
+    AND table_name = 'system_dept'
+    AND index_name = 'uk_system_dept_tenant_code'
+);
+SET @dept_legacy_uk := (
+  SELECT COUNT(*)
+  FROM information_schema.statistics
+  WHERE table_schema = DATABASE()
+    AND table_name = 'system_dept'
+    AND index_name = 'idx_system_dept_dept_code'
+);
+SET @dept_code_col := (
+  SELECT COUNT(*)
+  FROM information_schema.columns
+  WHERE table_schema = DATABASE()
+    AND table_name = 'system_dept'
+    AND column_name = 'dept_code'
+);
+SET @dept_tenant_col := (
+  SELECT COUNT(*)
+  FROM information_schema.columns
+  WHERE table_schema = DATABASE()
+    AND table_name = 'system_dept'
+    AND column_name = 'tenant_id'
+);
+
+SET @dept_drop_new_uk_stmt := IF(
+  @dept_table_exists > 0 AND @dept_new_uk > 0,
+  'ALTER TABLE `system_dept` DROP INDEX `uk_system_dept_tenant_code`',
+  'SELECT 1'
+);
+PREPARE dept_drop_new_uk_stmt FROM @dept_drop_new_uk_stmt;
+EXECUTE dept_drop_new_uk_stmt;
+DEALLOCATE PREPARE dept_drop_new_uk_stmt;
+
+-- Only restorable while the legacy dept_code column exists; after 000005 it does not.
+SET @dept_add_legacy_uk_stmt := IF(
+  @dept_table_exists > 0 AND @dept_code_col > 0 AND @dept_legacy_uk = 0,
+  'ALTER TABLE `system_dept` ADD UNIQUE INDEX `idx_system_dept_dept_code` (`dept_code`)',
+  'SELECT 1'
+);
+PREPARE dept_add_legacy_uk_stmt FROM @dept_add_legacy_uk_stmt;
+EXECUTE dept_add_legacy_uk_stmt;
+DEALLOCATE PREPARE dept_add_legacy_uk_stmt;
+
+SET @dept_drop_col_stmt := IF(
+  @dept_table_exists > 0 AND @dept_tenant_col > 0,
+  'ALTER TABLE `system_dept` DROP COLUMN `tenant_id`',
+  'SELECT 1'
+);
+PREPARE dept_drop_col_stmt FROM @dept_drop_col_stmt;
+EXECUTE dept_drop_col_stmt;
+DEALLOCATE PREPARE dept_drop_col_stmt;
 
 -- ============================================================================
 -- Phase 1.1: Core Authentication Tables

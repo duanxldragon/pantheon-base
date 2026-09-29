@@ -54,14 +54,72 @@ DEALLOCATE PREPARE permission_add_col_stmt;
 -- Phase 1.2: Organization Structure Tables
 -- ============================================================================
 
--- Add tenant_id to system_dept
-ALTER TABLE `system_dept`
-  ADD COLUMN `tenant_id` BIGINT UNSIGNED NOT NULL DEFAULT 0 AFTER `id`;
+-- Add tenant_id to system_dept (guarded: 000005 already dropped the dept_code
+-- column and its unique index under the runtime schema contract, so both the
+-- column and idx_system_dept_dept_code may not exist here)
+SET @dept_table_exists := (
+  SELECT COUNT(*)
+  FROM information_schema.tables
+  WHERE table_schema = DATABASE()
+    AND table_name = 'system_dept'
+);
+SET @dept_tenant_col := (
+  SELECT COUNT(*)
+  FROM information_schema.columns
+  WHERE table_schema = DATABASE()
+    AND table_name = 'system_dept'
+    AND column_name = 'tenant_id'
+);
+SET @dept_code_col := (
+  SELECT COUNT(*)
+  FROM information_schema.columns
+  WHERE table_schema = DATABASE()
+    AND table_name = 'system_dept'
+    AND column_name = 'dept_code'
+);
+SET @dept_old_uk := (
+  SELECT COUNT(*)
+  FROM information_schema.statistics
+  WHERE table_schema = DATABASE()
+    AND table_name = 'system_dept'
+    AND index_name = 'idx_system_dept_dept_code'
+);
+SET @dept_new_uk := (
+  SELECT COUNT(*)
+  FROM information_schema.statistics
+  WHERE table_schema = DATABASE()
+    AND table_name = 'system_dept'
+    AND index_name = 'uk_system_dept_tenant_code'
+);
 
--- Change unique constraint from dept_code-only to (tenant_id, dept_code)
-ALTER TABLE `system_dept`
-  DROP INDEX `idx_system_dept_dept_code`,
-  ADD UNIQUE INDEX `uk_system_dept_tenant_code` (`tenant_id`, `dept_code`);
+SET @dept_add_col_stmt := IF(
+  @dept_table_exists > 0 AND @dept_tenant_col = 0,
+  'ALTER TABLE `system_dept` ADD COLUMN `tenant_id` BIGINT UNSIGNED NOT NULL DEFAULT 0 AFTER `id`',
+  'SELECT 1'
+);
+PREPARE dept_add_col_stmt FROM @dept_add_col_stmt;
+EXECUTE dept_add_col_stmt;
+DEALLOCATE PREPARE dept_add_col_stmt;
+
+SET @dept_drop_old_uk_stmt := IF(
+  @dept_table_exists > 0 AND @dept_old_uk > 0,
+  'ALTER TABLE `system_dept` DROP INDEX `idx_system_dept_dept_code`',
+  'SELECT 1'
+);
+PREPARE dept_drop_old_uk_stmt FROM @dept_drop_old_uk_stmt;
+EXECUTE dept_drop_old_uk_stmt;
+DEALLOCATE PREPARE dept_drop_old_uk_stmt;
+
+-- Only meaningful while the legacy dept_code column still exists; after 000005
+-- the tenant scoping for system_dept relies on tenant_id alone.
+SET @dept_add_new_uk_stmt := IF(
+  @dept_table_exists > 0 AND @dept_code_col > 0 AND @dept_new_uk = 0,
+  'ALTER TABLE `system_dept` ADD UNIQUE INDEX `uk_system_dept_tenant_code` (`tenant_id`, `dept_code`)',
+  'SELECT 1'
+);
+PREPARE dept_add_new_uk_stmt FROM @dept_add_new_uk_stmt;
+EXECUTE dept_add_new_uk_stmt;
+DEALLOCATE PREPARE dept_add_new_uk_stmt;
 
 -- Add tenant_id to system_post
 ALTER TABLE `system_post`
@@ -125,14 +183,62 @@ DEALLOCATE PREPARE user_dept_add_col_stmt;
 -- Phase 1.4: Configuration Tables
 -- ============================================================================
 
--- Add tenant_id to system_setting
-ALTER TABLE `system_setting`
-  ADD COLUMN `tenant_id` BIGINT UNSIGNED NOT NULL DEFAULT 0 AFTER `id`;
+-- Add tenant_id to system_setting (guarded: 000014 already applied the same
+-- tenant_id column and composite unique key swap on this table)
+SET @setting_table_exists := (
+  SELECT COUNT(*)
+  FROM information_schema.tables
+  WHERE table_schema = DATABASE()
+    AND table_name = 'system_setting'
+);
+SET @setting_tenant_col := (
+  SELECT COUNT(*)
+  FROM information_schema.columns
+  WHERE table_schema = DATABASE()
+    AND table_name = 'system_setting'
+    AND column_name = 'tenant_id'
+);
+SET @setting_old_uk := (
+  SELECT COUNT(*)
+  FROM information_schema.statistics
+  WHERE table_schema = DATABASE()
+    AND table_name = 'system_setting'
+    AND index_name = 'idx_system_setting_setting_key'
+);
+SET @setting_new_uk := (
+  SELECT COUNT(*)
+  FROM information_schema.statistics
+  WHERE table_schema = DATABASE()
+    AND table_name = 'system_setting'
+    AND index_name = 'uk_system_setting_tenant_key'
+);
 
--- Change unique constraint from setting_key-only to (tenant_id, setting_key)
-ALTER TABLE `system_setting`
-  DROP INDEX `idx_system_setting_setting_key`,
-  ADD UNIQUE INDEX `uk_system_setting_tenant_key` (`tenant_id`, `setting_key`);
+SET @setting_add_col_stmt := IF(
+  @setting_table_exists > 0 AND @setting_tenant_col = 0,
+  'ALTER TABLE `system_setting` ADD COLUMN `tenant_id` BIGINT UNSIGNED NOT NULL DEFAULT 0 AFTER `id`',
+  'SELECT 1'
+);
+PREPARE setting_add_col_stmt FROM @setting_add_col_stmt;
+EXECUTE setting_add_col_stmt;
+DEALLOCATE PREPARE setting_add_col_stmt;
+
+SET @setting_drop_old_uk_stmt := IF(
+  @setting_table_exists > 0 AND @setting_old_uk > 0 AND @setting_new_uk = 0,
+  'ALTER TABLE `system_setting` DROP INDEX `idx_system_setting_setting_key`',
+  'SELECT 1'
+);
+PREPARE setting_drop_old_uk_stmt FROM @setting_drop_old_uk_stmt;
+EXECUTE setting_drop_old_uk_stmt;
+DEALLOCATE PREPARE setting_drop_old_uk_stmt;
+
+SET @setting_add_new_uk_stmt := IF(
+  @setting_table_exists > 0 AND @setting_new_uk = 0,
+  'ALTER TABLE `system_setting` ADD UNIQUE INDEX `uk_system_setting_tenant_key` (`tenant_id`, `setting_key`)',
+  'SELECT 1'
+);
+PREPARE setting_add_new_uk_stmt FROM @setting_add_new_uk_stmt;
+EXECUTE setting_add_new_uk_stmt;
+DEALLOCATE PREPARE setting_add_new_uk_stmt;
 
 -- ============================================================================
 -- Phase 1.5: Hierarchy Closure Tables (if exist)
