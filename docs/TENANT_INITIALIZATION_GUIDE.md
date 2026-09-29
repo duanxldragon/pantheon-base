@@ -578,8 +578,8 @@ POST /api/v1/tenants/101/archive
 
 ## 十一、参考资料
 
-- [TENANT_CONTRACT_V1.md](./architecture/TENANT_CONTRACT_V1.md) - 租户体系执行契约
-- [TENANT_MIGRATION_RUNBOOK.md](./architecture/TENANT_MIGRATION_RUNBOOK.md) - Schema迁移手册
+- [TENANT_CONTRACT_V1.md](./contracts/TENANT_CONTRACT_V1.md) - 租户体系执行契约
+- [TENANT_MIGRATION_RUNBOOK.md](./runbooks/TENANT_MIGRATION_RUNBOOK.md) - Schema迁移手册
 - [TENANT_SYSTEM_REVIEW_2026-09-29.md](./TENANT_SYSTEM_REVIEW_2026-09-29.md) - 租户体系全局审查报告
 - `backend/pkg/tenant/` - 租户运行时实现源码
 

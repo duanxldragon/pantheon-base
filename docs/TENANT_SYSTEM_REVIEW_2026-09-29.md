@@ -462,8 +462,8 @@ pantheon-base的租户体系在**认证集成层**实现良好，但在**数据�
 
 ### B. 参考文档
 
-1. `docs/architecture/TENANT_CONTRACT_V1.md` - 租户体系执行契约
-2. `docs/architecture/TENANT_MIGRATION_RUNBOOK.md` - Schema迁移手册
+1. `docs/contracts/TENANT_CONTRACT_V1.md` - 租户体系执行契约
+2. `docs/runbooks/TENANT_MIGRATION_RUNBOOK.md` - Schema迁移手册
 3. `backend/pkg/tenant/` - 租户运行时实现
 4. `backend/modules/auth/login/` - 登录租户集成
 
