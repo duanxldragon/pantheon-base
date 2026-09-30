@@ -377,7 +377,7 @@ mysql -u root -p pantheon < backend/pkg/database/migrations/add_oidc_fields.sql
 - [SSO/OIDC Design](docs/designs/SSO_OIDC_DESIGN.md)
 - [Multi-Tenant Design](docs/designs/MULTI_TENANT_DESIGN.md)
 - [Login Risk Control Design](docs/designs/LOGIN_RISK_CONTROL_DESIGN.md)
-- [Kubernetes Deployment](deployment/k8s/README.md)
+- [Kubernetes Deployment](../k8s/README.md)
 - [Contributing Guide](CONTRIBUTING.md)
 - [Case Study Template](docs/case-studies/TEMPLATE.md)
 

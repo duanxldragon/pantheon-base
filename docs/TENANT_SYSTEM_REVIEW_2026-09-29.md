@@ -167,7 +167,7 @@ pantheon-base的租户体系在**认证集成层**实现良好，但在**数据�
 ### 3.2 已实现部分
 
 #### ✅ 数据库Schema
-- **文件**: `backend/db/migrations/000013_tenant_canary.up.sql`
+- **文件**: `backend/pkg/database/migrations/000013_tenant_canary.up.sql`
 - **表结构**:
   - `tenants`: id, code, name, status, plan
   - `tenant_memberships`: tenant_id, user_id, role, status

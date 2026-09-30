@@ -136,7 +136,7 @@ UI 变更说明（impeccable 门禁）：本轮 4 处 CSS 修复均为「硬编�
 
 28. **i18n 资源表唯一索引** — `backend/pkg/database/migrations/000010_i18n_locale_key_unique.{up,down}.sql`
     确认事实后发现：模型无 GORM 软删除（`deleted_at` 列是历史遗留，模型早已不含该字段），且新装库（system_init.sql）与运行时 Bootstrap（`ensureLocaleKeyUniqueIndex`）都已有 `(locale, key)` 唯一索引——缺口只在"升级库依赖应用启动顺序"。新迁移先按"最新写入胜出"语义去重，再幂等创建唯一索引（information_schema 探测 + PREPARE），使唯一性保证进入版本化 schema。
-29. **会话吊销级联删除 refresh token** — `pkg/authtoken/token.go`、`modules/auth/session/session_service.go`、`modules/auth/security/security_service.go`
+29. **会话吊销级联删除 refresh token** — `backend/pkg/authtoken/token.go`、`backend/modules/auth/session/session_service.go`、`backend/modules/auth/security/security_service.go`
     新增 `pantheon:sessref:<sessionID>` 反向索引（与 refresh token 同 TTL，轮换时 Set 覆盖指向最新 token）。`RevokeSessionRefresh` 级联删除 token+索引，幂等。接入全部四条吊销路径：logout/管理员强制下线（`RevokeSession`）、用户自助下线（`RevokeOwnedSession`）、批量强制下线（`BatchRevokeSessions`）、改密踢出其他会话（`RevokeOtherSessionsForUser`，事务提交后收集 sessionID 级联）。Redis 删除失败仅记 Warn——DB 侧 `revoked_at` 已生效，refresh 路径仍被 session 状态校验兜底，属双保险而非单点。新增 2 个测试覆盖级联删除、幂等性与轮换后索引指向。
 30. **生成器私网数据源默认拒绝** — `generator_datasource_service.go`、`docs/DEPLOYMENT_GUIDE.md`
     默认值翻转为拒绝 RFC1918 私网地址（SSRF 最小面原则），需 `PANTHEON_GENERATOR_DATASOURCE_ALLOW_PRIVATE=true` 显式放行；环境变量已写入部署指南可选配置表。测试同步更新：默认拒绝 + opt-in 放行两个用例。
@@ -163,7 +163,7 @@ UI 变更说明（impeccable 门禁）：本轮 4 处 CSS 修复均为「硬编�
 
 ## 五、变更文件清单
 
-**后端（29 文件 + 5 新增）**: `internal/middleware/{body_limit,csrf,rate_limit,security_headers}_middleware.go`、`modules/auth/{login/login_handler,login/login_runtime,login/login_service,module,security/security_service,session/session_service}.go`、`modules/lowcode/{dynamicmodule/dynamic_module_{handler,lifecycle,naming},generator/{generator_datasource_service,generator_handler,generator_service_test,module}}.go`、`modules/system/{audit/audit_service,config/dict/dict_handler,config/setting/setting_handler,i18n/i18n_handler,iam/{permission/permission_handler,role/{role_handler,role_service},user/{user_handler,user_helper,user_service}},org/{dept/dept_handler,post/post_handler},seed,system_modules}.go`、`pkg/{authtoken/{token,token_test},common/batch,impexp/csv,upload/service,upload/service_test}.go`；新增 `pkg/common/builtin.go`、`pkg/database/migrations/000009_review_hardening_indexes.{up,down}.sql`、`pkg/database/migrations/000010_i18n_locale_key_unique.{up,down}.sql`。
+**后端（29 文件 + 5 新增）**: `internal/middleware/{body_limit,csrf,rate_limit,security_headers}_middleware.go`、`modules/auth/{login/login_handler,login/login_runtime,login/login_service,module,security/security_service,session/session_service}.go`、`modules/lowcode/{dynamicmodule/dynamic_module_{handler,lifecycle,naming},generator/{generator_datasource_service,generator_handler,generator_service_test,module}}.go`、`modules/system/{audit/audit_service,config/dict/dict_handler,config/setting/setting_handler,i18n/i18n_handler,iam/{permission/permission_handler,role/{role_handler,role_service},user/{user_handler,user_helper,user_service}},org/{dept/dept_handler,post/post_handler},seed,system_modules}.go`、`pkg/{authtoken/{token,token_test},common/batch,impexp/csv,upload/service,upload/service_test}.go`；新增 `backend/pkg/common/builtin.go`、`pkg/database/migrations/000009_review_hardening_indexes.{up,down}.sql`、`pkg/database/migrations/000010_i18n_locale_key_unique.{up,down}.sql`。
 
 **前端（6 文件）**: `src/api/{importExport,upload}.ts`、`src/i18n/resources/{zh-CN,en-US}.ts`、`src/modules/lowcode/generator/pages/ModuleWizard.css`、`src/modules/system/components/shared/list-page.css`。
 
