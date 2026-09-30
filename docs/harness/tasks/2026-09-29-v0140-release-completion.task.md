@@ -2,7 +2,7 @@
 
 ## Goal
 
-Complete the interrupted v0.14.0 multi-tenant release: land the local-only tenant commits plus the missing test-dependency fix through the governed PR gate, sync the stale SSRF integration manifest status, and publish the `pantheon-base-v0.14.0` tag and GitHub Release that the README already references.
+Complete tenant production-readiness P1 work and automated tenant E2E, then publish the next sequential foundation release, `pantheon-base-v0.14.2`, after all required gates pass.
 
 ## Primary Layer
 
@@ -37,16 +37,18 @@ platform
 
 ### In
 
-- missing test dependency declarations in `backend/go.mod` (`stretchr/testify`, `gorm.io/driver/sqlite`)
-- stale manifest status sync for `2026-09-29-ops-ssrf-protection-integration`
-- v0.14.0 tag and GitHub Release publication
+- Freeze per-resource tenant ownership in `docs/designs/TENANT_RESOURCE_SCOPE_MATRIX.md`, preserving global user identity with memberships.
+- Complete P1 tenant model/service read and write scoping for resources classified as tenant-owned or tenant-overridable.
+- Run tenant-specific backend tests and browser E2E, then the complete required smoke matrix.
+- Correct the tenant smoke workflow's invalid `actions/setup-node` pin and close related hosted CI failures.
+- Publish `pantheon-base-v0.14.2` only after the PR is merged and required checks, security review, and runtime evidence are green.
 
 ### Out
 
-- product code behavior changes
-- SSRF middleware implementation changes
+- OIDC tenant selection (P2; track separately unless it blocks the agreed E2E contract)
+- tenant billing, quotas, or cross-tenant sharing
 - `pantheon-ops` repository changes
-- new feature work beyond release completion
+- unrelated SSRF or product work
 
 ## Expected Files
 
@@ -57,28 +59,32 @@ platform
 
 ### Modify
 
-- `backend/go.mod`
-- `.harness/tasks/2026-09-29-ops-ssrf-protection-integration/manifest.json`
-- `RELEASE_NOTES_v0.14.1.md` (superseded by unified v0.14.0 release)
-- `.harness/STATUS.md`
+- tenant resource scope matrix and approved tenant contract notes
+- tenant model/service code, migration only if the approved matrix requires it, and tenant isolation tests
+- tenant browser E2E fixtures/specs and `.github/workflows/smoke-core.yml`
+- release notes/changelog for `v0.14.2` and task/evidence status
 
 ### Do Not Touch
 
 - `backend/pkg/**` and `backend/modules/**` runtime code
 - frontend sources
-- published tags other than `pantheon-base-v0.14.0`
+- published tags other than the approved `pantheon-base-v0.14.2`
 
 ## Implementation Notes
 
 - The remote main branch requires PR-based merges with 4 required status checks; squash merge is the only allowed strategy.
-- The remote repository has never carried the `pantheon-base-v0.14.0` tag, so release identity stays unified on v0.14.0 instead of publishing a patch v0.14.1.
+- The maintainer selected `v0.14.2` to preserve sequential versioning after the local `v0.14.1` tag/notes; no tag or GitHub Release exists remotely for v0.14.0 or v0.14.1.
+- User identity is global and tenant membership controls tenant access. Freeze remaining resource ownership in the scope matrix before changing runtime scoping.
 - The base-side copy of the ops SSRF task manifest was left `in-progress`; the ops repository already marked the same task `done` on 2026-09-29.
 
 ## Verification Plan
 
 - `cd backend && go mod tidy` (no unexpected go.sum churn)
 - `cd backend && go vet ./pkg/... ./modules/system/iam/...`
-- `cd backend && go test -count=1 ./modules/system/iam/tenant/`
+- `cd backend && go test -race ./...`
+- `cd frontend && npm run test:smoke:tenant`
+- `cd frontend && npm run test:smoke:all`
+- `cd frontend && npm run test:smoke:core`
 - `node scripts/check-pr-governance.mjs`
 - `node scripts/harness/check-task-packet.mjs --root .`
 - `node scripts/harness/check-structure-contract.mjs --root . --strict`
@@ -102,8 +108,9 @@ platform
 
 ## Human Gates
 
-- GitHub required checks (`Quality Gates`, `Security Gates`, `Unit Tests`, `CI Summary`) and PR merge.
-- Maintainer acceptance of the unified v0.14.0 release identity before tagging.
+- GitHub required checks (`Quality Gates`, `Security Gates`, `Unit Tests`, `CI Summary`), tenant E2E, and PR merge.
+- Maintainer approval of the per-resource scope matrix and runtime security review before release.
+- Maintainer approval of the v0.14.2 release notes and publication.
 
 ## Completion Checklist
 
