@@ -13,11 +13,11 @@ var (
 
 // TenantQuota represents quota limits for a tenant
 type TenantQuota struct {
-	MaxUsers       int `json:"max_users"`
-	MaxRoles       int `json:"max_roles"`
-	MaxDepts       int `json:"max_depts"`
-	MaxAPIKeys     int `json:"max_api_keys"`
-	MaxStorageMB   int `json:"max_storage_mb"`
+	MaxUsers     int `json:"max_users"`
+	MaxRoles     int `json:"max_roles"`
+	MaxDepts     int `json:"max_depts"`
+	MaxAPIKeys   int `json:"max_api_keys"`
+	MaxStorageMB int `json:"max_storage_mb"`
 }
 
 // GetDefaultQuota returns default quota based on plan

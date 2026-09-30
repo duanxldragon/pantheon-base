@@ -39,7 +39,9 @@
     "reviewFile": ".harness/evidence/2026-09-29-ops-ssrf-protection-integration/review.md",
     "summaryFile": ".harness/evidence/2026-09-29-ops-ssrf-protection-integration/summary.md",
     "baseRelease": "pantheon-base-v0.13.1",
-    "baseSSRFPackage": "backend/pkg/security/ssrf"
+    "baseSSRFPackage": "backend/pkg/security/ssrf",
+    "planRefs": [],
+    "relatedTasks": ["2026-09-28-ops-delivery-readiness-gap-closure"]
   },
   "verificationPlan": {
     "backend": [

@@ -52,10 +52,10 @@ var (
 
 // MetricsCollector periodically collects and updates tenant metrics
 type MetricsCollector struct {
-	db             *gorm.DB
-	tenantService  *TenantService
-	quotaEnforcer  *QuotaEnforcer
-	healthChecker  *TenantHealthChecker
+	db            *gorm.DB
+	tenantService *TenantService
+	quotaEnforcer *QuotaEnforcer
+	healthChecker *TenantHealthChecker
 }
 
 // NewMetricsCollector creates a new metrics collector
