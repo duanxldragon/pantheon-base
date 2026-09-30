@@ -7,23 +7,121 @@
 -- Phase 1.1: Core Authentication Tables
 -- ============================================================================
 
--- Add tenant_id to system_user
-ALTER TABLE `system_user`
-  ADD COLUMN `tenant_id` BIGINT UNSIGNED NOT NULL DEFAULT 0 AFTER `id`;
+-- Add tenant_id to system_user (guarded: the marker-driven bootstrap replay
+-- window models a minimal current schema that may not include this table —
+-- see 000012's header comment for the same replay hazard)
+SET @user_table_exists := (
+  SELECT COUNT(*)
+  FROM information_schema.tables
+  WHERE table_schema = DATABASE()
+    AND table_name = 'system_user'
+);
+SET @user_tenant_col := (
+  SELECT COUNT(*)
+  FROM information_schema.columns
+  WHERE table_schema = DATABASE()
+    AND table_name = 'system_user'
+    AND column_name = 'tenant_id'
+);
+SET @user_old_uk := (
+  SELECT COUNT(*)
+  FROM information_schema.statistics
+  WHERE table_schema = DATABASE()
+    AND table_name = 'system_user'
+    AND index_name = 'idx_system_user_username'
+);
+SET @user_new_uk := (
+  SELECT COUNT(*)
+  FROM information_schema.statistics
+  WHERE table_schema = DATABASE()
+    AND table_name = 'system_user'
+    AND index_name = 'uk_system_user_tenant_username'
+);
+
+SET @user_add_col_stmt := IF(
+  @user_table_exists > 0 AND @user_tenant_col = 0,
+  'ALTER TABLE `system_user` ADD COLUMN `tenant_id` BIGINT UNSIGNED NOT NULL DEFAULT 0 AFTER `id`',
+  'SELECT 1'
+);
+PREPARE user_add_col_stmt FROM @user_add_col_stmt;
+EXECUTE user_add_col_stmt;
+DEALLOCATE PREPARE user_add_col_stmt;
 
 -- Change unique constraint from username-only to (tenant_id, username)
-ALTER TABLE `system_user`
-  DROP INDEX `idx_system_user_username`,
-  ADD UNIQUE INDEX `uk_system_user_tenant_username` (`tenant_id`, `username`);
+SET @user_drop_old_uk_stmt := IF(
+  @user_table_exists > 0 AND @user_old_uk > 0,
+  'ALTER TABLE `system_user` DROP INDEX `idx_system_user_username`',
+  'SELECT 1'
+);
+PREPARE user_drop_old_uk_stmt FROM @user_drop_old_uk_stmt;
+EXECUTE user_drop_old_uk_stmt;
+DEALLOCATE PREPARE user_drop_old_uk_stmt;
 
--- Add tenant_id to system_role
-ALTER TABLE `system_role`
-  ADD COLUMN `tenant_id` BIGINT UNSIGNED NOT NULL DEFAULT 0 AFTER `id`;
+SET @user_add_new_uk_stmt := IF(
+  @user_table_exists > 0 AND @user_new_uk = 0,
+  'ALTER TABLE `system_user` ADD UNIQUE INDEX `uk_system_user_tenant_username` (`tenant_id`, `username`)',
+  'SELECT 1'
+);
+PREPARE user_add_new_uk_stmt FROM @user_add_new_uk_stmt;
+EXECUTE user_add_new_uk_stmt;
+DEALLOCATE PREPARE user_add_new_uk_stmt;
+
+-- Add tenant_id to system_role (guarded: same replay hazard as system_user)
+SET @role_table_exists := (
+  SELECT COUNT(*)
+  FROM information_schema.tables
+  WHERE table_schema = DATABASE()
+    AND table_name = 'system_role'
+);
+SET @role_tenant_col := (
+  SELECT COUNT(*)
+  FROM information_schema.columns
+  WHERE table_schema = DATABASE()
+    AND table_name = 'system_role'
+    AND column_name = 'tenant_id'
+);
+SET @role_old_uk := (
+  SELECT COUNT(*)
+  FROM information_schema.statistics
+  WHERE table_schema = DATABASE()
+    AND table_name = 'system_role'
+    AND index_name = 'idx_system_role_role_key'
+);
+SET @role_new_uk := (
+  SELECT COUNT(*)
+  FROM information_schema.statistics
+  WHERE table_schema = DATABASE()
+    AND table_name = 'system_role'
+    AND index_name = 'uk_system_role_tenant_key'
+);
+
+SET @role_add_col_stmt := IF(
+  @role_table_exists > 0 AND @role_tenant_col = 0,
+  'ALTER TABLE `system_role` ADD COLUMN `tenant_id` BIGINT UNSIGNED NOT NULL DEFAULT 0 AFTER `id`',
+  'SELECT 1'
+);
+PREPARE role_add_col_stmt FROM @role_add_col_stmt;
+EXECUTE role_add_col_stmt;
+DEALLOCATE PREPARE role_add_col_stmt;
 
 -- Change unique constraint from role_key-only to (tenant_id, role_key)
-ALTER TABLE `system_role`
-  DROP INDEX `idx_system_role_role_key`,
-  ADD UNIQUE INDEX `uk_system_role_tenant_key` (`tenant_id`, `role_key`);
+SET @role_drop_old_uk_stmt := IF(
+  @role_table_exists > 0 AND @role_old_uk > 0,
+  'ALTER TABLE `system_role` DROP INDEX `idx_system_role_role_key`',
+  'SELECT 1'
+);
+PREPARE role_drop_old_uk_stmt FROM @role_drop_old_uk_stmt;
+EXECUTE role_drop_old_uk_stmt;
+DEALLOCATE PREPARE role_drop_old_uk_stmt;
+
+SET @role_add_new_uk_stmt := IF(
+  @role_table_exists > 0 AND @role_new_uk = 0,
+  'ALTER TABLE `system_role` ADD UNIQUE INDEX `uk_system_role_tenant_key` (`tenant_id`, `role_key`)',
+  'SELECT 1'
+);
+PREPARE role_add_new_uk_stmt FROM @role_add_new_uk_stmt;
+EXECUTE role_add_new_uk_stmt;
+DEALLOCATE PREPARE role_add_new_uk_stmt;
 
 -- Add tenant_id to system_menu
 ALTER TABLE `system_menu`
@@ -121,46 +219,225 @@ PREPARE dept_add_new_uk_stmt FROM @dept_add_new_uk_stmt;
 EXECUTE dept_add_new_uk_stmt;
 DEALLOCATE PREPARE dept_add_new_uk_stmt;
 
--- Add tenant_id to system_post
-ALTER TABLE `system_post`
-  ADD COLUMN `tenant_id` BIGINT UNSIGNED NOT NULL DEFAULT 0 AFTER `id`;
+-- Add tenant_id to system_post (guarded: same replay hazard as system_user —
+-- this table is absent from the minimal marker-driven bootstrap schema)
+SET @post_table_exists := (
+  SELECT COUNT(*)
+  FROM information_schema.tables
+  WHERE table_schema = DATABASE()
+    AND table_name = 'system_post'
+);
+SET @post_tenant_col := (
+  SELECT COUNT(*)
+  FROM information_schema.columns
+  WHERE table_schema = DATABASE()
+    AND table_name = 'system_post'
+    AND column_name = 'tenant_id'
+);
+SET @post_old_uk := (
+  SELECT COUNT(*)
+  FROM information_schema.statistics
+  WHERE table_schema = DATABASE()
+    AND table_name = 'system_post'
+    AND index_name = 'idx_system_post_post_code'
+);
+SET @post_new_uk := (
+  SELECT COUNT(*)
+  FROM information_schema.statistics
+  WHERE table_schema = DATABASE()
+    AND table_name = 'system_post'
+    AND index_name = 'uk_system_post_tenant_code'
+);
+
+SET @post_add_col_stmt := IF(
+  @post_table_exists > 0 AND @post_tenant_col = 0,
+  'ALTER TABLE `system_post` ADD COLUMN `tenant_id` BIGINT UNSIGNED NOT NULL DEFAULT 0 AFTER `id`',
+  'SELECT 1'
+);
+PREPARE post_add_col_stmt FROM @post_add_col_stmt;
+EXECUTE post_add_col_stmt;
+DEALLOCATE PREPARE post_add_col_stmt;
 
 -- Change unique constraint from post_code-only to (tenant_id, post_code)
-ALTER TABLE `system_post`
-  DROP INDEX `idx_system_post_post_code`,
-  ADD UNIQUE INDEX `uk_system_post_tenant_code` (`tenant_id`, `post_code`);
+SET @post_drop_old_uk_stmt := IF(
+  @post_table_exists > 0 AND @post_old_uk > 0,
+  'ALTER TABLE `system_post` DROP INDEX `idx_system_post_post_code`',
+  'SELECT 1'
+);
+PREPARE post_drop_old_uk_stmt FROM @post_drop_old_uk_stmt;
+EXECUTE post_drop_old_uk_stmt;
+DEALLOCATE PREPARE post_drop_old_uk_stmt;
+
+SET @post_add_new_uk_stmt := IF(
+  @post_table_exists > 0 AND @post_new_uk = 0,
+  'ALTER TABLE `system_post` ADD UNIQUE INDEX `uk_system_post_tenant_code` (`tenant_id`, `post_code`)',
+  'SELECT 1'
+);
+PREPARE post_add_new_uk_stmt FROM @post_add_new_uk_stmt;
+EXECUTE post_add_new_uk_stmt;
+DEALLOCATE PREPARE post_add_new_uk_stmt;
 
 -- ============================================================================
 -- Phase 1.3: Relationship Tables
 -- ============================================================================
 
--- Add tenant_id to system_role_menu
-ALTER TABLE `system_role_menu`
-  ADD COLUMN `tenant_id` BIGINT UNSIGNED NOT NULL DEFAULT 0;
+-- Add tenant_id to system_role_menu (guarded: absent from the minimal
+-- marker-driven bootstrap schema, same replay hazard as system_user)
+SET @role_menu_table_exists := (
+  SELECT COUNT(*)
+  FROM information_schema.tables
+  WHERE table_schema = DATABASE()
+    AND table_name = 'system_role_menu'
+);
+SET @role_menu_tenant_col := (
+  SELECT COUNT(*)
+  FROM information_schema.columns
+  WHERE table_schema = DATABASE()
+    AND table_name = 'system_role_menu'
+    AND column_name = 'tenant_id'
+);
+SET @role_menu_new_pk_col_count := (
+  SELECT COUNT(*)
+  FROM information_schema.statistics
+  WHERE table_schema = DATABASE()
+    AND table_name = 'system_role_menu'
+    AND index_name = 'PRIMARY'
+    AND column_name = 'tenant_id'
+);
+
+SET @role_menu_add_col_stmt := IF(
+  @role_menu_table_exists > 0 AND @role_menu_tenant_col = 0,
+  'ALTER TABLE `system_role_menu` ADD COLUMN `tenant_id` BIGINT UNSIGNED NOT NULL DEFAULT 0',
+  'SELECT 1'
+);
+PREPARE role_menu_add_col_stmt FROM @role_menu_add_col_stmt;
+EXECUTE role_menu_add_col_stmt;
+DEALLOCATE PREPARE role_menu_add_col_stmt;
 
 -- Recreate primary key with tenant_id
-ALTER TABLE `system_role_menu`
-  DROP PRIMARY KEY,
-  ADD PRIMARY KEY (`tenant_id`, `role_id`, `menu_id`);
+SET @role_menu_pk_stmt := IF(
+  @role_menu_table_exists > 0 AND @role_menu_new_pk_col_count = 0,
+  'ALTER TABLE `system_role_menu` DROP PRIMARY KEY, ADD PRIMARY KEY (`tenant_id`, `role_id`, `menu_id`)',
+  'SELECT 1'
+);
+PREPARE role_menu_pk_stmt FROM @role_menu_pk_stmt;
+EXECUTE role_menu_pk_stmt;
+DEALLOCATE PREPARE role_menu_pk_stmt;
 
--- Add tenant_id to system_role_permission
-ALTER TABLE `system_role_permission`
-  ADD COLUMN `tenant_id` BIGINT UNSIGNED NOT NULL DEFAULT 0 AFTER `id`;
+-- Add tenant_id to system_role_permission (guarded: same replay hazard)
+SET @role_permission_table_exists := (
+  SELECT COUNT(*)
+  FROM information_schema.tables
+  WHERE table_schema = DATABASE()
+    AND table_name = 'system_role_permission'
+);
+SET @role_permission_tenant_col := (
+  SELECT COUNT(*)
+  FROM information_schema.columns
+  WHERE table_schema = DATABASE()
+    AND table_name = 'system_role_permission'
+    AND column_name = 'tenant_id'
+);
+SET @role_permission_old_uk := (
+  SELECT COUNT(*)
+  FROM information_schema.statistics
+  WHERE table_schema = DATABASE()
+    AND table_name = 'system_role_permission'
+    AND index_name = 'idx_role_permission_unique'
+);
+SET @role_permission_new_uk := (
+  SELECT COUNT(*)
+  FROM information_schema.statistics
+  WHERE table_schema = DATABASE()
+    AND table_name = 'system_role_permission'
+    AND index_name = 'uk_role_permission_tenant'
+);
+
+SET @role_permission_add_col_stmt := IF(
+  @role_permission_table_exists > 0 AND @role_permission_tenant_col = 0,
+  'ALTER TABLE `system_role_permission` ADD COLUMN `tenant_id` BIGINT UNSIGNED NOT NULL DEFAULT 0 AFTER `id`',
+  'SELECT 1'
+);
+PREPARE role_permission_add_col_stmt FROM @role_permission_add_col_stmt;
+EXECUTE role_permission_add_col_stmt;
+DEALLOCATE PREPARE role_permission_add_col_stmt;
 
 -- Update unique index to include tenant_id
-ALTER TABLE `system_role_permission`
-  DROP INDEX `idx_role_permission_unique`,
-  ADD UNIQUE INDEX `uk_role_permission_tenant` (`tenant_id`, `role_id`, `permission_key`);
+SET @role_permission_drop_old_uk_stmt := IF(
+  @role_permission_table_exists > 0 AND @role_permission_old_uk > 0,
+  'ALTER TABLE `system_role_permission` DROP INDEX `idx_role_permission_unique`',
+  'SELECT 1'
+);
+PREPARE role_permission_drop_old_uk_stmt FROM @role_permission_drop_old_uk_stmt;
+EXECUTE role_permission_drop_old_uk_stmt;
+DEALLOCATE PREPARE role_permission_drop_old_uk_stmt;
 
--- Add tenant_id to system_user_role
-ALTER TABLE `system_user_role`
-  ADD COLUMN `tenant_id` BIGINT UNSIGNED NOT NULL DEFAULT 0;
+SET @role_permission_add_new_uk_stmt := IF(
+  @role_permission_table_exists > 0 AND @role_permission_new_uk = 0,
+  'ALTER TABLE `system_role_permission` ADD UNIQUE INDEX `uk_role_permission_tenant` (`tenant_id`, `role_id`, `permission_key`)',
+  'SELECT 1'
+);
+PREPARE role_permission_add_new_uk_stmt FROM @role_permission_add_new_uk_stmt;
+EXECUTE role_permission_add_new_uk_stmt;
+DEALLOCATE PREPARE role_permission_add_new_uk_stmt;
+
+-- Add tenant_id to system_user_role (guarded: same replay hazard)
+SET @user_role_table_exists := (
+  SELECT COUNT(*)
+  FROM information_schema.tables
+  WHERE table_schema = DATABASE()
+    AND table_name = 'system_user_role'
+);
+SET @user_role_tenant_col := (
+  SELECT COUNT(*)
+  FROM information_schema.columns
+  WHERE table_schema = DATABASE()
+    AND table_name = 'system_user_role'
+    AND column_name = 'tenant_id'
+);
+SET @user_role_new_pk_col_count := (
+  SELECT COUNT(*)
+  FROM information_schema.statistics
+  WHERE table_schema = DATABASE()
+    AND table_name = 'system_user_role'
+    AND index_name = 'PRIMARY'
+    AND column_name = 'tenant_id'
+);
+SET @user_role_tenant_idx := (
+  SELECT COUNT(*)
+  FROM information_schema.statistics
+  WHERE table_schema = DATABASE()
+    AND table_name = 'system_user_role'
+    AND index_name = 'idx_system_user_role_tenant_user'
+);
+
+SET @user_role_add_col_stmt := IF(
+  @user_role_table_exists > 0 AND @user_role_tenant_col = 0,
+  'ALTER TABLE `system_user_role` ADD COLUMN `tenant_id` BIGINT UNSIGNED NOT NULL DEFAULT 0',
+  'SELECT 1'
+);
+PREPARE user_role_add_col_stmt FROM @user_role_add_col_stmt;
+EXECUTE user_role_add_col_stmt;
+DEALLOCATE PREPARE user_role_add_col_stmt;
 
 -- Recreate primary key with tenant_id
-ALTER TABLE `system_user_role`
-  DROP PRIMARY KEY,
-  ADD PRIMARY KEY (`tenant_id`, `user_id`, `role_id`),
-  ADD INDEX `idx_system_user_role_tenant_user` (`tenant_id`, `user_id`);
+SET @user_role_pk_stmt := IF(
+  @user_role_table_exists > 0 AND @user_role_new_pk_col_count = 0,
+  'ALTER TABLE `system_user_role` DROP PRIMARY KEY, ADD PRIMARY KEY (`tenant_id`, `user_id`, `role_id`)',
+  'SELECT 1'
+);
+PREPARE user_role_pk_stmt FROM @user_role_pk_stmt;
+EXECUTE user_role_pk_stmt;
+DEALLOCATE PREPARE user_role_pk_stmt;
+
+SET @user_role_add_idx_stmt := IF(
+  @user_role_table_exists > 0 AND @user_role_tenant_idx = 0,
+  'ALTER TABLE `system_user_role` ADD INDEX `idx_system_user_role_tenant_user` (`tenant_id`, `user_id`)',
+  'SELECT 1'
+);
+PREPARE user_role_add_idx_stmt FROM @user_role_add_idx_stmt;
+EXECUTE user_role_add_idx_stmt;
+DEALLOCATE PREPARE user_role_add_idx_stmt;
 
 -- Add tenant_id to system_user_dept (if exists)
 SET @user_dept_table_exists := (
@@ -282,13 +559,49 @@ DEALLOCATE PREPARE dept_closures_add_col_stmt;
 -- Phase 1.6: Data Scope Tables
 -- ============================================================================
 
--- Add tenant_id to system_role_data_scope
-ALTER TABLE `system_role_data_scope`
-  ADD COLUMN `tenant_id` BIGINT UNSIGNED NOT NULL DEFAULT 0 AFTER `id`;
+-- Add tenant_id to system_role_data_scope (guarded: absent from the minimal
+-- marker-driven bootstrap schema, same replay hazard as system_user).
+-- Note: this table keys on `role_key` (see 000001_init_schema.up.sql), not
+-- `role_id` — there is no role_id column here.
+SET @role_data_scope_table_exists := (
+  SELECT COUNT(*)
+  FROM information_schema.tables
+  WHERE table_schema = DATABASE()
+    AND table_name = 'system_role_data_scope'
+);
+SET @role_data_scope_tenant_col := (
+  SELECT COUNT(*)
+  FROM information_schema.columns
+  WHERE table_schema = DATABASE()
+    AND table_name = 'system_role_data_scope'
+    AND column_name = 'tenant_id'
+);
+SET @role_data_scope_idx := (
+  SELECT COUNT(*)
+  FROM information_schema.statistics
+  WHERE table_schema = DATABASE()
+    AND table_name = 'system_role_data_scope'
+    AND index_name = 'idx_role_data_scope_tenant_role'
+);
+
+SET @role_data_scope_add_col_stmt := IF(
+  @role_data_scope_table_exists > 0 AND @role_data_scope_tenant_col = 0,
+  'ALTER TABLE `system_role_data_scope` ADD COLUMN `tenant_id` BIGINT UNSIGNED NOT NULL DEFAULT 0 AFTER `id`',
+  'SELECT 1'
+);
+PREPARE role_data_scope_add_col_stmt FROM @role_data_scope_add_col_stmt;
+EXECUTE role_data_scope_add_col_stmt;
+DEALLOCATE PREPARE role_data_scope_add_col_stmt;
 
 -- Add composite index for tenant-scoped queries
-ALTER TABLE `system_role_data_scope`
-  ADD INDEX `idx_role_data_scope_tenant_role` (`tenant_id`, `role_id`);
+SET @role_data_scope_add_idx_stmt := IF(
+  @role_data_scope_table_exists > 0 AND @role_data_scope_idx = 0,
+  'ALTER TABLE `system_role_data_scope` ADD INDEX `idx_role_data_scope_tenant_role` (`tenant_id`, `role_key`)',
+  'SELECT 1'
+);
+PREPARE role_data_scope_add_idx_stmt FROM @role_data_scope_add_idx_stmt;
+EXECUTE role_data_scope_add_idx_stmt;
+DEALLOCATE PREPARE role_data_scope_add_idx_stmt;
 
 -- Add tenant_id to permission_role_data_scope_policy (if exists)
 SET @data_scope_policy_table_exists := (
