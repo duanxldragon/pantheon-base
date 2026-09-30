@@ -44,15 +44,6 @@ const AuthGuard = ({ children }: { children: ReactElement }) => {
   return children;
 };
 
-/** Authenticated users visiting /login go straight to their default path. */
-const LoginRedirect = () => {
-  const { token } = useAuthStore();
-  if (token && hasAuthSession()) {
-    return <Navigate to="/" replace />;
-  }
-  return <LoginPage />;
-};
-
 const DefaultHomeRedirect = () => {
   const { token, userInfo } = useAuthStore();
   const { menuTree, loading, loadError, fetchMenuTree } = useMenuStore();
@@ -156,7 +147,7 @@ function App() {
       <Suspense fallback={<Spin loading />}>
         <RouteErrorBoundary>
           <Routes>
-          <Route path="/login" element={<LoginRedirect />} />
+          <Route path="/login" element={<LoginPage />} />
           <Route
             path="/"
             element={

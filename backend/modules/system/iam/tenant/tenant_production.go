@@ -7,12 +7,13 @@ import (
 	"gorm.io/gorm"
 )
 
+// ErrQuotaExceeded is returned when a tenant operation exceeds its plan quota.
 var (
 	ErrQuotaExceeded = errors.New("tenant quota exceeded")
 )
 
-// TenantQuota represents quota limits for a tenant
-type TenantQuota struct {
+// Quota represents quota limits for a tenant
+type Quota struct {
 	MaxUsers     int `json:"max_users"`
 	MaxRoles     int `json:"max_roles"`
 	MaxDepts     int `json:"max_depts"`
@@ -21,10 +22,10 @@ type TenantQuota struct {
 }
 
 // GetDefaultQuota returns default quota based on plan
-func GetDefaultQuota(plan string) TenantQuota {
+func GetDefaultQuota(plan string) Quota {
 	switch plan {
 	case "free":
-		return TenantQuota{
+		return Quota{
 			MaxUsers:     5,
 			MaxRoles:     3,
 			MaxDepts:     5,
@@ -32,7 +33,7 @@ func GetDefaultQuota(plan string) TenantQuota {
 			MaxStorageMB: 100,
 		}
 	case "basic":
-		return TenantQuota{
+		return Quota{
 			MaxUsers:     20,
 			MaxRoles:     10,
 			MaxDepts:     20,
@@ -40,7 +41,7 @@ func GetDefaultQuota(plan string) TenantQuota {
 			MaxStorageMB: 1000,
 		}
 	case "professional":
-		return TenantQuota{
+		return Quota{
 			MaxUsers:     100,
 			MaxRoles:     50,
 			MaxDepts:     100,
@@ -48,7 +49,7 @@ func GetDefaultQuota(plan string) TenantQuota {
 			MaxStorageMB: 10000,
 		}
 	case "enterprise":
-		return TenantQuota{
+		return Quota{
 			MaxUsers:     -1, // Unlimited
 			MaxRoles:     -1,
 			MaxDepts:     -1,
@@ -83,7 +84,7 @@ func (e *QuotaEnforcer) CheckUserQuota(tenantID uint64) error {
 	}
 
 	var count int64
-	if err := e.db.Model(&TenantMembership{}).
+	if err := e.db.Model(&Membership{}).
 		Where("tenant_id = ? AND status = ?", tenantID, "active").
 		Count(&count).Error; err != nil {
 		return fmt.Errorf("count users: %w", err)
@@ -128,7 +129,7 @@ func (e *QuotaEnforcer) GetTenantUsage(tenantID uint64) (map[string]int64, error
 
 	// Count users
 	var userCount int64
-	e.db.Model(&TenantMembership{}).
+	e.db.Model(&Membership{}).
 		Where("tenant_id = ? AND status = ?", tenantID, "active").
 		Count(&userCount)
 	usage["users"] = userCount
@@ -157,44 +158,44 @@ func (e *QuotaEnforcer) GetTenantUsage(tenantID uint64) (map[string]int64, error
 	return usage, nil
 }
 
-// TenantAuditLogger logs tenant-related audit events
-type TenantAuditLogger struct {
+// AuditLogger logs tenant-related audit events
+type AuditLogger struct {
 	db *gorm.DB
 }
 
-// NewTenantAuditLogger creates a new audit logger
-func NewTenantAuditLogger(db *gorm.DB) *TenantAuditLogger {
-	return &TenantAuditLogger{db: db}
+// NewAuditLogger creates a new audit logger
+func NewAuditLogger(db *gorm.DB) *AuditLogger {
+	return &AuditLogger{db: db}
 }
 
 // LogTenantCreated logs tenant creation event
-func (l *TenantAuditLogger) LogTenantCreated(tenantID uint64, operatorID uint64, snapshot string) error {
+func (l *AuditLogger) LogTenantCreated(tenantID uint64, operatorID uint64, snapshot string) error {
 	return l.logEvent(tenantID, operatorID, "tenant.created", snapshot)
 }
 
 // LogTenantUpdated logs tenant update event
-func (l *TenantAuditLogger) LogTenantUpdated(tenantID uint64, operatorID uint64, snapshot string) error {
+func (l *AuditLogger) LogTenantUpdated(tenantID uint64, operatorID uint64, snapshot string) error {
 	return l.logEvent(tenantID, operatorID, "tenant.updated", snapshot)
 }
 
 // LogTenantDeleted logs tenant deletion event
-func (l *TenantAuditLogger) LogTenantDeleted(tenantID uint64, operatorID uint64, snapshot string) error {
+func (l *AuditLogger) LogTenantDeleted(tenantID uint64, operatorID uint64, snapshot string) error {
 	return l.logEvent(tenantID, operatorID, "tenant.deleted", snapshot)
 }
 
 // LogMemberAdded logs member addition event
-func (l *TenantAuditLogger) LogMemberAdded(tenantID uint64, operatorID uint64, memberUserID uint64, role string) error {
+func (l *AuditLogger) LogMemberAdded(tenantID uint64, operatorID uint64, memberUserID uint64, role string) error {
 	snapshot := fmt.Sprintf(`{"user_id":%d,"role":"%s"}`, memberUserID, role)
 	return l.logEvent(tenantID, operatorID, "tenant.member.added", snapshot)
 }
 
 // LogMemberRemoved logs member removal event
-func (l *TenantAuditLogger) LogMemberRemoved(tenantID uint64, operatorID uint64, memberUserID uint64) error {
+func (l *AuditLogger) LogMemberRemoved(tenantID uint64, operatorID uint64, memberUserID uint64) error {
 	snapshot := fmt.Sprintf(`{"user_id":%d}`, memberUserID)
 	return l.logEvent(tenantID, operatorID, "tenant.member.removed", snapshot)
 }
 
-func (l *TenantAuditLogger) logEvent(tenantID uint64, operatorID uint64, eventType string, detail string) error {
+func (l *AuditLogger) logEvent(tenantID uint64, operatorID uint64, eventType string, detail string) error {
 	// Log to operation_logs table (which already has tenant_id support)
 	return l.db.Exec(`
 		INSERT INTO operation_logs (tenant_id, user_id, module, operation, detail, created_at)
@@ -202,18 +203,18 @@ func (l *TenantAuditLogger) logEvent(tenantID uint64, operatorID uint64, eventTy
 	`, tenantID, operatorID, eventType, detail).Error
 }
 
-// TenantHealthChecker provides health check utilities
-type TenantHealthChecker struct {
+// HealthChecker provides health check utilities
+type HealthChecker struct {
 	db *gorm.DB
 }
 
-// NewTenantHealthChecker creates a new health checker
-func NewTenantHealthChecker(db *gorm.DB) *TenantHealthChecker {
-	return &TenantHealthChecker{db: db}
+// NewHealthChecker creates a new health checker
+func NewHealthChecker(db *gorm.DB) *HealthChecker {
+	return &HealthChecker{db: db}
 }
 
 // CheckTenantHealth performs comprehensive health check on a tenant
-func (c *TenantHealthChecker) CheckTenantHealth(tenantID uint64) (map[string]interface{}, error) {
+func (c *HealthChecker) CheckTenantHealth(tenantID uint64) (map[string]interface{}, error) {
 	result := make(map[string]interface{})
 
 	// Check tenant exists
@@ -225,7 +226,7 @@ func (c *TenantHealthChecker) CheckTenantHealth(tenantID uint64) (map[string]int
 
 	// Check member count
 	var memberCount int64
-	c.db.Model(&TenantMembership{}).
+	c.db.Model(&Membership{}).
 		Where("tenant_id = ? AND status = ?", tenantID, "active").
 		Count(&memberCount)
 	result["member_count"] = memberCount

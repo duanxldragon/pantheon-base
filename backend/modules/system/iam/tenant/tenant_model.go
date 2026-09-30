@@ -16,12 +16,13 @@ type Tenant struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
+// TableName pins the projection to the `tenants` master table.
 func (Tenant) TableName() string {
 	return "tenants"
 }
 
-// TenantMembership represents user membership in a tenant
-type TenantMembership struct {
+// Membership represents user membership in a tenant
+type Membership struct {
 	ID        uint64    `gorm:"primaryKey;autoIncrement" json:"id"`
 	TenantID  uint64    `gorm:"not null;index:idx_tenant_membership_tenant_user,priority:1;uniqueIndex:uk_tenant_membership" json:"tenant_id"`
 	UserID    uint64    `gorm:"not null;index:idx_tenant_membership_tenant_user,priority:2;uniqueIndex:uk_tenant_membership" json:"user_id"`
@@ -31,7 +32,8 @@ type TenantMembership struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
-func (TenantMembership) TableName() string {
+// TableName pins the projection to the `tenant_memberships` table.
+func (Membership) TableName() string {
 	return "tenant_memberships"
 }
 
@@ -57,16 +59,16 @@ type AddTenantMemberDTO struct {
 	Role   string `json:"role" binding:"required,oneof=owner admin member"`
 }
 
-// TenantFilter is used for filtering tenants in list queries
-type TenantFilter struct {
+// Filter is used for filtering tenants in list queries
+type Filter struct {
 	Status string `form:"status" binding:"omitempty,oneof=active suspended deleted"`
 	Plan   string `form:"plan" binding:"omitempty,oneof=free basic professional enterprise"`
 	Page   int    `form:"page" binding:"omitempty,min=1"`
 	Size   int    `form:"size" binding:"omitempty,min=1,max=100"`
 }
 
-// TenantListResponse wraps paginated tenant list
-type TenantListResponse struct {
+// ListResponse wraps paginated tenant list
+type ListResponse struct {
 	Items []Tenant `json:"items"`
 	Total int64    `json:"total"`
 	Page  int      `json:"page"`

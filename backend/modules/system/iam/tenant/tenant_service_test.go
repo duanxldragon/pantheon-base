@@ -15,7 +15,7 @@ func setupTestDB(t *testing.T) *gorm.DB {
 	require.NoError(t, err)
 
 	// Create tables
-	err = db.AutoMigrate(&Tenant{}, &TenantMembership{})
+	err = db.AutoMigrate(&Tenant{}, &Membership{})
 	require.NoError(t, err)
 
 	return db
@@ -23,7 +23,7 @@ func setupTestDB(t *testing.T) *gorm.DB {
 
 func TestCreateTenant(t *testing.T) {
 	db := setupTestDB(t)
-	service := NewTenantService(db)
+	service := NewService(db)
 
 	dto := CreateTenantDTO{
 		Code: "test-tenant",
@@ -41,7 +41,7 @@ func TestCreateTenant(t *testing.T) {
 
 func TestCreateTenant_DuplicateCode(t *testing.T) {
 	db := setupTestDB(t)
-	service := NewTenantService(db)
+	service := NewService(db)
 
 	dto := CreateTenantDTO{
 		Code: "test-tenant",
@@ -58,7 +58,7 @@ func TestCreateTenant_DuplicateCode(t *testing.T) {
 
 func TestGetTenantByID(t *testing.T) {
 	db := setupTestDB(t)
-	service := NewTenantService(db)
+	service := NewService(db)
 
 	// Create tenant
 	dto := CreateTenantDTO{
@@ -77,7 +77,7 @@ func TestGetTenantByID(t *testing.T) {
 
 func TestGetTenantByID_NotFound(t *testing.T) {
 	db := setupTestDB(t)
-	service := NewTenantService(db)
+	service := NewService(db)
 
 	_, err := service.GetTenantByID(99999)
 	assert.Equal(t, ErrTenantNotFound, err)
@@ -85,7 +85,7 @@ func TestGetTenantByID_NotFound(t *testing.T) {
 
 func TestListTenants(t *testing.T) {
 	db := setupTestDB(t)
-	service := NewTenantService(db)
+	service := NewService(db)
 
 	// Create multiple tenants
 	for i := 1; i <= 5; i++ {
@@ -98,7 +98,7 @@ func TestListTenants(t *testing.T) {
 	}
 
 	// List with pagination
-	filter := TenantFilter{
+	filter := Filter{
 		Page: 1,
 		Size: 3,
 	}
@@ -110,7 +110,7 @@ func TestListTenants(t *testing.T) {
 
 func TestUpdateTenant(t *testing.T) {
 	db := setupTestDB(t)
-	service := NewTenantService(db)
+	service := NewService(db)
 
 	// Create tenant
 	tenant, err := service.CreateTenant(CreateTenantDTO{
@@ -137,7 +137,7 @@ func TestUpdateTenant(t *testing.T) {
 
 func TestAddMember(t *testing.T) {
 	db := setupTestDB(t)
-	service := NewTenantService(db)
+	service := NewService(db)
 
 	// Create tenant
 	tenant, err := service.CreateTenant(CreateTenantDTO{
@@ -161,7 +161,7 @@ func TestAddMember(t *testing.T) {
 
 func TestAddMember_Duplicate(t *testing.T) {
 	db := setupTestDB(t)
-	service := NewTenantService(db)
+	service := NewService(db)
 
 	tenant, err := service.CreateTenant(CreateTenantDTO{
 		Code: "test-tenant",
@@ -179,7 +179,7 @@ func TestAddMember_Duplicate(t *testing.T) {
 
 func TestRemoveMember(t *testing.T) {
 	db := setupTestDB(t)
-	service := NewTenantService(db)
+	service := NewService(db)
 
 	tenant, err := service.CreateTenant(CreateTenantDTO{
 		Code: "test-tenant",
@@ -202,7 +202,7 @@ func TestRemoveMember(t *testing.T) {
 
 func TestDeleteTenant_WithActiveMembers(t *testing.T) {
 	db := setupTestDB(t)
-	service := NewTenantService(db)
+	service := NewService(db)
 
 	tenant, err := service.CreateTenant(CreateTenantDTO{
 		Code: "test-tenant",
@@ -220,7 +220,7 @@ func TestDeleteTenant_WithActiveMembers(t *testing.T) {
 
 func TestDeleteTenant_Success(t *testing.T) {
 	db := setupTestDB(t)
-	service := NewTenantService(db)
+	service := NewService(db)
 
 	tenant, err := service.CreateTenant(CreateTenantDTO{
 		Code: "test-tenant",

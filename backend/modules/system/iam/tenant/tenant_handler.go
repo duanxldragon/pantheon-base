@@ -7,14 +7,14 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// TenantHandler handles HTTP requests for tenant management
-type TenantHandler struct {
-	service *TenantService
+// Handler handles HTTP requests for tenant management
+type Handler struct {
+	service *Service
 }
 
-// NewTenantHandler creates a new tenant handler instance
-func NewTenantHandler(service *TenantService) *TenantHandler {
-	return &TenantHandler{service: service}
+// NewHandler creates a new tenant handler instance
+func NewHandler(service *Service) *Handler {
+	return &Handler{service: service}
 }
 
 // CreateTenant godoc
@@ -28,7 +28,7 @@ func NewTenantHandler(service *TenantService) *TenantHandler {
 // @Failure 400 {object} map[string]string
 // @Failure 409 {object} map[string]string
 // @Router /api/v1/tenants [post]
-func (h *TenantHandler) CreateTenant(c *gin.Context) {
+func (h *Handler) CreateTenant(c *gin.Context) {
 	var dto CreateTenantDTO
 	if err := c.ShouldBindJSON(&dto); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -57,7 +57,7 @@ func (h *TenantHandler) CreateTenant(c *gin.Context) {
 // @Success 200 {object} Tenant
 // @Failure 404 {object} map[string]string
 // @Router /api/v1/tenants/{id} [get]
-func (h *TenantHandler) GetTenant(c *gin.Context) {
+func (h *Handler) GetTenant(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid tenant id"})
@@ -86,10 +86,10 @@ func (h *TenantHandler) GetTenant(c *gin.Context) {
 // @Param plan query string false "Filter by plan (free, basic, professional, enterprise)"
 // @Param page query int false "Page number (default 1)"
 // @Param size query int false "Page size (default 20, max 100)"
-// @Success 200 {object} TenantListResponse
+// @Success 200 {object} ListResponse
 // @Router /api/v1/tenants [get]
-func (h *TenantHandler) ListTenants(c *gin.Context) {
-	var filter TenantFilter
+func (h *Handler) ListTenants(c *gin.Context) {
+	var filter Filter
 	if err := c.ShouldBindQuery(&filter); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -115,7 +115,7 @@ func (h *TenantHandler) ListTenants(c *gin.Context) {
 // @Success 200 {object} map[string]string
 // @Failure 404 {object} map[string]string
 // @Router /api/v1/tenants/{id} [put]
-func (h *TenantHandler) UpdateTenant(c *gin.Context) {
+func (h *Handler) UpdateTenant(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid tenant id"})
@@ -149,7 +149,7 @@ func (h *TenantHandler) UpdateTenant(c *gin.Context) {
 // @Failure 400 {object} map[string]string
 // @Failure 404 {object} map[string]string
 // @Router /api/v1/tenants/{id} [delete]
-func (h *TenantHandler) DeleteTenant(c *gin.Context) {
+func (h *Handler) DeleteTenant(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid tenant id"})
@@ -185,7 +185,7 @@ func (h *TenantHandler) DeleteTenant(c *gin.Context) {
 // @Failure 404 {object} map[string]string
 // @Failure 409 {object} map[string]string
 // @Router /api/v1/tenants/{id}/members [post]
-func (h *TenantHandler) AddTenantMember(c *gin.Context) {
+func (h *Handler) AddTenantMember(c *gin.Context) {
 	tenantID, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid tenant id"})
@@ -223,7 +223,7 @@ func (h *TenantHandler) AddTenantMember(c *gin.Context) {
 // @Success 200 {object} map[string]string
 // @Failure 404 {object} map[string]string
 // @Router /api/v1/tenants/{id}/members/{user_id} [delete]
-func (h *TenantHandler) RemoveTenantMember(c *gin.Context) {
+func (h *Handler) RemoveTenantMember(c *gin.Context) {
 	tenantID, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid tenant id"})
@@ -254,9 +254,9 @@ func (h *TenantHandler) RemoveTenantMember(c *gin.Context) {
 // @Tags Tenant
 // @Produce json
 // @Param id path int true "Tenant ID"
-// @Success 200 {array} TenantMembership
+// @Success 200 {array} Membership
 // @Router /api/v1/tenants/{id}/members [get]
-func (h *TenantHandler) ListTenantMembers(c *gin.Context) {
+func (h *Handler) ListTenantMembers(c *gin.Context) {
 	tenantID, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid tenant id"})
@@ -279,7 +279,7 @@ func (h *TenantHandler) ListTenantMembers(c *gin.Context) {
 // @Produce json
 // @Success 200 {array} Tenant
 // @Router /api/v1/tenants/my [get]
-func (h *TenantHandler) GetMyTenants(c *gin.Context) {
+func (h *Handler) GetMyTenants(c *gin.Context) {
 	// Extract user ID from context (set by auth middleware)
 	userID, exists := c.Get("user_id")
 	if !exists {

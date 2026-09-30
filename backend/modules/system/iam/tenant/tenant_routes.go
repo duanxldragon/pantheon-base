@@ -6,7 +6,7 @@ import (
 
 // RegisterRoutes registers tenant management routes
 // Routes are protected by platform_ops role (configured in main router)
-func RegisterRoutes(r *gin.RouterGroup, handler *TenantHandler) {
+func RegisterRoutes(r *gin.RouterGroup, handler *Handler) {
 	tenants := r.Group("/tenants")
 	{
 		// Public/authenticated routes

@@ -53,17 +53,17 @@ var (
 // MetricsCollector periodically collects and updates tenant metrics
 type MetricsCollector struct {
 	db            *gorm.DB
-	tenantService *TenantService
+	tenantService *Service
 	quotaEnforcer *QuotaEnforcer
-	healthChecker *TenantHealthChecker
+	healthChecker *HealthChecker
 }
 
 // NewMetricsCollector creates a new metrics collector
 func NewMetricsCollector(
 	db *gorm.DB,
-	tenantService *TenantService,
+	tenantService *Service,
 	quotaEnforcer *QuotaEnforcer,
-	healthChecker *TenantHealthChecker,
+	healthChecker *HealthChecker,
 ) *MetricsCollector {
 	return &MetricsCollector{
 		db:            db,
@@ -92,7 +92,7 @@ func (c *MetricsCollector) CollectMetrics() error {
 	for _, tenant := range tenants {
 		// User count
 		var userCount int64
-		c.db.Model(&TenantMembership{}).
+		c.db.Model(&Membership{}).
 			Where("tenant_id = ? AND status = ?", tenant.ID, "active").
 			Count(&userCount)
 		TenantUserCount.WithLabelValues(

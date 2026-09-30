@@ -9,11 +9,11 @@ import (
 // BootstrapService handles tenant-related bootstrap operations
 type BootstrapService struct {
 	db            *gorm.DB
-	tenantService *TenantService
+	tenantService *Service
 }
 
 // NewBootstrapService creates a new bootstrap service
-func NewBootstrapService(db *gorm.DB, tenantService *TenantService) *BootstrapService {
+func NewBootstrapService(db *gorm.DB, tenantService *Service) *BootstrapService {
 	return &BootstrapService{
 		db:            db,
 		tenantService: tenantService,

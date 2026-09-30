@@ -8,25 +8,30 @@ import (
 )
 
 var (
-	ErrTenantNotFound       = errors.New("tenant not found")
-	ErrTenantCodeExists     = errors.New("tenant code already exists")
+	// ErrTenantNotFound is returned when no tenant matches the given id/code.
+	ErrTenantNotFound = errors.New("tenant not found")
+	// ErrTenantCodeExists is returned when creating a tenant with an already-taken code.
+	ErrTenantCodeExists = errors.New("tenant code already exists")
+	// ErrTenantHasActiveUsers is returned when deleting a tenant that still has active members.
 	ErrTenantHasActiveUsers = errors.New("tenant has active users, cannot delete")
-	ErrMembershipExists     = errors.New("user is already a member of this tenant")
-	ErrMembershipNotFound   = errors.New("tenant membership not found")
+	// ErrMembershipExists is returned when adding a user who is already a tenant member.
+	ErrMembershipExists = errors.New("user is already a member of this tenant")
+	// ErrMembershipNotFound is returned when removing a non-existent tenant membership.
+	ErrMembershipNotFound = errors.New("tenant membership not found")
 )
 
-// TenantService handles tenant CRUD and lifecycle operations
-type TenantService struct {
+// Service handles tenant CRUD and lifecycle operations
+type Service struct {
 	db *gorm.DB
 }
 
-// NewTenantService creates a new tenant service instance
-func NewTenantService(db *gorm.DB) *TenantService {
-	return &TenantService{db: db}
+// NewService creates a new tenant service instance
+func NewService(db *gorm.DB) *Service {
+	return &Service{db: db}
 }
 
 // CreateTenant creates a new tenant with default settings
-func (s *TenantService) CreateTenant(dto CreateTenantDTO) (*Tenant, error) {
+func (s *Service) CreateTenant(dto CreateTenantDTO) (*Tenant, error) {
 	// Check if code already exists
 	var exists int64
 	if err := s.db.Model(&Tenant{}).Where("code = ?", dto.Code).Count(&exists).Error; err != nil {
@@ -56,7 +61,7 @@ func (s *TenantService) CreateTenant(dto CreateTenantDTO) (*Tenant, error) {
 }
 
 // GetTenantByID retrieves a tenant by its ID
-func (s *TenantService) GetTenantByID(id uint64) (*Tenant, error) {
+func (s *Service) GetTenantByID(id uint64) (*Tenant, error) {
 	var tenant Tenant
 	if err := s.db.First(&tenant, id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -68,7 +73,7 @@ func (s *TenantService) GetTenantByID(id uint64) (*Tenant, error) {
 }
 
 // GetTenantByCode retrieves a tenant by its code
-func (s *TenantService) GetTenantByCode(code string) (*Tenant, error) {
+func (s *Service) GetTenantByCode(code string) (*Tenant, error) {
 	var tenant Tenant
 	if err := s.db.Where("code = ?", code).First(&tenant).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -80,7 +85,7 @@ func (s *TenantService) GetTenantByCode(code string) (*Tenant, error) {
 }
 
 // ListTenants returns a paginated list of tenants
-func (s *TenantService) ListTenants(filter TenantFilter) (*TenantListResponse, error) {
+func (s *Service) ListTenants(filter Filter) (*ListResponse, error) {
 	// Set defaults
 	if filter.Page < 1 {
 		filter.Page = 1
@@ -112,7 +117,7 @@ func (s *TenantService) ListTenants(filter TenantFilter) (*TenantListResponse, e
 		return nil, fmt.Errorf("list tenants: %w", err)
 	}
 
-	return &TenantListResponse{
+	return &ListResponse{
 		Items: tenants,
 		Total: total,
 		Page:  filter.Page,
@@ -121,7 +126,7 @@ func (s *TenantService) ListTenants(filter TenantFilter) (*TenantListResponse, e
 }
 
 // UpdateTenant updates tenant fields
-func (s *TenantService) UpdateTenant(id uint64, dto UpdateTenantDTO) error {
+func (s *Service) UpdateTenant(id uint64, dto UpdateTenantDTO) error {
 	tenant, err := s.GetTenantByID(id)
 	if err != nil {
 		return err
@@ -153,10 +158,10 @@ func (s *TenantService) UpdateTenant(id uint64, dto UpdateTenantDTO) error {
 }
 
 // DeleteTenant soft-deletes a tenant (marks as deleted status)
-func (s *TenantService) DeleteTenant(id uint64) error {
+func (s *Service) DeleteTenant(id uint64) error {
 	// Check if tenant has active members
 	var memberCount int64
-	if err := s.db.Model(&TenantMembership{}).
+	if err := s.db.Model(&Membership{}).
 		Where("tenant_id = ? AND status = ?", id, "active").
 		Count(&memberCount).Error; err != nil {
 		return fmt.Errorf("check tenant members: %w", err)
@@ -175,7 +180,7 @@ func (s *TenantService) DeleteTenant(id uint64) error {
 }
 
 // AddMember adds a user to a tenant with specified role
-func (s *TenantService) AddMember(tenantID, userID uint64, role string) error {
+func (s *Service) AddMember(tenantID, userID uint64, role string) error {
 	// Verify tenant exists
 	if _, err := s.GetTenantByID(tenantID); err != nil {
 		return err
@@ -183,7 +188,7 @@ func (s *TenantService) AddMember(tenantID, userID uint64, role string) error {
 
 	// Check if membership already exists
 	var exists int64
-	if err := s.db.Model(&TenantMembership{}).
+	if err := s.db.Model(&Membership{}).
 		Where("tenant_id = ? AND user_id = ?", tenantID, userID).
 		Count(&exists).Error; err != nil {
 		return fmt.Errorf("check membership existence: %w", err)
@@ -192,7 +197,7 @@ func (s *TenantService) AddMember(tenantID, userID uint64, role string) error {
 		return ErrMembershipExists
 	}
 
-	membership := &TenantMembership{
+	membership := &Membership{
 		TenantID: tenantID,
 		UserID:   userID,
 		Role:     role,
@@ -207,9 +212,9 @@ func (s *TenantService) AddMember(tenantID, userID uint64, role string) error {
 }
 
 // RemoveMember removes a user from a tenant
-func (s *TenantService) RemoveMember(tenantID, userID uint64) error {
+func (s *Service) RemoveMember(tenantID, userID uint64) error {
 	result := s.db.Where("tenant_id = ? AND user_id = ?", tenantID, userID).
-		Delete(&TenantMembership{})
+		Delete(&Membership{})
 
 	if result.Error != nil {
 		return fmt.Errorf("remove membership: %w", result.Error)
@@ -223,8 +228,8 @@ func (s *TenantService) RemoveMember(tenantID, userID uint64) error {
 }
 
 // ListTenantMembers returns all members of a tenant
-func (s *TenantService) ListTenantMembers(tenantID uint64) ([]TenantMembership, error) {
-	var memberships []TenantMembership
+func (s *Service) ListTenantMembers(tenantID uint64) ([]Membership, error) {
+	var memberships []Membership
 	if err := s.db.Where("tenant_id = ? AND status = ?", tenantID, "active").
 		Order("created_at ASC").
 		Find(&memberships).Error; err != nil {
@@ -234,7 +239,7 @@ func (s *TenantService) ListTenantMembers(tenantID uint64) ([]TenantMembership, 
 }
 
 // GetUserTenants returns all tenants a user belongs to
-func (s *TenantService) GetUserTenants(userID uint64) ([]Tenant, error) {
+func (s *Service) GetUserTenants(userID uint64) ([]Tenant, error) {
 	var tenants []Tenant
 	if err := s.db.Table("tenants").
 		Joins("INNER JOIN tenant_memberships ON tenant_memberships.tenant_id = tenants.id").
@@ -249,7 +254,7 @@ func (s *TenantService) GetUserTenants(userID uint64) ([]Tenant, error) {
 
 // InitializeTenantDefaults creates default resources for a new tenant
 // (roles, menus, settings, etc.)
-func (s *TenantService) InitializeTenantDefaults(tenantID uint64) error {
+func (s *Service) InitializeTenantDefaults(tenantID uint64) error {
 	// TODO: Phase 2.2 - Implement default resource creation
 	// This should create:
 	// - Default roles (admin, user)

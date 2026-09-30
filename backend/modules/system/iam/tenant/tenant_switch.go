@@ -11,14 +11,14 @@ type SwitchTenantRequest struct {
 	TenantID uint64 `json:"tenant_id" binding:"required"`
 }
 
-// TenantSwitchHandler handles tenant context switching
-type TenantSwitchHandler struct {
-	service *TenantService
+// SwitchHandler handles tenant context switching
+type SwitchHandler struct {
+	service *Service
 }
 
-// NewTenantSwitchHandler creates a new tenant switch handler
-func NewTenantSwitchHandler(service *TenantService) *TenantSwitchHandler {
-	return &TenantSwitchHandler{service: service}
+// NewSwitchHandler creates a new tenant switch handler
+func NewSwitchHandler(service *Service) *SwitchHandler {
+	return &SwitchHandler{service: service}
 }
 
 // SwitchTenant godoc
@@ -32,7 +32,7 @@ func NewTenantSwitchHandler(service *TenantService) *TenantSwitchHandler {
 // @Failure 400 {object} map[string]string
 // @Failure 403 {object} map[string]string
 // @Router /api/v1/tenants/switch [post]
-func (h *TenantSwitchHandler) SwitchTenant(c *gin.Context) {
+func (h *SwitchHandler) SwitchTenant(c *gin.Context) {
 	// Extract user ID from context
 	userID, exists := c.Get("user_id")
 	if !exists {
@@ -111,7 +111,7 @@ func (h *TenantSwitchHandler) SwitchTenant(c *gin.Context) {
 // @Produce json
 // @Success 200 {array} map[string]interface{}
 // @Router /api/v1/tenants/switchable [get]
-func (h *TenantSwitchHandler) ListSwitchableTenants(c *gin.Context) {
+func (h *SwitchHandler) ListSwitchableTenants(c *gin.Context) {
 	// Extract user ID from context
 	userID, exists := c.Get("user_id")
 	if !exists {
@@ -133,7 +133,7 @@ func (h *TenantSwitchHandler) ListSwitchableTenants(c *gin.Context) {
 	}
 
 	// Build response with role information
-	var result []map[string]interface{}
+	result := make([]map[string]interface{}, 0, len(tenants))
 	for _, tenant := range tenants {
 		// Get user's role in this tenant
 		memberships, err := h.service.ListTenantMembers(tenant.ID)
@@ -169,7 +169,7 @@ func (h *TenantSwitchHandler) ListSwitchableTenants(c *gin.Context) {
 // @Produce json
 // @Success 200 {object} map[string]interface{}
 // @Router /api/v1/tenants/current [get]
-func (h *TenantSwitchHandler) GetCurrentTenant(c *gin.Context) {
+func (h *SwitchHandler) GetCurrentTenant(c *gin.Context) {
 	// Extract tenant ID from context (set by TenantContextMiddleware)
 	tenantID, exists := c.Get("tenant_id")
 	if !exists {
@@ -212,7 +212,7 @@ func (h *TenantSwitchHandler) GetCurrentTenant(c *gin.Context) {
 }
 
 // RegisterSwitchRoutes registers tenant switching routes
-func RegisterSwitchRoutes(r *gin.RouterGroup, handler *TenantSwitchHandler) {
+func RegisterSwitchRoutes(r *gin.RouterGroup, handler *SwitchHandler) {
 	r.POST("/tenants/switch", handler.SwitchTenant)
 	r.GET("/tenants/switchable", handler.ListSwitchableTenants)
 	r.GET("/tenants/current", handler.GetCurrentTenant)
