@@ -29,7 +29,7 @@ if err := validator.ValidateURL("https://example.com/api"); err != nil {
 }
 
 // Create safe HTTP client
-client := validator.CreateHTTPClient()
+client := validator.CreateHTTPClient(validator.Timeout)
 resp, err := client.Get("https://example.com/api")
 ```
 
@@ -109,7 +109,7 @@ func (s *DatasourceService) proxyQuery(datasourceURL, query string) (interface{}
         return nil, fmt.Errorf("datasource URL blocked: %w", err)
     }
     
-    client := validator.CreateHTTPClient()
+    client := validator.CreateHTTPClient(validator.Timeout)
     // Make request...
 }
 ```

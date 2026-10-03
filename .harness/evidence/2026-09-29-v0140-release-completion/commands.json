@@ -1,0 +1,94 @@
+{
+  "taskId": "2026-09-29-v0140-release-completion",
+  "repo": "pantheon-base",
+  "agent": {
+    "tool": "github-copilot",
+    "adapter": "vscode"
+  },
+  "completedAt": "2026-09-30",
+  "status": "in-progress",
+  "commands": [
+    {
+      "command": "cd backend && go mod tidy",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "Previously recorded on 2026-09-29; go.sum unchanged."
+    },
+    {
+      "command": "cd backend && go vet ./pkg/... ./modules/system/iam/...",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "Previously recorded on 2026-09-29; no findings."
+    },
+    {
+      "command": "cd backend && go test -count=1 ./modules/system/iam/tenant ./pkg/tenant",
+      "cwd": "pantheon-base",
+      "status": "failed",
+      "notes": "pkg/tenant passed. Tenant service tests require SQLite cgo; default CGO_ENABLED=0 uses the stub. CGO_ENABLED=1 selected Cygwin gcc, which cannot compile native Windows cgo."
+    },
+    {
+      "command": "node scripts/harness/check-task-packet.mjs --root .",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "29 packets, 0 errors, 28 pre-existing missing-review warnings."
+    },
+    {
+      "command": "npm run test:security-workflow && npm run test:quality-workflow",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "Security workflow test 1/1 and quality workflow tests 5/5 passed."
+    },
+    {
+      "command": "npm run check:harness-sync -- --strict",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "Passes against the local sibling checkout, which is three commits ahead of its remote main; does not establish remote canonical sync."
+    },
+    {
+      "command": "zizmor .github/workflows/smoke-core.yml",
+      "cwd": "pantheon-base",
+      "status": "failed",
+      "notes": "Exit 14 due to four existing cache-poisoning findings in setup-node/cache configuration; corrected SHA produced no unpinned-uses finding."
+    },
+    {
+      "command": "npm run check:task-packet && node scripts/frontmatter-check.mjs && node scripts/check-pr-governance.mjs",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "Task packets had zero errors; 313 docs checked; PR governance template passed."
+    },
+    {
+      "command": "gh pr checks 358 --required",
+      "cwd": "pantheon-base",
+      "status": "failed",
+      "notes": "PR-event required checks passed at hosted head c1b6f771, but push-event Code Quality Gates failed Docs Governance due canonical pantheon-harness sync drift. PR remains BLOCKED."
+    },
+    {
+      "command": "npm run test:smoke:tenant",
+      "cwd": "frontend",
+      "status": "not-run",
+      "notes": "Local Docker daemon unavailable and no test DSN configured. The hosted tenant job failed before tests because the pushed workflow action pin was invalid."
+    },
+    {
+      "command": "git push origin release/v0.14.0-completion",
+      "cwd": "pantheon-base",
+      "status": "failed",
+      "notes": "Git HTTPS connection to github.com:443 timed out; local commit 81e1bb09 remains ahead of origin."
+    }
+  ],
+  "knownGaps": [
+    "Tenant resource scope matrix is not frozen; user identity is global with tenant memberships by maintainer decision.",
+    "Tenant backend P1 service scoping, automated browser E2E, and full smoke have not completed.",
+    "Task and workflow commit 81e1bb09 is local only; GitHub push failed due network connectivity.",
+    "No v0.14.2 tag or GitHub Release exists; PR #358 is blocked and not approved for release.",
+    "Eight unrelated user deletions remain unstaged and untouched."
+  ],
+  "linkage": {
+    "evidenceDir": ".harness/evidence/2026-09-29-v0140-release-completion/",
+    "taskManifest": ".harness/tasks/2026-09-29-v0140-release-completion/manifest.json",
+    "evidence": ".harness/evidence/2026-09-29-v0140-release-completion/commands.json",
+    "reviewFile": ".harness/evidence/2026-09-29-v0140-release-completion/review.md",
+    "summaryFile": ".harness/evidence/2026-09-29-v0140-release-completion/summary.md",
+    "changeRef": "none",
+    "planRefs": ["docs/harness/tasks/2026-09-29-v0140-release-completion.task.md"]
+  }
+}

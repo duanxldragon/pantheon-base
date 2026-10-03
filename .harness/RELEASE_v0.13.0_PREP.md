@@ -182,9 +182,9 @@ Pantheon Base v0.13.0 在企业级整改收口成果基础上，完善了任务�
 
 #### 📖 文档
 
-- [CHANGELOG](./CHANGELOG.md)
-- [完整文档](./docs/README.md)
-- [归档索引](./.harness/ARCHIVE.md)
+- [CHANGELOG](../CHANGELOG.md)
+- [完整文档](../docs/README.md)
+- [归档索引](./ARCHIVE.md)
 
 ---
 

@@ -1,7 +1,16 @@
 # Pantheon Base - 任务执行状态总览
 
-**最后更新**: 2026-09-25  
-**当前提交**: 2250d347 (chore(governance): back-fill the S1607 PR body with verified root cause)
+**最后更新**: 2026-09-29  
+**当前提交**: f767b9cc (docs: add release notes for v0.14.1)
+
+### 2026-09-29 v0.14.0 发布收口
+
+| 任务 ID | 状态 | Evidence |
+|---------|------|----------|
+| 2026-09-29-v0140-release-completion | ✅ | `.harness/evidence/2026-09-29-v0140-release-completion/` |
+| 2026-09-29-ops-ssrf-protection-integration | ✅（状态同步，ops 侧完成） | `.harness/tasks/2026-09-29-ops-ssrf-protection-integration/manifest.json` |
+
+**成果**: 补齐 tenant 测试依赖声明；SSRF 集成任务 manifest 状态与 ops 侧对齐；v0.14.0 经治理 PR 合并后统一发布 tag 与 GitHub Release。
 
 ## 执行状态摘要
 

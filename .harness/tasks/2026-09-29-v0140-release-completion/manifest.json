@@ -1,0 +1,56 @@
+{
+  "taskId": "2026-09-29-v0140-release-completion",
+  "title": "Complete tenant P1 readiness and publish v0.14.2",
+  "goal": "Complete tenant P1 scoping per a frozen resource matrix, pass tenant browser E2E and all required smoke/CI gates, then publish pantheon-base-v0.14.2",
+  "primaryLayer": "platform",
+  "status": "in-progress",
+  "statusNote": "2026-09-30: maintainer selected sequential v0.14.2 and global user identity with tenant memberships; PR #358 remains blocked, tenant scope matrix and runtime P1/E2E are not closed, and no 0.14.x release is published",
+  "priority": "P1",
+  "type": "release-completion",
+  "scope": {
+    "in": [
+      "freeze tenant resource ownership while preserving global user identity with memberships",
+      "complete model/service tenant scopes for tenant-owned and tenant-overridable resources",
+      "pass tenant browser E2E and complete smoke matrix",
+      "repair the invalid setup-node pin and close hosted CI gates",
+      "publish v0.14.2 after merge and required review"
+    ],
+    "out": [
+      "OIDC tenant selection (P2, unless it blocks the accepted E2E contract)",
+      "tenant billing, quotas, and cross-tenant sharing",
+      "pantheon-ops repository changes",
+      "unrelated SSRF or product work"
+    ]
+  },
+  "harnessProfile": {
+    "template": "api-service",
+    "overlay": "pantheon-base",
+    "qualityProfile": "ci-workflow",
+    "ownerLayer": "platform"
+  },
+  "verificationPlan": {
+    "commands": [
+      "cd backend && go mod tidy",
+      "cd backend && go vet ./pkg/... ./modules/system/iam/...",
+      "cd backend && go test -count=1 ./modules/system/iam/tenant/",
+      "node scripts/check-pr-governance.mjs",
+      "node scripts/harness/check-task-packet.mjs --root .",
+      "node scripts/harness/check-structure-contract.mjs --root . --strict",
+      "node scripts/frontmatter-check.mjs"
+    ],
+    "runtimeEvidence": [
+      "go mod tidy clean with no go.sum churn",
+      "go vet and tenant package test compilation passed",
+      "governance, task-packet, structure, and frontmatter gates green locally"
+    ]
+  },
+  "runtimeSensitive": false,
+  "linkage": {
+    "evidenceDir": ".harness/evidence/2026-09-29-v0140-release-completion/",
+    "reviewFile": ".harness/evidence/2026-09-29-v0140-release-completion/review.md",
+    "summaryFile": ".harness/evidence/2026-09-29-v0140-release-completion/summary.md",
+    "changeRef": "PR: v0.14.0 release completion",
+    "planRefs": [],
+    "relatedTasks": ["2026-09-29-ops-ssrf-protection-integration", "2026-09-28-base-ssrf-protection"]
+  }
+}

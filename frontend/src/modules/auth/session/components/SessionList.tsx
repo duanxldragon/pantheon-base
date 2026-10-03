@@ -180,7 +180,9 @@ const SessionList: React.FC = () => {
     });
   };
 
+  const [revokingSessionId, setRevokingSessionId] = useState<string | null>(null);
   const removeSession = async (row: AdminSessionRow) => {
+    setRevokingSessionId(row.sessionId);
     try {
       await revokeAdminSession(row.sessionId);
       message.success(t('auth.session.revokeSuccess'));
@@ -188,6 +190,8 @@ const SessionList: React.FC = () => {
       await loadData(query, { silent: true });
     } catch {
       message.error(t('common.actionFailed'));
+    } finally {
+      setRevokingSessionId(null);
     }
   };
 
@@ -375,6 +379,7 @@ const SessionList: React.FC = () => {
                 size="small"
                 status="danger"
                 icon={<IconDelete />}
+                loading={revokingSessionId === row.sessionId}
                 disabled={!canDelete || isSelf || !!row.revokedAt}
               >
                 {t('auth.session.revoke')}

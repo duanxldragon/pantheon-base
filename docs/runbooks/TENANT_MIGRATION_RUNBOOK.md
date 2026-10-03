@@ -99,9 +99,9 @@
 
 ### 2.3 直接查询入口（scope 注入点）
 
-数据访问统一经过 `pkg/database/scope.go` 的 GORM scope 机制：
+数据访问统一经过 `backend/pkg/database/scope.go` 的 GORM scope 机制：
 
-- `WithDataScope(req *common.DataScopeReq)`（pkg/database/scope.go:12）— 现有 dept/self/custom 数据scope
+- `WithDataScope(req *common.DataScopeReq)`（backend/pkg/database/scope.go:12）— 现有 dept/self/custom 数据scope
 - `applyDataScopeMode`（scope.go:21）— 按 `DataScopeReq.Mode` 分派
 
 **租户注入点决策**：在 `applyDataScopeMode` 同层增加 tenant scope（platform 层，合同 §7 所有者），业务 handler 不手写 `WHERE tenant_id`。canary 任务交付该 helper；本 runbook 只约束迁移侧。
@@ -126,7 +126,7 @@
 
 | 路径 | 位置 | 租户化注意 |
 |------|------|-----------|
-| 操作日志中间件 | `internal/middleware/operation_log_middleware.go` | 异步落库时必须携带请求租户上下文，禁止落库时回读全局状态 |
+| 操作日志中间件 | `backend/internal/middleware/operation_log_middleware.go` | 异步落库时必须携带请求租户上下文，禁止落库时回读全局状态 |
 | 登录/安全事件 | `system_log_login` / `system_auth_security_event` | 行级带 tenant_id |
 | 导出/报表 | 经 platform 层专用通道（合同 §3.3）| 迁移窗口内禁止执行跨租户导出任务 |
 

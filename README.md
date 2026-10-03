@@ -10,16 +10,17 @@ Pantheon Platform 是一个面向企业后台的模块化单体底座，沉淀�
 
 | 项 | 值 |
 | --- | --- |
-| 当前 foundation release | [`pantheon-base-v0.13.0`](https://github.com/duanxldragon/pantheon-base/releases/tag/pantheon-base-v0.13.0)（已发布） |
+| 当前 foundation release | [`pantheon-base-v0.14.0`](https://github.com/duanxldragon/pantheon-base/releases/tag/pantheon-base-v0.14.0)（已发布） |
 | Shell/Harness 基线版本 | `1.4.0`（见 [VERSION](./VERSION) / [SHELL_VERSION.json](./SHELL_VERSION.json)） |
 | 部署文档 | [docs/DEPLOYMENT_GUIDE.md](./docs/DEPLOYMENT_GUIDE.md)（MySQL 8、Redis 7、迁移 + runtime seed、健康检查、遥测、备份恢复与 schema-aware 回滚） |
-| 变更记录 | [CHANGELOG.md](./CHANGELOG.md) |
+| 变更记录 | [CHANGELOG.md](./CHANGELOG.md) / [RELEASE_NOTES_v0.14.0.md](./RELEASE_NOTES_v0.14.0.md) |
 | **任务状态** | [.harness/STATUS.md](./.harness/STATUS.md) — 当前任务状态总览 |
 | **归档记录** | [.harness/ARCHIVE.md](./.harness/ARCHIVE.md) — 116 个已完成任务归档索引 |
+| **多租户系统** | [docs/TENANT_MATURITY_FINAL_2026-09-29.md](./docs/TENANT_MATURITY_FINAL_2026-09-29.md) — 96%成熟度（生产就绪） |
 
-交付状态说明：v0.13.0 foundation bundle、不可变 tag、GitHub Release 和 hosted required checks 均已完成。`pantheon-ops` 的 consumer lock、继承快照和业务 smoke 仍需在 Ops 仓库单独完成并验证。
+交付状态说明：v0.14.0 foundation bundle、不可变 tag、GitHub Release 和 hosted required checks 均已完成。`pantheon-ops` 的 consumer lock、继承快照和业务 smoke 仍需在 Ops 仓库单独完成并验证。
 
-**最新进展**（2026-09-25）：已完成两轮企业级整改（命名与边界整改 6/6、企业级整改 6/6），关闭所有 P0/P1 安全边界和生产规模问题。全模块通过 `-race` 检测，govulncheck 0 可达漏洞，Core Smoke 279 个用例全部通过。详见 [.harness/STATUS.md](./.harness/STATUS.md)。
+**最新进展**（2026-09-29）：v0.14.0 重大功能发布 - 完整多租户系统上线，成熟度从55%提升至96%（生产就绪）。新增完整数据隔离（23张表）、12个REST API端点、配额强制、审计日志、7个Prometheus指标和3个运维工具。100%向后兼容，现有部署可继续使用compat模式。详见 [RELEASE_NOTES_v0.14.0.md](./RELEASE_NOTES_v0.14.0.md)。
 
 ## 项目定位
 
@@ -30,12 +31,14 @@ Pantheon Platform 是一个面向企业后台的模块化单体底座，沉淀�
 ## 核心能力
 
 - **认证与会话**：access/refresh token、注销失效、在线会话、登录日志。
+- **多租户系统**（v0.14.0 新增）：完整数据隔离、租户CRUD API、成员管理、配额强制、审计日志、租户切换、Bootstrap自动化、Prometheus监控。96%成熟度，生产就绪。详见 [租户API文档](./docs/api/TENANT_API.md) 和 [升级指南](./docs/migrations/COMPAT_TO_MULTI_UPGRADE.md)。
 - **IAM 与权限**：用户、角色、菜单、页面权限、操作权限、Casbin 接口策略。
 - **组织管理**：部门、岗位、用户组织归属，以及组织架构视图。
 - **配置治理**：系统设置、字典管理、缓存刷新、敏感配置保护。
-- **审计能力**：登录日志、操作日志、关键写操作审计。
+- **审计能力**：登录日志、操作日志、关键写操作审计、租户操作审计。
 - **动态菜单**：菜单 seed、前端 manifest、组件注册表和构建期契约检查；注册表文件按命名约定发现（前端 `*Registry.ts`、后端 `*registry.go`），支持 consumer overlay 注入。
 - **低代码工作域**：后端物理路径为 `backend/modules/lowcode/generator` 与 `backend/modules/lowcode/dynamicmodule`，前端物理路径为 `frontend/src/modules/lowcode/generator` 与 `frontend/src/modules/lowcode/dynamicmodule`；逻辑工作域统一挂接到 `platform.lowcode`。
+- **运维工具**：健康检查、迁移验证、数据导出脚本，支持CI/CD集成。
 - **业务接入**：平台保留 `business/*` 扩展点、模块生成器和治理契约；具体业务仓库独立维护。
 
 ## 技术栈

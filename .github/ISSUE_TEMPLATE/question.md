@@ -40,8 +40,8 @@ If relevant, provide environment details:
 Have you checked the documentation?
 你检查过文档吗？
 
-- [ ] Yes, I checked [DEPLOYMENT_GUIDE.md](../docs/DEPLOYMENT_GUIDE.md)
-- [ ] Yes, I checked [docs/designs/](../docs/designs/)
+- [ ] Yes, I checked [DEPLOYMENT_GUIDE.md](../../docs/DEPLOYMENT_GUIDE.md)
+- [ ] Yes, I checked [docs/designs/](../../docs/designs/)
 - [ ] Yes, I checked README.md
 
 ## Code Snippet / 代码片段

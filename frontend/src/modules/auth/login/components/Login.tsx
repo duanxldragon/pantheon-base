@@ -42,6 +42,7 @@ import {
   usePublicSettings,
 } from '../../../../core/settings/publicSettings';
 import { COOKIE_TOKEN_PLACEHOLDER } from '../../../../core/auth/sessionSnapshot';
+import { resolveDefaultAuthedPath } from '../../../../core/router/defaultPath';
 import { SUPPORTED_LOCALES, switchI18nLanguage, type SupportedLocale } from '../../../../i18n';
 import './Login.css';
 
@@ -49,16 +50,6 @@ const FormItem = Form.Item;
 const LOGIN_NOTICE_MESSAGE_KEY_MAP: Record<string, string> = {
   'session.idle_timeout': 'auth.login.idleTimeoutNotice',
 };
-
-function resolvePostLoginPath(hasDashboardPermission: boolean, fallbackMenuPath: string | null) {
-  if (hasDashboardPermission) {
-    return '/dashboard';
-  }
-  if (fallbackMenuPath) {
-    return fallbackMenuPath;
-  }
-  return '/dashboard';
-}
 
 function resolveLoginErrorKey(error: unknown, fallbackKey: string) {
   if (!isRequestError(error)) {
@@ -136,7 +127,7 @@ function MFAChallengeFields({ challenge, t, onSubmit }: Readonly<MFAChallengeFie
         <div className="auth-login-mfa-setup">
           {challenge.totpProvisionUri ? (
             <div className="auth-login-mfa-qr">
-              <div className="auth-login-mfa-qr__image" aria-label={t('auth.mfa.scanQr')}>
+              <div className="auth-login-mfa-qr__image" role="img" aria-label={t('auth.mfa.scanQr')}>
                 <QRCodeSVG value={challenge.totpProvisionUri} size={168} level="M" includeMargin />
               </div>
               <Typography.Text className="auth-login-mfa-qr__hint">
@@ -172,6 +163,8 @@ function MFAChallengeFields({ challenge, t, onSubmit }: Readonly<MFAChallengeFie
           placeholder={t('auth.mfa.codePlaceholder')}
           size="large"
           maxLength={6}
+          autoComplete="one-time-code"
+          inputMode="numeric"
           onPressEnter={onSubmit}
         />
       </FormItem>
@@ -243,7 +236,7 @@ export function LoginPageComponent() {
     setUserInfo(res.user);
     const menuTree = await fetchMenuTree();
     const fallbackMenuPath = findFirstNavigableMenuPath(menuTree);
-    const nextPath = resolvePostLoginPath(canEnterPlatformDashboard(res.user), fallbackMenuPath);
+    const nextPath = resolveDefaultAuthedPath(canEnterPlatformDashboard(res.user), fallbackMenuPath);
     message.success(t('auth.loginSuccess'));
     navigate(nextPath, { replace: true });
   };
@@ -403,6 +396,7 @@ export function LoginPageComponent() {
                 prefix={<IconUser />}
                 placeholder={t('auth.usernamePlaceholder')}
                 size="large"
+                autoComplete="username"
                 onPressEnter={() => form.submit()}
               />
             </FormItem>
@@ -438,6 +432,7 @@ export function LoginPageComponent() {
                 prefix={<IconLock />}
                 placeholder={t('auth.passwordPlaceholder')}
                 size="large"
+                autoComplete="current-password"
                 onPressEnter={() => form.submit()}
               />
             </FormItem>

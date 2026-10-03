@@ -28,7 +28,7 @@ This registry turns repeated agent or process failures into concrete harness cha
 ## Review Notes
 
 - Repeated failures: CI signal noise (including advisory jobs that fail silently — FR-010, and the long-standing red advisory `Core Smoke` — FR-011, root-caused on 2026-09-20 by `.harness/evidence/2026-09-20-smoke-core-tenant-ci-gap/`), historical static-analysis maintainability debt, security boundary drift, smoke scope drift, unrecorded ratchet events, cache hygiene, and sibling-path method wrappers are now tracked.
-- FR-011 is `implemented`: the suite-membership and environment split is now explicit in `frontend/package.json`, `.github/workflows/smoke-core.yml`, and `tests/smoke-core/README.md`; the tenant matrix job owns its multi-mode prerequisites and `tenantmatrixdb` rejects unknown mode values. Hosted CI remains the required runtime evidence for the new tenant job.
+- FR-011 is `implemented`: the suite-membership and environment split is now explicit in `frontend/package.json`, `.github/workflows/smoke-core.yml`, and `frontend/tests/smoke-core/README.md`; the tenant matrix job owns its multi-mode prerequisites and `tenantmatrixdb` rejects unknown mode values. Hosted CI remains the required runtime evidence for the new tenant job.
 - Sensors with false positives: broad smoke can over-block unrelated PRs when used as a main quality gate.
 - Sensors with known false negatives: local checks still depend on agents recording task packet, evidence, and review artifacts for non-trivial work.
 - Rules to remove or downgrade: Codacy remains informational only; `Full Smoke Suite` stays scheduled, manual, or release-precheck.

@@ -115,7 +115,7 @@ Pantheon Base 应定位为“**模块化单体 + 企业后台底座**”，适�
 
 ### 4.3 为什么要拆
 
-- 当前 `backend/modules/system/user/user_service.go` 同时承担认证、会话、用户资料和后台用户管理，职责过重。
+- 当前 `backend/modules/system/iam/user/user_service.go` 同时承担认证、会话、用户资料和后台用户管理，职责过重。
 - 用户管理和认证安全不是同一种业务：
   - “管理别人”属于 IAM；
   - “验证我是谁 / 我能否登录”属于 Auth。
@@ -390,9 +390,9 @@ border/background，避免交互态被高特异性规则压掉）。机械门禁
 11. `docs/designs/BACKEND.md`
 12. `docs/designs/FRONTEND.md`
 13. `docs/designs/FRONTEND_UI_SPEC.md`
-14. `frontend/docs/COMPONENT_STYLING_GUIDE.md` (组件样式规范)
-15. `frontend/docs/UI_PATTERN_LIBRARY.md` (UI 模式库)
-16. `frontend/docs/DESIGN_ENGINEERING_GUIDE.md` (设计工程指南)
+14. `docs/frontend/COMPONENT_STYLING_GUIDE.md` (组件样式规范)
+15. `docs/frontend/UI_PATTERN_LIBRARY.md` (UI 模式库)
+16. `docs/frontend/DESIGN_ENGINEERING_GUIDE.md` (设计工程指南)
 17. `docs/designs/PLATFORM_DASHBOARD_DESIGN.md`
 18. `docs/designs/AUTH_MODULE_DESIGN.md`
 19. `docs/designs/MODULE_CONTRACT.md`
@@ -422,7 +422,7 @@ border/background，避免交互态被高特异性规则压掉）。机械门禁
 43. `docs/acceptances/ACCEPTANCE_CHECKLIST.md`
 44. `docs/acceptances/SYSTEM_CONFIG_GOVERNANCE_ACCEPTANCE.md`
 45. `docs/acceptances/BUSINESS_MODULE_ACCEPTANCE_MATRIX.md`
-46. `frontend/docs/COMPONENT_STYLING_GUIDE.md` - 组件样式规范（BEM 命名、Token 使用、状态实现）
-47. `frontend/docs/UI_PATTERN_LIBRARY.md` - UI 模式库（12 类常用模式 + 完整代码模板）
-48. `frontend/docs/DESIGN_ENGINEERING_GUIDE.md` - 设计工程指南（设计协作流程、Token 映射、调试技巧）
-49. `frontend/docs/TOKEN_MIGRATION_GUIDE.md` - Token 迁移指南（迁移规则、机械门禁、FAQ）
+46. `docs/frontend/COMPONENT_STYLING_GUIDE.md` - 组件样式规范（BEM 命名、Token 使用、状态实现）
+47. `docs/frontend/UI_PATTERN_LIBRARY.md` - UI 模式库（12 类常用模式 + 完整代码模板）
+48. `docs/frontend/DESIGN_ENGINEERING_GUIDE.md` - 设计工程指南（设计协作流程、Token 映射、调试技巧）
+49. `docs/frontend/TOKEN_MIGRATION_GUIDE.md` - Token 迁移指南（迁移规则、机械门禁、FAQ）
