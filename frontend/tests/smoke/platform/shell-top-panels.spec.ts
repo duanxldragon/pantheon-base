@@ -19,6 +19,33 @@ async function readBox(locator: import('@playwright/test').Locator): Promise<Box
   return box as Box;
 }
 
+// Arco Dropdown popups position themselves asynchronously (autoFitPosition) and
+// may still be animating in when a test measures them. A mid-transition box
+// reads as if the panel escaped the viewport, which made the narrow-viewport
+// containment assertions flaky. Wait until the box signature stops changing and
+// any in-flight animations have finished before measuring. This does not relax
+// the containment bound; it only removes the measurement race.
+async function settlePanel(locator: import('@playwright/test').Locator) {
+  let previous = '';
+  await expect
+    .poll(
+      async () => {
+        const box = await locator.boundingBox();
+        if (!box) return false;
+        const signature = `${Math.round(box.x)}:${Math.round(box.y)}:${Math.round(box.width)}:${Math.round(box.height)}`;
+        const stable = signature === previous;
+        previous = signature;
+        return stable;
+      },
+      { timeout: 5000, intervals: [100, 150, 200, 250] },
+    )
+    .toBe(true);
+  await locator.evaluate(async (element) => {
+    const animations = element.getAnimations({ subtree: true });
+    await Promise.all(animations.map((animation) => animation.finished.catch(() => undefined)));
+  });
+}
+
 async function expectNoViewportOverflow(page: import('@playwright/test').Page) {
   await expect
     .poll(async () =>
@@ -81,6 +108,7 @@ test('shell top panels and profile page stay contained on narrow viewports', asy
 
   const noticePanel = page.locator('.app-shell__notice-panel');
   await expect(noticePanel).toBeVisible();
+  await settlePanel(noticePanel);
   const noticeBox = await readBox(noticePanel);
   expect(noticeBox.y).toBeGreaterThanOrEqual(searchBox.y + searchBox.height - 1);
   expectBoxInsideViewport(page, noticeBox);
@@ -94,6 +122,7 @@ test('shell top panels and profile page stay contained on narrow viewports', asy
   await preferenceTrigger.click();
   const preferencePanel = page.locator('.app-shell__preference-panel');
   await expect(preferencePanel).toBeVisible();
+  await settlePanel(preferencePanel);
   expectBoxInsideViewport(page, await readBox(preferencePanel));
   await expect(await readWidth(preferencePanel)).toBeLessThanOrEqual(358);
   await expectNoViewportOverflow(page);
