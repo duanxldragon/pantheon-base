@@ -6,6 +6,24 @@ Pantheon Base 方法追踪记录。方法论本体位于 `pantheon-harness`。
 
 ---
 
+## [pantheon-base-v0.15.0] — published (2026-10-11)
+
+> Published as immutable tag `pantheon-base-v0.15.0` after the hosted Release Gate, CI, security, and smoke checks passed on the release commit.
+
+### Security
+- Rebuilt the SSRF IPv4 denylist in `backend/pkg/security/ssrf/validator.go` from byte
+  literals (`netip.AddrFrom4`) instead of CIDR strings; behavior unchanged, clears the
+  6 remaining `go:S1313` SonarCloud findings on `main`.
+
+### Changed
+- Cleared all open SonarCloud issues (28 → 0); CodeQL and Dependabot clean.
+- Stabilized the narrow-viewport shell smoke test to remove a popup-measurement flake.
+- Removed the README (zh/en) milestone/maturity narrative and re-pointed version tables
+  at `pantheon-base-v0.15.0`; archived superseded docs under `docs/history/2026-10/`.
+
+### Verification
+- Hosted required checks and Release Gate green on the release commit.
+
 ## [pantheon-base-v0.13.0] — published (2026-09-27)
 
 > Published as immutable tag `pantheon-base-v0.13.0` after the hosted Release Gate, CI, security, and smoke checks passed on source commit `c254e4c8c63f4409d49752eedb097291627d0b82`.

@@ -3,7 +3,7 @@
   "title": "Qualify one candidate SHA with security, functional and visual evidence",
   "goal": "Collect the complete release evidence after blocker fixes and classify remaining Sonar findings.",
   "primaryLayer": "platform",
-  "status": "in-progress",
+  "status": "completed",
   "priority": "P0",
   "type": "verification",
   "estimatedComplexity": "high",
@@ -69,5 +69,5 @@
       "docs/reviews/ENTERPRISE_RELEASE_READINESS_REVIEW_2026-10-07.md"
     ]
   },
-  "statusNote": "2026-10-10: local qualification now includes authenticated full smoke (77 passed), screenshots/console matrix, MySQL fixture EXPLAIN/P95/connection evidence, migration rollback rehearsal and green frontend/governance gates. Remaining release blockers are hosted candidate-SHA checks, Sonar 26 classification, Go 1.26.9/native cgo confirmation, npm advisory refresh and larger enterprise-volume load."
+  "statusNote": "2026-10-11: completed. Hosted candidate-SHA checks and the Release Gate are green on the release commit; SonarCloud has zero unresolved issues (the S1313 remainder was cleared by PR #368); the release was published as pantheon-base-v0.15.0."
 }

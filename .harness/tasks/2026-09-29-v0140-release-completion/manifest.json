@@ -3,8 +3,8 @@
   "title": "Complete tenant P1 readiness and publish v0.14.2",
   "goal": "Complete tenant P1 scoping per a frozen resource matrix, pass tenant browser E2E and all required smoke/CI gates, then publish pantheon-base-v0.14.2",
   "primaryLayer": "platform",
-  "status": "in-progress",
-  "statusNote": "2026-10-10: runtime/security/documentation work is superseded by 2026-10-07-release-readiness-remediation. Local authenticated full smoke (77 passed), MySQL fixture evidence, migration rollback, governance and UI gates are now recorded; v0.14.2 publication, hosted required checks, Sonar disposition and pantheon-ops lock remain separate maintainer gates.",
+  "status": "completed",
+  "statusNote": "2026-10-11: superseded and closed by 2026-10-07-release-readiness-remediation; the tenant P1 scope and runtime/security/documentation work are covered there, and the release was published as pantheon-base-v0.15.0 (the earlier v0.14.2 plan was superseded by the maintainer's v0.15.0 decision). Hosted required checks and Release Gate are green; pantheon-ops lock remains a separate consumer-repository follow-up.",
   "priority": "P1",
   "type": "release-completion",
   "scope": {

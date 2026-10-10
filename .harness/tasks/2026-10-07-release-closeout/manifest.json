@@ -3,7 +3,7 @@
   "title": "Close PR, branch, documentation and foundation handoff gates",
   "goal": "Reach the maintainer's main-only, all-checks-green final acceptance state and record the release decision.",
   "primaryLayer": "platform",
-  "status": "in-progress",
+  "status": "completed",
   "priority": "P0",
   "type": "release-closeout",
   "estimatedComplexity": "medium",

@@ -3,7 +3,7 @@
   "title": "Close 2026-10-07 enterprise release readiness blockers",
   "goal": "Repair verified release blockers, collect candidate-SHA evidence and obtain a maintainer final acceptance decision.",
   "primaryLayer": "platform",
-  "status": "in-progress",
+  "status": "completed",
   "priority": "P0",
   "type": "release-readiness-remediation",
   "estimatedComplexity": "high",
@@ -58,5 +58,5 @@
       "docs/reviews/ENTERPRISE_RELEASE_READINESS_REVIEW_2026-10-07.md"
     ]
   },
-  "statusNote": "2026-10-10: Wave 0 and locally executable Wave 1 remediation are complete. Browser, migration, MySQL fixture, frontend and governance evidence are recorded. Parent remains in-progress for hosted candidate-SHA gates, Sonar disposition, toolchain-dependent tenant/race evidence and final release closeout."
+  "statusNote": "2026-10-11: completed. All Wave 0/Wave 1 children closed; PR #368 merged; branches reduced to main only; Release Gate green; pantheon-base-v0.15.0 published."
 }
