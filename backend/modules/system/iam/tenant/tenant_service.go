@@ -20,6 +20,11 @@ var (
 	ErrMembershipNotFound = errors.New("tenant membership not found")
 )
 
+const (
+	tenantIDPredicate           = "tenant_id = ?"
+	activeTenantMemberPredicate = "tenant_id = ? AND status = ?"
+)
+
 // Service handles tenant CRUD and lifecycle operations
 type Service struct {
 	db *gorm.DB
@@ -174,7 +179,7 @@ func (s *Service) DeleteTenant(id uint64) error {
 	// Check if tenant has active members
 	var memberCount int64
 	if err := s.db.Model(&Membership{}).
-		Where("tenant_id = ? AND status = ?", id, "active").
+		Where(activeTenantMemberPredicate, id, "active").
 		Count(&memberCount).Error; err != nil {
 		return fmt.Errorf("check tenant members: %w", err)
 	}
@@ -247,7 +252,7 @@ const (
 // ListAllTenantMembers preserves the legacy unpaginated member listing.
 func (s *Service) ListAllTenantMembers(tenantID uint64) ([]Membership, error) {
 	memberships := make([]Membership, 0)
-	if err := s.db.Where("tenant_id = ? AND status = ?", tenantID, "active").
+	if err := s.db.Where(activeTenantMemberPredicate, tenantID, "active").
 		Order("created_at ASC, id ASC").
 		Find(&memberships).Error; err != nil {
 		return nil, fmt.Errorf("list tenant members: %w", err)
@@ -260,7 +265,7 @@ func (s *Service) ListTenantMembers(tenantID uint64, page, pageSize int) ([]Memb
 	page, pageSize = normalizeTenantMemberPagination(page, pageSize)
 
 	scope := s.db.Model(&Membership{}).
-		Where("tenant_id = ? AND status = ?", tenantID, "active")
+		Where(activeTenantMemberPredicate, tenantID, "active")
 
 	var total int64
 	if err := scope.Count(&total).Error; err != nil {

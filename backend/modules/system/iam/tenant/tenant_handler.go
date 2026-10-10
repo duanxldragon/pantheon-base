@@ -7,6 +7,11 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+const (
+	invalidTenantIDMessage = "invalid tenant id"
+	tenantNotFoundMessage  = "tenant not found"
+)
+
 // Handler handles HTTP requests for tenant management
 type Handler struct {
 	service *Service
@@ -60,14 +65,14 @@ func (h *Handler) CreateTenant(c *gin.Context) {
 func (h *Handler) GetTenant(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid tenant id"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": invalidTenantIDMessage})
 		return
 	}
 
 	tenant, err := h.service.GetTenantByID(id)
 	if err != nil {
 		if err == ErrTenantNotFound {
-			c.JSON(http.StatusNotFound, gin.H{"error": "tenant not found"})
+			c.JSON(http.StatusNotFound, gin.H{"error": tenantNotFoundMessage})
 			return
 		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -118,7 +123,7 @@ func (h *Handler) ListTenants(c *gin.Context) {
 func (h *Handler) UpdateTenant(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid tenant id"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": invalidTenantIDMessage})
 		return
 	}
 
@@ -130,7 +135,7 @@ func (h *Handler) UpdateTenant(c *gin.Context) {
 
 	if err := h.service.UpdateTenant(id, dto); err != nil {
 		if err == ErrTenantNotFound {
-			c.JSON(http.StatusNotFound, gin.H{"error": "tenant not found"})
+			c.JSON(http.StatusNotFound, gin.H{"error": tenantNotFoundMessage})
 			return
 		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -152,13 +157,13 @@ func (h *Handler) UpdateTenant(c *gin.Context) {
 func (h *Handler) DeleteTenant(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid tenant id"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": invalidTenantIDMessage})
 		return
 	}
 
 	if err := h.service.DeleteTenant(id); err != nil {
 		if err == ErrTenantNotFound {
-			c.JSON(http.StatusNotFound, gin.H{"error": "tenant not found"})
+			c.JSON(http.StatusNotFound, gin.H{"error": tenantNotFoundMessage})
 			return
 		}
 		if err == ErrTenantHasActiveUsers {
@@ -188,7 +193,7 @@ func (h *Handler) DeleteTenant(c *gin.Context) {
 func (h *Handler) AddTenantMember(c *gin.Context) {
 	tenantID, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid tenant id"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": invalidTenantIDMessage})
 		return
 	}
 
@@ -200,7 +205,7 @@ func (h *Handler) AddTenantMember(c *gin.Context) {
 
 	if err := h.service.AddMember(tenantID, dto.UserID, dto.Role); err != nil {
 		if err == ErrTenantNotFound {
-			c.JSON(http.StatusNotFound, gin.H{"error": "tenant not found"})
+			c.JSON(http.StatusNotFound, gin.H{"error": tenantNotFoundMessage})
 			return
 		}
 		if err == ErrMembershipExists {
@@ -226,7 +231,7 @@ func (h *Handler) AddTenantMember(c *gin.Context) {
 func (h *Handler) RemoveTenantMember(c *gin.Context) {
 	tenantID, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid tenant id"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": invalidTenantIDMessage})
 		return
 	}
 
@@ -265,8 +270,7 @@ func (h *Handler) ListTenantMembers(c *gin.Context) {
 
 // ListTenantMembersPage keeps the additive compatibility path while applying the same bounded contract.
 func (h *Handler) ListTenantMembersPage(c *gin.Context) {
-	page, pageSize := parseTenantMemberPagination(c)
-	h.writeTenantMembersPage(c, page, pageSize)
+	h.ListTenantMembers(c)
 }
 
 func parseTenantMemberPagination(c *gin.Context) (int, int) {
@@ -284,7 +288,7 @@ func parseTenantMemberPagination(c *gin.Context) (int, int) {
 func (h *Handler) writeTenantMembersPage(c *gin.Context, page, pageSize int) {
 	tenantID, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid tenant id"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": invalidTenantIDMessage})
 		return
 	}
 

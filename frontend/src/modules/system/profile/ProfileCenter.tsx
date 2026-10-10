@@ -255,14 +255,13 @@ const ProfileCenter: React.FC = () => {
                       <Input
                         value={avatarPreview}
                         placeholder={t('system.profile.avatarPlaceholder')}
-                        onChange={(value) => {
+                        onChange={(value = '') => {
                           // The FormItem's child is a Space, so Arco does not
                           // bind this Input to the form field automatically;
                           // mirror edits into the form store so manually typed
                           // avatar URLs are saved like uploaded ones.
-                          const next = value || '';
-                          profileForm.setFieldValue('avatar', next);
-                          setAvatarPreview(next);
+                          profileForm.setFieldValue('avatar', value);
+                          setAvatarPreview(value);
                         }}
                         onPressEnter={() => profileForm.submit()}
                       />

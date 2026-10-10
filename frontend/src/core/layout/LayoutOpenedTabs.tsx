@@ -56,12 +56,14 @@ const LayoutOpenedTabs: React.FC<LayoutOpenedTabsProps> = ({
     if (tabs.length === 0) {
       return;
     }
-    const nextIndex =
-      offset === 'home'
-        ? 0
-        : offset === 'end'
-          ? tabs.length - 1
-          : (currentIndex + offset + tabs.length) % tabs.length;
+    let nextIndex: number;
+    if (offset === 'home') {
+      nextIndex = 0;
+    } else if (offset === 'end') {
+      nextIndex = tabs.length - 1;
+    } else {
+      nextIndex = (currentIndex + offset + tabs.length) % tabs.length;
+    }
     tabRefs.current.get(tabs[nextIndex].path)?.focus();
   };
 
