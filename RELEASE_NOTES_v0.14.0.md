@@ -78,30 +78,50 @@ No action required - default tenant created automatically on bootstrap.
 
 ### For Existing Deployments (Compat→Multi Upgrade)
 
+**Erratum (2026-10-09)**: Use the current embedded migration runner below; the previously published `server migrate` example was not an implemented CLI. The runner applies all pending embedded migrations (currently through 000021), not only 000014-000016.
+
 **Prerequisites**:
-1. Backup database: `mysqldump pantheon > backup.sql`
-2. Run verification: `./scripts/tenant-migration-verify.sh`
+1. Set `PANTHEON_DSN` for the target database and `PANTHEON_BACKUP_FILE` to an absolute path for a new, non-empty backup file.
+2. Run pre-check: `./scripts/tenant-migration-verify.sh` with `DB_NAME`, `DB_USER`, and `DB_HOST` matching the DSN.
 
 **Upgrade Steps** (5-15 minutes downtime):
+
 ```bash
-# 1. Apply migration
-./pantheon-server migrate up
+# 1. Configure these values from the deployment secret store or protected environment.
+export DB_USER="user"
+export DB_NAME="database"
+export DB_HOST="host"
+export PANTHEON_DSN="user:password@tcp(host:3306)/database?charset=utf8mb4&parseTime=True&loc=Local"
+export PANTHEON_BACKUP_FILE="/backup/pantheon_before_multi_$(date +%Y%m%d_%H%M%S).sql"
 
-# 2. Create default tenant
-mysql pantheon < scripts/create-default-tenant.sql
+# 2. Back up the exact target database before touching schema or settings.
+mysqldump -h "$DB_HOST" -P "${DB_PORT:-3306}" -u "$DB_USER" -p "$DB_NAME" > "$PANTHEON_BACKUP_FILE"
+test -s "$PANTHEON_BACKUP_FILE"
 
-# 3. Migrate users
-mysql pantheon < scripts/migrate-users-to-tenant.sql
+# 3. Apply all pending embedded migrations; compat mode remains unchanged.
+bash ./scripts/tenant-migration-execute.sh
+```
 
-# 4. Switch mode
-UPDATE system_setting 
-SET setting_value = '"multi"' 
+```bash
+# 3. Create the default tenant and migrate existing users into it.
+#    No bundled .sql scripts exist for this step - follow Steps 1-2
+#    (inline SQL) of docs/migrations/COMPAT_TO_MULTI_UPGRADE.md.
+#    Verify before proceeding:
+mysql -u root -p pantheon -e "SELECT id, code, status FROM tenants WHERE code = 'default';"
+```
+
+```sql
+-- 4. Switch tenant mode (single quoted JSON value)
+UPDATE system_setting
+SET setting_value = '"multi"'
 WHERE setting_key = 'platform.tenant_mode';
+```
 
-# 5. Restart application
+```bash
+# 5. Restart the application
 systemctl restart pantheon-server
 
-# 6. Verify
+# 6. Verify tenant health
 ./scripts/tenant-health-check.sh 1
 ```
 
@@ -179,7 +199,7 @@ Existing deployments continue to work in `compat` mode (tenant_id=0). Multi-tena
 go get github.com/duanxldragon/pantheon-base@v0.14.0
 
 # 2. Run migrations
-./pantheon-server migrate up
+PANTHEON_DSN="user:password@tcp(host:3306)/database?charset=utf8mb4&parseTime=True&loc=Local" go run ./cmd/tenantmigration up
 
 # 3. Restart application
 systemctl restart pantheon-server
@@ -199,12 +219,12 @@ Upgrade to v0.13.1 first, then follow v0.13.x upgrade path.
    - Impact: Users with multiple tenants cannot choose via OIDC
 
 2. **E2E Tests** (Priority: P2)
-   - Status: Unit tests complete, E2E automated tests pending
-   - Mitigation: Manual testing procedures documented
+   - Status: Authenticated platform full smoke passed (77 tests across desktop/pad/phone); tenant-hostile E2E and native cgo execution remain hosted-toolchain gates
+   - Mitigation: Browser evidence is recorded under `.harness/evidence/2026-10-07-release-qualification/`; run the tenant matrix in hosted CI before immutable publication
 
 3. **Service Layer Integration** (Priority: P1)
-   - Status: TenantService complete, legacy services pending
-   - Impact: User/Role/Menu services need gradual scope integration
+   - Status: Tenant member pagination, auth/session ownership and IAM data-scope safeguards are implemented; broader per-resource tenant ownership remains an explicit follow-up
+   - Impact: Do not claim full multi-tenant resource isolation until the hosted tenant matrix and ownership review are green
 
 ## 🎯 Maturity Score
 
@@ -252,3 +272,6 @@ Upgrade to v0.13.1 first, then follow v0.13.x upgrade path.
 ---
 
 **Full Changelog**: v0.13.1...v0.14.0
+
+
+> **Qualification note (2026-10-10):** The historical maturity score above describes the v0.14.0 publication baseline. Current branch qualification is tracked separately in `.harness/STATUS.md`; local browser, migration rollback, MySQL fixture and governance evidence are green, while hosted required checks, Sonar disposition and immutable release publication remain open.

@@ -29,12 +29,14 @@ run_query() {
 
 # Test 1: Check migration 000020 applied
 echo "Test 1: Verifying migration 000020 status..."
-MIGRATION_APPLIED=$(run_query "SELECT COUNT(*) FROM schema_migrations WHERE version = '000020';")
-if [ "$MIGRATION_APPLIED" -eq 1 ]; then
-    echo -e "${GREEN}✅ Migration 000020 applied${NC}"
+MIGRATION_STATE=$(run_query "SELECT CONCAT(version, ':', dirty) FROM schema_migrations LIMIT 1;")
+MIGRATION_VERSION="${MIGRATION_STATE%%:*}"
+MIGRATION_DIRTY="${MIGRATION_STATE##*:}"
+if [ -n "$MIGRATION_VERSION" ] && [ "$MIGRATION_VERSION" -ge 20 ] && [ "$MIGRATION_DIRTY" -eq 0 ]; then
+    echo -e "${GREEN}✅ Tenant schema migrations applied (version $MIGRATION_VERSION)${NC}"
 else
-    echo -e "${RED}❌ Migration 000020 NOT applied${NC}"
-    echo "   Run: ./pantheon-server migrate up"
+    echo -e "${RED}❌ Tenant schema migration state is not ready (version=${MIGRATION_VERSION:-missing}, dirty=${MIGRATION_DIRTY:-unknown})${NC}"
+    echo "   Run: PANTHEON_DSN=... go run ./cmd/tenantmigration up"
     ERRORS=$((ERRORS + 1))
 fi
 
@@ -93,7 +95,7 @@ if [ "$DEFAULT_TENANT_EXISTS" -eq 1 ]; then
     run_query "SELECT id, code, name, status FROM tenants WHERE code = 'default';"
 else
     echo -e "${YELLOW}⚠️  Default tenant does not exist${NC}"
-    echo "   Run: INSERT INTO tenants (code, name, status, plan, created_at, updated_at) VALUES ('default', '默认租户', 'active', 'enterprise', NOW(), NOW());"
+    echo "   Run: follow Step 1 in docs/migrations/COMPAT_TO_MULTI_UPGRADE.md."
     WARNINGS=$((WARNINGS + 1))
 fi
 

@@ -550,6 +550,11 @@ func TestAuthHandler_RevokeSession(t *testing.T) {
 
 	c, recorder := newHandlerTestContext(t)
 	c.Params = gin.Params{{Key: "id", Value: "self-session"}}
+	// F02: the self-service path now verifies ownership and rejects the
+	// current session, so the caller identity and a distinct current session
+	// must be present.
+	c.Set("userID", u.ID)
+	c.Set("sessionId", "other-current-session")
 	h.RevokeSession(c)
 
 	code, data := decodeHandlerResponse(t, recorder)

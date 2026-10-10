@@ -577,7 +577,7 @@ const PermissionList: React.FC = () => {
               <Button
                 icon={<IconDownload />}
                 onClick={() => {
-                  exportPermissionWorkbench(workbenchQuery);
+                    void exportPermissionWorkbench(workbenchQuery).catch(() => message.error(t('common.actionFailed')));
                 }}
                 disabled={!canExport}
               >
@@ -724,7 +724,7 @@ const PermissionList: React.FC = () => {
                 <Popconfirm
                   title={t('system.permission.policy.batchDeleteConfirm')}
                   onOk={() => {
-                    handleBatchDelete();
+                      void handleBatchDelete().catch(() => message.error(t('common.actionFailed')));
                   }}
                   disabled={batchDeleteDisabled}
                 >
@@ -809,7 +809,7 @@ const PermissionList: React.FC = () => {
         form={form}
         layout="vertical"
         onSubmit={() => {
-          submitForm();
+           void submitForm();
         }}
       >
         <Space direction="vertical" size={20} className="dialog-form-stack">

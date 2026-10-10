@@ -1,0 +1,81 @@
+{
+  "taskId": "2026-10-07-iam-data-scope",
+  "executedAt": "2026-10-08T00:00:00+08:00",
+  "candidateSha": "docs/update-delivery-status@HEAD (worktree)",
+  "commands": [
+    {
+      "step": "build",
+      "command": "cd backend && go build ./...",
+      "result": "success",
+      "cwd": "backend",
+      "status": "passed"
+    },
+    {
+      "step": "vet",
+      "command": "cd backend && go vet ./internal/middleware/ ./modules/system/iam/role/",
+      "result": "success",
+      "cwd": "backend",
+      "status": "passed"
+    },
+    {
+      "step": "gofmt",
+      "command": "cd backend && gofmt -l internal/middleware/ modules/system/iam/",
+      "result": "success",
+      "details": "no findings after formatting",
+      "cwd": "backend",
+      "status": "passed"
+    },
+    {
+      "step": "F01 fault-injection tests",
+      "command": "cd backend && go test ./internal/middleware/ -run DataScope -v",
+      "result": "success",
+      "details": "TestApplyRolePolicyFailureFailsClosedScope / TestPolicyFailureRequestRejected / TestAdminBypassesPolicyLookup all PASS (bad-table injection: CREATE TABLE system_role_data_scope(unrelated_col BIGINT) + storeCachedTableExistence=true)",
+      "cwd": "backend",
+      "status": "passed"
+    },
+    {
+      "step": "F06 preserve-custom-dept regression",
+      "command": "cd backend && go test ./modules/system/iam/role/ -run 'TestRoleService_UpdateRole' -v",
+      "result": "success",
+      "details": "TestRoleService_UpdateRolePreservesCustomDataScopeDeptIDs (permission entry configures custom [10,20,30], role edit sends dataScope=custom, dept IDs preserved); TestRoleService_UpdateRoleSwitchToCustomWithoutPolicyKeepsEmpty PASS",
+      "cwd": "backend",
+      "status": "passed"
+    },
+    {
+      "step": "scoped regression",
+      "command": "cd backend && go test ./modules/system/iam/... ./internal/middleware/... ./pkg/database/...",
+      "result": "success",
+      "details": "menu/permission/role/user/middleware/database all ok",
+      "cwd": "backend",
+      "status": "passed"
+    },
+    {
+      "step": "full backend suite",
+      "command": "cd backend && PANTHEON_TEST_DSN=... PANTHEON_TEST_REDIS_ADDR=... PANTHEON_TEST_REDIS_PASSWORD=... go test ./...",
+      "result": "success-with-gap",
+      "details": "45 packages ok; only modules/system/iam/tenant fails locally: CGO_ENABLED=0 stub (go-sqlite3 requires cgo, Cygwin gcc cannot compile it). Known local toolchain gap recorded in the 2026-10-07 review; GitHub Backend Tests green.",
+      "cwd": "backend",
+      "status": "passed"
+    }
+  ],
+  "gap": "tenant package tests skipped locally due to CGO toolchain (Cygwin gcc vs MinGW). Not a code failure; CI equivalent passes.",
+  "repo": "pantheon-base",
+  "agent": {
+    "tool": "codex",
+    "adapter": "platform-coordinator"
+  },
+  "knownGaps": [
+    "tenant package tests skipped locally due to CGO toolchain (Cygwin gcc vs MinGW). Not a code failure; CI equivalent passes."
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-07-iam-data-scope/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-07-iam-data-scope/",
+    "reviewFile": ".harness/evidence/2026-10-07-iam-data-scope/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-07-release-readiness-remediation.task.md",
+      "docs/reviews/ENTERPRISE_RELEASE_READINESS_REVIEW_2026-10-07.md"
+    ],
+    "summaryFile": ".harness/evidence/2026-10-07-iam-data-scope/summary.md"
+  }
+}

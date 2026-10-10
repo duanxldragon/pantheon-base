@@ -56,16 +56,13 @@ func (s *BootstrapService) AssignAdminToDefaultTenant(adminUserID uint64) error 
 		return err
 	}
 
-	// Check if admin is already a member
-	memberships, err := s.tenantService.ListTenantMembers(tenant.ID)
+	// Check if admin is already a member (bounded single-membership lookup)
+	_, isMember, err := s.tenantService.ActiveMembershipRole(tenant.ID, adminUserID)
 	if err != nil {
 		return fmt.Errorf("check admin membership: %w", err)
 	}
-
-	for _, m := range memberships {
-		if m.UserID == adminUserID {
-			return nil // Already a member
-		}
+	if isMember {
+		return nil // Already a member
 	}
 
 	// Add admin as owner of default tenant

@@ -1,0 +1,63 @@
+{
+  "taskId": "2026-10-07-auth-session-scope",
+  "executedAt": "2026-10-08T00:20:00+08:00",
+  "commands": [
+    {
+      "step": "build + vet",
+      "command": "cd backend && go build ./... && go vet ./modules/auth/session/ ./modules/auth/login/",
+      "result": "success",
+      "cwd": "backend",
+      "status": "passed"
+    },
+    {
+      "step": "F02/F03 hostile tests",
+      "command": "cd backend && (DSN+Redis env) go test ./modules/auth/session/ -run 'TenantScope|RevokeOwnedSession_Rejects|CompatSeesAllTenants' -v",
+      "result": "success",
+      "details": "6/6 PASS: foreign-user session rejected (ErrUnauthorized), current-session rejected, tenant-scoped list/count, cross-tenant single revoke no-op (tokens untouched), cross-tenant batch revoke only own tenant, compat platform exception sees+revokes both tenants",
+      "cwd": "backend",
+      "status": "passed"
+    },
+    {
+      "step": "handler test update (old test encoded vulnerable behavior)",
+      "command": "set userID + distinct current sessionId in TestAuthHandler_RevokeSession",
+      "result": "success",
+      "details": "old test relied on no ownership check; now exercises RevokeOwnedSession path",
+      "cwd": ".",
+      "status": "passed"
+    },
+    {
+      "step": "manifest verification command",
+      "command": "cd backend && (DSN+Redis env) go test ./modules/auth/login/... ./modules/auth/session/... ./internal/middleware/...",
+      "result": "success",
+      "details": "login ok 78.574s; session ok 4.838s; internal/middleware ok 2.248s",
+      "cwd": "backend",
+      "status": "passed"
+    },
+    {
+      "step": "gofmt",
+      "command": "cd backend && gofmt -l modules/auth/ internal/middleware/",
+      "result": "success",
+      "cwd": "backend",
+      "status": "passed"
+    }
+  ],
+  "repo": "pantheon-base",
+  "agent": {
+    "tool": "codex",
+    "adapter": "platform-coordinator"
+  },
+  "knownGaps": [
+    "Legacy evidence did not record structured known gaps; consult the linked summary/review before treating as no-gap."
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-07-auth-session-scope/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-07-auth-session-scope/",
+    "reviewFile": ".harness/evidence/2026-10-07-auth-session-scope/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-07-release-readiness-remediation.task.md",
+      "docs/reviews/ENTERPRISE_RELEASE_READINESS_REVIEW_2026-10-07.md"
+    ],
+    "summaryFile": ".harness/evidence/2026-10-07-auth-session-scope/summary.md"
+  }
+}

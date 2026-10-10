@@ -1,0 +1,68 @@
+{
+  "taskId": "2026-10-07-ui-maintainability-followup",
+  "title": "Close observed UI and documentation consistency issues",
+  "goal": "Fix bounded form-state and accessibility issues and align the current UI/permission source of truth.",
+  "primaryLayer": "platform",
+  "status": "completed",
+  "priority": "P1",
+  "type": "improvement",
+  "estimatedComplexity": "medium",
+  "parentTaskId": "2026-10-07-release-readiness-remediation",
+  "dependsOn": [
+    "2026-10-07-release-closeout"
+  ],
+  "findings": [
+    "avatar input",
+    "profile error state",
+    "tab keyboard semantics",
+    "spec drift"
+  ],
+  "scope": {
+    "in": [
+      "frontend/src/modules/system/user/UserFormModal.tsx",
+      "frontend/src/modules/system/profile/ProfileCenter.tsx",
+      "frontend/src/core/layout/LayoutOpenedTabs.tsx",
+      "docs/designs/BACKOFFICE_STYLE_CONSTRAINTS.md",
+      "docs/designs/PERMISSION_MODEL.md"
+    ],
+    "out": [
+      "Broad redesign",
+      "New visual system or component library"
+    ]
+  },
+  "acceptanceCriteria": [
+    "Manually entered avatar URL persists after save/reload and upload flow remains valid.",
+    "Profile fetch failure shows a persistent recovery state; save is unavailable until valid data loads.",
+    "Tabs satisfy their chosen keyboard/ARIA model; desktop and phone render evidence shows no regressions.",
+    "Filter and page-guard documentation points to one current canonical rule."
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "ui-runtime",
+    "ownerLayer": "consumer-repository"
+  },
+  "verificationPlan": {
+    "commands": [
+      "cd frontend && npm run type-check && npm run lint && npm run test:unit && npm run build",
+      "npm run check:ui-quality-gate"
+    ],
+    "runtimeEvidence": [
+      "before/after browser URL, console and screenshots at 1440x900 and 390x844",
+      "form-save and error-retry smoke result"
+    ]
+  },
+  "runtimeSensitive": true,
+  "linkage": {
+    "parentTaskPacket": "docs/harness/tasks/2026-10-07-release-readiness-remediation.task.md",
+    "assessment": "docs/reviews/ENTERPRISE_RELEASE_READINESS_REVIEW_2026-10-07.md",
+    "evidenceDir": ".harness/evidence/2026-10-07-ui-maintainability-followup/",
+    "summaryFile": ".harness/evidence/2026-10-07-ui-maintainability-followup/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-07-ui-maintainability-followup/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-07-release-readiness-remediation.task.md",
+      "docs/reviews/ENTERPRISE_RELEASE_READINESS_REVIEW_2026-10-07.md"
+    ]
+  }
+}

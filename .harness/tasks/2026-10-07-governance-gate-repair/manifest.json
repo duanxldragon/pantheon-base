@@ -1,0 +1,63 @@
+{
+  "taskId": "2026-10-07-governance-gate-repair",
+  "title": "Repair main Docs Governance and Quality Gates",
+  "goal": "Resolve the missing shell landing artifact and harness mirror drift without weakening the required gate.",
+  "primaryLayer": "platform",
+  "status": "completed",
+  "priority": "P0",
+  "type": "ci-remediation",
+  "estimatedComplexity": "medium",
+  "parentTaskId": "2026-10-07-release-readiness-remediation",
+  "dependsOn": [],
+  "findings": [
+    "G01"
+  ],
+  "scope": {
+    "in": [
+      "SHELL_VERSION.json or its governed checker",
+      "scripts/harness/check-doc-frontmatter.mjs",
+      "pantheon-harness/scripts/harness/check-doc-frontmatter.mjs (upstream ownership only if needed)",
+      "docs/harness/AI_QUALITY_GOVERNANCE.md"
+    ],
+    "out": [
+      "Using solo-override",
+      "Changing unrelated product checks"
+    ]
+  },
+  "acceptanceCriteria": [
+    "Choose and document whether SHELL_VERSION.json is required; restore the artifact or update its canonical contract and checker together.",
+    "Harness mirror drift check passes with the intended upstream source; no unexplained script copy remains.",
+    "Hosted Docs Governance, Quality Gates and Release Gate Candidate Checks pass on the same candidate SHA; solo-override is absent."
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "ci-workflow",
+    "ownerLayer": "consumer-repository"
+  },
+  "verificationPlan": {
+    "commands": [
+      "npm run check:harness-adoption",
+      "npm run check:harness-sync",
+      "npm run check:harness-docs",
+      "npm run check:task-packet"
+    ],
+    "runtimeEvidence": [
+      "failed run 37131143242 root cause and green rerun URL",
+      "canonical source/consumer diff"
+    ]
+  },
+  "runtimeSensitive": false,
+  "linkage": {
+    "parentTaskPacket": "docs/harness/tasks/2026-10-07-release-readiness-remediation.task.md",
+    "assessment": "docs/reviews/ENTERPRISE_RELEASE_READINESS_REVIEW_2026-10-07.md",
+    "evidenceDir": ".harness/evidence/2026-10-07-governance-gate-repair/",
+    "summaryFile": ".harness/evidence/2026-10-07-governance-gate-repair/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-07-governance-gate-repair/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-07-release-readiness-remediation.task.md",
+      "docs/reviews/ENTERPRISE_RELEASE_READINESS_REVIEW_2026-10-07.md"
+    ]
+  }
+}

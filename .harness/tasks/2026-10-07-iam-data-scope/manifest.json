@@ -1,0 +1,63 @@
+{
+  "taskId": "2026-10-07-iam-data-scope",
+  "title": "Fail closed on policy errors and preserve custom department scope",
+  "goal": "Keep restricted data access restricted when policy lookup fails and preserve configured custom scope across role edits.",
+  "primaryLayer": "system/iam",
+  "status": "completed",
+  "priority": "P0",
+  "type": "security-fix",
+  "estimatedComplexity": "high",
+  "parentTaskId": "2026-10-07-release-readiness-remediation",
+  "dependsOn": [],
+  "findings": [
+    "F01",
+    "F06"
+  ],
+  "scope": {
+    "in": [
+      "backend/internal/middleware/data_scope_middleware.go",
+      "backend/modules/system/iam/role/role_service.go",
+      "backend/modules/system/iam/permission/permission_data_scope.go",
+      "backend/pkg/database/scope.go",
+      "adjacent *_test.go"
+    ],
+    "out": [
+      "Replacing the complete data-permission model",
+      "Changing role/menu contract without review"
+    ]
+  },
+  "acceptanceCriteria": [
+    "A role-policy read error denies the request or returns an error before user list/export access; it never defaults to all.",
+    "Create custom department scope, edit unrelated role fields, and verify the same department IDs and effective rows remain.",
+    "Restricted list/export and administrator behavior are covered by fault-injection and integration tests; migration/index impact is recorded."
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "permission-policy",
+    "ownerLayer": "consumer-repository"
+  },
+  "verificationPlan": {
+    "commands": [
+      "cd backend && go test ./internal/middleware/... ./modules/system/iam/role/... ./modules/system/iam/permission/... ./modules/system/iam/user/...",
+      "cd backend && go test ./..."
+    ],
+    "runtimeEvidence": [
+      "policy-query failure injection result",
+      "custom scope before/after role edit and list/export result"
+    ]
+  },
+  "runtimeSensitive": true,
+  "linkage": {
+    "parentTaskPacket": "docs/harness/tasks/2026-10-07-release-readiness-remediation.task.md",
+    "assessment": "docs/reviews/ENTERPRISE_RELEASE_READINESS_REVIEW_2026-10-07.md",
+    "evidenceDir": ".harness/evidence/2026-10-07-iam-data-scope/",
+    "summaryFile": ".harness/evidence/2026-10-07-iam-data-scope/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-07-iam-data-scope/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-07-release-readiness-remediation.task.md",
+      "docs/reviews/ENTERPRISE_RELEASE_READINESS_REVIEW_2026-10-07.md"
+    ]
+  }
+}

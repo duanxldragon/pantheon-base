@@ -209,27 +209,35 @@ Adds a user to a tenant.
 
 **GET** `/tenants/:id/members`
 
-Lists all members of a tenant.
+Lists one bounded page of active tenant members, ordered by creation time and ID. The response envelope is stable for all consumers; the `/members/page` path below remains as a compatibility alias.
 
 **Authorization**: Requires `platform_ops` role
 
+**Query parameters**: `page` (default 1, minimum 1), `pageSize` (default 20, maximum 100). Invalid or non-positive values use the defaults; larger page sizes are capped at 100.
+
 **Response** (200 OK):
 ```json
-[
-  {
-    "id": 1,
-    "tenant_id": 1,
-    "user_id": 100,
-    "role": "owner",
-    "status": "active",
-    "created_at": "2026-09-29T10:00:00Z",
-    "updated_at": "2026-09-29T10:00:00Z"
-  }
-]
+{
+  "items": [
+    {
+      "id": 1,
+      "tenant_id": 1,
+      "user_id": 100,
+      "role": "owner",
+      "status": "active",
+      "created_at": "2026-09-29T10:00:00Z",
+      "updated_at": "2026-09-29T10:00:00Z"
+    }
+  ],
+  "total": 1,
+  "page": 1,
+  "pageSize": 20
+}
 ```
 
----
+**GET** `/tenants/:id/members/page`
 
+Compatibility alias for the same bounded pagination contract and response envelope.
 ### 8. Remove Tenant Member
 
 **DELETE** `/tenants/:id/members/:user_id`

@@ -5,42 +5,73 @@
     {
       "step": "1. Create SSRF validator package",
       "command": "mkdir -p backend/pkg/security/ssrf",
-      "result": "success"
+      "result": "success",
+      "cwd": ".",
+      "status": "passed"
     },
     {
       "step": "2. Implement validator.go",
       "command": "Write backend/pkg/security/ssrf/validator.go",
       "result": "success",
-      "details": "Validator struct with IP/domain/port/scheme validation, DNS rebinding protection"
+      "details": "Validator struct with IP/domain/port/scheme validation, DNS rebinding protection",
+      "cwd": ".",
+      "status": "passed"
     },
     {
       "step": "3. Implement validator_test.go",
       "command": "Write backend/pkg/security/ssrf/validator_test.go",
       "result": "success",
-      "details": "8 comprehensive tests covering all attack vectors"
+      "details": "8 comprehensive tests covering all attack vectors",
+      "cwd": ".",
+      "status": "passed"
     },
     {
       "step": "4. Create documentation",
       "command": "Write backend/pkg/security/ssrf/README.md",
       "result": "success",
-      "details": "Usage examples and integration guide"
+      "details": "Usage examples and integration guide",
+      "cwd": ".",
+      "status": "passed"
     },
     {
       "step": "5. Run unit tests",
       "command": "go test ./backend/pkg/security/ssrf/",
       "result": "success",
-      "output": "ok      backend/pkg/security/ssrf       0.123s  coverage: 68.8% of statements"
+      "output": "ok      backend/pkg/security/ssrf       0.123s  coverage: 68.8% of statements",
+      "cwd": ".",
+      "status": "passed"
     },
     {
       "step": "6. Format code",
       "command": "gofmt -w backend/pkg/security/ssrf/",
-      "result": "success"
+      "result": "success",
+      "cwd": ".",
+      "status": "passed"
     },
     {
       "step": "7. Update VERSION",
       "command": "echo '0.13.1' > VERSION",
-      "result": "success"
+      "result": "success",
+      "cwd": ".",
+      "status": "passed"
     }
   ],
-  "summary": "All implementation and verification commands executed successfully"
+  "summary": "All implementation and verification commands executed successfully",
+  "repo": "pantheon-base",
+  "agent": {
+    "tool": "codex",
+    "adapter": "platform-coordinator"
+  },
+  "knownGaps": [
+    "Legacy evidence did not record structured known gaps; consult the linked summary/review before treating as no-gap."
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-09-28-base-ssrf-protection/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-09-28-base-ssrf-protection/",
+    "reviewFile": ".harness/evidence/2026-09-28-base-ssrf-protection/review.md",
+    "changeRef": "none",
+    "planRefs": [],
+    "summaryFile": ".harness/evidence/2026-09-28-base-ssrf-protection/summary.md",
+    "externalRef": "PR #357"
+  }
 }

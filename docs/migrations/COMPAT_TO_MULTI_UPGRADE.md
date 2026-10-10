@@ -4,9 +4,9 @@
 
 This guide walks you through upgrading from `compat` mode (single-tenant, tenant_id=0) to `multi` mode (true multi-tenancy) in Pantheon Base.
 
-**Estimated Downtime**: 5-15 minutes (depends on data volume)  
-**Rollback Time**: < 1 minute  
-**Prerequisites**: Migration 000020 applied, default tenant created
+**Estimated Downtime**: 5-15 minutes (depends on data volume)
+**Quick Rollback Time**: under 1 minute for switching back to `compat`; full database restore time depends on database size.
+**Prerequisites**: Tenant schema migration version 20 or later applied, default tenant created
 
 ---
 
@@ -15,8 +15,8 @@ This guide walks you through upgrading from `compat` mode (single-tenant, tenant
 ### 1. Verify Migration Status
 
 ```bash
-# Check that migration 000020 is applied
-mysql -u root -p pantheon -e "SELECT version FROM schema_migrations WHERE version = '000020';"
+# Confirm tenant schema migration version 20 or later is recorded and clean
+mysql -u root -p pantheon -e "SELECT version, dirty FROM schema_migrations;"
 
 # Verify all core tables have tenant_id column
 mysql -u root -p pantheon << 'EOF'
@@ -76,7 +76,7 @@ SELECT @default_tenant_id := id FROM tenants WHERE code = 'default';
 -- Assign all users without tenant membership to default tenant
 INSERT INTO tenant_memberships (tenant_id, user_id, role, status, created_at, updated_at)
 SELECT 
-    @default_tenant_id,
+    (SELECT id FROM tenants WHERE code = 'default'),
     u.id,
     CASE WHEN u.username = 'admin' THEN 'owner' ELSE 'member' END,
     'active',
@@ -244,18 +244,15 @@ WHERE setting_key = 'platform.tenant_mode';
 systemctl restart pantheon-server
 ```
 
-**Note**: Data remains in tenant 1, but compat mode ignores tenant_id filtering.
+**Note**: Data remains assigned to the created default tenant, but compat mode ignores tenant_id filtering. This is a temporary application-mode rollback, not a schema rollback.
 
 ### Full Rollback (restore from backup)
 
+A full restore replaces all database contents with the pre-upgrade snapshot and takes time proportional to database size. Stop all application writers first and verify the backup file before restoring. Do not use an invented `migrate down` command.
+
 ```bash
-# Stop application
 systemctl stop pantheon-server
-
-# Restore database
-mysql -u root -p pantheon < /backup/pantheon_before_multi_YYYYMMDD_HHMMSS.sql
-
-# Start application
+mysql -u root -p pantheon < "$PANTHEON_BACKUP_FILE"
 systemctl start pantheon-server
 ```
 
@@ -299,7 +296,7 @@ SELECT tenant_id, COUNT(*) FROM system_user GROUP BY tenant_id;
 SHOW INDEX FROM system_user WHERE Key_name LIKE '%tenant%';
 ```
 
-**Fix**: Re-run migration 000020 to create composite indexes
+**Fix**: Apply the current embedded migration set (version 20 or later) using the migration runner; do not replay one migration manually.
 
 ---
 

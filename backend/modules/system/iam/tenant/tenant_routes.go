@@ -22,6 +22,7 @@ func RegisterRoutes(r *gin.RouterGroup, handler *Handler) {
 		// Tenant member management
 		tenants.POST("/:id/members", handler.AddTenantMember)
 		tenants.GET("/:id/members", handler.ListTenantMembers)
+		tenants.GET("/:id/members/page", handler.ListTenantMembersPage)
 		tenants.DELETE("/:id/members/:user_id", handler.RemoveTenantMember)
 	}
 }

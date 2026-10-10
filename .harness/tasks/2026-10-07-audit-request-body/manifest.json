@@ -1,0 +1,60 @@
+{
+  "taskId": "2026-10-07-audit-request-body",
+  "title": "Protect operation audit from raw multipart and oversized bodies",
+  "goal": "Record useful audit metadata without persisting file bytes, non-JSON secrets or unbounded request bodies.",
+  "primaryLayer": "system/audit",
+  "status": "completed",
+  "priority": "P0",
+  "type": "security-fix",
+  "estimatedComplexity": "medium",
+  "parentTaskId": "2026-10-07-release-readiness-remediation",
+  "dependsOn": [],
+  "findings": [
+    "F05"
+  ],
+  "scope": {
+    "in": [
+      "backend/internal/middleware/operation_log_middleware.go",
+      "backend/internal/middleware/*operation*test.go",
+      "backend/modules/system/config/setting/setting_handler.go"
+    ],
+    "out": [
+      "Removing operation audit",
+      "Reducing upload capability"
+    ]
+  },
+  "acceptanceCriteria": [
+    "Multipart and binary uploads store only allowlisted metadata; test data includes a secret and file bytes that must not appear in the persisted audit record.",
+    "An audit-specific body cap bounds memory and storage, independent of the request upload limit.",
+    "JSON sensitive-field masking and useful request/audit correlation remain intact."
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "auth-security",
+    "ownerLayer": "consumer-repository"
+  },
+  "verificationPlan": {
+    "commands": [
+      "cd backend && go test ./internal/middleware/... ./modules/system/config/setting/...",
+      "cd backend && go test ./..."
+    ],
+    "runtimeEvidence": [
+      "persisted audit-row inspection for multipart and JSON probes",
+      "memory/body-limit rationale and runtime upload smoke"
+    ]
+  },
+  "runtimeSensitive": true,
+  "linkage": {
+    "parentTaskPacket": "docs/harness/tasks/2026-10-07-release-readiness-remediation.task.md",
+    "assessment": "docs/reviews/ENTERPRISE_RELEASE_READINESS_REVIEW_2026-10-07.md",
+    "evidenceDir": ".harness/evidence/2026-10-07-audit-request-body/",
+    "summaryFile": ".harness/evidence/2026-10-07-audit-request-body/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-07-audit-request-body/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-07-release-readiness-remediation.task.md",
+      "docs/reviews/ENTERPRISE_RELEASE_READINESS_REVIEW_2026-10-07.md"
+    ]
+  }
+}

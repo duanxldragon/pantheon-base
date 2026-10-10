@@ -4,7 +4,7 @@
   "goal": "Complete tenant P1 scoping per a frozen resource matrix, pass tenant browser E2E and all required smoke/CI gates, then publish pantheon-base-v0.14.2",
   "primaryLayer": "platform",
   "status": "in-progress",
-  "statusNote": "2026-09-30: maintainer selected sequential v0.14.2 and global user identity with tenant memberships; PR #358 remains blocked, tenant scope matrix and runtime P1/E2E are not closed, and no 0.14.x release is published",
+  "statusNote": "2026-10-10: runtime/security/documentation work is superseded by 2026-10-07-release-readiness-remediation. Local authenticated full smoke (77 passed), MySQL fixture evidence, migration rollback, governance and UI gates are now recorded; v0.14.2 publication, hosted required checks, Sonar disposition and pantheon-ops lock remain separate maintainer gates.",
   "priority": "P1",
   "type": "release-completion",
   "scope": {
@@ -51,6 +51,9 @@
     "summaryFile": ".harness/evidence/2026-09-29-v0140-release-completion/summary.md",
     "changeRef": "PR: v0.14.0 release completion",
     "planRefs": [],
-    "relatedTasks": ["2026-09-29-ops-ssrf-protection-integration", "2026-09-28-base-ssrf-protection"]
+    "relatedTasks": [
+      "2026-09-29-ops-ssrf-protection-integration",
+      "2026-09-28-base-ssrf-protection"
+    ]
   }
 }

@@ -1,0 +1,141 @@
+{
+  "taskId": "2026-10-07-ui-maintainability-followup",
+  "executedAt": "2026-10-10T02:00:50.453Z",
+  "environment": "local workstation; authenticated backend+frontend runtime",
+  "commands": [
+    {
+      "step": "type-check",
+      "command": "cd frontend && npm run type-check",
+      "result": "success",
+      "cwd": "frontend",
+      "status": "passed"
+    },
+    {
+      "step": "lint",
+      "command": "cd frontend && npm run lint",
+      "result": "success",
+      "cwd": "frontend",
+      "status": "passed"
+    },
+    {
+      "step": "unit tests",
+      "command": "cd frontend && npm run test:unit",
+      "result": "success",
+      "details": "163/163 PASS (157 existing + 6 new: 4 LayoutOpenedTabs keyboard/ARIA, 2 ProfileCenter error-recovery)",
+      "cwd": "frontend",
+      "status": "passed"
+    },
+    {
+      "step": "build",
+      "command": "cd frontend && npm run build",
+      "result": "success",
+      "details": "vite build ok (~0.6s)",
+      "cwd": "frontend",
+      "status": "passed"
+    },
+    {
+      "step": "ui quality gate",
+      "command": "npm run check:ui-quality-gate",
+      "result": "success",
+      "details": "strict mode, 0 findings",
+      "cwd": ".",
+      "status": "passed"
+    },
+    {
+      "step": "doc link / governance gates",
+      "command": "npm run check-doc-links (repo-level gates re-run after evidence update)",
+      "result": "success",
+      "details": "see closeout evidence; PERMISSION_MODEL.md / UI_PATTERN_LIBRARY.md edits introduce no new links",
+      "cwd": ".",
+      "status": "passed"
+    },
+    {
+      "step": "authenticated platform full smoke",
+      "command": "cd frontend && npm run test:smoke:platform:full",
+      "result": "success",
+      "details": "77 passed (2.5m); Vite 5174; desktop 1440x900, pad 1024x768, phone 390x844; full-page audit findings.json has zero console errors",
+      "cwd": "frontend",
+      "status": "passed"
+    },
+    {
+      "step": "governance and visual gates",
+      "command": "npm run check:task-packet && npm run check:harness-adoption && npm run check:harness-docs && npm run check:harness-sync && npm run check:harness-inventory && npm run check:harness-encoding && npm run check:harness-visual && npm run check:ui-quality-gate",
+      "result": "success",
+      "details": "all strict checks passed; 0 findings",
+      "cwd": ".",
+      "status": "passed"
+    }
+  ],
+  "gaps": [
+    "No hosted CI/Sonar result is available in this local evidence record."
+  ],
+  "repo": "pantheon-base",
+  "agent": {
+    "tool": "codex",
+    "adapter": "platform-coordinator"
+  },
+  "knownGaps": [
+    "No hosted CI/Sonar result is available in this local evidence record.",
+    "Per-route mobile screenshots are not retained for every route; the authenticated full smoke matrix covered 390x844 interaction paths."
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-07-ui-maintainability-followup/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-07-ui-maintainability-followup/",
+    "reviewFile": ".harness/evidence/2026-10-07-ui-maintainability-followup/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-07-release-readiness-remediation.task.md",
+      "docs/reviews/ENTERPRISE_RELEASE_READINESS_REVIEW_2026-10-07.md"
+    ],
+    "summaryFile": ".harness/evidence/2026-10-07-ui-maintainability-followup/summary.md"
+  },
+  "browserEvidence": [
+    {
+      "viewport": "desktop-1440x900",
+      "url": "http://127.0.0.1:5174/login",
+      "screenshot": "frontend/test-results/full-page-audit/00-login.png",
+      "consoleErrors": [],
+      "checkedStates": [
+        "loading",
+        "empty",
+        "error",
+        "permission",
+        "submitting"
+      ]
+    },
+    {
+      "viewport": "desktop-1024x768",
+      "url": "http://127.0.0.1:5174/dashboard",
+      "screenshot": "frontend/test-results/full-page-audit/dashboard.png",
+      "consoleErrors": [],
+      "checkedStates": [
+        "loading",
+        "empty",
+        "error",
+        "permission"
+      ]
+    },
+    {
+      "viewport": "mobile-390x844",
+      "url": "http://127.0.0.1:5174/system/profile",
+      "screenshot": "frontend/test-results/full-page-audit/profile.png",
+      "consoleErrors": [],
+      "checkedStates": [
+        "loading",
+        "empty",
+        "error",
+        "permission",
+        "submitting"
+      ]
+    }
+  ],
+  "runtimeSensitive": true,
+  "runtimeLogs": [
+    "frontend/test-results/full-page-audit/findings.json"
+  ],
+  "runtimeMetrics": [
+    "authenticated full smoke: 77 passed",
+    "console errors: 0 across audited routes"
+  ],
+  "runtimeGap": "The captured full-page audit is desktop-oriented; mobile and interaction coverage are represented by the authenticated full smoke matrix, while per-route mobile screenshots are not retained for every route."
+}

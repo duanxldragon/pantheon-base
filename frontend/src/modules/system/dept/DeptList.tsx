@@ -810,7 +810,7 @@ const DeptList: React.FC = () => {
               text: t('common.edit'),
               icon: <IconEdit />,
               onClick: () => {
-                openEdit(row);
+                  void openEdit(row).catch(() => message.error(t('common.actionFailed')));
               },
               hidden: !canEdit,
             },
@@ -1258,7 +1258,7 @@ const DeptList: React.FC = () => {
                       <Popconfirm
                         title={t('system.dept.batchEnableConfirm')}
                         onOk={() => {
-                          handleBatchStatus(1);
+                            void handleBatchStatus(1).catch(() => message.error(t('common.actionFailed')));
                         }}
                         disabled={batchActionDisabled}
                       >
@@ -1274,7 +1274,7 @@ const DeptList: React.FC = () => {
                       <Popconfirm
                         title={t('system.dept.batchDisableConfirm')}
                         onOk={() => {
-                          handleBatchStatus(2);
+                            void handleBatchStatus(2).catch(() => message.error(t('common.actionFailed')));
                         }}
                         disabled={batchActionDisabled}
                       >
@@ -1294,7 +1294,7 @@ const DeptList: React.FC = () => {
                       <Popconfirm
                         title={t('system.dept.batchDeleteConfirm')}
                         onOk={() => {
-                          handleBatchDelete();
+                            void handleBatchDelete().catch(() => message.error(t('common.actionFailed')));
                         }}
                         disabled={batchDeleteDisabled}
                       >
@@ -1344,7 +1344,7 @@ const DeptList: React.FC = () => {
             }}
             onCreatePost={openCreatePost}
             onViewUserDetail={(id) => {
-              openUserDetail(id);
+               void openUserDetail(id);
             }}
           />
         </Tabs.TabPane>
@@ -1398,7 +1398,7 @@ const DeptList: React.FC = () => {
                 size="small"
                 icon={<IconDownload />}
                 onClick={() => {
-                  handleExportGovernanceTasks();
+                    void handleExportGovernanceTasks().catch(() => message.error(t('common.actionFailed')));
                 }}
                 disabled={!canExport}
               >
@@ -1433,7 +1433,7 @@ const DeptList: React.FC = () => {
                       size="small"
                       icon={<IconEye />}
                       onClick={() => {
-                        locateGovernanceTask(task);
+                          void locateGovernanceTask(task).catch(() => message.error(t('common.actionFailed')));
                       }}
                     >
                       {t('system.dept.task.locate')}
@@ -1476,7 +1476,7 @@ const DeptList: React.FC = () => {
         <FormModalFooter
           onCancel={() => setVisible(false)}
           onSubmit={() => {
-            submitForm();
+             void submitForm();
           }}
           loading={submitting}
           submitText={editing ? t('common.save') : t('common.add')}
@@ -1488,7 +1488,7 @@ const DeptList: React.FC = () => {
         form={form}
         layout="vertical"
         onSubmit={() => {
-          submitForm();
+           void submitForm();
         }}
       >
         <Space direction="vertical" size={20} className="dialog-form-stack">
@@ -1602,7 +1602,7 @@ const DeptList: React.FC = () => {
             leaderForm.resetFields();
           }}
           onSubmit={() => {
-            submitBatchLeader();
+              void submitBatchLeader().catch(() => message.error(t('common.actionFailed')));
           }}
           submitText={t('common.save')}
         />
@@ -1613,7 +1613,7 @@ const DeptList: React.FC = () => {
         form={leaderForm}
         layout="vertical"
         onSubmit={() => {
-          submitBatchLeader();
+            void submitBatchLeader().catch(() => message.error(t('common.actionFailed')));
         }}
       >
         <Space direction="vertical" size={16} style={{ width: '100%' }}>
@@ -1672,7 +1672,7 @@ const DeptList: React.FC = () => {
             setCreatingPostDept(null);
           }}
           onSubmit={() => {
-            submitPostForm();
+              void submitPostForm().catch(() => message.error(t('common.actionFailed')));
           }}
           loading={postSubmitting}
           submitText={t('common.add')}
@@ -1684,7 +1684,7 @@ const DeptList: React.FC = () => {
         form={postForm}
         layout="vertical"
         onSubmit={() => {
-          submitPostForm();
+            void submitPostForm().catch(() => message.error(t('common.actionFailed')));
         }}
       >
         <Space direction="vertical" size={20} className="dialog-form-stack">
@@ -1765,7 +1765,7 @@ const DeptList: React.FC = () => {
         <PageError
           onRetry={() => {
             if (userDetailId > 0) {
-              openUserDetail(userDetailId);
+               void openUserDetail(userDetailId);
             }
           }}
         />

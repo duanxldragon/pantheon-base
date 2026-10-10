@@ -1,0 +1,73 @@
+{
+  "taskId": "2026-10-07-release-qualification",
+  "title": "Qualify one candidate SHA with security, functional and visual evidence",
+  "goal": "Collect the complete release evidence after blocker fixes and classify remaining Sonar findings.",
+  "primaryLayer": "platform",
+  "status": "in-progress",
+  "priority": "P0",
+  "type": "verification",
+  "estimatedComplexity": "high",
+  "parentTaskId": "2026-10-07-release-readiness-remediation",
+  "dependsOn": [
+    "2026-10-07-auth-session-scope",
+    "2026-10-07-login-log-identity",
+    "2026-10-07-iam-data-scope",
+    "2026-10-07-audit-request-body",
+    "2026-10-07-governance-gate-repair",
+    "2026-10-07-upgrade-runbook"
+  ],
+  "findings": [
+    "G01",
+    "Sonar 26 unresolved MAJOR BUGs",
+    "visual/runtime evidence gaps"
+  ],
+  "scope": {
+    "in": [
+      ".harness/evidence/<task-id>/",
+      "docs/acceptances/ACCEPTANCE_CHECKLIST.md (only if a recurring gap changes the standard)"
+    ],
+    "out": [
+      "Publishing release",
+      "Treating scanner findings as proven defects without triage"
+    ]
+  },
+  "acceptanceCriteria": [
+    "Every unresolved Sonar issue is classified with disposition and evidence; Quality Gate OK and release rule on unresolved issues are met without waiver.",
+    "Go full tests, vet, race where supported, frontend type-check/lint/unit/build, dependency scans, core smoke and key security smoke pass for the same SHA.",
+    "Authenticated desktop 1440x900 and phone 390x844 screenshots, URL, console and loading/empty/error/forbidden/submitting outcomes are recorded.",
+    "Representative MySQL query/latency and connection evidence shows no obvious ordinary-enterprise bottleneck; unmeasured claims stay unknown."
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "ci-workflow",
+    "ownerLayer": "consumer-repository"
+  },
+  "verificationPlan": {
+    "commands": [
+      "cd backend && go test ./... && go vet ./...",
+      "cd frontend && npm run type-check && npm run lint && npm run test:unit && npm run build",
+      "cd frontend && npm run test:smoke:platform:full",
+      "npm run check:harness-adoption"
+    ],
+    "runtimeEvidence": [
+      "candidate SHA plus GitHub run IDs and Sonar analysis ID",
+      "browser screenshot/index and console summary",
+      "dependency and MySQL performance summaries"
+    ]
+  },
+  "runtimeSensitive": true,
+  "linkage": {
+    "parentTaskPacket": "docs/harness/tasks/2026-10-07-release-readiness-remediation.task.md",
+    "assessment": "docs/reviews/ENTERPRISE_RELEASE_READINESS_REVIEW_2026-10-07.md",
+    "evidenceDir": ".harness/evidence/2026-10-07-release-qualification/",
+    "summaryFile": ".harness/evidence/2026-10-07-release-qualification/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-07-release-qualification/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-07-release-readiness-remediation.task.md",
+      "docs/reviews/ENTERPRISE_RELEASE_READINESS_REVIEW_2026-10-07.md"
+    ]
+  },
+  "statusNote": "2026-10-10: local qualification now includes authenticated full smoke (77 passed), screenshots/console matrix, MySQL fixture EXPLAIN/P95/connection evidence, migration rollback rehearsal and green frontend/governance gates. Remaining release blockers are hosted candidate-SHA checks, Sonar 26 classification, Go 1.26.9/native cgo confirmation, npm advisory refresh and larger enterprise-volume load."
+}

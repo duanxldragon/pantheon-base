@@ -1,0 +1,61 @@
+{
+  "taskId": "2026-10-07-upgrade-runbook",
+  "title": "Reconcile compat-to-multi migration instructions",
+  "goal": "Make the published upgrade and rollback instructions executable against the actual migration implementation.",
+  "primaryLayer": "platform",
+  "status": "completed",
+  "priority": "P0",
+  "type": "documentation-remediation",
+  "estimatedComplexity": "medium",
+  "parentTaskId": "2026-10-07-release-readiness-remediation",
+  "dependsOn": [],
+  "findings": [
+    "G03"
+  ],
+  "scope": {
+    "in": [
+      "RELEASE_NOTES_v0.14.0.md",
+      "docs/migrations/COMPAT_TO_MULTI_UPGRADE.md",
+      "docs/DEPLOYMENT_GUIDE.md",
+      "scripts/tenant-migration-*.sh (inspect before changing)"
+    ],
+    "out": [
+      "Running migration on production data",
+      "Changing schema solely to match stale prose"
+    ]
+  },
+  "acceptanceCriteria": [
+    "Every command in the documented compat-to-multi path resolves to an existing file/binary and matches the current migration sequence.",
+    "Disposable MySQL upgrade and rollback are executed with data checks; original published release notes receive an explicit erratum if immutable release text cannot be edited.",
+    "Documentation separates automatic bootstrap, manual SQL and shell commands; no bare SQL is presented as executable bash."
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "ci-workflow",
+    "ownerLayer": "consumer-repository"
+  },
+  "verificationPlan": {
+    "commands": [
+      "rg --files scripts | rg 'tenant|create-default|migrate-users'",
+      "node scripts/harness/check-doc-links.mjs --root . --strict"
+    ],
+    "runtimeEvidence": [
+      "disposable-environment upgrade/rollback command log",
+      "row-count and tenant-ownership verification before/after"
+    ]
+  },
+  "runtimeSensitive": true,
+  "linkage": {
+    "parentTaskPacket": "docs/harness/tasks/2026-10-07-release-readiness-remediation.task.md",
+    "assessment": "docs/reviews/ENTERPRISE_RELEASE_READINESS_REVIEW_2026-10-07.md",
+    "evidenceDir": ".harness/evidence/2026-10-07-upgrade-runbook/",
+    "summaryFile": ".harness/evidence/2026-10-07-upgrade-runbook/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-07-upgrade-runbook/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-07-release-readiness-remediation.task.md",
+      "docs/reviews/ENTERPRISE_RELEASE_READINESS_REVIEW_2026-10-07.md"
+    ]
+  }
+}

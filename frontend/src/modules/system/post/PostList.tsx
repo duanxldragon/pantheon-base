@@ -728,7 +728,7 @@ const PostList: React.FC = () => {
                     <Popconfirm
                       title={t('system.post.batchEnableConfirm')}
                       onOk={() => {
-                        handleBatchStatus(1);
+                          void handleBatchStatus(1).catch(() => message.error(t('common.actionFailed')));
                       }}
                       disabled={batchActionDisabled}
                     >
@@ -742,7 +742,7 @@ const PostList: React.FC = () => {
                     <Popconfirm
                       title={t('system.post.batchDisableConfirm')}
                       onOk={() => {
-                        handleBatchStatus(2);
+                          void handleBatchStatus(2).catch(() => message.error(t('common.actionFailed')));
                       }}
                       disabled={batchActionDisabled}
                     >
@@ -761,7 +761,7 @@ const PostList: React.FC = () => {
                     <Popconfirm
                       title={t('system.post.batchDeleteConfirm')}
                       onOk={() => {
-                        handleBatchDelete();
+                          void handleBatchDelete().catch(() => message.error(t('common.actionFailed')));
                       }}
                       disabled={batchDeleteDisabled}
                     >
@@ -850,7 +850,7 @@ const PostList: React.FC = () => {
           form={form}
           layout="vertical"
           onSubmit={() => {
-            submitForm();
+             void submitForm();
           }}
         >
           <Space direction="vertical" size={20} className="dialog-form-stack">

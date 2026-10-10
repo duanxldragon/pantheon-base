@@ -1,0 +1,41 @@
+{
+  "taskId": "2026-10-07-login-log-identity",
+  "executedAt": "2026-10-08T00:25:00+08:00",
+  "commands": [
+    {
+      "step": "vet + F04 tests",
+      "command": "cd backend && (DSN+Redis env) go test ./modules/auth/login/ -run 'LoginLog|ListOwnLoginLogs|ListLoginLogs' -v",
+      "result": "success",
+      "details": "4 new tests PASS: TestListOwnLoginLogs_ExactIdentityMatch (alice vs alice_admin/xalice), TestListOwnLoginLogs_DoesNotInheritAdminLikeFilter, TestListOwnLoginLogs_TenantScoped (101 vs 202 vs 0), TestListLoginLogs_AdminKeywordFilterIntact; all pre-existing login-log handler tests PASS",
+      "cwd": "backend",
+      "status": "passed"
+    },
+    {
+      "step": "manifest verification command",
+      "command": "cd backend && (DSN+Redis env) go test ./modules/auth/login/...",
+      "result": "success",
+      "details": "ok 78.574s",
+      "cwd": "backend",
+      "status": "passed"
+    }
+  ],
+  "repo": "pantheon-base",
+  "agent": {
+    "tool": "codex",
+    "adapter": "platform-coordinator"
+  },
+  "knownGaps": [
+    "Legacy evidence did not record structured known gaps; consult the linked summary/review before treating as no-gap."
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-07-login-log-identity/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-07-login-log-identity/",
+    "reviewFile": ".harness/evidence/2026-10-07-login-log-identity/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-07-release-readiness-remediation.task.md",
+      "docs/reviews/ENTERPRISE_RELEASE_READINESS_REVIEW_2026-10-07.md"
+    ],
+    "summaryFile": ".harness/evidence/2026-10-07-login-log-identity/summary.md"
+  }
+}

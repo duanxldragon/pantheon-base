@@ -52,21 +52,12 @@ func (h *SwitchHandler) SwitchTenant(c *gin.Context) {
 		return
 	}
 
-	// Verify user is member of target tenant
-	memberships, err := h.service.ListTenantMembers(req.TenantID)
+	// Verify user is member of target tenant (single bounded lookup, no
+	// full member list materialization)
+	memberRole, isMember, err := h.service.ActiveMembershipRole(req.TenantID, uid)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
-	}
-
-	isMember := false
-	var memberRole string
-	for _, m := range memberships {
-		if m.UserID == uid {
-			isMember = true
-			memberRole = m.Role
-			break
-		}
 	}
 
 	if !isMember {
@@ -132,22 +123,22 @@ func (h *SwitchHandler) ListSwitchableTenants(c *gin.Context) {
 		return
 	}
 
+	// Resolve the user's role in each tenant with one bounded query instead
+	// of re-listing every tenant's full membership.
+	tenantIDs := make([]uint64, 0, len(tenants))
+	for _, tenant := range tenants {
+		tenantIDs = append(tenantIDs, tenant.ID)
+	}
+	rolesByTenant, err := h.service.ActiveMembershipRolesByTenant(uid, tenantIDs)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
 	// Build response with role information
 	result := make([]map[string]interface{}, 0, len(tenants))
 	for _, tenant := range tenants {
-		// Get user's role in this tenant
-		memberships, err := h.service.ListTenantMembers(tenant.ID)
-		if err != nil {
-			continue
-		}
-
-		var userRole string
-		for _, m := range memberships {
-			if m.UserID == uid {
-				userRole = m.Role
-				break
-			}
-		}
+		userRole := rolesByTenant[tenant.ID]
 
 		result = append(result, map[string]interface{}{
 			"id":     tenant.ID,

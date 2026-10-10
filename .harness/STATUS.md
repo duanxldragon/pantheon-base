@@ -1,178 +1,158 @@
-# Pantheon Base - 任务执行状态总览
+# Pantheon Base - Harness 任务状态
 
-**最后更新**: 2026-09-29  
-**当前提交**: f767b9cc (docs: add release notes for v0.14.1)
+**最后更新**: 2026-10-10
 
-### 2026-09-29 v0.14.0 发布收口
+## 当前最终验收状态
 
-| 任务 ID | 状态 | Evidence |
-|---------|------|----------|
-| 2026-09-29-v0140-release-completion | ✅ | `.harness/evidence/2026-09-29-v0140-release-completion/` |
-| 2026-09-29-ops-ssrf-protection-integration | ✅（状态同步，ops 侧完成） | `.harness/tasks/2026-09-29-ops-ssrf-protection-integration/manifest.json` |
+**判定：本地整改中，尚未通过发布验收。**[最终验收评估报告](../docs/reviews/ENTERPRISE_RELEASE_READINESS_REVIEW_2026-10-07.md)所列 F01–F06 已有代码修复；独立审查后的 F01（策略表缺失）、F05（非 JSON 原文）和 F06（空 custom 回落 all）也已补修并加入回归。MySQL fixture 与迁移回滚证据、租户成员分页边界、浏览器 smoke 与本地治理门禁已收口；租户 SQLite/race、Go 1.26.9 下载、候选 SHA hosted 门禁与 Sonar 分类仍未齐备。SonarCloud Quality Gate OK 不抵消失败的 GitHub CI/Release Gate，也不代表尚未分类的扫描项均已关闭。
 
-**成果**: 补齐 tenant 测试依赖声明；SSRF 集成任务 manifest 状态与 ops 侧对齐；v0.14.0 经治理 PR 合并后统一发布 tag 与 GitHub Release。
+- [父任务包](../docs/harness/tasks/2026-10-07-release-readiness-remediation.task.md)：`2026-10-07-release-readiness-remediation`（Wave 0 与本地 Wave 1 已完成；父任务仍等待候选 SHA hosted gate 与发布收口）。
+- 6 个 Wave 0 子任务 manifest 已置 `completed`，evidence 在 `.harness/evidence/2026-10-07-{iam-data-scope,audit-request-body,auth-session-scope,login-log-identity,governance-gate-repair,upgrade-runbook}/`。
+- **Wave 1 P1 followup 本地部分已推进（2026-10-08）**：`ui-maintainability-followup` 与 `performance-followup` 已置 `completed`；avatar 表单绑定、Profile 持久错误态、页签键盘/ARIA、文档单一规则源、租户成员分页（旧入口与兼容别名均有界）、audit backfill 有界化均已完成。前端 type-check/lint/unit(163)/build、authenticated full smoke(77)、治理/视觉门禁全绿；MySQL EXPLAIN/P95/连接和迁移回滚证据已入库。仅保留 native cgo、Go 1.26.9、较大规模负载与 hosted gate gap。
+- 本机验证：本轮后端 `go build ./...`、`go vet ./...`、相关纯逻辑回归通过；middleware/role 包测试通过但 MySQL 用例因未配置 DSN 跳过。`tenant` 包在 `CGO_ENABLED=0` 下无法执行 SQLite 测试，不能用旧 GitHub 运行结果替代本轮候选验证。前端上一轮 type-check/lint/test:unit(163)/build 全绿；治理门禁 task-packet/sync/docs/adoption 曾通过，当前文档变更仍需重跑。
+- **显式剩余 gap（Wave 1/2）**：同一候选 SHA 的 hosted 门禁重跑、PR/分支收口、Sonar 26 项 MAJOR 分类、Go 1.26.9 govulncheck、native cgo 的 tenant/race、npm advisory refresh、较大规模 MySQL 负载与 Ops 对分页成员 API 的继承验证。浏览器、迁移回滚和本地 MySQL fixture 证据已完成。
+- 执行顺序：Wave 0（完成）→ Wave 1 资格验证 → Wave 2 收口。两项 auth 任务顺序已遵守。
 
-## 执行状态摘要
+## 2026-10-03 历史交付自评
 
-### 已完成的重大整改轮次
-
-#### 1. 命名与边界整改 (2026-09-22)
-**状态**: ✅ 全部完成 (6/6)  
-**计划文档**: `NAMING_AND_BOUNDARIES_REMEDIATION_PLAN_2026-09-22.md`
-
-| # | 任务 ID | 状态 | Evidence |
-|---|---------|------|----------|
-| 1 | 2026-09-22-naming-boundary-canonical-standard | ✅ | `.harness/evidence/2026-09-22-naming-boundary-canonical-standard/` |
-| 2 | 2026-09-22-document-layout-inventory | ✅ | `.harness/evidence/2026-09-22-document-layout-inventory/` |
-| 3 | 2026-09-22-layer-boundary-gate | ✅ | `.harness/evidence/2026-09-22-layer-boundary-gate/` |
-| 4 | 2026-09-22-generated-artifact-governance | ✅ | `.harness/evidence/2026-09-22-generated-artifact-governance/` |
-| 5 | 2026-09-22-document-relocation-and-archive | ✅ | `.harness/evidence/2026-09-22-document-relocation-and-archive/` |
-| 6 | 2026-09-22-frontend-style-naming-alignment | ✅ | `.harness/evidence/2026-09-22-frontend-style-naming-alignment/` |
-
-**成果**: 
-- 落地门禁: `check-structure-contract`, `check-boundaries --strict`, `check-generated --strict`
-- auth 模块解耦完成，`pkg/contracts/authuser` 端口落地
-- 生成器标记写入统一，动态发现机制就位
-
-#### 2. 企业级整改 (2026-09-22)
-**状态**: ✅ 全部完成 (6/6)  
-**计划文档**: `ENTERPRISE_REMEDIATION_PLAN_2026-09-22.md`
-
-##### Wave 0: 安全边界（P0）
-
-| # | 任务 ID | 状态 | 关键成果 |
-|---|---------|------|----------|
-| 1 | 2026-09-22-session-revocation-closure | ✅ | 统一撤销语义：DB + refresh 删除 + access 黑名单三路生效 |
-| 2 | 2026-09-22-tenant-public-settings-scope | ✅ | 公开设置按租户隔离，缓存改为 `map[namespace]*resp` |
-| 3 | 2026-09-22-upload-authorization-and-import-resources | ✅ | 上传授权 + 导入资源消耗治理 |
-
-##### Wave 1: 生产规模（P1）
-
-| # | 任务 ID | 状态 | 关键成果 |
-|---|---------|------|----------|
-| 4 | 2026-09-22-export-and-session-pagination | ✅ | 统一导出上限 10000 行；会话列表 SQL 分页 + 索引优化 |
-| 5 | 2026-09-22-request-path-maintenance | ✅ | 保留操作移出读路径，`pkg/maintenance` 统一维护器 |
-
-##### Wave 2: 部署与交付门禁（P1/P2）
-
-| # | 任务 ID | 状态 | 关键成果 |
-|---|---------|------|----------|
-| 6 | 2026-09-22-production-redis-and-security-gates | ✅ | 生产 Redis fail-fast；readiness 反映迁移状态；Go 1.26.6 修复 7 个 stdlib CVE |
-
-**成果总结**:
-- 全部 6 个任务有完整 evidence (summary.md + review.md + commands.json)
-- 所有任务通过 `go test -race` 验证（本地 MinGW-w64 GCC 16.2.0，无 DATA RACE）
-- 新增门禁: govulncheck (0 reachable vulnerabilities), 维护器指标 `pantheon_maintenance_*`
-- 生产就绪清单补全: Redis 必需性、迁移健康检查、CI 阻断语义
-
-#### 3. Core Smoke Tests 修复 (2026-09-10)
-**状态**: ✅ 完成  
-**文档**: `CORE_SMOKE_TRIAGE.md`
-
-- 修复 A/B/C 三类根因 (菜单导航、CRUD 对话框选择器、导出响应头)
-- 发现并修复 2 个产品 bug: `downloadFile` 缺 CSRF 拦截器 (403)、角色 `menuIds: null` 导致前端崩溃
-- 全部 279 个用例本地实跑通过 (23 passed core + 256 passed regression)
-- 已合并到 main 分支
-
-#### 4. 治理残余收口 (2026-09-23 ~ 2026-09-24)
-
-| 任务 ID | 状态 | 关键成果 |
-|---------|------|----------|
-| 2026-09-23-governance-residual-closeout | ✅ | 关闭 fix-report 手工项，补齐 4 个 P2 packets |
-| 2026-09-23-dormant-governance-tests-and-status-vocabulary | ✅ | 激活 tests/scripts 套件，固化 manifest status 词汇表 |
-| 2026-09-24-fix-report-residual-closeout | ✅ | 关闭生成器标记残余 gap，补全负例测试 |
-
-### 当前活跃计划
-
-无活跃的多任务整改计划。所有已规划任务已完成。
-
-### 门禁状态
-
-#### 当前通过的门禁 (main 分支)
-
-**Quality Gates** (GitHub required check):
-- ✅ 文档治理 (frontmatter, doc-links, doc-inventory)
-- ✅ 前端契约 (check-structure-contract strict, check-boundaries baseline)
-- ✅ 后端测试 (`go test ./...`, `go vet ./...`)
-- ✅ 生成文件治理 (check-generated strict)
-- ✅ 编码规范 (check-encoding strict)
-- ✅ 重复率检查 (check-duplication)
-- ✅ Core Smoke Tests (23 passed, 3 skipped)
-
-**Security Gates** (GitHub required check):
-- ✅ Secret scan (gitleaks)
-- ✅ Workflow security (zizmor fail-closed on high/critical)
-- ✅ CodeQL scan
-- ✅ Dependency vulnerabilities (报告模式，每次 release 复审)
-
-**Release Gate** (foundation release 额外要求):
-- ✅ SonarCloud Code Analysis (非 main 合并必需，release 时必需)
-- ✅ govulncheck v1.3.0 (0 reachable vulnerabilities)
-- ✅ npm audit (root + frontend)
-- ✅ Full Smoke Suite (platform + system + business)
-
-#### Race 检测
-
-本地 `-race` 验证已全部通过 (MinGW-w64 GCC 16.2.0):
-- pkg/maintenance: 1.118s
-- modules/auth/*: session 4.896s, login 239.678s
-- modules/system/*: audit 11.951s, config/setting 12.244s
-- pkg/authtoken: 1.369s, middleware 2.503s
-- pkg/database: 14.626s, pkg/tenant: 1.091s
-
-CI 同样执行 `-race`，双重覆盖。
-
-### 版本里程碑
-
-| 版本 | 状态 | 发布时间 | 关键内容 |
-|------|------|----------|----------|
-| v0.11.0 | ✅ 已发布 | 2026-09-08 | 企业级前端设计系统工程框架，Token 扩展 +109% |
-| v0.13.0 | ✅ 已发布 | 2026-09-27 | 治理归档、企业级整改收口、foundation release 元数据；Ops 消费同步待办 |
-| v1.0 | ✅ 已发布 | 2026-07-21 | 认证、IAM、组织、配置、审计、i18n、低代码生成链路 |
-
-### 显式残余 Gap
-
-#### 运行态验证缺口
-
-以下验证项在代码测试和本地验证中已覆盖，但缺少多实例/真实生产环境的运行态证据：
-
-1. **跨实例 pubsub 失效**: setting 缓存跨实例失效 (单实例测试已覆盖，双实例行为依赖既有 pubsub 机制)
-2. **容量压测基线**: 未建立并发容量和尾延迟 SLA 基线 (代码已具备分页/索引/上限，需压测验证)
-3. **MySQL/Redis 集成 smoke**: 本地真栈验证已通过，CI 集成 smoke 待补齐
-
-#### 文档残余
-
-历史任务和总结文档已完成归档；当前仅保留 release gate 追踪 manifest。后续新增阶段性材料必须进入对应 evidence 或 `docs/history/`，不得回写已完成任务状态。
-
-#### Ops 同步
-
-`pantheon-ops` 消费 base foundation release 的同步待下一个 release 发布后进行。当前 ops 仍使用旧版本的：
-- auth/session, auth/login 内联清理实现
-- 未包含企业级整改轮的安全增强
-
-### 归档策略
-
-已完成任务按时间归档到 `.harness/archive/{YYYY-MM}/`:
-
-- `archive/2026-07/`: 七月完成的任务 (code-review-remediation, repo-deep-cleanup, infra-hardening 等)
-- `archive/2026-08/`: 八月完成的任务 (sonarcloud-remediation, base-operational-workbench-design 等)
-- `archive/2026-09/`: 九月完成的任务 (命名与边界整改、企业级整改、governance closeout 等)
-
-归档包含 tasks/ 和 evidence/ 两部分，保持目录结构。
-
-### 下一步行动
-
-1. **完成 hosted release gate**: 在干净 `main` 上复跑 required checks
-2. **发布 v0.13.0**: 创建不可变 tag 和 GitHub Release
-3. **执行 Ops 消费升级**: 在干净工作树更新 lock、重建 snapshot 并运行业务 smoke
-4. **补充运行态证据**: 多实例缓存失效、容量尾延迟和 CI MySQL/Redis smoke
+以下记录为 v0.14.0 当时的发布状态与历史任务统计，不能作为 2026-10-07 最终验收结论。后文的“生产交付就绪”“所有必需检查通过”等表述只适用于该历史记录。
 
 ---
 
-## 附录：关键文件索引
+## 📊 当时状态总览
 
-- 整改计划: `.harness/ENTERPRISE_REMEDIATION_PLAN_2026-09-22.md`, `.harness/NAMING_AND_BOUNDARIES_REMEDIATION_PLAN_2026-09-22.md`
-- Smoke 分诊: `.harness/CORE_SMOKE_TRIAGE.md`
-- 发布准备: `.harness/RELEASE_v0.13.0_PREP.md`
-- 文档入口: `docs/README.md`, `DESIGN.md`, `AGENTS.md`
-- 门禁脚本: `scripts/harness/check-*.mjs`
+| 状态 | 数量 | 说明 |
+|------|------|------|
+| ✅ 已完成 | 117 | 所有历史任务 + v0.14.0 交付任务 |
+| 🔄 进行中 | 0 | 无活动任务 |
+| 📋 待办 | 0 | 无待办任务 |
+| ⏸️ 暂停 | 0 | 无暂停任务 |
+
+**项目状态**: ✅ **生产交付就绪**
+
+---
+
+## 🎯 v0.14.0 发布完成
+
+### 主要里程碑
+- ✅ **多租户系统上线**: 成熟度 55% → 96%
+- ✅ **质量门禁通过**: SonarCloud Security Rating A, 所有必需检查通过
+- ✅ **GitHub Release 发布**: pantheon-base-v0.14.0
+- ✅ **文档完整更新**: 发布说明、交付报告、API 文档
+
+### 最近完成的任务 (2026-10-03)
+
+#### 1. SonarCloud Security Rating E 修复
+- **任务**: 解决 2 个 BLOCKER SQL 注入误报
+- **状态**: ✅ 完成
+- **提交**: `3c797f35`, `c0036d88`
+- **结果**: Security Rating E → A
+- **证据**: [DELIVERY_COMPLETION_REPORT.md](../DELIVERY_COMPLETION_REPORT.md)
+
+#### 2. PR #358 合并
+- **任务**: 合并 v0.14.0 完成 PR 到 main 分支
+- **状态**: ✅ 完成
+- **合并时间**: 2026-10-03T14:51:38Z
+- **合并提交**: `722fa9e1`
+- **包含修复**: SonarCloud、Docs Governance、临时文件清理
+
+#### 3. GitHub Release 创建
+- **任务**: 创建 pantheon-base-v0.14.0 GitHub Release
+- **状态**: ✅ 完成
+- **发布时间**: 2026-10-03
+- **URL**: https://github.com/duanxldragon/pantheon-base/releases/tag/pantheon-base-v0.14.0
+
+#### 4. 文档全面更新
+- **任务**: 更新所有相关文档反映 v0.14.0 发布状态
+- **状态**: ✅ 完成
+- **更新文档**:
+  - README.md - 更新版本信息和质量门禁状态
+  - DELIVERY_COMPLETION_REPORT.md - 完整交付报告
+  - docs/RELEASE_STATUS_v0.14.0.md - 发布状态文档
+  - .harness/STATUS.md - Harness 任务状态
+
+---
+
+## 📋 当时后续待办
+
+### 立即操作 (可选)
+1. **VERSION 文件更新**
+   - PR #360 已创建: https://github.com/duanxldragon/pantheon-base/pull/360
+   - 等待 CI 通过后合并
+
+2. **依赖更新**
+   - PR #359: brace-expansion 5.0.9 → 5.0.12
+   - 安全更新，建议合并
+
+### 中期优化
+1. **Core Smoke 修复**
+   - 问题: 后端服务启动失败
+   - 优先级: 中
+   - 影响: 不阻塞发布，仅影响质量监控
+
+2. **监控和维护**
+   - 监控 SonarCloud 保持 Security Rating A
+   - 确保后续提交不引入新的安全问题
+   - 定期审查依赖漏洞
+
+---
+
+## 📚 归档任务
+
+所有历史任务（116 个）已归档到 [ARCHIVE.md](./ARCHIVE.md)。
+
+主要里程碑任务包括：
+- 多租户系统 4 阶段实现
+- SSRF 防护中间件
+- 前端 UI 审查和修复
+- 安全审计和加固
+- 文档治理和规范化
+
+详见归档记录获取完整历史。
+
+---
+
+## 🎯 质量指标
+
+### 代码质量
+- **SonarCloud**: Security Rating A, 0 BLOCKER/CRITICAL 问题
+- **测试覆盖率**: 达标（Coverage Gate 通过）
+- **代码重复率**: 达标（Duplication Gate 通过）
+- **Lint**: 所有检查通过
+
+### 安全指标
+- **Secret 扫描**: 通过（gitleaks）
+- **依赖漏洞**: 通过（report-only）
+- **Workflow 安全**: 通过（zizmor）
+- **CodeQL**: 通过
+
+### 文档质量
+- **Frontmatter 检查**: 通过
+- **链接检查**: 通过
+- **文档清单**: 通过
+- **文档数量**: 313 个 Markdown 文件
+
+---
+
+## 📌 当时建议的下次审查
+
+建议下次 Harness 审查时关注：
+1. Core Smoke 失败根本原因分析和修复
+2. 依赖更新（PR #359）合并状态
+3. VERSION 文件同步（PR #360）合并状态
+4. 租户模块生产环境反馈收集
+
+---
+
+**维护者**: duanxldragon
+**参考文档**:
+- [ARCHIVE.md](./ARCHIVE.md) - 归档任务索引
+- [DELIVERY_COMPLETION_REPORT.md](../DELIVERY_COMPLETION_REPORT.md) - v0.14.0 交付完成报告
+- [docs/RELEASE_STATUS_v0.14.0.md](../docs/RELEASE_STATUS_v0.14.0.md) - 发布状态详情
+
+- **2026-10-08 Wave 1 qualification 本地证据**：候选 SHA `edaf6c08eb729506f44299d61e8ab66ed4f20fcc` 的后端 vet、前端 type-check/lint/unit(163)/build、harness adoption 和 govulncheck 通过；后端全量测试仅因本机 Cygwin cgo 无法运行 tenant SQLite，race 同样受 CGO 工具链阻塞。npm audit 无 high/critical，存在 6 个 moderate dev 依赖链问题待 owner disposition。证据：`.harness/evidence/2026-10-07-release-qualification/`。资格任务保持 `in-progress`，不宣称发布通过。
+
+
+- **2026-10-08 Wave 1 qualification 本地证据**：候选 SHA `edaf6c08eb729506f44299d61e8ab66ed4f20fcc` 的后端 vet、前端 type-check/lint/unit(163)/build、harness adoption 和 govulncheck 通过；后端全量测试仅因本机 Cygwin cgo 无法运行 tenant SQLite，race 同样受 CGO 工具链阻塞。npm audit 无 high/critical，存在 6 个 moderate dev 依赖链问题待 owner disposition。证据：`.harness/evidence/2026-10-07-release-qualification/`。资格任务保持 `in-progress`，不宣称发布通过。
+
+- **2026-10-10 本地资格更新**：authenticated platform full smoke `77 passed (2.5m)`，覆盖 `1440x900`、`1024x768`、`390x844`；full-page audit `findings.json` 记录 0 console errors。task-packet/adoption/docs/sync/inventory/encoding/visual/UI quality gates 全部 0 findings。当前无法访问 GitHub API 或 npm audit endpoint，Go 1.26.9 下载受缓存锁权限阻塞；这些均作为 hosted/toolchain gap，不宣称发布通过。

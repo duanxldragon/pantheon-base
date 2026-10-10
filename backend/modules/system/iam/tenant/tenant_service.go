@@ -239,15 +239,95 @@ func (s *Service) RemoveMember(tenantID, userID uint64) error {
 	return nil
 }
 
-// ListTenantMembers returns all members of a tenant
-func (s *Service) ListTenantMembers(tenantID uint64) ([]Membership, error) {
-	var memberships []Membership
+const (
+	defaultTenantMemberPageSize = 20
+	maxTenantMemberPageSize     = 100
+)
+
+// ListAllTenantMembers preserves the legacy unpaginated member listing.
+func (s *Service) ListAllTenantMembers(tenantID uint64) ([]Membership, error) {
+	memberships := make([]Membership, 0)
 	if err := s.db.Where("tenant_id = ? AND status = ?", tenantID, "active").
-		Order("created_at ASC").
+		Order("created_at ASC, id ASC").
 		Find(&memberships).Error; err != nil {
 		return nil, fmt.Errorf("list tenant members: %w", err)
 	}
 	return memberships, nil
+}
+
+// ListTenantMembers returns one bounded page of active memberships and its total.
+func (s *Service) ListTenantMembers(tenantID uint64, page, pageSize int) ([]Membership, int64, error) {
+	page, pageSize = normalizeTenantMemberPagination(page, pageSize)
+
+	scope := s.db.Model(&Membership{}).
+		Where("tenant_id = ? AND status = ?", tenantID, "active")
+
+	var total int64
+	if err := scope.Count(&total).Error; err != nil {
+		return nil, 0, fmt.Errorf("count tenant members: %w", err)
+	}
+
+	memberships := make([]Membership, 0)
+	if err := scope.
+		Order("created_at ASC, id ASC").
+		Limit(pageSize).
+		Offset((page - 1) * pageSize).
+		Find(&memberships).Error; err != nil {
+		return nil, 0, fmt.Errorf("list tenant members: %w", err)
+	}
+	return memberships, total, nil
+}
+
+func normalizeTenantMemberPagination(page, pageSize int) (int, int) {
+	if page < 1 {
+		page = 1
+	}
+	if pageSize < 1 {
+		pageSize = defaultTenantMemberPageSize
+	}
+	if pageSize > maxTenantMemberPageSize {
+		pageSize = maxTenantMemberPageSize
+	}
+	if maxPage := int(^uint(0)>>1) / pageSize; page > maxPage {
+		page = maxPage
+	}
+	return page, pageSize
+}
+
+// ActiveMembershipRole returns the role of a user's active membership in one
+// tenant without loading the full member list.
+func (s *Service) ActiveMembershipRole(tenantID, userID uint64) (string, bool, error) {
+	var membership Membership
+	err := s.db.
+		Where("tenant_id = ? AND user_id = ? AND status = ?", tenantID, userID, "active").
+		First(&membership).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return "", false, nil
+	}
+	if err != nil {
+		return "", false, fmt.Errorf("check tenant membership: %w", err)
+	}
+	return membership.Role, true, nil
+}
+
+// ActiveMembershipRolesByTenant resolves the user's active role for each given
+// tenant with a single bounded query instead of one full member list per
+// tenant (which made tenant switch listings O(tenants × members)).
+func (s *Service) ActiveMembershipRolesByTenant(userID uint64, tenantIDs []uint64) (map[uint64]string, error) {
+	roles := make(map[uint64]string, len(tenantIDs))
+	if len(tenantIDs) == 0 {
+		return roles, nil
+	}
+	var rows []Membership
+	if err := s.db.
+		Where("user_id = ? AND tenant_id IN ? AND status = ?", userID, tenantIDs, "active").
+		Find(&rows).Error; err != nil {
+		return nil, fmt.Errorf("list user membership roles: %w", err)
+	}
+	for _, row := range rows {
+		roles[row.TenantID] = row.Role
+	}
+	return roles, nil
 }
 
 // GetUserTenants returns all tenants a user belongs to

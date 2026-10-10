@@ -151,9 +151,10 @@ func TestAddMember(t *testing.T) {
 	require.NoError(t, err)
 
 	// Verify
-	members, err := service.ListTenantMembers(tenant.ID)
+	members, total, err := service.ListTenantMembers(tenant.ID, 1, 20)
 	require.NoError(t, err)
 	assert.Len(t, members, 1)
+	assert.Equal(t, int64(1), total)
 	assert.Equal(t, tenant.ID, members[0].TenantID)
 	assert.Equal(t, uint64(100), members[0].UserID)
 	assert.Equal(t, "admin", members[0].Role)
@@ -195,9 +196,65 @@ func TestRemoveMember(t *testing.T) {
 	require.NoError(t, err)
 
 	// Verify
-	members, err := service.ListTenantMembers(tenant.ID)
+	members, total, err := service.ListTenantMembers(tenant.ID, 1, 20)
 	require.NoError(t, err)
 	assert.Len(t, members, 0)
+	assert.Equal(t, int64(0), total)
+}
+
+// TestListTenantMembers_PaginationContract pins the bounded listing contract:
+// total counts the full membership, pages are bounded, and out-of-range or
+// oversized requests are clamped instead of materializing the whole table.
+func TestListTenantMembers_PaginationContract(t *testing.T) {
+	db := setupTestDB(t)
+	service := NewService(db)
+
+	tenant, err := service.CreateTenant(CreateTenantDTO{
+		Code: "paged-tenant",
+		Name: "Paged Tenant",
+	})
+	require.NoError(t, err)
+
+	const memberCount = 7
+	for i := 1; i <= memberCount; i++ {
+		require.NoError(t, service.AddMember(tenant.ID, uint64(200+i), "member"))
+	}
+
+	members, total, err := service.ListTenantMembers(tenant.ID, 1, 3)
+	require.NoError(t, err)
+	assert.Equal(t, int64(memberCount), total)
+	assert.Len(t, members, 3)
+
+	members, _, err = service.ListTenantMembers(tenant.ID, 3, 3)
+	require.NoError(t, err)
+	assert.Len(t, members, 1)
+
+	// Oversized pageSize is clamped instead of loading everything.
+	members, _, err = service.ListTenantMembers(tenant.ID, 1, 100000)
+	require.NoError(t, err)
+	assert.LessOrEqual(t, len(members), maxTenantMemberPageSize)
+
+	// Non-positive page/pageSize fall back to safe defaults.
+	members, total, err = service.ListTenantMembers(tenant.ID, 0, 0)
+	require.NoError(t, err)
+	assert.Equal(t, int64(memberCount), total)
+	assert.LessOrEqual(t, len(members), defaultTenantMemberPageSize)
+
+	// Role lookups stay bounded and scoped to a single membership.
+	role, isMember, err := service.ActiveMembershipRole(tenant.ID, 201)
+	require.NoError(t, err)
+	assert.True(t, isMember)
+	assert.Equal(t, "member", role)
+
+	role, isMember, err = service.ActiveMembershipRole(tenant.ID, 999999)
+	require.NoError(t, err)
+	assert.False(t, isMember)
+	assert.Empty(t, role)
+
+	rolesByTenant, err := service.ActiveMembershipRolesByTenant(202, []uint64{tenant.ID, 424242})
+	require.NoError(t, err)
+	assert.Equal(t, "member", rolesByTenant[tenant.ID])
+	assert.NotContains(t, rolesByTenant, uint64(424242))
 }
 
 func TestDeleteTenant_WithActiveMembers(t *testing.T) {

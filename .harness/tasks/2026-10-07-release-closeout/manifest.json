@@ -1,0 +1,67 @@
+{
+  "taskId": "2026-10-07-release-closeout",
+  "title": "Close PR, branch, documentation and foundation handoff gates",
+  "goal": "Reach the maintainer's main-only, all-checks-green final acceptance state and record the release decision.",
+  "primaryLayer": "platform",
+  "status": "in-progress",
+  "priority": "P0",
+  "type": "release-closeout",
+  "estimatedComplexity": "medium",
+  "parentTaskId": "2026-10-07-release-readiness-remediation",
+  "dependsOn": [
+    "2026-10-07-release-qualification"
+  ],
+  "findings": [
+    "G02",
+    "stale release claims"
+  ],
+  "scope": {
+    "in": [
+      "README.md",
+      ".harness/STATUS.md",
+      "docs/RELEASE_STATUS_v0.14.0.md",
+      "release notes and foundation handoff records"
+    ],
+    "out": [
+      "Agent applying solo-override",
+      "Publishing or deleting branches before human release gate"
+    ]
+  },
+  "acceptanceCriteria": [
+    "All in-scope PRs are merged and no PR remains open under the maintainer's stated closeout criterion; exact PR URLs and merge SHAs are recorded.",
+    "Only main remains in the required local/remote branch scope, after authorized branch cleanup; no destructive cleanup is performed during planning.",
+    "The exact main SHA has all required CI and Release Gate checks green, Sonar accepted, docs accurate, and no unresolved release Blocker.",
+    "Maintainer performs final visual/functional acceptance and separately authorizes immutable release/publication and pantheon-ops consumer lock update."
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "ci-workflow",
+    "ownerLayer": "consumer-repository"
+  },
+  "verificationPlan": {
+    "commands": [
+      "gh pr list --state open",
+      "gh run list --branch main",
+      "git branch -a",
+      "git status --short --branch"
+    ],
+    "runtimeEvidence": [
+      "PR/branch state snapshot and final gate URLs",
+      "release SHA/tag and Ops handoff decision"
+    ]
+  },
+  "runtimeSensitive": false,
+  "linkage": {
+    "parentTaskPacket": "docs/harness/tasks/2026-10-07-release-readiness-remediation.task.md",
+    "assessment": "docs/reviews/ENTERPRISE_RELEASE_READINESS_REVIEW_2026-10-07.md",
+    "evidenceDir": ".harness/evidence/2026-10-07-release-closeout/",
+    "summaryFile": ".harness/evidence/2026-10-07-release-closeout/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-07-release-closeout/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-07-release-readiness-remediation.task.md",
+      "docs/reviews/ENTERPRISE_RELEASE_READINESS_REVIEW_2026-10-07.md"
+    ]
+  }
+}
