@@ -85,7 +85,7 @@ func (e *QuotaEnforcer) CheckUserQuota(tenantID uint64) error {
 
 	var count int64
 	if err := e.db.Model(&Membership{}).
-		Where("tenant_id = ? AND status = ?", tenantID, "active").
+		Where(activeTenantMemberPredicate, tenantID, "active").
 		Count(&count).Error; err != nil {
 		return fmt.Errorf("count users: %w", err)
 	}
@@ -111,7 +111,7 @@ func (e *QuotaEnforcer) CheckRoleQuota(tenantID uint64) error {
 
 	var count int64
 	if err := e.db.Table("system_role").
-		Where("tenant_id = ?", tenantID).
+		Where(tenantIDPredicate, tenantID).
 		Count(&count).Error; err != nil {
 		return fmt.Errorf("count roles: %w", err)
 	}
@@ -130,28 +130,28 @@ func (e *QuotaEnforcer) GetTenantUsage(tenantID uint64) (map[string]int64, error
 	// Count users
 	var userCount int64
 	e.db.Model(&Membership{}).
-		Where("tenant_id = ? AND status = ?", tenantID, "active").
+		Where(activeTenantMemberPredicate, tenantID, "active").
 		Count(&userCount)
 	usage["users"] = userCount
 
 	// Count roles
 	var roleCount int64
 	e.db.Table("system_role").
-		Where("tenant_id = ?", tenantID).
+		Where(tenantIDPredicate, tenantID).
 		Count(&roleCount)
 	usage["roles"] = roleCount
 
 	// Count depts
 	var deptCount int64
 	e.db.Table("system_dept").
-		Where("tenant_id = ?", tenantID).
+		Where(tenantIDPredicate, tenantID).
 		Count(&deptCount)
 	usage["depts"] = deptCount
 
 	// Count API keys (if table exists)
 	var apiKeyCount int64
 	e.db.Table("api_keys").
-		Where("tenant_id = ?", tenantID).
+		Where(tenantIDPredicate, tenantID).
 		Count(&apiKeyCount)
 	usage["api_keys"] = apiKeyCount
 
@@ -169,33 +169,33 @@ func NewAuditLogger(db *gorm.DB) *AuditLogger {
 }
 
 // LogTenantCreated logs tenant creation event
-func (l *AuditLogger) LogTenantCreated(tenantID uint64, operatorID uint64, snapshot string) error {
+func (l *AuditLogger) LogTenantCreated(tenantID, operatorID uint64, snapshot string) error {
 	return l.logEvent(tenantID, operatorID, "tenant.created", snapshot)
 }
 
 // LogTenantUpdated logs tenant update event
-func (l *AuditLogger) LogTenantUpdated(tenantID uint64, operatorID uint64, snapshot string) error {
+func (l *AuditLogger) LogTenantUpdated(tenantID, operatorID uint64, snapshot string) error {
 	return l.logEvent(tenantID, operatorID, "tenant.updated", snapshot)
 }
 
 // LogTenantDeleted logs tenant deletion event
-func (l *AuditLogger) LogTenantDeleted(tenantID uint64, operatorID uint64, snapshot string) error {
+func (l *AuditLogger) LogTenantDeleted(tenantID, operatorID uint64, snapshot string) error {
 	return l.logEvent(tenantID, operatorID, "tenant.deleted", snapshot)
 }
 
 // LogMemberAdded logs member addition event
-func (l *AuditLogger) LogMemberAdded(tenantID uint64, operatorID uint64, memberUserID uint64, role string) error {
+func (l *AuditLogger) LogMemberAdded(tenantID, operatorID, memberUserID uint64, role string) error {
 	snapshot := fmt.Sprintf(`{"user_id":%d,"role":"%s"}`, memberUserID, role)
 	return l.logEvent(tenantID, operatorID, "tenant.member.added", snapshot)
 }
 
 // LogMemberRemoved logs member removal event
-func (l *AuditLogger) LogMemberRemoved(tenantID uint64, operatorID uint64, memberUserID uint64) error {
+func (l *AuditLogger) LogMemberRemoved(tenantID, operatorID, memberUserID uint64) error {
 	snapshot := fmt.Sprintf(`{"user_id":%d}`, memberUserID)
 	return l.logEvent(tenantID, operatorID, "tenant.member.removed", snapshot)
 }
 
-func (l *AuditLogger) logEvent(tenantID uint64, operatorID uint64, eventType string, detail string) error {
+func (l *AuditLogger) logEvent(tenantID, operatorID uint64, eventType, detail string) error {
 	// Log to operation_logs table (which already has tenant_id support)
 	return l.db.Exec(`
 		INSERT INTO operation_logs (tenant_id, user_id, module, operation, detail, created_at)
@@ -227,7 +227,7 @@ func (c *HealthChecker) CheckTenantHealth(tenantID uint64) (map[string]interface
 	// Check member count
 	var memberCount int64
 	c.db.Model(&Membership{}).
-		Where("tenant_id = ? AND status = ?", tenantID, "active").
+		Where(activeTenantMemberPredicate, tenantID, "active").
 		Count(&memberCount)
 	result["member_count"] = memberCount
 
