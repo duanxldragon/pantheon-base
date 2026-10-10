@@ -545,10 +545,7 @@ func (s *AuditService) backfillOperationLogDerivedFields() error {
 
 	lastID := uint64(0)
 	processed := 0
-	for {
-		if processed >= operationLogBackfillRunCap {
-			break
-		}
+	for processed < operationLogBackfillRunCap {
 		batchLimit := operationLogBackfillBatchSize
 		if remaining := operationLogBackfillRunCap - processed; remaining < batchLimit {
 			batchLimit = remaining

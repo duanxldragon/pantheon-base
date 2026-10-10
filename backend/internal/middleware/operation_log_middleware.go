@@ -46,7 +46,7 @@ const (
 	operationLogAuditBodyLimitEnv     = "PANTHEON_OPERATION_LOG_AUDIT_BODY_LIMIT"
 	operationLogWriteTimeout          = 2 * time.Second
 	unavailableAuditParam             = `{"__body":"unavailable"}`
-	operationLogParamOverLimit         = `{"__body":"over_limit"}`
+	operationLogParamOverLimit        = `{"__body":"over_limit"}`
 	multipartAuditOverLimit           = `{"__multipart":"metadata_over_limit"}`
 	maxMultipartAuditFiles            = 32
 	maxMultipartAuditFieldName        = 128
