@@ -1,0 +1,62 @@
+{
+  "taskId": "2026-10-07-release-readiness-remediation",
+  "title": "Close 2026-10-07 enterprise release readiness blockers",
+  "goal": "Repair verified release blockers, collect candidate-SHA evidence and obtain a maintainer final acceptance decision.",
+  "primaryLayer": "platform",
+  "status": "in-progress",
+  "priority": "P0",
+  "type": "release-readiness-remediation",
+  "estimatedComplexity": "high",
+  "children": [
+    "2026-10-07-auth-session-scope",
+    "2026-10-07-login-log-identity",
+    "2026-10-07-iam-data-scope",
+    "2026-10-07-audit-request-body",
+    "2026-10-07-governance-gate-repair",
+    "2026-10-07-upgrade-runbook",
+    "2026-10-07-release-qualification",
+    "2026-10-07-release-closeout",
+    "2026-10-07-performance-followup",
+    "2026-10-07-ui-maintainability-followup"
+  ],
+  "scope": {
+    "in": [
+      "F01-F06 code blockers",
+      "G01-G03 release gate blockers",
+      "candidate-SHA verification and main-only closeout"
+    ],
+    "out": [
+      "unrelated new features",
+      "production migration or release during planning"
+    ]
+  },
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "ci-workflow",
+    "ownerLayer": "consumer-repository"
+  },
+  "verificationPlan": {
+    "commands": [
+      "npm run check:task-packet",
+      "npm run check:harness-docs",
+      "npm run check:harness-adoption"
+    ],
+    "runtimeEvidence": [
+      "child task evidence, independent review and final maintainer gate"
+    ]
+  },
+  "runtimeSensitive": false,
+  "linkage": {
+    "taskPacket": "docs/harness/tasks/2026-10-07-release-readiness-remediation.task.md",
+    "evidenceDir": ".harness/evidence/2026-10-07-release-readiness-remediation/",
+    "summaryFile": ".harness/evidence/2026-10-07-release-readiness-remediation/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-07-release-readiness-remediation/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-07-release-readiness-remediation.task.md",
+      "docs/reviews/ENTERPRISE_RELEASE_READINESS_REVIEW_2026-10-07.md"
+    ]
+  },
+  "statusNote": "2026-10-10: Wave 0 and locally executable Wave 1 remediation are complete. Browser, migration, MySQL fixture, frontend and governance evidence are recorded. Parent remains in-progress for hosted candidate-SHA gates, Sonar disposition, toolchain-dependent tenant/race evidence and final release closeout."
+}

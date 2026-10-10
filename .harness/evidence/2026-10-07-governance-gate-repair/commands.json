@@ -1,0 +1,73 @@
+{
+  "taskId": "2026-10-07-governance-gate-repair",
+  "executedAt": "2026-10-08T00:35:00+08:00",
+  "commands": [
+    {
+      "step": "root cause: SHELL_VERSION.json deleted in #358",
+      "command": "git log --diff-filter=D -- SHELL_VERSION.json && git show 722fa9e1 -- SHELL_VERSION.json",
+      "result": "success",
+      "details": "commit 722fa9e1 (v0.14.0 publication) deleted the required shell landing artifact while upstream pantheon-harness/scripts/harness/check-method-health.mjs still requires it (REQUIRED_REPO_SHELL_FILES + readJson)",
+      "cwd": ".",
+      "status": "passed"
+    },
+    {
+      "step": "restore SHELL_VERSION.json verbatim",
+      "command": "restore {name, version 1.4.0, releasedAt, compatibleMethodKit 1.4.0, minimumNode 24}",
+      "result": "success",
+      "cwd": ".",
+      "status": "passed"
+    },
+    {
+      "step": "mirror drift check",
+      "command": "diff ../pantheon-harness/scripts/harness/check-doc-frontmatter.mjs scripts/harness/check-doc-frontmatter.mjs",
+      "result": "success",
+      "details": "files already identical in worktree (d65310ba had synced them); check-doc-frontmatter reports 0 errors",
+      "cwd": ".",
+      "status": "passed"
+    },
+    {
+      "step": "gate reruns (node direct; npm shell shim broken on this host)",
+      "command": "node scripts/harness/check-method-health.mjs --root . --strict; node scripts/harness/check-sync-drift.mjs --root . --strict; node scripts/harness/check-doc-links.mjs --root . --strict",
+      "result": "success",
+      "details": "all: no findings, exit 0",
+      "cwd": ".",
+      "status": "passed"
+    },
+    {
+      "step": "npm gate equivalence",
+      "command": "npm.cmd run check:task-packet / check:harness-sync / check:harness-docs",
+      "result": "success",
+      "details": "task-packet: 30 files 0 errors 28 warnings exit 0; sync exit 0; docs exit 0",
+      "cwd": ".",
+      "status": "passed"
+    },
+    {
+      "step": "adoption gate",
+      "command": "npm.cmd run check:harness-adoption",
+      "result": "blocked-pending-closeout",
+      "details": "exits 1 only because .harness/evidence/*/commands.json files had not been written yet at check time; re-run after closeout",
+      "cwd": ".",
+      "status": "not-run"
+    }
+  ],
+  "gap": "hosted CI reruns (runs 37131143242/37131143233) require a pushed candidate SHA + PR merge; G02 open-PR closeout is a maintainer decision outside this local run.",
+  "repo": "pantheon-base",
+  "agent": {
+    "tool": "codex",
+    "adapter": "platform-coordinator"
+  },
+  "knownGaps": [
+    "hosted CI reruns (runs 37131143242/37131143233) require a pushed candidate SHA + PR merge; G02 open-PR closeout is a maintainer decision outside this local run."
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-07-governance-gate-repair/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-07-governance-gate-repair/",
+    "reviewFile": ".harness/evidence/2026-10-07-governance-gate-repair/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-07-release-readiness-remediation.task.md",
+      "docs/reviews/ENTERPRISE_RELEASE_READINESS_REVIEW_2026-10-07.md"
+    ],
+    "summaryFile": ".harness/evidence/2026-10-07-governance-gate-repair/summary.md"
+  }
+}

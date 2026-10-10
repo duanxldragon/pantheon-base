@@ -1,0 +1,61 @@
+{
+  "taskId": "2026-10-07-performance-followup",
+  "title": "Bound measured tenant and audit scaling risks",
+  "goal": "Measure and address the specific unbounded list, dashboard and audit backfill risks if representative data shows material impact.",
+  "primaryLayer": "platform",
+  "status": "completed",
+  "priority": "P1",
+  "type": "improvement",
+  "estimatedComplexity": "medium",
+  "parentTaskId": "2026-10-07-release-readiness-remediation",
+  "dependsOn": [
+    "2026-10-07-release-closeout"
+  ],
+  "findings": [
+    "performance static risks"
+  ],
+  "scope": {
+    "in": [
+      "backend/modules/platform/dashboard_service.go",
+      "backend/modules/system/iam/tenant/tenant_service.go",
+      "backend/modules/system/audit/audit_service.go"
+    ],
+    "out": [
+      "Speculative caching",
+      "Changing release blockers without separate task"
+    ]
+  },
+  "acceptanceCriteria": [
+    "Tenant member listing has an explicit pagination or bounded contract with tests.",
+    "Old audit-log backfill is bounded or measured acceptable on the agreed data volume.",
+    "Dashboard query plan, P95 and connection usage are captured before choosing caching or query changes; no regression against the agreed baseline."
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "none",
+    "ownerLayer": "consumer-repository"
+  },
+  "verificationPlan": {
+    "commands": [
+      "cd backend && go test ./modules/platform/... ./modules/system/iam/tenant/... ./modules/system/audit/..."
+    ],
+    "runtimeEvidence": [
+      "representative MySQL row counts and EXPLAIN",
+      "before/after P95 and connection usage"
+    ]
+  },
+  "runtimeSensitive": true,
+  "linkage": {
+    "parentTaskPacket": "docs/harness/tasks/2026-10-07-release-readiness-remediation.task.md",
+    "assessment": "docs/reviews/ENTERPRISE_RELEASE_READINESS_REVIEW_2026-10-07.md",
+    "evidenceDir": ".harness/evidence/2026-10-07-performance-followup/",
+    "summaryFile": ".harness/evidence/2026-10-07-performance-followup/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-07-performance-followup/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-07-release-readiness-remediation.task.md",
+      "docs/reviews/ENTERPRISE_RELEASE_READINESS_REVIEW_2026-10-07.md"
+    ]
+  }
+}

@@ -1245,7 +1245,7 @@ const ModuleWizard: React.FC = () => {
             title: t('generator.wizard.register.overwriteTitle'),
             content: t('generator.wizard.register.overwriteContent'),
             onOk: () => {
-              submitGenerateAndRegister(true);
+               void submitGenerateAndRegister(true);
             },
           });
           return;
@@ -2247,7 +2247,7 @@ const ModuleWizard: React.FC = () => {
                     loading={registering}
                     disabled={!oneClickEnabled}
                     onClick={() => {
-                      submitGenerateAndRegister();
+                       void submitGenerateAndRegister();
                     }}
                   >
                     {t('generator.wizard.register.submit')}
@@ -2438,7 +2438,7 @@ const ModuleWizard: React.FC = () => {
                         loading={auditingActivation}
                         disabled={result.module.status === 1}
                         onClick={() => {
-                          handleAuditActivation();
+                           void handleAuditActivation();
                         }}
                       >
                         {t('generator.wizard.result.checkActivation')}

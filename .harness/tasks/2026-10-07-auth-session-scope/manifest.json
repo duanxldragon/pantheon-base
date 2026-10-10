@@ -1,0 +1,62 @@
+{
+  "taskId": "2026-10-07-auth-session-scope",
+  "title": "Close self-service ownership and tenant session boundaries",
+  "goal": "Prevent a caller from revoking another user's session or reading/revoking sessions outside the active tenant.",
+  "primaryLayer": "system/auth",
+  "status": "completed",
+  "priority": "P0",
+  "type": "security-fix",
+  "estimatedComplexity": "high",
+  "parentTaskId": "2026-10-07-release-readiness-remediation",
+  "dependsOn": [],
+  "findings": [
+    "F02",
+    "F03"
+  ],
+  "scope": {
+    "in": [
+      "backend/modules/auth/login/login_handler.go",
+      "backend/modules/auth/session/session_service.go",
+      "backend/modules/auth/session/*_test.go",
+      "backend/modules/auth/login/*_test.go"
+    ],
+    "out": [
+      "Rewriting token format",
+      "Adding new identity providers"
+    ]
+  },
+  "acceptanceCriteria": [
+    "Self-service revoke rejects another user's session ID and follows the documented current-session rule.",
+    "Tenant-scoped managers cannot list, count, revoke or batch-revoke another tenant's sessions; an explicit platform operator exception is tested.",
+    "Two-user and two-tenant hostile tests plus an authenticated runtime smoke pass; reviewer checks every route's policy mapping."
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "auth-security",
+    "ownerLayer": "consumer-repository"
+  },
+  "verificationPlan": {
+    "commands": [
+      "cd backend && go test ./modules/auth/login/... ./modules/auth/session/... ./internal/middleware/...",
+      "cd backend && go test ./..."
+    ],
+    "runtimeEvidence": [
+      "two-user/two-tenant HTTP request and response summary",
+      "session invalidation path through DB and Redis"
+    ]
+  },
+  "runtimeSensitive": true,
+  "linkage": {
+    "parentTaskPacket": "docs/harness/tasks/2026-10-07-release-readiness-remediation.task.md",
+    "assessment": "docs/reviews/ENTERPRISE_RELEASE_READINESS_REVIEW_2026-10-07.md",
+    "evidenceDir": ".harness/evidence/2026-10-07-auth-session-scope/",
+    "summaryFile": ".harness/evidence/2026-10-07-auth-session-scope/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-07-auth-session-scope/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-07-release-readiness-remediation.task.md",
+      "docs/reviews/ENTERPRISE_RELEASE_READINESS_REVIEW_2026-10-07.md"
+    ]
+  }
+}

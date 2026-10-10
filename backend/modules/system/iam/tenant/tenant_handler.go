@@ -249,27 +249,57 @@ func (h *Handler) RemoveTenantMember(c *gin.Context) {
 }
 
 // ListTenantMembers godoc
-// @Summary List tenant members
-// @Description List all members of a tenant
+// @Summary List a page of tenant members
+// @Description List active members of a tenant with bounded pagination. The response envelope is shared with the /members/page compatibility alias.
 // @Tags Tenant
 // @Produce json
 // @Param id path int true "Tenant ID"
-// @Success 200 {array} Membership
+// @Param page query int false "Page number (>=1, default 1)"
+// @Param pageSize query int false "Page size (clamped to 1-100, default 20)"
+// @Success 200 {object} map[string]interface{}
 // @Router /api/v1/tenants/{id}/members [get]
 func (h *Handler) ListTenantMembers(c *gin.Context) {
+	page, pageSize := parseTenantMemberPagination(c)
+	h.writeTenantMembersPage(c, page, pageSize)
+}
+
+// ListTenantMembersPage keeps the additive compatibility path while applying the same bounded contract.
+func (h *Handler) ListTenantMembersPage(c *gin.Context) {
+	page, pageSize := parseTenantMemberPagination(c)
+	h.writeTenantMembersPage(c, page, pageSize)
+}
+
+func parseTenantMemberPagination(c *gin.Context) (int, int) {
+	page, err := strconv.Atoi(c.DefaultQuery("page", "1"))
+	if err != nil {
+		page = 1
+	}
+	pageSize, err := strconv.Atoi(c.DefaultQuery("pageSize", "20"))
+	if err != nil {
+		pageSize = defaultTenantMemberPageSize
+	}
+	return normalizeTenantMemberPagination(page, pageSize)
+}
+
+func (h *Handler) writeTenantMembersPage(c *gin.Context, page, pageSize int) {
 	tenantID, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid tenant id"})
 		return
 	}
 
-	members, err := h.service.ListTenantMembers(tenantID)
+	members, total, err := h.service.ListTenantMembers(tenantID, page, pageSize)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, members)
+	c.JSON(http.StatusOK, gin.H{
+		"items":    members,
+		"total":    total,
+		"page":     page,
+		"pageSize": pageSize,
+	})
 }
 
 // GetMyTenants godoc

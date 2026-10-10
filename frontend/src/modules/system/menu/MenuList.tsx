@@ -889,7 +889,7 @@ const MenuList: React.FC = () => {
         <FormModalFooter
           onCancel={() => setVisible(false)}
           onSubmit={() => {
-            submitForm();
+             void submitForm();
           }}
           loading={submitting}
           submitText={editing ? t('common.save') : t('common.add')}
@@ -901,7 +901,7 @@ const MenuList: React.FC = () => {
         form={form}
         layout="vertical"
         onSubmit={() => {
-          submitForm();
+           void submitForm();
         }}
       >
         <Space direction="vertical" size={20} className="dialog-form-stack">

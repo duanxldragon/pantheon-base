@@ -68,6 +68,8 @@ For Chinese-first onboarding, read:
 
 ### Acceptance and delivery
 
+- [Enterprise release readiness review (2026-10-07; current release decision, Chinese)](./reviews/ENTERPRISE_RELEASE_READINESS_REVIEW_2026-10-07.md)
+- [Release readiness remediation task packet (2026-10-07; Chinese)](./harness/tasks/2026-10-07-release-readiness-remediation.task.md) — machine-readable tasks are under `../.harness/tasks/2026-10-07-*/manifest.json`
 - [acceptances/ACCEPTANCE_CHECKLIST.md](./acceptances/ACCEPTANCE_CHECKLIST.md)
 - [acceptances/AGENT_EXECUTION_CHECKLIST.md](./acceptances/AGENT_EXECUTION_CHECKLIST.md)
 - [acceptances/TASK_PACKET_BASE_TEMPLATE.md](./acceptances/TASK_PACKET_BASE_TEMPLATE.md)

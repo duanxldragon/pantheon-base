@@ -138,11 +138,22 @@ const UserFormModal: React.FC<UserFormModalProps> = ({
                 </FormItem>
               </Col>
             </Row>
+            {/*
+              The FormItem wraps a Space (not the Input), so Arco cannot inject
+              the field value/onChange for us: keep the Input controlled by the
+              avatar preview and mirror every edit back into the form store so
+              manually typed URLs persist on save like uploaded ones do.
+            */}
             <FormItem label={t('system.user.avatar')} field="avatar">
               <Space direction="vertical" size={8} style={{ width: '100%' }}>
                 <Input
+                  value={avatarPreview}
                   placeholder={t('system.profile.avatarPlaceholder')}
-                  onChange={(value) => onAvatarPreviewChange(value)}
+                  onChange={(value) => {
+                    const next = value || '';
+                    form.setFieldValue('avatar', next);
+                    onAvatarPreviewChange(next);
+                  }}
                 />
                 <Space align="center" wrap>
                   <Avatar size={40}>

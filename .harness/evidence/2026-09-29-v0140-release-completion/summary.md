@@ -84,3 +84,7 @@ Complete the interrupted v0.14.0 multi-tenant release: land the local-only commi
 - The local workflow/task-state commit has not been pushed, the PR has no required approval, and PR #358 is blocked.
 - Local branches are not reduced to `main`; the release branch contains unmerged work. Eight unrelated user deletions remain unstaged and untouched.
 - Release publication is not approved by gates and has not occurred.
+
+## 2026-10-10 reconciliation
+
+The unresolved publication and hosted-gate portions are now tracked by `2026-10-07-release-readiness-remediation` and its `release-qualification`/`release-closeout` children. The local stack has since produced authenticated platform full smoke evidence (77 passed across 1440x900, 1024x768 and 390x844), MySQL fixture and migration rollback evidence, and green local governance/UI gates. This historical task remains `in-progress` because immutable release publication, hosted required checks, Sonar disposition, and the pantheon-ops consumer lock are human/remote gates.

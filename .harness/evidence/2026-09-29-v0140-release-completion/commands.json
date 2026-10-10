@@ -73,14 +73,25 @@
       "cwd": "pantheon-base",
       "status": "failed",
       "notes": "Git HTTPS connection to github.com:443 timed out; local commit 81e1bb09 remains ahead of origin."
+    },
+    {
+      "command": "cd frontend && npm run test:smoke:platform:full",
+      "cwd": "frontend",
+      "status": "passed",
+      "notes": "2026-10-10: 77 authenticated full-smoke tests passed across desktop/pad/phone viewports; generated full-page audit evidence has zero console errors."
+    },
+    {
+      "command": "local governance and UI quality gates",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "2026-10-10: task packet, adoption, docs, sync, inventory, encoding, visual and UI quality checks all 0 findings."
     }
   ],
   "knownGaps": [
-    "Tenant resource scope matrix is not frozen; user identity is global with tenant memberships by maintainer decision.",
-    "Tenant backend P1 service scoping, automated browser E2E, and full smoke have not completed.",
-    "Task and workflow commit 81e1bb09 is local only; GitHub push failed due network connectivity.",
-    "No v0.14.2 tag or GitHub Release exists; PR #358 is blocked and not approved for release.",
-    "Eight unrelated user deletions remain unstaged and untouched."
+    "v0.14.2 immutable publication and GitHub Release",
+    "hosted required checks and Sonar 26 classification",
+    "native cgo tenant/race and Go 1.26.9 toolchain",
+    "pantheon-ops foundation consumer lock"
   ],
   "linkage": {
     "evidenceDir": ".harness/evidence/2026-09-29-v0140-release-completion/",
@@ -89,6 +100,8 @@
     "reviewFile": ".harness/evidence/2026-09-29-v0140-release-completion/review.md",
     "summaryFile": ".harness/evidence/2026-09-29-v0140-release-completion/summary.md",
     "changeRef": "none",
-    "planRefs": ["docs/harness/tasks/2026-09-29-v0140-release-completion.task.md"]
+    "planRefs": [
+      "docs/harness/tasks/2026-09-29-v0140-release-completion.task.md"
+    ]
   }
 }

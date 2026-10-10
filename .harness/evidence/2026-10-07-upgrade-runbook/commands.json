@@ -1,0 +1,57 @@
+{
+  "taskId": "2026-10-07-upgrade-runbook",
+  "executedAt": "2026-10-08T00:40:00+08:00",
+  "commands": [
+    {
+      "step": "verify referenced artifacts exist",
+      "command": "ls scripts/tenant-migration-verify.sh scripts/tenant-migration-execute.sh scripts/tenant-health-check.sh docs/migrations/COMPAT_TO_MULTI_UPGRADE.md",
+      "result": "success",
+      "cwd": ".",
+      "status": "passed"
+    },
+    {
+      "step": "confirm phantom scripts absent",
+      "command": "ls scripts/*.sql",
+      "result": "success",
+      "details": "no .sql scripts exist — create-default-tenant.sql / migrate-users-to-tenant.sql never existed; COMPAT_TO_MULTI_UPGRADE.md holds the authoritative inline SQL",
+      "cwd": ".",
+      "status": "passed"
+    },
+    {
+      "step": "rewrite upgrade steps",
+      "command": "edit RELEASE_NOTES_v0.14.0.md Compat→Multi section",
+      "result": "success",
+      "details": "real migration path: mysqldump backup → ./scripts/tenant-migration-execute.sh (PANTHEON_DSN + go run ./cmd/tenantmigration up, currently through migration 000021) → default tenant + user migration per COMPAT_TO_MULTI_UPGRADE.md Steps 1-2 → SQL mode switch (sql block) → restart → tenant-health-check.sh 1; rollback restores the verified pre-migration backup",
+      "cwd": ".",
+      "status": "passed"
+    },
+    {
+      "step": "gofmt/structural checks",
+      "command": "npm.cmd run check:harness-docs / check:harness-sync",
+      "result": "success",
+      "details": "exit 0 after the edit",
+      "cwd": ".",
+      "status": "passed"
+    }
+  ],
+  "gap": "Hosted CI, Sonar classification and authenticated browser evidence remain release-qualification gaps; production migration is intentionally out of scope.",
+  "repo": "pantheon-base",
+  "agent": {
+    "tool": "codex",
+    "adapter": "platform-coordinator"
+  },
+  "knownGaps": [
+    "Hosted CI, Sonar classification and authenticated browser evidence remain release-qualification gaps; production migration is intentionally out of scope."
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-07-upgrade-runbook/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-07-upgrade-runbook/",
+    "reviewFile": ".harness/evidence/2026-10-07-upgrade-runbook/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-07-release-readiness-remediation.task.md",
+      "docs/reviews/ENTERPRISE_RELEASE_READINESS_REVIEW_2026-10-07.md"
+    ],
+    "summaryFile": ".harness/evidence/2026-10-07-upgrade-runbook/summary.md"
+  }
+}

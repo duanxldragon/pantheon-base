@@ -85,6 +85,8 @@ Shared skills live in `../../pantheon-harness/skills/`; recommended shared skill
 
 ### 4.1 开发与验收
 
+- [企业级最终验收评估报告（2026-10-07，当前发布判定）](./reviews/ENTERPRISE_RELEASE_READINESS_REVIEW_2026-10-07.md)
+- [最终验收整改任务包（2026-10-07）](./harness/tasks/2026-10-07-release-readiness-remediation.task.md) — 可执行任务清单位于 `../.harness/tasks/2026-10-07-*/manifest.json`
 - [设计与实现验收清单](./acceptances/ACCEPTANCE_CHECKLIST.md)
 - [Pantheon Base Agent 执行清单](./acceptances/AGENT_EXECUTION_CHECKLIST.md)
 - [Pantheon Base Task Packet 模板](./acceptances/TASK_PACKET_BASE_TEMPLATE.md)

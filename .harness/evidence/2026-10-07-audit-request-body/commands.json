@@ -1,0 +1,63 @@
+{
+  "taskId": "2026-10-07-audit-request-body",
+  "executedAt": "2026-10-08T00:10:00+08:00",
+  "commands": [
+    {
+      "step": "failing tests first (RED)",
+      "command": "cd backend && go test ./internal/middleware/ -run 'TestOperationLogMultipart|TestOperationLogAuditBodyCap|TestReadAndRestoreBody|TestOperationLogAuditBodyLimit'",
+      "result": "success",
+      "details": "initial run: build failure for missing production symbols (operationLogAuditBodyLimit etc.) — RED confirmed",
+      "cwd": "backend",
+      "status": "passed"
+    },
+    {
+      "step": "implement + build/vet",
+      "command": "cd backend && go build ./... && go vet ./internal/middleware/",
+      "result": "success",
+      "cwd": "backend",
+      "status": "passed"
+    },
+    {
+      "step": "F05 tests (GREEN, with MySQL)",
+      "command": "cd backend && PANTHEON_TEST_DSN=... go test ./internal/middleware/ -run 'TestOperationLogMultipart|TestOperationLogAuditBodyCap|TestReadAndRestoreBody|TestOperationLogAuditBodyLimit' -v",
+      "result": "success",
+      "details": "4/4 PASS: multipart allowlist metadata (secret + file bytes + envelope absent), 256KiB body capped at 64KiB, full body restored for handler, env override + invalid fallback",
+      "cwd": "backend",
+      "status": "passed"
+    },
+    {
+      "step": "manifest verification command",
+      "command": "cd backend && go test ./internal/middleware/... ./modules/system/config/setting/... (with PANTHEON_TEST_DSN)",
+      "result": "success",
+      "details": "internal/middleware ok 1.864s; system/config/setting ok 6.922s",
+      "cwd": "backend",
+      "status": "passed"
+    },
+    {
+      "step": "gofmt",
+      "command": "cd backend && gofmt -w internal/middleware/operation_log_request_body_guard_test.go && gofmt -l internal/middleware/",
+      "result": "success",
+      "cwd": "backend",
+      "status": "passed"
+    }
+  ],
+  "repo": "pantheon-base",
+  "agent": {
+    "tool": "codex",
+    "adapter": "platform-coordinator"
+  },
+  "knownGaps": [
+    "Legacy evidence did not record structured known gaps; consult the linked summary/review before treating as no-gap."
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-07-audit-request-body/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-07-audit-request-body/",
+    "reviewFile": ".harness/evidence/2026-10-07-audit-request-body/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-07-release-readiness-remediation.task.md",
+      "docs/reviews/ENTERPRISE_RELEASE_READINESS_REVIEW_2026-10-07.md"
+    ],
+    "summaryFile": ".harness/evidence/2026-10-07-audit-request-body/summary.md"
+  }
+}

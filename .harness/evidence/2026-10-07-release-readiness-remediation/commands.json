@@ -1,0 +1,182 @@
+{
+  "taskId": "2026-10-07-release-readiness-remediation",
+  "executedAt": "2026-10-10T02:31:20.125Z",
+  "commands": [
+    {
+      "step": "child tasks Wave 0 (all 6 completed, see child evidence dirs)",
+      "command": "see .harness/evidence/2026-10-07-{iam-data-scope,audit-request-body,auth-session-scope,login-log-identity,governance-gate-repair,upgrade-runbook}/commands.json",
+      "result": "success",
+      "cwd": ".",
+      "status": "passed"
+    },
+    {
+      "step": "go build + vet (whole backend)",
+      "command": "cd backend && go build ./... && go vet ./...",
+      "result": "success",
+      "cwd": "backend",
+      "status": "passed"
+    },
+    {
+      "step": "full backend test suite",
+      "command": "cd backend; PATH=D:\\msys64\\mingw64\\bin + PATH; CGO_ENABLED=1; CC=gcc; go test ./...",
+      "result": "success-with-gap",
+      "details": "All packages pass, including tenant SQLite tests. MySQL-backed cases skip because PANTHEON_TEST_DSN is not configured. An earlier CGO_ENABLED=0 run failed only in the tenant package with the go-sqlite3 stub and is superseded by this run.",
+      "cwd": "backend",
+      "status": "passed"
+    },
+    {
+      "step": "focused Go race tests",
+      "command": "cd backend; PATH=D:\\msys64\\mingw64\\bin + PATH; CGO_ENABLED=1; CC=gcc; go test -race ./internal/middleware ./modules/system/iam/role ./modules/system/iam/tenant",
+      "result": "success",
+      "cwd": "backend",
+      "status": "passed"
+    },
+    {
+      "step": "frontend type-check",
+      "command": "cd frontend && npm.cmd run type-check",
+      "result": "success",
+      "cwd": "frontend",
+      "status": "passed"
+    },
+    {
+      "step": "frontend lint",
+      "command": "cd frontend && npm.cmd run lint",
+      "result": "success",
+      "cwd": "frontend",
+      "status": "passed"
+    },
+    {
+      "step": "frontend unit tests",
+      "command": "cd frontend && npm.cmd run test:unit",
+      "result": "success",
+      "details": "21 files / 163 tests passed",
+      "cwd": "frontend",
+      "status": "passed"
+    },
+    {
+      "step": "frontend build",
+      "command": "cd frontend && npm.cmd run build",
+      "result": "success",
+      "cwd": "frontend",
+      "status": "passed"
+    },
+    {
+      "step": "governance gates (npm.cmd; npm shell shim broken on host)",
+      "command": "npm.cmd run check:task-packet; check:harness-sync; check:harness-docs; check:harness-adoption",
+      "result": "success",
+      "details": "task-packet 30 files 0 errors and 28 historical warnings; sync 0 findings; docs 0 findings; adoption 0 findings",
+      "cwd": ".",
+      "status": "passed"
+    },
+    {
+      "step": "frontend dependency audit",
+      "command": "cd frontend && npm audit --registry=https://registry.npmjs.org --json; npm audit --omit=dev --registry=https://registry.npmjs.org --json",
+      "result": "success-with-gap",
+      "details": "Full tree: 0 high/critical and 6 moderate in development coverage tooling. Production tree: 0 vulnerabilities.",
+      "cwd": "frontend",
+      "status": "passed"
+    },
+    {
+      "step": "authenticated platform full smoke",
+      "command": "cd frontend && npm run test:smoke:platform:full",
+      "result": "passed",
+      "details": "77 tests passed in 2.5m across 1440x900, 1024x768 and 390x844; full-page-audit findings.json reports zero console errors",
+      "cwd": "frontend",
+      "status": "passed"
+    },
+    {
+      "step": "local governance and visual gates",
+      "command": "npm run check:task-packet; check:harness-adoption; check:harness-docs; check:harness-sync; check:harness-inventory; check:harness-encoding; check:harness-visual; check:ui-quality-gate",
+      "result": "passed",
+      "details": "all strict checks passed; 0 findings",
+      "cwd": ".",
+      "status": "passed"
+    },
+    {
+      "step": "current Go toolchain qualification",
+      "command": "go vet ./... && go test ./...",
+      "result": "blocked",
+      "details": "go.mod requires Go 1.26.9; local auto-download is blocked by D:/cache lock permissions and the installed toolchain is Go 1.26.5; cached 1.26.6 reaches runtime/cgo cgo.exe exit status 2",
+      "cwd": "backend",
+      "status": "not-run"
+    },
+    {
+      "step": "current dependency audit",
+      "command": "cd frontend && npm audit --registry=https://registry.npmjs.org --json",
+      "result": "blocked",
+      "details": "network policy EACCES to registry.npmjs.org; configured mirror previously returned 404 NOT_IMPLEMENTED",
+      "cwd": "frontend",
+      "status": "blocked"
+    }
+  ],
+  "gap": "Hosted candidate-SHA Quality/Security/Release gates and Sonar 26 classification are unavailable because GitHub auth/network is blocked. Go 1.26.9, native cgo tenant/race, npm advisory refresh and larger enterprise-volume dashboard load remain explicit gaps; local browser, migration rollback and MySQL fixture evidence are closed.",
+  "repo": "pantheon-base",
+  "agent": {
+    "tool": "codex",
+    "adapter": "platform-coordinator"
+  },
+  "knownGaps": [
+    "Hosted candidate-SHA Quality/Security/Release gates and Sonar 26 classification are unavailable because GitHub auth/network is blocked. Go 1.26.9, native cgo tenant/race, npm advisory refresh and larger enterprise-volume dashboard load remain explicit gaps; local browser, migration rollback and MySQL fixture evidence are closed."
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-07-release-readiness-remediation/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-07-release-readiness-remediation/",
+    "reviewFile": ".harness/evidence/2026-10-07-release-readiness-remediation/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-07-release-readiness-remediation.task.md",
+      "docs/reviews/ENTERPRISE_RELEASE_READINESS_REVIEW_2026-10-07.md"
+    ],
+    "summaryFile": ".harness/evidence/2026-10-07-release-readiness-remediation/summary.md"
+  },
+  "browserEvidence": [
+    {
+      "viewport": "desktop-1440x900",
+      "url": "http://127.0.0.1:5174/login",
+      "screenshot": "frontend/test-results/full-page-audit/00-login.png",
+      "consoleErrors": [],
+      "checkedStates": [
+        "loading",
+        "empty",
+        "error",
+        "permission",
+        "submitting"
+      ]
+    },
+    {
+      "viewport": "desktop-1024x768",
+      "url": "http://127.0.0.1:5174/dashboard",
+      "screenshot": "frontend/test-results/full-page-audit/dashboard.png",
+      "consoleErrors": [],
+      "checkedStates": [
+        "loading",
+        "empty",
+        "error",
+        "permission"
+      ]
+    },
+    {
+      "viewport": "mobile-390x844",
+      "url": "http://127.0.0.1:5174/system/profile",
+      "screenshot": "frontend/test-results/full-page-audit/profile.png",
+      "consoleErrors": [],
+      "checkedStates": [
+        "loading",
+        "empty",
+        "error",
+        "permission",
+        "submitting"
+      ]
+    }
+  ],
+  "runtimeSensitive": true,
+  "runtimeLogs": [
+    "frontend/test-results/full-page-audit/findings.json",
+    ".harness/evidence/2026-10-07-upgrade-runbook/summary.md"
+  ],
+  "runtimeMetrics": [
+    "authenticated full smoke: 77 passed",
+    "full-page audit console errors: 0",
+    "MySQL dashboard fixture P95: 1.18s setup-inclusive"
+  ]
+}

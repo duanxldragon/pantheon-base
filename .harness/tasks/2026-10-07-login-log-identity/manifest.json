@@ -1,0 +1,61 @@
+{
+  "taskId": "2026-10-07-login-log-identity",
+  "title": "Constrain own login logs to exact identity",
+  "goal": "Make the own-login-log endpoint return only records of the authenticated subject.",
+  "primaryLayer": "system/auth",
+  "status": "completed",
+  "priority": "P0",
+  "type": "security-fix",
+  "estimatedComplexity": "small",
+  "parentTaskId": "2026-10-07-release-readiness-remediation",
+  "dependsOn": [
+    "2026-10-07-auth-session-scope"
+  ],
+  "findings": [
+    "F04"
+  ],
+  "scope": {
+    "in": [
+      "backend/modules/auth/login/login_handler.go",
+      "backend/modules/auth/login/login_service.go",
+      "backend/modules/auth/login/*_test.go"
+    ],
+    "out": [
+      "Changing login-log retention policy"
+    ]
+  },
+  "acceptanceCriteria": [
+    "Own-log query uses a stable exact authenticated identity, not a substring username filter.",
+    "Similar usernames and different tenants cannot read each other's login IP, device or timestamps.",
+    "Admin login-log filtering remains intentionally supported and tested."
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "auth-security",
+    "ownerLayer": "consumer-repository"
+  },
+  "verificationPlan": {
+    "commands": [
+      "cd backend && go test ./modules/auth/login/...",
+      "cd backend && go test ./..."
+    ],
+    "runtimeEvidence": [
+      "similar-username and tenant regression output",
+      "own-log authenticated runtime request"
+    ]
+  },
+  "runtimeSensitive": true,
+  "linkage": {
+    "parentTaskPacket": "docs/harness/tasks/2026-10-07-release-readiness-remediation.task.md",
+    "assessment": "docs/reviews/ENTERPRISE_RELEASE_READINESS_REVIEW_2026-10-07.md",
+    "evidenceDir": ".harness/evidence/2026-10-07-login-log-identity/",
+    "summaryFile": ".harness/evidence/2026-10-07-login-log-identity/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-07-login-log-identity/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-07-release-readiness-remediation.task.md",
+      "docs/reviews/ENTERPRISE_RELEASE_READINESS_REVIEW_2026-10-07.md"
+    ]
+  }
+}

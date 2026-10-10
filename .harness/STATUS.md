@@ -1,10 +1,25 @@
 # Pantheon Base - Harness 任务状态
 
-**最后更新**: 2026-10-03
+**最后更新**: 2026-10-10
+
+## 当前最终验收状态
+
+**判定：本地整改中，尚未通过发布验收。**[最终验收评估报告](../docs/reviews/ENTERPRISE_RELEASE_READINESS_REVIEW_2026-10-07.md)所列 F01–F06 已有代码修复；独立审查后的 F01（策略表缺失）、F05（非 JSON 原文）和 F06（空 custom 回落 all）也已补修并加入回归。MySQL fixture 与迁移回滚证据、租户成员分页边界、浏览器 smoke 与本地治理门禁已收口；租户 SQLite/race、Go 1.26.9 下载、候选 SHA hosted 门禁与 Sonar 分类仍未齐备。SonarCloud Quality Gate OK 不抵消失败的 GitHub CI/Release Gate，也不代表尚未分类的扫描项均已关闭。
+
+- [父任务包](../docs/harness/tasks/2026-10-07-release-readiness-remediation.task.md)：`2026-10-07-release-readiness-remediation`（Wave 0 与本地 Wave 1 已完成；父任务仍等待候选 SHA hosted gate 与发布收口）。
+- 6 个 Wave 0 子任务 manifest 已置 `completed`，evidence 在 `.harness/evidence/2026-10-07-{iam-data-scope,audit-request-body,auth-session-scope,login-log-identity,governance-gate-repair,upgrade-runbook}/`。
+- **Wave 1 P1 followup 本地部分已推进（2026-10-08）**：`ui-maintainability-followup` 与 `performance-followup` 已置 `completed`；avatar 表单绑定、Profile 持久错误态、页签键盘/ARIA、文档单一规则源、租户成员分页（旧入口与兼容别名均有界）、audit backfill 有界化均已完成。前端 type-check/lint/unit(163)/build、authenticated full smoke(77)、治理/视觉门禁全绿；MySQL EXPLAIN/P95/连接和迁移回滚证据已入库。仅保留 native cgo、Go 1.26.9、较大规模负载与 hosted gate gap。
+- 本机验证：本轮后端 `go build ./...`、`go vet ./...`、相关纯逻辑回归通过；middleware/role 包测试通过但 MySQL 用例因未配置 DSN 跳过。`tenant` 包在 `CGO_ENABLED=0` 下无法执行 SQLite 测试，不能用旧 GitHub 运行结果替代本轮候选验证。前端上一轮 type-check/lint/test:unit(163)/build 全绿；治理门禁 task-packet/sync/docs/adoption 曾通过，当前文档变更仍需重跑。
+- **显式剩余 gap（Wave 1/2）**：同一候选 SHA 的 hosted 门禁重跑、PR/分支收口、Sonar 26 项 MAJOR 分类、Go 1.26.9 govulncheck、native cgo 的 tenant/race、npm advisory refresh、较大规模 MySQL 负载与 Ops 对分页成员 API 的继承验证。浏览器、迁移回滚和本地 MySQL fixture 证据已完成。
+- 执行顺序：Wave 0（完成）→ Wave 1 资格验证 → Wave 2 收口。两项 auth 任务顺序已遵守。
+
+## 2026-10-03 历史交付自评
+
+以下记录为 v0.14.0 当时的发布状态与历史任务统计，不能作为 2026-10-07 最终验收结论。后文的“生产交付就绪”“所有必需检查通过”等表述只适用于该历史记录。
 
 ---
 
-## 📊 当前状态总览
+## 📊 当时状态总览
 
 | 状态 | 数量 | 说明 |
 |------|------|------|
@@ -58,7 +73,7 @@
 
 ---
 
-## 📋 后续待办
+## 📋 当时后续待办
 
 ### 立即操作 (可选)
 1. **VERSION 文件更新**
@@ -119,7 +134,7 @@
 
 ---
 
-## 📌 下次审查
+## 📌 当时建议的下次审查
 
 建议下次 Harness 审查时关注：
 1. Core Smoke 失败根本原因分析和修复
@@ -129,8 +144,15 @@
 
 ---
 
-**维护者**: duanxldragon  
+**维护者**: duanxldragon
 **参考文档**:
 - [ARCHIVE.md](./ARCHIVE.md) - 归档任务索引
 - [DELIVERY_COMPLETION_REPORT.md](../DELIVERY_COMPLETION_REPORT.md) - v0.14.0 交付完成报告
 - [docs/RELEASE_STATUS_v0.14.0.md](../docs/RELEASE_STATUS_v0.14.0.md) - 发布状态详情
+
+- **2026-10-08 Wave 1 qualification 本地证据**：候选 SHA `7b497cdc388f37309e80c76076685449da8f7771` 的后端 vet、前端 type-check/lint/unit(163)/build、harness adoption 和 govulncheck 通过；后端全量测试仅因本机 Cygwin cgo 无法运行 tenant SQLite，race 同样受 CGO 工具链阻塞。npm audit 无 high/critical，存在 6 个 moderate dev 依赖链问题待 owner disposition。证据：`.harness/evidence/2026-10-07-release-qualification/`。资格任务保持 `in-progress`，不宣称发布通过。
+
+
+- **2026-10-08 Wave 1 qualification 本地证据**：候选 SHA `7b497cdc388f37309e80c76076685449da8f7771` 的后端 vet、前端 type-check/lint/unit(163)/build、harness adoption 和 govulncheck 通过；后端全量测试仅因本机 Cygwin cgo 无法运行 tenant SQLite，race 同样受 CGO 工具链阻塞。npm audit 无 high/critical，存在 6 个 moderate dev 依赖链问题待 owner disposition。证据：`.harness/evidence/2026-10-07-release-qualification/`。资格任务保持 `in-progress`，不宣称发布通过。
+
+- **2026-10-10 本地资格更新**：authenticated platform full smoke `77 passed (2.5m)`，覆盖 `1440x900`、`1024x768`、`390x844`；full-page audit `findings.json` 记录 0 console errors。task-packet/adoption/docs/sync/inventory/encoding/visual/UI quality gates 全部 0 findings。当前无法访问 GitHub API 或 npm audit endpoint，Go 1.26.9 下载受缓存锁权限阻塞；这些均作为 hosted/toolchain gap，不宣称发布通过。
