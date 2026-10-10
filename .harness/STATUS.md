@@ -150,9 +150,9 @@
 - [DELIVERY_COMPLETION_REPORT.md](../DELIVERY_COMPLETION_REPORT.md) - v0.14.0 交付完成报告
 - [docs/RELEASE_STATUS_v0.14.0.md](../docs/RELEASE_STATUS_v0.14.0.md) - 发布状态详情
 
-- **2026-10-08 Wave 1 qualification 本地证据**：候选 SHA `7b497cdc388f37309e80c76076685449da8f7771` 的后端 vet、前端 type-check/lint/unit(163)/build、harness adoption 和 govulncheck 通过；后端全量测试仅因本机 Cygwin cgo 无法运行 tenant SQLite，race 同样受 CGO 工具链阻塞。npm audit 无 high/critical，存在 6 个 moderate dev 依赖链问题待 owner disposition。证据：`.harness/evidence/2026-10-07-release-qualification/`。资格任务保持 `in-progress`，不宣称发布通过。
+- **2026-10-08 Wave 1 qualification 本地证据**：候选 SHA `edaf6c08eb729506f44299d61e8ab66ed4f20fcc` 的后端 vet、前端 type-check/lint/unit(163)/build、harness adoption 和 govulncheck 通过；后端全量测试仅因本机 Cygwin cgo 无法运行 tenant SQLite，race 同样受 CGO 工具链阻塞。npm audit 无 high/critical，存在 6 个 moderate dev 依赖链问题待 owner disposition。证据：`.harness/evidence/2026-10-07-release-qualification/`。资格任务保持 `in-progress`，不宣称发布通过。
 
 
-- **2026-10-08 Wave 1 qualification 本地证据**：候选 SHA `7b497cdc388f37309e80c76076685449da8f7771` 的后端 vet、前端 type-check/lint/unit(163)/build、harness adoption 和 govulncheck 通过；后端全量测试仅因本机 Cygwin cgo 无法运行 tenant SQLite，race 同样受 CGO 工具链阻塞。npm audit 无 high/critical，存在 6 个 moderate dev 依赖链问题待 owner disposition。证据：`.harness/evidence/2026-10-07-release-qualification/`。资格任务保持 `in-progress`，不宣称发布通过。
+- **2026-10-08 Wave 1 qualification 本地证据**：候选 SHA `edaf6c08eb729506f44299d61e8ab66ed4f20fcc` 的后端 vet、前端 type-check/lint/unit(163)/build、harness adoption 和 govulncheck 通过；后端全量测试仅因本机 Cygwin cgo 无法运行 tenant SQLite，race 同样受 CGO 工具链阻塞。npm audit 无 high/critical，存在 6 个 moderate dev 依赖链问题待 owner disposition。证据：`.harness/evidence/2026-10-07-release-qualification/`。资格任务保持 `in-progress`，不宣称发布通过。
 
 - **2026-10-10 本地资格更新**：authenticated platform full smoke `77 passed (2.5m)`，覆盖 `1440x900`、`1024x768`、`390x844`；full-page audit `findings.json` 记录 0 console errors。task-packet/adoption/docs/sync/inventory/encoding/visual/UI quality gates 全部 0 findings。当前无法访问 GitHub API 或 npm audit endpoint，Go 1.26.9 下载受缓存锁权限阻塞；这些均作为 hosted/toolchain gap，不宣称发布通过。

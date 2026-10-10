@@ -1,7 +1,7 @@
 # Release Qualification Evidence
 
 Date: 2026-10-08
-Candidate SHA: `7b497cdc388f37309e80c76076685449da8f7771`
+Candidate SHA: `edaf6c08eb729506f44299d61e8ab66ed4f20fcc`
 
 ## Local results
 
