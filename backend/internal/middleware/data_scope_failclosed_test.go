@@ -163,7 +163,7 @@ func TestEmptyCustomPolicyReturnsNoRows(t *testing.T) {
 	}
 
 	scope := &common.DataScopeReq{UserID: 7, RoleKeys: []string{"restricted"}, Mode: common.DataScopeModeAll}
-	if failed := applyRoleDataScopePolicy(db, scope); failed {
+	if applyRoleDataScopePolicy(db, scope) {
 		t.Fatal("policy lookup unexpectedly failed")
 	}
 	if scope.Mode != common.DataScopeModeCustom || len(scope.DeptIDs) != 0 {

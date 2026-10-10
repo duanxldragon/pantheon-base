@@ -7,6 +7,8 @@ import (
 	"strings"
 
 	"github.com/duanxldragon/pantheon-base/backend/pkg/database"
+	// Blank import registers the go-sql-driver MySQL driver with database/sql so
+	// sql.Open above can open the DSN; the driver is used indirectly via golang-migrate.
 	_ "github.com/go-sql-driver/mysql"
 )
 

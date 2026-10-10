@@ -7,6 +7,7 @@ import (
 	"io"
 	"log/slog"
 	"mime"
+	"mime/multipart"
 	"net/http"
 	"os"
 	"strconv"
@@ -244,22 +245,7 @@ func OperationLogMiddleware(db *gorm.DB) gin.HandlerFunc {
 			username, _ = value.(string)
 		}
 
-		status := common.OperationStatusSuccess
-		errorMessage := ""
-		if c.Writer.Status() >= http.StatusBadRequest {
-			status = common.OperationStatusFailure
-			errorMessage = http.StatusText(c.Writer.Status())
-		}
-		if code, message := parseBusinessResult(responseBody.String()); code != 0 && code != 200 {
-			status = common.OperationStatusFailure
-			errorMessage = message
-		}
-		if overrideStatus, ok := readOperationLogStatus(c); ok {
-			status = overrideStatus
-		}
-		if overrideErrorMessage := readOperationLogErrorMsg(c); overrideErrorMessage != "" {
-			errorMessage = overrideErrorMessage
-		}
+		status, errorMessage := resolveOperationOutcome(c, responseBody.String())
 
 		log := SystemLogOper{
 			// Stamp the tenant of the acted-on context (queue-5 audit slice):
@@ -287,6 +273,30 @@ func OperationLogMiddleware(db *gorm.DB) gin.HandlerFunc {
 
 		store.enqueue(log)
 	}
+}
+
+// resolveOperationOutcome derives the audit status and failure message for a
+// completed request. Precedence: HTTP status failure, then business result
+// code in the response body, then explicit handler overrides set via context
+// (readOperationLogStatus / readOperationLogErrorMsg), which always win.
+func resolveOperationOutcome(c *gin.Context, responseBody string) (int, string) {
+	status := common.OperationStatusSuccess
+	errorMessage := ""
+	if c.Writer.Status() >= http.StatusBadRequest {
+		status = common.OperationStatusFailure
+		errorMessage = http.StatusText(c.Writer.Status())
+	}
+	if code, message := parseBusinessResult(responseBody); code != 0 && code != 200 {
+		status = common.OperationStatusFailure
+		errorMessage = message
+	}
+	if overrideStatus, ok := readOperationLogStatus(c); ok {
+		status = overrideStatus
+	}
+	if overrideErrorMessage := readOperationLogErrorMsg(c); overrideErrorMessage != "" {
+		errorMessage = overrideErrorMessage
+	}
+	return status, errorMessage
 }
 
 // tenantIDForOperationLog returns the tenant of the acted-on context for the
@@ -487,10 +497,24 @@ func multipartAuditMetadata(c *gin.Context) string {
 		return encodeAuditMetadata(metadata)
 	}
 
+	files, truncated := collectMultipartFileParts(form.File)
+	metadata["files"] = files
+	metadata["fieldCount"] = len(form.Value)
+	if truncated {
+		metadata["__truncated"] = true
+	}
+
+	return encodeAuditMetadata(metadata)
+}
+
+// collectMultipartFileParts builds the allowlisted per-field file metadata,
+// bounding both the number of fields and the number of file parts recorded so
+// a huge upload cannot bloat the audit row. Only names and sizes are kept.
+func collectMultipartFileParts(formFiles map[string][]*multipart.FileHeader) (map[string]interface{}, bool) {
 	files := make(map[string]interface{})
 	count := 0
 	truncated := false
-	for field, headers := range form.File {
+	for field, headers := range formFiles {
 		if count >= maxMultipartAuditFiles || len(files) >= maxMultipartAuditFiles {
 			truncated = true
 			break
@@ -519,13 +543,7 @@ func multipartAuditMetadata(c *gin.Context) string {
 		}
 		files[name] = parts
 	}
-	metadata["files"] = files
-	metadata["fieldCount"] = len(form.Value)
-	if truncated {
-		metadata["__truncated"] = true
-	}
-
-	return encodeAuditMetadata(metadata)
+	return files, truncated
 }
 
 func encodeAuditMetadata(metadata map[string]interface{}) string {

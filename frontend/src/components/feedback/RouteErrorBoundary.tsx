@@ -6,7 +6,7 @@ interface RouteErrorBoundaryProps {
 }
 
 interface RouteErrorBoundaryState {
-  error: unknown | null;
+  error: unknown;
 }
 
 /**

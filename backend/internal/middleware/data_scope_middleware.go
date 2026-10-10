@@ -89,7 +89,7 @@ func DataScopeMiddleware(db *gorm.DB) gin.HandlerFunc {
 		}
 		// 策略读取失败时 fail-closed：非管理员必须拒绝，绝不能按 all 放行全量数据。
 		if db != nil && !scope.IsAdmin {
-			if failed := applyRoleDataScopePolicy(db, scope); failed {
+			if applyRoleDataScopePolicy(db, scope) {
 				slog.Warn("data scope: policy lookup failed, denying request", "roles", strings.Join(roleKeys, ","))
 				if clientAcceptsJSON(c) {
 					common.Fail(c, common.CodeError, "common.serverError")

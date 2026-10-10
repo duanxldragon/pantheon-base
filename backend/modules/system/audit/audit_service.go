@@ -546,10 +546,7 @@ func (s *AuditService) backfillOperationLogDerivedFields() error {
 	lastID := uint64(0)
 	processed := 0
 	for processed < operationLogBackfillRunCap {
-		batchLimit := operationLogBackfillBatchSize
-		if remaining := operationLogBackfillRunCap - processed; remaining < batchLimit {
-			batchLimit = remaining
-		}
+		batchLimit := nextBackfillBatchLimit(processed)
 
 		var rows []middleware.SystemLogOper
 		err := s.db.
@@ -565,32 +562,7 @@ func (s *AuditService) backfillOperationLogDerivedFields() error {
 			break
 		}
 
-		if err := s.db.Transaction(func(tx *gorm.DB) error {
-			for _, row := range rows {
-				sourceDomain := strings.TrimSpace(row.SourceDomain)
-				if sourceDomain == "" {
-					sourceDomain = detectOperationLogSourceDomain(row.OperURL)
-				}
-				sourcePage := strings.TrimSpace(row.SourcePage)
-				if sourcePage == "" {
-					sourcePage = detectOperationLogSourcePage(row.OperURL)
-				}
-				failureCategory := strings.TrimSpace(row.FailureCategory)
-				if failureCategory == "" {
-					failureCategory = detectOperationLogFailureCategory(row.Status, row.ErrorMsg, row.JsonResult)
-				}
-				if err := tx.Model(&middleware.SystemLogOper{}).
-					Where("id = ?", row.ID).
-					Updates(map[string]any{
-						"source_domain":    sourceDomain,
-						"source_page":      sourcePage,
-						"failure_category": failureCategory,
-					}).Error; err != nil {
-					return err
-				}
-			}
-			return nil
-		}); err != nil {
+		if err := s.applyBackfillBatch(rows); err != nil {
 			return err
 		}
 
@@ -601,6 +573,52 @@ func (s *AuditService) backfillOperationLogDerivedFields() error {
 		}
 	}
 	return nil
+}
+
+// nextBackfillBatchLimit clamps the batch size to the remaining per-run cap.
+func nextBackfillBatchLimit(processed int) int {
+	if remaining := operationLogBackfillRunCap - processed; remaining < operationLogBackfillBatchSize {
+		return remaining
+	}
+	return operationLogBackfillBatchSize
+}
+
+// applyBackfillBatch derives and writes the missing audit fields for one batch
+// inside a single transaction, so a batch either lands fully or not at all.
+func (s *AuditService) applyBackfillBatch(rows []middleware.SystemLogOper) error {
+	return s.db.Transaction(func(tx *gorm.DB) error {
+		for _, row := range rows {
+			sourceDomain, sourcePage, failureCategory := deriveBackfillFields(row)
+			if err := tx.Model(&middleware.SystemLogOper{}).
+				Where("id = ?", row.ID).
+				Updates(map[string]any{
+					"source_domain":    sourceDomain,
+					"source_page":      sourcePage,
+					"failure_category": failureCategory,
+				}).Error; err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+}
+
+// deriveBackfillFields fills missing audit dimensions for one row, falling
+// back to the same detectors the request path uses.
+func deriveBackfillFields(row middleware.SystemLogOper) (sourceDomain, sourcePage, failureCategory string) {
+	sourceDomain = strings.TrimSpace(row.SourceDomain)
+	if sourceDomain == "" {
+		sourceDomain = detectOperationLogSourceDomain(row.OperURL)
+	}
+	sourcePage = strings.TrimSpace(row.SourcePage)
+	if sourcePage == "" {
+		sourcePage = detectOperationLogSourcePage(row.OperURL)
+	}
+	failureCategory = strings.TrimSpace(row.FailureCategory)
+	if failureCategory == "" {
+		failureCategory = detectOperationLogFailureCategory(row.Status, row.ErrorMsg, row.JsonResult)
+	}
+	return sourceDomain, sourcePage, failureCategory
 }
 
 func normalizeAuditLogIDs(ids []uint64) []uint64 {
