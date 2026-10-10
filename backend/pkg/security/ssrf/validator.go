@@ -206,15 +206,18 @@ func (v *Validator) checkPrivateIP(hostname string) error {
 // multicast and other reserved space. Prefixes are parsed once at startup so
 // the per-request check is a pure memory probe (no CIDR string parsing).
 var blockedPrefixes = []netip.Prefix{
+	// NOSONAR rationale (go:S1313): the RFC 1918/link-local/multicast/reserved
+	// literals below ARE the SSRF denylist — the check exists to reject them,
+	// so encoding them as literals is the reviewed, intended behavior.
 	// IPv4
 	netip.MustParsePrefix("0.0.0.0/8"),      // "this" network (RFC 1122)
-	netip.MustParsePrefix("10.0.0.0/8"),     // Private network (RFC 1918)
+	netip.MustParsePrefix("10.0.0.0/8"),     // Private network (RFC 1918) // NOSONAR
 	netip.MustParsePrefix("127.0.0.0/8"),    // Loopback
-	netip.MustParsePrefix("169.254.0.0/16"), // Link-local (cloud metadata)
-	netip.MustParsePrefix("172.16.0.0/12"),  // Private network (RFC 1918)
-	netip.MustParsePrefix("192.168.0.0/16"), // Private network (RFC 1918)
-	netip.MustParsePrefix("224.0.0.0/4"),    // Multicast
-	netip.MustParsePrefix("240.0.0.0/4"),    // Reserved (includes broadcast)
+	netip.MustParsePrefix("169.254.0.0/16"), // Link-local (cloud metadata) // NOSONAR
+	netip.MustParsePrefix("172.16.0.0/12"),  // Private network (RFC 1918) // NOSONAR
+	netip.MustParsePrefix("192.168.0.0/16"), // Private network (RFC 1918) // NOSONAR
+	netip.MustParsePrefix("224.0.0.0/4"),    // Multicast // NOSONAR
+	netip.MustParsePrefix("240.0.0.0/4"),    // Reserved (includes broadcast) // NOSONAR
 	// IPv6
 	netip.MustParsePrefix("::/128"),        // Unspecified
 	netip.MustParsePrefix("::1/128"),       // Loopback

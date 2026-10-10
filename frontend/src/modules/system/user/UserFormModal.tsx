@@ -149,10 +149,9 @@ const UserFormModal: React.FC<UserFormModalProps> = ({
                 <Input
                   value={avatarPreview}
                   placeholder={t('system.profile.avatarPlaceholder')}
-                  onChange={(value) => {
-                    const next = value || '';
-                    form.setFieldValue('avatar', next);
-                    onAvatarPreviewChange(next);
+                  onChange={(value = '') => {
+                    form.setFieldValue('avatar', value);
+                    onAvatarPreviewChange(value);
                   }}
                 />
                 <Space align="center" wrap>

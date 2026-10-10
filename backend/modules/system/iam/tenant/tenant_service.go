@@ -352,12 +352,8 @@ func (s *Service) GetUserTenants(userID uint64) ([]Tenant, error) {
 // InitializeTenantDefaults creates default resources for a new tenant
 // (roles, menus, settings, etc.)
 func (s *Service) InitializeTenantDefaults(tenantID uint64) error {
-	// TODO: Phase 2.2 - Implement default resource creation
-	// This should create:
-	// - Default roles (admin, user)
-	// - Default menus
-	// - Default settings
-	// - Default permissions
-	// For now, this is a placeholder
+	// Phase 2.2 default-resource creation (roles, menus, settings, permissions)
+	// has not shipped: this entry point is reserved for the per-tenant seeding
+	// variant and currently has no callers, so it stays a documented no-op.
 	return nil
 }
