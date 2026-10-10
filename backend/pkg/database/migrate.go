@@ -24,6 +24,7 @@ var migrationFS embed.FS
 const migrationsTableName = "schema_migrations"
 const menuHideInNavCompatMigrationVersion = 6
 const moduleRegistrationCompatMigrationVersion = 8
+
 // currentRuntimeSchemaVersion is the migration baseline represented by the
 // current-schema compatibility markers. Keep it ahead of data-only migrations
 // so existing runtime schemas still execute those migrations once.
