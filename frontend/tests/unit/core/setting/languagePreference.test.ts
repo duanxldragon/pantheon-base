@@ -7,7 +7,7 @@ import {
   getDefaultLanguagePreference,
   LANGUAGE_STORAGE_KEY,
   LANGUAGE_EXPLICIT_STORAGE_KEY,
-} from '../../../../src/core/settings/languagePreference'
+} from '../../../../src/core/setting/languagePreference'
 
 describe('languagePreference', () => {
   beforeEach(() => {

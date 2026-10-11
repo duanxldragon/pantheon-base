@@ -66,8 +66,8 @@ import {
   refreshPublicSettings,
   setExplicitLanguagePreference,
   usePublicSettings,
-} from '../settings/publicSettings';
-import { clearExplicitLanguagePreference } from '../settings/languagePreference';
+} from '../setting/publicSettings';
+import { clearExplicitLanguagePreference } from '../setting/languagePreference';
 import { SUPPORTED_LOCALES, switchI18nLanguage, type SupportedLocale } from '../../i18n';
 import {
   shouldLoadShellNoticeSummary,

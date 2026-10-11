@@ -6,7 +6,7 @@ import { showImportResult } from '../../../../api/importExport';
 import { isArcoFormValidationError } from '../../../../core/arco/formValidation';
 import { publishRefresh, useRefreshSubscription } from '../../../../core/refresh/refreshBus';
 import { invalidateRouteWarmDataMany, resolveRouteWarmData } from '../../../../core/router/prefetch';
-import { usePublicSettings } from '../../../../core/settings/publicSettings';
+import { usePublicSettings } from '../../../../core/setting/publicSettings';
 import { getDeptTree, type DeptNode } from '../../org/dept/api';
 import { getPostList } from '../../org/post/api';
 import { getRoleList } from '../role/api';

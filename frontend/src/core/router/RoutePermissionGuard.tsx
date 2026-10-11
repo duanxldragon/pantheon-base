@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { PageError, PageForbidden, RouteContentFallback } from '../../components';
 import { ensureAuthUserInfo } from '../auth/bootstrap';
-import { checkPermission } from '../permissions/checkPermission';
+import { checkPermission } from '../permission/checkPermission';
 import { useAuthStore } from '../../store/useAuthStore';
 
 interface RoutePermissionGuardProps {

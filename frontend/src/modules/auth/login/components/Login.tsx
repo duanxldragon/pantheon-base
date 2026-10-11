@@ -40,7 +40,7 @@ import {
   getBrandInitial,
   setExplicitLanguagePreference,
   usePublicSettings,
-} from '../../../../core/settings/publicSettings';
+} from '../../../../core/setting/publicSettings';
 import { COOKIE_TOKEN_PLACEHOLDER } from '../../../../core/auth/sessionSnapshot';
 import { resolveDefaultAuthedPath } from '../../../../core/router/defaultPath';
 import { SUPPORTED_LOCALES, switchI18nLanguage, type SupportedLocale } from '../../../../i18n';

@@ -5,7 +5,7 @@ import { publishRefresh, useRefreshSubscription } from '../../../../core/refresh
 import {
   refreshPublicSettings,
   hasExplicitLanguagePreference,
-} from '../../../../core/settings/publicSettings';
+} from '../../../../core/setting/publicSettings';
 import { invalidateRouteWarmData, resolveRouteWarmData } from '../../../../core/router/prefetch';
 import {
   applyPantheonDefaultTheme,
