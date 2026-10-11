@@ -97,7 +97,7 @@ remedy, so the entries were deleted rather than re-dated. The one remaining entr
    Only physical paths and import specifiers moved. `check:menu-contract` (16 menus / 20 routes /
    89 permissions / 20 component keys) passes in the pre-build gate chain.
 
-## The defect CI caught that no local check could
+## The defects CI caught that no local check could
 
 The first CI run failed `Frontend Contract`, `Frontend Unit Tests` and `Quality Gates`. The cause
 was real and it was introduced by this change: **five case-only renames were never recorded by
@@ -117,10 +117,28 @@ single-step `git mv` is a no-op on a case-insensitive filesystem. Re-verified wi
 index-vs-disk name comparison: `tracked files: 2199, not on disk: 0, case mismatch: 0`, and
 `check:import-path-case` → `passed for 248 source files`.
 
+**The same hazard bit a second time.** The next CI run failed `Frontend Contract` again, this time
+because `frontend/scripts/check-shell-visual-contract.mjs` hardcodes the old filename as a path
+segment (`path.join(..., 'modals', 'AppModalActions.ts')`). `fs.existsSync` is case-insensitive on
+Windows, so it passed locally and died on Linux with `ENOENT`. Fixed, then swept every renamed path
+in the branch — the only remaining pre-move references are in synthetic test fixtures (which
+intentionally name non-existent files) and in dated acceptance/design documents, both left as-is.
+
 This is worth recording for two reasons. It is exactly the class of defect the review's
 *correspondence* axis was meant to surface, and it is the strongest possible argument for keeping
 these gates blocking rather than advisory: **the local toolchain was structurally incapable of
-detecting it.**
+detecting either defect.**
+
+**A local-detectable gate was investigated and rejected.** The natural fix would be a gate that
+validates hardcoded source paths inside `frontend/scripts/**` with exact case. The narrow rule "any
+hardcoded source-file basename must exist under `src/` with exact case" yields **34 findings** on the
+current tree, essentially all false positives (`package.json`, `.spec.ts`, `index.js`, `List.tsx`
+templates, `dashboard.css` inside a docstring). Shipping it would require a large allowlist — which
+is the opposite of fixing a root cause. Sensor coverage is instead already adequate: the import half
+is caught by `check:import-path-case`, and the hardcoded-path half fails loudly on Linux CI. The
+actionable rule is recorded in `commands.json`: do case-only renames as a two-step `git mv` and
+confirm with a git-index-vs-disk comparison — note that `fs.existsSync` is useless for this check,
+because it is case-insensitive too.
 
 ## Completion status
 
@@ -128,10 +146,12 @@ completed (pending the branch push, CI run and merge to `main`)
 
 ## Residual risk
 
-- **Case-only renames are a trap on this repository's development platforms.** Five such renames
-  were silently dropped by git and only Linux CI caught them. Any future case-only rename must be
-  performed as a two-step `git mv` and confirmed by comparing the git index against the real
-  on-disk names.
+- **Case-only renames are a trap on this repository's development platforms.** Two separate defects
+  of this class slipped past every local check and were caught only by Linux CI. Any future
+  case-only rename must be performed as a two-step `git mv` and confirmed by comparing the git index
+  against the real on-disk names — `fs.existsSync` cannot be used for that check, because it is
+  case-insensitive on Windows and macOS too. No gate was added for this: a heuristic gate was probed
+  and rejected at 34 false positives (see above).
 - **Behaviour change in the boundary gate.** `check-boundaries.mjs --strict` now fails when it
   cannot resolve the repository root, instead of passing quietly. That is the point of the fix, but
   any invocation whose cwd is neither the repository root nor a workspace containing it will now

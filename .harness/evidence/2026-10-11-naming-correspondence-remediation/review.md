@@ -37,13 +37,20 @@ changed.
   `modules/auth/session/clientInfo.tsx` and `modules/platform/widgets.tsx` are JSX modules that
   declare no component. Rather than renaming them to satisfy a naming rule, the contract encodes a
   mechanical discriminator (`declaresComponent()`), so the rule matches reality.
-- **CI caught what the local toolchain structurally could not.** Five in-place case-only renames
-  were never recorded by git, because Windows and macOS resolve filenames case-insensitively — so
-  `tsc`, `eslint`, `vite build` and `vitest` all passed while Linux CI failed three checks
-  (`check:import-path-case`: 13 problems; five test suites: `Failed to resolve import`). The defect
-  was real and was introduced by this change. It is fixed with two-step `git mv`s and re-verified by
-  a git-index-vs-disk name comparison (`case mismatch: 0`). Recorded rather than quietly fixed: it
-  is the clearest demonstration that these gates must stay blocking.
+- **CI caught what the local toolchain structurally could not — twice.** First, five in-place
+  case-only renames were never recorded by git, because Windows and macOS resolve filenames
+  case-insensitively — so `tsc`, `eslint`, `vite build` and `vitest` all passed while Linux CI failed
+  three checks (`check:import-path-case`: 13 problems; five test suites: `Failed to resolve import`).
+  Then the very same hazard reappeared: `check-shell-visual-contract.mjs` hardcodes the old filename
+  as a path segment and died on Linux with `ENOENT` while passing locally. Both are real defects
+  introduced by this change, both are fixed, and both were re-verified. Recorded rather than quietly
+  fixed: they are the clearest demonstration that these gates must stay blocking.
+- **The obvious ratchet was tested and rejected.** A gate validating hardcoded source paths in
+  `frontend/scripts/**` with exact case was probed and produced 34 findings, essentially all false
+  positives (`package.json`, `.spec.ts`, `index.js`, `List.tsx` templates). Shipping it would mean a
+  large allowlist, which is the opposite of fixing a root cause. The evidence records the probe
+  result and the actionable rule instead — refusing to add a gate is the right call when the gate
+  would be noise.
 - **The runtime contract is proven, not claimed.** Rather than asserting "no API/permission/menu
   change", the change set is verified by diffing literal sets between `main` and `HEAD`: 20
   `componentKey` registry keys, 116 permission codes and 60 API route paths, all byte-identical.

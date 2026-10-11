@@ -50,7 +50,7 @@ const appModalActionsPath = path.join(
   'components',
   'patterns',
   'modals',
-  'AppModalActions.ts',
+  'appModalActions.ts',
 );
 const formSectionPath = path.join(
   frontendRoot,
