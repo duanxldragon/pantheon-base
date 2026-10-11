@@ -41,7 +41,7 @@ never written, and the structure contract's rule set was scoped to `backend/` on
 
 ## Fix
 
-Six commits, in dependency order:
+Six commits, in dependency order, plus three follow-ups that CI forced:
 
 1. **`217232ab` backend package names (128 files).** Every Go package clause now equals its
    directory name (213 insertions / 213 deletions, mechanically verified 213/213). Import *paths*
@@ -63,6 +63,12 @@ Six commits, in dependency order:
    `frontend-file-naming`, `barrel-only`, `domain-correspondence`.
 6. **`3dba49e1` contract docs.** `REPOSITORY_LAYOUT.md`/`.en.md` §5, §8.2, §8.3, §9, §10.1 and a
    new §11 correspondence table.
+7. **`98b16e3f` harness packet.** The task manifest and evidence required by the adoption gate for
+   any `backend/` or `frontend/` change.
+8. **`3e50c960` case-only renames (8 files).** Recorded the five renames git silently dropped on a
+   case-insensitive filesystem — see the section below.
+9. **`b4aa988e` stale filename in a gate (4 files).** `check-shell-visual-contract.mjs` still built a
+   path from the pre-rename `AppModalActions.ts` — the second half of the same trap.
 
 The baseline was **ratcheted, not renewed**: `config/boundary-baseline.json` went from 5 entries to
 1. The four retired entries were the auth→system findings whose own recorded remedy was *"promote
@@ -146,6 +152,17 @@ completed (pending the branch push, CI run and merge to `main`)
 
 ## Residual risk
 
+- **SonarCloud new-code duplication is an artefact of the move, not new duplication.** The gate
+  reports 3.54% against a 3% threshold, but the PR adds 1,565 lines while SonarCloud reports
+  `new_lines = 21030`: files whose content changed while moving — the frontend files, whose import
+  specifiers had to be rewritten — are not recognised as moves and are counted as new code. Their
+  pre-existing duplication then counts as new duplication (744 lines), dominated by
+  `i18n_service_test.go` (187), `OperationLogList.tsx` (152), `RoleList.tsx` (130),
+  `permission_service_test.go` (124) and `dept_service_test.go` (116) — none of which this change
+  authored. The repository's own Duplication Gate passes, and SonarCloud is **not** one of the
+  ruleset's required checks (the required set is Quality Gates, Security Gates, Unit Tests, CI
+  Summary), so it does not block the merge. Fixing it would mean refactoring pre-existing duplication
+  in files this change only relocated.
 - **Case-only renames are a trap on this repository's development platforms.** Two separate defects
   of this class slipped past every local check and were caught only by Linux CI. Any future
   case-only rename must be performed as a two-step `git mv` and confirmed by comparing the git index
