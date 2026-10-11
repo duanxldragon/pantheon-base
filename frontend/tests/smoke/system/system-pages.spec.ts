@@ -664,6 +664,35 @@ async function createApiPermission(
   expect(payload.code).toBe(200);
 }
 
+/**
+ * Reads one setting group through the API. The returned items are also the
+ * restore payload handed to updateSettingGroup in each test's finally block.
+ */
+async function fetchSettingGroupItems(
+  page: Page,
+  accessToken: string,
+  group: string,
+): Promise<SettingItem[]> {
+  const response = await page.request.get(`${apiBaseUrl}/system/setting/group/${group}`, {
+    headers: authHeaders(accessToken),
+  });
+  expect(response.ok()).toBeTruthy();
+  const payload = await response.json();
+  expect(payload.code).toBe(200);
+  return payload.data.items as SettingItem[];
+}
+
+/** Reads a single setting value from a group; used with expect.poll(). */
+async function readSettingValueFromApi(
+  page: Page,
+  accessToken: string,
+  group: string,
+  settingKey: string,
+): Promise<string | undefined> {
+  const items = await fetchSettingGroupItems(page, accessToken, group);
+  return items.find((item) => item.settingKey === settingKey)?.settingValue;
+}
+
 async function getCurrentUserPreferences(
   page: Page,
   accessToken: string,
@@ -748,6 +777,96 @@ function formItem(scope: Page | ReturnType<Page['locator']>, label: string) {
     .locator('.arco-form-item')
     .filter({ has: scope.getByText(label, { exact: true }) })
     .first();
+}
+
+type ListViewOnlyViewerOptions = {
+  /** Prefix for the throwaway role key and username. */
+  slug: string;
+  /** Cleanup label reported by runOptionalSmokeCleanup. */
+  cleanupTag: string;
+  roleName: string;
+  nickname: string;
+  /** The single list permission the role is granted. */
+  listPermission: string;
+  /** Extra GET endpoints the page needs, granted to the role. */
+  apiPermissions: Array<[path: string, method: string]>;
+  route: string;
+  identityLabel: string;
+};
+
+/**
+ * Shared workflow for the "list-only role" permission smoke tests: provision a
+ * role holding only the list permission, provision a user bound to that role,
+ * sign that user in and open the target page. `assertViewer` receives the
+ * viewer page and performs the page-specific capability assertions. The viewer
+ * page and the provisioned identity are always cleaned up.
+ */
+async function withListViewOnlyViewer(
+  page: Page,
+  options: ListViewOnlyViewerOptions,
+  assertViewer: (viewerPage: Page) => Promise<void>,
+): Promise<void> {
+  const adminAccessToken = await signInAsAdmin(page);
+  const roleKey = `${options.slug}_view_only_${Date.now()}`;
+  const username = `${options.slug}_viewer_${Date.now()}`;
+  const password = 'ChangeMe123';
+
+  await deleteUserByUsername(page, adminAccessToken, username);
+  await deleteRoleByKey(page, adminAccessToken, roleKey);
+
+  try {
+    const createRoleResponse = await page.request.post(`${apiBaseUrl}/system/role`, {
+      headers: await verifiedHeaders(page, adminAccessToken),
+      data: {
+        roleName: options.roleName,
+        roleKey,
+        sort: 10,
+        status: 1,
+        menuIds: [],
+        permissionKeys: [options.listPermission],
+      },
+    });
+    expect(createRoleResponse.ok()).toBeTruthy();
+
+    const role = await getRoleByKey(page, adminAccessToken, roleKey);
+    expect(role).toBeTruthy();
+
+    for (const [permissionPath, method] of options.apiPermissions) {
+      await createApiPermission(page, adminAccessToken, roleKey, permissionPath, method);
+    }
+    await createApiPermission(page, adminAccessToken, roleKey, '/api/v1/system/menu/tree', 'GET');
+
+    const createUserResponse = await page.request.post(`${apiBaseUrl}/system/user`, {
+      headers: await verifiedHeaders(page, adminAccessToken),
+      data: {
+        username,
+        password,
+        nickname: options.nickname,
+        status: 1,
+        roleIds: [role!.id],
+      },
+    });
+    expect(createUserResponse.ok()).toBeTruthy();
+    const createUserPayload = await createUserResponse.json();
+    expect(createUserPayload.code).toBe(200);
+
+    const viewerTokens = await loginByApi(page.request, { username, password });
+    const viewerPage = await page.context().newPage();
+
+    try {
+      await installClientSession(viewerPage, viewerTokens);
+      await viewerPage.goto(options.route, { waitUntil: 'domcontentloaded' });
+      await expectPageIdentityReady(viewerPage, options.identityLabel);
+      await expectNoPageError(viewerPage);
+      await assertViewer(viewerPage);
+    } finally {
+      await viewerPage.close();
+    }
+  } finally {
+    await runOptionalSmokeCleanup(options.cleanupTag, async () => {
+      await cleanupViewerIdentity(page, adminAccessToken, username, roleKey);
+    });
+  }
 }
 
 test.beforeEach(async ({ page }) => {
@@ -1172,13 +1291,7 @@ test('setting workspace keeps group navigation and config primary while audit st
 
 test('setting smoke: site name updates public brand display', async ({ page }) => {
   const accessToken = await signInAsAdmin(page);
-  const groupResponse = await page.request.get(`${apiBaseUrl}/system/setting/group/basic`, {
-    headers: authHeaders(accessToken),
-  });
-  expect(groupResponse.ok()).toBeTruthy();
-  const groupPayload = await groupResponse.json();
-  expect(groupPayload.code).toBe(200);
-  const originalItems = groupPayload.data.items as SettingItem[];
+  const originalItems = await fetchSettingGroupItems(page, accessToken, 'basic');
   const nextSiteName = `Pantheon QA ${Date.now()}`;
   const nextItems = originalItems.map((item) => ({
     settingKey: item.settingKey,
@@ -1485,13 +1598,7 @@ test('i18n smoke: import csv creates updates and downloads error file', async ({
 
 test('setting smoke: security policy saves through setting page UI', async ({ page }) => {
   const accessToken = await signInAsAdmin(page);
-  const groupResponse = await page.request.get(`${apiBaseUrl}/system/setting/group/security`, {
-    headers: authHeaders(accessToken),
-  });
-  expect(groupResponse.ok()).toBeTruthy();
-  const groupPayload = await groupResponse.json();
-  expect(groupPayload.code).toBe(200);
-  const originalItems = groupPayload.data.items as SettingItem[];
+  const originalItems = await fetchSettingGroupItems(page, accessToken, 'security');
   const originalValue =
     originalItems.find((item) => item.settingKey === 'security.password_min_length')
       ?.settingValue ?? '6';
@@ -1503,18 +1610,7 @@ test('setting smoke: security policy saves through setting page UI', async ({ pa
     await page.locator('input[role="spinbutton"]').first().fill(nextValue);
     await page.locator('.submit-bar button').last().click();
     await expect
-      .poll(async () => {
-        const verifyResponse = await page.request.get(
-          `${apiBaseUrl}/system/setting/group/security`,
-          {
-            headers: authHeaders(accessToken),
-          },
-        );
-        const verifyPayload = await verifyResponse.json();
-        return (
-          verifyPayload.data.items as Array<{ settingKey: string; settingValue: string }>
-        ).find((item) => item.settingKey === 'security.password_min_length')?.settingValue;
-      })
+      .poll(() => readSettingValueFromApi(page, accessToken, 'security', 'security.password_min_length'))
       .toBe(nextValue);
   } finally {
     await updateSettingGroup(page, accessToken, 'security', originalItems);
@@ -1523,13 +1619,7 @@ test('setting smoke: security policy saves through setting page UI', async ({ pa
 
 test('setting smoke: setting audit row opens unified operation log detail', async ({ page }) => {
   const accessToken = await signInAsAdmin(page);
-  const groupResponse = await page.request.get(`${apiBaseUrl}/system/setting/group/audit`, {
-    headers: authHeaders(accessToken),
-  });
-  expect(groupResponse.ok()).toBeTruthy();
-  const groupPayload = await groupResponse.json();
-  expect(groupPayload.code).toBe(200);
-  const originalItems = groupPayload.data.items as SettingItem[];
+  const originalItems = await fetchSettingGroupItems(page, accessToken, 'audit');
   const originalValue =
     originalItems.find((item) => item.settingKey === 'audit.login_log_retention_days')
       ?.settingValue ?? '90';
@@ -1563,13 +1653,7 @@ test('setting smoke: setting audit row opens unified operation log detail', asyn
 
 test('setting smoke: login policy saves through setting page UI', async ({ page }) => {
   const accessToken = await signInAsAdmin(page);
-  const groupResponse = await page.request.get(`${apiBaseUrl}/system/setting/group/login`, {
-    headers: authHeaders(accessToken),
-  });
-  expect(groupResponse.ok()).toBeTruthy();
-  const groupPayload = await groupResponse.json();
-  expect(groupPayload.code).toBe(200);
-  const originalItems = groupPayload.data.items as SettingItem[];
+  const originalItems = await fetchSettingGroupItems(page, accessToken, 'login');
   const originalValue =
     originalItems.find((item) => item.settingKey === 'login.max_failed_attempts')?.settingValue ??
     '5';
@@ -1581,15 +1665,7 @@ test('setting smoke: login policy saves through setting page UI', async ({ page 
     await page.locator('input[role="spinbutton"]').first().fill(nextValue);
     await page.locator('.submit-bar button').last().click();
     await expect
-      .poll(async () => {
-        const verifyResponse = await page.request.get(`${apiBaseUrl}/system/setting/group/login`, {
-          headers: authHeaders(accessToken),
-        });
-        const verifyPayload = await verifyResponse.json();
-        return (
-          verifyPayload.data.items as Array<{ settingKey: string; settingValue: string }>
-        ).find((item) => item.settingKey === 'login.max_failed_attempts')?.settingValue;
-      })
+      .poll(() => readSettingValueFromApi(page, accessToken, 'login', 'login.max_failed_attempts'))
       .toBe(nextValue);
   } finally {
     await updateSettingGroup(page, accessToken, 'login', originalItems);
@@ -1600,13 +1676,7 @@ test('setting smoke: upload storage driver can be selected through setting page 
   page,
 }) => {
   const accessToken = await signInAsAdmin(page);
-  const groupResponse = await page.request.get(`${apiBaseUrl}/system/setting/group/upload`, {
-    headers: authHeaders(accessToken),
-  });
-  expect(groupResponse.ok()).toBeTruthy();
-  const groupPayload = await groupResponse.json();
-  expect(groupPayload.code).toBe(200);
-  const originalItems = groupPayload.data.items as SettingItem[];
+  const originalItems = await fetchSettingGroupItems(page, accessToken, 'upload');
   const currentValue =
     originalItems.find((item) => item.settingKey === 'upload.storage_driver')?.settingValue ??
     'local';
@@ -1620,15 +1690,7 @@ test('setting smoke: upload storage driver can be selected through setting page 
     await page.locator('.arco-select-option').filter({ hasText: nextLabel }).first().click();
     await page.locator('.submit-bar button').last().click();
     await expect
-      .poll(async () => {
-        const verifyResponse = await page.request.get(`${apiBaseUrl}/system/setting/group/upload`, {
-          headers: authHeaders(accessToken),
-        });
-        const verifyPayload = await verifyResponse.json();
-        return (
-          verifyPayload.data.items as Array<{ settingKey: string; settingValue: string }>
-        ).find((item) => item.settingKey === 'upload.storage_driver')?.settingValue;
-      })
+      .poll(() => readSettingValueFromApi(page, accessToken, 'upload', 'upload.storage_driver'))
       .toBe(nextValue);
   } finally {
     await updateSettingGroup(page, accessToken, 'upload', originalItems);
@@ -1641,13 +1703,7 @@ test('setting smoke: default language applies when there is no explicit choice',
   const accessToken = await signInAsAdmin(page);
   await installReloadStableReadCache(page);
   const originalPreferences = await getCurrentUserPreferences(page, accessToken);
-  const groupResponse = await page.request.get(`${apiBaseUrl}/system/setting/group/i18n`, {
-    headers: authHeaders(accessToken),
-  });
-  expect(groupResponse.ok()).toBeTruthy();
-  const groupPayload = await groupResponse.json();
-  expect(groupPayload.code).toBe(200);
-  const originalItems = groupPayload.data.items as SettingItem[];
+  const originalItems = await fetchSettingGroupItems(page, accessToken, 'i18n');
   const nextItems = originalItems.map((item) => ({
     settingKey: item.settingKey,
     settingValue: item.settingKey === 'i18n.default_language' ? 'en-US' : item.settingValue,
@@ -1681,13 +1737,7 @@ test('setting smoke: default language can be selected through setting page UI', 
   page,
 }) => {
   const accessToken = await signInAsAdmin(page);
-  const groupResponse = await page.request.get(`${apiBaseUrl}/system/setting/group/i18n`, {
-    headers: authHeaders(accessToken),
-  });
-  expect(groupResponse.ok()).toBeTruthy();
-  const groupPayload = await groupResponse.json();
-  expect(groupPayload.code).toBe(200);
-  const originalItems = groupPayload.data.items as SettingItem[];
+  const originalItems = await fetchSettingGroupItems(page, accessToken, 'i18n');
   const currentValue =
     originalItems.find((item) => item.settingKey === 'i18n.default_language')?.settingValue ??
     'zh-CN';
@@ -1701,15 +1751,7 @@ test('setting smoke: default language can be selected through setting page UI', 
     await page.locator('.arco-select-option').filter({ hasText: nextLabel }).first().click();
     await page.locator('.submit-bar button').last().click();
     await expect
-      .poll(async () => {
-        const verifyResponse = await page.request.get(`${apiBaseUrl}/system/setting/group/i18n`, {
-          headers: authHeaders(accessToken),
-        });
-        const verifyPayload = await verifyResponse.json();
-        return (
-          verifyPayload.data.items as Array<{ settingKey: string; settingValue: string }>
-        ).find((item) => item.settingKey === 'i18n.default_language')?.settingValue;
-      })
+      .poll(() => readSettingValueFromApi(page, accessToken, 'i18n', 'i18n.default_language'))
       .toBe(nextValue);
   } finally {
     await updateSettingGroup(page, accessToken, 'i18n', originalItems);
@@ -1722,13 +1764,7 @@ test('setting smoke: login page language choice overrides saved preference and s
   const accessToken = await signInAsAdmin(page);
   await installReloadStableReadCache(page);
   const originalPreferences = await getCurrentUserPreferences(page, accessToken);
-  const groupResponse = await page.request.get(`${apiBaseUrl}/system/setting/group/i18n`, {
-    headers: authHeaders(accessToken),
-  });
-  expect(groupResponse.ok()).toBeTruthy();
-  const groupPayload = await groupResponse.json();
-  expect(groupPayload.code).toBe(200);
-  const originalItems = groupPayload.data.items as SettingItem[];
+  const originalItems = await fetchSettingGroupItems(page, accessToken, 'i18n');
   const nextItems = originalItems.map((item) => ({
     settingKey: item.settingKey,
     settingValue: item.settingKey === 'i18n.default_language' ? 'ja-JP' : item.settingValue,
@@ -1784,13 +1820,7 @@ test('setting smoke: logout clears explicit language and falls back to default l
   const accessToken = await signInAsAdmin(page);
   await installReloadStableReadCache(page);
   const originalPreferences = await getCurrentUserPreferences(page, accessToken);
-  const groupResponse = await page.request.get(`${apiBaseUrl}/system/setting/group/i18n`, {
-    headers: authHeaders(accessToken),
-  });
-  expect(groupResponse.ok()).toBeTruthy();
-  const groupPayload = await groupResponse.json();
-  expect(groupPayload.code).toBe(200);
-  const originalItems = groupPayload.data.items as SettingItem[];
+  const originalItems = await fetchSettingGroupItems(page, accessToken, 'i18n');
   const nextItems = originalItems.map((item) => ({
     settingKey: item.settingKey,
     settingValue: item.settingKey === 'i18n.default_language' ? 'en-US' : item.settingValue,
@@ -1887,13 +1917,7 @@ test('auth smoke: logout sends revoke request without stale invalid-session prom
 
 test('platform smoke: lock screen keeps current route and opened tabs', async ({ page }) => {
   const accessToken = await signInAsAdmin(page);
-  const groupResponse = await page.request.get(`${apiBaseUrl}/system/setting/group/ui`, {
-    headers: authHeaders(accessToken),
-  });
-  expect(groupResponse.ok()).toBeTruthy();
-  const groupPayload = await groupResponse.json();
-  expect(groupPayload.code).toBe(200);
-  const originalItems = groupPayload.data.items as SettingItem[];
+  const originalItems = await fetchSettingGroupItems(page, accessToken, 'ui');
   const nextItems = originalItems.map((item) => ({
     settingKey: item.settingKey,
     settingValue: item.settingKey === 'ui.enable_tab_bar' ? 'true' : item.settingValue,
@@ -2037,13 +2061,7 @@ test('setting smoke: logout clears explicit theme and falls back to default them
   test.setTimeout(45000);
   const accessToken = await signInAsAdmin(page);
   const originalPreferences = await getCurrentUserPreferences(page, accessToken);
-  const groupResponse = await page.request.get(`${apiBaseUrl}/system/setting/group/ui`, {
-    headers: authHeaders(accessToken),
-  });
-  expect(groupResponse.ok()).toBeTruthy();
-  const groupPayload = await groupResponse.json();
-  expect(groupPayload.code).toBe(200);
-  const originalItems = groupPayload.data.items as SettingItem[];
+  const originalItems = await fetchSettingGroupItems(page, accessToken, 'ui');
   const nextTheme = 'emerald';
   const nextItems = originalItems.map((item) => ({
     settingKey: item.settingKey,
@@ -2096,13 +2114,7 @@ test('setting smoke: logout clears explicit theme and falls back to default them
 
 test('setting smoke: tab bar visibility follows ui preference', async ({ page }) => {
   const accessToken = await signInAsAdmin(page);
-  const groupResponse = await page.request.get(`${apiBaseUrl}/system/setting/group/ui`, {
-    headers: authHeaders(accessToken),
-  });
-  expect(groupResponse.ok()).toBeTruthy();
-  const groupPayload = await groupResponse.json();
-  expect(groupPayload.code).toBe(200);
-  const originalItems = groupPayload.data.items as SettingItem[];
+  const originalItems = await fetchSettingGroupItems(page, accessToken, 'ui');
   const nextItems = originalItems.map((item) => ({
     settingKey: item.settingKey,
     settingValue: item.settingKey === 'ui.enable_tab_bar' ? 'false' : item.settingValue,
@@ -2125,13 +2137,7 @@ test('setting smoke: default theme applies when explicit theme preference is cle
   const accessToken = await signInAsAdmin(page);
   await installReloadStableReadCache(page);
   const originalPreferences = await getCurrentUserPreferences(page, accessToken);
-  const groupResponse = await page.request.get(`${apiBaseUrl}/system/setting/group/ui`, {
-    headers: authHeaders(accessToken),
-  });
-  expect(groupResponse.ok()).toBeTruthy();
-  const groupPayload = await groupResponse.json();
-  expect(groupPayload.code).toBe(200);
-  const originalItems = groupPayload.data.items as SettingItem[];
+  const originalItems = await fetchSettingGroupItems(page, accessToken, 'ui');
   const nextTheme = 'emerald';
   const nextItems = originalItems.map((item) => ({
     settingKey: item.settingKey,
@@ -2165,13 +2171,7 @@ test('setting smoke: default theme applies when explicit theme preference is cle
 
 test('setting smoke: upload config affects runtime upload endpoint', async ({ page }) => {
   const accessToken = await signInAsAdmin(page);
-  const groupResponse = await page.request.get(`${apiBaseUrl}/system/setting/group/upload`, {
-    headers: authHeaders(accessToken),
-  });
-  expect(groupResponse.ok()).toBeTruthy();
-  const groupPayload = await groupResponse.json();
-  expect(groupPayload.code).toBe(200);
-  const originalItems = groupPayload.data.items as SettingItem[];
+  const originalItems = await fetchSettingGroupItems(page, accessToken, 'upload');
   const nextItems = originalItems.map((item) => {
     switch (item.settingKey) {
       case 'upload.storage_driver':
@@ -2296,61 +2296,19 @@ test('operation log smoke: failed reason and detail summary are visible', async 
 test('setting permission smoke: list-only role can view page but cannot save or refresh', async ({
   page,
 }) => {
-  const adminAccessToken = await signInAsAdmin(page);
-  const roleKey = `setting_view_only_${Date.now()}`;
-  const username = `setting_viewer_${Date.now()}`;
-  const password = 'ChangeMe123';
-
-  await deleteUserByUsername(page, adminAccessToken, username);
-  await deleteRoleByKey(page, adminAccessToken, roleKey);
-
-  try {
-    const createRoleResponse = await page.request.post(`${apiBaseUrl}/system/role`, {
-      headers: await verifiedHeaders(page, adminAccessToken),
-      data: {
-        roleName: '系统设置只读烟测角色',
-        roleKey,
-        sort: 10,
-        status: 1,
-        menuIds: [],
-        permissionKeys: ['system:setting:list'],
-      },
-    });
-    expect(createRoleResponse.ok()).toBeTruthy();
-    const role = await getRoleByKey(page, adminAccessToken, roleKey);
-    expect(role).toBeTruthy();
-    await createApiPermission(
-      page,
-      adminAccessToken,
-      roleKey,
-      '/api/v1/system/setting/list',
-      'GET',
-    );
-    await createApiPermission(page, adminAccessToken, roleKey, '/api/v1/system/menu/tree', 'GET');
-
-    const createUserResponse = await page.request.post(`${apiBaseUrl}/system/user`, {
-      headers: await verifiedHeaders(page, adminAccessToken),
-      data: {
-        username,
-        password,
-        nickname: '系统设置只读烟测用户',
-        status: 1,
-        roleIds: [role!.id],
-      },
-    });
-    expect(createUserResponse.ok()).toBeTruthy();
-    const createUserPayload = await createUserResponse.json();
-    expect(createUserPayload.code).toBe(200);
-
-    const viewerTokens = await loginByApi(page.request, { username, password });
-    const viewerPage = await page.context().newPage();
-
-    try {
-      await installClientSession(viewerPage, viewerTokens);
-      await viewerPage.goto('/system/setting/basic', { waitUntil: 'domcontentloaded' });
-      await expectPageIdentityReady(viewerPage, '系统设置');
-      await expectNoPageError(viewerPage);
-
+  await withListViewOnlyViewer(
+    page,
+    {
+      slug: 'setting',
+      cleanupTag: 'system-pages:setting-viewer',
+      roleName: '系统设置只读烟测角色',
+      nickname: '系统设置只读烟测用户',
+      listPermission: 'system:setting:list',
+      apiPermissions: [['/api/v1/system/setting/list', 'GET']],
+      route: '/system/setting/basic',
+      identityLabel: '系统设置',
+    },
+    async (viewerPage) => {
       const settingPanel = viewerPage.locator('.setting-page__config-card');
       await expect(settingPanel.getByRole('button', { name: '刷新设置缓存' })).toBeDisabled();
       await expect(
@@ -2359,79 +2317,29 @@ test('setting permission smoke: list-only role can view page but cannot save or 
       await expect(
         settingPanel.locator('.submit-bar').getByRole('button', { name: '取消' }),
       ).toBeEnabled();
-    } finally {
-      await viewerPage.close();
-    }
-  } finally {
-    await runOptionalSmokeCleanup('system-pages:setting-viewer', async () => {
-      await cleanupViewerIdentity(page, adminAccessToken, username, roleKey);
-    });
-  }
+    },
+  );
 });
 
 test('dict permission smoke: list-only role can view page but cannot mutate config', async ({
   page,
 }) => {
-  const adminAccessToken = await signInAsAdmin(page);
-  const roleKey = `dict_view_only_${Date.now()}`;
-  const username = `dict_viewer_${Date.now()}`;
-  const password = 'ChangeMe123';
-
-  await deleteUserByUsername(page, adminAccessToken, username);
-  await deleteRoleByKey(page, adminAccessToken, roleKey);
-
-  try {
-    const createRoleResponse = await page.request.post(`${apiBaseUrl}/system/role`, {
-      headers: await verifiedHeaders(page, adminAccessToken),
-      data: {
-        roleName: '字典只读烟测角色',
-        roleKey,
-        sort: 10,
-        status: 1,
-        menuIds: [],
-        permissionKeys: ['system:dict:list'],
-      },
-    });
-    expect(createRoleResponse.ok()).toBeTruthy();
-    const role = await getRoleByKey(page, adminAccessToken, roleKey);
-    expect(role).toBeTruthy();
-    await createApiPermission(
-      page,
-      adminAccessToken,
-      roleKey,
-      '/api/v1/system/dict/type/list',
-      'GET',
-    );
-    await createApiPermission(
-      page,
-      adminAccessToken,
-      roleKey,
-      '/api/v1/system/dict/item/list',
-      'GET',
-    );
-    await createApiPermission(page, adminAccessToken, roleKey, '/api/v1/system/menu/tree', 'GET');
-
-    const createUserResponse = await page.request.post(`${apiBaseUrl}/system/user`, {
-      headers: await verifiedHeaders(page, adminAccessToken),
-      data: {
-        username,
-        password,
-        nickname: '字典只读烟测用户',
-        status: 1,
-        roleIds: [role!.id],
-      },
-    });
-    expect(createUserResponse.ok()).toBeTruthy();
-
-    const viewerTokens = await loginByApi(page.request, { username, password });
-    const viewerPage = await page.context().newPage();
-
-    try {
-      await installClientSession(viewerPage, viewerTokens);
-      await viewerPage.goto('/system/dict', { waitUntil: 'domcontentloaded' });
-      await expectPageIdentityReady(viewerPage, '字典管理');
-      await expectNoPageError(viewerPage);
-
+  await withListViewOnlyViewer(
+    page,
+    {
+      slug: 'dict',
+      cleanupTag: 'system-pages:dict-viewer',
+      roleName: '字典只读烟测角色',
+      nickname: '字典只读烟测用户',
+      listPermission: 'system:dict:list',
+      apiPermissions: [
+        ['/api/v1/system/dict/type/list', 'GET'],
+        ['/api/v1/system/dict/item/list', 'GET'],
+      ],
+      route: '/system/dict',
+      identityLabel: '字典管理',
+    },
+    async (viewerPage) => {
       const typePanel = viewerPage.locator('.dict-page__actions').first();
       await expect(typePanel.getByRole('button', { name: '导出' })).toBeDisabled();
       await expect(typePanel.getByRole('button', { name: '下载模板' })).toBeDisabled();
@@ -2445,380 +2353,134 @@ test('dict permission smoke: list-only role can view page but cannot mutate conf
       await expect(itemPanel.getByRole('button', { name: '下载模板' })).toBeDisabled();
       await expect(itemPanel.getByRole('button', { name: '导入' })).toBeDisabled();
       await expect(itemPanel.getByRole('button', { name: '新增字典项' })).toBeDisabled();
-    } finally {
-      await viewerPage.close();
-    }
-  } finally {
-    await runOptionalSmokeCleanup('system-pages:dict-viewer', async () => {
-      await cleanupViewerIdentity(page, adminAccessToken, username, roleKey);
-    });
-  }
+    },
+  );
 });
 
 test('i18n permission smoke: list-only role can view page but cannot mutate translations', async ({
   page,
 }) => {
-  const adminAccessToken = await signInAsAdmin(page);
-  const roleKey = `i18n_view_only_${Date.now()}`;
-  const username = `i18n_viewer_${Date.now()}`;
-  const password = 'ChangeMe123';
-
-  await deleteUserByUsername(page, adminAccessToken, username);
-  await deleteRoleByKey(page, adminAccessToken, roleKey);
-
-  try {
-    const createRoleResponse = await page.request.post(`${apiBaseUrl}/system/role`, {
-      headers: await verifiedHeaders(page, adminAccessToken),
-      data: {
-        roleName: '国际化只读烟测角色',
-        roleKey,
-        sort: 10,
-        status: 1,
-        menuIds: [],
-        permissionKeys: ['system:i18n:list'],
-      },
-    });
-    expect(createRoleResponse.ok()).toBeTruthy();
-    const role = await getRoleByKey(page, adminAccessToken, roleKey);
-    expect(role).toBeTruthy();
-    await createApiPermission(page, adminAccessToken, roleKey, '/api/v1/system/i18n/list', 'GET');
-    await createApiPermission(
-      page,
-      adminAccessToken,
-      roleKey,
-      '/api/v1/system/i18n/overview',
-      'GET',
-    );
-    await createApiPermission(page, adminAccessToken, roleKey, '/api/v1/system/menu/tree', 'GET');
-
-    const createUserResponse = await page.request.post(`${apiBaseUrl}/system/user`, {
-      headers: await verifiedHeaders(page, adminAccessToken),
-      data: {
-        username,
-        password,
-        nickname: '国际化只读烟测用户',
-        status: 1,
-        roleIds: [role!.id],
-      },
-    });
-    expect(createUserResponse.ok()).toBeTruthy();
-
-    const viewerTokens = await loginByApi(page.request, { username, password });
-    const viewerPage = await page.context().newPage();
-
-    try {
-      await installClientSession(viewerPage, viewerTokens);
-      await viewerPage.goto('/system/i18n', { waitUntil: 'domcontentloaded' });
-      await expectPageIdentityReady(viewerPage, '国际化管理');
-      await expectNoPageError(viewerPage);
-
+  await withListViewOnlyViewer(
+    page,
+    {
+      slug: 'i18n',
+      cleanupTag: 'system-pages:i18n-viewer',
+      roleName: '国际化只读烟测角色',
+      nickname: '国际化只读烟测用户',
+      listPermission: 'system:i18n:list',
+      apiPermissions: [
+        ['/api/v1/system/i18n/list', 'GET'],
+        ['/api/v1/system/i18n/overview', 'GET'],
+      ],
+      route: '/system/i18n',
+      identityLabel: '国际化管理',
+    },
+    async (viewerPage) => {
       const headerActions = viewerPage.locator('.system-list__work-actions').first();
       await expect(headerActions.getByRole('button', { name: '新增' })).toHaveCount(0);
       await expect(headerActions.getByRole('button', { name: '刷新缓存' })).toHaveCount(0);
       await expect(headerActions.getByRole('button', { name: '刷新', exact: true })).toHaveCount(0);
       await expect(headerActions.getByRole('button', { name: '导出' })).toHaveCount(0);
       await expect(headerActions.getByRole('button', { name: '导入' })).toHaveCount(0);
-    } finally {
-      await viewerPage.close();
-    }
-  } finally {
-    await runOptionalSmokeCleanup('system-pages:i18n-viewer', async () => {
-      await cleanupViewerIdentity(page, adminAccessToken, username, roleKey);
-    });
-  }
+    },
+  );
 });
 
 test('login-log permission smoke: list-only role can view page but cannot clear, export, or batch delete', async ({
   page,
 }) => {
-  const adminAccessToken = await signInAsAdmin(page);
-  const roleKey = `login_log_view_only_${Date.now()}`;
-  const username = `login_log_viewer_${Date.now()}`;
-  const password = 'ChangeMe123';
-
-  await deleteUserByUsername(page, adminAccessToken, username);
-  await deleteRoleByKey(page, adminAccessToken, roleKey);
-
-  try {
-    const createRoleResponse = await page.request.post(`${apiBaseUrl}/system/role`, {
-      headers: await verifiedHeaders(page, adminAccessToken),
-      data: {
-        roleName: '登录日志只读烟测角色',
-        roleKey,
-        sort: 10,
-        status: 1,
-        menuIds: [],
-        permissionKeys: ['system:login-log:list'],
-      },
-    });
-    expect(createRoleResponse.ok()).toBeTruthy();
-    await createApiPermission(
-      page,
-      adminAccessToken,
-      roleKey,
-      '/api/v1/system/login-log/list',
-      'GET',
-    );
-    await createApiPermission(
-      page,
-      adminAccessToken,
-      roleKey,
-      '/api/v1/system/setting/group/audit',
-      'GET',
-    );
-    await createApiPermission(page, adminAccessToken, roleKey, '/api/v1/system/menu/tree', 'GET');
-
-    const role = await getRoleByKey(page, adminAccessToken, roleKey);
-    expect(role).toBeTruthy();
-
-    const createUserResponse = await page.request.post(`${apiBaseUrl}/system/user`, {
-      headers: await verifiedHeaders(page, adminAccessToken),
-      data: {
-        username,
-        password,
-        nickname: '登录日志只读烟测用户',
-        status: 1,
-        roleIds: [role!.id],
-      },
-    });
-    expect(createUserResponse.ok()).toBeTruthy();
-
-    const viewerTokens = await loginByApi(page.request, { username, password });
-    const viewerPage = await page.context().newPage();
-
-    try {
-      await installClientSession(viewerPage, viewerTokens);
-      await viewerPage.goto('/system/login-log', { waitUntil: 'domcontentloaded' });
-      await expectPageIdentityReady(viewerPage, '登录日志');
-      await expectNoPageError(viewerPage);
-
+  await withListViewOnlyViewer(
+    page,
+    {
+      slug: 'login_log',
+      cleanupTag: 'system-pages:login-log-viewer',
+      roleName: '登录日志只读烟测角色',
+      nickname: '登录日志只读烟测用户',
+      listPermission: 'system:login-log:list',
+      apiPermissions: [
+        ['/api/v1/system/login-log/list', 'GET'],
+        ['/api/v1/system/setting/group/audit', 'GET'],
+      ],
+      route: '/system/login-log',
+      identityLabel: '登录日志',
+    },
+    async (viewerPage) => {
       await expect(viewerPage.getByRole('button', { name: '导出' })).toBeDisabled();
       await expect(viewerPage.getByRole('button', { name: '清理日志' })).toHaveCount(0);
       await expect(viewerPage.getByRole('button', { name: '删除所选' })).toHaveCount(0);
-    } finally {
-      await viewerPage.close();
-    }
-  } finally {
-    await runOptionalSmokeCleanup('system-pages:login-log-viewer', async () => {
-      await cleanupViewerIdentity(page, adminAccessToken, username, roleKey);
-    });
-  }
+    },
+  );
 });
 
 test('session permission smoke: list-only role can view page but cannot revoke or clear sessions', async ({
   page,
 }) => {
-  const adminAccessToken = await signInAsAdmin(page);
-  const roleKey = `session_view_only_${Date.now()}`;
-  const username = `session_viewer_${Date.now()}`;
-  const password = 'ChangeMe123';
-
-  await deleteUserByUsername(page, adminAccessToken, username);
-  await deleteRoleByKey(page, adminAccessToken, roleKey);
-
-  try {
-    const createRoleResponse = await page.request.post(`${apiBaseUrl}/system/role`, {
-      headers: await verifiedHeaders(page, adminAccessToken),
-      data: {
-        roleName: '会话只读烟测角色',
-        roleKey,
-        sort: 10,
-        status: 1,
-        menuIds: [],
-        permissionKeys: ['system:session:list'],
-      },
-    });
-    expect(createRoleResponse.ok()).toBeTruthy();
-    await createApiPermission(
-      page,
-      adminAccessToken,
-      roleKey,
-      '/api/v1/system/session/list',
-      'GET',
-    );
-    await createApiPermission(page, adminAccessToken, roleKey, '/api/v1/system/menu/tree', 'GET');
-
-    const role = await getRoleByKey(page, adminAccessToken, roleKey);
-    expect(role).toBeTruthy();
-
-    const createUserResponse = await page.request.post(`${apiBaseUrl}/system/user`, {
-      headers: await verifiedHeaders(page, adminAccessToken),
-      data: {
-        username,
-        password,
-        nickname: '会话只读烟测用户',
-        status: 1,
-        roleIds: [role!.id],
-      },
-    });
-    expect(createUserResponse.ok()).toBeTruthy();
-
-    const viewerTokens = await loginByApi(page.request, { username, password });
-    const viewerPage = await page.context().newPage();
-
-    try {
-      await installClientSession(viewerPage, viewerTokens);
-      await viewerPage.goto('/system/session', { waitUntil: 'domcontentloaded' });
-      await expectPageIdentityReady(viewerPage, '会话管理');
-      await expectNoPageError(viewerPage);
-
+  await withListViewOnlyViewer(
+    page,
+    {
+      slug: 'session',
+      cleanupTag: 'system-pages:session-viewer',
+      roleName: '会话只读烟测角色',
+      nickname: '会话只读烟测用户',
+      listPermission: 'system:session:list',
+      apiPermissions: [['/api/v1/system/session/list', 'GET']],
+      route: '/system/session',
+      identityLabel: '会话管理',
+    },
+    async (viewerPage) => {
       await expect(viewerPage.getByRole('button', { name: '清理历史会话' })).toHaveCount(0);
       const revokeButtons = viewerPage.getByRole('button', { name: '下线会话' });
       await expect(revokeButtons.first()).toBeDisabled();
-    } finally {
-      await viewerPage.close();
-    }
-  } finally {
-    await runOptionalSmokeCleanup('system-pages:session-viewer', async () => {
-      await cleanupViewerIdentity(page, adminAccessToken, username, roleKey);
-    });
-  }
+    },
+  );
 });
 
 test('operation-log permission smoke: list-only role can view page but cannot clear, export, or batch delete', async ({
   page,
 }) => {
-  const adminAccessToken = await signInAsAdmin(page);
-  const roleKey = `operation_log_view_only_${Date.now()}`;
-  const username = `operation_log_viewer_${Date.now()}`;
-  const password = 'ChangeMe123';
-
-  await deleteUserByUsername(page, adminAccessToken, username);
-  await deleteRoleByKey(page, adminAccessToken, roleKey);
-
-  try {
-    const createRoleResponse = await page.request.post(`${apiBaseUrl}/system/role`, {
-      headers: await verifiedHeaders(page, adminAccessToken),
-      data: {
-        roleName: '操作日志只读烟测角色',
-        roleKey,
-        sort: 10,
-        status: 1,
-        menuIds: [],
-        permissionKeys: ['system:operation-log:list'],
-      },
-    });
-    expect(createRoleResponse.ok()).toBeTruthy();
-    await createApiPermission(
-      page,
-      adminAccessToken,
-      roleKey,
-      '/api/v1/system/operation-log/list',
-      'GET',
-    );
-    await createApiPermission(
-      page,
-      adminAccessToken,
-      roleKey,
-      '/api/v1/system/setting/group/audit',
-      'GET',
-    );
-    await createApiPermission(page, adminAccessToken, roleKey, '/api/v1/system/menu/tree', 'GET');
-
-    const role = await getRoleByKey(page, adminAccessToken, roleKey);
-    expect(role).toBeTruthy();
-
-    const createUserResponse = await page.request.post(`${apiBaseUrl}/system/user`, {
-      headers: await verifiedHeaders(page, adminAccessToken),
-      data: {
-        username,
-        password,
-        nickname: '操作日志只读烟测用户',
-        status: 1,
-        roleIds: [role!.id],
-      },
-    });
-    expect(createUserResponse.ok()).toBeTruthy();
-
-    const viewerTokens = await loginByApi(page.request, { username, password });
-    const viewerPage = await page.context().newPage();
-
-    try {
-      await installClientSession(viewerPage, viewerTokens);
-      await viewerPage.goto('/system/operation-log', { waitUntil: 'domcontentloaded' });
-      await expectPageIdentityReady(viewerPage, '操作日志');
-      await expectNoPageError(viewerPage);
-
+  await withListViewOnlyViewer(
+    page,
+    {
+      slug: 'operation_log',
+      cleanupTag: 'system-pages:operation-log-viewer',
+      roleName: '操作日志只读烟测角色',
+      nickname: '操作日志只读烟测用户',
+      listPermission: 'system:operation-log:list',
+      apiPermissions: [
+        ['/api/v1/system/operation-log/list', 'GET'],
+        ['/api/v1/system/setting/group/audit', 'GET'],
+      ],
+      route: '/system/operation-log',
+      identityLabel: '操作日志',
+    },
+    async (viewerPage) => {
       await expect(viewerPage.getByRole('button', { name: '导出' })).toBeDisabled();
       await expect(viewerPage.getByRole('button', { name: '清理日志' })).toHaveCount(0);
       await expect(viewerPage.getByRole('button', { name: '删除所选' })).toHaveCount(0);
-    } finally {
-      await viewerPage.close();
-    }
-  } finally {
-    await runOptionalSmokeCleanup('system-pages:operation-log-viewer', async () => {
-      await cleanupViewerIdentity(page, adminAccessToken, username, roleKey);
-    });
-  }
+    },
+  );
 });
 
 test('module permission smoke: list-only role can view registry but cannot register or unregister modules', async ({
   page,
 }) => {
-  const adminAccessToken = await signInAsAdmin(page);
-  const roleKey = `module_view_only_${Date.now()}`;
-  const username = `module_viewer_${Date.now()}`;
-  const password = 'ChangeMe123';
-
-  await deleteUserByUsername(page, adminAccessToken, username);
-  await deleteRoleByKey(page, adminAccessToken, roleKey);
-
-  try {
-    const createRoleResponse = await page.request.post(`${apiBaseUrl}/system/role`, {
-      headers: await verifiedHeaders(page, adminAccessToken),
-      data: {
-        roleName: '模块注册表只读烟测角色',
-        roleKey,
-        sort: 10,
-        status: 1,
-        menuIds: [],
-        permissionKeys: ['system:module:list'],
-      },
-    });
-    expect(createRoleResponse.ok()).toBeTruthy();
-    await createApiPermission(
-      page,
-      adminAccessToken,
-      roleKey,
-      '/api/v1/lowcode/dynamic-modules',
-      'GET',
-    );
-    await createApiPermission(page, adminAccessToken, roleKey, '/api/v1/system/menu/tree', 'GET');
-
-    const role = await getRoleByKey(page, adminAccessToken, roleKey);
-    expect(role).toBeTruthy();
-
-    const createUserResponse = await page.request.post(`${apiBaseUrl}/system/user`, {
-      headers: await verifiedHeaders(page, adminAccessToken),
-      data: {
-        username,
-        password,
-        nickname: '模块注册表只读烟测用户',
-        status: 1,
-        roleIds: [role!.id],
-      },
-    });
-    expect(createUserResponse.ok()).toBeTruthy();
-
-    const viewerTokens = await loginByApi(page.request, { username, password });
-    const viewerPage = await page.context().newPage();
-
-    try {
-      await installClientSession(viewerPage, viewerTokens);
-      await viewerPage.goto('/system/modules', { waitUntil: 'domcontentloaded' });
-      await expectPageIdentityReady(viewerPage, '模块注册表');
-      await expectNoPageError(viewerPage);
-
+  await withListViewOnlyViewer(
+    page,
+    {
+      slug: 'module',
+      cleanupTag: 'system-pages:module-viewer',
+      roleName: '模块注册表只读烟测角色',
+      nickname: '模块注册表只读烟测用户',
+      listPermission: 'system:module:list',
+      apiPermissions: [['/api/v1/lowcode/dynamic-modules', 'GET']],
+      route: '/system/modules',
+      identityLabel: '模块注册表',
+    },
+    async (viewerPage) => {
       await expect(viewerPage.getByRole('button', { name: '前往生成器' })).toHaveCount(0);
       await expect(viewerPage.getByRole('button', { name: '卸载' })).toHaveCount(0);
-    } finally {
-      await viewerPage.close();
-    }
-  } finally {
-    await runOptionalSmokeCleanup('system-pages:module-viewer', async () => {
-      await cleanupViewerIdentity(page, adminAccessToken, username, roleKey);
-    });
-  }
+    },
+  );
 });
 
 test('module manager smoke: auto-recycle module shows explicit lifecycle and purge guidance', async ({
@@ -3908,13 +3570,7 @@ test('refresh sync smoke: setting page auto-updates across isolated contexts', a
   test.setTimeout(45000);
   const adminLogin = await createSharedAdminLogin(page);
   const accessToken = adminLogin.accessToken;
-  const groupResponse = await page.request.get(`${apiBaseUrl}/system/setting/group/basic`, {
-    headers: authHeaders(accessToken),
-  });
-  expect(groupResponse.ok()).toBeTruthy();
-  const groupPayload = await groupResponse.json();
-  expect(groupPayload.code).toBe(200);
-  const originalItems = groupPayload.data.items as SettingItem[];
+  const originalItems = await fetchSettingGroupItems(page, accessToken, 'basic');
   const originalSiteName =
     originalItems.find((item) => item.settingKey === 'site.name')?.settingValue || 'Pantheon Base';
   const nextSiteName = `Pantheon Sync ${Date.now()}`;
