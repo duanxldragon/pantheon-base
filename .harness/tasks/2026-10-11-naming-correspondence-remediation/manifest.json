@@ -1,0 +1,96 @@
+{
+  "taskId": "2026-10-11-naming-correspondence-remediation",
+  "title": "Remediate frontend/backend naming and directory correspondence findings",
+  "goal": "Execute the 12-item action list from the 2026-10-11 frontend/backend naming and correspondence review: align Go package names with directory names, make the frontend system subdomains mirror the backend layout, close the frontend naming drift, repair the two harness gates that were passing without enforcing, and pin the frontend/backend domain correspondence into the canonical contract — all without changing API routes, database rows, permission codes or runtime behavior.",
+  "primaryLayer": "platform",
+  "status": "completed",
+  "priority": "P0",
+  "type": "refactor",
+  "estimatedComplexity": "large",
+  "findings": [
+    "Go package name != directory name in 6 groups (iam/org/config/audit/i18n)",
+    "check-boundaries.mjs scanned frontend system dirs that did not exist",
+    "check-boundaries.mjs resolved the repo root to a stray empty directory and scanned 0 files",
+    "system subdomain ts rules were empty (ts: [])",
+    "check-structure-contract.mjs had no rules for frontend/src/modules/**",
+    "9 naming drift cases (4 camelCase .tsx + 5 PascalCase .ts)",
+    "core/permissions and core/settings plural/singular mismatch",
+    "modules/system/components/ held only a stylesheet",
+    "ghost directory pantheon-base/pantheon-base/",
+    "frontend/src/assets/ whitelisted but absent",
+    "no canonical frontend/backend correspondence table",
+    "no @/ path alias (403 relative imports)"
+  ],
+  "scope": {
+    "in": [
+      "backend/modules/system/**",
+      "frontend/src/**",
+      "frontend/scripts/check-shell-visual-contract.mjs",
+      "frontend/tsconfig.app.json",
+      "frontend/vite.config.ts",
+      "frontend/vitest.config.ts",
+      "scripts/harness/check-boundaries.mjs",
+      "scripts/harness/check-structure-contract.mjs",
+      "tests/scripts/harness-check-boundaries.test.mjs",
+      "tests/scripts/harness-check-structure-contract.test.mjs",
+      "config/boundary-baseline.json",
+      "docs/designs/REPOSITORY_LAYOUT.md",
+      "docs/designs/REPOSITORY_LAYOUT.en.md",
+      ".gitignore",
+      ".harness/tasks/2026-10-11-naming-correspondence-remediation/",
+      ".harness/evidence/2026-10-11-naming-correspondence-remediation/"
+    ],
+    "out": [
+      "Renaming API routes, database tables/columns, permission codes or menu rows (explicit non-goal of .harness/NAMING_AND_BOUNDARIES_REMEDIATION_PLAN_2026-09-22.md)",
+      "Unifying audit vs operation-log vocabulary (would change routes, permission codes and menu data)",
+      "Mass-migrating the 400+ existing relative imports to the @/ alias (alias added additively)",
+      "Re-homing components to enforce one placement convention (documented instead; no readability gain)",
+      "Renaming the three legitimate non-component JSX modules"
+    ]
+  },
+  "acceptanceCriteria": [
+    "go build ./... , CGO_ENABLED=0 go vet ./... and gofmt -l are all clean.",
+    "Every Go package name equals its directory name except backend/cmd/* (package main).",
+    "Frontend system subdomains physically mirror the backend layout (iam/org/config nested).",
+    "check-boundaries.mjs --strict reports 0 findings, 0 stale baseline entries and 0 unresolved roots, and actually reads files.",
+    "check-structure-contract.mjs reports 0 findings across all tracked files with the four new rule families active.",
+    "Frontend tsc, eslint, vite build (all 13 pre-build contract gates) and vitest 163/163 with coverage thresholds met.",
+    "All documentation gates pass and no doc link points at a moved file.",
+    "The new gate rules each have a positive and a negative test in tests/scripts/.",
+    "config/boundary-baseline.json shrinks from 5 entries to 1 by executing a recorded ratchet, not by re-dating it."
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "ci-workflow",
+    "ownerLayer": "consumer-repository"
+  },
+  "verificationPlan": {
+    "commands": [
+      "cd backend && CGO_ENABLED=0 go build ./... && CGO_ENABLED=0 go vet ./... && gofmt -l .",
+      "node scripts/harness/check-boundaries.mjs --strict --repo pantheon-base --baseline config/boundary-baseline.json",
+      "npm run check:structure",
+      "cd frontend && npm run type-check && npm run lint && npm run build && npm run test:unit:coverage",
+      "node --test tests/scripts/harness-check-boundaries.test.mjs tests/scripts/harness-check-structure-contract.test.mjs",
+      "npm run check:docs-frontmatter && npm run check:harness-docs && npm run check:harness-inventory && npm run check:harness-sync"
+    ],
+    "runtimeEvidence": [
+      "check-boundaries before/after finding counts and the unresolved-root failure mode",
+      "check-structure-contract rule inventory with 0 findings across 2195 tracked files",
+      "frontend build gate output and vitest coverage summary",
+      "go build / go vet / gofmt output"
+    ]
+  },
+  "runtimeSensitive": false,
+  "linkage": {
+    "assessment": "deliverables/gstack/code-review-frontend-backend-naming-2026-10-11.md",
+    "evidenceDir": ".harness/evidence/2026-10-11-naming-correspondence-remediation/",
+    "summaryFile": ".harness/evidence/2026-10-11-naming-correspondence-remediation/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-11-naming-correspondence-remediation/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".harness/NAMING_AND_BOUNDARIES_REMEDIATION_PLAN_2026-09-22.md",
+      "docs/designs/REPOSITORY_LAYOUT.md"
+    ]
+  }
+}

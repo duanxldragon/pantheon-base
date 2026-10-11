@@ -1,0 +1,121 @@
+{
+  "taskId": "2026-10-11-naming-correspondence-remediation",
+  "repo": "pantheon-base",
+  "executedAt": "2026-10-11T11:40:00+08:00",
+  "agent": {
+    "tool": "other",
+    "adapter": "software-workshop-agent"
+  },
+  "commands": [
+    {
+      "command": "CGO_ENABLED=0 go build ./...",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "Clean after renaming the package clause of 6 package groups (iam/org/config/audit/i18n) and canonicalising 45 import aliases across 10 files. 128 files changed, 213 insertions / 213 deletions. Import paths were not touched, so every caller outside the renamed packages is unaffected."
+    },
+    {
+      "command": "CGO_ENABLED=0 go vet ./...",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "Clean. One real defect was found and fixed during the rename: backend/modules/auth/login/login_runtime_test.go had a local variable named `setting` that shadowed the newly renamed `setting` package; renamed the local to `settingRow`. CGO_ENABLED=0 is required locally because the local cgo toolchain exits 2 on this machine; that is an environment limitation, not a code issue."
+    },
+    {
+      "command": "gofmt -l .",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "Empty output. This matters because gofmt exits 0 even when it lists files, and a gofmt-OK but unformatted file makes golangci-lint fail."
+    },
+    {
+      "command": "node scripts/harness/check-boundaries.mjs --strict --repo pantheon-base --baseline config/boundary-baseline.json (before)",
+      "cwd": ".",
+      "status": "failed",
+      "details": "Reported 0 findings while scanning ZERO files. Root cause: scanRepository accepted any directory named after the repo, and a stray local shell pantheon-base/pantheon-base/ (containing a single empty docs/) satisfied that test, so repoRoot pointed at an empty directory. The gate had been giving false confidence locally. On CI (cwd = repo root, no stray directory) it fell back to the correct root, which is why CI stayed green."
+    },
+    {
+      "command": "rmdir pantheon-base/docs && rmdir pantheon-base",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Removed the ghost directory with rmdir (which only succeeds on empty directories) after confirming git ls-files pantheon-base returned 0 tracked files. Review finding #13."
+    },
+    {
+      "command": "node scripts/harness/check-boundaries.mjs --strict --repo pantheon-base --baseline config/boundary-baseline.json (after)",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Boundary check (strict): 0 finding(s), 1 baselined, 0 stale baselined, 0 unresolved repo root(s), 0 warning(s). Exit 0. The single baselined entry is the platform -> system/iam/menu/api type-only import. Verified from both the repo root and the workspace parent directory."
+    },
+    {
+      "command": "node .tmp/check-structure-contract.local.mjs --root . (git ls-files injected via a temp file)",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Structure contract check: 0 finding(s) across 2195 tracked file(s). Four new rule families active: go-package-dir-match, frontend-file-naming, barrel-only, domain-correspondence. Before the fixes this run surfaced exactly the 2 known one-sided subdomains (system/profile, system/iam/tenant), which are now registered as §9 controlled exceptions."
+    },
+    {
+      "command": "node .tmp/check-structure-contract.local.mjs --root .tmp/sf/<case> (9 synthetic fixtures)",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Each new rule verified with a positive and a negative fixture: N1 PascalCase .ts flagged; N2 camelCase .tsx declaring a component flagged (this fixture caught a real bug — the first detector only looked for PascalCase declaration names, so a camelCase-named component slipped through); N3 camelCase .tsx with no component declaration allowed; N4 use*.tsx hook allowed; N5 package/dir mismatch flagged; N6 backend/cmd/* package main allowed; N7 barrel with implementation flagged; N8 pure barrel allowed; N9 one-sided subdomain flagged."
+    },
+    {
+      "command": "node scripts/harness/check-boundaries.mjs --json --strict --root .tmp/vfy/<case> --repo pantheon-base (5 fixtures)",
+      "cwd": ".",
+      "status": "passed",
+      "details": "New boundary rules verified end to end: auth -> sibling api allowed / auth -> sibling component flagged (exit 1, 1 finding on usesCss.ts); iam -> org/dept/api allowed (exit 0); iam -> org/dept/DeptList flagged (exit 1); system/config/setting -> ../../../../i18n NOT flagged (exit 0, the regression guard for the same-named top-level directory); unresolvable repo root exits 1 with unresolvedCount=1."
+    },
+    {
+      "command": "npm run build",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "All 13 pre-build contract gates pass and vite reports 'built in 1.67s'. The build initially failed twice, both times because of real misses rather than gate noise: check-shell-visual-contract.mjs still read the old stylesheet path, and check-import-path-case reported 14 files importing ../../components/shared/list-page.css — the relative form that a grep for the absolute path had missed. Both fixed; the gate catching the second one is the gate working."
+    },
+    {
+      "command": "npm run type-check && npm run lint",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "tsc -b --noEmit exits 0; eslint . exits 0 with no output. The @/ alias was added to tsconfig.app.json, vite.config.ts and vitest.config.ts together and does not break the existing relative imports."
+    },
+    {
+      "command": "npm run test:unit:coverage",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "21 test files, 163/163 tests pass. Coverage thresholds met with all files at 92.57% lines / 86.22% branches / 98.5% functions. This run also validated the vitest.config.ts fix: its coverage globs still pointed at core/permissions and core/settings after the rename, so those directories would have silently dropped out of coverage."
+    },
+    {
+      "command": "npm run check:docs-frontmatter && npm run check:harness-docs && npm run check:harness-inventory && npm run check:harness-sync && npm run check:harness-method",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Frontmatter: 315 docs checked, 226 with frontmatter, passed. Docs links: 0 findings (one real break was found and fixed — docs/reviews/ENTERPRISE_RELEASE_READINESS_REVIEW_2026-10-07.md linked to the pre-move frontend/src/modules/system/user/UserFormModal.tsx). Inventory, sync drift and method health: 0 findings."
+    },
+    {
+      "command": "npm run check:generated && npm run check:generated-modules && npm run check:ui-quality-gate && npm run check:failure-registry && npm run check:harness-visual",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Generated artifact check: 0 findings across 11 artifacts. Generated modules: no generated modules found. UI quality gate, failure registry and visual evidence: no findings."
+    },
+    {
+      "command": "npm run check:task-packet-template && npm run check:task-packet",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Task-packet template present and linked; all docs/harness/tasks/*.task.md packets pass."
+    }
+  ],
+  "browserEvidence": [],
+  "runtimeSensitive": false,
+  "runtimeGap": "None. The remediation is structural only: no API route, database row, permission code, menu componentKey or runtime behaviour changed. Verified by construction — componentKey is a literal string matched by check:menu-contract (16 menus / 20 routes / 89 permissions / 20 component keys), and route paths, module metadata and API prefixes are untouched.",
+  "knownGaps": [
+    "This machine cannot spawn child processes from Node (spawnSync git/node fails with EBUSY), so the three gates that shell out to git — check:structure, check:harness-encoding, and the tests/scripts suites — cannot run locally. check:structure was therefore verified with the same script reading an injected `git ls-files` file list (identical rule code, only the enumeration replaced); check:harness-encoding is unchanged by this task and is CI-only. The two tests/scripts suites run in CI via `npm run test:scripts` (ci.yml) and were verified locally by driving the gate directly against the same fixtures.",
+    "check-boundaries.mjs now fails --strict on an unresolvable repository root. This is deliberate (it is the fix for the silent no-op) but it is a behaviour change: any invocation whose cwd is neither the repo root nor a workspace containing the repo will now fail instead of passing quietly.",
+    "The auth rule still allows auth to import non-api system modules such as system/audit/retentionSetting. Tightening it to api-only would create 7 new findings and is outside the 12-item scope; recorded here so it is not mistaken for full coverage.",
+    "docs/acceptances/PLATFORM_ACCEPTANCE_MATRIX_20260430_UI_MIGRATION.md and .harness/tasks/2026-10-07-ui-maintainability-followup/manifest.json still reference pre-move frontend paths. They are dated point-in-time records, so they were intentionally left as-is.",
+    "frontend/vite.config.ts has a pre-existing dead code-splitting regex (the platform-builder group still matches modules/generator and modules/system/dynamicmodule, neither of which has existed for several releases). Left untouched to avoid changing bundle output in a structural PR; recorded as a residual."
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-11-naming-correspondence-remediation/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-11-naming-correspondence-remediation/",
+    "reviewFile": ".harness/evidence/2026-10-11-naming-correspondence-remediation/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".harness/NAMING_AND_BOUNDARIES_REMEDIATION_PLAN_2026-09-22.md",
+      "docs/designs/REPOSITORY_LAYOUT.md"
+    ]
+  }
+}
