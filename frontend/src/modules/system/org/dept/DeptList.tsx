@@ -56,10 +56,10 @@ import DeptOrgTab from './DeptOrgTab';
 import {
   getUserDetail,
   getUserList,
+  UserDetailContent,
   type UserDetail as UserDetailData,
   type UserListRow,
 } from '../../iam/user/api';
-import UserDetailContent from '../../iam/user/UserDetailContent';
 import {
   AppModal,
   AppTable,
@@ -87,7 +87,7 @@ import {
   useGovernanceRail,
   withTableColumnPriority,
 } from '../../../../components';
-import '../../components/shared/list-page.css';
+import '../../../../assets/list-page.css';
 
 const Row = Grid.Row;
 const Col = Grid.Col;

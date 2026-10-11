@@ -45,7 +45,7 @@ import { formatClientSummary } from '../clientInfo';
 import SessionDetailModal from './SessionDetailModal';
 import { getSettingGroup, type SettingGroup } from '../../../system/config/setting/api';
 import { loadRetentionSetting } from '../../../system/audit/retentionSetting';
-import '../../../system/components/shared/list-page.css';
+import '../../../../assets/list-page.css';
 import '../../auth.css';
 
 const defaultRetentionOptions = [1, 7, 30];

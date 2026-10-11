@@ -54,7 +54,7 @@ import {
   type DictTypeQuery,
   type DictTypeRow,
 } from './api';
-import '../../components/shared/list-page.css';
+import '../../../../assets/list-page.css';
 
 const FormItem = Form.Item;
 const { Text } = Typography;

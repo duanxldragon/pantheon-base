@@ -8,15 +8,7 @@ const currentFilePath = fileURLToPath(import.meta.url);
 const frontendRoot = path.resolve(path.dirname(currentFilePath), '..');
 const layoutCssPath = path.join(frontendRoot, 'src', 'core', 'layout', 'index.css');
 const globalCssPath = path.join(frontendRoot, 'src', 'index.css');
-const listPageCssPath = path.join(
-  frontendRoot,
-  'src',
-  'modules',
-  'system',
-  'components',
-  'shared',
-  'list-page.css',
-);
+const listPageCssPath = path.join(frontendRoot, 'src', 'assets', 'list-page.css');
 const dashboardCssPath = path.join(frontendRoot, 'src', 'modules', 'platform', 'Dashboard.css');
 const loginCssPath = path.join(
   frontendRoot,

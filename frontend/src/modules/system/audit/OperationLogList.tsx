@@ -62,7 +62,7 @@ import {
 } from '../../../components';
 import { formatDateTime } from '../../../core/format/dateTime';
 import { usePermission } from '../../../hooks/usePermission';
-import '../components/shared/list-page.css';
+import '../../../assets/list-page.css';
 const httpMethodSet = new Set(['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS', 'HEAD']);
 
 type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };

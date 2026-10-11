@@ -56,7 +56,7 @@ import UserFormModal from './UserFormModal';
 import ResetPasswordModal from './ResetPasswordModal';
 import { useUserList, emptyQuery } from './useUserList';
 import { translateRoleName } from '../role/display';
-import '../../components/shared/list-page.css';
+import '../../../../assets/list-page.css';
 import './UserList.css';
 
 interface ResetPasswordFormValues {

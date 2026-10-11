@@ -74,7 +74,7 @@ import {
   type DictTypeRow,
   type DictUsageAnalysisResp,
 } from './api';
-import '../../components/shared/list-page.css';
+import '../../../../assets/list-page.css';
 
 const FormItem = Form.Item;
 const { Text } = Typography;

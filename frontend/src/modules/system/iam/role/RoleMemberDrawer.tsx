@@ -28,7 +28,7 @@ import {
   type RoleRow,
 } from './api';
 import { translateRoleName } from './display';
-import '../../components/shared/list-page.css';
+import '../../../../assets/list-page.css';
 
 interface RoleMemberDrawerProps {
   role: RoleRow | null;

@@ -35,7 +35,7 @@ import {
   withTableColumnPriority,
 } from '../../../../components';
 import { translateRoleName } from '../role/display';
-import '../../components/shared/list-page.css';
+import '../../../../assets/list-page.css';
 
 type TranslateFn = ReturnType<typeof useTranslation>['t'];
 

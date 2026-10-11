@@ -230,3 +230,8 @@ export function downloadUserImportTemplate() {
 export function importUsers(file: File) {
   return uploadImportFile('/system/user/import', file);
 }
+
+// Public component contract (REPOSITORY_LAYOUT §8.2): system subdomains may reuse
+// this renderer across subdomain boundaries, but only through this module — never by
+// reaching into the subdomain's component files directly.
+export { default as UserDetailContent } from './UserDetailContent';

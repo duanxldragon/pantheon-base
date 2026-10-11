@@ -41,7 +41,7 @@ import {
 import { getSettingGroup, type SettingGroup } from '../../../system/config/setting/api';
 import { loadRetentionSetting } from '../../../system/audit/retentionSetting';
 import '../../auth.css';
-import '../../../system/components/shared/list-page.css';
+import '../../../../assets/list-page.css';
 
 const TextArea = Input.TextArea;
 

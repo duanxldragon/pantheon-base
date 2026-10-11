@@ -77,7 +77,7 @@ import {
   TableBatchActionBar,
   useGovernanceRail,
 } from '../../../../components';
-import '../../components/shared/list-page.css';
+import '../../../../assets/list-page.css';
 
 const FormItem = Form.Item;
 

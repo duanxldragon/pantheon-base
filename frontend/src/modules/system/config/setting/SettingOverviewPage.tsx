@@ -14,7 +14,7 @@ import { usePermission } from '../../../../hooks/usePermission';
 import { resolveSettingGroupMeta, settingGroups, type SettingGroupKey } from './settingGroups';
 import SettingGroupWorkspace from './SettingGroupWorkspace';
 import { useSettingCatalog } from './useSettingCatalog';
-import '../../components/shared/list-page.css';
+import '../../../../assets/list-page.css';
 
 const SettingOverviewPage: React.FC = () => {
   const { t } = useTranslation();

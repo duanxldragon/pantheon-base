@@ -70,7 +70,7 @@ import {
   isRegisteredComponentKey,
   listRegisteredComponentKeys,
 } from '../../../../core/router/componentRegistry';
-import '../../components/shared/list-page.css';
+import '../../../../assets/list-page.css';
 
 const FormItem = Form.Item;
 const registeredComponentKeys = listRegisteredComponentKeys();
