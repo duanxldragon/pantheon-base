@@ -1,0 +1,73 @@
+{
+  "taskId": "2026-10-11-dependabot-sprintf-js-dos",
+  "repo": "pantheon-base",
+  "executedAt": "2026-10-11T08:30:00+08:00",
+  "agent": {
+    "tool": "other",
+    "adapter": "software-workshop-agent"
+  },
+  "commands": [
+    {
+      "command": "gh api repos/duanxldragon/pantheon-base/dependabot/alerts?state=open",
+      "cwd": ".",
+      "status": "passed",
+      "details": "1 open Dependabot alert: #43 sprintf-js (npm, dev scope, frontend/package-lock.json), severity medium, GHSA-hp3w-g68c-fv3c / CVE-2026-97058, vulnerable range <= 1.1.3, first_patched_version = null. Code scanning and secret scanning alerts are both 0."
+    },
+    {
+      "command": "npm ls sprintf-js --depth=20 (before)",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "Single path only: nyc@18.0.0 -> @istanbuljs/load-nyc-config@1.1.0 -> js-yaml@3.15.2 -> argparse@1.0.10 -> sprintf-js@1.0.3. vite-plugin-istanbul@9.0.1 dedupes onto the same load-nyc-config."
+    },
+    {
+      "command": "grep -n \"js-yaml\\|safeLoad\" node_modules/@istanbuljs/load-nyc-config/index.js",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "index.js:80 uses require('js-yaml').load(...) for .yml/.yaml config files; load() still exists in js-yaml v5, so the override is API-compatible."
+    },
+    {
+      "command": "node -e \"JSON.parse(require('fs').readFileSync('frontend/package-lock.json','utf8'))\" + surgical deletion of 4 package entries",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Removed node_modules/@istanbuljs/load-nyc-config/node_modules/js-yaml, node_modules/@istanbuljs/load-nyc-config/node_modules/argparse, node_modules/sprintf-js, node_modules/esprima. Diff is exactly 45 deleted lines with zero version drift."
+    },
+    {
+      "command": "npm ci --dry-run",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "Lockfile accepted as in sync with package.json; planned changes are exactly 'remove js-yaml 3.15.2, argparse 1.0.10, sprintf-js 1.0.3, esprima 4.0.1'."
+    },
+    {
+      "command": "npm ls sprintf-js --depth=20 (after)",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "Tree is empty; node_modules/sprintf-js and node_modules/esprima no longer exist on disk."
+    },
+    {
+      "command": "node .tmp-verify-nyc.cjs (load-nyc-config YAML parse through hoisted js-yaml)",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "js-yaml resolved from load-nyc-config is frontend/node_modules/js-yaml/dist/js-yaml.cjs.js (v5.4.2). Parsing a .nycrc.yml produced reporter=lcov,text and checkCoverage=true. RESULT: PASS. Temporary script deleted afterwards."
+    },
+    {
+      "command": "npm run lint && npm run type-check",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "eslint and tsc -b both clean after the dependency change; no source files were modified."
+    }
+  ],
+  "browserEvidence": [],
+  "runtimeSensitive": false,
+  "runtimeGap": "The Dependabot alert closes only after the change lands on the default branch; the hosted API state before that point is recorded above.",
+  "knownGaps": [
+    "A full lockfile re-resolve was deliberately avoided: it floated 104 unrelated package versions, so the fix is a surgical lockfile edit validated with npm ci --dry-run.",
+    "sprintf-js 1.1.3 is the latest release and is still inside the advisory range, so no upstream patched version exists to pin to."
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-11-dependabot-sprintf-js-dos/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-11-dependabot-sprintf-js-dos/",
+    "reviewFile": ".harness/evidence/2026-10-11-dependabot-sprintf-js-dos/review.md",
+    "changeRef": "none",
+    "planRefs": []
+  }
+}

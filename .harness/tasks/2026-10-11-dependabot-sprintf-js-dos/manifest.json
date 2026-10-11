@@ -1,0 +1,63 @@
+{
+  "taskId": "2026-10-11-dependabot-sprintf-js-dos",
+  "title": "Remediate Dependabot sprintf-js DoS alert via js-yaml override",
+  "goal": "Remove the vulnerable transitive npm dependency sprintf-js@1.0.3 (GHSA-hp3w-g68c-fv3c / CVE-2026-97058, denial of service through unbounded precision specifiers) from the frontend dependency graph so Dependabot alert #43 closes without upgrading unrelated packages.",
+  "primaryLayer": "platform",
+  "status": "completed",
+  "priority": "P1",
+  "type": "security-remediation",
+  "estimatedComplexity": "small",
+  "findings": [
+    "GHSA-hp3w-g68c-fv3c",
+    "CVE-2026-97058",
+    "Dependabot alert #43"
+  ],
+  "scope": {
+    "in": [
+      "frontend/package.json",
+      "frontend/package-lock.json",
+      ".harness/tasks/2026-10-11-dependabot-sprintf-js-dos/",
+      ".harness/evidence/2026-10-11-dependabot-sprintf-js-dos/"
+    ],
+    "out": [
+      "Removing nyc or vite-plugin-istanbul (both remain in use for coverage)",
+      "Backend Go module graph (the advisory is npm-only)",
+      "Dismissing the alert without removing the vulnerable dependency",
+      "Upgrading unrelated npm packages that a full lockfile re-resolve would have floated"
+    ]
+  },
+  "acceptanceCriteria": [
+    "npm ls sprintf-js reports an empty tree for the frontend workspace.",
+    "frontend/package-lock.json no longer contains a sprintf-js, nested argparse@1 or esprima entry.",
+    "npm ci --dry-run accepts the lockfile as in sync with package.json and only removes the four orphaned packages.",
+    "@istanbuljs/load-nyc-config still resolves js-yaml and parses a YAML config through the hoisted js-yaml v5.",
+    "GitHub Dependabot alert #43 transitions out of the open state once main carries the change."
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "ci-workflow",
+    "ownerLayer": "consumer-repository"
+  },
+  "verificationPlan": {
+    "commands": [
+      "gh api repos/duanxldragon/pantheon-base/dependabot/alerts?state=open",
+      "cd frontend && npm ls sprintf-js --depth=20",
+      "cd frontend && npm ci --dry-run",
+      "cd frontend && node -e \"require('@istanbuljs/load-nyc-config')\""
+    ],
+    "runtimeEvidence": [
+      "Before/after Dependabot alert snapshot for alert #43",
+      "Before/after npm ls sprintf-js output",
+      "load-nyc-config YAML parse result through the hoisted js-yaml v5"
+    ]
+  },
+  "runtimeSensitive": false,
+  "linkage": {
+    "evidenceDir": ".harness/evidence/2026-10-11-dependabot-sprintf-js-dos/",
+    "summaryFile": ".harness/evidence/2026-10-11-dependabot-sprintf-js-dos/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-11-dependabot-sprintf-js-dos/review.md",
+    "changeRef": "none",
+    "planRefs": []
+  }
+}
