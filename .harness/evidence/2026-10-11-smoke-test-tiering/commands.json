@@ -1,0 +1,124 @@
+{
+  "taskId": "2026-10-11-smoke-test-tiering",
+  "repo": "pantheon-base",
+  "executedAt": "2026-10-11T18:20:00+08:00",
+  "agent": {
+    "tool": "other",
+    "adapter": "software-workshop-agent"
+  },
+  "commands": [
+    {
+      "command": "find frontend/tests -name '*.spec.ts' | wc -l && grep -cE \"^test\\('\" frontend/tests/smoke/system/system-pages.spec.ts",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Baseline shape: 28 smoke specs; the single file frontend/tests/smoke/system/system-pages.spec.ts held 3709 lines and 59 literal top-level test() declarations. Expanding its two data-driven loops (systemPages 14 entries, workspacePages 4 entries) and the registerSystemWorkspaceTaskDepthSmokeTests registrar (4 tests) gives 81 runtime tests in one file."
+    },
+    {
+      "command": "grep -n 'test:smoke' .github/workflows/quality.yml && sed -n '596,604p' .github/workflows/quality.yml",
+      "cwd": ".",
+      "status": "passed",
+      "details": "The PR-blocking smoke job ran `npm run test:smoke:platform:contracts && npm run test:smoke:system:pages`. So every pull request executed 2 contract specs plus the whole 81-test monolith regardless of which module it touched. Confirmed the absence of any intermediate tier."
+    },
+    {
+      "command": "ls frontend/src/modules/system/ && ls backend/modules/system/",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Both sides already publish the same module taxonomy: audit, config, i18n, iam, org, profile. The split reuses that taxonomy instead of inventing one, so the spec file names, the module selection and the source tree all use the same six words."
+    },
+    {
+      "command": "node .tmp/split-system-pages.mjs (dry run, then --write)",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Deterministic splitter. Boundaries detected: imports 1-25, helper body 26-870 (845 lines), beforeEach at 872, registrar at 876, loops at 882 and 900, 59 test blocks from 912. Distribution: config 23, audit 11, iam 9, platform 8, i18n 5, org 3, plus routes 18 (the two loops) and registrar 4 = 81. Emitted 7 module specs plus the shared helpers module and removed the monolith."
+    },
+    {
+      "command": "node .tmp/verify-split.mjs",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Equivalence proof: 59/59 original test blocks byte-identical and present exactly once (missing=0, extra=0); both loops preserved; registrar call preserved; beforeEach present in all 7 specs; 845/845 helper-region lines preserved in the barrel (the 67 declaration lines differ only by an added `export ` prefix); all 27 original import bindings still resolvable."
+    },
+    {
+      "command": "cd frontend && npx tsc -p tsconfig.spec-check.json --noEmit  (BEFORE: monolith restored)",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "Baseline for the type-check diff. frontend/tests is covered by neither tsconfig.app.json (include: ['src']) nor the CI eslint step (`eslint src --max-warnings 0`), so a temporary tsconfig including tests was used to make the split statically verifiable. Baseline: 69 errors, all pre-existing (34 in the monolith plus 35 elsewhere)."
+    },
+    {
+      "command": "cd frontend && npx tsc -p tsconfig.spec-check.json --noEmit  (AFTER: split applied)",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "69 errors after the split, and the normalised error-message multiset is IDENTICAL (0 new, 0 gone). The 34 errors that used to be attributed to system-pages.spec.ts are now distributed across the new files with the same messages. This is the strongest available local proof that no import was dropped: a missing import would appear here as TS2304 'Cannot find name'. Two such errors were in fact caught this way during the work (apiBaseUrl used inside a template literal, and formItem used in the registrar call block) and fixed before this final run."
+    },
+    {
+      "command": "cd frontend && npx eslint tests --max-warnings 0",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "Exit 0, no output. This is the gate that catches unused imports produced by the generated per-spec import lists (eslint is not run over tests in CI, so it was run explicitly). One false positive was caught and fixed here: `path` matched as an object key in a data table and was being imported from the barrel, so Node builtins are now never re-exported."
+    },
+    {
+      "command": "cd frontend && npm run type-check && npm run lint",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "tsc -b exit 0; eslint . exit 0."
+    },
+    {
+      "command": "cd frontend && npm run prebuild",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "All 13 pre-build contract gates pass. Two of them pinned the old file and were updated as part of this change: check:smoke-coverage-contract (now '34 smoke specs and 20 script entries', was 28 and 14) and check:system-page-admission (16 entries; its requiredSmokeAssertions metadata pointed at tests/smoke/system/system-pages.spec.ts and now points at system-config.spec.ts, which is the file that actually contains those tokens). check:import-path-case passes for 248 source files."
+    },
+    {
+      "command": "cd frontend && npm run test:smoke:l0",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "The new L0 tier (check:smoke-coverage-contract + check:smoke-web-base + check:system-page-admission) exits 0. It validates the whole smoke wiring — every spec is reachable from a script and mapped in the README, and the admission tokens still exist — in seconds and without a browser or server."
+    },
+    {
+      "command": "node --test tests/scripts/resolve-smoke-modules.test.mjs",
+      "cwd": ".",
+      "status": "passed",
+      "details": "13 tests / 13 pass. Covers: single-module backend and frontend paths; module spec paths; role-authorization.spec.ts -> iam; multi-module de-duplication and sorting; escalation to all for shared frontend core, shared smoke scaffolding, non-system backend and unknown paths (e.g. .github/workflows/**); docs/governance-only -> empty; docs alongside a module -> the module; windows separators and ./ prefixes; empty input."
+    },
+    {
+      "command": "node scripts/resolve-smoke-modules.mjs frontend/src/modules/system/iam/api/user.ts",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Dry run: 'smoke modules : test:smoke:module:iam'. And `node scripts/resolve-smoke-modules.mjs frontend/src/core/api/client.ts` -> 'test:smoke:module:all'. The safe default is verified end to end."
+    },
+    {
+      "command": "node -e \"js-yaml.load(.github/workflows/quality.yml)\"",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Workflow parses. Job graph: change-scope, docs-governance, frontend-contract, backend-tests, go-lint, duplication, smoke-sanity, pr-smoke-modules, pr-smoke-core, quality-gates. quality-gates needs now includes pr-smoke-modules, and change-scope exposes smoke_modules from the resolver step."
+    },
+    {
+      "command": "node scripts/check-duplication.mjs",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Result: PASS. Note the new pr-smoke-modules job intentionally repeats the mysql/redis service block used by smoke-sanity; the gate already tolerated the same duplication across smoke-core.yml and smoke-full.yml before this change."
+    },
+    {
+      "command": "node scripts/harness/check-adoption.mjs --root . --strict && node scripts/harness/{check-doc-links,check-doc-inventory,check-sync-drift,check-method-health,check-template-health}.mjs --root . --strict && node scripts/harness/check-task-packet.mjs --root .",
+      "cwd": ".",
+      "status": "passed",
+      "details": "check-adoption reports 0 findings once this task packet exists. The gate first flagged frontend/config/system-page-admission.json as 'implementation change detected without a matching task manifest change', which is exactly why this packet was created. The other harness gates report 0 findings (docs links, docs inventory, sync drift, method health, template health) and check-task-packet exits 0."
+    },
+    {
+      "command": "npx playwright test tests/smoke/system/system-*.spec.ts (attempted)",
+      "cwd": "frontend",
+      "status": "failed",
+      "details": "Could not be executed on this host. Node cannot spawn child processes here: spawnSync('git', ['--version']) fails with EBUSY even with the tool sandbox fully disabled, so the runner cannot start the Vite server or the browser. This is a host-level restriction, not a property of the change. The executed proof is CI: the blocking Quality Gates jobs run npm run test:smoke:l1 and npm run test:smoke:module:<touched> against a real backend."
+    }
+  ],
+  "browserEvidence": [],
+  "runtimeSensitive": true,
+  "runtimeGap": "Playwright cannot run on this host (spawnSync EBUSY), so the split specs are not executed locally. The local proof is byte-level equivalence against the pre-split file plus eslint/tsc/prebuild; the executed proof is the CI Quality Gates run of the L1 tier and the path-selected module suites.",
+  "knownGaps": [
+    "frontend/tests/** is covered by neither tsc (tsconfig.app.json includes only src) nor the CI eslint step (eslint src --max-warnings 0). A temporary tsconfig was used to make this refactor statically verifiable and then deleted. Adding tests to CI's static coverage is the obvious follow-up, but it would surface 69 pre-existing type errors and 0 lint errors, which is a separate remediation and was deliberately not bundled here.",
+    "The new pr-smoke-modules job duplicates the mysql/redis service block already used by smoke-sanity, pr-smoke-core, smoke-core.yml and smoke-full.yml. The duplication gate passes, and factoring the service block out would be a larger workflow refactor than this change should carry.",
+    "Module selection is only as good as the path map. A change to shared frontend code (frontend/src/core/**, frontend/src/api/**, the router, i18n resources) escalates to every module by design, so shared-core PRs are not made faster — only correctly scoped. That is the intended trade-off and it is asserted by a unit test.",
+    "smoke-core remains report-only and is not part of the L1 tier, per tests/smoke-core/README.md ('转 blocking 需在连续多轮全绿后按 harness 规则切换'). L1 is therefore platform:contracts + system:routes, not the smoke-core suite.",
+    "The monolith's 34 pre-existing TypeScript errors are now spread across the new specs. They were not introduced or fixed by this change (the error multiset is identical), but they are easier to see now.",
+    "The full root script suite (node --test tests/scripts/*.test.mjs) still reports failures on this host because the sandbox refuses to spawn child processes (spawnSync EBUSY). tests/scripts/resolve-smoke-modules.test.mjs does not spawn and passes 13/13 locally; CI runs the whole suite in an environment that can spawn."
+  ]
+}

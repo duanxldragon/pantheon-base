@@ -1,0 +1,93 @@
+{
+  "taskId": "2026-10-11-smoke-test-tiering",
+  "title": "Tier and module-split the smoke suite so a change only runs the tests it can affect",
+  "goal": "Restructure the smoke suite so that not every change pays for the full browser regression: split the 3709-line system-pages.spec.ts monolith into per-business-module specs, introduce explicit L0/L1/L2/L3 tiers, and drive module selection from the changed paths so the PR gate runs the critical path plus only the touched modules. No assertion, route, permission string or fixture may change.",
+  "primaryLayer": "platform",
+  "status": "completed",
+  "priority": "P2",
+  "type": "refactor",
+  "estimatedComplexity": "high",
+  "findings": [
+    "The PR-blocking smoke job (quality.yml `smoke-sanity`) ran `npm run test:smoke:platform:contracts && npm run test:smoke:system:pages`, i.e. 2 contract specs plus one 3709-line / 81-test monolith, on every pull request regardless of what changed.",
+    "A single file carried 59 of the 81 tests, spanning six unrelated business modules (iam, config, i18n, audit, org, platform). Any change anywhere in the system domain re-ran all six.",
+    "There was no tier between 'static contract' and 'full browser regression': the only fast signal was the pre-build contract gates, and the only browser signal was the monolith.",
+    "The monolith also hid a verification gap: `frontend/tests/**` is covered by neither `tsc` (tsconfig.app.json includes only `src`) nor the CI eslint step (`eslint src`). The split needed a type-check of its own to be verifiable.",
+    "Module selection must fail safe: a shared-core or wiring change has to escalate to every module, otherwise a split would silently reduce coverage instead of re-focusing it.",
+    "smoke-core is deliberately report-only (README: '转 blocking 需在连续多轮全绿后按 harness 规则切换'), so the new L1 tier must not absorb it."
+  ],
+  "scope": {
+    "in": [
+      "frontend/tests/smoke/system/system-pages.spec.ts (split into per-module specs; file removed)",
+      "frontend/tests/smoke/system/system-pages-helpers.ts (new shared non-spec scaffolding module)",
+      "frontend/tests/smoke/system/system-{routes,iam,config,i18n,audit,org,platform}.spec.ts (new)",
+      "frontend/package.json (per-module scripts, L0/L1/L2 tiers, module:<name> entries)",
+      "frontend/tests/smoke/README.md (script entry map, coverage matrix, test tier documentation)",
+      "frontend/config/system-page-admission.json (repoint requiredSmokeAssertions at the new spec file)",
+      "scripts/resolve-smoke-modules.mjs (new path -> module resolver)",
+      "tests/scripts/resolve-smoke-modules.test.mjs (new unit test)",
+      ".github/workflows/quality.yml (change-scope exposes the module list; smoke-sanity becomes L1; new blocking pr-smoke-modules job)",
+      ".github/pull_request_template.md (smoke checklist aligned to the tiers)",
+      ".harness/tasks/2026-10-11-smoke-test-tiering/",
+      ".harness/evidence/2026-10-11-smoke-test-tiering/"
+    ],
+    "out": [
+      "Any change to a test assertion, expectation, route string, permission string, fixture value or cleanup step",
+      "Any production source change: no frontend/src or backend/ source file is modified",
+      "Making smoke-core blocking: it stays report-only per tests/smoke-core/README.md until it has been green for several consecutive runs",
+      "Splitting the five platform/system-secondary-route-*.spec.ts files or backoffice-ui-visual.spec.ts",
+      "Adding a type-check of tests/ to CI: doing so would surface 69 pre-existing errors unrelated to this change (recorded as a follow-up)"
+    ]
+  },
+  "acceptanceCriteria": [
+    "The split is provably behaviour-preserving: every one of the 59 top-level test blocks is byte-identical to its pre-split form and the multiset of blocks is unchanged.",
+    "All 81 runtime tests survive: 59 literal blocks plus the 14-entry systemPages loop, the 4-entry workspacePages loop and the 4 registrar tests.",
+    "The shared helper region is preserved line-for-line (845 lines), with only an `export` prefix added to declaration lines.",
+    "The split introduces no new TypeScript error and removes none: the before/after error-message multiset is identical.",
+    "eslint passes on tests/ with zero warnings (no unused imports from the generated import lists).",
+    "All 13 pre-build contract gates pass, including check:smoke-coverage-contract (34 smoke specs, 20 script entries) and check:system-page-admission (16 entries).",
+    "scripts/resolve-smoke-modules.mjs resolves unambiguous module paths to that module, and escalates every shared/unknown path to all modules; its unit test passes.",
+    "The new pr-smoke-modules job is wired into the Quality Gates aggregator so it blocks when it runs, and is skipped (not failed) when no module is touched."
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "ci-workflow",
+    "ownerLayer": "consumer-repository"
+  },
+  "verificationPlan": {
+    "commands": [
+      "node .tmp/split-system-pages.mjs --write (deterministic splitter)",
+      "node .tmp/verify-split.mjs (block / helper / import equivalence proof)",
+      "cd frontend && npx tsc -p tsconfig.spec-check.json --noEmit (before/after error-set diff)",
+      "cd frontend && npx eslint tests --max-warnings 0",
+      "cd frontend && npm run type-check && npm run lint && npm run prebuild",
+      "cd frontend && npm run test:smoke:l0",
+      "node --test tests/scripts/resolve-smoke-modules.test.mjs",
+      "node scripts/check-duplication.mjs",
+      "node scripts/harness/check-adoption.mjs --root . --strict"
+    ],
+    "runtimeEvidence": [
+      "byte-identical test-block proof (59/59)",
+      "helper-region line preservation proof (845/845)",
+      "before/after TypeScript error multiset diff (69 = 69, 0 new, 0 gone)",
+      "resolver unit test output (13/13)",
+      "prebuild / lint / type-check / L0 output",
+      "parsed quality.yml job graph showing the new job and the aggregator wiring"
+    ]
+  },
+  "runtimeSensitive": true,
+  "runtimeGap": "Playwright cannot execute on this host (Node cannot spawn child processes: spawnSync fails with EBUSY), so the split specs are not run locally. The change is verified locally by byte-level equivalence against the pre-split file plus eslint/tsc/prebuild; the executed proof comes from CI, where the blocking Quality Gates jobs run the L1 and module suites against a real backend.",
+  "linkage": {
+    "assessment": "docs/harness/tasks/2026-10-11-smoke-test-tiering.task.md",
+    "evidenceDir": ".harness/evidence/2026-10-11-smoke-test-tiering/",
+    "summaryFile": ".harness/evidence/2026-10-11-smoke-test-tiering/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-11-smoke-test-tiering/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "frontend/tests/smoke/README.md",
+      "frontend/tests/smoke-core/README.md",
+      "docs/designs/QUALITY_AND_SECURITY_STRATEGY.md",
+      ".github/workflows/quality.yml"
+    ]
+  }
+}
