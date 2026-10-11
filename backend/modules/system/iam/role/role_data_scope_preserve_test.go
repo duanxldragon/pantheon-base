@@ -1,9 +1,9 @@
-package iam
+package role
 
 import (
 	"testing"
 
-	permission "github.com/duanxldragon/pantheon-base/backend/modules/system/iam/permission"
+	"github.com/duanxldragon/pantheon-base/backend/modules/system/iam/permission"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/common"
 )
 

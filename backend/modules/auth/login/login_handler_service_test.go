@@ -9,9 +9,9 @@ import (
 	"testing"
 	"time"
 
-	settingmod "github.com/duanxldragon/pantheon-base/backend/modules/system/config/setting"
-	rolemod "github.com/duanxldragon/pantheon-base/backend/modules/system/iam/role"
-	user "github.com/duanxldragon/pantheon-base/backend/modules/system/iam/user"
+	"github.com/duanxldragon/pantheon-base/backend/modules/system/config/setting"
+	"github.com/duanxldragon/pantheon-base/backend/modules/system/iam/role"
+	"github.com/duanxldragon/pantheon-base/backend/modules/system/iam/user"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/authtoken"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/common"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/testmysql"
@@ -27,9 +27,9 @@ func setupHandlerTestDB(t *testing.T) *gorm.DB {
 	_ = db.AutoMigrate(
 		&user.SystemUser{},
 		&user.SystemUserRole{},
-		&rolemod.SystemRole{},
-		&rolemod.SystemRolePermission{},
-		&settingmod.SystemSetting{},
+		&role.SystemRole{},
+		&role.SystemRolePermission{},
+		&setting.SystemSetting{},
 		&SystemUserSession{},
 		&SystemLogLogin{},
 		&SystemLoginThrottle{},

@@ -1,5 +1,5 @@
 //nolint:goconst,gosec // repeated assertion literals and fixture file operations in this test file are intentional.
-package system
+package i18n
 
 import (
 	"errors"
