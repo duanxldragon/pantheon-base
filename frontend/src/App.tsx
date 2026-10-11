@@ -19,7 +19,7 @@ import {
   handleVerifySuccess,
   handleVerifyCancel,
 } from './components/feedback/secondaryVerifyController';
-import { findFirstNavigableMenuPath } from './modules/system/menu/api';
+import { findFirstNavigableMenuPath } from './modules/system/iam/menu/api';
 import { useMenuStore } from './store/useMenuStore';
 import { checkPermission } from './core/permissions/checkPermission';
 import { resolveDefaultAuthedPath } from './core/router/defaultPath';

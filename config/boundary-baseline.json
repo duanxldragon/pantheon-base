@@ -6,7 +6,7 @@
   "entries": [
     {
       "file": "frontend/src/modules/platform/widgets.tsx",
-      "importPath": "../system/menu/api",
+      "importPath": "../system/iam/menu/api",
       "layer": "platform",
       "reviewBy": "2026-12-31",
       "reason": "Type-only import of the menu contract type MenuNode. Ratchet: promote MenuNode to a shared contract type (frontend/src/api) so the platform module stops importing the system/menu module path."

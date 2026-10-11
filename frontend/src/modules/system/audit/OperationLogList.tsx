@@ -34,7 +34,7 @@ import {
   type OperationLogRow,
   type OperationLogQuery,
 } from './api';
-import { getSettingGroup, type SettingGroup } from '../setting/api';
+import { getSettingGroup, type SettingGroup } from '../config/setting/api';
 import { loadRetentionSetting } from './retentionSetting';
 import {
   AppModal,
