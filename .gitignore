@@ -25,6 +25,7 @@ backend-*.log
 # Local caches and temp files
 .tmp/
 backend/.tmp/
+backend/.tmp-probe/
 frontend/.tmp/
 .tmp-trace-user/
 .worktrees/

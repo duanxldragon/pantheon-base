@@ -47,7 +47,7 @@ import {
   TABLE_ACTION_COLUMN_WIDTH,
 } from '../../../../components';
 import SessionDetailModal from '../../session/components/SessionDetailModal';
-import '../../../system/components/shared/list-page.css';
+import '../../../../assets/list-page.css';
 import '../../auth.css';
 
 const FormItem = Form.Item;

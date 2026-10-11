@@ -19,12 +19,12 @@ import {
   handleVerifySuccess,
   handleVerifyCancel,
 } from './components/feedback/secondaryVerifyController';
-import { findFirstNavigableMenuPath } from './modules/system/menu/api';
+import { findFirstNavigableMenuPath } from './modules/system/iam/menu/api';
 import { useMenuStore } from './store/useMenuStore';
-import { checkPermission } from './core/permissions/checkPermission';
+import { checkPermission } from './core/permission/checkPermission';
 import { resolveDefaultAuthedPath } from './core/router/defaultPath';
 
-const BaseLayout = lazy(() => import('./core/layout'));
+const BaseLayout = lazy(() => import('./core/layout/AppLayout'));
 const LoginPage = lazy(() =>
   import('./modules/auth/login/components/Login').then((module) => ({
     default: module.LoginPageComponent,

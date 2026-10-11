@@ -28,7 +28,7 @@ import {
 import { usePermission } from '../../../../hooks/usePermission';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { auditPendingActivations, getModuleStatus } from '../../../lowcode/dynamicmodule/api';
+import { auditPendingActivations, getModuleStatus } from '../../dynamicmodule/api';
 
 import {
   createGeneratorDatasource,
@@ -51,7 +51,7 @@ import { FieldEditor } from '../../components/FieldEditor';
 import { CodePreview } from '../../components/CodePreview';
 import DatasourceManagerModal from './components/DatasourceManagerModal';
 import MenuPreviewTree from './components/MenuPreviewTree';
-import '../../../system/components/shared/list-page.css';
+import '../../../../assets/list-page.css';
 import './ModuleWizard.css';
 import {
   buildDashboardQuickActionDescriptionKey,

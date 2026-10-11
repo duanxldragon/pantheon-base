@@ -27,7 +27,7 @@ beforeAll(() => {
       }) as MediaQueryList);
 });
 
-vi.mock('../../../../../src/modules/system/user/api', () => ({
+vi.mock('../../../../../src/modules/system/iam/user/api', () => ({
   getProfile: (...args: unknown[]) => getProfileMock(...args),
   updateProfile: vi.fn(),
 }));

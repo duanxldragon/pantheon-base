@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	authsessiondomain "github.com/duanxldragon/pantheon-base/backend/modules/auth/session"
+	"github.com/duanxldragon/pantheon-base/backend/modules/auth/session"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/authtoken"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/common"
 	commonhttp "github.com/duanxldragon/pantheon-base/backend/pkg/common/http"
@@ -115,7 +115,7 @@ func (h *AuthHandler) LoginHandler(c *gin.Context) {
 
 	ip := c.ClientIP()
 	userAgent := c.GetHeader(headerUserAgent)
-	clientInfo := authsessiondomain.ParseClientInfo(userAgent)
+	clientInfo := session.ParseClientInfo(userAgent)
 
 	sourceKey := buildLoginSourceKey(ip)
 	currentUser, err := service.LoginWithSource(&req, sourceKey)
@@ -203,7 +203,7 @@ func (h *AuthHandler) VerifyMFAHandler(c *gin.Context) {
 
 	ip := c.ClientIP()
 	userAgent := c.GetHeader(headerUserAgent)
-	clientInfo := authsessiondomain.ParseClientInfo(userAgent)
+	clientInfo := session.ParseClientInfo(userAgent)
 	resp, err := service.VerifyMFAChallengeWithContext(c.Request.Context(), &req, ip, userAgent)
 	if err != nil {
 		// Tenant gates (explicit choice rejected at MFA-final session issuance)

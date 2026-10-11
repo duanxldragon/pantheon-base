@@ -76,7 +76,7 @@ SonarCloud 对上述 `main` SHA 的公开分析为 **Quality Gate OK**，未解�
 ## 5. 非阻塞优化与未知项
 
 - **性能静态风险：**首页请求执行多项计数与组织治理快照；租户成员列表无分页/条数上限；审计启动回填一次性读取并逐行更新。参见 [`dashboard_service.go#L71`](../../backend/modules/platform/dashboard_service.go#L71)、[`tenant_service.go#L243`](../../backend/modules/system/iam/tenant/tenant_service.go#L243)、[`audit_service.go#L517`](../../backend/modules/system/audit/audit_service.go#L517)。未测得普通企业负载的 P95、连接池和大库启动耗时，先测量再决定缓存或重构。
-- **UI/可访问性：**手填头像地址只更新预览，个人中心初次加载失败后缺持久错误态；筛选无结果空态和页签键盘行为可改进。参见 [`UserFormModal.tsx#L141`](../../frontend/src/modules/system/user/UserFormModal.tsx#L141)、[`ProfileCenter.tsx#L46`](../../frontend/src/modules/system/profile/ProfileCenter.tsx#L46)、[`LayoutOpenedTabs.tsx#L81`](../../frontend/src/core/layout/LayoutOpenedTabs.tsx#L81)。
+- **UI/可访问性：**手填头像地址只更新预览，个人中心初次加载失败后缺持久错误态；筛选无结果空态和页签键盘行为可改进。参见 [`UserFormModal.tsx#L141`](../../frontend/src/modules/system/iam/user/UserFormModal.tsx#L141)、[`ProfileCenter.tsx#L46`](../../frontend/src/modules/system/profile/ProfileCenter.tsx#L46)、[`LayoutOpenedTabs.tsx#L81`](../../frontend/src/core/layout/LayoutOpenedTabs.tsx#L81)。
 - **维护性：**角色与权限模块各自映射同一数据范围表；动态模块直接实例化系统 i18n 服务；部分视觉与权限规范仍有历史说法。作为后续小范围治理，不构成本轮新增功能要求。
 - **未证明：**当前提交的桌面/手机渲染及错误态、真实 MySQL 规模性能、多租户攻击复现、依赖漏洞状态、文件资产管理完整性，以及“无任何废弃代码/命名问题”。这些未知项不能写成已通过。
 

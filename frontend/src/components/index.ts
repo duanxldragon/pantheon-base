@@ -45,12 +45,12 @@ export { default as TableBatchActionBar } from './patterns/table/TableBatchActio
 export {
   TABLE_ACTION_COLUMN_WIDTH,
   type TableActionColumnWidthPreset,
-} from './patterns/table/TableAction';
-export { TABLE_COLUMN_WIDTH, type TableColumnWidthPreset } from './patterns/table/TableColumnWidth';
+} from './patterns/table/tableAction';
+export { TABLE_COLUMN_WIDTH, type TableColumnWidthPreset } from './patterns/table/tableColumnWidth';
 export {
   withTableColumnPriority,
   type TableColumnPriority,
-} from './patterns/table/TableColumnPriority';
+} from './patterns/table/tableColumnPriority';
 export {
   getPaginationCurrentPage,
   getPaginationPageSize,
@@ -90,7 +90,7 @@ export {
   showAppModalConfirm,
   showAppModalSuccess,
   showAppModalError,
-} from './patterns/modals/AppModalActions';
+} from './patterns/modals/appModalActions';
 export { default as AppDrawer } from './patterns/modals/AppDrawer';
 export { default as PageSplitLayout } from './patterns/layout/PageSplitLayout';
 export {
@@ -100,7 +100,7 @@ export {
   SideRailNote,
 } from './patterns/rails/SideRail';
 export { StandardRailSummary, StandardRailNotePanel } from './patterns/rails/StandardRail';
-export type { RailSummaryItem, RailSummaryTone } from './patterns/rails/RailSummary';
+export type { RailSummaryItem, RailSummaryTone } from './patterns/rails/railSummary';
 export { default as ImportCsvButton } from './patterns/actions/ImportCsvButton';
 export { default as PageLoading } from './feedback/PageLoading';
 export { default as PageSkeleton } from './feedback/PageSkeleton';
