@@ -91,9 +91,36 @@ remedy, so the entries were deleted rather than re-dated. The one remaining entr
 5. **Docs and generated artifacts:** frontmatter (315 docs), doc links (0 findings), harness
    inventory/sync/method, generated artifacts (11), generated modules, UI quality gate, failure
    registry, visual evidence and task-packet checks all pass.
-6. **Runtime contract by construction:** `componentKey` is a literal string coupling
-   `check:menu-contract` (16 menus / 20 routes / 89 permissions / 20 component keys) across DB, Go
-   registry and `componentRegistry.ts`. No route path, module metadata or API prefix changed.
+6. **Runtime contract, verified mechanically rather than asserted:** the 20 `componentKey` registry
+   keys, the 116 permission-code literals under `backend/modules/system` and the 60 API route path
+   literals across `backend/` and `frontend/` are each **byte-identical between `main` and `HEAD`**.
+   Only physical paths and import specifiers moved. `check:menu-contract` (16 menus / 20 routes /
+   89 permissions / 20 component keys) passes in the pre-build gate chain.
+
+## The defect CI caught that no local check could
+
+The first CI run failed `Frontend Contract`, `Frontend Unit Tests` and `Quality Gates`. The cause
+was real and it was introduced by this change: **five case-only renames were never recorded by
+git.**
+
+The naming fix renamed five non-component `.ts` modules in place from PascalCase to camelCase
+(`TableAction.ts` → `tableAction.ts`, and the same for `TableColumnWidth`, `TableColumnPriority`,
+`RailSummary`, `AppModalActions`). Windows and macOS filesystems are case-insensitive, so git did
+not see a rename at all — the index kept the **old** casing while the working tree had the new one.
+Every local check therefore passed: `tsc`, `eslint`, `vite build` and `vitest` 163/163 all resolve
+imports through a case-insensitive lookup and find the file either way. On Linux the specifiers no
+longer matched the tracked filenames, so `check:import-path-case` reported 13 problems and five test
+suites died with `Failed to resolve import "./patterns/table/tableAction"`.
+
+Fixed with a two-step move (`git mv Old.ts __tmp__.ts && git mv __tmp__.ts new.ts`), because a
+single-step `git mv` is a no-op on a case-insensitive filesystem. Re-verified with a purpose-built
+index-vs-disk name comparison: `tracked files: 2199, not on disk: 0, case mismatch: 0`, and
+`check:import-path-case` → `passed for 248 source files`.
+
+This is worth recording for two reasons. It is exactly the class of defect the review's
+*correspondence* axis was meant to surface, and it is the strongest possible argument for keeping
+these gates blocking rather than advisory: **the local toolchain was structurally incapable of
+detecting it.**
 
 ## Completion status
 
@@ -101,6 +128,10 @@ completed (pending the branch push, CI run and merge to `main`)
 
 ## Residual risk
 
+- **Case-only renames are a trap on this repository's development platforms.** Five such renames
+  were silently dropped by git and only Linux CI caught them. Any future case-only rename must be
+  performed as a two-step `git mv` and confirmed by comparing the git index against the real
+  on-disk names.
 - **Behaviour change in the boundary gate.** `check-boundaries.mjs --strict` now fails when it
   cannot resolve the repository root, instead of passing quietly. That is the point of the fix, but
   any invocation whose cwd is neither the repository root nor a workspace containing it will now

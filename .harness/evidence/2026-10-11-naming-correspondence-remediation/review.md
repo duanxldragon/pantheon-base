@@ -37,6 +37,18 @@ changed.
   `modules/auth/session/clientInfo.tsx` and `modules/platform/widgets.tsx` are JSX modules that
   declare no component. Rather than renaming them to satisfy a naming rule, the contract encodes a
   mechanical discriminator (`declaresComponent()`), so the rule matches reality.
+- **CI caught what the local toolchain structurally could not.** Five in-place case-only renames
+  were never recorded by git, because Windows and macOS resolve filenames case-insensitively — so
+  `tsc`, `eslint`, `vite build` and `vitest` all passed while Linux CI failed three checks
+  (`check:import-path-case`: 13 problems; five test suites: `Failed to resolve import`). The defect
+  was real and was introduced by this change. It is fixed with two-step `git mv`s and re-verified by
+  a git-index-vs-disk name comparison (`case mismatch: 0`). Recorded rather than quietly fixed: it
+  is the clearest demonstration that these gates must stay blocking.
+- **The runtime contract is proven, not claimed.** Rather than asserting "no API/permission/menu
+  change", the change set is verified by diffing literal sets between `main` and `HEAD`: 20
+  `componentKey` registry keys, 116 permission codes and 60 API route paths, all byte-identical.
+  `componentRegistry.ts` shows the point exactly — every key is unchanged while every `import()`
+  target moved.
 - **Completion honesty.** `check:structure`, `check:harness-encoding` and the `tests/scripts`
   suites cannot run on this host (Node cannot spawn child processes here). This is recorded as a
   known gap with the exact substitute used, not presented as a local pass.
@@ -52,5 +64,8 @@ changed.
   paths and module metadata.
 - Assume the baseline was re-dated to hide findings: refuted by the 5 → 1 shrink and by the retired
   entries' own recorded remedy being the change that was made.
+- Assume a rename landed just because the local build is green: refuted — five case-only renames
+  were silently dropped by git on a case-insensitive filesystem and only Linux CI caught them. A
+  green local build is not evidence that a rename was recorded.
 - Do not accept "the check passes" as evidence on this host: the three git-shelling gates are
   explicitly listed as CI-only, with the substitution recorded.

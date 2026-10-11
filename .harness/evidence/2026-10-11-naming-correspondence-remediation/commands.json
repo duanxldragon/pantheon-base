@@ -96,12 +96,31 @@
       "cwd": ".",
       "status": "passed",
       "details": "Task-packet template present and linked; all docs/harness/tasks/*.task.md packets pass."
+    },
+    {
+      "command": "node .tmp/detect-case-drift.mjs (git ls-files vs real on-disk names)",
+      "cwd": ".",
+      "status": "failed",
+      "details": "CI CAUGHT A REAL DEFECT THAT NO LOCAL CHECK COULD SEE. 5 files had been renamed in place with a case-only change (AppModalActions/AppModalActions -> appModalActions, RailSummary -> railSummary, TableAction -> tableAction, TableColumnPriority -> tableColumnPriority, TableColumnWidth -> tableColumnWidth). Windows and macOS filesystems are case-insensitive, so git never noticed the rename: the index kept the OLD casing while the working tree had the new one. Every local check therefore passed (tsc, eslint, vite build, vitest 163/163) because the case-insensitive resolver found the file either way. On Linux CI the import specifiers no longer matched the tracked filenames, so Frontend Contract (check:import-path-case: 13 problems), Frontend Unit Tests (5 suites: 'Failed to resolve import \"./patterns/table/tableAction\"') and Quality Gates all failed. This is precisely the class of defect the review's correspondence axis was meant to surface, and it is the strongest argument for keeping these gates blocking."
+    },
+    {
+      "command": "git mv -f <old>.ts __casefix_tmp__.ts && git mv -f __casefix_tmp__.ts <new>.ts (x5)",
+      "cwd": "frontend/src/components/patterns",
+      "status": "passed",
+      "details": "Recorded the 5 case-only renames as explicit two-step moves, because a single-step `git mv Old.ts new.ts` is a no-op on a case-insensitive filesystem. Re-verified: detect-case-drift reports 'tracked files: 2199, not on disk: 0, case mismatch: 0', and check:import-path-case reports 'import path case guard passed for 248 source files'."
+    },
+    {
+      "command": "git show <ref>:frontend/src/core/router/componentRegistry.ts | grep -oE \"^  '[^']+':\" | sort | diff - (main vs HEAD)",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Mechanical proof that the runtime contract is untouched, rather than an assertion. The 20 componentKey registry keys are byte-identical between main and HEAD — only the import() target paths changed. Same comparison for the permission-code literals under backend/modules/system (116 distinct values, identical) and for the API route path literals across backend/ and frontend/ (60 distinct values, identical). This is the evidence for the runtimeGap claim below."
     }
   ],
   "browserEvidence": [],
   "runtimeSensitive": false,
-  "runtimeGap": "None. The remediation is structural only: no API route, database row, permission code, menu componentKey or runtime behaviour changed. Verified by construction — componentKey is a literal string matched by check:menu-contract (16 menus / 20 routes / 89 permissions / 20 component keys), and route paths, module metadata and API prefixes are untouched.",
+  "runtimeGap": "None. The remediation is structural only: no API route, database row, permission code, menu componentKey or runtime behaviour changed. Verified mechanically, not asserted — the 20 componentKey registry keys, the 116 permission-code literals under backend/modules/system and the 60 API route path literals across backend/ and frontend/ are all byte-identical between main and HEAD; only physical paths and import specifiers moved. check:menu-contract (16 menus / 20 routes / 89 permissions / 20 component keys) passes as part of the pre-build gate chain.",
   "knownGaps": [
+    "Case-only renames are invisible on case-insensitive filesystems. 5 in-place case-only renames (the 5 PascalCase .ts -> camelCase .ts fixes) were not recorded by git: the index kept the old casing while the working tree had the new one, so every local check passed on Windows while Linux CI failed. CI caught it; it is fixed and now re-verified. Any future case-only rename in this repository must be done as a two-step `git mv` and confirmed with a git-index-vs-disk name comparison.",
     "This machine cannot spawn child processes from Node (spawnSync git/node fails with EBUSY), so the three gates that shell out to git — check:structure, check:harness-encoding, and the tests/scripts suites — cannot run locally. check:structure was therefore verified with the same script reading an injected `git ls-files` file list (identical rule code, only the enumeration replaced); check:harness-encoding is unchanged by this task and is CI-only. The two tests/scripts suites run in CI via `npm run test:scripts` (ci.yml) and were verified locally by driving the gate directly against the same fixtures.",
     "check-boundaries.mjs now fails --strict on an unresolvable repository root. This is deliberate (it is the fix for the silent no-op) but it is a behaviour change: any invocation whose cwd is neither the repo root nor a workspace containing the repo will now fail instead of passing quietly.",
     "The auth rule still allows auth to import non-api system modules such as system/audit/retentionSetting. Tightening it to api-only would create 7 new findings and is outside the 12-item scope; recorded here so it is not mistaken for full coverage.",
