@@ -7,7 +7,15 @@ const DEFAULT_THRESHOLD = 3;
 const DEFAULT_MINIMUM_BLOCK_LINES = 21;
 
 const DEFAULT_CONFIG = {
-  includeRoots: ['backend', 'frontend/src', 'frontend/scripts', 'scripts', 'tests', '.github/workflows'],
+  includeRoots: [
+    'backend',
+    'frontend/src',
+    'frontend/scripts',
+    'frontend/tests',
+    'scripts',
+    'tests',
+    '.github/workflows',
+  ],
   supportedExtensions: new Set(['.go', '.ts', '.tsx', '.js', '.mjs', '.cjs', '.yml', '.yaml']),
   excludedDirectoryFragments: [
     '/node_modules/',

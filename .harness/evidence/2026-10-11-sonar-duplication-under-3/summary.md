@@ -12,6 +12,11 @@ So the gated metric was never failing. The 3.16% is the *ungated overall* densit
 objective the 2026-09-01 task packet (`docs/harness/tasks/2026-09-01-sonar-duplication-reduction.task.md`)
 set out to bring below 3.00%, which had since regressed from 1.61% → 3.16%.
 
+The local gate was green at 1.52% while SonarCloud read 3.16% because the two measure different file
+sets: the gate's `includeRoots` covered `frontend/src` but **not** `frontend/tests`, which is exactly
+where most of the SonarCloud duplication sits. That discrepancy is a governance gap in its own right
+and is closed by the ratchet in §3 below.
+
 **Target arithmetic.** `duplicated_lines_density = duplicated_lines / lines`. To reach 3.00% of the
 current 166757 lines the numerator must drop to ≤ 5002, i.e. **remove ≥ 267 duplicated lines**.
 
@@ -61,6 +66,40 @@ Three helpers replace 26 copy-pasted call sites:
 
 Net diff: **319 insertions / 761 deletions across 2 files**.
 
+### 3. `scripts/check-duplication.mjs` — ratchet: close the blind spot
+
+The duplication regressed from 1.61% to 3.16% without the repository's own gate ever going red,
+because the gate did not scan the file set where the growth happened. Recording that as
+"no repeat observed" would be false, and recording it without a control would leave the same
+regression path open, so the gate was widened instead:
+
+```diff
+   includeRoots: [
+     'backend',
+     'frontend/src',
+     'frontend/scripts',
++    'frontend/tests',
+     'scripts',
+     'tests',
+     '.github/workflows',
+   ],
+```
+
+**The threshold was not changed** (still 3.00%) and no exclusion was added — the scan was made
+*wider*, which is the opposite of gaming the metric. Measured before editing, with the gate's own
+`analyzeDuplication()`:
+
+| Scope | Density | Files |
+| --- | --- | --- |
+| Baseline (`frontend/tests` excluded) | 1.52% (2024 / 132732) | 697 |
+| With `frontend/tests` | **1.62%** (2457 / 152062) | 784 |
+| `frontend/tests` in isolation | 2.24% (433 / 19330) | 87 |
+
+So the widened gate passes with 1.38pp of headroom, and the same class of regression is now visible
+locally. `node --test tests/scripts/check-duplication.test.mjs` → 2 pass / 0 fail (both cases pass
+explicit `includeRoots` overrides, so the default change does not affect them — verified, not
+assumed).
+
 ## Verification performed
 
 1. **eslint** on the changed spec: exit 0.
@@ -83,6 +122,10 @@ Net diff: **319 insertions / 761 deletions across 2 files**.
    setup/seed lines, the multiset of non-blank lines is **809 before / 810 after**, the single
    difference being the closing brace of a newly added helper. No assertion, fixture value or
    control-flow line changed.
+7. **Ratchet gate.** `node scripts/check-duplication.mjs` → **1.62% (2457/152070, 784 files), exit 0**
+   against the unchanged 3.00% threshold. `node --test tests/scripts/check-duplication.test.mjs` →
+   2 pass / 0 fail. The widened scope was measured with the gate's own analyser *before* the script
+   was edited, so the headroom is evidenced rather than hoped for.
 
 ## Expected result
 
@@ -90,8 +133,11 @@ Net diff: **319 insertions / 761 deletions across 2 files**.
 267 required. Projected overall density ≈ **2.75%**, with the new-code density staying below its
 existing 1.8%.
 
-The authoritative number comes from the hosted re-analysis after CI; the local
-`check-duplication` gate cannot confirm it because it excludes `frontend/tests`.
+The authoritative number comes from the hosted re-analysis after CI. Note that the local
+`check-duplication` gate still cannot *confirm* the cloud figure — the two normalise lines
+differently and SonarCloud counts a superset of files — but after the ratchet it no longer has a
+structural blind spot over `frontend/tests`, so it can now catch a local regression of the same
+class instead of passing regardless.
 
 ## Residual risk
 
@@ -101,8 +147,13 @@ The authoritative number comes from the hosted re-analysis after CI; the local
   succeeded in 0.237 s earlier in the same session, fails identically, so this is an environment
   regression. The Go suite is therefore verified by CI only.
 - **The E2E specs cannot be executed locally either** (Node cannot spawn child processes on this
-  host, so Playwright and `node --test` both fail). The spec is executed by the blocking Quality
-  Gates smoke job in CI.
+  host, so Playwright fails). The spec is executed by the blocking Quality Gates smoke job in CI.
+  Note that plain `node --test` on the root `tests/scripts/**` suites *does* work on this host, which
+  is why the duplication-gate tests could be run above.
+- **The widened gate raises the reported local number from 1.52% to 1.62%.** That is a visibility
+  change, not a code-quality change: the extra 0.10pp is pre-existing duplication in
+  `frontend/tests` that was previously simply not scanned. If a future change needs more headroom,
+  the natural next tranche is the ~280 duplicated lines in the five secondary-route specs.
 - **Deliberately deferred headroom**, recorded in the manifest scope: the five
   `system-secondary-route-*.spec.ts` / `backoffice-ui-visual.spec.ts` files share ~280 duplicated
   lines of identical harness, but are only covered by the report-only daily smoke, so extracting

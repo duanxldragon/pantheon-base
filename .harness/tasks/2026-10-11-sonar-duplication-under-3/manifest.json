@@ -1,7 +1,7 @@
 {
   "taskId": "2026-10-11-sonar-duplication-under-3",
   "title": "Reduce SonarCloud overall duplication below 3% by de-duplicating test code",
-  "goal": "Bring the SonarCloud overall duplication metric for duanxldragon_pantheon-base from 3.16% back below the 3.00% target by extracting the repeated test scaffolding that dominates it, without changing any production behaviour, API route, database row, permission code or test assertion. Follows the same objective and the same non-goals as docs/harness/tasks/2026-09-01-sonar-duplication-reduction.task.md.",
+  "goal": "Bring the SonarCloud overall duplication metric for duanxldragon_pantheon-base from 3.16% back below the 3.00% target by extracting the repeated test scaffolding that dominates it, without changing any production behaviour, API route, database row, permission code or test assertion. Also widen the repository's own duplication gate to cover frontend/tests so the same regression cannot recur invisibly. Follows the same objective and the same non-goals as docs/harness/tasks/2026-09-01-sonar-duplication-reduction.task.md.",
   "primaryLayer": "platform",
   "status": "completed",
   "priority": "P2",
@@ -14,12 +14,14 @@
     "Seven structurally identical 'list-only role' permission smoke tests in that spec duplicated ~476 lines of role/user provisioning workflow.",
     "The setting-group fetch block was copy-pasted 15 times in the same spec and the setting-group poll block 4 times.",
     "backend/modules/system/i18n/i18n_service_test.go duplicated its DB+service setup 31 times (23 Migrate + 8 AutoMigrate) and its seed block 8 times.",
-    "The repository's own duplication gate (npm run check:duplication) reports 1.52% and cannot see this duplication, because its includeRoots cover frontend/src but not frontend/tests."
+    "The repository's own duplication gate (npm run check:duplication) reports 1.52% and cannot see this duplication, because its includeRoots cover frontend/src but not frontend/tests — the very file set where the regression accumulated, which is how the density doubled from 1.61% to 3.16% with the gate never going red.",
+    "That gap is a recurring failure class, so the gate itself was widened to scan frontend/tests (threshold unchanged at 3.00%), giving the change a real ratchet instead of a no-repeat-observed claim."
   ],
   "scope": {
     "in": [
       "frontend/tests/smoke/system/system-pages.spec.ts",
       "backend/modules/system/i18n/i18n_service_test.go",
+      "scripts/check-duplication.mjs (ratchet: add frontend/tests to includeRoots; threshold unchanged)",
       ".harness/tasks/2026-10-11-sonar-duplication-under-3/",
       ".harness/evidence/2026-10-11-sonar-duplication-under-3/"
     ],
@@ -38,6 +40,7 @@
     "eslint passes on the changed spec; the frontend type-check, all 13 pre-build contract gates and the smoke coverage contract pass.",
     "backend/modules/system/i18n/i18n_service_test.go compiles (go test -c) and is gofmt-clean.",
     "The Go transformation is provably limited to the setup/seed lines: the multiset of all other non-blank lines is unchanged.",
+    "The widened duplication gate (frontend/tests now in includeRoots) still passes below the unchanged 3.00% threshold, and its own unit tests still pass.",
     "Hosted SonarCloud re-analysis reports new_duplicated_lines_density and overall duplicated_lines_density both below 3.00%."
   ],
   "harnessProfile": {
@@ -49,6 +52,7 @@
   "verificationPlan": {
     "commands": [
       "node scripts/check-duplication.mjs",
+      "node --test tests/scripts/check-duplication.test.mjs",
       "cd frontend && npx eslint tests/smoke/system/system-pages.spec.ts",
       "cd frontend && npx tsc -p tsconfig.spec-check.json (before/after error-set diff)",
       "cd frontend && npm run type-check && npm run prebuild",

@@ -38,10 +38,28 @@
       "details": "6 groups / 15 blocks, 201 duplicated lines in ranges of 10-18 lines. Block references show duplication both inside the file (5 blocks in one group) and against i18n_updated_by_test.go (cross-file). Inspection showed the ranges are the DB+service setup followed by a fixture slice."
     },
     {
-      "command": "node scripts/check-duplication.mjs",
+      "command": "node scripts/check-duplication.mjs  (BEFORE the gate change)",
       "cwd": ".",
       "status": "passed",
-      "details": "Repository duplication: 1.52% (2024/132732 normalized lines), threshold <= 3.00%, 697 files scanned, minimum block size 21 lines. IMPORTANT: this gate is green both before and after, and cannot be used to verify progress toward the SonarCloud 3% target, because its includeRoots are backend, frontend/src, frontend/scripts, scripts, tests, .github/workflows — it excludes frontend/tests, where most of the SonarCloud duplication lives."
+      "details": "Repository duplication: 1.52% (2024/132732 normalized lines), threshold <= 3.00%, 697 files scanned, minimum block size 21 lines. IMPORTANT: in this state the gate is green both before and after the extraction, and cannot be used to verify progress toward the SonarCloud 3% target, because its includeRoots were backend, frontend/src, frontend/scripts, scripts, tests, .github/workflows — it excluded frontend/tests, where most of the SonarCloud duplication lives. This blind spot is the failure class the ratchet below closes."
+    },
+    {
+      "command": "node .tmp/dup-with-tests.mjs (scope probe: analyseDuplication with frontend/tests added)",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Measured the gate's own analyser over the widened file set BEFORE editing the script, to confirm the ratchet would stay green: baseline 1.52% (2024/132732, 697 files); with frontend/tests added 1.62% (2457/152062, 784 files); frontend/tests in isolation 2.24% (433/19330, 87 files). The widened scope therefore leaves 1.38pp of headroom under the unchanged 3.00% threshold."
+    },
+    {
+      "command": "node scripts/check-duplication.mjs  (AFTER adding frontend/tests to includeRoots)",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Repository duplication: 1.62% (2457/152070 normalized lines), threshold <= 3.00%, 784 files scanned, minimum block size 21 lines. Exit 0. The threshold was NOT changed; only the scanned file set was widened, which is the opposite of an exclusion change."
+    },
+    {
+      "command": "node --test tests/scripts/check-duplication.test.mjs",
+      "cwd": ".",
+      "status": "passed",
+      "details": "2 tests, 2 pass, 0 fail. Both tests pass explicit includeRoots overrides, so widening DEFAULT_CONFIG.includeRoots does not affect them — verified rather than assumed."
     },
     {
       "command": "npx eslint tests/smoke/system/system-pages.spec.ts",
@@ -100,6 +118,7 @@
     "The remaining Go *_test.go hotspots (permission 124 dl, dept 116 dl, login 105 dl, middleware ~180 dl) are table-driven fixture data. SonarCloud normalises string literals in its Go duplication detection — proven by the fact that blocks with entirely different fixture values are grouped together — so these need structural rewrites (shared seed helpers with per-kind error messages, or merged table-driven tests) rather than simple extraction.",
     "frontend/tests/smoke/system/governance/permission-workbench-remediation.spec.ts (182 dl) and the frontend/src list pages (OperationLogList 152, RoleList 130, LoginLogList 103, PostList 93, DeptList 85) are the next largest clusters but were left untouched: the former needs a behavioural read-through of the workbench assertions, and the latter are production UI where the repo already has a shared component layer and further extraction has a much worse readability trade-off.",
     "SonarCloud's overall duplicated_lines_density is not a quality-gate condition (only new_duplicated_lines_density is, with a 3% threshold). The 3.16% target is therefore a project objective, not a merge blocker, and the authoritative confirmation requires the hosted re-analysis after CI.",
-    "go test could not be executed locally (sandbox now kills Go process execution). Compilation of the test package was verified with go test -c, and the transformation was proven line-equivalent, but the suite itself is verified by CI only."
+    "go test could not be executed locally (sandbox now kills Go process execution). Compilation of the test package was verified with go test -c, and the transformation was proven line-equivalent, but the suite itself is verified by CI only.",
+    "The full root script suite (node --test tests/scripts/*.test.mjs) reports 74 failed / 76 passed on this host, but every failure traces to the sandbox refusing to spawn child processes: the fixtures call execFileSync, which fails with 'spawnSync git EBUSY' / 'spawnSync node EBUSY', and the tests that assert on a child exit code then see status null (e.g. 'null !== 1'). None of the failures is check-duplication.test.mjs, which passes 2/2, and none is caused by the includeRoots change. CI's npm run test:scripts runs the same suite in an environment that can spawn."
   ]
 }
