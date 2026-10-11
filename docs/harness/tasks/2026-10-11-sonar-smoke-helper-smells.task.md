@@ -52,7 +52,7 @@ platform
 - Quality Profile: ci-workflow
 - Portable Failure Class: `ci-signal-noise`
 - Owner Layer: consumer-repository
-- Ratchet Decision: gate-restored（主干门禁被拆分浮出的存量异味打红，本任务恢复而非放松门禁）
+- Ratchet Decision: no-repeat-observed（同类「文件搬迁浮出存量异味」已在本包内清理并逐条留痕，不再复发）
 - Coverage Dimensions:
   - maintainability
   - method-health
