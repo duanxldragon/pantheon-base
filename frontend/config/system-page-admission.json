@@ -17,7 +17,7 @@
     "identitySelectors": [".setting-overview-page"],
     "requiredSmokeAssertions": [
       {
-        "file": "tests/smoke/system/system-pages.spec.ts",
+        "file": "tests/smoke/system/system-config.spec.ts",
         "tokens": ["/system/setting", ".setting-overview-page"]
       },
       {
@@ -40,7 +40,7 @@
     "identitySelectors": [".setting-group-page"],
     "requiredSmokeAssertions": [
       {
-        "file": "tests/smoke/system/system-pages.spec.ts",
+        "file": "tests/smoke/system/system-config.spec.ts",
         "tokens": ["/system/setting/security", ".setting-group-page"]
       },
       {

@@ -38,6 +38,7 @@ jobs:
     outputs:
       docs_only: ${{ steps.scope.outputs.all_count != '' && steps.scope.outputs.all_count == steps.scope.outputs.docs_only_count }}
       governance_only: ${{ steps.scope.outputs.all_count != '' && steps.scope.outputs.all_count == steps.scope.outputs.governance_only_count }}
+      smoke_modules: ${{ steps.smoke.outputs.modules }}
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
@@ -49,6 +50,7 @@ jobs:
         if: ${{ github.event_name == 'pull_request' || github.event_name == 'push' }}
         uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d
         with:
+          list-files: json
           filters: |
             all:
               - '**'
@@ -87,6 +89,13 @@ jobs:
               - 'scripts/frontmatter-check.mjs'
               - 'scripts/harness/**'
               - 'tests/scripts/**'
+
+      - name: Resolve touched smoke modules
+        id: smoke
+        if: ${{ github.event_name == 'pull_request' || github.event_name == 'push' }}
+        env:
+          CHANGED_FILES_JSON: ${{ steps.scope.outputs.all_files }}
+        run: node scripts/resolve-smoke-modules.mjs
 
   docs-governance:
     name: Docs Governance
@@ -597,15 +606,157 @@ jobs:
           cat "$RUNNER_TEMP/pantheon-backend.log" >&2 || true
           exit 1
 
-      - name: Run smoke sanity suite
+      - name: Run L1 critical-path smoke suite
         working-directory: frontend
-        run: npm run test:smoke:platform:contracts && npm run test:smoke:system:pages
+        run: npm run test:smoke:l1
 
       - name: Upload smoke artifacts
         if: failure()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: smoke-sanity-artifacts
+          path: |
+            frontend/test-results
+            ${{ runner.temp }}/pantheon-backend.log
+          if-no-files-found: ignore
+
+      - name: Stop backend
+        if: always()
+        shell: bash
+        run: |
+          if [ -f "$RUNNER_TEMP/pantheon-backend.pid" ]; then
+            kill "$(cat "$RUNNER_TEMP/pantheon-backend.pid")" || true
+          fi
+
+  # ============================================================
+  # Phase 5b: Path-driven module smoke (按改动路径选层)
+  # ============================================================
+  # Runs only the module suites the changed paths can actually affect.
+  # `scripts/resolve-smoke-modules.mjs` maps paths -> suites; anything that is
+  # not unambiguously inside one module resolves to every module (safe default).
+  # L1 critical-path coverage always runs separately in `smoke-sanity`.
+  pr-smoke-modules:
+    name: PR Smoke Modules
+    needs:
+      - change-scope
+      - backend-tests
+      - frontend-contract
+    if: |
+      (github.event_name == 'pull_request' || github.event_name == 'push') &&
+      needs.change-scope.outputs.governance_only != 'true' &&
+      needs.change-scope.outputs.smoke_modules != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: pantheon_base
+          TZ: Asia/Shanghai
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=12
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=12
+    env:
+      PANTHEON_DSN: "root:root@tcp(127.0.0.1:3306)/pantheon_base?charset=utf8mb4&parseTime=True&loc=UTC"
+      PANTHEON_TEST_DSN: "root:root@tcp(127.0.0.1:3306)/pantheon_base?charset=utf8mb4&parseTime=True&loc=UTC"
+      PANTHEON_REDIS_ADDR: 127.0.0.1:6379
+      PANTHEON_WORKSPACE_ROOT: ${{ github.workspace }}
+      PANTHEON_PORT: "8080"
+      PANTHEON_API_BASE_URL: http://127.0.0.1:8080/api/v1
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Setup Go
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e
+        with:
+          go-version-file: ${{ env.GO_VERSION_FILE }}
+          cache: true
+
+      - name: Setup Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          package-manager-cache: false
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: |
+          npm ci --ignore-scripts
+          npm run patch:arco-react19
+
+      - name: Install Playwright browsers
+        working-directory: frontend
+        run: ./node_modules/.bin/playwright install --with-deps chromium
+
+      - name: Start backend
+        shell: bash
+        working-directory: backend
+        run: |
+          nohup go run ./cmd/server >"$RUNNER_TEMP/pantheon-backend.log" 2>&1 &
+          echo $! >"$RUNNER_TEMP/pantheon-backend.pid"
+
+      - name: Wait for backend health
+        shell: bash
+        run: |
+          for attempt in $(seq 1 90); do
+            if curl -fsS http://127.0.0.1:8080/api/v1/health >/dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Backend did not become healthy in time." >&2
+          cat "$RUNNER_TEMP/pantheon-backend.log" >&2 || true
+          exit 1
+
+      - name: Run touched module smoke suites
+        shell: bash
+        working-directory: frontend
+        env:
+          SMOKE_MODULES: ${{ needs.change-scope.outputs.smoke_modules }}
+        run: |
+          set -euo pipefail
+          IFS=',' read -r -a suites <<< "${SMOKE_MODULES}"
+          echo "Touched smoke suites: ${SMOKE_MODULES}"
+          echo "### PR Smoke Modules" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Suite | Result |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|-------|--------|" >> "$GITHUB_STEP_SUMMARY"
+          for suite in "${suites[@]}"; do
+            [ -n "${suite}" ] || continue
+            echo "::group::${suite}"
+            if npm run "${suite}"; then
+              printf '| %s | success |\n' "${suite}" >> "$GITHUB_STEP_SUMMARY"
+            else
+              printf '| %s | **failure** |\n' "${suite}" >> "$GITHUB_STEP_SUMMARY"
+              exit 1
+            fi
+            echo "::endgroup::"
+          done
+
+      - name: Upload smoke artifacts
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: smoke-module-artifacts
           path: |
             frontend/test-results
             ${{ runner.temp }}/pantheon-backend.log
@@ -749,6 +900,7 @@ jobs:
       - go-lint
       - duplication
       - smoke-sanity
+      - pr-smoke-modules
       - pr-smoke-core
     if: always()
     runs-on: ubuntu-latest
@@ -766,6 +918,7 @@ jobs:
           GO_LINT_RESULT: ${{ needs.go-lint.result }}
           DUPLICATION_RESULT: ${{ needs.duplication.result }}
           SMOKE_SANITY_RESULT: ${{ needs.smoke-sanity.result }}
+          PR_SMOKE_MODULES_RESULT: ${{ needs.pr-smoke-modules.result }}
           PR_SMOKE_CORE_RESULT: ${{ needs.pr-smoke-core.result }}
           SOLO_OVERRIDE: ${{ contains(github.event.pull_request.labels.*.name, 'solo-override') }}
         run: |
@@ -794,7 +947,8 @@ jobs:
           printf '| Backend Tests | %s |\n' "$BACKEND_TESTS_RESULT" >> "$GITHUB_STEP_SUMMARY"
           printf '| Go Lint | %s |\n' "$GO_LINT_RESULT" >> "$GITHUB_STEP_SUMMARY"
           printf '| Duplication Gate | %s |\n' "$DUPLICATION_RESULT" >> "$GITHUB_STEP_SUMMARY"
-          printf '| Smoke Sanity | %s |\n' "$SMOKE_SANITY_RESULT" >> "$GITHUB_STEP_SUMMARY"
+          printf '| Smoke Sanity (L1) | %s |\n' "$SMOKE_SANITY_RESULT" >> "$GITHUB_STEP_SUMMARY"
+          printf '| PR Smoke Modules (L2, path-driven) | %s |\n' "$PR_SMOKE_MODULES_RESULT" >> "$GITHUB_STEP_SUMMARY"
           printf '| PR Smoke Core (optional) | %s |\n' "$PR_SMOKE_CORE_RESULT" >> "$GITHUB_STEP_SUMMARY"
           printf '| Runtime Gates Required | %s |\n' "$RUNTIME_GATES_REQUIRED" >> "$GITHUB_STEP_SUMMARY"
           echo "Docs Only: ${DOCS_ONLY}"
@@ -805,6 +959,7 @@ jobs:
           echo "Go Lint: ${GO_LINT_RESULT}"
           echo "Duplication Gate: ${DUPLICATION_RESULT}"
           echo "Smoke Sanity: ${SMOKE_SANITY_RESULT}"
+          echo "PR Smoke Modules: ${PR_SMOKE_MODULES_RESULT}"
           echo "PR Smoke Core: ${PR_SMOKE_CORE_RESULT}"
           echo "Runtime Gates Required: ${RUNTIME_GATES_REQUIRED}"
           if [ "${DOCS_GOVERNANCE_RESULT}" != "success" ] || \
@@ -816,6 +971,15 @@ jobs:
                [ "${BACKEND_TESTS_RESULT}" != "success" ] || \
                [ "${GO_LINT_RESULT}" != "success" ] || \
                [ "${SMOKE_SANITY_RESULT}" != "success" ]; }; then
+            exit 1
+          fi
+          # PR Smoke Modules is path-driven: it is skipped when no module is touched
+          # (docs/governance-only, or a change with no runtime surface). When it does
+          # run, it is blocking.
+          if [ "${RUNTIME_GATES_REQUIRED}" = "true" ] && \
+             [ "${PR_SMOKE_MODULES_RESULT}" != "success" ] && \
+             [ "${PR_SMOKE_MODULES_RESULT}" != "skipped" ]; then
+            echo "PR Smoke Modules did not succeed: ${PR_SMOKE_MODULES_RESULT}"
             exit 1
           fi
           # PR Smoke Core is optional (only runs with 'smoke-required' label)

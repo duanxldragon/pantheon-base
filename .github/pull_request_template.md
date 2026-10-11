@@ -46,7 +46,9 @@
 
 - [ ] 后端测试：`go test ./...`
 - [ ] 前端构建：`cd frontend && npm run build`
-- [ ] 轻量 smoke：`cd frontend && npm run test:smoke:platform:contracts && npm run test:smoke:system:pages`
+- [ ] L0 静态契约：`cd frontend && npm run test:smoke:l0`
+- [ ] L1 关键路径 smoke（PR 必过）：`cd frontend && npm run test:smoke:l1`
+- [ ] L2 命中模块 smoke（PR 按改动路径自动选择，也可本地手跑）：`cd frontend && npm run test:smoke:module:<iam|config|i18n|audit|org|platform|all>`
 - [ ] 如涉及系统域深链路，已补充专项 smoke：`cd frontend && npm run test:smoke:system:iam-authz`
 - [ ] 其他专项验证已补充
 - [ ] CodeQL 结果已检查并解释
