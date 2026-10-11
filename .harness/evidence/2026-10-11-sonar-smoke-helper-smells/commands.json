@@ -1,0 +1,47 @@
+{
+  "taskId": "2026-10-11-sonar-smoke-helper-smells",
+  "repo": "pantheon-base",
+  "executedAt": "2026-10-11T21:40:00+08:00",
+  "agent": {
+    "tool": "other",
+    "adapter": "software-workshop-agent"
+  },
+  "commands": [
+    {
+      "command": "curl -s 'https://sonarcloud.io/api/issues/search?projectKeys=duanxldragon_pantheon-base&branch=main&resolved=false&ps=50'",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Total 17 unresolved issues on main at commit b8e91da6, all CODE_SMELL (16 MINOR, 1 MAJOR), every one in frontend/tests/smoke/system/system-pages-helpers.ts: 4x typescript:S7763 (lines 29/31/37/38), 1x typescript:S7503 (line 237), 11x typescript:S9382 (lines 354/356/394/396/509/511/565/567/742/744/851), 1x typescript:S4043 (line 508)."
+    },
+    {
+      "command": "curl -s 'https://sonarcloud.io/api/issues/search?componentKeys=...frontend/tests/smoke/system/system-pages.spec.ts&branch=main&ps=50'",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Total 0 issues ever recorded on the old monolith file. This proves the 17 findings are latent smells in long-lived code that SonarCloud automatic analysis never classified as new until the PR #373 file move; the move did not introduce them."
+    },
+    {
+      "command": "grep -n for expectPagePathname / installOperationToken / signInWithUi / verifiedApiHeaders in system-pages-helpers.ts",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Each of the 4 S7763 symbols appeared only in the import block and the re-export block, nowhere in the file body — so converting them to `export ... from` re-exports cannot change behaviour."
+    },
+    {
+      "command": "cd frontend && npx eslint tests/smoke/system/system-pages-helpers.ts --max-warnings 0",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Clean, exit 0, no warnings after all edits."
+    },
+    {
+      "command": "node frontend/scripts/check-smoke-coverage-contract.mjs",
+      "cwd": ".",
+      "status": "passed",
+      "details": "smoke coverage contract passed for 34 smoke specs and 20 script entries — unchanged by this fix, as expected (no spec added or removed)."
+    },
+    {
+      "command": "node scripts/check-pr-governance.mjs",
+      "cwd": ".",
+      "status": "passed",
+      "details": "OK pantheon-base PR template governance fields are present."
+    }
+  ]
+}

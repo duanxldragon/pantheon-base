@@ -1,0 +1,75 @@
+{
+  "taskId": "2026-10-11-sonar-smoke-helper-smells",
+  "title": "Clear the 17 SonarCloud code smells surfaced by the smoke-helper file split so the main Release Gate unblocks",
+  "goal": "PR #373 moved 845 lines of long-lived helper code into frontend/tests/smoke/system/system-pages-helpers.ts. SonarCloud automatic analysis only raises issues on new code, so the move re-classified every line as new and surfaced 17 latent code smells (4x S7763, 1x S7503, 11x S9382, 1x S4043), all in that one file. The main-branch Release Gate blocks on any unresolved issue, so main is currently red. Fix the smells with behaviour-preserving edits: mechanical fixes where provably safe, NOSONAR with a written justification where the sequential await is intentional test-fixture semantics.",
+  "primaryLayer": "platform",
+  "status": "completed",
+  "priority": "P1",
+  "type": "fix",
+  "estimatedComplexity": "low",
+  "findings": [
+    "SonarCloud automatic analysis raises issues only on code it has not analysed before; the same helper lines inside the old system-pages.spec.ts carried 0 issues across all analyses (verified via component-scoped issue search), while the identical code in the new helpers file raised 17.",
+    "The release-gate.yml 'Check unprocessed SonarCloud issues' step counts every unresolved issue on main (resolved=false, all types), so even MINOR code smells block a release.",
+    "All 17 findings are concentrated in one file, which makes a single focused commit the right fix shape.",
+    "4 of the findings (S7763) are pure import-plus-re-export barrels: converting to `export ... from` is provably behaviour-preserving.",
+    "1 finding (S7503) is an `async` keyword with no `await`; removing it keeps the returned Promise identical.",
+    "1 finding (S4043) is `targets.reverse()` used directly in `for...of`; hoisting the in-place reverse to a statement before the loop is behaviour-identical.",
+    "11 findings (S9382, await inside loop) are deliberate sequential semantics: children-first dept deletion order, per-item header fetching, ordered permission seeding and sequential auto-retrying assertions. Parallelising them would change fixture behaviour that the suite already validated in CI, so they are suppressed with `// NOSONAR` plus a written reason, following the existing repo convention (backend/pkg/testmysql/mysql.go, i18n_service_fast_test.go)."
+  ],
+  "scope": {
+    "in": [
+      "frontend/tests/smoke/system/system-pages-helpers.ts (S7763 export-from conversion, S7503 async removal, S4043 reverse hoist, 11x NOSONAR justification comments)",
+      ".harness/tasks/2026-10-11-sonar-smoke-helper-smells/",
+      ".harness/evidence/2026-10-11-sonar-smoke-helper-smells/"
+    ],
+    "out": [
+      "Any change to deletion ordering, header fetching cadence, assertion sequencing or fixture data",
+      "Parallelising the await-in-loop sites with Promise.all: it would change validated fixture semantics (e.g. dept children-first order) for no functional gain",
+      "Excluding tests/** from SonarCloud analysis: .sonarcloud.properties deliberately keeps tests fully analysed",
+      "Adding rule-level ignores to .sonarcloud.properties: SonarCloud automatic analysis does not support them (documented in that file for the i18n precedent)"
+    ]
+  },
+  "acceptanceCriteria": [
+    "All 4 S7763 findings are resolved by `export ... from` re-exports; the 4 symbols have no in-file usage other than the re-export (verified by grep before the edit).",
+    "waitForOkApiResponse no longer declares async but returns the same Promise<Response> value; all call sites keep working unchanged.",
+    "deleteDeptByName still deletes children before parents: the reverse() call happens before iteration, in place, on the same filtered array.",
+    "Every NOSONAR suppression carries a written justification and follows the repo's existing NOSONAR convention.",
+    "eslint passes on the modified file with zero warnings.",
+    "The smoke coverage contract still passes (34 smoke specs, 20 script entries) — the change adds no spec file and touches no script entry.",
+    "SonarCloud main analysis of the merge commit reports 0 unresolved issues and the Release Gate returns to green."
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "ci-workflow",
+    "ownerLayer": "consumer-repository"
+  },
+  "verificationPlan": {
+    "commands": [
+      "grep -n for each of the 4 re-exported symbols in system-pages-helpers.ts (must show only the export-from lines)",
+      "cd frontend && npx eslint tests/smoke/system/system-pages-helpers.ts --max-warnings 0",
+      "node frontend/scripts/check-smoke-coverage-contract.mjs",
+      "node scripts/check-pr-governance.mjs",
+      "SonarCloud main-branch issue search after merge: resolved=false total must be 0"
+    ],
+    "runtimeEvidence": [
+      "eslint clean output on the modified file",
+      "coverage-contract pass line (34 specs / 20 script entries)",
+      "SonarCloud issues API total before (17) and after (0) the fix"
+    ]
+  },
+  "runtimeSensitive": true,
+  "runtimeGap": "Playwright cannot execute on this host (spawnSync EBUSY), so the modified helpers are not executed locally. Behaviour preservation is argued structurally (export-from is a rename-free re-export; async removal keeps the returned promise; reverse hoist is order-identical; NOSONAR adds comments only), and the executing proof is CI: the L1 tier plus module suites run the helpers against a real backend, and the SonarCloud re-analysis must report 0 unresolved issues.",
+  "linkage": {
+    "assessment": "docs/harness/tasks/2026-10-11-sonar-smoke-helper-smells.task.md",
+    "evidenceDir": ".harness/evidence/2026-10-11-sonar-smoke-helper-smells/",
+    "summaryFile": ".harness/evidence/2026-10-11-sonar-smoke-helper-smells/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-11-sonar-smoke-helper-smells/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".github/workflows/release-gate.yml",
+      ".sonarcloud.properties",
+      ".harness/tasks/2026-10-11-smoke-test-tiering/manifest.json"
+    ]
+  }
+}
