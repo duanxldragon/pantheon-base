@@ -1,0 +1,79 @@
+{
+  "taskId": "2026-10-11-sonar-duplication-under-3",
+  "title": "Reduce SonarCloud overall duplication below 3% by de-duplicating test code",
+  "goal": "Bring the SonarCloud overall duplication metric for duanxldragon_pantheon-base from 3.16% back below the 3.00% target by extracting the repeated test scaffolding that dominates it, without changing any production behaviour, API route, database row, permission code or test assertion. Follows the same objective and the same non-goals as docs/harness/tasks/2026-09-01-sonar-duplication-reduction.task.md.",
+  "primaryLayer": "platform",
+  "status": "completed",
+  "priority": "P2",
+  "type": "refactor",
+  "estimatedComplexity": "medium",
+  "findings": [
+    "SonarCloud overall duplication is 3.16% (5269 / 166757 lines) against a 3.00% target; the 2026-09-01 remediation had previously brought it under 3% and it has regressed.",
+    "62% of all duplicated lines live in test code (E2E specs, Go *_test.go, tests/scripts), 26% in frontend/src and 12% in backend production code.",
+    "A single E2E spec, frontend/tests/smoke/system/system-pages.spec.ts, carries 737 duplicated lines (14% of the repository total) in 16 ranges.",
+    "Seven structurally identical 'list-only role' permission smoke tests in that spec duplicated ~476 lines of role/user provisioning workflow.",
+    "The setting-group fetch block was copy-pasted 15 times in the same spec and the setting-group poll block 4 times.",
+    "backend/modules/system/i18n/i18n_service_test.go duplicated its DB+service setup 31 times (23 Migrate + 8 AutoMigrate) and its seed block 8 times.",
+    "The repository's own duplication gate (npm run check:duplication) reports 1.52% and cannot see this duplication, because its includeRoots cover frontend/src but not frontend/tests."
+  ],
+  "scope": {
+    "in": [
+      "frontend/tests/smoke/system/system-pages.spec.ts",
+      "backend/modules/system/i18n/i18n_service_test.go",
+      ".harness/tasks/2026-10-11-sonar-duplication-under-3/",
+      ".harness/evidence/2026-10-11-sonar-duplication-under-3/"
+    ],
+    "out": [
+      "Changing SonarCloud project settings or .sonarcloud.properties (explicit non-goal inherited from the 2026-09-01 task packet)",
+      "Rewriting generated or fixture content to game the metric",
+      "Any production source change: no API route, database row, permission code, menu componentKey or runtime behaviour changes",
+      "The five frontend/tests/smoke/platform/system-secondary-route-*.spec.ts and backoffice-ui-visual.spec.ts harness duplication (~280 duplicated lines) — these specs are only exercised by the report-only daily smoke-full workflow, so the extraction cannot be verified by a PR-blocking gate",
+      "Go table-driven fixture data in the remaining *_test.go hotspots (permission, dept, login, middleware): SonarCloud normalises string literals, so those blocks need structural rewrites rather than extraction; recorded as headroom"
+    ]
+  },
+  "acceptanceCriteria": [
+    "No test assertion, expectation, route, permission string or cleanup step changes — the diff is a pure extraction.",
+    "frontend/tests/smoke/system/system-pages.spec.ts keeps all 59 top-level test() declarations with identical titles.",
+    "frontend/tests/smoke/system/system-pages.spec.ts introduces no new TypeScript errors against its pre-change error set.",
+    "eslint passes on the changed spec; the frontend type-check, all 13 pre-build contract gates and the smoke coverage contract pass.",
+    "backend/modules/system/i18n/i18n_service_test.go compiles (go test -c) and is gofmt-clean.",
+    "The Go transformation is provably limited to the setup/seed lines: the multiset of all other non-blank lines is unchanged.",
+    "Hosted SonarCloud re-analysis reports new_duplicated_lines_density and overall duplicated_lines_density both below 3.00%."
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "ci-workflow",
+    "ownerLayer": "consumer-repository"
+  },
+  "verificationPlan": {
+    "commands": [
+      "node scripts/check-duplication.mjs",
+      "cd frontend && npx eslint tests/smoke/system/system-pages.spec.ts",
+      "cd frontend && npx tsc -p tsconfig.spec-check.json (before/after error-set diff)",
+      "cd frontend && npm run type-check && npm run prebuild",
+      "cd backend && go test -c -vet=off -o /tmp/i18n.test.exe ./modules/system/i18n/ && gofmt -l modules/system/i18n/",
+      "curl https://sonarcloud.io/api/measures/component?component=duanxldragon_pantheon-base (after CI)"
+    ],
+    "runtimeEvidence": [
+      "SonarCloud per-file duplicated_lines ranking before the change",
+      "eslint / tsc / prebuild / smoke-coverage-contract output",
+      "go test -c compile result and gofmt output",
+      "line-level equivalence proof for the Go transformation",
+      "hosted SonarCloud duplication measures after CI"
+    ]
+  },
+  "runtimeSensitive": false,
+  "linkage": {
+    "assessment": "docs/harness/tasks/2026-09-01-sonar-duplication-reduction.task.md",
+    "evidenceDir": ".harness/evidence/2026-10-11-sonar-duplication-under-3/",
+    "summaryFile": ".harness/evidence/2026-10-11-sonar-duplication-under-3/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-11-sonar-duplication-under-3/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-09-01-sonar-duplication-reduction.task.md",
+      ".harness/archive/2026-09/evidence/2026-09-01-sonar-duplication-reduction/summary.md",
+      "docs/designs/QUALITY_AND_SECURITY_STRATEGY.md"
+    ]
+  }
+}

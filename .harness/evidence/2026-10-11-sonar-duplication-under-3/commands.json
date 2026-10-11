@@ -1,0 +1,105 @@
+{
+  "taskId": "2026-10-11-sonar-duplication-under-3",
+  "repo": "pantheon-base",
+  "executedAt": "2026-10-11T15:10:00+08:00",
+  "agent": {
+    "tool": "other",
+    "adapter": "software-workshop-agent"
+  },
+  "commands": [
+    {
+      "command": "curl 'https://sonarcloud.io/api/qualitygates/project_status?projectKey=duanxldragon_pantheon-base'",
+      "cwd": ".",
+      "status": "passed",
+      "details": "main @ 1015bcf7: status OK. Conditions: new_reliability_rating 1 (OK), new_security_rating 1 (OK), new_maintainability_rating 1 (OK), new_duplicated_lines_density 1.8 <= 3 (OK), new_security_hotspots_reviewed 100 (OK). So the gated metric (new code) is already green; the 3.16% figure is the ungated OVERALL density."
+    },
+    {
+      "command": "curl 'https://sonarcloud.io/api/measures/component?component=duanxldragon_pantheon-base&metricKeys=duplicated_lines_density,duplicated_lines,ncloc,lines,duplicated_blocks,duplicated_files'",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Baseline: ncloc 145308, lines 166757, duplicated_lines 5269, duplicated_lines_density 3.2 (exactly 5269/166757 = 3.16%), duplicated_blocks 328, duplicated_files 102. Target: duplicated_lines must fall to <= 5002 (3.00% of 166757), i.e. remove >= 267 duplicated lines."
+    },
+    {
+      "command": "curl 'https://sonarcloud.io/api/measures/component_tree?...&qualifiers=FIL&metricKeys=duplicated_lines,duplicated_blocks,ncloc,lines&ps=500' (paged)",
+      "cwd": ".",
+      "status": "passed",
+      "details": "735 files analysed, 102 with duplication. Per-cluster totals: test code 3285 dl (62%) split across frontend/tests/smoke/** 1504, Go *_test.go ~1400, tests/scripts/** ~336; frontend/src 1394 dl (26%); backend production 623 dl (12%). Largest single files: system-pages.spec.ts 737, i18n_service_test.go 187, permission-workbench-remediation.spec.ts 182, OperationLogList.tsx 152, cut-foundation-release.test.mjs 133, RoleList.tsx 130."
+    },
+    {
+      "command": "curl 'https://sonarcloud.io/api/duplications/show?key=...:frontend/tests/smoke/system/system-pages.spec.ts'",
+      "cwd": ".",
+      "status": "passed",
+      "details": "15 duplication groups / 47 blocks. The union of the blocks is 16 ranges covering 737 lines. Two ranges dominate: 2521-2665 (145 lines) and 2668-2826 (159 lines) are two near-identical viewer-permission tests; 2294-2513 (172 lines) is the rest of the same family; 1586-1807 (167 lines) is the setting-group fetch+save pattern."
+    },
+    {
+      "command": "curl 'https://sonarcloud.io/api/duplications/show?key=...:backend/modules/system/i18n/i18n_service_test.go'",
+      "cwd": ".",
+      "status": "passed",
+      "details": "6 groups / 15 blocks, 201 duplicated lines in ranges of 10-18 lines. Block references show duplication both inside the file (5 blocks in one group) and against i18n_updated_by_test.go (cross-file). Inspection showed the ranges are the DB+service setup followed by a fixture slice."
+    },
+    {
+      "command": "node scripts/check-duplication.mjs",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Repository duplication: 1.52% (2024/132732 normalized lines), threshold <= 3.00%, 697 files scanned, minimum block size 21 lines. IMPORTANT: this gate is green both before and after, and cannot be used to verify progress toward the SonarCloud 3% target, because its includeRoots are backend, frontend/src, frontend/scripts, scripts, tests, .github/workflows — it excludes frontend/tests, where most of the SonarCloud duplication lives."
+    },
+    {
+      "command": "npx eslint tests/smoke/system/system-pages.spec.ts",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "Exit 0, no output. Run after the viewer-helper extraction and again after the setting-helper extraction."
+    },
+    {
+      "command": "npx tsc -p tsconfig.spec-check.json  (before vs after error-set diff)",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "The spec is not covered by tsconfig.app.json (which includes only src/), so a temporary config was used and then deleted. Errors attributable to system-pages.spec.ts: 34 before, 34 after, with comm reporting ZERO new and ZERO removed. All 34 are pre-existing artifacts of the ad-hoc config (page.route overloads resolving to never, a metricLabels union narrowing) and none is introduced by this change."
+    },
+    {
+      "command": "npm run type-check",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "tsc -b exit 0."
+    },
+    {
+      "command": "npm run prebuild",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "All contract gates passed, including check:smoke-coverage-contract ('passed for 28 smoke specs and 14 script entries') and check:import-path-case ('passed for 248 source files'). The smoke coverage contract was the key one: the refactor keeps every spec file and every tests/smoke/*.spec.ts reference intact."
+    },
+    {
+      "command": "gofmt -l modules/system/i18n/",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "Empty output."
+    },
+    {
+      "command": "go test -c -vet=off -o /tmp/i18n.test.exe ./modules/system/i18n/",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "Exit 0; produced a 29278208-byte test binary. This compiles the whole test package including the new helpers, so it proves there are no unused variables (the one real hazard of the transformation: `db` became unused at 11 sites and was rewritten to `_, service := ...`), no type errors and no syntax errors."
+    },
+    {
+      "command": "node .tmp/verify-i18n-transform.mjs (line-level equivalence proof)",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Compared the multiset of non-blank source lines excluding the allowed-to-change setup/seed lines: 809 significant lines before, 810 after, the single difference being the closing brace of the newly added helper. This proves no test assertion, fixture value or control-flow line was touched."
+    },
+    {
+      "command": "go test ./modules/system/i18n/... (attempted)",
+      "cwd": "backend",
+      "status": "failed",
+      "details": "Could not be executed on this host. Mid-session the sandbox began terminating Go process execution: `go test` hangs and is SIGTERM'd, and even `go run main.go` on a trivial hello-world program is killed. `go test ./pkg/contracts/...`, which had succeeded in 0.237s earlier in the same session, fails identically, so this is an environment regression and not a property of the change. `go build` and `go test -c` still work because they do not execute the produced binary. CI runs the real `go test` suite."
+    }
+  ],
+  "browserEvidence": [],
+  "runtimeSensitive": false,
+  "runtimeGap": "None. This change touches test files only: no production source file is modified, so no API route, database row, permission code, menu componentKey or runtime behaviour can change. The frontend spec is executed by the blocking Quality Gates smoke job (quality.yml runs `npm run test:smoke:platform:contracts && npm run test:smoke:system:pages`), and the Go test package is executed by ci.yml.",
+  "knownGaps": [
+    "The five frontend/tests/smoke/platform/system-secondary-route-*.spec.ts and backoffice-ui-visual.spec.ts files share ~280 duplicated lines of identical local harness (artifactDir, ensureArtifactDir, collectRuntimeErrors, expectNoViewportOverflow, fulfillJson, viewportCases) that could be moved into the existing tests/smoke/helpers/ directory. Deliberately NOT done in this change: those specs are only exercised by the report-only daily smoke-full workflow, so the extraction would not be covered by any PR-blocking gate and a regression would only surface after merge.",
+    "The remaining Go *_test.go hotspots (permission 124 dl, dept 116 dl, login 105 dl, middleware ~180 dl) are table-driven fixture data. SonarCloud normalises string literals in its Go duplication detection — proven by the fact that blocks with entirely different fixture values are grouped together — so these need structural rewrites (shared seed helpers with per-kind error messages, or merged table-driven tests) rather than simple extraction.",
+    "frontend/tests/smoke/system/governance/permission-workbench-remediation.spec.ts (182 dl) and the frontend/src list pages (OperationLogList 152, RoleList 130, LoginLogList 103, PostList 93, DeptList 85) are the next largest clusters but were left untouched: the former needs a behavioural read-through of the workbench assertions, and the latter are production UI where the repo already has a shared component layer and further extraction has a much worse readability trade-off.",
+    "SonarCloud's overall duplicated_lines_density is not a quality-gate condition (only new_duplicated_lines_density is, with a 3% threshold). The 3.16% target is therefore a project objective, not a merge blocker, and the authoritative confirmation requires the hosted re-analysis after CI.",
+    "go test could not be executed locally (sandbox now kills Go process execution). Compilation of the test package was verified with go test -c, and the transformation was proven line-equivalent, but the suite itself is verified by CI only."
+  ]
+}
