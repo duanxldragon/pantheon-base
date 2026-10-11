@@ -10,32 +10,26 @@ import {
   authHeaders,
   type BrowserLoginResult,
   installClientSession,
-  installOperationToken,
   loginByApi,
   requestHeaders,
   signInAsAdmin,
-  signInWithUi,
-  verifiedApiHeaders,
   verifiedHeaders,
 } from '../helpers/auth';
 import { runOptionalSmokeCleanup } from '../helpers/fixture-policy';
 import { installSharedPageReadCache, type CachedReadResponse } from '../helpers/shared-read-cache';
-import { expectPagePathname } from '../helpers/url-pattern';
 import { listRegisteredComponentKeys } from '../../../src/core/router/componentRegistry';
+export { expectPagePathname } from '../helpers/url-pattern';
+export { installOperationToken, signInWithUi, verifiedApiHeaders } from '../helpers/auth';
 export {
   adminCredentials,
   apiBaseUrl,
   authHeaders,
-  expectPagePathname,
   installClientSession,
-  installOperationToken,
   loginByApi,
   path,
   requestHeaders,
   runOptionalSmokeCleanup,
   signInAsAdmin,
-  signInWithUi,
-  verifiedApiHeaders,
   verifiedHeaders,
 };
 
@@ -234,7 +228,7 @@ export async function openUserMenu(page: Page) {
   await page.getByRole('button').and(page.locator('[aria-haspopup="menu"]')).click();
 }
 
-export async function waitForOkApiResponse(
+export function waitForOkApiResponse(
   page: Page,
   matcher: (
     response: Parameters<Page['waitForResponse']>[0] extends (arg: infer T) => boolean ? T : never,
@@ -351,9 +345,9 @@ export async function deleteUserByUsername(page: Page, accessToken: string, user
   const items = Array.isArray(payload.data?.items) ? payload.data.items : [];
   for (const item of items) {
     if (item.username === username) {
-      await page.request
+      await page.request // NOSONAR — sequential cleanup deletes keep fixture teardown deterministic
         .delete(`${apiBaseUrl}/system/user/${item.id}`, {
-          headers: await verifiedHeaders(page, accessToken),
+          headers: await verifiedHeaders(page, accessToken), // NOSONAR — headers fetched per delete by design
         })
         .catch(() => undefined);
     }
@@ -391,9 +385,9 @@ export async function deleteRoleByKey(page: Page, accessToken: string, roleKey: 
   const items = Array.isArray(payload.data?.items) ? payload.data.items : [];
   for (const item of items) {
     if (item.roleKey === roleKey && item.roleKey !== 'admin') {
-      await page.request
+      await page.request // NOSONAR — sequential cleanup deletes keep fixture teardown deterministic
         .delete(`${apiBaseUrl}/system/role/${item.id}`, {
-          headers: await verifiedHeaders(page, accessToken),
+          headers: await verifiedHeaders(page, accessToken), // NOSONAR — headers fetched per delete by design
         })
         .catch(() => undefined);
     }
@@ -505,10 +499,11 @@ export async function deleteDeptByName(page: Page, accessToken: string, deptName
     await getDeptTree(page, accessToken, { sortField: 'sort', sortOrder: 'asc' }),
   );
   const targets = rows.filter((item) => item.deptName === deptName && !item.isRoot);
-  for (const item of targets.reverse()) {
-    await page.request
+  targets.reverse(); // children before parents so nested depts delete without FK failures
+  for (const item of targets) {
+    await page.request // NOSONAR — children-first deletion order must stay sequential
       .delete(`${apiBaseUrl}/system/dept/${item.id}`, {
-        headers: await verifiedHeaders(page, accessToken),
+        headers: await verifiedHeaders(page, accessToken), // NOSONAR — headers fetched per delete by design
       })
       .catch(() => undefined);
   }
@@ -562,9 +557,9 @@ export async function deletePostByCode(page: Page, accessToken: string, postCode
   const items = await getPostListItems(page, accessToken, { postCode });
   for (const item of items) {
     if (item.postCode === postCode) {
-      await page.request
+      await page.request // NOSONAR — sequential cleanup deletes keep fixture teardown deterministic
         .delete(`${apiBaseUrl}/system/post/${item.id}`, {
-          headers: await verifiedHeaders(page, accessToken),
+          headers: await verifiedHeaders(page, accessToken), // NOSONAR — headers fetched per delete by design
         })
         .catch(() => undefined);
     }
@@ -739,9 +734,9 @@ export async function updateCurrentUserPreferences(
 export async function expectNoPageError(page: Page) {
   for (const title of pageErrorTitles) {
     const matches = page.getByText(title, { exact: false });
-    const count = await matches.count();
+    const count = await matches.count(); // NOSONAR — per-title count must resolve before inner assertions
     for (let i = 0; i < count; i += 1) {
-      await expect(matches.nth(i)).not.toBeVisible();
+      await expect(matches.nth(i)).not.toBeVisible(); // NOSONAR — auto-retrying assertions run sequentially by design
     }
   }
 }
@@ -848,7 +843,7 @@ export async function withListViewOnlyViewer(
     expect(role).toBeTruthy();
 
     for (const [permissionPath, method] of options.apiPermissions) {
-      await createApiPermission(page, adminAccessToken, roleKey, permissionPath, method);
+      await createApiPermission(page, adminAccessToken, roleKey, permissionPath, method); // NOSONAR — ordered permission seeding; parallel POSTs could race server-side
     }
     await createApiPermission(page, adminAccessToken, roleKey, '/api/v1/system/menu/tree', 'GET');
 
