@@ -1,7 +1,7 @@
 {
   "taskId": "2026-10-12-v0161-release-cut",
   "repo": "pantheon-base",
-  "executedAt": "2026-10-12T14:30:00+08:00",
+  "executedAt": "2026-10-12T15:25:00+08:00",
   "agent": {
     "tool": "other",
     "adapter": "software-workshop-agent"
@@ -74,10 +74,22 @@
       "details": "OK pantheon-base PR body governance fields are present. The body declares Task ID 2026-10-12-v0161-release-cut and links the manifest, evidence, summary and review artifacts, all of which exist."
     },
     {
-      "command": "gh workflow run foundation-release-cut.yml -f release_version=pantheon-base-v0.16.1 -f release_line=release/0.16 -f notes_dir=.harness/evidence/2026-10-12-v0161-release-cut/notes -f dry_run=true",
+      "command": "gh workflow run foundation-release-cut.yml --ref main -f release_version=pantheon-base-v0.16.1 -f release_line=release/0.16 -f notes_dir=.harness/evidence/2026-10-12-v0161-release-cut/notes -f base_commit=c83f8e4c865b19ecd5351ecefac4106ec416e0bc -f dry_run=true",
+      "cwd": ".",
+      "status": "failed",
+      "details": "FIRST DISPATCH FAILED, after 7 seconds, at the Validate inputs step (run 38217014119): 'Missing or empty .harness/evidence/2026-10-12-v0161-release-cut/notes/release-notes.md'. The file is committed and present in the tree; the defect is step order. Validate inputs was the job's first step and ran before Checkout default branch, so it inspected an empty runner workspace. The check itself is right - it exists to fail fast on a bad notes_dir - but it cannot run before the tree is on disk. Nothing immutable was created: the failure happened before the tag, the release and any upload."
+    },
+    {
+      "command": "python .tmp/validate-workflow.py",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Validates the fix. Validate inputs now runs immediately after Checkout default branch and before Setup Node, so it still fails fast but with the tree present. The script asserts the ordering explicitly - Checkout at index 0 precedes Validate inputs at index 1 - rather than only re-checking YAML validity, because the original validation checked structure, SHA pins and the S7630 injection surface but never step order, which is exactly why this reached a hosted run. Also re-confirms: parses as YAML, workflow_dispatch only, both uses: entries SHA-pinned, workflow-level permissions contents: read with contents: write scoped to the single cut job, and no run block interpolates ${{ inputs.* }} or ${{ github.event.* }}."
+    },
+    {
+      "command": "gh workflow run foundation-release-cut.yml --ref main -f release_version=pantheon-base-v0.16.1 -f release_line=release/0.16 -f notes_dir=.harness/evidence/2026-10-12-v0161-release-cut/notes -f base_commit=c83f8e4c865b19ecd5351ecefac4106ec416e0bc -f dry_run=true (retry, after the step-order fix merges)",
       "cwd": ".",
       "status": "not-run",
-      "details": "NOT YET EXECUTED at the time this evidence was written. workflow_dispatch requires the workflow to exist on the default branch, so the dispatch can only happen after this change is merged. Recorded here as pending rather than as passed; the hosted run and the published asset list are the authoritative verification and are appended to this file once they exist."
+      "details": "NOT YET EXECUTED. The retry targets base_commit c83f8e4c deliberately: that is the commit whose Release Gate Summary is completed/success and whose VERSION, README, CHANGELOG and STATUS already read 0.16.1. The fix touches only .github/workflows/foundation-release-cut.yml, which is not a sharedPath, so build-release-bundle.mjs's worktree-versus-baseCommit check still passes even though the runner checks out the newer main HEAD."
     },
     {
       "command": "gh release view pantheon-base-v0.16.1 --json assets --jq '.assets[].name'",
@@ -93,7 +105,9 @@
     "The bundle build itself was never executed on this host, for the EBUSY reason above. Feasibility rests on the manifest generating successfully, 52/52 sharedPaths existing, and all six overlay anchors resolving - not on producing an archive.",
     "The consumer-side rebuild (npm run rebuild:from-base) could not be run here either, for the same reason. The anchor check is a text-level substitute for the most likely failure mode, not a full assembly. The first real rebuild against v0.16.1 is the authoritative verification of consumption.",
     "No local execution of the spawn-dependent repository gates was possible (check:structure and the harness checks that enumerate changed files via git ls-files), so those remain CI-only signals for this change.",
-    "The new workflow has never been exercised by GitHub Actions. Its first hosted run is the dry-run dispatch that follows the merge, and its first real run is the one that publishes v0.16.1."
+    "The new workflow has never been exercised by GitHub Actions. Its first hosted run is the dry-run dispatch that follows the merge, and its first real run is the one that publishes v0.16.1.",
+    "The first dispatch did fail, and it failed for a reason static validation did not cover: Validate inputs ran before Checkout, so it inspected an empty workspace. The pre-dispatch validation checked YAML validity, trigger shape, SHA pins and the S7630 injection surface, but not step ordering relative to the checkout. That gap is now closed by an explicit ordering assertion in .tmp/validate-workflow.py, and the recorded lesson is that a dispatch-only workflow's first hosted run is part of its verification, not a formality.",
+    "The release is pinned to c83f8e4c rather than to main HEAD at dispatch time, because the step-order fix necessarily lands as a commit after the release content commit. The tag therefore points at the version-bump commit, not at whatever main has moved on to, which is the intended shape: the fix is release infrastructure, not release content."
   ],
   "linkage": {
     "taskManifest": ".harness/tasks/2026-10-12-v0161-release-cut/manifest.json",

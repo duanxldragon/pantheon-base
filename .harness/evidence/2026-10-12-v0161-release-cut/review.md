@@ -89,3 +89,30 @@ Argued from evidence rather than reproduced locally:
 - The new workflow has never been exercised; its first run is the post-merge dry-run.
 - Neither release check is a required check, so until a maintainer adds them, a broken release fails
   loudly but does not block.
+
+## Addendum — the first hosted run failed, and why that was predictable
+
+The first dispatch (run `38217014119`) failed after 7 seconds, before anything immutable was created:
+
+```
+##[error]Missing or empty .harness/evidence/2026-10-12-v0161-release-cut/notes/release-notes.md
+```
+
+The file is committed and present. The defect was step order: `Validate inputs` was the job's first
+step, so it ran **before** `Checkout default branch` and inspected an empty runner workspace. The
+check itself is correct — it exists so a wrong `notes_dir` fails fast — but it cannot run before the
+tree exists. The fix moves it directly after the checkout and before `Setup Node`, which keeps the
+fail-fast property while giving it a tree to read.
+
+This is worth recording as a verification lesson rather than a footnote. The pre-dispatch validation
+covered YAML validity, trigger shape, SHA pins, least-privilege permissions and the
+`githubactions:S7630` injection surface — everything except the ordering of steps relative to the
+checkout. That is a blind spot specific to dispatch-only workflows: unlike a PR-triggered workflow,
+nothing exercises them until someone dispatches them, so a purely structural review can be complete
+and still miss a run-order bug. `.tmp/validate-workflow.py` now asserts the ordering explicitly
+(`Checkout` at index 0 precedes `Validate inputs` at index 1), and the general rule is that a
+dispatch-only workflow's first hosted run is part of its verification, not a formality to be assumed.
+
+No tag, release or asset was created by the failed run, so the release identity (`pantheon-base-v0.16.1`
+on `c83f8e4c`) is unaffected and the retry reuses it unchanged.
+
