@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"fmt"
 	"log/slog"
 	"net/http"
 	"sort"
@@ -263,15 +262,13 @@ func buildTableExistCacheKey(db *gorm.DB, tableName string) string {
 	return buildDatabaseCacheNamespace(db) + ":table:" + tableName
 }
 
+// buildDatabaseCacheNamespace 为每个逻辑数据库生成缓存命名空间。
+// 命名空间必须来自连接身份（DSN 的 host + 库名）而不是连接池指针：
+// 连接池被关闭并回收后，Go 运行时可能把同一地址分配给新的连接池，
+// 使无关连接继承上一个库的缓存结论（历史上曾让 MigrateDataScopePolicy
+// 误判策略表已存在而跳过建表）。详见 database.ConnectionCacheNamespace。
 func buildDatabaseCacheNamespace(db *gorm.DB) string {
-	if db == nil {
-		return "nil"
-	}
-	sqlDB, err := db.DB()
-	if err == nil && sqlDB != nil {
-		return fmt.Sprintf("%p", sqlDB)
-	}
-	return fmt.Sprintf("%p", db)
+	return database.ConnectionCacheNamespace(db)
 }
 
 func loadDeptAndChildrenIDs(db *gorm.DB, deptID uint64) []uint64 {

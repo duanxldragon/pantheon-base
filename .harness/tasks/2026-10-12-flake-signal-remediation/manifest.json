@@ -1,0 +1,93 @@
+{
+  "taskId": "2026-10-12-flake-signal-remediation",
+  "title": "Remove two recurring main-branch flakes: the data-scope cache identity leak and the sidebar collapse measurement race",
+  "goal": "Two flake mechanisms repeatedly turned main-branch gate signal red or needed a rerun. (1) The data scope middleware keys its process-local table-existence and user-dept caches by the *sql.DB pointer address. Per-test databases are dropped in t.Cleanup, so the Go runtime recycles the address and a brand-new test database inherits the previous one's cached 'system_role_data_scope exists' verdict; MigrateDataScopePolicy then skips its CREATE TABLE and the next INSERT fails with Error 1146. (2) platform-shell-critical.spec.ts:60 read the sidebar boundingBox immediately after clicking the collapse toggle, sampling a mid-transition width (248 vs 248 on the first attempt, 215.5625 vs 108.265625 on the retry) of Arco's 200ms Sider width transition. Fix both races at the root instead of relaxing assertions: key caches by logical database identity, and settle layout/animation before measuring.",
+  "primaryLayer": "platform",
+  "status": "in-progress",
+  "priority": "P1",
+  "type": "fix",
+  "estimatedComplexity": "medium",
+  "findings": [
+    "CI evidence (run 38174480716 attempt 1, job Backend Tests on main commit c7e564bc): TestDataScopeMiddlewareInjectsRoleDeptScope failed with 'seed role data scope: Error 1146 (42S02): Table pantheon_base_testdatascopemiddlewa_..._4675.system_role_data_scope doesn't exist'. The log shows the INSERT right after MigrateDataScopePolicy returned nil, and no earlier statement created the table.",
+    "MigrateDataScopePolicy can only return nil without creating the table via its 'else if !cachedHasTable(...)' branch, i.e. cachedHasTable returned true for a database that has no such table. That verdict can only come from the package-global tableExistCache.",
+    "buildDatabaseCacheNamespace keyed that cache with fmt.Sprintf(\"%p\", sqlDB) — the pool pointer address. testmysql.Open drops each per-test database in t.Cleanup, so the pool becomes unreachable and Go may hand the same address to the next pool.",
+    "Measured on this host with a throwaway probe: 12 sequentially opened pools produced only 9 distinct addresses; one address was reused 3 times and another twice. Address recycling is real, not hypothetical.",
+    "The poisoning source is data_scope_failclosed_test.go, which creates a deliberately broken system_role_data_scope (unrelated_col BIGINT) and then calls storeCachedTableExistence(db, ..., true). It runs before data_scope_middleware_test.go, matching the CI failure order.",
+    "Control experiment: with the legacy %p namespace restored and GOGC=20, 'go test ./internal/middleware/ -count=25' fails on the first run with the same Error 1146. With the DSN-based namespace it passes repeatedly.",
+    "Core Smoke evidence (run 38187794895 attempt 1): 'expect(received).toBeLessThan(expected) Expected: < 248 Received: 248' at line 80, then on retry 'Expected: > 215.5625 Received: 108.265625' at line 88. Both are mid-transition samples: Arco Sider declares transition: width @transition-duration-2 (200ms) and the spec used width={248} / collapsedWidth={76}.",
+    "The original wait was 'await expect(sidebar).toBeVisible({ timeout: 3000 })' after the click. The sidebar is always visible, so that assertion returns immediately and waited for nothing.",
+    "frontend/tests/smoke/platform/shell-top-panels.spec.ts already solved this exact class of problem locally with settlePanel (box-signature stability plus awaiting element.getAnimations({subtree:true})). Extracting it into a shared helper avoids adding a near-duplicate block that SonarCloud new-code duplication would flag.",
+    "Neither fix relaxes an assertion bound: the Go path still requires the policy table to be created, and the browser path still requires collapsedWidth < initialWidth and expandedWidth > collapsedWidth."
+  ],
+  "scope": {
+    "in": [
+      "backend/pkg/database/connection_cache_namespace.go (new ConnectionCacheNamespace derived from DSN host:port/dbname, with pool-identity fallback)",
+      "backend/pkg/database/connection_cache_namespace_test.go (offline unit tests: distinct databases, distinct hosts, stability, no credential leakage, unusable-DSN fallback)",
+      "backend/internal/middleware/data_scope_middleware.go (buildDatabaseCacheNamespace delegates to database.ConnectionCacheNamespace; drop the %p implementation and the now-unused fmt import)",
+      "backend/internal/middleware/data_scope_middleware_test.go (TestDataScopeCacheKeysAreScopedPerConnection, TestMigrateDataScopePolicyIgnoresForeignCachedVerdict)",
+      "frontend/tests/smoke/helpers/layout-settle.ts (new readElementWidth and settleElementLayout)",
+      "frontend/tests/smoke-core/platform-shell-critical.spec.ts (await the collapsed state class and settle before measuring)",
+      "frontend/tests/smoke/platform/shell-top-panels.spec.ts (reuse the shared helper instead of its local copies)",
+      "docs/harness/failure-registry.md (FR-012, FR-013)",
+      ".harness/tasks/2026-10-12-flake-signal-remediation/",
+      ".harness/evidence/2026-10-12-flake-signal-remediation/",
+      "docs/harness/tasks/2026-10-12-flake-signal-remediation.task.md"
+    ],
+    "out": [
+      "Relaxing any assertion threshold, adding test retries, or serializing the Go suite: that hides the race instead of removing it",
+      "Changing MigrateDataScopePolicy's fail-closed semantics, the ShouldAutoMigrate branch, or any policy read logic",
+      "Promoting Core Smoke from report-only to blocking: tests/smoke-core/README.md requires consecutive green runs plus a maintainer decision",
+      "Touching frontend/src/**, backend/modules/**, .github/workflows/**, .sonarcloud.properties, or any package.json script entry",
+      "Adding or removing smoke specs (the coverage contract must stay at 34 specs / 20 script entries)"
+    ]
+  },
+  "acceptanceCriteria": [
+    "ConnectionCacheNamespace returns distinct namespaces for distinct host:port/dbname pairs and a stable namespace for the same DSN, without embedding credentials.",
+    "buildDatabaseCacheNamespace no longer depends on the *sql.DB pointer address.",
+    "The new regression tests fail against the legacy %p namespace and pass against the new one.",
+    "platform-shell-critical.spec.ts measures the sidebar only after the Arco collapsed state class has flipped and the width transition has finished; assertion bounds are unchanged.",
+    "settleElementLayout is shared by both specs; no duplicated helper block is added.",
+    "gofmt/go vet/go build, tsc --noEmit and eslint --max-warnings 0 are clean on the changed files.",
+    "The smoke coverage contract still reports 34 specs and 20 script entries.",
+    "Hosted CI on the PR and on the merge commit is green, including the push-triggered Core Smoke job."
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "ci-workflow",
+    "ownerLayer": "consumer-repository"
+  },
+  "verificationPlan": {
+    "commands": [
+      "go build ./... && go vet ./pkg/database/ ./internal/middleware/ && gofmt -l ./pkg/database/ ./internal/middleware/",
+      "go test ./pkg/database/ -run TestConnectionCacheNamespace -v",
+      "go test ./internal/middleware/ -run 'TestDataScope|TestMigrateDataScopePolicy|TestApplyRolePolicy|TestPolicy|TestAdminBypasses|TestEmptyCustom|TestMissingPolicy|TestRoleDataScope' -v",
+      "GOGC=20 go test ./internal/middleware/ -count=25  (legacy %p namespace must fail; fixed namespace must pass)",
+      "npx tsc --noEmit -p tsconfig.json && npx eslint tests/smoke/helpers/layout-settle.ts tests/smoke-core/platform-shell-critical.spec.ts tests/smoke/platform/shell-top-panels.spec.ts --max-warnings 0",
+      "npx playwright test tests/smoke-core/platform-shell-critical.spec.ts --config playwright.config.ts (local real stack: MySQL + Redis backend on :8080, Vite on :5173)",
+      "node frontend/scripts/check-smoke-coverage-contract.mjs",
+      "node scripts/check-pr-governance.mjs && node scripts/check-duplication.mjs",
+      "node scripts/harness/check-adoption.mjs --strict && node scripts/harness/check-task-packet.mjs && node scripts/harness/check-evidence.mjs --strict && node scripts/harness/check-failure-registry.mjs"
+    ],
+    "runtimeEvidence": [
+      "Legacy-namespace control run failing with Error 1146 under GOGC=20 -count=25",
+      "Fixed-namespace stress runs passing at the same settings",
+      "Playwright run of platform-shell-critical.spec.ts against the local real stack",
+      "Coverage contract pass line (34 specs / 20 script entries)"
+    ]
+  },
+  "runtimeSensitive": true,
+  "runtimeGap": "The browser fix is verified on this host by running the real spec against a local stack (MySQL + Redis backend on :8080, Vite on :5173) rather than by CI, because Core Smoke is push-triggered and report-only and therefore does not run on pull requests. The final disposition is still hosted CI: the merge-commit push must show a green Core Smoke job.",
+  "linkage": {
+    "assessment": "docs/harness/tasks/2026-10-12-flake-signal-remediation.task.md",
+    "evidenceDir": ".harness/evidence/2026-10-12-flake-signal-remediation/",
+    "summaryFile": ".harness/evidence/2026-10-12-flake-signal-remediation/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-12-flake-signal-remediation/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/failure-registry.md",
+      ".github/workflows/smoke-core.yml",
+      "frontend/playwright.config.ts"
+    ]
+  }
+}
