@@ -1,0 +1,152 @@
+name: Foundation Release Backfill
+
+# Repairs a foundation release that was published without its artifact set.
+#
+# v0.14.0, v0.15.0 and v0.16.0 all shipped with zero assets because the publish
+# step is a local `npm run release:foundation:publish` that nobody ran, and
+# nothing verified the published outcome. The Foundation Release Verify workflow
+# now fails loudly on that state, but it cannot repair it.
+#
+# This workflow rebuilds the bundle from the release commit and uploads the four
+# expected assets. It is dispatch-only and defaults to dry_run so the rebuild is
+# reviewed before anything is written to a published release.
+#
+# The bundle must be built with the scripts from the release commit itself,
+# because build-release-bundle.mjs validates that the worktree's shared paths
+# match the manifest's baseCommit. The verification gate comes from the default
+# branch, since it did not exist in earlier releases.
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_version:
+        description: "Release tag to backfill, for example pantheon-base-v0.16.0"
+        required: true
+      release_line:
+        description: "Release line, for example release/0.16"
+        required: true
+      base_commit:
+        description: "Full 40-character commit the release tag points at"
+        required: true
+      dry_run:
+        description: "Build and verify only; do not upload to the release"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: foundation-release-backfill-${{ inputs.release_version }}
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: "24"
+
+jobs:
+  backfill:
+    name: Backfill Release Assets
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Validate inputs
+        env:
+          RELEASE_VERSION: ${{ inputs.release_version }}
+          BASE_COMMIT: ${{ inputs.base_commit }}
+        shell: bash
+        run: |
+          if [[ ! "$RELEASE_VERSION" =~ ^pantheon-base-v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::release_version must match pantheon-base-vX.Y.Z"
+            exit 1
+          fi
+          if [[ ! "$BASE_COMMIT" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "::error::base_commit must be a full 40-character lowercase hex commit"
+            exit 1
+          fi
+
+      - name: Checkout release commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ inputs.base_commit }}
+          fetch-depth: 0
+          persist-credentials: false
+          path: build
+
+      - name: Checkout verification gate
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          fetch-depth: 1
+          persist-credentials: false
+          path: gate
+
+      - name: Setup Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          package-manager-cache: false
+
+      - name: Build release manifest and bundle
+        working-directory: build
+        run: |
+          npm run release:foundation:cut -- \
+            --release-version "${{ inputs.release_version }}" \
+            --release-line "${{ inputs.release_line }}" \
+            --base-commit "${{ inputs.base_commit }}"
+
+      - name: Verify the rebuilt bundle before uploading
+        run: |
+          node gate/scripts/foundation-release/check-release-assets.mjs \
+            --release-version "${{ inputs.release_version }}" \
+            --dist "build/dist/foundation-releases" \
+            --local-only
+
+      - name: Upload missing assets
+        if: ${{ inputs.dry_run == false }}
+        working-directory: build/dist/foundation-releases/${{ inputs.release_version }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_VERSION: ${{ inputs.release_version }}
+        run: |
+          gh release upload "$RELEASE_VERSION" --clobber \
+            "foundation-release-${RELEASE_VERSION}.tgz" \
+            "foundation-release-${RELEASE_VERSION}.tgz.sha256" \
+            "repo.tar" \
+            "repo.tar.sha256"
+
+      - name: Verify published assets
+        if: ${{ inputs.dry_run == false }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          node gate/scripts/foundation-release/check-release-assets.mjs \
+            --release-version "${{ inputs.release_version }}" \
+            --repo "${{ github.repository }}" \
+            --skip-local
+
+      - name: Summarize
+        if: always()
+        env:
+          BUILD: ${{ job.status }}
+          RELEASE_VERSION: ${{ inputs.release_version }}
+          DRY_RUN: ${{ inputs.dry_run }}
+        shell: bash
+        run: |
+          {
+            echo "## Foundation Release Backfill"
+            echo ""
+            echo "Release: \`$RELEASE_VERSION\`"
+            echo ""
+            echo "| Step | Result |"
+            echo "|------|--------|"
+            echo "| Rebuild and verify | $BUILD |"
+            echo ""
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          if [ "$DRY_RUN" = "true" ]; then
+            {
+              echo "Dry run: nothing was uploaded. Re-dispatch with \`dry_run: false\`"
+              echo "to publish the rebuilt assets to the release."
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi

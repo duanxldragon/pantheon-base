@@ -1,0 +1,93 @@
+{
+  "taskId": "2026-10-12-foundation-release-asset-gate",
+  "title": "Gate the foundation release artifact set so a release can no longer be published without its bundle",
+  "goal": "A foundation release is only consumable through its published artifacts: pantheon-ops materializes a release from repo.tar plus the bundle archive, both verified by SHA-256. pantheon-base-v0.14.0, v0.15.0 and v0.16.0 were all published with zero assets while the Release Gate, CI and the smoke suites stayed green, so every consumer that pinned those versions had nothing to consume and the release line silently stopped advancing. The release scripts were only ever covered by unit tests of the scripts themselves; nothing asserted the published outcome. Add a check that verifies a release carries its complete, checksum-consistent artifact set, wire it to the `release: published` event so the state is caught immediately, and provide a dispatch-only, dry-run-by-default workflow that can rebuild and upload the missing assets from the release commit.",
+  "primaryLayer": "platform",
+  "status": "in-progress",
+  "priority": "P1",
+  "type": "ci",
+  "estimatedComplexity": "medium",
+  "findings": [
+    "gh release view pantheon-base-v0.16.0 --json assets returns 0 assets. The same is true for v0.15.0 and v0.14.0. v0.13.0 and v0.12.1 both carry 4 assets: foundation-release-<version>.tgz, its .sha256, repo.tar and repo.tar.sha256. The artifact channel therefore broke at v0.14.0 and stayed broken for three releases.",
+    "The consumer is pinned to the last version that still had artifacts. pantheon-ops/foundation-release.lock.json is locked to releaseVersion pantheon-base-v0.13.0 and .foundation/releases/ stops at pantheon-base-v0.13.0. A lock cannot be advanced to a version that has nothing to materialize, so the broken artifact channel is the direct cause of the ops baseline being three minor versions behind.",
+    "scripts/foundation-release/publish-foundation-release.mjs does upload the assets (gh release create followed by gh release upload), and package.json exposes release:foundation:bundle/cut/manifest/publish. The scripts are correct; the step was simply never wired into any workflow and was never run. Releases after v0.13.0 were created by hand.",
+    "CI only ran npm run test:foundation-release (.github/workflows/ci.yml:186), which unit-tests the release scripts. A green run of that job says nothing about whether a release carries its artifacts, so three consecutive broken releases produced no signal.",
+    ".github/workflows/release-gate.yml already documents itself as 'the single hard checkpoint that must pass before pantheon-base-vX.Y.Z is tagged and the release bundle is published', but it contains no step that observes the bundle. The documented contract and the implemented gate disagree.",
+    "The lock file already declares the artifact contract that nothing verified: releaseArtifact.assetName/checksum and repoSnapshot.assetName/sha256 with generatedFrom: git-archive. The expected asset set is therefore not a new invention, it is an existing declaration that had no sensor.",
+    "scripts/foundation-release/check-release-assets.mjs reuses validateReleaseAssetChecksum and isMissingGitHubReleaseError, both already exported by publish-foundation-release.mjs, so the checksum semantics are identical to the publish path rather than a second implementation that could drift.",
+    "publish-foundation-release.mjs creates the release before uploading assets, so the release: published event can fire while the upload is still in flight. The verify job therefore polls with --wait instead of failing on that race.",
+    "Backfill feasibility for the current version was verified statically: checking out commit 3fe572f3244070ab14e304bc075017f20e86e9cd and running build-release-manifest.mjs produces a manifest whose 52 sharedPaths (backend 4, frontend 46, docs 2) all exist at that commit, so the bundle build would succeed. The rebuild itself cannot run on this host because Node cannot spawn subprocesses here (see runtimeGap)."
+  ],
+  "scope": {
+    "in": [
+      "scripts/foundation-release/check-release-assets.mjs (new gate: required asset set, local bundle checksum verification, remote asset verification with optional polling, --local-only mode)",
+      "tests/scripts/foundation-release/check-release-assets.test.mjs (new hermetic unit tests)",
+      "package.json (new check:release-assets script)",
+      ".github/workflows/foundation-release-verify.yml (new: runs the gate on release: published and on dispatch)",
+      ".github/workflows/foundation-release-backfill.yml (new: dispatch-only, dry-run by default, rebuilds and uploads missing assets)",
+      "docs/harness/failure-registry.md (FR-014)",
+      ".harness/tasks/2026-10-12-foundation-release-asset-gate/",
+      ".harness/evidence/2026-10-12-foundation-release-asset-gate/",
+      "docs/harness/tasks/2026-10-12-foundation-release-asset-gate.task.md"
+    ],
+    "out": [
+      "Uploading anything to v0.14.0, v0.15.0 or v0.16.0 as part of this change: repairing published releases is a separate, deliberate dispatch of the backfill workflow, not a side effect of adding the gate",
+      "Changing the release scripts' behaviour: publish-foundation-release.mjs, build-release-bundle.mjs, build-release-manifest.mjs and release-cli.mjs are read and reused, not modified",
+      "Rewriting the sharedPaths contract or the foundation release model: the ownership list and the snapshot-plus-overlay design are untouched",
+      "Making the new workflow a required check: that is a branch-protection decision for a maintainer, recorded as a human gate",
+      "Touching backend/**, frontend/**, or any existing workflow's jobs"
+    ]
+  },
+  "acceptanceCriteria": [
+    "check-release-assets.mjs fails for a release missing any of the four assets and passes for v0.13.0, the last release that carries them.",
+    "The gate verifies local bundle checksums with the same validator the publish path uses, so a locally built bundle cannot be uploaded unverified.",
+    "--local-only verifies the local bundle without contacting GitHub, so it can gate an upload step.",
+    "The unit tests are hermetic: no network, no subprocess, and they cover the pass case, each missing-asset case, tampered checksums, missing checksum sidecars, an absent local bundle, the release-not-found path, the publish-in-flight retry, and unexpected errors being rethrown rather than reported as a gate failure.",
+    "The verify workflow triggers on release: published and fails when a release is missing assets.",
+    "The backfill workflow is dispatch-only, defaults to dry_run, and verifies the rebuilt bundle before uploading.",
+    "Both new workflows pin actions by commit SHA and declare least-privilege permissions.",
+    "npm run check:duplication still passes and the new script adds no duplicated helper block.",
+    "The failure registry validates with FR-014 registered."
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "ci-workflow",
+    "ownerLayer": "consumer-repository"
+  },
+  "verificationPlan": {
+    "commands": [
+      "node --test tests/scripts/foundation-release/check-release-assets.test.mjs",
+      "npm run check:release-assets -- --release-version pantheon-base-v0.13.0 --repo duanxldragon/pantheon-base",
+      "npm run check:release-assets -- --release-version pantheon-base-v0.16.0 --repo duanxldragon/pantheon-base --skip-local",
+      "npm run check:release-assets -- --release-version 0.16.0 --repo duanxldragon/pantheon-base --skip-local",
+      "npm run check:release-assets -- --release-version pantheon-base-v0.16.0 --dist dist/foundation-releases --local-only",
+      "npm run check:duplication",
+      "node scripts/harness/check-failure-registry.mjs",
+      "node scripts/harness/check-task-packet.mjs && node scripts/harness/check-evidence.mjs --strict",
+      "YAML parse plus action-pinning assertion over both new workflow files"
+    ],
+    "runtimeEvidence": [
+      "v0.13.0 gate run passing with all four assets listed, exit 0",
+      "v0.16.0 gate run failing with all four assets listed as missing, exit 1",
+      "Local bundle verification of v0.13.0 passing with both archive checksums validated",
+      "21/21 unit tests passing",
+      "Manifest generation and sharedPath existence check for commit 3fe572f3 (v0.16.0) reporting 52/52 present"
+    ]
+  },
+  "runtimeSensitive": true,
+  "runtimeGap": "This host cannot execute the rebuild or the spawn-based parts of the existing release test suite: Node cannot spawn subprocesses here at all, so spawnSync('git', ...) and spawnSync(process.execPath, ...) both fail with EBUSY. The same EBUSY already fails 17 of the 40 pre-existing foundation-release tests on this machine, on files this change does not touch, so it is an environment limitation rather than a regression. Consequences: (1) build-release-bundle.mjs, which shells out to git rev-parse and git archive, could not be run locally, so the backfill is delivered as a CI workflow instead of a local procedure and was verified statically rather than executed; (2) the new gate's unit tests were deliberately written without spawning so they run on this host, and the CLI wiring is covered through an exported runCheckCli rather than a spawned process; (3) hosted CI on ubuntu-latest, where spawning works, remains the only place the workflows themselves are exercised.",
+  "linkage": {
+    "assessment": "docs/harness/tasks/2026-10-12-foundation-release-asset-gate.task.md",
+    "evidenceDir": ".harness/evidence/2026-10-12-foundation-release-asset-gate/",
+    "summaryFile": ".harness/evidence/2026-10-12-foundation-release-asset-gate/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-12-foundation-release-asset-gate/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/designs/FOUNDATION_RELEASE_MODEL.md",
+      "docs/VERSION_MANAGEMENT_GUIDE.md",
+      ".github/workflows/release-gate.yml",
+      ".github/workflows/ci.yml"
+    ]
+  }
+}

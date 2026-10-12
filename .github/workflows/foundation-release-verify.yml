@@ -1,0 +1,119 @@
+name: Foundation Release Verify
+
+# A foundation release is only consumable when its published assets are
+# complete. pantheon-ops materializes a release from repo.tar plus the bundle
+# archive, both verified by SHA-256, so a release missing any of the four
+# assets silently breaks every consumer that pins it.
+#
+# v0.14.0, v0.15.0 and v0.16.0 were all published with zero assets while the
+# Release Gate, CI and the smoke suites stayed green, because nothing asserted
+# that a release actually carries its artifacts. The release scripts were only
+# ever covered by unit tests of the scripts themselves, never by a check of the
+# published outcome.
+#
+# This workflow closes that gap. It runs on `release: published` and fails the
+# moment a release is missing an asset, instead of letting the next consumer
+# discover it weeks later.
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      release_version:
+        description: "Release tag to verify, for example pantheon-base-v0.16.0"
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: foundation-release-verify-${{ github.event.release.tag_name || inputs.release_version }}
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: "24"
+
+jobs:
+  verify-assets:
+    name: Verify Release Assets
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.target.outputs.tag }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Setup Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          package-manager-cache: false
+
+      - name: Resolve release tag
+        id: target
+        env:
+          EVENT_TAG: ${{ github.event.release.tag_name }}
+          INPUT_TAG: ${{ inputs.release_version }}
+        shell: bash
+        run: |
+          tag="${EVENT_TAG:-$INPUT_TAG}"
+          if [ -z "$tag" ]; then
+            echo "::error::No release tag resolved from the event or workflow input."
+            exit 1
+          fi
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "Verifying release $tag"
+
+      # `gh release create` runs before `gh release upload` in
+      # publish-foundation-release.mjs, so the `published` event can fire while
+      # the bundle is still uploading. --wait polls until the asset set is
+      # complete instead of failing on that race.
+      - name: Verify published release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.target.outputs.tag }}
+        run: |
+          npm run check:release-assets -- \
+            --release-version "$TAG" \
+            --repo "${{ github.repository }}" \
+            --wait 600
+
+  summary:
+    name: Foundation Release Verify Summary
+    needs: [verify-assets]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Summarize
+        env:
+          VERIFY: ${{ needs.verify-assets.result }}
+          TAG: ${{ needs.verify-assets.outputs.tag }}
+        shell: bash
+        run: |
+          tag="${TAG:-<unresolved>}"
+          {
+            echo "## Foundation Release Verify"
+            echo ""
+            echo "Release: \`$tag\`"
+            echo ""
+            echo "| Gate | Result |"
+            echo "|------|--------|"
+            echo "| Published assets complete | $VERIFY |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          if [ "$VERIFY" != "success" ]; then
+            {
+              echo ""
+              echo "The release does not carry its complete artifact set. Expected"
+              echo "\`foundation-release-$tag.tgz\`, its \`.sha256\`, \`repo.tar\` and"
+              echo "\`repo.tar.sha256\`."
+              echo ""
+              echo "Re-publish with \`npm run release:foundation:publish\`, or upload the"
+              echo "missing assets with \`gh release upload $tag <files>\`."
+            } >> "$GITHUB_STEP_SUMMARY"
+            echo "::error::Release $tag does not carry its complete artifact set."
+            exit 1
+          fi

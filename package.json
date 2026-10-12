@@ -7,6 +7,7 @@
     "check:docs-frontmatter": "node scripts/frontmatter-check.mjs",
     "check:docs-frontmatter:legacy": "node scripts/frontmatter-check.mjs --report-legacy",
     "check:duplication": "node scripts/check-duplication.mjs",
+    "check:release-assets": "node scripts/foundation-release/check-release-assets.mjs",
     "check:github-feedback": "node scripts/fetch-github-feedback.mjs --check",
     "check:pr-governance": "node scripts/check-pr-governance.mjs",
     "check:harness-method": "node scripts/harness/check-method-health.mjs --root . --strict",

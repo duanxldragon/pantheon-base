@@ -1,0 +1,135 @@
+{
+  "taskId": "2026-10-12-foundation-release-asset-gate",
+  "repo": "pantheon-base",
+  "executedAt": "2026-10-12T12:45:00+08:00",
+  "agent": {
+    "tool": "other",
+    "adapter": "software-workshop-agent"
+  },
+  "commands": [
+    {
+      "command": "gh release list --limit 8 && for t in v0.16.0 v0.15.0 v0.14.0 v0.13.1 v0.13.0 v0.12.1; do gh release view \"pantheon-base-$t\" --json assets --jq '.assets | length'; done",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Establishes the break. v0.16.0, v0.15.0 and v0.14.0 each report 0 assets. v0.13.0 and v0.12.1 each report 4. The artifact channel broke at v0.14.0 and stayed broken for three consecutive releases, with no failing signal anywhere."
+    },
+    {
+      "command": "gh release view pantheon-base-v0.13.0 --json assets --jq '.assets[] | \"\\(.name) \\(.size)\"'",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Recovers the intended artifact shape from the last release that worked: foundation-release-pantheon-base-v0.13.0.tgz (18229344 bytes), foundation-release-pantheon-base-v0.13.0.tgz.sha256 (111 bytes), repo.tar (30556160 bytes), repo.tar.sha256 (75 bytes). This four-asset set is what the new gate requires."
+    },
+    {
+      "command": "cat pantheon-ops/foundation-release.lock.json (parsed: releaseVersion, sharedPaths) && ls pantheon-ops/.foundation/releases/",
+      "cwd": "../pantheon-ops",
+      "status": "passed",
+      "details": "Links the break to its consumer impact. The lock is pinned to pantheon-base-v0.13.0 and the materialized bundles stop at pantheon-base-v0.13.0. A lock cannot advance to a version that has no artifacts, so the missing assets are the direct cause of the ops baseline sitting three minor versions behind, not a coincidence."
+    },
+    {
+      "command": "grep -n 'release:foundation' package.json && grep -rn 'foundation' .github/workflows/",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Confirms the scripts exist and are unwired. package.json exposes release:foundation:bundle/cut/manifest/publish; the only workflow reference is ci.yml:186 running npm run test:foundation-release. No workflow ever runs publish, which is why releases after v0.13.0 were created by hand without assets."
+    },
+    {
+      "command": "sed -n '1,20p' .github/workflows/release-gate.yml",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Shows the documented contract disagreeing with the implemented gate. The header states the gate 'must pass before pantheon-base-vX.Y.Z is tagged and the release bundle is published', but no job in the file observes the published bundle."
+    },
+    {
+      "command": "node scripts/foundation-release/check-release-assets.mjs --release-version pantheon-base-v0.13.0 --repo duanxldragon/pantheon-base",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Positive control, exit 0. '[ok] local bundle pantheon-base-v0.13.0: foundation-release-pantheon-base-v0.13.0.tgz, repo.tar' followed by '[ok] release pantheon-base-v0.13.0 carries all 4 required assets'. Also exercises the local bundle path: both archives' SHA-256 sidecars validate against the same validateReleaseAssetChecksum the publish path uses."
+    },
+    {
+      "command": "node scripts/foundation-release/check-release-assets.mjs --release-version pantheon-base-v0.16.0 --repo duanxldragon/pantheon-base --skip-local",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Negative control, exit 1. '[FAIL] release pantheon-base-v0.16.0 is missing assets: foundation-release-pantheon-base-v0.16.0.tgz, foundation-release-pantheon-base-v0.16.0.tgz.sha256, repo.tar, repo.tar.sha256'. This is the state that previously produced no signal at all."
+    },
+    {
+      "command": "node scripts/foundation-release/check-release-assets.mjs --release-version 0.16.0 --repo duanxldragon/pantheon-base --skip-local",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Argument validation, exit 1 with 'release-version must match pantheon-base-vX.Y.Z' on stderr. Confirms the gate cannot be pointed at a bare semver and silently pass."
+    },
+    {
+      "command": "node --test tests/scripts/foundation-release/check-release-assets.test.mjs",
+      "cwd": ".",
+      "status": "passed",
+      "details": "21/21 pass in 2.9s. Covers: the required asset set; a complete asset list accepted; each missing asset reported; an empty release reported as fully missing; a valid local bundle accepted; a tampered archive rejected on SHA-256 mismatch; a missing checksum sidecar rejected; an absent version directory reported as not present; local-only accepting a valid bundle without touching GitHub (asserted by a fetch spy that must not be called); local-only failing when no bundle was built; local-only plus skip-local rejected as contradictory; the complete-release pass path; the missing-asset fail path; release-not-found failing without waiting; the publish-in-flight retry succeeding on the second attempt with exactly one 5000ms sleep; unexpected errors rethrown rather than reported as a gate failure; malformed options rejected; --local-only and --dist parsed; the version-format rejection; and the missing --release-version rejection."
+    },
+    {
+      "command": "npm run --silent check:release-assets -- --release-version pantheon-base-v0.13.0 --repo duanxldragon/pantheon-base",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Confirms the npm script wiring, not just the direct node invocation. Exit 0 with the same two [ok] lines."
+    },
+    {
+      "command": "npm run --silent check:duplication",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Result: PASS. The new script reuses validateReleaseAssetChecksum and isMissingGitHubReleaseError from publish-foundation-release.mjs instead of reimplementing checksum logic, so it adds no duplicated block above the 21-line detection floor. This was a design constraint: copying runCommand/parseRepoParts/resolveRepoFullName would have been a ~41-line contiguous duplicate."
+    },
+    {
+      "command": "python -c \"import yaml, re; ...\" over .github/workflows/foundation-release-verify.yml and foundation-release-backfill.yml",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Both files parse as YAML. verify triggers on ['release','workflow_dispatch'] with top-level permissions contents:read and two jobs (verify-assets, summary with needs and if:always()); backfill triggers on ['workflow_dispatch'] only with contents:write scoped to the job. Every uses: entry matches /[^@]+@[0-9a-f]{40}/, so both workflows are SHA-pinned like the rest of the repository."
+    },
+    {
+      "command": "git worktree add --detach /tmp/v016-wt 3fe572f3244070ab14e304bc075017f20e86e9cd && node scripts/foundation-release/build-release-manifest.mjs --release-version pantheon-base-v0.16.0 --release-line release/0.16 --base-commit 3fe572f3...",
+      "cwd": "/tmp/v016-wt",
+      "status": "passed",
+      "details": "Backfill feasibility, step 1. Checking out the v0.16.0 release commit and running that era's manifest builder produces releases/pantheon-base-v0.16.0/{manifest.json,verification-summary.json,release-notes.md,upgrade-notes.md,consumer-impact.md}. The manifest builder does not shell out, so it runs on this host."
+    },
+    {
+      "command": "python -c \"...\" verifying every manifest sharedPath exists at commit 3fe572f3",
+      "cwd": "/tmp/v016-wt",
+      "status": "passed",
+      "details": "Backfill feasibility, step 2. The generated manifest declares 52 sharedPaths (backend 4, frontend 46, docs 2) and 0 are missing at that commit. Since copyEntry throws on a missing shared path, this is the precondition that would have failed the rebuild; it does not. Recorded as 'bundle build should succeed'."
+    },
+    {
+      "command": "node scripts/foundation-release/cut-foundation-release.mjs --release-version pantheon-base-v0.16.0 --release-line release/0.16 --base-commit 3fe572f3...",
+      "cwd": "/tmp/v016-wt",
+      "status": "failed",
+      "details": "The rebuild itself could NOT be executed on this host, and this is recorded rather than hidden. build-release-bundle.mjs calls runGit -> spawnSync('git', ['rev-parse', ...]), which fails here with 'git rev-parse 3fe572f3...^{commit} failed' because Node cannot spawn subprocesses in this environment. A direct probe confirms the scope: spawnSync returns status null with error.code EBUSY for git, for node and even for echo. The same limitation already fails 17 of the 40 pre-existing foundation-release tests on this machine, on files this change does not touch, so it is environmental rather than a regression. This is why the backfill is delivered as a CI workflow and was verified statically instead of executed."
+    },
+    {
+      "command": "node --test tests/scripts/foundation-release/ (existing suite, unmodified files)",
+      "cwd": ".",
+      "status": "failed",
+      "details": "Baseline for the environment claim: 23 pass / 17 fail locally, all 17 from spawn EBUSY, on build-release-bundle/build-release-manifest/publish tests that this change does not modify. Establishes that the local spawn failure predates this work and is not caused by it."
+    },
+    {
+      "command": "npm run --silent check:structure",
+      "cwd": ".",
+      "status": "failed",
+      "details": "Reports 'structure check failed to enumerate files: spawnSync git EBUSY' - the same environmental limitation, on a file this change does not touch. Hosted CI on ubuntu-latest is the authoritative run for the spawn-dependent gates."
+    }
+  ],
+  "runtimeSensitive": true,
+  "runtimeGap": "Node cannot spawn subprocesses on this host: spawnSync returns status null with error.code EBUSY for git, node and echo alike. Any release script that shells out (build-release-bundle.mjs via git rev-parse / git archive, and the spawn-based existing tests) therefore cannot run here. The backfill was consequently delivered as a CI workflow and verified statically - the manifest builds, and all 52 sharedPaths exist at the release commit - rather than executed end to end. The new gate's own tests were deliberately written to avoid spawning so they do run here; the CLI wiring is covered through an exported runCheckCli rather than a spawned process. Hosted CI on ubuntu-latest remains the only environment where the two new workflows are actually exercised.",
+  "knownGaps": [
+    "The bundle rebuild was not executed end to end on this host: Node cannot spawn git here, so git rev-parse and git archive both fail with EBUSY. Feasibility for v0.16.0 is established statically (manifest generated, 52/52 sharedPaths present at commit 3fe572f3) rather than by producing the archive.",
+    "Neither new workflow has been exercised by GitHub Actions yet. release: published only fires on the default branch, so the verify workflow cannot run before this change is merged, and the backfill workflow defaults to dry_run. Their first hosted runs are post-merge.",
+    "The new workflow is not a required check. Branch protection is a maintainer decision, so a release published without assets will go red but will not block on its own until the check is added to the required set.",
+    "Repairing v0.14.0, v0.15.0 and v0.16.0 is not part of this change. The backfill workflow enables it, but uploading to already-published releases is a deliberate operation that should be dispatched and reviewed separately.",
+    "The gate asserts the presence and checksum of the four assets. It does not verify that the bundle's contents match the release manifest's sharedPaths, which build-release-bundle.mjs already validates at build time.",
+    "Local execution of the spawn-dependent repository gates (check:structure, the 17 spawn-based release tests) is impossible on this host, so those remain CI-only signals for this change."
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-12-foundation-release-asset-gate/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-12-foundation-release-asset-gate/",
+    "reviewFile": ".harness/evidence/2026-10-12-foundation-release-asset-gate/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/designs/FOUNDATION_RELEASE_MODEL.md",
+      "docs/VERSION_MANAGEMENT_GUIDE.md",
+      ".github/workflows/release-gate.yml",
+      ".github/workflows/ci.yml"
+    ]
+  }
+}
