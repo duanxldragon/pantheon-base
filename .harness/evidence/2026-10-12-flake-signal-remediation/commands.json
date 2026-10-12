@@ -1,0 +1,145 @@
+{
+  "taskId": "2026-10-12-flake-signal-remediation",
+  "repo": "pantheon-base",
+  "executedAt": "2026-10-12T11:20:00+08:00",
+  "agent": {
+    "tool": "other",
+    "adapter": "software-workshop-agent"
+  },
+  "commands": [
+    {
+      "command": "gh api repos/duanxldragon/pantheon-base/actions/runs/38174480716/attempts/1/jobs --jq '.jobs[] | select(.name==\"Backend Tests\") | .id' then gh api .../actions/jobs/<id>/logs",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Root cause of the Go flake. The attempt-1 log of main commit c7e564bc (run 38174480716) contains: 'data_scope_middleware_test.go:25 Error 1146 (42S02): Table pantheon_base_testdatascopemiddlewa_1791752467296821037_4675.system_role_data_scope doesn't exist' followed by the INSERT and '--- FAIL: TestDataScopeMiddlewareInjectsRoleDeptScope ... seed role data scope: Error 1146'. The immediately preceding log lines are the fail-closed tests that create a broken same-named table and cache 'exists=true' for it. Attempt 2 of the same run passed, which is why this only ever looked like a flake."
+    },
+    {
+      "command": "gh api repos/duanxldragon/pantheon-base/actions/runs/38187794895/attempts/1/jobs --jq '.jobs[] | select(.name==\"Core Smoke\") | .id' then gh api .../actions/jobs/<id>/logs",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Root cause of the smoke flake. Attempt 1 of run 38187794895 (main 9cb2d2ca) failed 'sidebar menu expands and collapses' twice: 'Error: expect(received).toBeLessThan(expected) Expected: < 248 Received: 248' at line 80, and on retry 'Error: expect(received).toBeGreaterThan(expected) Expected: > 215.5625 Received: 108.265625' at line 88. Both are mid-transition samples of Arco Sider's 200ms width transition; every other test in the job passed."
+    },
+    {
+      "command": "throwaway diagnostic: open 12 testmysql pools sequentially in nested subtests, record fmt.Sprintf(\"%p\", sqlDB), runtime.GC() after each, count duplicate addresses",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "Measured on this host: 'opened 12 pools, 9 distinct addresses, 2 addresses reused' — one address appeared 3 times, another twice. This turns the pointer-recycling hypothesis into an observed property of the runtime. The diagnostic file was deleted immediately after the measurement (not part of the change set)."
+    },
+    {
+      "command": "go build ./... && gofmt -l ./pkg/database/ ./internal/middleware/ && go vet ./pkg/database/ ./internal/middleware/",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "Clean build, no unformatted files, vet silent after the middleware namespace delegation and the new pkg/database helper."
+    },
+    {
+      "command": "go test ./pkg/database/ -run TestConnectionCacheNamespace -v",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "4/4 pass: TestConnectionCacheNamespaceDistinguishesDatabases, ...DistinguishesHosts, ...NeverLeaksCredentials, ...FallsBackWhenDSNIsUnusable. The namespace for 'root:super_secret@tcp(127.0.0.1:3306)/pantheon?charset=utf8mb4' is exactly 'mysql:127.0.0.1:3306/pantheon', so no credential can reach a cache key."
+    },
+    {
+      "command": "go test ./internal/middleware/ -run 'TestDataScope|TestMigrateDataScopePolicy|TestApplyRolePolicy|TestPolicy|TestAdminBypasses|TestEmptyCustom|TestMissingPolicy|TestRoleDataScope' -v",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "14/14 pass against a live MySQL, including the two new cases TestDataScopeCacheKeysAreScopedPerConnection and TestMigrateDataScopePolicyIgnoresForeignCachedVerdict, plus the pre-existing fail-closed suite whose poisoning behaviour is unchanged."
+    },
+    {
+      "command": "PANTHEON_TEST_DSN=... GOGC=20 go test ./internal/middleware/ -count=25   # with the legacy %p namespace temporarily restored",
+      "cwd": "backend",
+      "status": "failed",
+      "details": "Control experiment, deliberately expected to fail. With buildDatabaseCacheNamespace reverted to fmt.Sprintf(\"%p\", sqlDB), run 1 failed: 'data_scope_middleware_test.go:90 Error 1146 (42S02): Table pantheon_base_testmigratedatascopep_1791773190728720500_2989.system_role_data_scope doesn't exist' with '--- FAIL: TestMigrateDataScopePolicyIgnoresForeignCachedVerdict'. This is the same failure mode as the CI log and it proves the new regression test actually guards the defect rather than merely describing it."
+    },
+    {
+      "command": "PANTHEON_TEST_DSN=... GOGC=20 go test ./internal/middleware/ -count=25   # with the fix applied, 3 consecutive runs",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "run 1: PASS, run 2: PASS, run 3: PASS. Same seed, same forced-GC pressure and the same 25x repetition that made the legacy implementation fail on the first run. 75 package executions with zero failures."
+    },
+    {
+      "command": "npx tsc --noEmit -p tsconfig.json && npx eslint tests/smoke/helpers/layout-settle.ts tests/smoke-core/platform-shell-critical.spec.ts tests/smoke/platform/shell-top-panels.spec.ts --max-warnings 0",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "Typecheck exit 0 and eslint exit 0 with zero warnings on the new shared helper and both consumers."
+    },
+    {
+      "command": "curl -s 'https://sonarcloud.io/api/issues/search?projectKeys=duanxldragon_pantheon-base&pullRequest=377&resolved=false&ps=50' && curl -s 'https://sonarcloud.io/api/qualitygates/project_status?projectKey=duanxldragon_pantheon-base&pullRequest=377'",
+      "cwd": ".",
+      "status": "failed",
+      "details": "First SonarCloud analysis of PR #377 reported 2 issues on new code and failed the gate on new_reliability_rating (3, threshold 1): go:S1764 MAJOR at data_scope_middleware_test.go:71 ('Correct one of the identical sub-expressions on both sides of this operator' — the stability check compared two textually identical calls) and typescript:S7503 MINOR at layout-settle.ts:6 (readElementWidth declared async with no await). Both were introduced by this PR, not inherited. The S7503 one is the same hazard recorded for the PR #373 file split: moving a long-lived local helper into a new file re-classifies it as new code and surfaces latent smells."
+    },
+    {
+      "command": "edit: store the derived key in a variable and reuse TableName(); drop the redundant async on readElementWidth; re-run gofmt/go vet/go test and tsc/eslint",
+      "cwd": ".",
+      "status": "passed",
+      "details": "go:S1764 fixed by assigning buildTableExistCacheKey(first, tableName) to firstTableKey and comparing that against a fresh call, so no two operands are textually identical while the stability property is still asserted; the table name now comes from (&SystemRoleDataScope{}).TableName() so the literal is not repeated three times either. typescript:S7503 fixed by removing async from readElementWidth — locator.evaluate already returns Promise<number>, so the signature is unchanged. Re-verified: gofmt clean, go vet silent, the three data-scope tests pass, tsc --noEmit exit 0, eslint exit 0."
+    },
+    {
+      "command": "probe: chromium page with a 248px div that transitions to 76px over 200ms; read the width immediately after the style change, then read it again after awaiting element.getAnimations({subtree:true}).finished",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "{\"w1\":248,\"mid\":248,\"w2\":76}. The immediate post-change read returns the *old* width because the transition has not started yet, and the post-animation read returns the target. This reproduces both CI symptoms (248 vs 248, and the retry's partial values) and shows that awaiting getAnimations is what makes settleElementLayout's measurement correct."
+    },
+    {
+      "command": "npx playwright test tests/smoke-core/platform-shell-critical.spec.ts --config <local config adding launchOptions.executablePath> --workers=1",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "Real-stack run on this host: MySQL + Redis backend built from this working tree on 127.0.0.1:8080 and the project's own start-smoke-vite on 127.0.0.1:5173, admin login against the seeded dev database. 4 passed (23.1s): shell structure, 'sidebar menu expands and collapses' (3.4s), system-page navigation, breadcrumb. Run twice with the same result. The local config only overrode the browser executable path and was deleted afterwards; no product or test file was altered to make this pass."
+    },
+    {
+      "command": "npx playwright test ... --grep 'sidebar menu expands and collapses' --repeat-each=12 --retries=0   # with the pre-fix test body temporarily restored",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "Honest negative result: the pre-fix body passed 12/12 on this host. This host is fast enough that the 200ms transition usually starts before the immediate boundingBox() read resolves, so the race did not fire locally. The pre-fix failure is therefore evidenced by the CI log and the animation probe above, not by a local reproduction; the local run only establishes that the fixed version is not slower or more brittle."
+    },
+    {
+      "command": "node frontend/scripts/check-smoke-coverage-contract.mjs",
+      "cwd": ".",
+      "status": "passed",
+      "details": "smoke coverage contract passed for 34 smoke specs and 20 script entries — unchanged, as expected: the new file is a helper under tests/smoke/helpers/ and no spec was added, removed or renamed."
+    },
+    {
+      "command": "node scripts/check-duplication.mjs && node scripts/check-pr-governance.mjs",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Duplication Result: PASS (no new duplicated block; extracting settleElementLayout is what prevented a second copy of the 20-line helper). PR governance fields present."
+    },
+    {
+      "command": "node scripts/harness/check-adoption.mjs --strict && node scripts/harness/check-task-packet.mjs && node scripts/harness/check-evidence.mjs --strict && node scripts/harness/check-failure-registry.mjs --strict && node scripts/harness/check-doc-frontmatter.mjs && node scripts/harness/check-doc-links.mjs && node scripts/harness/check-doc-inventory.mjs && node scripts/harness/check-template-health.mjs && node scripts/harness/check-sync-drift.mjs && node scripts/harness/check-boundaries.mjs",
+      "cwd": ".",
+      "status": "passed",
+      "details": "All harness gates pass with the new task packet, evidence and registry rows: adoption strict 0 findings, task packet PASS, evidence PASS, failure registry 0 errors/0 warnings, doc frontmatter 0/0, doc links 0 findings, doc inventory 0 findings, template health 0/0, sync drift 0 findings, boundaries no findings. The only remaining message is the pre-existing advisory 'openspec skeleton directory is missing' from the earlier deletion, which exits 0 and is continue-on-error in CI."
+    }
+  ],
+  "browserEvidence": [
+    {
+      "viewport": "1280x720 (Playwright default for the smoke-core project)",
+      "url": "http://127.0.0.1:5173/dashboard",
+      "visualGap": "No screenshot is attached: this fix removes a measurement race in a test, it does not change any rendered pixel, so a visual diff would show nothing. What was actually verified in the browser is behavioural: after clicking .app-shell__collapse-btn the sider gains arco-layout-sider-collapsed and its width settles at 76px, and after the second click the class is removed and the width settles back at 248px. The failure mode is a mid-transition read, which a still screenshot cannot capture, so the decisive artifact is the animation probe (immediate read 248 -> post-animation read 76).",
+      "consoleErrors": [],
+      "checkedStates": [
+        "collapsed: class arco-layout-sider-collapsed present, settled width 76 < initial 248",
+        "expanded again: class arco-layout-sider-collapsed absent, settled width 248 > collapsed 76"
+      ]
+    }
+  ],
+  "runtimeSensitive": true,
+  "runtimeGap": "The Go side is fully reproducible on this host: the legacy namespace fails under GOGC=20 -count=25 and the fix passes 3x25 runs. The browser side is verified here against a real local stack (MySQL + Redis backend on :8080, Vite on :5173, 4/4 passed twice), but the pre-fix race did not fire locally in 12 repeats, so the pre-fix failure rests on the hosted CI log plus the standalone animation probe. Final disposition for both remains hosted CI: the pull-request checks and the push-triggered Core Smoke job on the merge commit.",
+  "knownGaps": [
+    "The pre-fix sidebar race could not be reproduced on this host (12/12 passed with the old body); the before/after for the browser fix is argued from the CI log and a standalone animation probe rather than a local red run.",
+    "Core Smoke is push-triggered and report-only, so a pull request cannot prove the fixed spec in CI; the merge-commit push is the first hosted validation of the browser fix.",
+    "Address recycling depends on the Go runtime and GC, so the invariant test (distinct connections must not share a cache key) is the deterministic guard; the foreign-verdict scenario test only reproduces the CI sequence under GC pressure.",
+    "The cache namespace is derived from the DSN host and database name. Two different physical servers behind the same host:port/dbname string would share a namespace; the repository runs a single logical database, so this is recorded rather than engineered around.",
+    "tests/** is still not type-checked or linted by CI as a whole (pre-existing, recorded in the PR #373 work); the changed test files were type-checked and linted manually here."
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-12-flake-signal-remediation/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-12-flake-signal-remediation/",
+    "reviewFile": ".harness/evidence/2026-10-12-flake-signal-remediation/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/failure-registry.md",
+      ".github/workflows/smoke-core.yml",
+      "frontend/playwright.config.ts"
+    ]
+  }
+}
