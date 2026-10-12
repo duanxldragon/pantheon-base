@@ -1,0 +1,80 @@
+{
+  "taskId": "2026-10-12-v0161-release-cut",
+  "title": "Cut and publish pantheon-base-v0.16.1 with a consumable asset set",
+  "goal": "Two changes merged after the v0.16.0 tag: root-cause fixes for the two recurring main-branch flakes (#377) and the foundation release asset gate (#380). Cut them as a patch release (v0.16.1) and, unlike v0.14.0/v0.15.0/v0.16.0, publish the four consumable assets so pantheon-ops can actually advance its lock. Because the release scripts shell out to git, tar and gh, they cannot run on the machine that prepared this change, so the release is cut by a new dispatch-only Foundation Release Cut workflow on a runner where those tools work.",
+  "primaryLayer": "platform",
+  "status": "in-progress",
+  "priority": "P1",
+  "type": "release-closeout",
+  "estimatedComplexity": "medium",
+  "findings": [
+    "docs/VERSION_MANAGEMENT_GUIDE.md section 2.4 puts security fixes, bug fixes that do not change functional behaviour, compatibility patches and documentation corrections on a patch bump. Both merged changes qualify: #377 removes two test-visible races at their root without relaxing an assertion, and #380 adds a release gate. Neither adds a module or changes a consumer-facing interface, so section 2.3 (minor) does not apply.",
+    "The defect fixed by #377 was reachable only through test fixtures. buildDatabaseCacheNamespace keyed process-local caches by fmt.Sprintf(\"%p\", sqlDB); testmysql.Open drops each per-test database in t.Cleanup, which makes the pool unreachable and lets Go recycle the address. Production always passes the process-wide singleton pool, so no consumer-visible behaviour changes. The patch bump is justified by the correctness fix, not by a product-visible defect.",
+    "The v0.16.0 closeout packet (2026-10-12-v0160-release-closeout) recorded that v0.15.0's GitHub Release carried no assets and deliberately mirrored that shape: 'tag plus a release-notes body'. That decision is what made the channel unusable, because pantheon-ops materializes a release from repo.tar plus the bundle archive and verifies both by SHA-256. v0.14.0, v0.15.0 and v0.16.0 therefore cannot be consumed at all, and the ops lock has been stuck at pantheon-base-v0.13.0. This release deliberately reverses that choice.",
+    "The release scripts are canonical but uninvokable here: build-release-bundle.mjs and publish-foundation-release.mjs spawn git, tar and gh, and Node cannot spawn any subprocess on the preparing host (spawnSync returns status null with error.code EBUSY for git, gh, tar, node and echo alike). Confirmed independently with the sandbox disabled, so it is a host limitation rather than sandbox policy. CI on ubuntu-latest is therefore the only environment where a release can be cut, which is what foundation-release-cut.yml provides.",
+    "publish-foundation-release.mjs enforces its own preconditions and they are all satisfiable here: the worktree stays clean because releases/*/ and dist/ are gitignored; Release Gate Summary is already completed/success on the candidate commit because release-gate.yml triggers on push to main; and the manifest baseCommit must equal the target commit, which the workflow passes explicitly via --base-commit and --target-commit.",
+    "sharedPaths is unchanged across v0.13.0, v0.16.0 and v0.16.1: the same 52 entries (backend 4, frontend 46, docs 2). Verified by generating a v0.16.1 manifest and diffing it against both the committed v0.13.0 manifest and the ops lock. The consumer lock therefore needs only its version, commit and checksums advanced, not its path declaration.",
+    "The business overlay anchors on exact source lines and throws 'Base assembly contract changed' if an anchor does not appear exactly once. All six anchors were re-checked against the v0.16.1 base tree and each still resolves exactly once, including the two files that v0.16.0's package rename and directory move touched. This is the single most likely way this release could break the consumer, and it does not."
+  ],
+  "scope": {
+    "in": [
+      ".github/workflows/foundation-release-cut.yml (new, dispatch-only, dry_run defaults to true)",
+      "VERSION -> 0.16.1",
+      "CHANGELOG.md [pantheon-base-v0.16.1] entry",
+      "RELEASE_NOTES_v0.16.1.md",
+      "README.md / README.en.md version tables and delivery-status line",
+      ".harness/STATUS.md version and release section",
+      ".harness/tasks/2026-10-12-v0161-release-cut/ and .harness/evidence/2026-10-12-v0161-release-cut/",
+      "docs/harness/tasks/2026-10-12-v0161-release-cut.task.md"
+    ],
+    "out": [
+      "Any product source change: backend/**, frontend/** are untouched; this release records work already merged to main",
+      "Relaxing or editing release-gate.yml, .sonarcloud.properties or any existing required check",
+      "Committing the gitignored releases/pantheon-base-v0.16.1/ bundle or dist/ output",
+      "Updating the pantheon-ops consumer lock: that is a separate consumer-repository change"
+    ]
+  },
+  "acceptanceCriteria": [
+    "VERSION reads 0.16.1 and README (zh/en), CHANGELOG, RELEASE_NOTES and .harness/STATUS.md all point at pantheon-base-v0.16.1.",
+    "foundation-release-cut.yml runs the canonical cut and publish scripts, keeps every dispatch input out of run-block interpolation, and defaults dry_run to true.",
+    "check-task-packet, check-evidence --strict, check-failure-registry, check:duplication and check-pr-governance all pass locally, and the hosted required checks plus Release Gate are green on the release commit.",
+    "The immutable tag pantheon-base-v0.16.1 is created on the release commit and its GitHub Release carries all four assets: foundation-release-pantheon-base-v0.16.1.tgz, its .sha256, repo.tar and repo.tar.sha256.",
+    "Foundation Release Verify passes on the published release, confirming the asset set the gate exists to protect."
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "ci-workflow",
+    "ownerLayer": "consumer-repository"
+  },
+  "verificationPlan": {
+    "commands": [
+      "cat VERSION && grep -n 'pantheon-base-v0.16.1' README.md README.en.md CHANGELOG.md RELEASE_NOTES_v0.16.1.md .harness/STATUS.md",
+      "node scripts/harness/check-task-packet.mjs --root . && node scripts/harness/check-evidence.mjs --root . --strict && node scripts/harness/check-failure-registry.mjs --root . --strict",
+      "npm run --silent check:duplication && node scripts/check-pr-governance.mjs --event <event.json>",
+      "python -c \"import yaml; ...\" validating foundation-release-cut.yml, its SHA pins and its run-block injection surface",
+      "gh workflow run foundation-release-cut.yml -f release_version=pantheon-base-v0.16.1 -f release_line=release/0.16 -f notes_dir=.harness/evidence/2026-10-12-v0161-release-cut/notes -f dry_run=true",
+      "gh release view pantheon-base-v0.16.1 --json assets --jq '.assets[].name'"
+    ],
+    "runtimeEvidence": [
+      "Local gate output for task-packet, evidence, failure-registry, duplication and PR governance",
+      "The workflow's dry-run and real dispatch runs, with the release URL and the four asset names",
+      "Foundation Release Verify conclusion on the published release",
+      "The ops lock diff and the materialized bundle checksums, recorded in the consumer change"
+    ]
+  },
+  "runtimeSensitive": true,
+  "runtimeGap": "The release itself cannot be produced on the preparing host: Node cannot spawn subprocesses there (spawnSync returns status null with error.code EBUSY for git, gh, tar, node and echo), and both build-release-bundle.mjs and publish-foundation-release.mjs depend on spawning git, tar and gh. The rebuild was therefore delivered as a dispatch-only CI workflow and verified statically here (manifest generation succeeds, all 52 sharedPaths exist, all six overlay anchors resolve exactly once, the workflow parses and is SHA-pinned and free of run-block input interpolation) rather than executed end to end. The hosted run is the authoritative verification, and the release is not claimed as published until the asset list is read back from the GitHub API.",
+  "linkage": {
+    "assessment": "docs/harness/tasks/2026-10-12-v0161-release-cut.task.md",
+    "evidenceDir": ".harness/evidence/2026-10-12-v0161-release-cut/",
+    "summaryFile": ".harness/evidence/2026-10-12-v0161-release-cut/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-12-v0161-release-cut/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/VERSION_MANAGEMENT_GUIDE.md",
+      "docs/designs/FOUNDATION_RELEASE_MODEL.md",
+      ".github/workflows/release-gate.yml"
+    ]
+  }
+}

@@ -1,0 +1,109 @@
+{
+  "taskId": "2026-10-12-v0161-release-cut",
+  "repo": "pantheon-base",
+  "executedAt": "2026-10-12T14:30:00+08:00",
+  "agent": {
+    "tool": "other",
+    "adapter": "software-workshop-agent"
+  },
+  "commands": [
+    {
+      "command": "git log --oneline 3fe572f3..origin/main",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Establishes the release content. Exactly two commits landed after the v0.16.0 release commit: 8beec2cc 'fix(tests): remove two recurring main-branch flakes at their root (#377)' and 1dc2976b 'feat(release): gate foundation releases on their published artifact set (#380)'. Nothing else is unaccounted for, so v0.16.1 is a well-scoped patch."
+    },
+    {
+      "command": "gh api repos/duanxldragon/pantheon-base/branches/main --jq '.commit.sha' and gh api repos/duanxldragon/pantheon-base/pulls/380 --jq '.merged,.merge_commit_sha'",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Confirms the candidate commit for the release. Remote main is 1dc2976b5ff05fa79427b407422cb4c7a16ffcc6, which is the squash-merge of PR #380. Local main was stale at 3fe572f3 until fetched; the local branch was fast-forwarded so the release candidate and the local view agree."
+    },
+    {
+      "command": "gh api repos/duanxldragon/pantheon-base/commits/1dc2976b5ff05fa79427b407422cb4c7a16ffcc6/check-runs?per_page=100 --jq '.check_runs[] | select(.name==\"Release Gate Summary\")'",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Verifies the precondition publish-foundation-release.mjs enforces hardest. 'Release Gate Summary: completed/success started=2026-10-12T05:38:18Z' on the candidate commit. release-gate.yml triggers on push to main, so this is satisfied without any extra step. Had it been missing or not successful, publishFoundationRelease would have thrown before writing anything."
+    },
+    {
+      "command": "node .tmp/analyze-release.mjs",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Generates a v0.16.1 manifest through the real build-release-manifest.mjs (it does not shell out, so it runs here) and diffs its sharedPaths against both the ops lock and the committed v0.13.0 manifest. Result: manifest 52 (backend 4, frontend 46, docs 2); ops lock 52; v0.13.0 manifest 52; zero paths only in the new manifest and zero only in the lock. The consumer lock therefore needs only version, commit and checksums advanced - no path declaration rewrite."
+    },
+    {
+      "command": "node .tmp/check-overlay-anchors.mjs",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Extracts the six assembly anchors out of the consumer's own scripts/business-overlay/rebuild-from-base.mjs (wireBusinessRegistries) and asserts each still appears exactly once in the v0.16.1 base tree. All six pass. This matters because v0.16.0 renamed Go packages and moved frontend/src/modules/system/*, which is exactly the class of change that breaks an anchor and makes rebuild-from-base throw 'Base assembly contract changed'. Note the first attempt at this check under-reported (4 of 6) because two anchors are double-quoted in the source; the script was corrected to parse both quote styles before trusting the result."
+    },
+    {
+      "command": "node -e \"const {spawnSync}=require('node:child_process'); for (const c of ['git','gh','tar','node','echo']) { const r=spawnSync(c,['--version'],{encoding:'utf8'}); console.log(c, r.status, r.error && r.error.code); }\"",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Establishes the binding constraint of this task. Every subprocess returns status=null with error.code=EBUSY: git, gh, tar, node and echo alike. Re-run with the sandbox disabled and the result is identical, so this is a host limitation rather than sandbox policy. Consequences: build-release-bundle.mjs (git rev-parse / git diff / git ls-files / git archive / tar) and publish-foundation-release.mjs (git, tar, gh) cannot run here, and neither can the consumer's rebuild-from-base.mjs. Hence the release is cut by a CI workflow."
+    },
+    {
+      "command": "git check-ignore -v releases/pantheon-base-v0.16.1/ dist/foundation-releases",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Confirms the release can be built in CI without tripping publish's clean-worktree precondition. '.gitignore:68:releases/*/ releases/pantheon-base-v0.16.1/' - so the generated releases/<version>/ directory is ignored, and dist/ is ignored outright. Only releases/pantheon-base-v0.13.0/ is deliberately un-ignored. Had releases/<version>/ been tracked, ensureCleanWorktree would have failed after cut and publish could never have run."
+    },
+    {
+      "command": "python -c \"import yaml, re, pathlib; ...\" over foundation-release-cut.yml, foundation-release-verify.yml and foundation-release-backfill.yml",
+      "cwd": ".",
+      "status": "passed",
+      "details": "All three parse as YAML. foundation-release-cut.yml triggers on ['workflow_dispatch'] only with a single 'cut' job; verify on ['release','workflow_dispatch']; backfill on ['workflow_dispatch']. Every uses: entry matches a 40-character hex SHA. An added assertion checks that no run block in any of the three interpolates ${{ inputs.* }} or ${{ github.event.* }}, which is the githubactions:S7630 rule SonarCloud enforced on the previous PR. No BOM and no CRLF."
+    },
+    {
+      "command": "npm run --silent check:duplication",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Result: PASS. The new workflow is scanned because the gate covers .github/workflows; it adds no duplicate block above the 21-line detection floor."
+    },
+    {
+      "command": "npm run --silent check:task-packet && node scripts/harness/check-evidence.mjs --root . --strict && npm run --silent check:failure-registry",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Task packet [PASS] for docs/harness/tasks/2026-10-12-v0161-release-cut.task.md (one warning, that the linked review.md did not exist yet at that moment). Evidence [PASS] for .harness/evidence/2026-10-12-v0161-release-cut/commands.json. Failure registry 1 file, 0 errors, 0 warnings."
+    },
+    {
+      "command": "node scripts/check-pr-governance.mjs --event .tmp/event-v0161-release-cut.json --body .tmp/pr-body-v0161-release-cut.md",
+      "cwd": ".",
+      "status": "passed",
+      "details": "OK pantheon-base PR body governance fields are present. The body declares Task ID 2026-10-12-v0161-release-cut and links the manifest, evidence, summary and review artifacts, all of which exist."
+    },
+    {
+      "command": "gh workflow run foundation-release-cut.yml -f release_version=pantheon-base-v0.16.1 -f release_line=release/0.16 -f notes_dir=.harness/evidence/2026-10-12-v0161-release-cut/notes -f dry_run=true",
+      "cwd": ".",
+      "status": "not-run",
+      "details": "NOT YET EXECUTED at the time this evidence was written. workflow_dispatch requires the workflow to exist on the default branch, so the dispatch can only happen after this change is merged. Recorded here as pending rather than as passed; the hosted run and the published asset list are the authoritative verification and are appended to this file once they exist."
+    },
+    {
+      "command": "gh release view pantheon-base-v0.16.1 --json assets --jq '.assets[].name'",
+      "cwd": ".",
+      "status": "not-run",
+      "details": "NOT YET EXECUTED. The expected result is the four consumable assets: foundation-release-pantheon-base-v0.16.1.tgz, foundation-release-pantheon-base-v0.16.1.tgz.sha256, repo.tar, repo.tar.sha256. For contrast, the same command against v0.13.0 returns four names and against v0.14.0/v0.15.0/v0.16.0 returns nothing at all."
+    }
+  ],
+  "runtimeSensitive": true,
+  "runtimeGap": "Node cannot spawn subprocesses on the host that prepared this change: spawnSync returns status null with error.code EBUSY for git, gh, tar, node and echo, and the result is unchanged with the sandbox disabled. build-release-bundle.mjs and publish-foundation-release.mjs both depend on spawning, so the release cannot be cut here, and the consumer's rebuild-from-base.mjs cannot be run here either. The release is therefore delivered as a dispatch-only CI workflow and verified statically beforehand: the manifest generates, all 52 sharedPaths exist at the candidate commit, all six overlay anchors resolve exactly once, the workflow parses, is SHA-pinned and interpolates no dispatch input into a run block. The hosted run is the authoritative verification, and the release is not reported as published until the four asset names are read back from the GitHub API.",
+  "knownGaps": [
+    "The release has not been cut at the time this evidence was written. The Foundation Release Cut workflow does not exist on the default branch until this change merges, and workflow_dispatch cannot target a workflow that is not on the default branch. The dispatch, the published asset list and the Foundation Release Verify conclusion are appended to this file afterwards.",
+    "The bundle build itself was never executed on this host, for the EBUSY reason above. Feasibility rests on the manifest generating successfully, 52/52 sharedPaths existing, and all six overlay anchors resolving - not on producing an archive.",
+    "The consumer-side rebuild (npm run rebuild:from-base) could not be run here either, for the same reason. The anchor check is a text-level substitute for the most likely failure mode, not a full assembly. The first real rebuild against v0.16.1 is the authoritative verification of consumption.",
+    "No local execution of the spawn-dependent repository gates was possible (check:structure and the harness checks that enumerate changed files via git ls-files), so those remain CI-only signals for this change.",
+    "The new workflow has never been exercised by GitHub Actions. Its first hosted run is the dry-run dispatch that follows the merge, and its first real run is the one that publishes v0.16.1."
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-12-v0161-release-cut/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-12-v0161-release-cut/",
+    "reviewFile": ".harness/evidence/2026-10-12-v0161-release-cut/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/VERSION_MANAGEMENT_GUIDE.md",
+      "docs/designs/FOUNDATION_RELEASE_MODEL.md",
+      ".github/workflows/release-gate.yml"
+    ]
+  }
+}
