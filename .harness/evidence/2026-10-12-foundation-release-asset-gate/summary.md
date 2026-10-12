@@ -115,6 +115,15 @@ precondition that could have failed the rebuild; it does not. The rebuild would 
 | `.github/workflows/foundation-release-backfill.yml` | New: dispatch-only repair, dry-run by default |
 | `docs/harness/failure-registry.md` | FR-014 registered |
 
+## Post-open finding (SonarCloud)
+
+SonarCloud failed the PR quality gate with five BLOCKER `githubactions:S7630` script-injection findings in
+`foundation-release-backfill.yml`, where `${{ inputs.* }}` was interpolated straight into `run:` blocks
+(quoting does not help — GitHub expands the expression before the shell parses the line). Fixed by reading
+every input through a job-level `env:` block and referencing shell variables; see the evidence entry and
+`review.md`. The repository's own **Workflow Security** job passed on the same revision, so this is
+recorded as a gap in the gate set as well as a fixed defect.
+
 ## Residual risk
 
 - Neither workflow has run on GitHub Actions yet; `release: published` only fires on the default branch,

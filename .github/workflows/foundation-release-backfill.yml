@@ -49,15 +49,25 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    env:
+      # Workflow inputs are controlled by whoever dispatches the workflow, so
+      # they are read only through the environment and never interpolated
+      # directly into a run block, where expression expansion happens before
+      # the shell parses the line (githubactions:S7630).
+      RELEASE_VERSION: ${{ inputs.release_version }}
+      RELEASE_LINE: ${{ inputs.release_line }}
+      BASE_COMMIT: ${{ inputs.base_commit }}
+      DRY_RUN: ${{ inputs.dry_run }}
     steps:
       - name: Validate inputs
-        env:
-          RELEASE_VERSION: ${{ inputs.release_version }}
-          BASE_COMMIT: ${{ inputs.base_commit }}
         shell: bash
         run: |
           if [[ ! "$RELEASE_VERSION" =~ ^pantheon-base-v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             echo "::error::release_version must match pantheon-base-vX.Y.Z"
+            exit 1
+          fi
+          if [[ ! "$RELEASE_LINE" =~ ^release/[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::release_line must match release/X.Y"
             exit 1
           fi
           if [[ ! "$BASE_COMMIT" =~ ^[0-9a-f]{40}$ ]]; then
@@ -91,29 +101,28 @@ jobs:
         working-directory: build
         run: |
           npm run release:foundation:cut -- \
-            --release-version "${{ inputs.release_version }}" \
-            --release-line "${{ inputs.release_line }}" \
-            --base-commit "${{ inputs.base_commit }}"
+            --release-version "$RELEASE_VERSION" \
+            --release-line "$RELEASE_LINE" \
+            --base-commit "$BASE_COMMIT"
 
       - name: Verify the rebuilt bundle before uploading
         run: |
           node gate/scripts/foundation-release/check-release-assets.mjs \
-            --release-version "${{ inputs.release_version }}" \
+            --release-version "$RELEASE_VERSION" \
             --dist "build/dist/foundation-releases" \
             --local-only
 
       - name: Upload missing assets
         if: ${{ inputs.dry_run == false }}
-        working-directory: build/dist/foundation-releases/${{ inputs.release_version }}
         env:
           GH_TOKEN: ${{ github.token }}
-          RELEASE_VERSION: ${{ inputs.release_version }}
         run: |
+          dist="build/dist/foundation-releases/${RELEASE_VERSION}"
           gh release upload "$RELEASE_VERSION" --clobber \
-            "foundation-release-${RELEASE_VERSION}.tgz" \
-            "foundation-release-${RELEASE_VERSION}.tgz.sha256" \
-            "repo.tar" \
-            "repo.tar.sha256"
+            "${dist}/foundation-release-${RELEASE_VERSION}.tgz" \
+            "${dist}/foundation-release-${RELEASE_VERSION}.tgz.sha256" \
+            "${dist}/repo.tar" \
+            "${dist}/repo.tar.sha256"
 
       - name: Verify published assets
         if: ${{ inputs.dry_run == false }}
@@ -121,7 +130,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           node gate/scripts/foundation-release/check-release-assets.mjs \
-            --release-version "${{ inputs.release_version }}" \
+            --release-version "$RELEASE_VERSION" \
             --repo "${{ github.repository }}" \
             --skip-local
 
@@ -129,8 +138,6 @@ jobs:
         if: always()
         env:
           BUILD: ${{ job.status }}
-          RELEASE_VERSION: ${{ inputs.release_version }}
-          DRY_RUN: ${{ inputs.dry_run }}
         shell: bash
         run: |
           {

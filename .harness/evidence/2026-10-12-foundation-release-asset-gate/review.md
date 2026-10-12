@@ -72,6 +72,27 @@ Argued from evidence rather than reproduced locally:
    checksum, not content-vs-manifest. That boundary is recorded; content validation already happens at
    build time in `validateBundleSource`.
 
+## Post-open review finding (SonarCloud)
+
+Opening the PR surfaced one real defect that no local gate had caught. It is recorded here rather than
+folded away:
+
+- Hosted SonarCloud failed the PR quality gate (`new_security_rating` 5 against a threshold of 1) with
+  five BLOCKER `githubactions:S7630` findings, all in `foundation-release-backfill.yml` (lines 94, 95,
+  96, 101 and 124). Each was a workflow input interpolated directly into a `run:` block.
+- The quotes were not protection: GitHub expands `${{ ... }}` before the shell parses the line, so an
+  input containing a double quote or `$( )` escapes the quoting. A reviewer should treat "it is quoted"
+  as insufficient for workflow inputs.
+- Fixed by reading every input through a job-level `env:` block and referencing shell variables, which is
+  the pattern the workflow's own *Validate inputs* step already used. The dynamic `working-directory` on
+  the upload step was replaced with a `dist=` variable so no path is built from an expression either, and
+  a `release_line` format check was added.
+- The repository's own **Workflow Security** job passed on the same revision and `actionlint` was not
+  installable on this host, so SonarCloud was the only signal that caught this. That is itself a finding
+  about the local gate set and is recorded in `knownGaps`.
+- The local re-validation after the fix is a Python assertion over the YAML, not the Sonar rule engine, so
+  the authoritative confirmation is the SonarCloud re-run against the pushed commit.
+
 ## Residual risk accepted
 
 - The two workflows have never executed; their first hosted runs are post-merge, and
@@ -80,3 +101,5 @@ Argued from evidence rather than reproduced locally:
 - `v0.14.0`, `v0.15.0` and `v0.16.0` remain asset-less until the backfill is deliberately dispatched.
 - Spawn-dependent repository gates (`check:structure`, 17 pre-existing release tests) cannot run on this
   host; they remain CI-only signals for this change.
+- The PR's SonarCloud security rating depends on the hosted re-analysis of the pushed fix; the local
+  re-validation cannot reproduce the `githubactions:S7630` rule.

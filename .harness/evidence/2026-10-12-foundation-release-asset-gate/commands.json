@@ -80,6 +80,18 @@
       "details": "Both files parse as YAML. verify triggers on ['release','workflow_dispatch'] with top-level permissions contents:read and two jobs (verify-assets, summary with needs and if:always()); backfill triggers on ['workflow_dispatch'] only with contents:write scoped to the job. Every uses: entry matches /[^@]+@[0-9a-f]{40}/, so both workflows are SHA-pinned like the rest of the repository."
     },
     {
+      "command": "curl -s \"https://sonarcloud.io/api/issues/search?componentKeys=duanxldragon_pantheon-base&pullRequest=380&resolved=false\" and .../api/qualitygates/project_status?...&pullRequest=380 (after opening PR #380)",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Hosted SonarCloud failed the PR quality gate as ERROR (new_security_rating 5 against a threshold of 1) with 5 BLOCKER githubactions:S7630 findings, all in .github/workflows/foundation-release-backfill.yml at lines 94, 95, 96, 101 and 124. Every one was a workflow input interpolated straight into a run block: --release-version \"${{ inputs.release_version }}\", --release-line \"${{ inputs.release_line }}\", --base-commit \"${{ inputs.base_commit }}\" and two further release_version reads. The quotes do not help, because GitHub expands the expression before the shell parses the line, so a value containing a double quote or $( ) breaks out. .github/workflows is inside the Sonar scope (.sonarcloud.properties excludes only scripts/**, frontend/scripts/**, database/** and frontend/src/i18n/resources/**), and the repository's own Workflow Security job passed on the same revision, so SonarCloud was the only signal that caught this."
+    },
+    {
+      "command": "python -c \"...\" re-validating both workflows for run-block injection after the fix",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Fixed by moving all inputs into a job-level env block (RELEASE_VERSION, RELEASE_LINE, BASE_COMMIT, DRY_RUN) and reading them as shell variables, which is the pattern the workflow's own Validate inputs step already used. The dynamic working-directory on the upload step was replaced with a dist= variable so no path is built from an expression either. Re-validation asserts that no run block in either workflow interpolates ${{ inputs.* }} or ${{ github.event.* }}, that both files still parse as YAML, and that every uses: remains SHA-pinned; a release_line format check was added at the same time. The remaining ${{ inputs.* }} occurrences sit in concurrency.group, job env, with.ref and if: conditions, none of which are shell contexts."
+    },
+    {
       "command": "git worktree add --detach /tmp/v016-wt 3fe572f3244070ab14e304bc075017f20e86e9cd && node scripts/foundation-release/build-release-manifest.mjs --release-version pantheon-base-v0.16.0 --release-line release/0.16 --base-commit 3fe572f3...",
       "cwd": "/tmp/v016-wt",
       "status": "passed",
@@ -118,7 +130,8 @@
     "The new workflow is not a required check. Branch protection is a maintainer decision, so a release published without assets will go red but will not block on its own until the check is added to the required set.",
     "Repairing v0.14.0, v0.15.0 and v0.16.0 is not part of this change. The backfill workflow enables it, but uploading to already-published releases is a deliberate operation that should be dispatched and reviewed separately.",
     "The gate asserts the presence and checksum of the four assets. It does not verify that the bundle's contents match the release manifest's sharedPaths, which build-release-bundle.mjs already validates at build time.",
-    "Local execution of the spawn-dependent repository gates (check:structure, the 17 spawn-based release tests) is impossible on this host, so those remain CI-only signals for this change."
+    "Local execution of the spawn-dependent repository gates (check:structure, the 17 spawn-based release tests) is impossible on this host, so those remain CI-only signals for this change.",
+    "The 5 BLOCKER githubactions:S7630 findings were surfaced by hosted SonarCloud only after the PR was opened; no local gate caught them. The repository's Workflow Security job passed on the same revision, actionlint could not be installed on this host, and scripts/** is excluded from Sonar analysis so the new script was never scanned. The workflow was corrected and re-validated locally, but that re-validation is a Python assertion over the YAML rather than the Sonar rule engine, so the authoritative confirmation is the SonarCloud re-run against the pushed fix."
   ],
   "linkage": {
     "taskManifest": ".harness/tasks/2026-10-12-foundation-release-asset-gate/manifest.json",
