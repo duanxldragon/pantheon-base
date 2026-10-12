@@ -72,6 +72,17 @@ jobs:
       DRY_RUN: ${{ inputs.dry_run }}
       REPO: ${{ github.repository }}
     steps:
+      - name: Checkout default branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      # Must run after the checkout: it asserts the release-note files are present
+      # on disk, and the runner workspace is empty before checkout. The first
+      # dispatch of this workflow failed here for exactly that reason
+      # (run 38217014119: "Missing or empty .../notes/release-notes.md").
       - name: Validate inputs
         shell: bash
         run: |
@@ -93,13 +104,6 @@ jobs:
               exit 1
             fi
           done
-
-      - name: Checkout default branch
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-        with:
-          ref: ${{ github.event.repository.default_branch }}
-          fetch-depth: 0
-          persist-credentials: false
 
       - name: Setup Node
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
