@@ -1,0 +1,73 @@
+{
+  "taskId": "2026-10-12-v0160-release-closeout",
+  "title": "Cut and publish the v0.16.0 foundation release (naming correspondence, tiered smoke, hygiene)",
+  "goal": "Six PRs merged after the v0.15.0 tag: frontend/backend naming and directory correspondence (#371), smoke-suite de-duplication (#372), smoke tiering plus per-module split (#373), the SonarCloud smells the split re-surfaced (#374), a dev-dependency DoS fix (#370) and an empty-directory removal (#375). None changes a consumer-facing interface. Package them as a minor foundation release (v0.16.0) with release notes, changelog, README/STATUS alignment, an immutable tag and a GitHub Release, without relaxing any gate.",
+  "primaryLayer": "platform",
+  "status": "completed",
+  "priority": "P1",
+  "type": "release-closeout",
+  "estimatedComplexity": "medium",
+  "findings": [
+    "Per docs/VERSION_MANAGEMENT_GUIDE.md section 2.3, '架构优化（不影响消费仓）' and '质量门禁增强' are minor-version triggers, so the naming correspondence (#371) and smoke tiering (#373) put this release on a minor bump (0.16.0), not a patch. Section 2.4 patch is limited to security/bug fixes; only the dev-only dependency fix (#370) qualifies there and is too thin to justify a patch release on its own.",
+    "Consumers (pantheon-ops) only consume immutable tags (docs/designs/FOUNDATION_RELEASE_MODEL.md section 2.2), and minor versions are 'upgrade on demand'. Because no contract, route, permission code, menu seed or i18n key moved, no consumer is forced to upgrade.",
+    "v0.15.0's release bundle under releases/pantheon-base-v0.15.0/ is gitignored (releases/*/ is ignored except v0.13.0), so the committed release artifacts are VERSION, CHANGELOG.md, RELEASE_NOTES_vX.Y.Z.md, README(zh/en), .harness/STATUS.md and the harness task packet. The GitHub Release for v0.15.0 carries no assets, so v0.16.0 mirrors that: tag plus a release-notes body.",
+    "No mechanical gate pins README/STATUS/CHANGELOG text to VERSION, so the version alignment is a convention upheld by review, not by a checker."
+  ],
+  "scope": {
+    "in": [
+      "VERSION -> 0.16.0",
+      "RELEASE_NOTES_v0.16.0.md",
+      "CHANGELOG.md v0.16.0 entry",
+      "README.md / README.en.md version tables and delivery-status line",
+      ".harness/STATUS.md version and release-closeout section",
+      ".harness/tasks/2026-10-12-v0160-release-closeout/ and .harness/evidence/2026-10-12-v0160-release-closeout/",
+      "docs/harness/tasks/2026-10-12-v0160-release-closeout.task.md"
+    ],
+    "out": [
+      "Any source, contract, workflow or gate change: the release records work already merged to main",
+      "Relaxing or editing release-gate.yml, .sonarcloud.properties or any required check",
+      "Committing the gitignored releases/pantheon-base-v0.16.0/ bundle"
+    ]
+  },
+  "acceptanceCriteria": [
+    "VERSION reads 0.16.0 and README (zh/en), CHANGELOG and .harness/STATUS.md all point at pantheon-base-v0.16.0.",
+    "RELEASE_NOTES_v0.16.0.md states the release is a minor, internal-engineering release with no consumer-facing interface change and no migration beyond v0.15.0.",
+    "The harness task packet exists with manifest, evidence (commands.json, summary.md, review.md) and the docs/harness task doc, and all harness gates pass (adoption --strict, task-packet, front-matter, doc-links, doc-inventory, sync-drift, method-health, template-health).",
+    "check-pr-governance passes locally and the PR's required checks plus Release Gate are green on the release commit.",
+    "The immutable tag pantheon-base-v0.16.0 is created on the release commit and a GitHub Release is published from RELEASE_NOTES_v0.16.0.md."
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "ci-workflow",
+    "ownerLayer": "consumer-repository"
+  },
+  "verificationPlan": {
+    "commands": [
+      "cat VERSION && grep -n 'pantheon-base-v0.16.0' README.md README.en.md CHANGELOG.md .harness/STATUS.md",
+      "node scripts/harness/check-adoption.mjs --root . --strict",
+      "node scripts/harness/check-task-packet.mjs --root . && node scripts/harness/check-doc-frontmatter.mjs --root . --strict && node scripts/harness/check-doc-links.mjs --root . --strict",
+      "node scripts/check-pr-governance.mjs",
+      "gh pr checks <n> --watch && gh release create pantheon-base-v0.16.0 --notes-file RELEASE_NOTES_v0.16.0.md"
+    ],
+    "runtimeEvidence": [
+      "VERSION and README/CHANGELOG/STATUS grep showing pantheon-base-v0.16.0",
+      "harness gate pass lines",
+      "hosted required checks plus Release Gate conclusion on the release commit",
+      "tag and GitHub Release URLs"
+    ]
+  },
+  "runtimeSensitive": false,
+  "linkage": {
+    "assessment": "docs/harness/tasks/2026-10-12-v0160-release-closeout.task.md",
+    "evidenceDir": ".harness/evidence/2026-10-12-v0160-release-closeout/",
+    "summaryFile": ".harness/evidence/2026-10-12-v0160-release-closeout/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-12-v0160-release-closeout/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/VERSION_MANAGEMENT_GUIDE.md",
+      "docs/designs/FOUNDATION_RELEASE_MODEL.md",
+      ".harness/tasks/2026-10-07-release-closeout/manifest.json"
+    ]
+  }
+}

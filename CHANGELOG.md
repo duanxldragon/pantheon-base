@@ -6,6 +6,37 @@ Pantheon Base 方法追踪记录。方法论本体位于 `pantheon-harness`。
 
 ---
 
+## [pantheon-base-v0.16.0] — published (2026-10-12)
+
+> Published as immutable tag `pantheon-base-v0.16.0` after the hosted Release Gate, CI, security, and smoke checks passed on the release commit. No consumer-facing interface changed.
+
+### Changed
+
+- Frontend/backend naming and directory correspondence: Go package names now equal their
+  directory leaf (`system/{iam,org,config,audit,i18n}`); `frontend/src/modules/system/*`
+  mirrors the backend's three-level layout; `core/permissions`/`core/settings` singularized
+  and `AppLayout.tsx` split out of `core/layout/index.tsx`. No import path, route, permission
+  code, menu seed, i18n key or contract shape changed.
+- Smoke suite tiered (L0 static / L1 critical path / L2 module / L3 full) and split by business
+  module out of the `system-pages.spec.ts` monolith, with path-driven module selection
+  (`scripts/resolve-smoke-modules.mjs`) so a change only pays for the depth it can affect.
+
+### Fixed
+
+- Cleared Dependabot alert #43 (`sprintf-js` DoS, dev-only) by overriding `js-yaml` for
+  `@istanbuljs/load-nyc-config`.
+- Cleared the 17 SonarCloud code smells re-surfaced by the smoke-helper split, restoring the
+  main Release Gate.
+
+### Removed
+
+- Removed the empty `openspec/` skeleton directory.
+
+### Verification
+
+- SonarCloud 0 unresolved issues, overall duplication 2.8%; CodeQL and Dependabot clean.
+- Hosted required checks and Release Gate green on the release commit.
+
 ## [pantheon-base-v0.15.0] — published (2026-10-11)
 
 > Published as immutable tag `pantheon-base-v0.15.0` after the hosted Release Gate, CI, security, and smoke checks passed on the release commit.
