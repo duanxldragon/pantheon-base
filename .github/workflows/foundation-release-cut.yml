@@ -1,0 +1,185 @@
+name: Foundation Release Cut
+
+# Cuts and publishes a foundation release: immutable tag, GitHub release, and
+# the four consumable assets.
+#
+# The release scripts (`release:foundation:cut` / `:publish`) are canonical, but
+# they shell out to git, tar and gh, so they can only run end to end where those
+# tools are all present and unconstrained — here, on ubuntu-latest. v0.14.0,
+# v0.15.0 and v0.16.0 were each published with zero assets precisely because no
+# workflow ever invoked them and the scripts were only covered by unit tests of
+# themselves. This workflow closes that gap.
+#
+# `publish-foundation-release.mjs` enforces its own preconditions before it
+# writes anything, so this workflow does not need to restate them:
+#   - a clean worktree;
+#   - a successful `Release Gate Summary` check run on the target commit;
+#   - a manifest whose baseCommit equals the target commit;
+#   - four checksum-valid assets, and non-placeholder release notes;
+#   - a tag that either does not exist or already points at the same commit;
+#   - an existing GitHub release is a hard error, so a release can never be
+#     silently overwritten.
+#
+# dry_run defaults to true so an accidental dispatch is inert; re-dispatch with
+# dry_run false to actually tag, create and upload.
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_version:
+        description: "Version to publish, for example pantheon-base-v0.16.1"
+        required: true
+      release_line:
+        description: "Release line, for example release/0.16"
+        required: true
+      notes_dir:
+        description: "Repo directory holding release-notes.md, upgrade-notes.md and consumer-impact.md"
+        required: true
+      base_commit:
+        description: "Commit to release; defaults to the default branch HEAD"
+        required: false
+        default: ""
+      dry_run:
+        description: "Validate and build only; do not tag, create, or upload"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: foundation-release-cut-${{ inputs.release_version }}
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: "24"
+
+jobs:
+  cut:
+    name: Cut And Publish Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      # Dispatch inputs are controlled by whoever triggers the workflow, so they
+      # are read only through the environment and never interpolated directly
+      # into a run block, where expression expansion happens before the shell
+      # parses the line (githubactions:S7630).
+      RELEASE_VERSION: ${{ inputs.release_version }}
+      RELEASE_LINE: ${{ inputs.release_line }}
+      NOTES_DIR: ${{ inputs.notes_dir }}
+      BASE_COMMIT_INPUT: ${{ inputs.base_commit }}
+      DRY_RUN: ${{ inputs.dry_run }}
+      REPO: ${{ github.repository }}
+    steps:
+      - name: Validate inputs
+        shell: bash
+        run: |
+          if [[ ! "$RELEASE_VERSION" =~ ^pantheon-base-v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::release_version must match pantheon-base-vX.Y.Z"
+            exit 1
+          fi
+          if [[ ! "$RELEASE_LINE" =~ ^release/[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::release_line must match release/X.Y"
+            exit 1
+          fi
+          if [[ -n "$BASE_COMMIT_INPUT" && ! "$BASE_COMMIT_INPUT" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "::error::base_commit must be a full 40-character lowercase hex commit"
+            exit 1
+          fi
+          for name in release-notes upgrade-notes consumer-impact; do
+            if [[ ! -s "${NOTES_DIR}/${name}.md" ]]; then
+              echo "::error::Missing or empty ${NOTES_DIR}/${name}.md"
+              exit 1
+            fi
+          done
+
+      - name: Checkout default branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Setup Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          package-manager-cache: false
+
+      # publish-foundation-release.mjs creates and pushes an annotated tag. The
+      # checkout deliberately does not persist credentials, so git is pointed at
+      # the gh credential helper for the lifetime of this job instead.
+      - name: Configure git credentials for the tag push
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh auth setup-git
+
+      - name: Resolve target commit
+        shell: bash
+        run: |
+          commit="${BASE_COMMIT_INPUT}"
+          if [[ -z "$commit" ]]; then
+            commit="$(git rev-parse HEAD)"
+          fi
+          commit="$(git rev-parse "${commit}^{commit}")"
+          echo "TARGET_COMMIT=${commit}" >> "$GITHUB_ENV"
+          echo "Releasing ${RELEASE_VERSION} from ${commit}"
+
+      - name: Cut manifest and bundle
+        run: |
+          npm run release:foundation:cut -- \
+            --release-version "$RELEASE_VERSION" \
+            --release-line "$RELEASE_LINE" \
+            --base-commit "$TARGET_COMMIT" \
+            --release-notes "$(cat "${NOTES_DIR}/release-notes.md")" \
+            --upgrade-notes "$(cat "${NOTES_DIR}/upgrade-notes.md")" \
+            --consumer-impact "$(cat "${NOTES_DIR}/consumer-impact.md")"
+
+      # Fail early and legibly if the bundle is not consumable, before anything
+      # immutable is created.
+      - name: Verify the built asset set
+        run: |
+          node scripts/foundation-release/check-release-assets.mjs \
+            --release-version "$RELEASE_VERSION" \
+            --dist "dist/foundation-releases" \
+            --local-only
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          args=(
+            --release-version "$RELEASE_VERSION"
+            --release-line "$RELEASE_LINE"
+            --target-commit "$TARGET_COMMIT"
+            --repo "$REPO"
+            --remote origin
+          )
+          if [[ "$DRY_RUN" == "true" ]]; then
+            args+=(--dry-run)
+          fi
+          npm run release:foundation:publish -- "${args[@]}"
+
+      - name: Summarize
+        if: always()
+        env:
+          BUILD: ${{ job.status }}
+        shell: bash
+        run: |
+          {
+            echo "## Foundation Release Cut"
+            echo ""
+            echo "Release: \`$RELEASE_VERSION\`"
+            echo "Target commit: \`${TARGET_COMMIT:-<unresolved>}\`"
+            echo ""
+            echo "| Step | Result |"
+            echo "|------|--------|"
+            echo "| Cut, verify, publish | $BUILD |"
+            echo ""
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          if [[ "$DRY_RUN" == "true" ]]; then
+            echo "Dry run: nothing was tagged, created or uploaded. Re-dispatch with \`dry_run: false\`." >> "$GITHUB_STEP_SUMMARY"
+          fi

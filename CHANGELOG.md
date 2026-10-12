@@ -6,6 +6,42 @@ Pantheon Base 方法追踪记录。方法论本体位于 `pantheon-harness`。
 
 ---
 
+## [pantheon-base-v0.16.1] — 2026-10-12
+
+> Patch release. Root-causes the two recurring `main` flakes and closes the release-artifact gap
+> that let v0.14.0/v0.15.0/v0.16.0 ship without a consumable bundle. No consumer-facing interface
+> changed.
+
+### Fixed
+
+- Data-scope caches were keyed by the connection pool's pointer address
+  (`fmt.Sprintf("%p", sqlDB)`), so a per-test database dropped in `t.Cleanup` let Go recycle the
+  address and a fresh database inherit the previous one's cached "`system_role_data_scope` exists"
+  verdict; `MigrateDataScopePolicy` then skipped its `CREATE TABLE` and the next `INSERT` failed
+  with `Error 1146 (42S02)`. The cache key now derives from the DSN's `host:port/dbname`, with a
+  pool-pointer fallback for non-MySQL dialectors. Production always passes the process-wide
+  singleton pool, so this was test-reachable hardening rather than a product-visible defect.
+- `platform-shell-critical.spec.ts` read the sidebar `boundingBox()` immediately after the collapse
+  toggle, sampling Arco Sider's 200 ms width transition mid-flight (215.5625 vs 108.265625 on the
+  retry); the following `toBeVisible` returned at once because the sidebar is always visible.
+  Measurements now go through a shared `settleElementLayout` helper that waits for the box signature
+  to stabilise and for `getAnimations()` to finish.
+
+### Added
+
+- `scripts/foundation-release/check-release-assets.mjs`: asserts a published release carries the
+  four consumable assets and that each archive matches its `.sha256` sidecar, reusing the publish
+  path's own `validateReleaseAssetChecksum` so the two cannot drift.
+- `Foundation Release Verify`, on `release: published`, so a release published without assets fails
+  at the moment it is created instead of being discovered by the next consumer.
+- `Foundation Release Backfill` and `Foundation Release Cut`, both dispatch-only and defaulting to
+  `dry_run: true`; the release scripts had never been wired into any workflow.
+
+### Notes
+
+- `sharedPaths` is unchanged (52 entries: backend 4, frontend 46, docs 2), so the consumer lock needs
+  only its version and checksums advanced.
+
 ## [pantheon-base-v0.16.0] — published (2026-10-12)
 
 > Published as immutable tag `pantheon-base-v0.16.0` after the hosted Release Gate, CI, security, and smoke checks passed on the release commit. No consumer-facing interface changed.
