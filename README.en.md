@@ -12,12 +12,12 @@ The project is not intended to be just a login shell plus CRUD scaffolding. Its 
 
 | Item | Value |
 | --- | --- |
-| Current foundation release | [`pantheon-base-v0.15.0`](https://github.com/duanxldragon/pantheon-base/releases/tag/pantheon-base-v0.15.0) (published) |
+| Current foundation release | [`pantheon-base-v0.16.0`](https://github.com/duanxldragon/pantheon-base/releases/tag/pantheon-base-v0.16.0) (published) |
 | Shell/Harness baseline | `1.4.0` (see [VERSION](./VERSION) / [SHELL_VERSION.json](./SHELL_VERSION.json)) |
 | Deployment guide | [docs/DEPLOYMENT_GUIDE.md](./docs/DEPLOYMENT_GUIDE.md) (MySQL 8, Redis 7, migrations + runtime seed, health checks, telemetry, backup/restore, and schema-aware rollback) |
-| Changelog | [CHANGELOG.md](./CHANGELOG.md) / [RELEASE_NOTES_v0.15.0.md](./RELEASE_NOTES_v0.15.0.md) |
+| Changelog | [CHANGELOG.md](./CHANGELOG.md) / [RELEASE_NOTES_v0.16.0.md](./RELEASE_NOTES_v0.16.0.md) |
 
-Delivery status: the v0.15.0 foundation bundle, immutable tag, GitHub Release, and hosted required checks are complete. The `pantheon-ops` consumer lock, inheritance snapshot, and business smoke validation remain a separate consumer-repository follow-up.
+Delivery status: the v0.16.0 foundation bundle, immutable tag, GitHub Release, and hosted required checks are complete. v0.16.0 is an internal-engineering release (frontend/backend naming correspondence, tiered smoke, dependency and quality hygiene) with no consumer-facing interface change. The `pantheon-ops` consumer lock, inheritance snapshot, and business smoke validation remain a separate consumer-repository follow-up.
 
 ## Positioning
 

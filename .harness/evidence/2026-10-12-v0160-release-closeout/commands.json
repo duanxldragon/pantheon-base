@@ -1,0 +1,89 @@
+{
+  "taskId": "2026-10-12-v0160-release-closeout",
+  "repo": "pantheon-base",
+  "executedAt": "2026-10-12T08:30:00+08:00",
+  "agent": {
+    "tool": "other",
+    "adapter": "software-workshop-agent"
+  },
+  "commands": [
+    {
+      "command": "git log --oneline pantheon-base-v0.15.0..HEAD",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Six commits between the v0.15.0 tag (9702509e) and HEAD (c7e564bc): #375 chore, #374 fix(tests), #373 refactor(tests), #372 refactor(tests), #371 refactor, #370 fix(deps). All internal: no source contract, route, permission code, menu seed or i18n key moved."
+    },
+    {
+      "command": "git diff --name-only pantheon-base-v0.15.0..HEAD | awk -F/ '{print $1\"/\"$2}' | sort | uniq -c",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Changed areas are backend/modules (123), frontend/src (82), frontend/tests (18), .harness (20), tests/scripts (3), scripts (2), docs (4), plus single config/lockfile files. Consistent with a naming-refactor plus test-infrastructure release; no docs/contracts or API surface file in the set."
+    },
+    {
+      "command": "cat docs/VERSION_MANAGEMENT_GUIDE.md (sections 2.3 / 2.4)",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Section 2.3 lists '架构优化（不影响消费仓）' and '质量门禁增强' as minor triggers — #371 and #373 fall here, so the release is minor (0.16.0). Section 2.4 patch covers security/bug fixes only; only the dev-only dependency fix (#370) qualifies, too thin alone for a patch release."
+    },
+    {
+      "command": "cat VERSION && grep -n 'pantheon-base-v0.16.0' README.md README.en.md CHANGELOG.md .harness/STATUS.md",
+      "cwd": ".",
+      "status": "passed",
+      "details": "VERSION reads 0.16.0; README (zh/en) release pointer and changelog link, CHANGELOG entry heading, and .harness/STATUS.md version line all reference pantheon-base-v0.16.0. Four references consistent."
+    },
+    {
+      "command": "curl -s 'https://sonarcloud.io/api/measures/component?component=duanxldragon_pantheon-base&branch=main&metricKeys=duplicated_lines_density,duplicated_lines,lines'",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Main-branch overall duplication = 2.8% (4737 duplicated lines of 166755). Recorded in the v0.16.0 release notes as a quality fact."
+    },
+    {
+      "command": "curl -s 'https://sonarcloud.io/api/issues/search?projectKeys=duanxldragon_pantheon-base&branch=main&resolved=false&ps=1'",
+      "cwd": ".",
+      "status": "passed",
+      "details": "0 unresolved issues on main — the 17 smells surfaced by the smoke-helper split (#374) are cleared and the Release Gate's unprocessed-issues rule is satisfied."
+    },
+    {
+      "command": "gh release view pantheon-base-v0.15.0 --json assets,body",
+      "cwd": ".",
+      "status": "passed",
+      "details": "The previous release carries no binary assets (assets: []) and uses a release-notes body, so v0.16.0 mirrors that shape: immutable tag plus a GitHub Release whose body is RELEASE_NOTES_v0.16.0.md."
+    },
+    {
+      "command": "node scripts/harness/check-adoption.mjs --root . --strict",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Harness adoption strict check passes with the new v0.16.0 task packet present."
+    },
+    {
+      "command": "node scripts/harness/check-task-packet.mjs --root .",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Task-packet check passes for the new docs/harness task doc."
+    },
+    {
+      "command": "node scripts/check-pr-governance.mjs",
+      "cwd": ".",
+      "status": "passed",
+      "details": "PR governance template check passes locally."
+    }
+  ],
+  "browserEvidence": [],
+  "runtimeSensitive": false,
+  "runtimeGap": "This release closeout changes no source file, so no browser or runtime execution is applicable; smoke behaviour is inherited from the merged commits (#373/#374) as exercised by hosted CI.",
+  "knownGaps": [
+    "pantheon-ops consumer lock and inheritance snapshot remain a separate consumer-repository follow-up",
+    "No mechanical gate pins README/STATUS/CHANGELOG text to VERSION, so version alignment is upheld by review",
+    "tests/** is still not type-checked or linted in CI (69 pre-existing tsc errors, recorded in the PR #373 work)"
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-12-v0160-release-closeout/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-12-v0160-release-closeout/",
+    "reviewFile": ".harness/evidence/2026-10-12-v0160-release-closeout/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/VERSION_MANAGEMENT_GUIDE.md",
+      "docs/designs/FOUNDATION_RELEASE_MODEL.md"
+    ]
+  }
+}

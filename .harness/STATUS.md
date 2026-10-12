@@ -1,17 +1,17 @@
 # Pantheon Base - Harness 任务状态
 
-**最后更新**: 2026-10-11
-**当前版本**: v0.15.0（`pantheon-base-v0.15.0`）
+**最后更新**: 2026-10-12
+**当前版本**: v0.16.0（`pantheon-base-v0.16.0`）
 
 ## 当前最终验收状态
 
-**判定：发布收口完成。** 2026-10-07 最终验收报告所列 F01–F06 与 G01–G03 的代码、治理与文档修复均已收口；同一候选提交的 GitHub 必需检查与 Release Gate 全绿，SonarCloud 未解决项清零，v0.15.0 已作为不可变 tag 与 GitHub Release 发布。本地与远端仅保留 `main` 分支。
+**判定：发布收口完成。** v0.15.0 之后的内部工程改动（前后端命名对齐、冒烟分层与模块拆分、依赖与质量卫生）已收口；同一候选提交的 GitHub 必需检查与 Release Gate 全绿，SonarCloud 未解决项清零，v0.16.0 已作为不可变 tag 与 GitHub Release 发布。本地与远端仅保留 `main` 分支。
 
 ## 任务状态总览
 
 | 状态 | 说明 |
 |------|------|
-| ✅ 已完成 | 全部历史任务 + 2026-10-07 整改任务包 + 发布收口 |
+| ✅ 已完成 | 全部历史任务 + 2026-10-07 整改任务包 + v0.15.0/v0.16.0 发布收口 |
 | 🔄 进行中 | 无 |
 | 📋 待办 | 无 |
 | ⏸️ 暂停 | 无 |
@@ -23,6 +23,17 @@
 - Wave 1（`release-qualification`）：completed —— 候选提交的 CI、前端、后端、浏览器、MySQL 与治理证据齐备。
 - Wave 2（`release-closeout`）：completed —— PR #368 合并、分支收口为 `main`、Release Gate 全绿、v0.15.0 发布。
 - P1 followup（`performance-followup` / `ui-maintainability-followup`）：completed。
+
+## 发布收口（v0.16.0）
+
+- **版本**：`VERSION` = 0.16.0；tag `pantheon-base-v0.16.0`；GitHub Release 已发布。
+- **性质**：内部工程发布（minor），**零消费侧接口变更**——无路由、权限码、菜单 seed、i18n key 或契约形状变动。
+- **范围**：
+  - #371 前后端命名与目录对齐（Go 包名 == 目录名；`frontend/src/modules/system/*` 镜像后端三层结构；`core/permissions`/`core/settings` 单数化、`AppLayout.tsx` 拆出 `index.tsx`）。
+  - #372/#373/#374 冒烟分层（L0 静态 / L1 关键路径 / L2 模块 / L3 全量）并按业务模块拆分 `system-pages.spec.ts`；新增路径驱动的 `scripts/resolve-smoke-modules.mjs` 与 CI `pr-smoke-modules` 作业。
+  - #370 清除 Dependabot #43（`sprintf-js` DoS，dev 依赖）；#374 清除拆分浮出的 17 条 SonarCloud 异味；#375 删除空 `openspec/` 骨架。
+- **质量**：SonarCloud 未解决项 0、整体重复率 2.8%；CodeQL 0 error/critical；Dependabot 0 high/critical。
+- **任务包**：`.harness/tasks/2026-10-12-v0160-release-closeout/`。
 
 ## 发布收口（v0.15.0）
 

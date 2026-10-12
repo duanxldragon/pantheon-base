@@ -10,14 +10,14 @@ Pantheon Platform 是一个面向企业后台的模块化单体底座，沉淀�
 
 | 项 | 值 |
 | --- | --- |
-| 当前 foundation release | [`pantheon-base-v0.15.0`](https://github.com/duanxldragon/pantheon-base/releases/tag/pantheon-base-v0.15.0)（已发布） |
+| 当前 foundation release | [`pantheon-base-v0.16.0`](https://github.com/duanxldragon/pantheon-base/releases/tag/pantheon-base-v0.16.0)（已发布） |
 | Shell/Harness 基线版本 | `1.4.0`（见 [VERSION](./VERSION) / [SHELL_VERSION.json](./SHELL_VERSION.json)） |
 | 部署文档 | [docs/DEPLOYMENT_GUIDE.md](./docs/DEPLOYMENT_GUIDE.md)（MySQL 8、Redis 7、迁移 + runtime seed、健康检查、遥测、备份恢复与 schema-aware 回滚） |
-| 变更记录 | [CHANGELOG.md](./CHANGELOG.md) / [RELEASE_NOTES_v0.15.0.md](./RELEASE_NOTES_v0.15.0.md) |
+| 变更记录 | [CHANGELOG.md](./CHANGELOG.md) / [RELEASE_NOTES_v0.16.0.md](./RELEASE_NOTES_v0.16.0.md) |
 | **任务状态** | [.harness/STATUS.md](./.harness/STATUS.md) — 当前任务状态总览 |
 | **归档记录** | [.harness/ARCHIVE.md](./.harness/ARCHIVE.md) — 已完成任务归档索引 |
 
-交付状态说明：v0.15.0 foundation bundle、不可变 tag、GitHub Release 和 hosted required checks 均已完成。`pantheon-ops` 的 consumer lock、继承快照和业务 smoke 仍需在 Ops 仓库单独完成并验证。
+交付状态说明：v0.16.0 foundation bundle、不可变 tag、GitHub Release 和 hosted required checks 均已完成。v0.16.0 为内部工程发布（前后端命名对齐、冒烟分层、依赖与质量卫生），未改动任何消费侧接口。`pantheon-ops` 的 consumer lock、继承快照和业务 smoke 仍需在 Ops 仓库单独完成并验证。
 
 ## 项目定位
 
