@@ -62,6 +62,18 @@
       "details": "Typecheck exit 0 and eslint exit 0 with zero warnings on the new shared helper and both consumers."
     },
     {
+      "command": "curl -s 'https://sonarcloud.io/api/issues/search?projectKeys=duanxldragon_pantheon-base&pullRequest=377&resolved=false&ps=50' && curl -s 'https://sonarcloud.io/api/qualitygates/project_status?projectKey=duanxldragon_pantheon-base&pullRequest=377'",
+      "cwd": ".",
+      "status": "failed",
+      "details": "First SonarCloud analysis of PR #377 reported 2 issues on new code and failed the gate on new_reliability_rating (3, threshold 1): go:S1764 MAJOR at data_scope_middleware_test.go:71 ('Correct one of the identical sub-expressions on both sides of this operator' — the stability check compared two textually identical calls) and typescript:S7503 MINOR at layout-settle.ts:6 (readElementWidth declared async with no await). Both were introduced by this PR, not inherited. The S7503 one is the same hazard recorded for the PR #373 file split: moving a long-lived local helper into a new file re-classifies it as new code and surfaces latent smells."
+    },
+    {
+      "command": "edit: store the derived key in a variable and reuse TableName(); drop the redundant async on readElementWidth; re-run gofmt/go vet/go test and tsc/eslint",
+      "cwd": ".",
+      "status": "passed",
+      "details": "go:S1764 fixed by assigning buildTableExistCacheKey(first, tableName) to firstTableKey and comparing that against a fresh call, so no two operands are textually identical while the stability property is still asserted; the table name now comes from (&SystemRoleDataScope{}).TableName() so the literal is not repeated three times either. typescript:S7503 fixed by removing async from readElementWidth — locator.evaluate already returns Promise<number>, so the signature is unchanged. Re-verified: gofmt clean, go vet silent, the three data-scope tests pass, tsc --noEmit exit 0, eslint exit 0."
+    },
+    {
       "command": "probe: chromium page with a 248px div that transitions to 76px over 200ms; read the width immediately after the style change, then read it again after awaiting element.getAnimations({subtree:true}).finished",
       "cwd": "frontend",
       "status": "passed",

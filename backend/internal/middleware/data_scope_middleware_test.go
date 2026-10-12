@@ -59,16 +59,22 @@ func TestDataScopeMiddlewareInjectsRoleDeptScope(t *testing.T) {
 // 分配给新的连接池，使新测试库继承旧库的缓存结论（策略表「已存在」），
 // MigrateDataScopePolicy 因此跳过建表，后续 INSERT 报 Error 1146。
 func TestDataScopeCacheKeysAreScopedPerConnection(t *testing.T) {
+	tableName := (&SystemRoleDataScope{}).TableName()
 	first := testmysql.Open(t)
+	firstTableKey := buildTableExistCacheKey(first, tableName)
+	firstUserKey := buildUserDeptCacheKey(first, 7)
+
 	second := testmysql.Open(t)
 
-	if buildTableExistCacheKey(first, "system_role_data_scope") == buildTableExistCacheKey(second, "system_role_data_scope") {
+	if firstTableKey == buildTableExistCacheKey(second, tableName) {
 		t.Fatal("distinct connections must not share a table-existence cache key")
 	}
-	if buildUserDeptCacheKey(first, 7) == buildUserDeptCacheKey(second, 7) {
+	if firstUserKey == buildUserDeptCacheKey(second, 7) {
 		t.Fatal("distinct connections must not share a user-dept cache key")
 	}
-	if buildTableExistCacheKey(first, "system_role_data_scope") != buildTableExistCacheKey(first, "system_role_data_scope") {
+	// Re-deriving the key for the same connection must not drift, otherwise the
+	// cache would miss forever and the early-exit it exists for would be lost.
+	if firstTableKey != buildTableExistCacheKey(first, tableName) {
 		t.Fatal("cache key must be stable for the same connection")
 	}
 }

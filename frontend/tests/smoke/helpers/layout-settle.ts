@@ -3,7 +3,7 @@ import { expect, type Locator } from '@playwright/test';
 /**
  * 读取元素渲染宽度（取整像素）。
  */
-export async function readElementWidth(locator: Locator): Promise<number> {
+export function readElementWidth(locator: Locator): Promise<number> {
   return locator.evaluate((element) => Math.round(element.getBoundingClientRect().width));
 }
 

@@ -87,6 +87,22 @@ papered over.
 | `frontend/tests/smoke/platform/shell-top-panels.spec.ts` | Reuse shared helper, local copies removed |
 | `docs/harness/failure-registry.md` | FR-012 and FR-013 registered as implemented sensors |
 
+## Follow-up found by CI on this PR
+
+The first SonarCloud analysis of PR #377 reported two issues on new code and failed the gate on
+`new_reliability_rating`:
+
+- `go:S1764` (MAJOR) — the cache-key stability check compared two textually identical calls. Fixed by
+  binding the derived key to a variable and comparing that against a fresh call, and by taking the
+  table name from `TableName()` instead of repeating the literal three times.
+- `typescript:S7503` (MINOR) — `readElementWidth` was declared `async` with no `await`. `async`
+  removed; `locator.evaluate` already returns `Promise<number>`, so the signature is unchanged.
+
+The `S7503` finding is the same hazard recorded after the PR #373 split: moving a long-lived local
+helper into a new file re-classifies it as new code and surfaces latent smells that the old location
+never reported. That is why the helper was checked for this class of smell before being pushed, and
+why the residue is recorded here rather than only in the PR conversation.
+
 ## Residual risk
 
 - Core Smoke is push-triggered and report-only, so a PR cannot prove the browser fix in CI; the
