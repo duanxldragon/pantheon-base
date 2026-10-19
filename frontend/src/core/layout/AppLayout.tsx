@@ -40,6 +40,11 @@ import { useTranslation } from 'react-i18next';
 import { beginLogoutTransition, endLogoutTransition } from '../../api/request';
 import { type MenuNode } from '../../modules/system/iam/menu/api';
 import { logout as logoutApi, reportActivity } from '../../modules/auth/session/api';
+import { TenantSwitcher } from '../../modules/auth/tenant/TenantSwitcher';
+import {
+  TenantViewpointBanner,
+  TenantViewpointSwitcher,
+} from '../../modules/auth/tenant/TenantViewpointSwitcher';
 import {
   updateCurrentUserPreferences,
   verifyOperationPassword,
@@ -1032,6 +1037,7 @@ const BaseLayout: React.FC = () => {
   } = useLayoutMenu({
     menuTree,
     orgEnabled: publicSettings.orgEnabled,
+    tenantEnabled: publicSettings.tenantMode === 'multi',
     currentPath: location.pathname,
     activeMenuPath,
     routeActiveMenu: matchedRoute?.activeMenu,
@@ -1795,6 +1801,8 @@ const BaseLayout: React.FC = () => {
               summary={noticeSummary}
               t={t}
             />
+            <TenantSwitcher enabled={publicSettings.tenantMode === 'multi'} t={t} />
+            <TenantViewpointSwitcher enabled={publicSettings.tenantMode === 'multi'} t={t} />
             <Dropdown
               trigger="click"
               position="br"
@@ -1854,6 +1862,7 @@ const BaseLayout: React.FC = () => {
             </Dropdown>
           </Space>
         </Header>
+        <TenantViewpointBanner t={t} />
         {isHorizontalLayout ? (
           <LayoutSideMenu
             appName={appName}

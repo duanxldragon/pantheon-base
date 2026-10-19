@@ -6,6 +6,8 @@ import { showImportResult } from '../../../../api/importExport';
 import { isArcoFormValidationError } from '../../../../core/arco/formValidation';
 import { publishRefresh, useRefreshSubscription } from '../../../../core/refresh/refreshBus';
 import { invalidateRouteWarmDataMany, resolveRouteWarmData } from '../../../../core/router/prefetch';
+import { readTenantViewpointId } from '../../../../core/tenant/viewpoint';
+import { addTenantMember, type TenantMemberRole } from '../tenant/api';
 import { usePublicSettings } from '../../../../core/setting/publicSettings';
 import { getDeptTree, type DeptNode } from '../../org/dept/api';
 import { getPostList } from '../../org/post/api';
@@ -83,6 +85,27 @@ const emptyForm: UserCreatePayload = {
   deptId: 0,
   postId: 0,
   roleIds: [],
+};
+
+/**
+ * Form-only extension of the create payload: the "join the pinned tenant"
+ * integration lives in one place. Both fields are stripped before the wire
+ * call — membership is a separate endpoint (`/system/tenant/:id/members`),
+ * not part of the user create payload, and the user's own tenant_id is
+ * stamped server-side from the viewpoint context (contract §3.3).
+ */
+type UserFormValues = UserCreatePayload & {
+  joinTenant?: boolean;
+  membershipRole?: TenantMemberRole;
+};
+
+const emptyFormValues: UserFormValues = {
+  ...emptyForm,
+  // Multi mode login requires an active membership, so "join" defaults to
+  // on: a user created in a tenant viewpoint without membership is a row
+  // nobody can ever log into.
+  joinTenant: true,
+  membershipRole: 'member',
 };
 
 function isDefaultUserListQuery(query: UserListQuery) {
@@ -346,9 +369,11 @@ export function useUserList(form: FormInstance<UserCreatePayload>) {
 
   // ---- Form modal actions ----
 
+  const viewpointTenantId = useMemo(() => readTenantViewpointId(), []);
+
   const openCreate = useCallback(() => {
     dispatch({ type: 'OPEN_CREATE' });
-    form.setFieldsValue(emptyForm);
+    form.setFieldsValue(emptyFormValues);
   }, [form]);
 
   const openEdit = useCallback(
@@ -379,9 +404,9 @@ export function useUserList(form: FormInstance<UserCreatePayload>) {
   }, []);
 
   const submitForm = useCallback(async () => {
-    let values: UserCreatePayload;
+    let values: UserFormValues;
     try {
-      values = (await form.validate()) as UserCreatePayload;
+      values = (await form.validate()) as UserFormValues;
     } catch (error) {
       if (isArcoFormValidationError(error)) {
         return;
@@ -403,7 +428,7 @@ export function useUserList(form: FormInstance<UserCreatePayload>) {
         });
         message.success(t('common.updateSuccess'));
       } else {
-        await createUser({
+        const created = await createUser({
           username: values.username,
           password: values.password,
           nickname: values.nickname ?? '',
@@ -417,6 +442,27 @@ export function useUserList(form: FormInstance<UserCreatePayload>) {
           profileExt: values.profileExt,
         });
         message.success(t('common.createSuccess'));
+        // While a tenant viewpoint is pinned, the fresh row already belongs
+        // to that tenant. Multi-mode login requires an active membership, so
+        // the integration call completes the "can log in" loop in the same
+        // gesture. A failed membership add is reported separately: the user
+        // creation itself already succeeded, so we never undo it here.
+        if (
+          viewpointTenantId !== null &&
+          viewpointTenantId > 0 &&
+          values.joinTenant !== false &&
+          Number(created?.id) > 0
+        ) {
+          try {
+            await addTenantMember(viewpointTenantId, {
+              user_id: Number(created.id),
+              role: values.membershipRole || 'member',
+            });
+            message.success(t('system.user.joinTenantDone'));
+          } catch {
+            message.error(t('system.tenant.viewpoint.joinMembershipFailed'));
+          }
+        }
       }
       invalidateUserCaches();
       publishRefresh('system:user:changed', 'system/user');
@@ -427,7 +473,7 @@ export function useUserList(form: FormInstance<UserCreatePayload>) {
     } finally {
       dispatch({ type: 'SET_SUBMITTING', submitting: false });
     }
-  }, [form, invalidateUserCaches, loadData, orgEnabled, state.editingRow, state.query, t]);
+  }, [form, invalidateUserCaches, loadData, orgEnabled, state.editingRow, state.query, t, viewpointTenantId]);
 
   const handleAvatarUploadSuccess = useCallback(
     (response: unknown) => {
@@ -660,6 +706,9 @@ export function useUserList(form: FormInstance<UserCreatePayload>) {
     state,
     orgEnabled,
     orgRequiredForUser,
+    // Tenant viewpoint (platform subject only): enables the join-tenant
+    // section of the create-user form and is consumed by submitForm.
+    viewpointTenantId,
     // Form modal
     openCreate,
     openEdit,
