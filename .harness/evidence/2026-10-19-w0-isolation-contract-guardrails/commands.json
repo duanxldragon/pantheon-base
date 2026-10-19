@@ -1,0 +1,74 @@
+{
+  "taskId": "2026-10-19-w0-isolation-contract-guardrails",
+  "repo": "pantheon-base",
+  "executedAt": "2026-10-19T10:15:00+08:00",
+  "completedAt": "2026-10-19T10:40:00+08:00",
+  "agent": {
+    "tool": "other",
+    "adapter": "software-workshop-agent"
+  },
+  "runtimeSensitive": false,
+  "runtimeGap": "W0 is a documentation plus test-authoring wave: no production code was changed by it, and the red run was produced by temporarily reverting five predicates in a working copy (checksums recorded before and after). It does not prove anything about a deployment; that is W1's live evidence. The red cases are Go tests that gate CI; the two-tenant probe (acceptance/cross_tenant_leak.py) stays outside the repository build on purpose.",
+  "commands": [
+    {
+      "command": "go test -count=1 ./internal/middleware/... ./modules/system/iam/permission/... (tree mutated: five tenant predicates removed)",
+      "cwd": "backend",
+      "status": "failed",
+      "details": "The expected red run: 7 failures, each naming the leak rather than a compile or fixture error. Middleware: TestLoadRoleDataScopePoliciesIsTenantScoped (4 sub-cases), TestDataScopeMiddlewareAppliesOnlyTheCallersPolicy (got mode \"all\", expected \"self\"), TestDataScopeMiddlewareIgnoresOtherTenantsPolicy (handler ran with mode \"all\"). Permission: TestListDataScopePoliciesIsTenantScoped (5 rows for a tenant owning 2), TestUpdateDataScopePolicyWritesToCallersTenant (the write landed on the tenant-0 row), TestUpdateDataScopePolicyRejectsForeignRoleKey (err = nil), TestUpdateDataScopePolicyRejectsForeignDeptIDs (err = nil). Full transcript: red-run.log."
+    },
+    {
+      "command": "go test -count=1 -run 'TestListRolesEchoesOnlyTheCallersDataScope|TestListRolesDataScopeKeepsCompatBaseline' ./modules/system/iam/role/ (tree mutated: loadRoleDataScopes unscoped)",
+      "cwd": "backend",
+      "status": "failed",
+      "details": "The eighth red case, added because the first pass had no unit-level coverage for F13 — it was only covered by the L3 acceptance assertion. With `s.scoped(s.db)` removed, tenant 101 echoed tenant 202's mode: 'must echo \"self\" for its own role, got {... DataScope:dept}'. Only tenant A failed, which is the shape of the bug: B's row happened to be the last one scanned, so B looked correct while A was wrong — a single-tenant assertion would have passed."
+    },
+    {
+      "command": "md5sum -c /tmp/w0bak/before.md5 (after restoring the three mutated files)",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "All three files verify OK against the checksums taken before mutation (data_scope_middleware.go, permission_data_scope.go, permission_service.go), so the red run left no residue in the tree."
+    },
+    {
+      "command": "cd backend && go build ./...",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "Clean build after restore."
+    },
+    {
+      "command": "cd backend && go test -count=1 ./internal/middleware/... ./modules/system/iam/permission/... ./modules/system/iam/role/...",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "All three packages ok after restore (middleware 5.6s, permission 11.5s, role 11.8s): the same eight cases are green against the W1 tree, which is what makes the red run meaningful."
+    },
+    {
+      "command": "cd backend && go test -count=1 -run 'Tenant|DataScope' ./internal/middleware/... ./modules/system/iam/permission/...",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "41 top-level tests selected and passing. This replaces the manifest's original `-run Tenant`, which silently skipped three of the seven cases because their names do not contain the substring 'Tenant'. A gate that reports green while three leak assertions are red is worse than no gate."
+    },
+    {
+      "command": "node scripts/harness/check-doc-frontmatter.mjs / check-doc-links.mjs / check-doc-inventory.mjs / check-encoding.mjs / check-task-packet.mjs --root .",
+      "cwd": "D:/workspace/go/pantheon-platform/pantheon-base",
+      "status": "passed",
+      "details": "All green after the contract edit: 0 frontmatter errors, 0 broken links, 0 inventory findings, 0 encoding findings, 0 task-packet errors."
+    }
+  ],
+  "knownGaps": [
+    "The contract clause is a clarification (V1.2), not a new freeze. It states an obligation the code already had to meet; it does not authorize any new DDL or data change.",
+    "The red cases cover the data-scope cluster only. They do not cover F1/F2/F3/F4/F5/F6, whose red cases arrive with their own waves (W2–W5).",
+    "F13's red case was added on a second pass: the first version of this wave only had middleware and permission tests, so RoleService.loadRoleDataScopes was covered by the acceptance probe but not by a unit test. It is now covered, but that gap existed for one iteration and is recorded rather than papered over.",
+    "The red run was produced by mutation, not by checking out the pre-W1 commit: the working tree carries a large amount of uncommitted tenant work from earlier sessions, so a commit-level revert was not available. The mutation reverts exactly the five predicates W1 introduced, and the checksums prove the tree was restored.",
+    "Nothing in this wave prevents a *new* predicate-free query from being written; the clause makes it reviewable and the tests guard the five known code points. A static check (lint for role_key queries without tenant_id) would be the real enforcement and is not part of this program."
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-19-w0-isolation-contract-guardrails/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-19-w0-isolation-contract-guardrails/",
+    "summaryFile": ".harness/evidence/2026-10-19-w0-isolation-contract-guardrails/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-19-w0-isolation-contract-guardrails/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-19-tenant-permission-isolation-remediation.task.md",
+      "docs/contracts/TENANT_CONTRACT_V1.md"
+    ]
+  }
+}

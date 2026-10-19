@@ -390,7 +390,7 @@ func (s *UserService) applyUserImportCreate(tx *gorm.DB, row importRow, result *
 
 func (s *UserService) listUsersForExport(ctx context.Context, query *UserListQuery, dataScope *common.DataScopeReq) ([]SystemUser, error) {
 	var users []SystemUser
-	db := s.db.WithContext(ctx).Model(&SystemUser{}).Scopes(database.WithDataScope(dataScope))
+	db := s.scoped(s.db.WithContext(ctx).Model(&SystemUser{})).Scopes(database.WithDataScope(dataScope))
 	db = applyUserListFilters(db, query)
 
 	sortColumn, sortDesc := normalizeUserSort(query)

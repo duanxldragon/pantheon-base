@@ -68,6 +68,8 @@
     "evidenceDir": ".harness/evidence/2026-10-11-dependabot-sprintf-js-dos/",
     "reviewFile": ".harness/evidence/2026-10-11-dependabot-sprintf-js-dos/review.md",
     "changeRef": "none",
-    "planRefs": []
+    "planRefs": [],
+    "evidence": ".harness/evidence/2026-10-11-dependabot-sprintf-js-dos/commands.json",
+    "summaryFile": ".harness/evidence/2026-10-11-dependabot-sprintf-js-dos/summary.md"
   }
 }

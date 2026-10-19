@@ -65,7 +65,7 @@ func (s *RoleService) ExportRoles(ctx context.Context, query *RoleListQuery) (*i
 
 func (s *RoleService) listRolesForExport(ctx context.Context, query *RoleListQuery) ([]SystemRole, error) {
 	var roles []SystemRole
-	db := s.db.WithContext(ctx).Model(&SystemRole{})
+	db := s.scoped(s.db.WithContext(ctx).Model(&SystemRole{}))
 	if query != nil {
 		if strings.TrimSpace(query.RoleName) != "" {
 			db = db.Where("role_name LIKE ?", fmt.Sprintf("%%%s%%", common.EscapeLikePattern(strings.TrimSpace(query.RoleName))))
@@ -391,7 +391,9 @@ func (s *RoleService) applyImportRow(tx *gorm.DB, result *impexp.ImportResult, r
 func (s *RoleService) loadRolesByRoleKey() (map[string]*SystemRole, error) {
 	result := make(map[string]*SystemRole)
 	var roles []SystemRole
-	if err := s.db.Find(&roles).Error; err != nil {
+	// Scoped: role keys are unique per tenant, so import matching must only
+	// consider the request tenant's own roles.
+	if err := s.scoped(s.db).Find(&roles).Error; err != nil {
 		return nil, err
 	}
 	for i := range roles {

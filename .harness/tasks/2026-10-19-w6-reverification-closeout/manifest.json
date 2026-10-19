@@ -1,0 +1,97 @@
+{
+  "taskId": "2026-10-19-w6-reverification-closeout",
+  "title": "Re-run the full 193-assertion acceptance, close every defect explicitly, and hand the tenant over as deliverable",
+  "goal": "The program is only done when the same measurement that produced the 13 defects comes back clean. This wave re-runs all three suites against the fixed tree -- tenant_acceptance.py (136), ui_walkthrough.cjs (23) and cross_tenant_leak.py (34) -- and requires a verdict per defect rather than a single aggregate score: closed, downgraded with a written reason, or still open with a fix path. It also updates the acceptance report, STATUS.md and the changelog, archives W0..W5, and leaves the environment in a deliverable state (one clean tenant, no probe fixtures, no tenant_id = 0 rows produced by the console).",
+  "primaryLayer": "platform",
+  "status": "completed",
+  "priority": "P0",
+  "type": "verification",
+  "estimatedComplexity": "medium",
+  "parentTaskId": "2026-10-19-tenant-permission-isolation-remediation",
+  "dependsOn": [
+    "2026-10-19-w1-data-scope-tenant-dimension",
+    "2026-10-19-w2-tenant-user-onboarding",
+    "2026-10-19-w3-role-menu-grant-persistence",
+    "2026-10-19-w4-session-revocation-login-gate",
+    "2026-10-19-w5-tenant-console-ux"
+  ],
+  "findings": [
+    "All 13 defects from the baseline acceptance run must reach an explicit disposition; an aggregate pass rate is not an acceptable closeout signal."
+  ],
+  "scope": {
+    "in": [
+      "acceptance/tenant_acceptance.py",
+      "acceptance/ui_walkthrough.cjs",
+      "acceptance/cross_tenant_leak.py",
+      "acceptance/PANTHEON_BASE_TENANT_ACCEPTANCE_REPORT.{md,html}",
+      ".harness/STATUS.md",
+      "CHANGELOG.md"
+    ],
+    "out": [
+      "Fixing defects that W1..W5 left open (they get a new task instead)",
+      "Re-cutting a foundation release unless sharedPaths changed"
+    ]
+  },
+  "implementationNotes": [
+    "Run the suites in a fixed order and from a clean fixture state: acceptance, then UI, then the leak probe, because the leak probe creates a tenant and leaves rows that would skew earlier counts.",
+    "Report per-defect disposition. '179/193 -> 193/193' hides which defect moved; the closeout table must map each F-id to closed/downgraded/open with the evidence path.",
+    "Verify the environment afterwards: exactly one deliverable tenant active, probe tenant archived, no tenant_id = 0 rows created by the console during the run.",
+    "If a defect is downgraded, the reason must be a product or scope decision recorded in the report, not 'acceptable for now'."
+  ],
+  "contractAnchors": [
+    "docs/contracts/TENANT_CONTRACT_V1.md",
+    "docs/contracts/PLATFORM_CONTRACT.md"
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "permission-policy",
+    "ownerLayer": "consumer-repository"
+  },
+  "verificationPlan": {
+    "commands": [
+      "cd backend && go build ./...",
+      "cd backend && go test -count=1 ./...",
+      "python tenant_acceptance.py",
+      "NODE_PATH=<frontend>/node_modules node ui_walkthrough.cjs",
+      "python cross_tenant_leak.py"
+    ],
+    "runtimeEvidence": [
+      "three suite logs with totals",
+      "per-defect disposition table with evidence paths",
+      "post-run SQL snapshot: zero rows in system_role_data_scope with tenant_id = 0 created during the run"
+    ]
+  },
+  "runtimeSensitive": true,
+  "evidenceRequired": [
+    ".harness/evidence/2026-10-19-w6-reverification-closeout/commands.json",
+    ".harness/evidence/2026-10-19-w6-reverification-closeout/summary.md",
+    ".harness/evidence/2026-10-19-w6-reverification-closeout/disposition.md",
+    ".harness/evidence/2026-10-19-w6-reverification-closeout/final-run.log"
+  ],
+  "humanGates": [
+    "Accept the final verdict: deliverable, or deliverable-with-written-limitations, based on the per-defect table rather than the aggregate.",
+    "Confirm which P1/P2 items may ship open, and record that decision in the report."
+  ],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed",
+    "All three suites run in the fixed order from a clean fixture state",
+    "Every defect has a closed/downgraded disposition with an evidence path",
+    "Environment left deliverable: probe tenants archived, no ghost members, no tenant-0 grants on tenant roles",
+    "STATUS.md, CHANGELOG and the acceptance report updated"
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-19-w6-reverification-closeout/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-19-w6-reverification-closeout/",
+    "summaryFile": ".harness/evidence/2026-10-19-w6-reverification-closeout/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-19-w6-reverification-closeout/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-19-tenant-permission-isolation-remediation.task.md"
+    ]
+  }
+}

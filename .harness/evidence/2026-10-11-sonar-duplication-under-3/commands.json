@@ -120,5 +120,14 @@
     "SonarCloud's overall duplicated_lines_density is not a quality-gate condition (only new_duplicated_lines_density is, with a 3% threshold). The 3.16% target is therefore a project objective, not a merge blocker, and the authoritative confirmation requires the hosted re-analysis after CI.",
     "go test could not be executed locally (sandbox now kills Go process execution). Compilation of the test package was verified with go test -c, and the transformation was proven line-equivalent, but the suite itself is verified by CI only.",
     "The full root script suite (node --test tests/scripts/*.test.mjs) reports 74 failed / 76 passed on this host, but every failure traces to the sandbox refusing to spawn child processes: the fixtures call execFileSync, which fails with 'spawnSync git EBUSY' / 'spawnSync node EBUSY', and the tests that assert on a child exit code then see status null (e.g. 'null !== 1'). None of the failures is check-duplication.test.mjs, which passes 2/2, and none is caused by the includeRoots change. CI's npm run test:scripts runs the same suite in an environment that can spawn."
-  ]
+  ],
+  "linkage": {
+    "planRefs": [],
+    "evidenceDir": ".harness/evidence/2026-10-11-sonar-duplication-under-3/",
+    "taskManifest": ".harness/tasks/2026-10-11-sonar-duplication-under-3/manifest.json",
+    "reviewFile": ".harness/evidence/2026-10-11-sonar-duplication-under-3/review.md",
+    "changeRef": "none",
+    "evidence": ".harness/evidence/2026-10-11-sonar-duplication-under-3/commands.json",
+    "summaryFile": ".harness/evidence/2026-10-11-sonar-duplication-under-3/summary.md"
+  }
 }

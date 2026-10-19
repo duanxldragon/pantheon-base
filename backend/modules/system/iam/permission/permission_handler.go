@@ -6,6 +6,7 @@ import (
 
 	"github.com/duanxldragon/pantheon-base/backend/pkg/common"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/impexp"
+	"github.com/duanxldragon/pantheon-base/backend/pkg/tenant"
 
 	"github.com/gin-gonic/gin"
 )
@@ -33,6 +34,14 @@ func NewPermissionHandler(s *PermissionService) *PermissionHandler {
 	return &PermissionHandler{service: s}
 }
 
+// svc binds the service to the request tenant context. Every surface that reads
+// or writes tenant-owned rows (roles, data-scope policies) must go through it;
+// otherwise a tenant administrator operates on the whole installation
+// (acceptance F7/F8/F9/F10).
+func (h *PermissionHandler) svc(c *gin.Context) *PermissionService {
+	return h.service.WithTenantContext(tenant.FromGin(c))
+}
+
 func (h *PermissionHandler) GetWorkbench(c *gin.Context) {
 	var query PermissionWorkbenchQuery
 	if err := c.ShouldBindQuery(&query); err != nil {
@@ -40,7 +49,7 @@ func (h *PermissionHandler) GetWorkbench(c *gin.Context) {
 		return
 	}
 
-	workbench, err := h.service.GetWorkbench(&query)
+	workbench, err := h.svc(c).GetWorkbench(&query)
 	if err != nil {
 		common.Fail(c, common.CodeError, "permission.workbench.error")
 		return
@@ -57,7 +66,7 @@ func (h *PermissionHandler) ExportWorkbench(c *gin.Context) {
 		return
 	}
 
-	file, err := h.service.ExportWorkbench(&query)
+	file, err := h.svc(c).ExportWorkbench(&query)
 	if err != nil {
 		common.Fail(c, common.CodeError, "permission.workbench.export.error")
 		return
@@ -91,7 +100,7 @@ func (h *PermissionHandler) RemediateWorkbenchPolicies(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.service.RemediateWorkbenchPolicies(&req)
+	resp, err := h.svc(c).RemediateWorkbenchPolicies(&req)
 	if err != nil {
 		common.FailWithError(c, common.CodeError, err, errRequestFailed)
 		return
@@ -106,7 +115,7 @@ func (h *PermissionHandler) ListDataScopePolicies(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.service.ListDataScopePolicies(&query)
+	resp, err := h.svc(c).ListDataScopePolicies(&query)
 	if err != nil {
 		common.Fail(c, common.CodeError, "permission.data_scope.list.error")
 		return
@@ -123,7 +132,7 @@ func (h *PermissionHandler) UpdateDataScopePolicy(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.service.UpdateDataScopePolicy(c.Param("roleKey"), &req)
+	resp, err := h.svc(c).UpdateDataScopePolicy(c.Param("roleKey"), &req)
 	if err != nil {
 		common.FailWithError(c, common.CodeError, err, errRequestFailed)
 		return

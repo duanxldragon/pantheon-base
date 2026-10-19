@@ -43,5 +43,15 @@
       "status": "passed",
       "details": "OK pantheon-base PR template governance fields are present."
     }
-  ]
+  ],
+  "linkage": {
+    "planRefs": [],
+    "evidenceDir": ".harness/evidence/2026-10-11-sonar-smoke-helper-smells/",
+    "taskManifest": ".harness/tasks/2026-10-11-sonar-smoke-helper-smells/manifest.json",
+    "reviewFile": ".harness/evidence/2026-10-11-sonar-smoke-helper-smells/review.md",
+    "changeRef": "none",
+    "evidence": ".harness/evidence/2026-10-11-sonar-smoke-helper-smells/commands.json",
+    "summaryFile": ".harness/evidence/2026-10-11-sonar-smoke-helper-smells/summary.md"
+  },
+  "knownGaps": []
 }

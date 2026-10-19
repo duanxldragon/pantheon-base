@@ -1,4 +1,5 @@
 import { apiRequest } from '../../../api/request';
+import { downloadFile } from '../../../api/file';
 
 export interface AuthSessionPayload {
   tokenType?: string;
@@ -129,5 +130,14 @@ export function batchRevokeAdminSessions(data: SessionBatchRevokePayload) {
     url: '/system/session/batch-revoke',
     method: 'post',
     data,
+  });
+}
+
+export function exportAdminSessions(data?: AdminSessionQuery) {
+  return downloadFile({
+    url: '/system/session/export',
+    method: 'post',
+    data,
+    filename: 'system-session-export.csv',
   });
 }

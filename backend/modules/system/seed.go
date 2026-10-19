@@ -1,9 +1,11 @@
 package system
 
 import (
+	"log/slog"
 	"strings"
 
 	"github.com/duanxldragon/pantheon-base/backend/pkg/rbacbind"
+	"github.com/duanxldragon/pantheon-base/backend/pkg/tenant"
 
 	"gorm.io/gorm"
 )
@@ -13,6 +15,9 @@ const (
 	moduleOrg     = "system.org"
 	moduleConfig  = "system.config"
 	moduleLowcode = "system.lowcode"
+	// moduleTenant gates the tenant console menu; the frontend hides it unless
+	// platform.tenant_mode is multi (mirrors system.org / org.enabled).
+	moduleTenant = "system.tenant"
 
 	menuKeyOperationLog = "operation-log"
 
@@ -69,6 +74,10 @@ func seedDictModuleMenus(db *gorm.DB) error {
 
 func seedI18nModuleMenus(db *gorm.DB) error {
 	return ensureMenuSeeds(db, append(baseMenuGroupSeeds(), i18nMenuSeeds()...))
+}
+
+func seedTenantModuleMenus(db *gorm.DB) error {
+	return ensureMenuSeeds(db, append(baseMenuGroupSeeds(), tenantMenuSeeds()...))
 }
 
 func ensureMenuSeeds(db *gorm.DB, seeds []menuSeed) error {
@@ -447,6 +456,30 @@ func i18nMenuSeeds() []menuSeed {
 	}
 }
 
+func tenantMenuSeeds() []menuSeed {
+	return []menuSeed{
+		{
+			Key:       "tenant",
+			ParentKey: "access",
+			TitleKey:  "system.menu.tenant",
+			Path:      "/system/tenant",
+			Component: "system/tenant/TenantList",
+			PagePerm:  "system:tenant:list",
+			Perms:     "",
+			Type:      "C",
+			Icon:      "storage",
+			RouteName: "system-tenant",
+			Module:    moduleTenant,
+			Sort:      35,
+		},
+		{Key: "tenant-create", ParentKey: "tenant", TitleKey: "system.permission.tenant.create", Perms: "system:tenant:create", Type: "F", Sort: 1},
+		{Key: "tenant-update", ParentKey: "tenant", TitleKey: "system.permission.tenant.update", Perms: "system:tenant:update", Type: "F", Sort: 2},
+		{Key: "tenant-delete", ParentKey: "tenant", TitleKey: "system.permission.tenant.delete", Perms: "system:tenant:delete", Type: "F", Sort: 3},
+		{Key: "tenant-member-add", ParentKey: "tenant", TitleKey: "system.permission.tenant.member_add", Perms: "system:tenant:member-add", Type: "F", Sort: 4},
+		{Key: "tenant-member-remove", ParentKey: "tenant", TitleKey: "system.permission.tenant.member_remove", Perms: "system:tenant:member-remove", Type: "F", Sort: 5},
+	}
+}
+
 func auditMenuSeeds() []menuSeed {
 	return []menuSeed{
 		{
@@ -549,14 +582,18 @@ func seedMenuPayload(seed menuSeed, parentID uint64) map[string]interface{} {
 
 func bindSeedMenuAdminRole(db *gorm.DB, seed menuSeed, menuID uint64) error {
 	var adminRoleID uint64
-	if err := db.Table("system_role").Select("id").Where("role_key = ?", "admin").Limit(1).Pluck("id", &adminRoleID).Error; err != nil {
+	// Only the platform admin (tenant 0): a tenant may own a role with the same
+	// key, and seeding must never write a grant into a tenant namespace.
+	if err := db.Table("system_role").Select("id").
+		Where("role_key = ? AND tenant_id = ?", "admin", tenant.PlatformGlobalTenantID).
+		Limit(1).Pluck("id", &adminRoleID).Error; err != nil {
 		return err
 	}
 	if adminRoleID == 0 {
 		return nil
 	}
 	if normalizeSeedMenuType(seed.Type) != "F" {
-		if err := rbacbind.EnsureRoleMenu(db, adminRoleID, menuID); err != nil {
+		if err := rbacbind.EnsureRoleMenu(db, tenant.PlatformGlobalTenantID, adminRoleID, menuID); err != nil {
 			return err
 		}
 	}
@@ -824,10 +861,20 @@ func resolveMenuParentID(db *gorm.DB, parentKey string) (uint64, error) {
 		"generator":         "/system/generator",
 		"dict":              "/system/dict",
 		"i18n":              "/system/i18n",
+		"tenant":            "/system/tenant",
 		menuKeyOperationLog: "/system/operation-log",
 	}
 	parentPath, ok := parentPaths[parentKey]
 	if !ok {
+		// A silent zero here is how the tenant permission rows ended up at the
+		// menu root: tenantMenuSeeds declared ParentKey "tenant" before this map
+		// knew about it, and nothing reported the miss, so the five buttons
+		// rendered as top-level entries in 菜单管理. Keep the menu (at the root)
+		// rather than failing the whole seed, but make the miss visible.
+		slog.Warn(
+			"menu seed references an unmapped parent key; menu will be created at the root",
+			"parent_key", parentKey,
+		)
 		return 0, nil
 	}
 	return lookupMenuIDByPath(db, parentPath)

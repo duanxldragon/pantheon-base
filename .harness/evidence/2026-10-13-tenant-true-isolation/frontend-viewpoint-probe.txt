@@ -1,0 +1,78 @@
+frontend tenant-viewpoint probe — run=1791956676
+platform admin logged in
+
+================================================================================================
+setup  provision one tenant in a single call (the viewpoint target)
+================================================================================================
+PASS   setup tenant provisioned with its own admin                          status=200 code=200 msg=success id=35
+
+================================================================================================
+step 1/2  console listing the viewpoint switcher depends on
+================================================================================================
+PASS   platform subject may list active tenants (switcher renders)          status=200 code=200 rows=2 contains_probe_tenant=True
+PASS   without a header the platform subject reads the platform scope       status=200 code=200 users=3
+PASS   the tenant's own users do not leak into the platform scope           users=3 contains_tenant_admin=False
+
+================================================================================================
+step 3  X-Tenant-Id pins the working scope to the tenant
+================================================================================================
+PASS   a valid X-Tenant-Id resolves the platform subject to that tenant     current={"mode": "multi", "resolvedBy": "header", "tenant": {"id": 35, "code": "probe-vp-1791956676", "name": "Viewpoint Probe 1791956676", "status": "active", "plan": 
+PASS   the pinned scope lists the tenant's population                       status=200 code=200 users=['vpadm1791956676']
+PASS   the pinned scope does not leak the platform operator                 users=['vpadm1791956676']
+PASS   a bogus X-Tenant-Id is still refused (403)                           status=200 code=403 msg=tenant.forbidden
+PASS   X-Tenant-Id:0 dropped to the platform-global scope (what viewpoint 0 sends) current={"mode": "multi", "resolvedBy": "header", "tenantId": 0}
+
+================================================================================================
+step 4  create user inside the pinned tenant, then join it
+================================================================================================
+PASS   create user succeeds inside the pinned scope                         status=200 code=200 msg=success id=548
+PASS   the new user is stamped into the pinned tenant                       users=['vpjoin1791956676', 'vpadm1791956676']
+PASS   the new user never appears in the platform scope                     users=3 delta_vs_baseline=0
+PASS   POST /system/tenant/:id/members accepts the join (the form's second call) status=200 code=200 msg=success
+PASS   the created user is an active member of the tenant                   members=2 joined={"id": 26, "tenant_id": 35, "user_id": 548, "role": "member", "status": "active", "created_at": "2026-10-14T13:44:37.968+08:00", "updated_at": "2026-10-14T13:44
+
+================================================================================================
+step 5  the login closure the join gesture exists for
+================================================================================================
+PASS   the created user can log in with the tenant selected                 status=200 code=200 msg=success
+PASS   the created user resolves to the tenant it joined                    current={"mode": "multi", "resolvedBy": "subject", "tenant": {"id": 35, "code": "probe-vp-1791956676", "name": "Viewpoint Probe 1791956676", "status": "active", "plan":
+PASS   a wrong password does not authenticate the new user                  status=200 code=401 msg=user.login.error.password_wrong
+
+================================================================================================
+step 6  a non-platform subject cannot use X-Tenant-Id to escape
+================================================================================================
+PASS   X-Tenant-Id:0 never unscopes a non-platform subject (fails closed)   status=200 code=403 msg=tenant.forbidden current={}
+PASS   any X-Tenant-Id from a non-platform subject is refused (header is platform-only) status=200 code=403 msg=tenant.forbidden
+PASS   a bogus X-Tenant-Id never becomes the member's scope                 status=200 code=403 current={}
+PASS   the member still cannot read the platform scope                      status=200 code=403 users=[]
+PASS   a tenant member is refused the tenant console (switcher hides on 403) status=200 code=403 msg=permission.denied
+
+================================================================================================
+cleanup
+================================================================================================
+     delete tenant (id=35) -> status=200 code=200 msg=success
+     residual cleanup SQL (soft-deleted tenant row + tenant-scoped rows):
+       DELETE FROM `permission_role_data_scope_policy` WHERE tenant_id IN (SELECT id FROM tenants WHERE code LIKE 'probe-vp-1791956676%');
+       DELETE FROM `system_auth_mfa_challenge` WHERE tenant_id IN (SELECT id FROM tenants WHERE code LIKE 'probe-vp-1791956676%');
+       DELETE FROM `system_auth_security_event` WHERE tenant_id IN (SELECT id FROM tenants WHERE code LIKE 'probe-vp-1791956676%');
+       DELETE FROM `system_dept` WHERE tenant_id IN (SELECT id FROM tenants WHERE code LIKE 'probe-vp-1791956676%');
+       DELETE FROM `system_dict_item` WHERE tenant_id IN (SELECT id FROM tenants WHERE code LIKE 'probe-vp-1791956676%');
+       DELETE FROM `system_dict_type` WHERE tenant_id IN (SELECT id FROM tenants WHERE code LIKE 'probe-vp-1791956676%');
+       DELETE FROM `system_log_login` WHERE tenant_id IN (SELECT id FROM tenants WHERE code LIKE 'probe-vp-1791956676%');
+       DELETE FROM `system_log_oper` WHERE tenant_id IN (SELECT id FROM tenants WHERE code LIKE 'probe-vp-1791956676%');
+       DELETE FROM `system_post` WHERE tenant_id IN (SELECT id FROM tenants WHERE code LIKE 'probe-vp-1791956676%');
+       DELETE FROM `system_role` WHERE tenant_id IN (SELECT id FROM tenants WHERE code LIKE 'probe-vp-1791956676%');
+       DELETE FROM `system_role_data_scope` WHERE tenant_id IN (SELECT id FROM tenants WHERE code LIKE 'probe-vp-1791956676%');
+       DELETE FROM `system_role_menu` WHERE tenant_id IN (SELECT id FROM tenants WHERE code LIKE 'probe-vp-1791956676%');
+       DELETE FROM `system_role_permission` WHERE tenant_id IN (SELECT id FROM tenants WHERE code LIKE 'probe-vp-1791956676%');
+       DELETE FROM `system_setting` WHERE tenant_id IN (SELECT id FROM tenants WHERE code LIKE 'probe-vp-1791956676%');
+       DELETE FROM `system_user` WHERE tenant_id IN (SELECT id FROM tenants WHERE code LIKE 'probe-vp-1791956676%');
+       DELETE FROM `system_user_role` WHERE tenant_id IN (SELECT id FROM tenants WHERE code LIKE 'probe-vp-1791956676%');
+       DELETE FROM `system_user_session` WHERE tenant_id IN (SELECT id FROM tenants WHERE code LIKE 'probe-vp-1791956676%');
+       DELETE FROM `tenant_memberships` WHERE tenant_id IN (SELECT id FROM tenants WHERE code LIKE 'probe-vp-1791956676%');
+       DELETE FROM system_user WHERE username LIKE 'vpjoin1791956676%';
+       DELETE FROM tenants WHERE code LIKE 'probe-vp-1791956676%';
+
+================================================================================================
+RESULT: 22/22 checks passed
+================================================================================================

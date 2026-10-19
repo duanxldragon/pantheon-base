@@ -1,0 +1,7 @@
+created user 791 session f153701e-aac0-45a4-a482-8392b4ff6841
+after-login       user_key=blacklist:791 val='' ttl='-2' | session_key=blacklist:session:f153701e-aac0-45a4-a482-8392b4ff6841 val='' ttl='-2'
+reset-password code 200
+after-reset       user_key=blacklist:791 val='1' ttl='960' | session_key=blacklist:session:f153701e-aac0-45a4-a482-8392b4ff6841 val='1' ttl='960'
+after-new-login   user_key=blacklist:791 val='' ttl='-2' | session_key=blacklist:session:f153701e-aac0-45a4-a482-8392b4ff6841 val='1' ttl='960'
+old session after reset+new-login: 401 token.expired.force
+new session after reset+new-login: 200

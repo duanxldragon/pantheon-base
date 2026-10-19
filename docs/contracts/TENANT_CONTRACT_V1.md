@@ -13,7 +13,7 @@ linked_contracts:
   - docs/contracts/SYSTEM_IAM_CONTRACT.md
   - docs/contracts/SYSTEM_ORG_CONTRACT.md
   - docs/contracts/SYSTEM_CONFIG_CONTRACT.md
-updated_at: 2026-09-10
+updated_at: 2026-10-13
 ---
 
 # 租户合同 V1（共享 schema MVP）
@@ -98,6 +98,36 @@ tenant_memberships
 - 哪些表带 `tenant_id`、哪些保持全局，由 [租户资源 scope 矩阵](../designs/TENANT_RESOURCE_SCOPE_MATRIX.md) 登记，新增表必须在登记表注册后才允许合入（见验收矩阵 T4）
 - **禁止**：`tenant_id` 可空（NULL 语义歧义）；用字符串租户编码做外键；业务代码直接 `WHERE tenant_code = ?`
 
+#### 2.3.1 读写义务（V1.2 补充，2026-10-19）
+
+`tenant_id` 是**行的身份**，不是装饰字段。带 `tenant_id` 的表，任何读写代码必须同时满足下列三条；三条各自可被 reviewer 单独引用驳回。
+
+1. **读必须带租户谓词。** 查询必须附加 `tenant_id = ctx.tenant_id`（或经 §3.3 的 scope helper 注入）。
+   「租户内唯一」的业务键（`role_key`、`username`、`dept_code`、`post_code` 等）在库里的唯一约束是
+   `(tenant_id, key)`，**不是全局唯一**。因此 `WHERE role_key = ?` 本身就是跨租户读取，
+   即使加了 `LIMIT 1`、即使只用来回显一个字段。
+2. **写必须由上下文赋值租户。** `tenant_id` 只能来自请求上下文（§3.2），不得来自请求体；
+   upsert 的冲突键 / `ON CONFLICT` 必须包含 `tenant_id`。以裸键作为冲突键会把租户私有行**改写成
+   `tenant_id = 0` 的平台行**，而平台行对所有租户生效——这是最隐蔽的一种放大，因为写入方看到的只是「保存成功」。
+3. **按裸键做存在性或归属校验同样算读。** 「这个 `role_key` 存在吗」「这些 `dept_id` 是我的吗」
+   这类判断必须带租户谓词。否则一个租户可以用猜到的键，给另一个租户的资源建策略，
+   或把另一个租户的主数据 id 写进自己的配置（`dept_id`、`post_id` 是全局序列，同一数字在不同租户指不同对象）。
+
+**唯一的两个放行面**（对应 §3.3 的 cross-tenant 两条路径）：
+
+| 作用域 | 可以读写 | 不因此获得 |
+|---|---|---|
+| 平台作用域（`ctx.tenant_id = 0`，需 §3.4 声明 + 平台能力） | `tenant_id = 0` 的全局行 | 按裸键操作**租户私有行**的权力 |
+| 租户作用域（`ctx.tenant_id > 0`） | 自己那一份 | 任何其他租户的行，包括「同名」行 |
+
+上下文缺失且非 compat → 按 §3.2 拒绝，**不得退化为「读全部」**；策略/配置读不到时的默认行为是 fail-closed，
+而不是回到最宽松的一档。
+
+> 可引用条款：reviewer 驳回一个 `WHERE role_key = ?` 时引用「§2.3.1 第 1 条」；驳回一个
+> `ON CONFLICT(role_key)` 时引用「§2.3.1 第 2 条」；驳回一个不带租户的 `Count()` 归属校验时引用「§2.3.1 第 3 条」。
+> 本条款的回归测试：`backend/internal/middleware/data_scope_tenant_test.go`、
+> `backend/modules/system/iam/permission/permission_data_scope_tenant_test.go`。
+
 ---
 
 ## 3. 租户上下文（冻结）
@@ -106,14 +136,29 @@ tenant_memberships
 
 1. 显式 header `X-Tenant-Id`（平台运维/后台管理场景，要求平台级权限 + 审计）
 2. 认证主体（JWT claims 中的 `tenant_id`，登录时根据"用户默认租户"或登录请求指定租户签发）
-3. Compat 模式兜底：`tenant_id = 0`
+3. 平台作用域兜底：请求落在**显式声明为平台管理 API 的路由**上，且主体具平台级能力、且不属于任何租户 → `tenant_id = 0`（multi 模式，见 §3.4）
+4. Compat 模式兜底：`tenant_id = 0`
+
+> **V1.1 澄清（2026-10-13）**：V1 原文只有第 1/2/4 条，且把兜底限定在 compat 模式，于是 multi 模式下"非租户（平台）主体"被判为 §3.2 的"上下文缺失"（500 `TENANT_CONTEXT_MISSING`），平台控制台在 multi 下整体不可用。新增的第 3 条把 §3.3 早已承认的"平台管理 API（显式声明，要求平台权限，落审计）"落到解析层：**`multi` 是 `compat` 的超集**，`tenant_id = 0`（平台级/全局，§2.3/§4）在两种模式下都是一等作用域。第 1/2 条优先级不变，原 compat 兜底语义不变（仅编号后移为第 4 条）。
 
 ### 3.2 传播规则
 
 - 租户上下文在 **认证中间件之后、业务 handler 之前** 确定，随后只读
 - 业务代码 **只读** 上下文，不允许在 handler 内改写当前请求的租户上下文
 - 后台/异步任务必须显式携带租户上下文（worker 消息带 `tenant_id`），禁止依赖进程级全局
-- 上下文缺失且非 compat 模式 → 请求拒绝（500 分类为配置错误，401/403 分类为认证/授权错误，见 §5）
+- 上下文缺失且非 compat 模式 → 请求拒绝（500 分类为配置错误，401/403 分类为认证/授权错误，见 §5）。**适用范围**：未声明平台作用域的路由组；已声明为平台管理 API 的路由按 §3.1 第 3 条解析（见 §3.4）
+
+### 3.4 平台作用域声明（V1.1 澄清）
+
+§3.3 要求平台管理 API 必须"显式声明"。声明的载体是**路由组**，也是 §3.1 第 3 条兜底的启用条件：
+
+- **未声明**的路由组保持 V1 语义：multi 模式下无 claim 即拒绝（deny-by-default），不享有平台作用域兜底。
+- **已声明**的路由组额外获得一条兜底，但需同时满足两个条件，缺一不可：
+  1. 主体具**平台级能力** —— 全局角色（如 `platform_ops`）或全局（无 domain）Casbin policy 允许该路由；租户域内角色（`role:<key>@tenant:<id>`）不构成平台能力（§4：两个命名空间不合并、不隐式提升）。
+  2. 主体**不属于任何租户** —— 无 active membership。该主体正是 §3.1 第 2 条里"零成员 → 无 claim 签发"的平台人群，两侧判定必须一致。
+- 因此兜底永不覆盖第 1/2 条：有 claim 的主体走第 2 条；有 membership 的主体只能通过第 1 条显式 header 落到平台作用域（需平台级能力）。
+- 兜底只决定**上下文**，不放宽 §3.3 的读取不变量：解析到 `tenant_id = 0` 的请求只能读写平台/全局行。
+- 参考实现：`internal/middleware.PlatformScopeTenantContextMiddleware`（声明侧）与 `internal/middleware.TenantContextMiddleware`（未声明侧的严格语义），解析逻辑在 `pkg/tenant.Resolve`。
 
 ### 3.3 数据访问不变量（最关键）
 
@@ -154,6 +199,7 @@ tenant_memberships
   - 不校验 membership； Casbin 全部 `tenant:0`
   - 存量测试、存量 API 行为不变 —— 这是 canary 期（`2026-09-10-tenant-canary-slice`）的回归底线
 - `multi` 模式行为：完整启用 §3/§4/§5
+- **`multi` 是 `compat` 的超集**（V1.1 澄清）：multi 下 §3.1 第 4 条（compat 兜底）不再生效，但平台级/全局作用域（`tenant_id = 0`）依然是一等作用域（§3.1 第 3 条）。因此**同一部署内非租户（平台）主体与租户主体并存**，`platform.tenant_mode` 表达的是"是否启用租户维度"，而不是"整站二选一的世界开关"
 - 模式切换只允许 compat → multi 单向（per 部署），回退 = 数据回滚（runbook），禁止 multi 运行后直接改回 compat 继续写入
 
 ---
@@ -177,3 +223,37 @@ tenant_memberships
 - [租户就绪四项检查](../acceptances/BUSINESS_MODULE_ACCEPTANCE_MATRIX.md)（矩阵 T1–T4）适用于所有触碰租户语义的变更
 - canary 切片（任务 3）是本合同行为承诺的首个运行态验证，其隔离测试即合同验收测试
 - 合同变更：V1 冻结后修改需走 contract-change 流程（改版本号 + 变更记录 + 对应 runbook/matrix 同步）
+
+---
+
+## 9. 变更记录
+
+| 版本 | 日期 | 变更 | 性质 |
+|------|------|------|------|
+| V1.1 | 2026-10-13 | §3.1 新增第 3 条「平台作用域兜底」（原第 3 条顺延为第 4 条，语义不变）；新增 §3.4「平台作用域声明」；§3.2 补注拒绝规则的适用范围；§6 补注「multi 是 compat 的超集」 | 澄清（Clarification） |
+| V1.2 | 2026-10-19 | 新增 §2.3.1「读写义务」：读必须带租户谓词、写必须由上下文赋值且冲突键含租户、按裸键的归属校验同样算读；给出唯一两个放行面与 fail-closed 默认 | 澄清（Clarification） |
+
+**V1.2 的触发与范围**
+
+- 触发：任务 `2026-10-19-tenant-permission-isolation-remediation` 的 W0。2026-10-19 的租户交付验收在实机测出
+  6 个同源缺陷（F7/F8/F9/F10/F11/F13）：`system_role_data_scope` 早已带 `tenant_id` 与 `(tenant_id, role_key)` 唯一键，
+  但读、写、校验三条路径里有一半按裸 `role_key` 工作，实测一个租户能列出 53 个角色（自己只有 3 个）、
+  能给另一租户独有的角色写数据范围、且改写后让另一租户的普通用户可见行数从 1 变成 3。
+- 缺口定位：§3.3 已经要求「所有带 `tenant_id` 的表必须附加租户谓词」，但它写在**上下文**一章，
+  描述的是「查询」；§2.3 讲归属时只说了「哪些表带 `tenant_id`」，没有说「带了之后读写各有什么义务」。
+  于是「表里有没有这一列」被当成合规判据，而「路径上有没有用这一列」没人检查。
+- 范围：只在 §2.3 增加一个子节，**不新增概念、不改任何既有条款的语义**；§3.3 的 cross-tenant 两条路径、
+  §4 的 Casbin domain、§5 的错误码、§7 的归属边界均未改动。本条把 §3.3 的义务**前移**到归属模型里，
+  使「列存在但路径忽略」在模型层就可被判定为违规。
+- 配套实现与回归测试：`2026-10-19-w1-data-scope-tenant-dimension`（W1），
+  `backend/internal/middleware/data_scope_tenant_test.go` 与
+  `backend/modules/system/iam/permission/permission_data_scope_tenant_test.go`。
+
+**本次澄清的触发与范围**
+
+- 触发：任务 `2026-10-13-tenant-console-remediation`。实测 multi 模式下 `dashboard` / `system/dict/*` / `system/setting/*` / `system/operation-log/*` / `auth/operation-verify` 全部 `500 tenant.context.missing`，`X-Tenant-Id` 对非 `platform_ops` 角色无效（403），平台控制台整体不可用；且因系统设置页同样 500，UI 内无法切回 compat（§6 亦禁止回切）。
+- 缺口定位：§3.3 要求平台管理 API「显式声明」，但 §3.1 没有给出**声明之后如何解析上下文**——实现把兜底只留给了 compat，于是 multi 下的平台级主体落入 §3.2 的「上下文缺失」。
+- 澄清范围：只补齐 §3 的解析语义与 §6 的模式语义。**§2（模型）、§4（Casbin domain）、§5（错误码）、§7（归属边界）均未改动**；§3.1 的优先级次序与第 1/2 条判定条件未改动。
+- 配套实现：`pkg/tenant.Resolve`（`platform-fallback` 解析来源）、`internal/middleware.PlatformScopeTenantContextMiddleware`、`pkg/tenant.IsPlatformPopulationUser`；路由组声明清单见任务包 `2026-10-13-tenant-console-remediation`。
+
+> 治理提示：本记录使 runbook `TENANT_MIGRATION_RUNBOOK.md` §8 的 G4（「无未闭合 contract-change」）不再自动成立。G4 的放行判定权在维护者，本澄清不自行宣告 G4 通过；生产 DDL/数据变更禁令不受本文件影响。

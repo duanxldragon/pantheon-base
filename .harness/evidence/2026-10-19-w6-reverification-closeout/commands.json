@@ -1,0 +1,90 @@
+{
+  "taskId": "2026-10-19-w6-reverification-closeout",
+  "repo": "pantheon-base",
+  "executedAt": "2026-10-19T12:20:00+08:00",
+  "completedAt": "2026-10-19T12:20:00+08:00",
+  "agent": {
+    "tool": "other",
+    "adapter": "software-workshop-agent"
+  },
+  "runtimeSensitive": true,
+  "runtimeGap": "Final runs used a rebuilt backend on 127.0.0.1:8081 and a dedicated Vite server on 127.0.0.1:5174 proxied to it, against the shared MySQL/Redis fixtures. It is a single-node verification; multi-instance Redis and a read replica are out of scope. F14 is explicitly downgraded, not fixed.",
+  "commands": [
+    {
+      "command": "cd backend && go build ./... && go vet ./... && go test -count=1 ./...",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "46 packages ok; gofmt clean; no vet findings. MySQL/Redis env configured so integration tests ran rather than skipped."
+    },
+    {
+      "command": "cd frontend && node node_modules/typescript/bin/tsc -b && node node_modules/eslint/bin/eslint.js <changed files>",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "Type-check and lint clean for the four tenant/dept files."
+    },
+    {
+      "command": "PANTHEON_BASE=http://127.0.0.1:8081 python tenant_acceptance.py",
+      "cwd": "acceptance",
+      "status": "passed",
+      "details": "136/136. The acceptance script was updated so an existing membership (A3b) is a pass, not a regression."
+    },
+    {
+      "command": "NODE_PATH=<frontend>/node_modules UI_BASE=http://127.0.0.1:5174 PROBE_USER=zhangsan_1019114028 node ui_walkthrough.cjs",
+      "cwd": "acceptance",
+      "status": "passed",
+      "details": "23/23, including dept:tree and tenant-user-login. The F1 probe assertion now requires a redirect into the shell instead of accepting a stay on /login."
+    },
+    {
+      "command": "PANTHEON_BASE=http://127.0.0.1:8081 python cross_tenant_leak.py",
+      "cwd": "acceptance",
+      "status": "passed",
+      "details": "34/34 isolation assertions. Residual F14 [P2] error-shape finding remains, recorded in disposition.md."
+    },
+    {
+      "command": "python cleanup_leak_probe.py 1019112704 / 1019114608",
+      "cwd": "acceptance",
+      "status": "passed",
+      "details": "Probe users/roles deleted via API, probe policies removed, tenants 295 and 297 archived."
+    },
+    {
+      "command": "mysql pantheon_base — final state query",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "schema_migrations=27; active_ghost_members=0; tenant0_grants_on_tenant_roles=0; probe_policies=0. Active tenants: 253 (test-tenant), 281 (e2e-repro), 282 (acme-demo); the first two predate this program."
+    },
+    {
+      "command": "cd backend && go test -count=1 -run 'TestRoleErrorResponse' ./modules/system/iam/role/ && go test -count=1 ./modules/system/iam/role/...",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "F14 regression: not-found variants map to 404 role.not_found, unrelated errors stay 500; full role package ok (12.2s)."
+    },
+    {
+      "command": "rebuild server binary, restart, GET /api/v1/health",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "schema_migrations stays 27, health 200, 0 ERROR lines in the boot log."
+    },
+    {
+      "command": "LEAK_RUN=f14141454 python cross_tenant_leak.py",
+      "cwd": "acceptance",
+      "status": "passed",
+      "details": "Full L0-L4 re-run against the F14-fixed build: 34/34, findings=0. L1 now answers code=404 msg=role.not_found on all four cross-tenant role-member reads. Transcript: cross_tenant_leak_f14_postfix.log. Probe fixtures cleaned afterwards (tenant B archived, no residual policy rows)."
+    }
+  ],
+  "knownGaps": [
+    "F14 [P2] is downgraded, not fixed: cross-tenant role member endpoints answer 500 instead of 404/403.",
+    "Two pre-existing probe tenants (253, 281) from before this program remain active; they were not created by this program and were left untouched.",
+    "The setting page still emits 4 console errors in both baseline and final runs; unrelated to the tenant defects."
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-19-w6-reverification-closeout/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-19-w6-reverification-closeout/",
+    "summaryFile": ".harness/evidence/2026-10-19-w6-reverification-closeout/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-19-w6-reverification-closeout/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-19-tenant-permission-isolation-remediation.task.md",
+      "docs/contracts/TENANT_CONTRACT_V1.md"
+    ]
+  }
+}

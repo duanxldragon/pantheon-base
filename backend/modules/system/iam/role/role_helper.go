@@ -10,6 +10,7 @@ import (
 
 	"github.com/duanxldragon/pantheon-base/backend/pkg/database"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/rbacbind"
+	"github.com/duanxldragon/pantheon-base/backend/pkg/tenant"
 
 	"gorm.io/gorm"
 )
@@ -79,7 +80,9 @@ func (s *RoleService) ensureAdminUserBinding() error {
 		return nil
 	}
 
-	return rbacbind.EnsureUserRole(s.db, 1, adminRoleID)
+	// The platform bootstrap binds the built-in admin (user 1) to the platform
+	// `admin` role, so the binding lives in the platform-global namespace.
+	return rbacbind.EnsureUserRole(s.db, tenant.PlatformGlobalTenantID, 1, adminRoleID)
 }
 
 func (s *RoleService) validateRoleCreate(req *RoleCreateReq) error {
@@ -113,7 +116,10 @@ func (s *RoleService) validateRoleUpdate(role *SystemRole, req *RoleUpdateReq) e
 
 func (s *RoleService) ensureRoleKeyUnique(roleID uint64, roleKey string) error {
 	var count int64
-	db := s.db.Model(&SystemRole{}).Where(condRoleKeyEquals, strings.TrimSpace(roleKey))
+	// Role keys are unique PER TENANT in multi mode (contract §4): the scope
+	// narrows the lookup to the request tenant, so each tenant can own its own
+	// `tenant_admin` without colliding with the platform's roles.
+	db := s.scoped(s.db.Model(&SystemRole{})).Where(condRoleKeyEquals, strings.TrimSpace(roleKey))
 	if roleID > 0 {
 		db = db.Where("id <> ?", roleID)
 	}
@@ -164,7 +170,7 @@ func (s *RoleService) ensurePermissionKeysExist(permissionKeys []string) error {
 
 func (s *RoleService) ensureUsersExist(userIDs []uint64) error {
 	var count int64
-	if err := s.db.Table("system_user").Where("id IN ?", userIDs).Count(&count).Error; err != nil {
+	if err := s.scoped(s.db.Table("system_user")).Where("id IN ?", userIDs).Count(&count).Error; err != nil {
 		return err
 	}
 	if count != int64(len(userIDs)) {
@@ -173,7 +179,27 @@ func (s *RoleService) ensureUsersExist(userIDs []uint64) error {
 	return nil
 }
 
+// roleOwningTenantIDTx resolves the tenant that owns a role row, on an existing
+// transaction/query handle. `system_role_permission` is keyed by
+// (tenant_id, role_id, permission_key), so the grant is stamped from the role
+// itself and can never be written into another tenant's namespace. A missing
+// role resolves to 0 (the pre-tenant behaviour).
+func roleOwningTenantIDTx(tx *gorm.DB, roleID uint64) (uint64, error) {
+	var tenantID uint64
+	if err := tx.Table("system_role").
+		Select("tenant_id").
+		Where("id = ?", roleID).
+		Scan(&tenantID).Error; err != nil {
+		return 0, err
+	}
+	return tenantID, nil
+}
+
 func (s *RoleService) replaceRolePermissions(tx *gorm.DB, roleID uint64, permissionKeys []string) error {
+	tenantID, err := roleOwningTenantIDTx(tx, roleID)
+	if err != nil {
+		return err
+	}
 	if err := tx.Exec("DELETE FROM system_role_permission WHERE role_id = ?", roleID).Error; err != nil {
 		return err
 	}
@@ -184,6 +210,7 @@ func (s *RoleService) replaceRolePermissions(tx *gorm.DB, roleID uint64, permiss
 	permissions := make([]SystemRolePermission, 0, len(normalized))
 	for _, permissionKey := range normalized {
 		permissions = append(permissions, SystemRolePermission{
+			TenantID:      tenantID,
 			RoleID:        roleID,
 			PermissionKey: permissionKey,
 		})

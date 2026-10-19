@@ -1,0 +1,105 @@
+{
+  "taskId": "2026-10-19-w1-data-scope-tenant-dimension",
+  "repo": "pantheon-base",
+  "executedAt": "2026-10-19T09:40:00+08:00",
+  "completedAt": "2026-10-19T10:05:00+08:00",
+  "agent": {
+    "tool": "other",
+    "adapter": "software-workshop-agent"
+  },
+  "runtimeSensitive": true,
+  "runtimeGap": "W1 is verified on a live single-node deployment (backend on 127.0.0.1:8080 against MySQL 8 pantheon_base, frontend on 127.0.0.1:5173) with tenant_mode=multi. Not covered here: (a) a MySQL replica/read-only path, (b) tenants whose role_key collides with a *soft-deleted* role in another tenant, (c) the platform administrator's cross-tenant viewpoint, which is W5's TenantViewpointSwitcher work. The migration's down file intentionally keeps data, so the down path was reviewed rather than executed.",
+  "commands": [
+    {
+      "command": "cd backend && go build ./...",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "Clean build of the whole module after the W1 edits (middleware, permission service/handler/workbench, role service, migration)."
+    },
+    {
+      "command": "cd backend && gofmt -l internal/ modules/ pkg/",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "No output: every touched file is gofmt-clean. permission_handler.go needed one reformat after the svc(c) rewiring and was fixed."
+    },
+    {
+      "command": "cd backend && go vet ./internal/middleware/... ./modules/system/iam/...",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "Clean. The signature change on applyRoleDataScopePolicy/loadRoleDataScopePolicies broke four call sites in data_scope_failclosed_test.go; they were updated to pass tenant.PlatformGlobalTenantID, which preserves their original meaning (rows seeded with the default tenant_id = 0)."
+    },
+    {
+      "command": "cd backend && go test -count=1 ./internal/middleware/... ./modules/system/iam/permission/... ./modules/system/iam/role/...",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "All three packages ok (middleware 5.4s, permission 11.0s, role 11.1s) against a real MySQL test DSN. New cases: TestLoadRoleDataScopePoliciesIsTenantScoped (4 sub-tests), TestDataScopeMiddlewareAppliesOnlyTheCallersPolicy, TestDataScopeMiddlewareIgnoresOtherTenantsPolicy, TestResolvePolicyTenantID, TestListDataScopePoliciesIsTenantScoped, TestUpdateDataScopePolicyWritesToCallersTenant, TestUpdateDataScopePolicyRejectsForeignRoleKey, TestUpdateDataScopePolicyRejectsForeignDeptIDs, TestWithTenantContextKeepsCompatBaseline. The role package was re-run separately once W0 added role_data_scope_tenant_test.go (TestListRolesEchoesOnlyTheCallersDataScope covers F13 at unit level; it fails on the unscoped loadRoleDataScopes and passes here)."
+    },
+    {
+      "command": "go test -count=1 ./modules/system/iam/role/... (first run, before the fixture repair)",
+      "cwd": "backend",
+      "status": "failed",
+      "details": "TestRoleService_UpdateRolePreservesCustomDataScopeDeptIDs failed with Error 1054: Unknown column 'deleted_at' in 'where clause'. Root cause was the fixture, not the fix: setupRoleTestDB created system_dept as (id, dept_name) with no tenant_id/deleted_at and no rows, so the new ownership check could not validate depts 10/20/30. The fixture now creates the real shape and seeds those departments; the package is green on re-run. Recorded because a reader should know the fix widened the dept-ownership check's blast radius into a second package's fixtures."
+    },
+    {
+      "command": "cd backend && go test -count=1 ./pkg/database/...",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "Green after two fixes. First run failed: TestRunMigrationsDoesNotReapplyRoleDataScopeBackfillAfterPolicyDeletion builds a scratch database stamped at currentRuntimeSchemaVersion (24) whose system_role has no tenant_id column, so the unguarded INSERT in 000025 failed the whole migration. Two corrections: 000025 now guards on information_schema exactly like 000024 (a database can record 24 while 000024's DDL never ran — the very reason 000024 exists — and there an unguarded INSERT turns startup into a failure loop), and the test's final assertion moved from assertMigrationVersion(currentRuntimeSchemaVersion) to assertLatestMigrationVersion, because the baseline is now deliberately behind the newest file. Its actual claim (a deleted policy is not resurrected) is unchanged and still asserted."
+    },
+    {
+      "command": "python cross_tenant_leak.py L2 L3",
+      "cwd": "C:/Users/xiaolong/WorkBuddy AI/2026-10-19-08-42-36/acceptance",
+      "status": "passed",
+      "details": "26/26 passed, 0 findings (baseline was 27/34 with F7/F8/F9/F10/F11/F13 open). Two-tenant fixture A=acme-demo(282), B=beta-w1095735(292), shared role_key dsp_w1095735. Key lines: [L2] A 的数据范围页只列本租户角色 rows=3 B角色泄露=[]; [L2] A 为 B 独有角色写数据范围被拒 code=500 msg=permission.role.invalid; [L2] A 写策略后不产生 tenant_id=0 的全局行 rows=[['282','dsp_w1095735','self',''],['292','dsp_w1095735','all','']]; [L3] A 放宽数据范围后 B 用户的有效数据范围不变 B 用户可见行数 1 -> 1; [L3] B 放宽数据范围后 A 用户的有效数据范围不变; [L3] A 提交 B 租户的部门 ID 作为自定义范围被拒 code=500 stored(tenant_id=0)= (empty)."
+    },
+    {
+      "command": "NODE_PATH=<frontend>/node_modules node ui_leak_probe.cjs",
+      "cwd": "C:/Users/xiaolong/WorkBuddy AI/2026-10-19-08-42-36/acceptance",
+      "status": "passed",
+      "details": "5/5 passed at UI level (baseline: total 53, duplicated keys in the workbench). Now: 权限工作台角色表不混列他租户同名角色 rows=2 重复键=[]; 数据权限页角色总数等于本租户角色数 总数=2 本租户角色数=2 重复键=[]. The assertion was tightened from 'total <= 5' to 'total == the tenant's own distinct role keys' so the check cannot pass on a merely-small number."
+    },
+    {
+      "command": "mysql < 000025_role_data_scope_tenant_backfill.up.sql (scratch database pantheon_mig025_probe)",
+      "cwd": "D:/workspace/go/pantheon-platform/pantheon-base/backend/pkg/database/migrations",
+      "status": "passed",
+      "details": "Five seed cases exercised in one run: a key owned by exactly one tenant is copied to that tenant; a key owned by two tenants copies the tenant-0 mode to the tenant that had no row and leaves the existing tenant row untouched; a role with no policy anywhere gets nothing; a soft-deleted role is skipped. Second execution leaves the row count at 6, so the statement is idempotent. Full transcript in sql-snapshots.txt section D."
+    },
+    {
+      "command": "restart backend on the migrated schema, then GET /api/v1/health",
+      "cwd": "D:/workspace/go/pantheon-platform/pantheon-base",
+      "status": "passed",
+      "details": "schema_migrations 24 -> 25, dirty=0; health returns code 200 with database/migrations/redis all ok; no ERROR line in the boot log. Confirms 000025 is picked up by the existing bootstrap path without touching currentRuntimeSchemaVersion (the baseline sits at 24, deliberately behind the data-only migration, so a marker-complete database is stamped 24 and then replays 25). Repeated after 000025 gained its information_schema guard, by rewinding schema_migrations to 24 and restarting: 24 -> 25 again, policy rows still 145, health ok. So the guarded statement, not just its unguarded predecessor, is proven on the real schema."
+    },
+    {
+      "command": "python cleanup_leak_probe.py w1095735",
+      "cwd": "C:/Users/xiaolong/WorkBuddy AI/2026-10-19-08-42-36/acceptance",
+      "status": "passed",
+      "details": "Probe users (760/761/762) and roles (669/670/671/672) deleted through the API, probe policy and casbin rows removed, tenant 292 archived. Tenant A verified back to tenant_admin+tenant_member with no tenant-local policy rows, so the environment is left deliverable."
+    },
+    {
+      "command": "node scripts/harness/check-evidence.mjs --strict / check-task-packet.mjs / check-adoption.mjs / check-doc-frontmatter.mjs / check-doc-links.mjs / check-doc-inventory.mjs",
+      "cwd": "D:/workspace/go/pantheon-platform/pantheon-base",
+      "status": "passed",
+      "details": "All harness gates green with this packet in place; validateTaskManifest passes for the W1 manifest with status completed."
+    }
+  ],
+  "knownGaps": [
+    "The live installation had no tenant-local role holding a tenant-0 policy, so 000025 inserted 0 rows on pantheon_base. The statement is proven on a scratch database instead (sql-snapshots.txt section D) rather than by production data.",
+    "Platform scope (tenant 0) still lists every tenant's roles in the data-scope console. That is deliberate for this wave — the platform administrator is cross-tenant by definition (see hasAdministrativeRole) — but it means the console still shows duplicate role keys to a platform-scoped caller until the W5 viewpoint switcher makes the tenant viewpoint explicit.",
+    "A tenant-local role that owns no policy row in its own tenant still fails closed (500 on every governed request). This is pre-existing behaviour, not a W1 regression: 000021 gave every role that existed at the time an `all` row, and roles created afterwards were already policy-less. Inventing a mode here would silently widen a role nobody configured, so it is left to a separate decision.",
+    "dept_ids on historical custom policies are copied verbatim. A department id belonging to another tenant can only narrow that tenant's result to zero rows (the row filter is tenant-scoped), never widen it, so it is a correctness wart rather than a leak; new writes are validated.",
+    "The frontend permission page's data-scope tab was verified through the browser probe only for the tenant viewpoint; the platform viewpoint is W5.",
+    "F14 (cross-tenant role reads answering 500 instead of 403/404) is untouched by W1 and remains unscheduled."
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-19-w1-data-scope-tenant-dimension/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-19-w1-data-scope-tenant-dimension/",
+    "summaryFile": ".harness/evidence/2026-10-19-w1-data-scope-tenant-dimension/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-19-w1-data-scope-tenant-dimension/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-19-tenant-permission-isolation-remediation.task.md",
+      "docs/contracts/TENANT_CONTRACT_V1.md"
+    ]
+  }
+}

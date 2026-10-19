@@ -155,13 +155,28 @@ function renderMenuItems(nodes: MenuNode[], options: MenuRenderOptions, level = 
   });
 }
 
-function filterMenuTreeByCapabilities(nodes: MenuNode[], orgEnabled: boolean): MenuNode[] {
+interface CapabilityFilter {
+  orgEnabled: boolean;
+  tenantEnabled: boolean;
+}
+
+function filterMenuTreeByCapabilities(nodes: MenuNode[], caps: CapabilityFilter): MenuNode[] {
   return nodes
-    .filter((item) => orgEnabled || item.module !== 'system.org')
+    .filter((item) => {
+      if (!caps.orgEnabled && item.module === 'system.org') {
+        return false;
+      }
+      // 单租户（compat）下没有租户维度可管，租户管理菜单从访问控制移除。
+      // 多租户（multi）下保留。与 org.enabled / system.org 同一套能力过滤机制。
+      if (!caps.tenantEnabled && item.module === 'system.tenant') {
+        return false;
+      }
+      return true;
+    })
     .map((item) => ({
       ...item,
       children: item.children?.length
-        ? filterMenuTreeByCapabilities(item.children, orgEnabled)
+        ? filterMenuTreeByCapabilities(item.children, caps)
         : [],
     }));
 }
@@ -169,6 +184,7 @@ function filterMenuTreeByCapabilities(nodes: MenuNode[], orgEnabled: boolean): M
 export interface UseLayoutMenuOptions {
   menuTree: MenuNode[];
   orgEnabled: boolean;
+  tenantEnabled: boolean;
   currentPath: string;
   activeMenuPath: string;
   routeActiveMenu?: string;
@@ -191,6 +207,7 @@ export function useLayoutMenu(options: UseLayoutMenuOptions): UseLayoutMenuResul
   const {
     menuTree,
     orgEnabled,
+    tenantEnabled,
     activeMenuPath,
     currentPath,
     routeActiveMenu,
@@ -200,8 +217,8 @@ export function useLayoutMenu(options: UseLayoutMenuOptions): UseLayoutMenuResul
   } = options;
 
   const visibleMenuTree = useMemo(
-    () => filterMenuTreeByCapabilities(menuTree, orgEnabled),
-    [menuTree, orgEnabled],
+    () => filterMenuTreeByCapabilities(menuTree, { orgEnabled, tenantEnabled }),
+    [menuTree, orgEnabled, tenantEnabled],
   );
 
   const currentMenuTitleKey = useMemo(

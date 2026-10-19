@@ -1,0 +1,81 @@
+tenant isolation probe (Phase G) — run=1791894695
+platform admin logged in
+
+========================================================================================
+Phase C  create two tenants, each provisioned in one call
+========================================================================================
+PASS   C create tenant tenant_a (id=28) with admin in one call        status=200 code=200 msg=success
+PASS   C create tenant tenant_b (id=29) with admin in one call        status=200 code=200 msg=success
+PASS   C tenant A has an OWNER membership (login gate satisfied)      members=1 owners=1
+PASS   C tenant B has an OWNER membership (login gate satisfied)      members=1 owners=1
+
+========================================================================================
+Phase F  per-tenant username uniqueness (same 'admin' in both tenants)
+========================================================================================
+PASS   F tenant A's 'admin' can log in (tenant A selected)            status=200 code=200 msg=success
+PASS   F tenant B's 'admin' can log in with the SAME username         status=200 code=200 msg=success
+PASS   F tenant A's password does NOT authenticate against tenant B   status=200 code=401 msg=user.login.error.password_wrong
+PASS   F tenant B's password does NOT authenticate against tenant A   status=200 code=401 msg=user.login.error.password_wrong
+PASS   B/E tenant A admin resolves to tenant 28                       current={"mode": "multi", "resolvedBy": "subject", "tenant": {"id": 28, "code": "probe-iso-a-1791894695", "name": "Isolation A 1791894695", "status": "active", "plan": "free", "role": "", "isActive": false}, 
+PASS   B/E tenant B admin resolves to tenant 29                       current={"mode": "multi", "resolvedBy": "subject", "tenant": {"id": 29, "code": "probe-iso-b-1791894695", "name": "Isolation B 1791894695", "status": "active", "plan": "free", "role": "", "isActive": false}, 
+PASS   B A tenant_admin reaches the IAM console (membership role -> Casbin) status=200 code=200 msg=success
+
+========================================================================================
+Phase D  tenant A sees only its own tenant
+========================================================================================
+PASS   D tenant A user list is non-empty                              users=1
+PASS   D tenant A user list contains its own admin                    usernames=['admin']
+PASS   D tenant A user list does NOT leak the platform operator       users=1 usernames=['admin']
+PASS   D tenant A role list shows tenant-local roles only             role_keys=['tenant_admin', 'tenant_member']
+PASS   D tenant A dept tree is reachable and tenant-confined          status=200 code=200 depts=0
+PASS   D tenant A post list is reachable and tenant-confined          status=200 code=200 msg=success
+
+========================================================================================
+Phase D  tenant B sees only its own tenant
+========================================================================================
+PASS   D tenant B user list is non-empty                              users=1
+PASS   D tenant B user list contains its own admin                    usernames=['admin']
+PASS   D tenant B user list does NOT leak the platform operator       users=1 usernames=['admin']
+PASS   D tenant B role list shows tenant-local roles only             role_keys=['tenant_admin', 'tenant_member']
+PASS   D tenant B dept tree is reachable and tenant-confined          status=200 code=200 depts=0
+PASS   D tenant B post list is reachable and tenant-confined          status=200 code=200 msg=success
+
+========================================================================================
+Phase D  a write in A must not appear in B
+========================================================================================
+PASS   D tenant A admin can create a user                             status=200 code=200 msg=success
+PASS   D the new user appears in tenant A's list                      usernames=['iso_write_1791894695', 'admin']
+PASS   D the new user does NOT appear in tenant B's list              usernames=['admin']
+PASS   D tenant B cannot read tenant A's user by id                   status=200 code=500 msg=user.detail.error
+
+========================================================================================
+Phase D  tenant console must not enumerate other tenants
+========================================================================================
+PASS   D tenant A admin does NOT enumerate the whole tenant population status=200 code=403 rows=0 codes=[]
+PASS   E A switchable list contains its tenant                        status=200 code=200 ids=[28]
+
+========================================================================================
+Phase E  X-Tenant-Id validation
+========================================================================================
+PASS   E a bogus X-Tenant-Id is refused (403)                         status=200 code=403 msg=tenant.forbidden
+PASS   E a valid X-Tenant-Id resolves to that tenant                  current={"mode": "multi", "resolvedBy": "header", "tenant": {"id": 28, "code": "probe-iso-a-1791894695", "name": "Isolation A 1791894695", "status": "active", "plan": "free", "role": "", "isActive": false}, "
+PASS   E X-Tenant-Id:0 drops to the platform-global scope             current={"mode": "multi", "resolvedBy": "header", "tenantId": 0}
+PASS   E a no-op switch to the current tenant is rejected             status=200 code=500 msg=tenant.switch.same
+PASS   E switching into a tenant the subject is not a member of is refused status=200 code=403 msg=tenant.forbidden
+
+========================================================================================
+cleanup
+========================================================================================
+     delete tenant A (id=28) -> status=200 code=200 msg=success
+     delete tenant B (id=29) -> status=200 code=200 msg=success
+     residual cleanup SQL (if any):
+       DELETE FROM tenant_memberships WHERE tenant_id IN (SELECT id FROM tenants WHERE code='probe-iso-a-1791894695');
+       DELETE FROM system_user WHERE tenant_id IN (SELECT id FROM tenants WHERE code='probe-iso-a-1791894695');
+       DELETE FROM tenants WHERE code='probe-iso-a-1791894695';
+       DELETE FROM tenant_memberships WHERE tenant_id IN (SELECT id FROM tenants WHERE code='probe-iso-b-1791894695');
+       DELETE FROM system_user WHERE tenant_id IN (SELECT id FROM tenants WHERE code='probe-iso-b-1791894695');
+       DELETE FROM tenants WHERE code='probe-iso-b-1791894695';
+
+========================================================================================
+RESULT: 34/34 checks passed
+========================================================================================

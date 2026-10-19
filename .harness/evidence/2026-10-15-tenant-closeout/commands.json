@@ -1,0 +1,120 @@
+{
+  "taskId": "2026-10-15-tenant-closeout",
+  "repo": "pantheon-base",
+  "executedAt": "2026-10-15T10:25:00+08:00",
+  "completedAt": "2026-10-15T11:05:00+08:00",
+  "agent": {
+    "tool": "other",
+    "adapter": "software-workshop-agent"
+  },
+  "runtimeSensitive": true,
+  "runtimeGap": "The tenant hostile browser matrix (tests/smoke-core/tenant-hostile-*.spec.ts + tenant-protected-resources.spec.ts) could not be run green: its fixture tooling logs the platform `admin` in with an explicit tenant claim, which under the current isolation model resolves to an EMPTY tenant role set and is therefore refused with 403 permission.denied. Root cause and fix path are recorded in knownGaps; the suite is CI-advisory (continue-on-error) and does not cover the acceptance path.",
+  "commands": [
+    {
+      "command": "cd backend && go build ./...",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "Whole-tree compile gate on the worktree carrying the tenant isolation change set plus this pass's one-file fix (login_tenant_switch.go). Exit 0, ~6s warm."
+    },
+    {
+      "command": "cd backend && go build -o ../.tmp/bin/pantheon-server.exe ./cmd/server",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "Built the dev server binary used by every live probe below. Exit 0."
+    },
+    {
+      "command": "cd backend && gofmt -l internal/ modules/ pkg/",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "Empty after fixing one pre-existing violation in modules/auth/login/login_tenant_gate_test.go (a string-concatenation continuation line that gofmt wants joined). That violation is part of the uncommitted tenant worktree, not of this pass; it was fixed rather than reported so the gofmt gate is genuinely green."
+    },
+    {
+      "command": "cd backend && go vet ./modules/auth/login/... ./pkg/tenant/...",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "Exit 0, no findings. NOTE: the 2026-10-13/14 tenant tasks recorded `go vet` as not-run because any fresh Go tool invocation blocked indefinitely on this host (0.03s user CPU over 5 minutes). That blocker is GONE in this session: go vet and go test both complete normally, so this pass closes that recorded environment gap for these packages."
+    },
+    {
+      "command": "cd backend && go test -count=1 ./modules/auth/login/... ./pkg/tenant/...",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "ok modules/auth/login 0.051s; ok pkg/tenant 0.032s. These are the packages touched by the defect-B fix and carry the tenant issuance-gate and candidate tests."
+    },
+    {
+      "command": "python .tmp/verify_tenant_full_flow.py",
+      "cwd": ".",
+      "status": "passed",
+      "details": "RESULT: 62/62 checks passed against the live multi stack (backend 8080 + MySQL 3306 + Redis 6379). Covers provision-on-create, tenant-admin login, tenant-local user/role provisioning, membership->login, cross-tenant read denial, X-Tenant-Id semantics, session switch, and full lifecycle (suspend/resume/archive/delete). Re-run AFTER the defect-B fix, so it also pins that the fix did not regress the 62-check baseline."
+    },
+    {
+      "command": "python .tmp/verify_tenant_isolation_phase_g.py",
+      "cwd": ".",
+      "status": "passed",
+      "details": "RESULT: 34/34 checks passed. Isolation assertions: same username in two tenants with different passwords, per-tenant role/visibility confinement, tenant console lockout for a tenant admin, X-Tenant-Id validation, switch rejection, full teardown."
+    },
+    {
+      "command": "python .tmp/verify_picker_defect.py",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Defect A (picker tenantId) and defect B (/auth/tenants/current vs switchable) re-verified on a CLEAN database (fixture tenants 92/93, admin usr-v1). Result: Finding A - selecting the member-only tenant 93 returns code=200 success (was 401 before the upstream fix). Finding B - current -> tenantId=92 role='owner' isActive=True; switchable -> tenantId=92 role='owner' isActive=True; AGREE=True (was role=''/isActive=False). Both defects are closed. Fixtures 92/93 were purged afterwards."
+    },
+    {
+      "command": "mysql pantheon_base -e \"UPDATE system_setting SET setting_value='multi' ...; SELECT COUNT(*) FROM tenant_memberships WHERE status='active'\"",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Restored platform.tenant_mode=multi after the matrix tool forced it to compat, and confirmed 0 active memberships / 0 active fixture tenants / 0 tenant-domain casbin policies / 40 platform policies - a clean acceptance state where the platform admin logs in directly (resolvedBy=platform-fallback, no picker)."
+    },
+    {
+      "command": "cd frontend && PANTHEON_API_BASE_URL=http://127.0.0.1:8080/api/v1 node scripts/run-smoke-suite.mjs --host 127.0.0.1 --port 5173 --cleanup-fixtures all --config playwright.config.ts -- tests/smoke-core/{auth-login-logout,auth-tenant-picker,business-generated-basic,platform-shell-critical,system-dept-operations,system-import-export,system-menu-permission,system-role-authz,system-user-crud}.spec.ts --workers=1",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "CORE SMOKE: 26 passed, 3 skipped, 0 failed in 2.4m against the real backend + real MySQL/Redis. The 3 skips are the conditional business-generated-basic fixture cases (no generated module present), which is the documented behaviour. Fixture cleanup afterwards reported every counter at 0."
+    },
+    {
+      "command": "cd frontend && PANTHEON_API_BASE_URL=http://127.0.0.1:8080/api/v1 PANTHEON_VIEWPOINT_EVIDENCE_DIR=../.harness/evidence/2026-10-15-tenant-closeout/browser-viewpoint node scripts/run-smoke-suite.mjs --host 127.0.0.1 --port 5173 --config playwright.config.ts -- tests/smoke-core/tenant-viewpoint-switcher.spec.ts --workers=1",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "TENANT UI SMOKE (real Chromium, real backend): 5/5 passed in 49.4s. Cases: platform-global default (no X-Tenant-Id, no banner); pinning a tenant through the real dropdown (full reload, banner, header on business calls, list confined to the tenant); create-user-inside-viewpoint with join-tenant checked by default (membership active); that user logging in; exiting the viewpoint. Screenshots kept under browser-viewpoint/."
+    },
+    {
+      "command": "curl -s -X POST http://127.0.0.1:8080/api/v1/auth/login -d '{\"username\":\"admin\",\"password\":\"123456\"}'",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Acceptance-state probe: the platform admin logs in directly (token pair issued, no tenantSelectionRequired) and GET /auth/tenants/current answers {mode:multi, resolvedBy:platform-fallback, tenantId:0}. This is the state a human reviewer will land in."
+    },
+    {
+      "command": "cd backend && PANTHEON_MATRIX_DSN=... PANTHEON_MATRIX_MODE=multi go run ./cmd/tenantmatrixdb up",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "Fixture tooling ran cleanly (' tenants 101/202 ready, flag=multi'; schema_migrations stayed at 24). It is the *consumers* of these fixtures that are stale - see knownGaps."
+    },
+    {
+      "command": "cd frontend && PANTHEON_API_BASE_URL=http://127.0.0.1:8080/api/v1 node scripts/run-smoke-suite.mjs ... --setup scripts/tenant-matrix-fixture-setup.mjs -- tests/smoke-core/tenant-hostile-browser-matrix.spec.ts tests/smoke-core/tenant-hostile-browser-matrix-phase2.spec.ts tests/smoke-core/tenant-protected-resources.spec.ts",
+      "cwd": "frontend",
+      "status": "failed",
+      "details": "FAILED at fixture setup: 'list matrix_browser_a: 403 permission.denied'. Diagnosis (reproduced by hand): the fixture logs the platform admin in with tenantId=101; under the isolation model a session carrying a tenant claim resolves its roles inside that tenant, so the platform admin - who owns no tenant role - gets an empty role set and every console call is refused. The spec bodies use the same login-for-tenant helper, so they would fail the same way. This is a stale-fixture condition (the fixtures were written before task 2026-10-13-tenant-true-isolation changed the subject model), not a product regression: the sanctioned path - provision a real tenant with POST /system/tenant, then log in as that tenant's own admin - is exactly what tenant-viewpoint-switcher.spec.ts does and it passes 5/5. Fix path recorded in knownGaps."
+    }
+  ],
+  "knownGaps": [
+    "TENANT HOSTILE MATRIX IS RED AND IS A STALE FIXTURE, NOT A PRODUCT BUG. frontend/scripts/tenant-matrix-fixture-setup.mjs and the three tenant-hostile/tenant-protected spec files log the platform `admin` in with an explicit tenantId against tenants 101/202. Before task 2026-10-13-tenant-true-isolation the platform admin's global /api/v1/* policy still applied inside the tenant; now a tenant-claim session resolves roles inside the tenant (contract §4), so a platform admin with no tenant-scoped role gets an empty role set and 403 permission.denied. Evidence: hand curl of POST /auth/login {username:admin,password:123456,tenantId:101} returns 200 with roles:[] and perms containing platform:dashboard:*, and the very next GET /system/dict/type/list returns code 403 permission.denied. Fix path (not done here, deliberately): provision each fixture tenant through POST /system/tenant so it owns a real tenant_admin (roles + Casbin policies are then written in-process, so the running enforcer sees them), then log in as that tenant's admin - the pattern tenant-viewpoint-switcher.spec.ts already uses and which passes. Doing this needs a reload-or-provision decision for the running backend, which is why it was not rushed into a closeout pass. The CI job smoke-tenant is continue-on-error (advisory), so this has been invisible to merge gates.",
+    "PLATFORM ADMIN + TENANT CLAIM = EMPTY ROLE SET. Related to the item above and worth a product ruling: a platform-capable subject that names a tenant at login (or picks one from the picker) ends up in a console it cannot use, because its roles are resolved tenant-scoped. Today this is unreachable in the acceptance state because the platform admin has no memberships after cleanup, but the login picker will offer a platform admin's member tenants and then hand back a session with no authority. Whether a platform-capable subject should retain platform roles inside a tenant claim is a contract-level product decision, not something this pass should decide.",
+    "go vet / go test blocker from 2026-10-13/14 is gone in this session and was re-run green for modules/auth/login and pkg/tenant. The broader combined targeted go test run across internal/middleware, system/iam/{user,role}, system/org and platform was not re-attempted this pass (it is slow, not blocked); the live probes cover those paths end to end.",
+    "DELETE /system/tenant/:id reports the business rule 'tenant still has active members' as code 500 (tenant.has_active_members) instead of a 4xx conflict. Left unchanged (shared contract); recorded because teardown code must purge memberships first.",
+    "A soft-deleted tenant keeps its Casbin domain policies. This was observed live: after the browser spec soft-deleted smoke-vp-1792032501725 (tenant 203), 6 role:<key>@tenant:203 policies remained. They were purged with the documented procedure. The procedure itself is now recorded in docs/runbooks/TENANT_TROUBLESHOOTING.md §2b (defect C closeout).",
+    "tests/ is outside the repo typecheck gate (tsc -b compiles only tsconfig.app.json's src include), so smoke/unit test files under frontend/tests are never typechecked by CI.",
+    "The freeze decision docs/TENANT_SCOPE_FREEZE_DECISION_2026-10-15.md §6 (are system_role / system_menu / system_permission tenant-owned or global?) remains OPEN. The implementation ships per-tenant roles + global menus/permissions, which is what every probe above validates; the document recommends switching roles to global. Only the maintainer can rule on this."
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-15-tenant-closeout/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-15-tenant-closeout/",
+    "summaryFile": ".harness/evidence/2026-10-15-tenant-closeout/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-15-tenant-closeout/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/TENANT_SCOPE_FREEZE_DECISION_2026-10-15.md",
+      "docs/TENANT_LOGIN_INIT_EVALUATION_2026-10-15.md",
+      "docs/contracts/TENANT_CONTRACT_V1.md",
+      "docs/runbooks/TENANT_TROUBLESHOOTING.md"
+    ]
+  }
+}

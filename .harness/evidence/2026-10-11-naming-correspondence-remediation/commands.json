@@ -142,6 +142,8 @@
     "planRefs": [
       ".harness/NAMING_AND_BOUNDARIES_REMEDIATION_PLAN_2026-09-22.md",
       "docs/designs/REPOSITORY_LAYOUT.md"
-    ]
+    ],
+    "evidence": ".harness/evidence/2026-10-11-naming-correspondence-remediation/commands.json",
+    "summaryFile": ".harness/evidence/2026-10-11-naming-correspondence-remediation/summary.md"
   }
 }

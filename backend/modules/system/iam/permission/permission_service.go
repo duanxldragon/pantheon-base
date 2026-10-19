@@ -44,6 +44,41 @@ const (
 
 type PermissionService struct {
 	db *gorm.DB
+	// tenantCtx is the per-request tenant context (contract §2.3/§3.3). Set from
+	// the Gin context by the handler layer via WithTenantContext; nil/compat
+	// keeps the historical global behaviour (flag-off baseline). Without it the
+	// data-scope console reads and writes every tenant's policy rows, which is
+	// how a tenant administrator could list and overwrite another tenant's
+	// role data scope (acceptance F7/F8/F9).
+	tenantCtx *tenant.Context
+}
+
+// WithTenantContext returns a shallow view of the service bound to a request
+// tenant context. A nil or compat context returns the receiver unchanged.
+func (s *PermissionService) WithTenantContext(ctx *tenant.Context) *PermissionService {
+	if ctx == nil || !ctx.IsMulti() {
+		return s
+	}
+	bound := *s
+	bound.tenantCtx = ctx
+	return &bound
+}
+
+// tenantOwnerID is the tenant a policy row belongs to (write path: from the
+// resolved request context, never from the request body — contract §3.3).
+// Compat/platform => 0, which is the platform/global scope.
+func (s *PermissionService) tenantOwnerID() uint64 {
+	if s.tenantCtx == nil || !s.tenantCtx.IsMulti() {
+		return 0
+	}
+	return s.tenantCtx.TenantID
+}
+
+// isPlatformScope reports whether the caller operates on the platform/global
+// population (tenant 0) rather than inside a tenant. Platform scope is the only
+// scope allowed to read or write rows that are not pinned to a tenant.
+func (s *PermissionService) isPlatformScope() bool {
+	return s.tenantOwnerID() == tenant.PlatformGlobalTenantID
 }
 
 type workbenchRemediationRecord struct {
@@ -759,9 +794,19 @@ func (s *PermissionService) resolvePolicySubject(roleKey string, tenantID uint64
 	return tenant.RoleSubject(roleKey, tenantID), nil
 }
 
+// ensureRoleKeyExists verifies the role key exists in the caller's tenant.
+//
+// It used to accept a role_key that existed in ANY tenant, which let a tenant
+// administrator write policies (including data-scope policies) for a role that
+// belongs to somebody else — acceptance F8. Platform scope is exempt because
+// the platform console manages global roles, whose rows live at tenant 0.
 func (s *PermissionService) ensureRoleKeyExists(roleKey string) error {
 	var count int64
-	if err := s.db.Table("system_role").Where("role_key = ? AND deleted_at IS NULL", roleKey).Count(&count).Error; err != nil {
+	db := s.db.Table("system_role").Where("role_key = ? AND deleted_at IS NULL", roleKey)
+	if !s.isPlatformScope() {
+		db = db.Where("tenant_id = ?", s.tenantOwnerID())
+	}
+	if err := db.Count(&count).Error; err != nil {
 		return err
 	}
 	if count == 0 {

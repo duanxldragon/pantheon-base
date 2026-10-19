@@ -1,0 +1,173 @@
+{
+  "taskId": "2026-10-13-tenant-console-remediation",
+  "repo": "pantheon-base",
+  "executedAt": "2026-10-13T15:20:00+08:00",
+  "completedAt": "2026-10-13T15:50:00+08:00",
+  "agent": {
+    "tool": "other",
+    "adapter": "software-workshop-agent"
+  },
+  "runtimeSensitive": true,
+  "commands": [
+    {
+      "command": "git diff --stat <each changed path>  # scope classification pass",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Classifies the 60 working-tree paths against this task's declared scope. Result: the tree carries TWO independent changesets. This task owns the tenant-console change. A second, unrelated workstream (log-governance retention refresh + admin session/security-event CSV export) is also uncommitted here. It was found by reading the diffs of files the task had not declared: backend/modules/auth/login/login_handler.go adds ExportSecurityEvents, login_runtime.go adds ExportAdminSessions/ExportSecurityEvents, session_service.go adds ExportAdminSessions, login_menu.go adds session-export and security-event-export permission rows, and GovernanceCleanupBar.tsx adds an onBeforeOpen prop for retention refresh. Two files are shared: backend/modules/auth/module.go and backend/modules/system/iam/permission/permission_workbench.go. The manifest and task packet were corrected as a result: the earlier scope declaration had (a) claimed no menu/seed rows were added, when the tenant console menu tree, its five permission rows and their translations were in fact added, and (b) claimed the platform.tenant_mode is_public flag was untouched, when it was deliberately flipped 0 -> 1 so the frontend can read the mode. Both corrections are recorded rather than papered over."
+    },
+    {
+      "command": "git log --oneline -3 && git rev-parse --short HEAD && git status --short | wc -l",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Establishes the baseline the fix sits on: HEAD is 0fed4a39 'fix(release): run cut-workflow input validation after the checkout (#383)'. 60 working-tree paths changed by this task (26 modified backend, 13 modified frontend, 2 modified contracts, plus new migration/test/i18n/tenant-module files). Nothing is committed; the change is reviewed as a working tree."
+    },
+    {
+      "command": "mysql -uroot -p*** -h127.0.0.1 pantheon_base -e \"SELECT version, dirty FROM schema_migrations; SELECT id, code, status, LEFT(IFNULL(metadata,'<NULL>'),20) AS metadata FROM tenants ORDER BY id; SHOW COLUMNS FROM tenants LIKE 'metadata';\"",
+      "cwd": ".",
+      "status": "passed",
+      "details": "The single most direct piece of evidence for P0-1 and P0-3. schema_migrations: version=23, dirty=0 (was 22 before this task). tenants holds exactly one row: id=0, code='__global__', status='archived', metadata=NULL - the reserved placeholder is at id 0 (was id 1) and no probe rows leaked. SHOW COLUMNS returns metadata/type=text/Null=YES/Default=NULL, i.e. the column the model writes now exists with the exact shape the struct expects."
+    },
+    {
+      "command": "cd backend && go build ./...",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "build-exit=0. The whole backend compiles with the new middleware variant, the new pkg/tenant resolution branch, the new membership probe and the 13 re-declared route groups."
+    },
+    {
+      "command": "cd backend && gofmt -l modules/ internal/ pkg/",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "No output, exit 0. Closes P2-2: the two pre-existing violations (modules/auth/module.go, modules/system/iam/tenant/tenant_platform_handler.go) were fixed with gofmt -w, so the tree is format-clean."
+    },
+    {
+      "command": "cd backend && go vet ./pkg/tenant/... ./internal/middleware/...",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "vet-exit=0, no diagnostics. The two packages that carry the resolution logic are vet-clean, which matters because the new Resolve branch and the capability probe are the highest-risk code in the change."
+    },
+    {
+      "command": "cd backend && go test ./pkg/tenant/... -count=1",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "ok github.com/duanxldragon/pantheon-base/backend/pkg/tenant 0.483s. This is the package whose TestResolveForCanary_MultiMode had to be updated: header X-Tenant-Id: 0 is now legal for a platform-capable subject (contract §3.4) and still forbidden for one without the grant. Both branches are asserted and both pass."
+    },
+    {
+      "command": "cd backend && go test ./internal/middleware/... ./modules/auth/... -count=1",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "ok internal/middleware 0.849s; ok modules/auth/login 0.679s; ok modules/auth/mfa 0.633s; ok modules/auth/security 1.022s; ok modules/auth/session 0.770s (modules/auth and modules/auth/oidc have no test files). Note this run SKIPS the real-MySQL membership test, because PANTHEON_TEST_DSN is unset and testmysql.OpenTB calls tb.Skip in that case - the dedicated run below covers it."
+    },
+    {
+      "command": "cd backend && PANTHEON_TEST_DSN='root:***@tcp(127.0.0.1:3306)/pantheon_base?...' go test ./internal/middleware/ -run TestPlatformScopeTenantContextMiddleware -count=1 -v",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "PASS, ok internal/middleware 0.449s. The platform-scope resolution matrix is 8/8 (declared scope lets a tenant-less operator reach tenant 0; capability is still required; an undeclared route denies the same operator; a subject claim outranks the fallback; an explicit header outranks the fallback; the header may pin the platform-global scope; a header without capability is still forbidden; compat keeps the compat fallback for every subject), the membership guard is 4/4 against a real MySQL database (a member without a claim cannot fall back implicitly; a member can still pin the platform-global scope explicitly; a tenant-less operator falls back implicitly; an unknown subject fails closed), and the failure envelopes pass. The guard is the load-bearing condition of option b+c, so it is verified against the real engine rather than an in-process fake."
+    },
+    {
+      "command": "cd backend && go test ./modules/system/iam/tenant/... -count=1",
+      "cwd": "backend",
+      "status": "failed",
+      "details": "FAIL [build failed]: link.exe -> D:\\msys64\\mingw64\\bin\\gcc.exe failed: exit status 1. This is the cgo/SQLite link step for the package's test binary, not a compile error in the new code: go build ./..., go vet and gofmt on the same package all pass. The new list/filter/summary tests in tenant_service_list_test.go are therefore written and reviewed but NOT executed on this host; recorded in knownGaps and in the manifest's runtimeGap."
+    },
+    {
+      "command": "cd backend && go build -o ../.tmp/pantheon-server.exe ./cmd/server && go vet ./modules/system/... && gofmt -l modules/ internal/ pkg/",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "build-rc=0, vet-rc=0, gofmt produced no output. Rebuilds the server after the P1-6 seed fix (the new `tenant` parentPaths entry plus the unmapped-parent warning) and confirms the modules/system package is vet-clean and format-clean."
+    },
+    {
+      "command": "cd backend && go test ./modules/system/ -count=1",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "ok github.com/duanxldragon/pantheon-base/backend/modules/system 0.241s. The package's seed tests run on this host (unlike modules/system/iam/tenant, which fails at the cgo link step), so the change to resolveMenuParentID and the new unmapped-parent warning are covered by the existing seed suite as well as by the live probe."
+    },
+    {
+      "command": "mysql -e \"SELECT m.id, m.parent_id, p.title_key AS parent_title, m.title_key, m.type, m.sort, m.module FROM system_menu m LEFT JOIN system_menu p ON p.id=m.parent_id WHERE m.module='system.tenant' OR m.title_key LIKE '%tenant%' ORDER BY m.sort, m.id;\"",
+      "cwd": ".",
+      "status": "passed",
+      "details": "P1-6, at the data layer. Before the fix the five tenant permission rows (ids 166-170) all had parent_id=0; the parent menu (id 165, system.menu.tenant) correctly had parent_id=1. After the rebuild and restart the same query returns parent_id=165 for all five, with parent_title=system.menu.tenant, and id 165 still shows parent_title=system.menu.access. The rows were repaired by the ordinary startup re-seed, not by a data migration. A count of 'unmapped parent key' warnings in the server log is 0, confirming `tenant` was the only missing map entry."
+    },
+    {
+      "command": "python .tmp/verify_tenant_menu_fix.py",
+      "cwd": ".",
+      "status": "passed",
+      "details": "18/18 live checks for the two follow-up defects. A (nav tree): /system/tenant exists, is nested under /system/access, carries module system.tenant, is not a top-level entry (top level is exactly /dashboard plus the five M-type groups), and the nav tree contains no orphan tenant permission node (22 nodes). B (manage scope, the view 菜单管理 actually renders): the manage-scope tree returns 102 nodes, the tenant menu has exactly the five expected permission children, no tenant permission row sits at the root, and none is orphaned elsewhere. C (compat visibility): the frontend capability filter, replicated exactly, keeps 租户管理 under multi, removes it under compat, keeps 访问控制 itself, drops exactly one child (5 -> 4, leaving user/role/permission/menu), and does not disturb system.org or system.config."
+    },
+    {
+      "command": "python .tmp/verify_tenant_remediation.py",
+      "cwd": ".",
+      "status": "passed",
+      "details": "30/30 re-run against the restarted stack after the follow-up fixes, confirming no regression in the original remediation: platform endpoints still reachable under multi, reserved placeholder still excluded, keyword/status/summary/soft-delete unchanged, id 0 still guarded."
+    },
+    {
+      "command": "cd frontend && node ./node_modules/typescript/bin/tsc -b && for g in menu-contract i18n-hardcode i18n-generated-scope system-datetime-presentation shell-visual-contract ui-contract search-toolbar-contract important-budget system-page-admission smoke-web-base smoke-coverage-contract import-path-case contrast; do node ./scripts/check-$g.mjs; done",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "tsc -b exit 0 and all 13 contract gates PASS after adding the tenantEnabled capability to useLayoutMenu/AppLayout. check:menu-contract stays green, which matters because P1-6 and P1-7 both touch menu declarations."
+    },
+    {
+      "command": "python .tmp/verify_tenant_remediation.py",
+      "cwd": ".",
+      "status": "passed",
+      "details": "30/30 live checks passed against the running multi-mode backend on :8080. Covers: operation-verify/dashboard/dict/setting/operation-log/menu-tree all reachable (previously 500 tenant.context.missing); reserved placeholder absent from the list; summary facets self-consistent and equal to the unfiltered total; GET and DELETE /system/tenant/0 both rejected with envelope code 400; create succeeds (proving the metadata column); keyword search matches and excludes correctly; LIKE metacharacter escaped; status transitions active->suspended->archived accepted; status=archived and status=deleted accepted, status=bogus rejected with 400; archived tenant listed under its filter; soft-deleted tenant leaves the default view but is reachable via status=deleted. The script is run-scoped (probe-remediation-<epoch>) and prints its own cleanup SQL; the tenants table was re-checked afterwards and holds only the id-0 placeholder."
+    },
+    {
+      "command": "cd frontend && for g in menu-contract i18n-hardcode i18n-generated-scope system-datetime-presentation shell-visual-contract ui-contract search-toolbar-contract important-budget system-page-admission smoke-web-base smoke-coverage-contract import-path-case contrast; do node ./scripts/check-$g.mjs; done",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "All 13 contract gates PASS (exit 0 each). check:menu-contract is the one that was red before this task with 10 findings - the five system.permission.tenant.* keys missing from the zh-CN and en-US fallback packs - and it is now green, which is the ratchet this packet records."
+    },
+    {
+      "command": "cd frontend && node ./node_modules/typescript/bin/tsc -b",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "tsc-exit=0, no diagnostics. Confirms the frontend tenant module changes (new TenantEditableStatus, TenantSummary, keyword query field, compat guidance state) type-check across the whole project graph."
+    },
+    {
+      "command": "cd frontend && node ./node_modules/vitest/vitest.mjs run tests/unit/core/format/dateTime.test.ts",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "21/21 tests pass (1 file). Closes P2-1: the two added cases pin that Go's zero time 0001-01-01T00:00:00Z is treated as unset rather than formatted, which is the actual source of the '01-01-01 08:05:43' cells (year 1 at UTC+08:05:43)."
+    },
+    {
+      "command": "node scripts/harness/check-task-packet.mjs --root . && node scripts/harness/check-evidence.mjs --root . --strict && node scripts/harness/check-adoption.mjs --root . --strict",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Task packet check PASS for the new packet; evidence check --strict PASS over every commands.json in .harness/evidence; adoption check 0 findings. The first packet run failed with 'taskManifest.structuralScope.graphFocus must be an array of strings' - the manifest schema requires graphFocus to be an array - and the manifest was corrected rather than the schema relaxed."
+    },
+    {
+      "command": "node scripts/harness/check-doc-frontmatter.mjs --root . --strict && node scripts/harness/check-doc-links.mjs --root . --strict && node scripts/harness/check-doc-inventory.mjs --root . --strict",
+      "cwd": ".",
+      "status": "passed",
+      "details": "0 errors / 0 warnings each. The new task packet carries valid frontmatter (doc_type Remediation requires linked_contracts, which it lists) and every link resolves."
+    },
+    {
+      "command": "node scripts/harness/check-encoding.mjs --root .",
+      "cwd": ".",
+      "status": "not-run",
+      "details": "Cannot run on this host. The script shells out via spawnSync(git ...) and Node cannot spawn any subprocess here: spawnSync returns status=null with error.code=EBUSY for git, node and echo alike, and the result is unchanged with the sandbox disabled. This is a host limitation, not a sandbox policy. The encoding sweep therefore did not enumerate files; the files this task wrote are UTF-8 without BOM (verified by the doc and frontend gates that do parse them)."
+    }
+  ],
+  "knownGaps": [
+    "Verification-set blind spot exposed by P1-6. The nav tree the sidebar renders excludes F-type menu rows, so every probe that went through it was blind to the five tenant permission rows sitting at parent_id=0; check:menu-contract validates that permission keys exist as seeds and in the locale packs but says nothing about parent_id. Nothing in the original verification set asserted menu depth. The follow-up probe (.tmp/verify_tenant_menu_fix.py) closes the specific hole by reading the manage-scope tree, but the general assertion - for every seeded menu, a non-empty ParentKey must resolve to a non-zero parent_id - is still not part of any gate. It should be.",
+    "Repo-wide `check-evidence --strict` exits 1, but not because of this task. Nine pre-existing commands.json files fail the current schema and are untouched by this change: 2026-09-25-task-archiving-and-v0130-prep (a planRefs entry that no longer exists), 2026-10-07-release-closeout (agent.tool value outside the allowlist), 2026-10-07-release-qualification and 2026-10-07-release-readiness-remediation (command statuses outside passed/failed/not-run), 2026-10-11-smoke-test-tiering and 2026-10-11-sonar-duplication-under-3 (linkage not an object), 2026-10-11-sonar-smoke-helper-smells (knownGaps not an array, linkage not an object). Verified by running the gate against this task's file alone: 1 file, 0 errors, 0 warnings, exit 0. Repairing other tasks' historical evidence is out of scope for this task.",
+    "Interleaved workstream (scope honesty). The working tree that carries this task's change also carries a second, unrelated uncommitted changeset: log-governance retention-option refresh plus CSV export for admin sessions and security events. Its files are backend/modules/auth/login/*, backend/modules/auth/security/security_service.go, backend/modules/auth/session/session_service.go, the system:session:export and system:security-event:export permission rows, frontend/src/modules/auth/*, frontend/src/components/governance/GovernanceCleanupBar.tsx, frontend/src/modules/system/audit/OperationLogList.tsx, frontend/src/modules/system/config/setting/* and a one-line hero key rename in frontend/src/modules/system/iam/menu/MenuList.tsx. None of them is covered by this task's evidence. Two files are genuinely shared and are touched by both changesets: backend/modules/auth/module.go and backend/modules/system/iam/permission/permission_workbench.go. This task's evidence must not be read as validating the export workstream.",
+    "go test ./modules/system/iam/tenant/... does not run on this host: the package's SQLite test driver needs cgo and the mingw gcc link step exits 1. The new tenant_service_list_test.go cases (reserved-row exclusion, keyword LIKE escaping, archived filter binding, soft-deleted hiding, summary paging, delete-unknown-id) are written and reviewed but unexecuted. Compensating evidence: go build/vet/gofmt pass on the package, and the same behaviours are covered end to end by the 30-check live probe against MySQL.",
+    "node scripts/harness/check-encoding.mjs cannot run: Node cannot spawn subprocesses on this host (EBUSY). The encoding sweep is not part of the evidence set.",
+    "The frontend tenant console was verified by static gates (tsc, 13 contract checks) and by the backend probe, but not by an in-browser visual pass: the smoke/visual tier needs a browser session that this host could not drive. The UI change is therefore asserted at the contract level only.",
+    "The tenants CRUD ownership misplacement (contract §7 assigns it to system/org, the console lives in system/iam) is knowingly left in place and is not verified by this task.",
+    "Whether the contract amendment should re-grant runbook §8 gate G4 is a maintainer decision; this task does not declare it granted and does not verify it."
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-13-tenant-console-remediation/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-13-tenant-console-remediation/",
+    "summaryFile": ".harness/evidence/2026-10-13-tenant-console-remediation/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-13-tenant-console-remediation/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/contracts/TENANT_CONTRACT_V1.md",
+      "docs/designs/TENANT_RESOURCE_SCOPE_MATRIX.md",
+      "docs/runbooks/TENANT_MIGRATION_RUNBOOK.md"
+    ]
+  }
+}

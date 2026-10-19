@@ -5,6 +5,7 @@ import (
 	"github.com/duanxldragon/pantheon-base/backend/pkg/capability"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/common"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/rbacbind"
+	"github.com/duanxldragon/pantheon-base/backend/pkg/tenant"
 	"log/slog"
 	"net/url"
 	"strings"
@@ -626,14 +627,19 @@ func hasRoleKey(roleKeys []string, target string) bool {
 
 func bindMenuToAdmin(tx *gorm.DB, menuID uint64) error {
 	var roleID uint64
-	if err := tx.Table("system_role").Select("id").Where("role_key = ?", "admin").Limit(1).Pluck("id", &roleID).Error; err != nil {
+	// The platform admin role lives in the global namespace (tenant 0). Without
+	// the predicate, a tenant that also owns a role named `admin` could be
+	// picked and the menu would be granted into that tenant's namespace.
+	if err := tx.Table("system_role").Select("id").
+		Where("role_key = ? AND tenant_id = ?", "admin", tenant.PlatformGlobalTenantID).
+		Limit(1).Pluck("id", &roleID).Error; err != nil {
 		return err
 	}
 	if roleID == 0 {
 		slog.Warn("bindMenuToAdmin: admin role not found, skipping menu binding", "menuID", menuID)
 		return nil
 	}
-	return rbacbind.EnsureRoleMenu(tx, roleID, menuID)
+	return rbacbind.EnsureRoleMenu(tx, tenant.PlatformGlobalTenantID, roleID, menuID)
 }
 
 func (s *MenuService) validateMenuCreate(req *MenuCreateReq) error {

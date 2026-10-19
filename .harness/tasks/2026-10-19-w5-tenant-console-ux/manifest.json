@@ -1,0 +1,89 @@
+{
+  "taskId": "2026-10-19-w5-tenant-console-ux",
+  "title": "Fix the two console defects a tenant administrator sees on every page: platform-capability misjudgement and a department tree that renders only its root",
+  "goal": "Two console defects survive every acceptance run and are the first thing a tenant administrator notices. TenantViewpointSwitcher decides whether the caller is platform-capable with hasPerm('system:tenant:list'); a tenant administrator holds the full console key set including that key, so every page load fires GET /system/tenant/list, gets 403 tenant.platformOnly, and the global interceptor shows two red toasts (StrictMode double-invokes in dev). DeptList hands the nested tree to Arco Table with pagination.total = data.length and no expandable/childrenColumnName, so only the root department renders and the page reports a total of 1 while the API returns a two-level tree. Both are wrong decision inputs, not styling: one needs a real capability signal, the other needs the already-computed flatDeptRows or a tree-shaped table.",
+  "primaryLayer": "platform",
+  "status": "completed",
+  "priority": "P1",
+  "type": "bug-fix",
+  "estimatedComplexity": "small",
+  "parentTaskId": "2026-10-19-tenant-permission-isolation-remediation",
+  "dependsOn": [
+    "2026-10-19-w0-isolation-contract-guardrails"
+  ],
+  "findings": [
+    "F5 (P1): TenantViewpointSwitcher proxies platform capability with a permission key the tenant admin legitimately holds, so every console page issues GET /system/tenant/list and shows two 403 tenant.platformOnly toasts.",
+    "F6 (P1): DeptList binds the nested tree directly to the table without expandable/childrenColumnName, so only the root department renders and the total reads 1 instead of the real department count."
+  ],
+  "scope": {
+    "in": [
+      "frontend/src/modules/auth/tenant/TenantViewpointSwitcher.tsx",
+      "frontend/src/modules/system/org/dept/DeptList.tsx",
+      "frontend/tests/smoke-core/tenant-viewpoint-switcher.spec.ts",
+      "frontend/tests/smoke-core/system-pages.spec.ts (dept assertions)"
+    ],
+    "out": [
+      "Changing the tenant switch API or its 403 semantics",
+      "Redesigning the department page layout or the org tab",
+      "Changing permission key names"
+    ]
+  },
+  "implementationNotes": [
+    "Use a real platform signal for F5: tenantId === 0 or resolvedBy === 'platform-fallback' from /auth/tenants/current, which the switcher already has access to. A permission key is an authorization fact, not a scope fact.",
+    "Alternative if the signal is not available at that point: keep the call but route it through a silent channel that does not raise a global toast. Prefer the capability signal; suppressing the symptom leaves the wrong request in place.",
+    "For F6, prefer binding flatDeptRows (already computed in the file) with total = flatDeptRows.length so search, sort and pagination keep working; switching to Arco's tree mode is acceptable only if the surrounding toolbar still behaves.",
+    "Both fixes are covered by existing smoke specs; extend rather than add new spec files."
+  ],
+  "contractAnchors": [
+    "docs/contracts/PLATFORM_CONTRACT.md",
+    "docs/contracts/TENANT_CONTRACT_V1.md"
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "permission-policy",
+    "ownerLayer": "consumer-repository"
+  },
+  "verificationPlan": {
+    "commands": [
+      "cd frontend && node scripts/run-smoke-suite.mjs --host 127.0.0.1 --port 5173 --config playwright.config.ts -- tests/smoke-core/tenant-viewpoint-switcher.spec.ts --workers=1",
+      "cd frontend && node scripts/run-smoke-suite.mjs --host 127.0.0.1 --port 5173 --config playwright.config.ts -- tests/smoke-core/system-pages.spec.ts --workers=1",
+      "NODE_PATH=<frontend>/node_modules node ui_walkthrough.cjs"
+    ],
+    "runtimeEvidence": [
+      "network log for a tenant-admin page load with zero /system/tenant/list calls (or zero 403 envelopes)",
+      "department page screenshot showing both levels and a total of 2",
+      "no tenant.platformOnly toast in the console capture"
+    ]
+  },
+  "runtimeSensitive": false,
+  "evidenceRequired": [
+    ".harness/evidence/2026-10-19-w5-tenant-console-ux/commands.json",
+    ".harness/evidence/2026-10-19-w5-tenant-console-ux/summary.md",
+    ".harness/evidence/2026-10-19-w5-tenant-console-ux/network-after.json"
+  ],
+  "humanGates": [
+    "Confirm the preferred capability signal for the viewpoint switcher (tenantId === 0 vs resolvedBy), since the two differ for a platform user operating inside a tenant."
+  ],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed",
+    "No tenant.platformOnly toast on any console page for a tenant admin",
+    "Department list renders every level with a correct total",
+    "Existing smoke specs green, no new spec file added",
+    "ui_walkthrough.cjs reaches 23/23"
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-19-w5-tenant-console-ux/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-19-w5-tenant-console-ux/",
+    "summaryFile": ".harness/evidence/2026-10-19-w5-tenant-console-ux/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-19-w5-tenant-console-ux/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-19-tenant-permission-isolation-remediation.task.md"
+    ]
+  }
+}

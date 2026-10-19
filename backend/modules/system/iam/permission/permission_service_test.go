@@ -61,6 +61,19 @@ func (permissionTestMenu) TableName() string {
 	return "system_menu"
 }
 
+// permissionTestDept 让夹具带上真实的 system_dept 结构。数据权限的自定义范围
+// 会校验部门归属（acceptance F11），没有这张表时任何 dept id 都算非法。
+type permissionTestDept struct {
+	ID        uint64         `gorm:"primaryKey;autoIncrement"`
+	TenantID  uint64         `gorm:"not null;default:0"`
+	Name      string         `gorm:"column:dept_name;size:64;not null;default:''"`
+	DeletedAt gorm.DeletedAt `gorm:"index"`
+}
+
+func (permissionTestDept) TableName() string {
+	return "system_dept"
+}
+
 func setupPermissionTestDB(t *testing.T) *gorm.DB {
 	t.Helper()
 
@@ -71,10 +84,18 @@ func setupPermissionTestDB(t *testing.T) *gorm.DB {
 		&permissionTestRoleMenu{},
 		&permissionTestRolePermission{},
 		&permissionTestMenu{},
+		&permissionTestDept{},
 		&database.CasbinRule{},
 		&PermissionRoleDataScopePolicy{},
 	); err != nil {
 		t.Fatalf("migrate permission fixtures: %v", err)
+	}
+
+	if err := db.Create(&[]permissionTestDept{
+		{ID: 10, TenantID: 0, Name: "研发部"},
+		{ID: 20, TenantID: 0, Name: "市场部"},
+	}).Error; err != nil {
+		t.Fatalf("seed permission depts: %v", err)
 	}
 
 	return db

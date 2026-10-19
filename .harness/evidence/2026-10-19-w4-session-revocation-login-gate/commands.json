@@ -1,0 +1,65 @@
+{
+  "taskId": "2026-10-19-w4-session-revocation-login-gate",
+  "repo": "pantheon-base",
+  "executedAt": "2026-10-19T12:05:00+08:00",
+  "completedAt": "2026-10-19T12:05:00+08:00",
+  "agent": {
+    "tool": "other",
+    "adapter": "software-workshop-agent"
+  },
+  "runtimeSensitive": true,
+  "runtimeGap": "Verified on a live stack with Redis. Not covered: multi-instance Redis failover during the clear call, and refresh-token behaviour after the new login (the old refresh token is deleted by RevokeUserTokens and was not separately replayed).",
+  "commands": [
+    {
+      "command": "cd backend && go build ./...",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "Clean build after adding ClearUserBlacklist and session-level markers in RevokeUserTokens."
+    },
+    {
+      "command": "cd backend && go test -count=1 -v ./modules/auth/login/ -run 'Blacklist|DisableEnable'",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "TestSuccessfulLoginClearsUserBlacklist, TestFailedIssuanceKeepsUserBlacklist, TestFailedCredentialKeepsUserBlacklist, TestDisableEnableCycleLetsTheUserLogInAgain."
+    },
+    {
+      "command": "cd backend && go test -count=1 ./modules/auth/session/ -run RevokeUserTokens",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "Asserts user-level key, one session-level key per session, refresh-token cascade, and that another user's session is untouched."
+    },
+    {
+      "command": "cd backend && go test -count=1 ./...",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "Full MySQL/Redis-backed suite green after the change."
+    },
+    {
+      "command": "python tenant_acceptance.py (PANTHEON_BASE=http://127.0.0.1:8081)",
+      "cwd": "acceptance",
+      "status": "passed",
+      "details": "A3c: reset password -> new password logs in code=200; disable -> cannot log in; re-enable -> logs in code=200; session usable."
+    },
+    {
+      "command": "python redis_keys_probe.py (see redis-keys.txt)",
+      "cwd": "acceptance",
+      "status": "passed",
+      "details": "After reset: blacklist:<uid>=1 TTL 960s and blacklist:session:<sid>=1 TTL 960s. After the new login: user key gone, session key still 1. Old session 401 token.expired.force; new session 200."
+    }
+  ],
+  "knownGaps": [
+    "The test-only PANTHEON_TEST_REDIS_DB switch was added so key-survival tests are not flushed by other packages under parallel `go test ./...`; default remains DB 1.",
+    "Refresh-token replay after reset is covered by the existing cascade test, not by the live probe."
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-19-w4-session-revocation-login-gate/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-19-w4-session-revocation-login-gate/",
+    "summaryFile": ".harness/evidence/2026-10-19-w4-session-revocation-login-gate/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-19-w4-session-revocation-login-gate/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-19-tenant-permission-isolation-remediation.task.md",
+      "docs/contracts/TENANT_CONTRACT_V1.md"
+    ]
+  }
+}

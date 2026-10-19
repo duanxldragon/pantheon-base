@@ -140,6 +140,18 @@ func TestLifecycleService_RevokeUserTokens(t *testing.T) {
 	if err != nil || ttl < authtoken.AccessTokenTTL {
 		t.Fatalf("expected blacklist TTL >= access token TTL, got %v err=%v", ttl, err)
 	}
+	// Every session of the revoked user gets its own session-level marker so a
+	// successful login (which clears the user-level key) cannot revive an access
+	// token minted before the credential change.
+	for _, sid := range []string{"revoke-a", "revoke-b"} {
+		if _, err := rdb.Get(ctx, authtoken.BlacklistSessionKey(sid)).Result(); err != nil {
+			t.Fatalf("expected session blacklist for %s, got %v", sid, err)
+		}
+	}
+	if _, err := rdb.Get(ctx, authtoken.BlacklistSessionKey("keep-c")).Result(); err == nil {
+		t.Fatal("expected other user's session not blacklisted")
+	}
+
 	for _, revoked := range []string{"rt-a", "rt-b"} {
 		if _, _, err := authtoken.ValidateRefresh(ctx, rdb, revoked); err == nil {
 			t.Fatalf("expected refresh token %s revoked", revoked)
