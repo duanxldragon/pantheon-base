@@ -5,7 +5,8 @@
 
 ## 当前最终验收状态
 
-**判定：v0.16.1 发布准备中。** v0.16.0 发布时镜像了 v0.15.0 的"零产物"发布方式，导致消费侧（`pantheon-ops`）的 `foundation-release.lock.json` 至今仍锁定在 `pantheon-base-v0.13.0`。v0.16.1 是一次**补丁发布**，其唯一目的是重新产出四件可消费产物（`foundation-release-<v>.tgz` + `.sha256` + `repo.tar` + `repo.tar.sha256`），并把发布流程从"人工本地执行"改为"CI 可重复执行"。版本号与收口文档已进入候选提交，tag 与 GitHub Release 待 `Foundation Release Cut` 工作流触发后产出。
+**判定：v0.16.1 发布准备中。**（2026-10-19 补记：main 在发布候选之上新增 4 个租户整改提交
+`b07cd2a1`/`ae277910`/`6803f18a`/`fc6672ab`，是否纳入 v0.16.1 属发布范围决策，见 release-cut 任务的人工门） v0.16.0 发布时镜像了 v0.15.0 的"零产物"发布方式，导致消费侧（`pantheon-ops`）的 `foundation-release.lock.json` 至今仍锁定在 `pantheon-base-v0.13.0`。v0.16.1 是一次**补丁发布**，其唯一目的是重新产出四件可消费产物（`foundation-release-<v>.tgz` + `.sha256` + `repo.tar` + `repo.tar.sha256`），并把发布流程从"人工本地执行"改为"CI 可重复执行"。版本号与收口文档已进入候选提交，tag 与 GitHub Release 待 `Foundation Release Cut` 工作流触发后产出。
 
 ## 任务状态总览
 
@@ -13,7 +14,7 @@
 |------|------|
 | ✅ 已完成 | 全部历史任务 + 2026-10-07 整改任务包 + v0.15.0/v0.16.0 发布收口 |
 | 🔄 进行中 | v0.16.1 发布收口（`2026-10-12-v0161-release-cut`） |
-| ✅ 已完成 | 租户权限隔离整改（`2026-10-19-tenant-permission-isolation-remediation`，W0–W6 全部完成，F14 降级） |
+| ✅ 已完成 | 租户权限隔离整改（`2026-10-19-tenant-permission-isolation-remediation`，W0–W6 全部完成 + F14 收口后关闭，**零残留**） |
 | ⏸️ 暂停 | 无 |
 
 ## 租户权限隔离整改（2026-10-19，已收口）
@@ -37,6 +38,7 @@
 | W4 | `2026-10-19-w4-session-revocation-login-gate` | F2 | ✅ completed |
 | W5 | `2026-10-19-w5-tenant-console-ux` | F5 F6 | ✅ completed |
 | W6 | `2026-10-19-w6-reverification-closeout` | 全量 193 项复跑 + 收口 | ✅ completed |
+| W6+ | 收口后跟进 | F14（P2 错误码整形 → `404 role.not_found`） | ✅ closed，34/34 零 findings |
 
 ### W0 完成情况（2026-10-19）
 

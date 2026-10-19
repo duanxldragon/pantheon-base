@@ -3,7 +3,7 @@
   "repo": "pantheon-base",
   "executedAt": "2026-10-11T00:30:00+08:00",
   "agent": {
-    "tool": "gstack-pantheon-base-closeout",
+    "tool": "other",
     "adapter": "software-workshop-orchestrator"
   },
   "commands": [

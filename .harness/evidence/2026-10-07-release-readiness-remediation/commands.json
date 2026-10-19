@@ -106,7 +106,7 @@
       "result": "blocked",
       "details": "network policy EACCES to registry.npmjs.org; configured mirror previously returned 404 NOT_IMPLEMENTED",
       "cwd": "frontend",
-      "status": "blocked"
+      "status": "not-run"
     }
   ],
   "gap": "Hosted candidate-SHA Quality/Security/Release gates and Sonar 26 classification are unavailable because GitHub auth/network is blocked. Go 1.26.9, native cgo tenant/race, npm advisory refresh and larger enterprise-volume dashboard load remain explicit gaps; local browser, migration rollback and MySQL fixture evidence are closed.",

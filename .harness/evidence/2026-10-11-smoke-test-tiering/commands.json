@@ -120,5 +120,14 @@
     "smoke-core remains report-only and is not part of the L1 tier, per tests/smoke-core/README.md ('转 blocking 需在连续多轮全绿后按 harness 规则切换'). L1 is therefore platform:contracts + system:routes, not the smoke-core suite.",
     "The monolith's 34 pre-existing TypeScript errors are now spread across the new specs. They were not introduced or fixed by this change (the error multiset is identical), but they are easier to see now.",
     "The full root script suite (node --test tests/scripts/*.test.mjs) still reports failures on this host because the sandbox refuses to spawn child processes (spawnSync EBUSY). tests/scripts/resolve-smoke-modules.test.mjs does not spawn and passes 13/13 locally; CI runs the whole suite in an environment that can spawn."
-  ]
+  ],
+  "linkage": {
+    "planRefs": [],
+    "evidenceDir": ".harness/evidence/2026-10-11-smoke-test-tiering/",
+    "taskManifest": ".harness/tasks/2026-10-11-smoke-test-tiering/manifest.json",
+    "reviewFile": ".harness/evidence/2026-10-11-smoke-test-tiering/review.md",
+    "changeRef": "none",
+    "evidence": ".harness/evidence/2026-10-11-smoke-test-tiering/commands.json",
+    "summaryFile": ".harness/evidence/2026-10-11-smoke-test-tiering/summary.md"
+  }
 }

@@ -47,7 +47,7 @@
     {
       "command": "npm audit --audit-level=high",
       "cwd": "frontend",
-      "status": "blocked",
+      "status": "not-run",
       "result": "registry.npmmirror.com audit endpoint returned HTTP 404 NOT_IMPLEMENTED; prior evidence had 0 high/critical and 6 moderate dev-tool findings"
     },
     {
@@ -66,7 +66,7 @@
     {
       "command": "cd frontend && npm audit --registry=https://registry.npmjs.org --json",
       "cwd": "frontend",
-      "status": "blocked",
+      "status": "not-run",
       "notes": "network policy EACCES to registry.npmjs.org; configured mirror previously returned 404 NOT_IMPLEMENTED"
     }
   ],
