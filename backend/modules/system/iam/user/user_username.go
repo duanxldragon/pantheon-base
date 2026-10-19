@@ -9,6 +9,7 @@ import (
 	"github.com/duanxldragon/pantheon-base/backend/pkg/common"
 	commonsecurity "github.com/duanxldragon/pantheon-base/backend/pkg/common/security"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/rbacbind"
+	"github.com/duanxldragon/pantheon-base/backend/pkg/tenant"
 
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
@@ -119,7 +120,9 @@ func (s *UserService) ensureAdminRoleBinding() error {
 		return nil
 	}
 
-	return rbacbind.EnsureUserRole(s.db, 1, adminRoleID)
+	// The platform bootstrap binds the built-in admin (user 1) to the platform
+	// `admin` role, so the binding lives in the platform-global namespace.
+	return rbacbind.EnsureUserRole(s.db, tenant.PlatformGlobalTenantID, 1, adminRoleID)
 }
 
 func (s *UserService) releaseDeletedUsernames() error {

@@ -3,6 +3,7 @@ package testredis
 import (
 	"context"
 	"os"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -31,6 +32,12 @@ var passwordEnvVars = []string{
 // any job that provisions Redis so a typo'd or renamed variable fails the build
 // instead of reducing coverage silently.
 const requiredEnvVar = "PANTHEON_TEST_REDIS_REQUIRED"
+
+// dbEnvVar selects the Redis logical database for a test process. The default
+// (1) is shared by every package, which is fine for tests that only write and
+// read within one call, but not for tests asserting that a key survives a
+// concurrent `go test ./...` run: another package's cleanup flushes the DB.
+const dbEnvVar = "PANTHEON_TEST_REDIS_DB"
 
 func isTruthy(value string) bool {
 	switch strings.ToLower(strings.TrimSpace(value)) {
@@ -87,10 +94,25 @@ func open(t reporter) *redis.Client {
 
 	password, _ := firstEnv(passwordEnvVars)
 
+	// DB 1 is the shared default, but `go test ./...` runs packages in
+	// parallel and every Open flushes its database on cleanup, so a test that
+	// asserts a key survives a call can be wiped by another package mid-run.
+	// A test that needs isolation can pick its own database (0-15) through
+	// PANTHEON_TEST_REDIS_DB; the env var is per test process, so parallel
+	// packages cannot race on it.
+	dbIndex := 1
+	if raw := strings.TrimSpace(os.Getenv(dbEnvVar)); raw != "" {
+		parsed, err := strconv.Atoi(raw)
+		if err != nil || parsed < 0 || parsed > 15 {
+			t.Fatalf("%s must be an integer 0-15, got %q", dbEnvVar, raw)
+		}
+		dbIndex = parsed
+	}
+
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     addr,
 		Password: password,
-		DB:       1, // Use DB 1 for tests to avoid conflicts
+		DB:       dbIndex,
 	})
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)

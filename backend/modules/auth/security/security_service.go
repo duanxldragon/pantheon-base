@@ -17,6 +17,7 @@ import (
 	commonsecurity "github.com/duanxldragon/pantheon-base/backend/pkg/common/security"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/contracts/authuser"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/database"
+	"github.com/duanxldragon/pantheon-base/backend/pkg/impexp"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/logging"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/maintenance"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/tenant"
@@ -233,6 +234,44 @@ func (s *Service) ListSecurityEvents(query *SecurityEventQuery) (*SecurityEventP
 		HighSeverityCount: highSeverityCount,
 		Page:              page,
 		PageSize:          pageSize,
+	}, nil
+}
+
+// ExportSecurityEvents exports security events as CSV. It reuses the exact
+// list-scope filters (keyword/type/severity/time window/acknowledgement) so
+// the file always matches the filtered view being exported.
+func (s *Service) ExportSecurityEvents(query *SecurityEventQuery) (*impexp.CSVFile, error) {
+	if s.db == nil {
+		return nil, common.ErrDatabaseNotInitialized
+	}
+	var events []SystemAuthSecurityEvent
+	db := applySecurityEventFilters(s.scoped(s.db.Model(&SystemAuthSecurityEvent{})), query)
+	if err := db.Order("created_at desc, id desc").Limit(impexp.MaxExportRows()).Find(&events).Error; err != nil {
+		return nil, err
+	}
+
+	items := toSecurityEventRespList(events)
+	rows := make([][]string, 0, len(items))
+	for _, item := range items {
+		acknowledgedAt := ""
+		if item.AcknowledgedAt != nil {
+			acknowledgedAt = *item.AcknowledgedAt
+		}
+		rows = append(rows, []string{
+			strconv.FormatUint(item.ID, 10),
+			item.Username, item.EventType, item.Severity, item.SourceKey, item.IP,
+			item.UserAgent, item.MessageKey, item.Metadata, acknowledgedAt,
+			item.AcknowledgedByUser, item.AcknowledgementNote, item.CreatedAt,
+		})
+	}
+	return &impexp.CSVFile{
+		Filename: "system-security-event-export.csv",
+		Headers: []string{
+			"id", "username", "eventType", "severity", "sourceKey", "ip", "userAgent",
+			"messageKey", "metadata", "acknowledgedAt", "acknowledgedByUser",
+			"acknowledgementNote", "createdAt",
+		},
+		Rows: rows,
 	}, nil
 }
 

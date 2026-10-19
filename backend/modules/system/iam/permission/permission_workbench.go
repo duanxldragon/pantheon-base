@@ -89,6 +89,11 @@ func (s *PermissionService) GetWorkbench(query *PermissionWorkbenchQuery) (*Perm
 
 func (s *PermissionService) fetchWorkbenchRoles(query *PermissionWorkbenchQuery) ([]permissionWorkbenchRoleRow, error) {
 	db := s.db.Table("system_role").Where("deleted_at IS NULL")
+	// The workbench is the console's role board; without this predicate a tenant
+	// administrator sees every tenant's roles (acceptance F7).
+	if !s.isPlatformScope() {
+		db = db.Where("tenant_id = ?", s.tenantOwnerID())
+	}
 	if query != nil {
 		if strings.TrimSpace(query.RoleKey) != "" {
 			db = db.Where("role_key LIKE ?", "%"+common.EscapeLikePattern(strings.TrimSpace(query.RoleKey))+"%")
@@ -570,6 +575,14 @@ var requiredAPIRoutesByPermission = map[string][]string{
 	"system:security-event:list":         {"GET /api/v1/system/security-event/list"},
 	"system:security-event:acknowledge":  {"POST /api/v1/system/security-event/:id/acknowledge", "POST /api/v1/system/security-event/batch-acknowledge"},
 	"system:security-event:clear":        {"POST /api/v1/system/security-event/cleanup"},
+	"system:security-event:export":       {"POST /api/v1/system/security-event/export"},
+	"system:session:export":              {"POST /api/v1/system/session/export"},
+	"system:tenant:list":                 {"GET /api/v1/system/tenant/list"},
+	"system:tenant:create":               {"POST /api/v1/system/tenant"},
+	"system:tenant:update":               {"PUT /api/v1/system/tenant/:id"},
+	"system:tenant:delete":               {"DELETE /api/v1/system/tenant/:id"},
+	"system:tenant:member-add":           {"POST /api/v1/system/tenant/:id/members"},
+	"system:tenant:member-remove":        {"DELETE /api/v1/system/tenant/:id/members/:userId"},
 	"system:module:list":                 {"GET /api/v1/lowcode/dynamic-modules"},
 	"system:module:register":             {"POST /api/v1/lowcode/dynamic-modules"},
 	"system:module:unregister":           {"DELETE /api/v1/lowcode/dynamic-modules/:name"},

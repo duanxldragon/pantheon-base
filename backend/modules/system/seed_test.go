@@ -240,6 +240,7 @@ CREATE TABLE system_menu (
 	if err := db.Exec(`
 CREATE TABLE system_role (
 	id BIGINT PRIMARY KEY,
+	tenant_id BIGINT UNSIGNED NOT NULL DEFAULT 0,
 	role_key VARCHAR(64),
 	status INT
 )`).Error; err != nil {
@@ -247,9 +248,10 @@ CREATE TABLE system_role (
 	}
 	if err := db.Exec(`
 CREATE TABLE system_role_menu (
+	tenant_id BIGINT UNSIGNED NOT NULL DEFAULT 0,
 	role_id BIGINT NOT NULL,
 	menu_id BIGINT NOT NULL,
-	PRIMARY KEY (role_id, menu_id)
+	PRIMARY KEY (tenant_id, role_id, menu_id)
 )`).Error; err != nil {
 		return err
 	}

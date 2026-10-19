@@ -70,7 +70,16 @@ func normalizeUserSort(query *UserListQuery) (string, bool) {
 	return column, true
 }
 
+// replaceUserRoles rewrites a user's role bindings. Every binding lands in the
+// tenant that owns the user (contract §2.3/§4): `system_user_role` is keyed by
+// (tenant_id, user_id, role_id), so the tenant is resolved from the user row
+// itself instead of being threaded through every caller — a binding can never
+// be written into a tenant the user does not belong to.
 func replaceUserRoles(tx *gorm.DB, userID uint64, roleIDs []uint64) error {
+	tenantID, err := userOwningTenantIDTx(tx, userID)
+	if err != nil {
+		return err
+	}
 	if err := tx.Exec("DELETE FROM system_user_role WHERE user_id = ?", userID).Error; err != nil {
 		return err
 	}
@@ -79,14 +88,29 @@ func replaceUserRoles(tx *gorm.DB, userID uint64, roleIDs []uint64) error {
 	}
 	// Batch insert using a single query
 	type userRole struct {
-		UserID uint64 `gorm:"column:user_id"`
-		RoleID uint64 `gorm:"column:role_id"`
+		TenantID uint64 `gorm:"column:tenant_id"`
+		UserID   uint64 `gorm:"column:user_id"`
+		RoleID   uint64 `gorm:"column:role_id"`
 	}
 	roles := make([]userRole, 0, len(roleIDs))
 	for _, roleID := range roleIDs {
-		roles = append(roles, userRole{UserID: userID, RoleID: roleID})
+		roles = append(roles, userRole{TenantID: tenantID, UserID: userID, RoleID: roleID})
 	}
 	return tx.Table("system_user_role").CreateInBatches(roles, 100).Error
+}
+
+// userOwningTenantIDTx resolves the tenant that owns a user row, on an existing
+// transaction/query handle. A missing user resolves to 0, which keeps the
+// pre-tenant behaviour (all historical rows are tenant_id = 0).
+func userOwningTenantIDTx(tx *gorm.DB, userID uint64) (uint64, error) {
+	var tenantID uint64
+	if err := tx.Table("system_user").
+		Select("tenant_id").
+		Where("id = ?", userID).
+		Scan(&tenantID).Error; err != nil {
+		return 0, err
+	}
+	return tenantID, nil
 }
 
 func normalizeUint64IDs(ids []uint64) []uint64 {
@@ -125,8 +149,13 @@ func (s *UserService) validateUserCreate(req *UserCreateReq) error {
 		return err
 	}
 
+	// Username uniqueness is PER TENANT in multi mode (contract §2.3): the
+	// scope narrows the lookup to the request tenant, so `acme` and `beta` may
+	// each own an `admin`. Compat keeps the historical global uniqueness.
 	var count int64
-	if err := s.db.Model(&SystemUser{}).Where("username = ?", req.Username).Count(&count).Error; err != nil {
+	if err := s.scoped(s.db.Model(&SystemUser{})).
+		Where("username = ?", req.Username).
+		Count(&count).Error; err != nil {
 		return err
 	}
 	if count > 0 {
@@ -184,7 +213,8 @@ func (s *UserService) ensureUserRoleIDs(roleIDs []uint64) error {
 	}
 
 	var count int64
-	if err := s.db.Table("system_role").Where("id IN ? AND status = ?", normalized, common.StatusEnabled).Count(&count).Error; err != nil {
+	if err := s.scoped(s.db.Table("system_role")).
+		Where("id IN ? AND status = ?", normalized, common.StatusEnabled).Count(&count).Error; err != nil {
 		return err
 	}
 	if count != int64(len(normalized)) {
@@ -193,9 +223,15 @@ func (s *UserService) ensureUserRoleIDs(roleIDs []uint64) error {
 	return nil
 }
 
+// getAdminRoleID resolves the PLATFORM admin role (tenant_id = 0). It is only
+// consulted for the builtin admin user, which is a platform-global row.
 func (s *UserService) getAdminRoleID() (uint64, error) {
 	var roleID uint64
-	if err := s.db.Table("system_role").Select("id").Where("role_key = ?", "admin").Limit(1).Pluck("id", &roleID).Error; err != nil {
+	if err := s.db.Table("system_role").
+		Select("id").
+		Where("role_key = ? AND tenant_id = ?", "admin", 0).
+		Limit(1).
+		Pluck("id", &roleID).Error; err != nil {
 		return 0, err
 	}
 	return roleID, nil
@@ -232,7 +268,7 @@ func (s *UserService) ensureDeptID(deptID uint64) error {
 		return nil
 	}
 	var count int64
-	if err := s.db.Table("system_dept").Where("id = ?", deptID).Count(&count).Error; err != nil {
+	if err := s.scoped(s.db.Table("system_dept")).Where("id = ?", deptID).Count(&count).Error; err != nil {
 		return err
 	}
 	if count == 0 {
@@ -253,7 +289,7 @@ func (s *UserService) ensurePostForDept(deptID, postID uint64) error {
 		DeptID uint64 `gorm:"column:dept_id"`
 	}
 	var post postRow
-	if err := s.db.Table("system_post").Select("id, dept_id").Where("id = ?", postID).First(&post).Error; err != nil {
+	if err := s.scoped(s.db.Table("system_post")).Select("id, dept_id").Where("id = ?", postID).First(&post).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return common.NewBadRequest("user.post.invalid")
 		}
@@ -289,9 +325,12 @@ func (s *UserService) loadUserRoles(userIDs []uint64) (map[uint64][]uint64, map[
 	}
 
 	var pairs []userRolePair
+	// The join pins the role to the binding's own tenant (contract §4): a
+	// tenant-local binding can only ever resolve to a role in that same tenant,
+	// so tenant A's role never shows up on tenant B's user.
 	if err := s.db.Table("system_user_role").
 		Select("system_user_role.user_id, system_user_role.role_id, system_role.role_key, system_role.role_name").
-		Joins("JOIN system_role ON system_role.id = system_user_role.role_id").
+		Joins("JOIN system_role ON system_role.id = system_user_role.role_id AND system_role.tenant_id = system_user_role.tenant_id").
 		Where("system_user_role.user_id IN ?", userIDs).
 		Order("system_user_role.role_id asc").
 		Scan(&pairs).Error; err != nil {
@@ -320,7 +359,10 @@ func (s *UserService) loadUserLastLoginAt(username string) (*string, error) {
 	}
 
 	var lastLogin loginRow
-	err := s.db.Table("system_log_login").
+	// Login logs are tenant-scoped and usernames repeat across tenants, so the
+	// lookup must be pinned to the request tenant — otherwise tenant A's user
+	// detail would surface tenant B's login timestamp.
+	err := s.scoped(s.db.Table("system_log_login")).
 		Select("login_time").
 		Where("username = ? AND status = ?", trimmedUsername, common.LoginStatusSuccess).
 		Order("login_time desc, id desc").
@@ -359,7 +401,7 @@ func (s *UserService) loadDeptNames(users []SystemUser) (map[uint64]string, erro
 		DeptName string `gorm:"column:dept_name"`
 	}
 	var rows []deptNameRow
-	if err := s.db.Table("system_dept").Select("id, dept_name").Where(condIDIn, deptIDs).Scan(&rows).Error; err != nil {
+	if err := s.scoped(s.db.Table("system_dept")).Select("id, dept_name").Where(condIDIn, deptIDs).Scan(&rows).Error; err != nil {
 		return nil, err
 	}
 	for _, row := range rows {
@@ -391,7 +433,7 @@ func (s *UserService) loadPostNames(users []SystemUser) (map[uint64]string, erro
 		PostName string `gorm:"column:post_name"`
 	}
 	var rows []postNameRow
-	if err := s.db.Table("system_post").Select("id, post_name").Where(condIDIn, postIDs).Scan(&rows).Error; err != nil {
+	if err := s.scoped(s.db.Table("system_post")).Select("id, post_name").Where(condIDIn, postIDs).Scan(&rows).Error; err != nil {
 		return nil, err
 	}
 	for _, row := range rows {

@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/duanxldragon/pantheon-base/backend/pkg/rbacbind"
+	"github.com/duanxldragon/pantheon-base/backend/pkg/tenant"
 
 	"gorm.io/gorm"
 )
@@ -82,8 +83,10 @@ func authMenuSeeds() []menuSeed {
 		{Key: "login-log-delete", ParentKey: menuKeyLoginLog, TitleKey: "system.permission.login_log.delete", Perms: "system:login-log:delete", Type: "F", Sort: 3},
 		{Key: "session-delete", ParentKey: "session", TitleKey: "system.permission.session.delete", Perms: "system:session:delete", Type: "F", Sort: 1},
 		{Key: "session-clear", ParentKey: "session", TitleKey: "system.permission.session.clear", Perms: "system:session:clear", Type: "F", Sort: 2},
+		{Key: "session-export", ParentKey: "session", TitleKey: "system.permission.session.export", Perms: "system:session:export", Type: "F", Sort: 3},
 		{Key: "security-event-acknowledge", ParentKey: menuKeySecurityEvent, TitleKey: "system.permission.security_event.acknowledge", Perms: "system:security-event:acknowledge", Type: "F", Sort: 1},
 		{Key: "security-event-clear", ParentKey: menuKeySecurityEvent, TitleKey: "system.permission.security_event.clear", Perms: "system:security-event:clear", Type: "F", Sort: 2},
+		{Key: "security-event-export", ParentKey: menuKeySecurityEvent, TitleKey: "system.permission.security_event.export", Perms: "system:security-event:export", Type: "F", Sort: 3},
 	}
 }
 
@@ -172,12 +175,14 @@ func ensureAdminRoleMenuBinding(db *gorm.DB, menuID uint64) error {
 		return err
 	}
 
-	return rbacbind.EnsureRoleMenu(db, adminRoleID, menuID)
+	return rbacbind.EnsureRoleMenu(db, tenant.PlatformGlobalTenantID, adminRoleID, menuID)
 }
 
 func lookupAdminRoleID(db *gorm.DB) (uint64, error) {
 	var adminRoleID uint64
-	if err := db.Table("system_role").Select("id").Where("role_key = ?", "admin").Limit(1).Pluck("id", &adminRoleID).Error; err != nil {
+	if err := db.Table("system_role").Select("id").
+		Where("role_key = ? AND tenant_id = ?", "admin", tenant.PlatformGlobalTenantID).
+		Limit(1).Pluck("id", &adminRoleID).Error; err != nil {
 		return 0, err
 	}
 	return adminRoleID, nil

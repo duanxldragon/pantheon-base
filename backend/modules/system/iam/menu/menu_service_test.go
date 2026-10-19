@@ -15,10 +15,10 @@ func setupMenuTestDB(t *testing.T) *gorm.DB {
 	if err := db.AutoMigrate(&SystemMenu{}); err != nil {
 		t.Fatalf("migrate menu: %v", err)
 	}
-	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_role (id BIGINT PRIMARY KEY AUTO_INCREMENT, role_key VARCHAR(64), status INT)")
-	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_role_menu (role_id BIGINT, menu_id BIGINT, PRIMARY KEY (role_id, menu_id))")
-	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_role_permission (role_id BIGINT, permission_key VARCHAR(128))")
-	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_setting (setting_key VARCHAR(128) PRIMARY KEY, setting_value TEXT)")
+	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_role (id BIGINT PRIMARY KEY AUTO_INCREMENT, tenant_id BIGINT UNSIGNED NOT NULL DEFAULT 0, role_key VARCHAR(64), status INT)")
+	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_role_menu (tenant_id BIGINT UNSIGNED NOT NULL DEFAULT 0, role_id BIGINT, menu_id BIGINT, PRIMARY KEY (tenant_id, role_id, menu_id))")
+	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_role_permission (tenant_id BIGINT UNSIGNED NOT NULL DEFAULT 0, role_id BIGINT, permission_key VARCHAR(128))")
+	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_setting (tenant_id BIGINT UNSIGNED NOT NULL DEFAULT 0, setting_key VARCHAR(128) NOT NULL, setting_value TEXT, PRIMARY KEY (tenant_id, setting_key))")
 	return db
 }
 
@@ -209,7 +209,7 @@ func TestMenuServiceNavigationHidesOrgWhenCapabilityDisabled(t *testing.T) {
 	if err := db.Create(&SystemMenu{ID: 2, TitleKey: "system.menu.org", Path: "/system/org", Type: "M", Module: "system.org", IsVisible: 1}).Error; err != nil {
 		t.Fatalf("seed org menu: %v", err)
 	}
-	if err := db.Exec("INSERT INTO system_setting (setting_key, setting_value) VALUES ('org.enabled', 'false')").Error; err != nil {
+	if err := db.Exec("INSERT INTO system_setting (tenant_id, setting_key, setting_value) VALUES (0, 'org.enabled', 'false')").Error; err != nil {
 		t.Fatalf("seed org capability: %v", err)
 	}
 

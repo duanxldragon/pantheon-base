@@ -126,7 +126,7 @@ func (h *AuthHandler) LoginHandler(c *gin.Context) {
 		return
 	}
 
-	tenantClaim, tenantErr := service.resolveLoginTenantClaim(currentUser.ID, req.TenantId)
+	tenantClaim, tenantErr := service.resolveLoginTenantClaim(currentUser, req.TenantId)
 	if tenantErr != nil {
 		if errors.Is(tenantErr, tenant.ErrTenantForbidden) && req.TenantId == 0 {
 			if candidates := service.ListLoginTenantCandidates(c.Request.Context(), currentUser.ID); len(candidates) > 1 {
@@ -432,6 +432,42 @@ func (h *AuthHandler) ExportLoginLogs(c *gin.Context) {
 	}
 	if err := impexp.WriteCSV(c, *file); err != nil {
 		common.FailWithError(c, common.CodeError, err, "auth.login_log.export.error")
+	}
+}
+
+func (h *AuthHandler) ExportSecurityEvents(c *gin.Context) {
+	common.SetAuditMetadata(c, "auth.security_event.export.title", common.BusinessExport)
+
+	var query SecurityEventQuery
+	if err := c.ShouldBindJSON(&query); err != nil {
+		common.Fail(c, common.CodeParamInvalid, msgParamInvalid)
+		return
+	}
+	file, err := h.service.WithTenantContext(tenant.FromGin(c)).ExportSecurityEvents(&query)
+	if err != nil {
+		common.FailWithError(c, common.CodeError, err, "auth.security_event.export.error")
+		return
+	}
+	if err := impexp.WriteCSV(c, *file); err != nil {
+		common.FailWithError(c, common.CodeError, err, "auth.security_event.export.error")
+	}
+}
+
+func (h *AuthHandler) ExportAdminSessions(c *gin.Context) {
+	common.SetAuditMetadata(c, "auth.session.export.title", common.BusinessExport)
+
+	var query AdminSessionQuery
+	if err := c.ShouldBindJSON(&query); err != nil {
+		common.Fail(c, common.CodeParamInvalid, msgParamInvalid)
+		return
+	}
+	file, err := h.service.WithTenantContext(tenant.FromGin(c)).ExportAdminSessions(&query)
+	if err != nil {
+		common.FailWithError(c, common.CodeError, err, "auth.session.export.error")
+		return
+	}
+	if err := impexp.WriteCSV(c, *file); err != nil {
+		common.FailWithError(c, common.CodeError, err, "auth.session.export.error")
 	}
 }
 
