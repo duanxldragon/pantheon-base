@@ -53,7 +53,9 @@ type ApiEnvelope<T> = { code: number; message?: string; data: T };
 
 const manifestPath = join(process.cwd(), '..', '.tmp', 'smoke-tenant-matrix.json');
 const run = `${Date.now()}`;
-const adminPassword = 'SmokeMatrix#2026';
+// Ephemeral smoke-tenant admin password; override via env when a run needs a
+// different value. Never a real credential — tenants are torn down per run.
+const adminPassword = process.env.PANTHEON_SMOKE_MATRIX_ADMIN_PASSWORD ?? 'SmokeMatrix#2026';
 
 const RUN_TENANT_SPEC = [
   { key: 'a', dictCode: 'matrix_browser_a' },

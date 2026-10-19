@@ -304,7 +304,7 @@ func (s *Service) ListTenants(filter Filter) (*ListResponse, error) {
 // (which must exclude `status`). Serving the counts from the database is what
 // makes the console summary cards consistent with the total instead of being
 // derived from whatever rows happen to be on the current page.
-func summarizeTenants(base *gorm.DB) (*TenantSummary, error) {
+func summarizeTenants(base *gorm.DB) (*Summary, error) {
 	var rows []struct {
 		Status string
 		Total  int64
@@ -316,7 +316,7 @@ func summarizeTenants(base *gorm.DB) (*TenantSummary, error) {
 		return nil, fmt.Errorf("summarize tenants: %w", err)
 	}
 
-	summary := &TenantSummary{}
+	summary := &Summary{}
 	for _, row := range rows {
 		switch row.Status {
 		case tenant.TenantStatusActive:
@@ -713,9 +713,9 @@ func (s *Service) ListTenantMembers(tenantID uint64, page, pageSize int) ([]Memb
 	return memberships, total, nil
 }
 
-// TenantMemberResp enriches a membership row with the member's identity so
+// MemberResp enriches a membership row with the member's identity so
 // the management console can render names without a second lookup.
-type TenantMemberResp struct {
+type MemberResp struct {
 	Membership
 	Username string `json:"username"`
 	Nickname string `json:"nickname"`
@@ -723,7 +723,7 @@ type TenantMemberResp struct {
 
 // ListTenantMembersWithUser returns one bounded page of active memberships
 // joined with system_user identity columns, plus the total member count.
-func (s *Service) ListTenantMembersWithUser(tenantID uint64, page, pageSize int) ([]TenantMemberResp, int64, error) {
+func (s *Service) ListTenantMembersWithUser(tenantID uint64, page, pageSize int) ([]MemberResp, int64, error) {
 	page, pageSize = normalizeTenantMemberPagination(page, pageSize)
 
 	scope := s.db.Model(&Membership{}).
@@ -734,7 +734,7 @@ func (s *Service) ListTenantMembersWithUser(tenantID uint64, page, pageSize int)
 		return nil, 0, fmt.Errorf("count tenant members: %w", err)
 	}
 
-	items := make([]TenantMemberResp, 0)
+	items := make([]MemberResp, 0)
 	if err := scope.
 		Select("tenant_memberships.*, system_user.username AS username, system_user.nickname AS nickname").
 		Joins("LEFT JOIN system_user ON system_user.id = tenant_memberships.user_id").

@@ -26,6 +26,8 @@ type PlatformHandler struct {
 	service *Service
 }
 
+// NewPlatformHandler builds the platform-scope tenant handler on top of the
+// shared tenant service.
 func NewPlatformHandler(service *Service) *PlatformHandler {
 	return &PlatformHandler{service: service}
 }
@@ -76,6 +78,7 @@ func (h *PlatformHandler) failServiceError(c *gin.Context, err error, fallback s
 	}
 }
 
+// ListTenants handles GET platform tenant listing with filters.
 func (h *PlatformHandler) ListTenants(c *gin.Context) {
 	var filter Filter
 	if err := c.ShouldBindQuery(&filter); err != nil {
@@ -90,6 +93,7 @@ func (h *PlatformHandler) ListTenants(c *gin.Context) {
 	common.Success(c, resp)
 }
 
+// GetTenant handles GET of a single tenant by id.
 func (h *PlatformHandler) GetTenant(c *gin.Context) {
 	id, ok := parseTenantID(c)
 	if !ok {
@@ -103,6 +107,7 @@ func (h *PlatformHandler) GetTenant(c *gin.Context) {
 	common.Success(c, row)
 }
 
+// CreateTenant handles POST creation of a tenant with audit metadata.
 func (h *PlatformHandler) CreateTenant(c *gin.Context) {
 	common.SetAuditMetadata(c, tenantAuditTitle("create"), common.BusinessInsert)
 
@@ -119,6 +124,7 @@ func (h *PlatformHandler) CreateTenant(c *gin.Context) {
 	common.Success(c, row)
 }
 
+// UpdateTenant handles PUT updates of a tenant with audit metadata.
 func (h *PlatformHandler) UpdateTenant(c *gin.Context) {
 	common.SetAuditMetadata(c, tenantAuditTitle("update"), common.BusinessUpdate)
 
@@ -138,6 +144,7 @@ func (h *PlatformHandler) UpdateTenant(c *gin.Context) {
 	common.Success(c, gin.H{})
 }
 
+// DeleteTenant handles DELETE of a tenant with audit metadata.
 func (h *PlatformHandler) DeleteTenant(c *gin.Context) {
 	common.SetAuditMetadata(c, tenantAuditTitle("delete"), common.BusinessDelete)
 
@@ -152,6 +159,7 @@ func (h *PlatformHandler) DeleteTenant(c *gin.Context) {
 	common.Success(c, gin.H{})
 }
 
+// ListTenantMembers handles GET of a tenant membership listing.
 func (h *PlatformHandler) ListTenantMembers(c *gin.Context) {
 	id, ok := parseTenantID(c)
 	if !ok {
@@ -171,6 +179,7 @@ func (h *PlatformHandler) ListTenantMembers(c *gin.Context) {
 	})
 }
 
+// AddTenantMember handles POST addition of a tenant member with audit metadata.
 func (h *PlatformHandler) AddTenantMember(c *gin.Context) {
 	common.SetAuditMetadata(c, tenantAuditTitle("member_add"), common.BusinessGrant)
 
@@ -190,6 +199,7 @@ func (h *PlatformHandler) AddTenantMember(c *gin.Context) {
 	common.Success(c, gin.H{})
 }
 
+// RemoveTenantMember handles DELETE removal of a tenant member with audit metadata.
 func (h *PlatformHandler) RemoveTenantMember(c *gin.Context) {
 	common.SetAuditMetadata(c, tenantAuditTitle("member_remove"), common.BusinessDelete)
 

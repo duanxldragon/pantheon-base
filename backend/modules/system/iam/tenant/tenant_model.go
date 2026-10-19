@@ -93,13 +93,13 @@ type Filter struct {
 	Size    int    `form:"size" binding:"omitempty,min=1,max=100"`
 }
 
-// TenantSummary carries per-status tenant counts for the list summary cards.
+// Summary carries per-status tenant counts for the list summary cards.
 //
 // The counts are facets: they apply every list filter except `status`, so
 // `Active + Suspended + Archived` is the number of non-deleted tenants matching
 // the current keyword/plan filter. Computing them server-side is what keeps the
 // summary independent of the current page.
-type TenantSummary struct {
+type Summary struct {
 	Total     int64 `json:"total"`
 	Active    int64 `json:"active"`
 	Suspended int64 `json:"suspended"`
@@ -109,9 +109,9 @@ type TenantSummary struct {
 
 // ListResponse wraps paginated tenant list
 type ListResponse struct {
-	Items   []Tenant       `json:"items"`
-	Total   int64          `json:"total"`
-	Page    int            `json:"page"`
-	Size    int            `json:"size"`
-	Summary *TenantSummary `json:"summary,omitempty"`
+	Items   []Tenant `json:"items"`
+	Total   int64    `json:"total"`
+	Page    int      `json:"page"`
+	Size    int      `json:"size"`
+	Summary *Summary `json:"summary,omitempty"`
 }

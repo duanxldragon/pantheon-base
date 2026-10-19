@@ -81,11 +81,6 @@ func (s *PermissionService) isPlatformScope() bool {
 	return s.tenantOwnerID() == tenant.PlatformGlobalTenantID
 }
 
-// scoped applies the tenant read filter to a query over a tenant-scoped table.
-func (s *PermissionService) scoped(db *gorm.DB) *gorm.DB {
-	return db.Scopes(tenant.WithTenantScope(s.tenantCtx))
-}
-
 type workbenchRemediationRecord struct {
 	roleKey      string
 	issueType    string
