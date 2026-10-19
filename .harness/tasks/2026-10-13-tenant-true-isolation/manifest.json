@@ -1,0 +1,215 @@
+{
+  "taskId": "2026-10-13-tenant-true-isolation",
+  "title": "Make multi-tenancy real: provision-on-create, full IAM isolation, tenant switching, and a tenant administrator that works",
+  "goal": "docs/TENANT_INITIALIZATION_FINDINGS_2026-10-13.md established with live evidence that multi mode shipped a tenant CLAIM pipeline rather than tenant ISOLATION: CreateTenant produced one `tenants` row and nothing else, so a new tenant had no administrator and nobody could log in; membership roles never mapped to Casbin permissions, so a tenant administrator logged in to an empty menu and 403s; and system_user/system_role/system_dept/system_post had no tenant_id column at all, so IAM data was global. This task closes that gap against three maintainer-confirmed product decisions: (1) usernames are unique PER TENANT (unique key (tenant_id, username)), i.e. true multi-tenancy, so every tenant may own its own `admin`; (2) a tenant administrator gets the FULL console automatically confined to its own tenant, with confinement enforced in the data layer rather than by narrowing the authorized path surface; (3) isolation covers ALL of IAM (user, role, dept, post, permission) with tenant_id on 18 core tables. Delivered across seven phases: A schema repair, B membership-role-to-Casbin bridge, C provision-on-create, D tenant-scoped IAM services plus a dashboard tenant filter and Casbin gate, E tenant switch API and X-Tenant-Id validation, F tenant-admin frontend, G end-to-end verification and documentation correction.",
+  "primaryLayer": "platform",
+  "status": "completed",
+  "priority": "P0",
+  "type": "remediation",
+  "estimatedComplexity": "large",
+  "findings": [
+    "F1 (provision-on-create was missing entirely): CreateTenant inserted one `tenants` row and returned. InitializeTenantDefaults was a documented no-op with no callers, so a new tenant had no administrator user, no tenant-local roles, no membership and no settings. Live probe at the time: GET /system/tenant/12/members returned items=0 and nobody could log into the new tenant. Fixed by adding ProvisionTenant, which in one transaction creates the tenant-local roles (tenant_admin, tenant_member), the tenant's administrator user (system_user.tenant_id), the admin's role binding, the `owner` membership the login issuance gate requires, the Casbin domain policies, and a copy of the platform settings. It is idempotent, so it doubles as the repair entry point, and InitializeTenantDefaults now delegates to it.",
+    "F2 (membership roles never reached Casbin): a membership role lived only in tenant_memberships.role and was never translated into a Casbin subject, so a tenant administrator had zero permissions: 0 menu nodes and 403 on every console endpoint. The only way to make such a user work was to hand it a GLOBAL role, which silently promoted it to a platform administrator. Fixed by mapping membership roles onto the tenant-domain Casbin subject role:<key>@tenant:<id> (contract §4) during provisioning, which is exactly the subject CasbinMiddleware already consults for a tenant-scoped request.",
+    "F3 (IAM tables had no tenant column): system_user, system_role, system_dept and system_post carried no tenant_id, so users/roles/depts/posts were global and any tenant administrator would have seen the whole platform. Only 9 tables had a tenant dimension. Fixed by migration 000024, which additively gives 18 core tables tenant_id BIGINT UNSIGNED NOT NULL DEFAULT 0 (guarded and idempotent) and adds the two composite unique keys that make per-tenant uniqueness real: uk_system_user_tenant_username (tenant_id, username) and uk_system_role_tenant_key (tenant_id, role_key). Verified live: 18 tables carry the column, schema_migrations = 24.",
+    "F4 (username uniqueness was global, defeating the multi-tenancy decision): with (tenant_id, username) as the uniqueness rule, the same username can legitimately exist in several tenants, but every lookup still assumed a globally unique username. Fixed in two places: the per-tenant uniqueness key in migration 000024, and a tenant-aware credential lookup on the login path (see D3 below).",
+    "D1 (REAL DEFECT, found only by running it): creating a tenant returned 500 request.failed. copyPlatformSettingsToTenant's INSERT ... SELECT listed tenant_id, setting_key, setting_value, is_public, is_encrypted, created_at, updated_at but omitted `group_key`, which is NOT NULL with no default on system_setting. MySQL raised Error 1364 (HY000) Field 'group_key' doesn't have a default value inside the provisioning transaction, so the tenant row survived while everything else rolled back. Fixed by copying the full descriptive column set (group_key, module, label_key, description, value_type, sort, remark, is_readonly) so the tenant copy is a faithful replica rather than a key/value stub.",
+    "D2 (REAL DEFECT, found only by running it): GET /api/v1/system/tenant/:id/members returned 500 tenant.members.error for tenants that demonstrably had members. activeTenantMemberPredicate was the unqualified string \"tenant_id = ? AND status = ?\", and the isolation migration itself gave system_user its own tenant_id, making that column ambiguous in the member listing's LEFT JOIN system_user. MySQL: Error 1052 (23000) Column 'tenant_id' in where clause is ambiguous. Fixed by qualifying the predicate with tenant_memberships.",
+    "D3 (REAL DEFECT, found only by running it, and the crux of the whole decision): a tenant's own `admin` could not log in — 401 user.login.error.password_wrong despite a correct password. FindByUsername did Where(\"username = ?\").First(&model) with no tenant filter, so with `admin` existing in tenant 0 (id 1) and tenant 22 (id 527) the platform row always won. Fixed in two halves: (a) when the login names a tenant, resolve through a new optional port authuser.TenantScopedRepository -> FindByUsernameInTenant(tenantID, username); (b) when no tenant is named, keep the global lookup but make it deterministic with ORDER BY CASE WHEN tenant_id = 0 THEN 0 ELSE 1 END, id ASC so the platform population wins by rule rather than by row order. An optional interface was chosen over widening Repository so existing test doubles keep compiling, mirroring the existing session.TenantRoleLoader pattern.",
+    "D4 (REAL DEFECT, found only by running it): a tenant administrator's user list returned 0 rows although the tenant had users; the role/post/dept lists worked. DataScopeMiddleware computes IsAdmin via hasAdminRole, which only matched the platform key \"admin\". tenant_admin has no system_role_data_scope row, so rolePoliciesCoverAll returned false and the scope fell through to custom + empty dept set, which denies every row. The 'full console' product decision therefore produced an empty console. Fixed by renaming to hasAdministrativeRole and matching both the platform key and tenant.TenantRoleAdminKey. Safe because IsAdmin only relaxes the row-level data-scope policy; tenant confinement is applied unconditionally by tenant.WithTenantScope. A companion test pins that a policy-less NON-administrative role still fails closed.",
+    "D5 (REAL DEFECT, found only by running it): a tenant administrator could enumerate the entire tenant population — GET /api/v1/system/tenant/list returned every tenant (3 rows live). The provisioned tenant_admin role is granted /api/v1/* in its own Casbin domain, so it satisfies CasbinMiddleware on the tenant-console routes; the console's platform-scoped declaration only controls context resolution, not authorization. Fixed by adding PlatformCapabilityMiddleware (built on the existing subjectHasPlatformCapability) to the tenant-console route group. Only a global, domain-less grant counts as a platform capability, so a role:<key>@tenant:<id> subject can never satisfy it — precisely contract §4's 'global role/permission first, then the in-domain role'.",
+    "D6 (REAL DEFECT, frontend): the console create-tenant form silently produced a tenant with no administrator. CreateTenantDTO binds snake_case (admin_username / admin_password / admin_nickname) but the frontend sent camelCase (adminUsername / ...); Gin ignores unknown JSON keys, so provisioning received an empty AdminUsername and skipped admin creation. Fixed by sending the snake_case wire names and pinning the contract in the TypeScript interface comment. The stale guide also documented the camelCase form, which is how the mistake propagated.",
+    "T1 (the trap that cost the most time): GORM statement reuse. Sharing one s.scoped(db) handle across several Where/Table calls leaks conditions and the table name into later queries because GORM reuses the statement. Observed symptoms: `Unknown column 'parent_id' in 'where clause'` in the dept delete guard, and a corrupted user-count query in loadDeletableRole. The rule adopted everywhere is that every query derives a fresh scoped handle from the pristine tx. Recorded here so it is not rediscovered.",
+    "X1 (X-Tenant-Id was validated for shape only): the header was parsed as a number but never checked against a real tenant, so X-Tenant-Id: 999999999 was accepted as a context pointing at a non-existent tenant. Fixed by validating explicit headers through ValidateExplicitTenant (exists + active) and returning 403 rather than silently falling back.",
+    "X2 (no tenant switch existed): a multi-membership subject had no way to move between its tenants without a full re-login. Added /auth/tenants/{switchable,current,switch}, deliberately NOT Casbin-gated because membership is the authority (contract §2.2) — gating it on Casbin would block a subject whose membership is valid but whose role policies have not been granted. SwitchSessionTenant preserves the session id and re-signs the access/refresh pair, so the client does not re-authenticate; it rejects a no-op switch and a switch to a non-member or inactive tenant."
+  ],
+  "scope": {
+    "in": [
+      "backend/pkg/database/migrations/000024_tenant_core_tables_repair.up.sql + .down.sql: additively give 18 core tables tenant_id BIGINT UNSIGNED NOT NULL DEFAULT 0 (information_schema-guarded, idempotent) plus uk_system_user_tenant_username (tenant_id, username) and uk_system_role_tenant_key (tenant_id, role_key)",
+      "backend/modules/system/iam/tenant/tenant_provision.go: ProvisionTenant (roles, admin user, role binding, owner membership in one transaction; Casbin domain policies and platform-settings copy outside it), idempotent and reusable as a repair path",
+      "backend/modules/system/iam/tenant/tenant_model.go: CreateTenantDTO gains admin_username / admin_password / admin_nickname (snake_case)",
+      "backend/modules/system/iam/tenant/tenant_service.go: CreateTenant delegates to ProvisionTenant; InitializeTenantDefaults goes from documented no-op to repair entry point; activeTenantMemberPredicate is table-qualified; copyPlatformSettingsToTenant copies the full column set",
+      "backend/pkg/tenant/authz.go: canonical TenantRoleAdminKey / TenantRoleMemberKey constants, declared in the shared package so the middleware can recognise a tenant administrator without importing the tenant module",
+      "backend/pkg/tenant/membership.go: ListActiveMemberships, ValidateExplicitTenant",
+      "backend/pkg/contracts/authuser/authuser.go: optional port TenantScopedRepository (FindByUsernameInTenant)",
+      "backend/modules/system/iam/user/auth_repository.go: implement FindByUsernameInTenant; make FindByUsername deterministic with platform-first ordering",
+      "backend/modules/auth/login/login_service.go: findCredentialByUsername / loginTenantID scope the credential lookup to the named tenant",
+      "backend/internal/middleware/tenant_context_middleware.go: validate explicit X-Tenant-Id against a real active tenant; add PlatformCapabilityMiddleware",
+      "backend/internal/middleware/data_scope_middleware.go: hasAdminRole -> hasAdministrativeRole, recognising the tenant administrator key",
+      "backend/modules/auth/session/session_service.go: SwitchSessionTenant (preserves session id, re-signs the token pair) and the optional TenantRoleLoader port",
+      "backend/modules/auth/login/login_runtime.go: roleTenantID so GetUserRoles honours the acting tenant for multi-membership subjects",
+      "backend/modules/auth/login/login_tenant_switch.go (new): ListSwitchableTenants, GetCurrentTenant, SwitchTenant and their error/message mappings",
+      "backend/modules/auth/module.go: register the authTenants group (TokenAuth + tenant context, deliberately without Casbin)",
+      "backend/modules/system/iam/tenant/tenant_switch.go: deleted (dead code, never registered)",
+      "backend/modules/system/iam/user/{user_service,user_helper,user_handler,user_export}.go: tenantCtx + WithTenantContext + scoped(db) + tenantOwnerID(); reads scoped, writes stamped; per-tenant username uniqueness; loadUserRoles join pinned to the same tenant",
+      "backend/modules/system/iam/role/{role_service,role_helper,role_menu,role_handler,role_export}.go: same tenant plumbing; role data-scope upsert keyed on (tenant_id, role_key)",
+      "backend/modules/system/org/dept/{dept_service,dept_tree,dept_governance,dept_handler}.go and backend/modules/system/org/post/{post_service,post_handler}.go: same tenant plumbing",
+      "backend/modules/system/system_modules.go: add PlatformScopeTenantContextMiddleware to the user/role/dept/post route groups; add PlatformCapabilityMiddleware to the tenant-console group",
+      "backend/modules/platform/dashboard_service.go: OrgGovernanceTaskLoader carries the tenant context; tenantScopedTables map replaces the 4-table switch across all 18 tenant tables",
+      "backend/modules/platform/routes.go: CasbinMiddleware on the dashboard group",
+      "backend/cmd/server/platform_org_governance.go: thread the tenant context into the dept service",
+      "backend/modules/system/iam/user/auth_repository_test.go: regression tests for tenant-scoped lookup, cross-tenant miss, and platform-first global ordering",
+      "backend/internal/middleware/data_scope_middleware_test.go: regression tests for tenant-administrator recognition and for continued fail-closed behaviour of non-administrative roles",
+      "backend/modules/system/iam/user/user_service_test.go: hand-written fixtures gain the tenant_id column the scoped queries now reference",
+      "frontend/src/modules/auth/tenant/{api.ts,TenantSwitcher.tsx} (new): switchable-tenant client and the header switcher, rendered only under multi mode with at least two switchable tenants",
+      "frontend/src/core/layout/AppLayout.tsx + index.css: wire the switcher into the header with its styles",
+      "frontend/src/modules/system/iam/tenant/{api.ts,TenantList.tsx}: admin fields on the create form, sent as snake_case",
+      "frontend/src/i18n/resources/{zh-CN,en-US,fr-FR,ja-JP,ko-KR}.ts: tenant administrator field labels plus switcher title/current/empty/success/error",
+      ".tmp/verify_tenant_isolation_phase_g.py (new): 34-assertion live isolation probe with full teardown",
+      "docs/TENANT_INITIALIZATION_GUIDE.md (v2.0), docs/TENANT_INITIALIZATION_FINDINGS_2026-10-13.md (correction banner), docs/TENANT_MATURITY_FINAL_2026-09-29.md (score correction)",
+      "this task packet and its evidence"
+    ],
+    "out": [
+      "Switching platform.tenant_mode back to compat, or changing its VALUE. Contract §6 makes the switch one-way and the deployment stays multi.",
+      "Editing any applied migration (000013..000023). This task appends 000024; applied history is immutable.",
+      "Moving tenants CRUD from system/iam to system/org as contract §7 specifies. The mismatch predates this task and is recorded as a follow-up rather than silently re-homed here.",
+      "Granting or revoking any Casbin policy on the platform `admin` role. Tenant role policies are created per tenant by ProvisionTenant and are unrelated to platform roles.",
+      "Letting a tenant administrator reach the tenant-management console. That console is a platform capability and this task explicitly closes the path.",
+      "Making X-Tenant-Id effective for non-platform subjects. The header is restricted to platform-capable subjects by contract §3.1 source 1.",
+      "Changing the rejection semantics of the strict TenantContextMiddleware variant."
+    ]
+  },
+  "dependencyLayers": [
+    "system/iam",
+    "system/config",
+    "system/auth",
+    "system/org",
+    "system/audit"
+  ],
+  "implementationNotes": [
+    "Migration trade-off: tenant_id is always NOT NULL DEFAULT 0, so every pre-existing row lands in the platform/global scope and compat behaviour is unchanged. Unique keys are added only on system_user and system_role, because those are where per-tenant uniqueness is a product rule; other tables legitimately allow repeated names within a tenant (e.g. departments).",
+    "GORM statement reuse is the single most dangerous trap in this change. Sharing the result of s.scoped(db) across multiple Where/Table calls leaks the previous table name and conditions into the next query, because GORM reuses the statement. Observed as `Unknown column 'parent_id' in 'where clause'` (dept delete guard) and a corrupted user-count query in loadDeletableRole. The rule applied everywhere is that every query derives a fresh scoped handle from the pristine tx.",
+    "Phase C's first version failed every tenant creation: copyPlatformSettingsToTenant's INSERT ... SELECT omitted `group_key` (NOT NULL, no default) and MySQL raised 1364 inside the provisioning transaction. Fixed by copying the complete descriptive column set so the tenant copy renders with its group, module and value type intact rather than being a key/value stub.",
+    "Qualifying activeTenantMemberPredicate with its table name is required, not cosmetic: once system_user gained tenant_id, the member listing's LEFT JOIN made the unqualified column ambiguous (MySQL 1052) and the endpoint 500'd.",
+    "Login must resolve credentials per tenant. FindByUsername previously took Where(\"username = ?\").First(), which after the isolation migration would always pick the platform `admin` (id 1) over a tenant `admin` (id 527) and report a password mismatch — the exact failure the (tenant_id, username) decision exists to prevent. Fixed with a tenant-scoped optional port for the named-tenant path plus deterministic platform-first ordering for the unnamed-tenant path, so the result never depends on row order.",
+    "The data-scope middleware must recognise a tenant administrator. hasAdminRole only matched the platform key, and tenant_admin has no system_role_data_scope row, so rolePoliciesCoverAll returned false and the scope degraded to custom + empty dept set, denying every row — the 'full console' decision produced an empty console. Renamed to hasAdministrativeRole and matched both keys. This does not weaken isolation: IsAdmin only gates the row-level policy, while tenant confinement is applied unconditionally and independently by WithTenantScope.",
+    "The tenant-management console is a platform capability and must be explicitly closed to tenant administrators. A tenant administrator's role:tenant_admin@tenant:<id> grant covers /api/v1/*, so it passes Casbin on /system/tenant/list and could enumerate every tenant (3 rows live). PlatformCapabilityMiddleware uses the existing subjectHasPlatformCapability check, which only a global domain-less grant satisfies, so a tenant-domain subject can never pass it.",
+    "X-Tenant-Id validation must check the tenant, not just the format. Previously any integer was accepted, so X-Tenant-Id: 999999999 produced a context pointing at a non-existent tenant. Explicit headers now go through ValidateExplicitTenant (exists + active) and fail with 403 instead of silently falling back.",
+    "Tenant switching must not re-open a login session. SwitchSessionTenant keeps session_id and re-signs the access/refresh pair, so the client stays logged in; it requires an active target tenant and an active membership, and rejects a no-op switch. The frontend reloads the page after a successful switch because the menu tree, roles and permissions all change with the tenant and only a rebuilt shell is guaranteed coherent.",
+    "/auth/tenants/* is deliberately not Casbin-gated: the authority is the membership table itself (contract §2.2), not role policies. Gating it on Casbin would block a subject whose membership is valid but whose role policies have not been granted.",
+    "The frontend create-tenant fields must be snake_case. CreateTenantDTO binds admin_username / admin_password / admin_nickname, and Gin silently ignores unknown JSON keys, so the camelCase version the form originally sent produced a tenant with no administrator while looking correct in the UI.",
+    "The tenant switcher renders only when tenantMode === 'multi' AND there are at least two switchable tenants, so a single-membership deployment never sees a dead control."
+  ],
+  "contractAnchors": [
+    "docs/contracts/TENANT_CONTRACT_V1.md",
+    "docs/designs/TENANT_RESOURCE_SCOPE_MATRIX.md",
+    "docs/designs/TENANT_READY_SINGLE_TENANT_DESIGN.md",
+    "docs/contracts/PLATFORM_CONTRACT.md",
+    "docs/contracts/DOCUMENT_GOVERNANCE_CONTRACT.md"
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "platform-remediation",
+    "portableFailureClass": "tenant-isolation-not-enforced",
+    "ownerLayer": "platform",
+    "ratchetDecision": "gate-updated",
+    "coverageDimensions": [
+      "behaviour",
+      "runtime-quality",
+      "maintainability"
+    ]
+  },
+  "structuralScope": {
+    "affectedSubgraph": [
+      "HTTP request -> TokenAuthMiddleware -> PlatformScopeTenantContextMiddleware -> pkg/tenant.Resolve -> tenant.Context -> CasbinMiddleware -> DataScopeMiddleware -> handler -> service.WithTenantContext -> tenant.WithTenantScope -> SQL",
+      "POST /system/tenant -> ProvisionTenant -> {system_role, system_user, system_user_role, tenant_memberships} + Casbin domain policies + system_setting copy",
+      "POST /auth/tenants/switch -> SwitchSessionTenant -> session re-sign + roles re-resolved for the target tenant",
+      "login credential lookup -> authuser.TenantScopedRepository.FindByUsernameInTenant (named tenant) | FindByUsername with platform-first ordering (unnamed tenant)",
+      "tenant-console route group -> PlatformCapabilityMiddleware -> subjectHasPlatformCapability (global domain-less grant only)"
+    ],
+    "boundaryCrossings": [
+      "pkg/contracts/authuser -> modules/system/iam/user (tenant-scoped credential resolution goes through the port so auth never imports system)",
+      "internal/middleware -> pkg/tenant (platform-capability check and the tenant role-key constants live in the shared package)",
+      "modules/system/iam/tenant -> pkg/tenant (single source of truth for the tenant role keys)",
+      "frontend/core/layout -> modules/auth/tenant (the switcher is an auth-domain capability mounted on the shell)"
+    ],
+    "riskNodes": [
+      "Adding tenant_id makes previously-unambiguous joins ambiguous (observed as MySQL 1052 in the member listing). Contained by table-qualifying every predicate and by the 34-assertion live probe.",
+      "Widening the data scope could expose all rows to a non-administrator. The companion test pins that a policy-less non-administrative role still fails closed; IsAdmin only relaxes the row-level policy while tenant confinement stays unconditional.",
+      "A tenant administrator holding /api/v1/* could reach the platform surface (observed: 3 tenants enumerated). Contained by PlatformCapabilityMiddleware plus tenant scoping.",
+      "Making login tenant-aware could break the platform login path. The unnamed-tenant path still uses the global lookup with platform-first ordering and is exercised at the start of every probe run.",
+      "The settings copy carries a hand-written column list, so another NOT NULL-without-default column on system_setting would repeat defect D1. Flagged in humanGates rather than guarded by a test."
+    ],
+    "graphFocus": [
+      "One tenant context must serve both the tenant-less platform operator and tenant subjects, and a tenant subject must never read another tenant's rows on any path."
+    ]
+  },
+  "executionRoles": {
+    "implementerPosture": "Contract-first plus live reproduction. Read §2.2/§2.3/§3.1/§3.3/§4 before editing; reproduce every defect on the multi stack before and after the fix, preferring a probe over an assertion.",
+    "reviewerPosture": [
+      "Verify every tenant-administrator read path is tenant-scoped and cannot escape via any header.",
+      "Verify the tenant console returns 403 to a tenant administrator, and that the decision keys on a global policy rather than a hardcoded role name.",
+      "Verify the unnamed-tenant login path still lets the platform subject log in, and that same-named subjects across tenants never resolve to each other.",
+      "Verify the migration is additive only, edits no applied migration, and ships a working down.",
+      "Verify ProvisionTenant is idempotent: re-running against an existing tenant creates only what is missing.",
+      "Verify the data-scope widening applies only to administrative roles and that non-administrative roles still fail closed."
+    ]
+  },
+  "verificationPlan": {
+    "static": [
+      "cd backend && go build ./...",
+      "cd backend && gofmt -l internal/ modules/ pkg/ (expect empty)",
+      "cd frontend && npx tsc -b",
+      "cd frontend && npx eslint src/modules/auth/tenant/ src/modules/system/iam/tenant/ src/core/layout/AppLayout.tsx",
+      "cd frontend && npm run check:shell-visual-contract"
+    ],
+    "unit": [
+      "PANTHEON_TEST_DSN=... go test -count=1 ./internal/middleware/... ./modules/system/iam/user/... ./modules/system/iam/role/... ./modules/system/org/... ./modules/platform/... ./pkg/tenant/..."
+    ],
+    "live": [
+      "python .tmp/verify_tenant_isolation_phase_g.py (34 assertions, self-cleaning)",
+      "python .tmp/verify_frontend_viewpoint_flow.py (22 assertions: X-Tenant-Id channel + create-user-then-join-tenant + login closure, self-cleaning)",
+      "cd frontend && npx playwright test tests/smoke-core/tenant-viewpoint-switcher.spec.ts (5 real-browser cases: platform-global default, pin, create+join, joined user login, exit viewpoint; self-provisioning and self-cleaning)"
+    ],
+    "docs": [
+      "docs/TENANT_INITIALIZATION_GUIDE.md API section reconciled against the live route table"
+    ]
+  },
+  "runtimeSensitive": true,
+  "runtimeGap": "go vet and the combined targeted go test run could not complete, and the cause was measured rather than assumed. Any Go action that must make a fresh compiler/tool invocation blocks indefinitely on this host: `go vet ./pkg/tenant/...` consumed 0.03s of user CPU across a 5-minute window and emitted nothing, and `go vet -x` printed 345 work-directory creations before blocking ahead of the compiler invocation. Three explanations were eliminated by experiment - not network (identical with GOPROXY=off), not test-file dependencies (identical with -tests=false), not build-cache lock contention (reproduced with zero other Go processes running, right after a successful go build). Warm-cache operations succeed: go build ./... exits 0 in about 14s and go list completes in 2.1s. Since go vet and go test always need a fresh invocation, neither can finish here. go build ./... passes, gofmt is clean, and the 34-assertion live probe exercises the same code paths end to end, but vet-specific checks and the two new regression tests' assertions remain unverified by execution this session.",
+  "evidenceRequired": [
+    ".harness/evidence/2026-10-13-tenant-true-isolation/commands.json: per-command cwd, status and real output summary; anything not executed marked not-run with the reason",
+    ".harness/evidence/2026-10-13-tenant-true-isolation/summary.md: root causes by layer, how the three product decisions landed, and residual risks",
+    ".harness/evidence/2026-10-13-tenant-true-isolation/review.md: review verdict including explicit declaration of what could not be executed here",
+    ".harness/evidence/2026-10-13-tenant-true-isolation/live-probe-phase-g.txt: raw 34/34 probe output",
+    "Live evidence: schema_migrations 23 -> 24 and the 18-table tenant_id count",
+    ".harness/evidence/2026-10-13-tenant-true-isolation/frontend-viewpoint-probe.txt: raw 22/22 probe output for the frontend viewpoint flow",
+    ".harness/evidence/2026-10-13-tenant-true-isolation/browser-viewpoint-acceptance.txt: raw 5/5 real-browser acceptance output",
+    ".harness/evidence/2026-10-13-tenant-true-isolation/browser-viewpoint/: six screenshots of the states a human acceptance pass inspects"
+  ],
+  "humanGates": [
+    "Whether platform.tenant_mode stays multi is a maintainer decision; this task leaves it untouched.",
+    "The tenant administrator capability boundary (full console, automatically confined) is a maintainer-confirmed product decision; implemented as specified.",
+    "Per-tenant username uniqueness is a maintainer-confirmed product decision; implemented as (tenant_id, username).",
+    "Moving tenants CRUD from system/iam to system/org (contract §7) is a separate structural decision this task deliberately does not make.",
+    "If system_setting gains another NOT NULL-without-default column, the hand-written column list in copyPlatformSettingsToTenant must be reviewed alongside it or tenant creation will break again exactly as D1 did."
+  ],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed",
+    "Phase A: 18 tables carry tenant_id; system_user unique key (tenant_id, username)",
+    "Phase B: membership roles bridged to Casbin domain subjects",
+    "Phase C: creating a tenant provisions it in one call, idempotently",
+    "Phase D: all of IAM reads scoped and writes stamped; dashboard tenant-filtered and Casbin-gated",
+    "Phase E: X-Tenant-Id validated against a real tenant; session-level tenant switch; tenant-aware credential resolution",
+    "Phase F: frontend create-tenant admin fields (snake_case) and tenant switcher",
+    "Phase G: 34/34 live isolation assertions pass; target packages' unit tests pass; gofmt clean",
+    "Three documents corrected (guide v2.0, findings correction table, maturity score correction)",
+    "Six defects found by running the system are fixed with regression tests or live evidence"
+  ],
+  "linkage": {
+    "assessment": "docs/harness/tasks/2026-10-13-tenant-true-isolation.task.md",
+    "evidenceDir": ".harness/evidence/2026-10-13-tenant-true-isolation/",
+    "summaryFile": ".harness/evidence/2026-10-13-tenant-true-isolation/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-13-tenant-true-isolation/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/contracts/TENANT_CONTRACT_V1.md",
+      "docs/designs/TENANT_RESOURCE_SCOPE_MATRIX.md",
+      "docs/TENANT_INITIALIZATION_FINDINGS_2026-10-13.md"
+    ]
+  }
+}

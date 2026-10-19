@@ -47,8 +47,9 @@ English version: [TENANT_RESOURCE_SCOPE_MATRIX.en.md](./TENANT_RESOURCE_SCOPE_MA
 
 | 资源 | 当前归类 | 备注 |
 | :--- | :--- | :--- |
-| `system_user` | 待合同冻结 | 用户与租户关系（单/多 membership）未冻结前不归类 |
-| `system_role` / `system_menu` / `system_permission` | 待合同冻结 | 平台治理对象是否租户内复制由合同决定 |
+| `system_user` | `tenant-replicated` | 用户名**租户内唯一**（2026-10-13 维护者决策，迁移 000024 落地 `uk_system_user_tenant_username`） |
+| `system_role` | `tenant-replicated` | **2026-10-15 维护者裁决：角色按租户复制**。每个租户持有自己的 `tenant_admin` / `tenant_member` 副本；角色**定义**是全局统一的，单一来源为 `pkg/tenant` 的角色常量与 `modules/system/iam/tenant` 的 `tenantRoleDefinitions`，由 `ProvisionTenant` 代码生成而非人工逐租户维护，因此不会产生漂移 |
+| `system_menu` / `system_permission` | `platform-global` | **2026-10-15 维护者裁决：菜单与权限保持全局共享**（无 `tenant_id` 列）。租户差异只由 Casbin domain 表达（契约 §4），不做租户内菜单/权限定制 |
 | `system_dept` / `system_post` | `platform-global`（倾向） | 组织是组织，租户是租户，不混用 |
 | 系统设置（`system_setting`） | `tenant-overridable` 候选 | canary 首选资源域（`system/config`） |
 | 字典（`system_dict`） | `tenant-overridable` 候选 | 平台默认 + 租户覆盖 |
@@ -63,16 +64,23 @@ English version: [TENANT_RESOURCE_SCOPE_MATRIX.en.md](./TENANT_RESOURCE_SCOPE_MA
 
 | 表 | 唯一键 | 当前 scope | 目标 scope | 冲突策略 |
 | :--- | :--- | :--- | :--- | :--- |
-| `system_user` | username | 平台全局 | 待合同冻结 | — |
-| `system_role` | role_key | 平台全局 | 待合同冻结 | — |
+| `system_user` | username | 平台全局 | `tenant-unique`：`(tenant_id, username)` **已冻结**（2026-10-13） | 迁移 000024 已建 `uk_system_user_tenant_username` |
+| `system_role` | role_key | 平台全局 | `tenant-unique`：`(tenant_id, role_key)` **已冻结**（2026-10-15） | 迁移 000024 已建 `uk_system_role_tenant_key`；角色按租户复制，复制体在租户内唯一 |
 | `system_setting` | key（或 key+scope 组合） | 平台全局 | `tenant-overridable`：组合键候选 | 合同冻结 |
 | 业务 `biz_*` 表 | 新增时逐表登记 | 按评审 | 按评审 | 按评审 |
+
+**`system_user.username` 的推论（2026-10-15 补记）**：用户名既然只保证**租户内**唯一，那么「按用户名找登录主体」这个全局查找就必然要给出一个确定性赢家。实现约定为：平台主体（`tenant_id = 0`）优先，其次 id 升序；**所属租户已软删除的行不是登录候选**（该主体没有任何可承载会话的租户上下文，让它胜出会把活跃租户的同名用户遮蔽掉，登录成功但处处 `tenant.context.missing`）。软删除租户**不会**清理其 `system_user` 行，因此这条排除必须由查找侧保证，不能指望删除侧清干净。详见 `docs/TENANT_FULL_FLOW_REVIEW_2026-10-14.md` 缺陷 6 与 `docs/runbooks/TENANT_TROUBLESHOOTING.md` §5b。
 
 登记规则：
 
 1. 新 DDL 评审必须回答“平台全局唯一还是租户内唯一”（见业务模块验收矩阵 1.1 节四必答项）。
 2. 登记表由租户合同任务接管维护；合同冻结前本表为唯一登记入口。
 3. 目标 scope 为“待合同冻结”的键，禁止在合同冻结前提前改造成组合唯一键。
+   > **回溯备案（2026-10-15）**：`system_user.username` 与 `system_role.role_key` 在迁移 000024
+   > （2026-10-13「真隔离」任务）落地时已经改造成组合唯一键，当时本登记表仍是“待合同冻结”。
+   > 该状态已由本轮裁决正式认可：`system_user` 随「用户名租户内唯一」决策冻结为租户内唯一，
+   > `system_role` 随本轮「角色按租户复制」裁决冻结为租户内唯一。两条唯一键从现在起是**合同认可**的
+   > 既成事实，不再算提前改造。
 
 ## 4. 租户识别方式（全部待决策，禁止按示例实现）
 

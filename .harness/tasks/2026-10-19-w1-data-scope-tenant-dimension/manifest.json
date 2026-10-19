@@ -1,0 +1,138 @@
+{
+  "taskId": "2026-10-19-w1-data-scope-tenant-dimension",
+  "title": "Give the row-level data-scope policy a real tenant dimension on both the read and the write path",
+  "goal": "system_role_data_scope already has a tenant_id column and a (tenant_id, role_key) unique key, yet five of the six code points that touch it work on role_key alone: the middleware struct has no TenantID field, loadRoleDataScopePolicies filters by role_key only, resolveDataScopeMode returns all when any matching row is all, UpdateDataScopePolicy never assigns TenantID and conflicts on role_key, ListDataScopePolicies reads system_role with no tenant predicate, ensureRoleKeyExists accepts a key that exists in any tenant, and RoleService.loadRoleDataScopes echoes whichever row was scanned last. Measured effect: tenant A's console lists 53 roles while owning 3, A writes a policy for a role that exists only in B, and setting the shared key to all raised B's ordinary user from 1 visible row to 3 (and the reverse direction behaved identically). This wave closes the tenant dimension on both sides, backfills historical tenant_id = 0 rows where the owner is unambiguous, and validates that custom deptIds belong to the calling tenant.",
+  "primaryLayer": "platform",
+  "status": "completed",
+  "priority": "P0",
+  "type": "security-fix",
+  "estimatedComplexity": "high",
+  "parentTaskId": "2026-10-19-tenant-permission-isolation-remediation",
+  "dependsOn": [
+    "2026-10-19-w0-isolation-contract-guardrails"
+  ],
+  "findings": [
+    "F7 (P0): ListDataScopePolicies queries system_role with only deleted_at IS NULL, so the data-scope console lists every tenant's roles.",
+    "F8 (P0): ensureRoleKeyExists checks existence in any tenant, so tenant A successfully wrote a data-scope policy for a role that exists only in tenant B (code 200).",
+    "F9 (P1): UpdateDataScopePolicy builds the policy without TenantID and declares OnConflict on role_key alone, producing tenant_id = 0 rows that apply to every tenant.",
+    "F10 (P0): SystemRoleDataScope has no TenantID field and resolveDataScopeMode widens to all if any matching row is all, so one tenant's write changes another tenant's effective visible rows (1 -> 3 measured in both directions).",
+    "F11 (P1): custom deptIds are stored verbatim with no tenant ownership check; tenant A submitted tenant B's department 203 and it was persisted.",
+    "F13 (P1): RoleService.loadRoleDataScopes filters by role_key only, so a tenant's role list echoes another tenant's or the global row's dataScope."
+  ],
+  "scope": {
+    "in": [
+      "backend/internal/middleware/data_scope_middleware.go",
+      "backend/modules/system/iam/permission/permission_data_scope.go",
+      "backend/modules/system/iam/permission/permission_service.go",
+      "backend/modules/system/iam/role/role_service.go",
+      "backend/pkg/database/migrations/000025_role_data_scope_tenant_backfill.up.sql",
+      "backend/pkg/database/migrations/000025_role_data_scope_tenant_backfill.down.sql",
+      "backend/internal/middleware/data_scope_tenant_test.go",
+      "backend/modules/system/iam/permission/permission_data_scope_tenant_test.go",
+      "backend/internal/middleware/data_scope_failclosed_test.go",
+      "backend/modules/system/iam/permission/permission_service_test.go",
+      "backend/modules/system/iam/role/role_service_test.go",
+      "backend/pkg/database/migrate_test.go",
+      "backend/modules/system/iam/role/role_data_scope_tenant_test.go"
+    ],
+    "out": [
+      "Changing the five data-scope modes or their resolution priority among themselves",
+      "Changing the tenant_admin / tenant_member exemption from row-level policy",
+      "Deleting historical tenant_id = 0 rows automatically"
+    ]
+  },
+  "implementationNotes": [
+    "Thread the tenant through explicitly rather than reading it inside helpers: DataScopeMiddleware already resolves tenant.FromGin(c), so pass that TenantID into applyRoleDataScopePolicy and loadRoleDataScopePolicies instead of adding a hidden dependency.",
+    "Keep fail-closed intact. rolePoliciesCoverAll must still deny when a role has no row for the resolved tenant; adding the predicate must not turn a missing row into a pass-through.",
+    "PermissionService has no tenantOwnerID equivalent today; mirror RoleService.tenantOwnerID() rather than duplicating tenant resolution logic.",
+    "resolvePolicySubject already accepts a tenantId and is correct; the defect is ensureRoleKeyExists and UpdateDataScopePolicy. Fix the validation, not the subject mapping.",
+    "The migration copies, never moves: it reads only the tenant_id = 0 row (the pre-fix effective policy every tenant saw) and inserts a per-owner copy, leaving the platform row in place because the platform scope still reads it. A policy that exists only under another tenant is deliberately not copied — that row is another tenant's authority and copying it would freeze F10 into the data. Duplicated role_keys are therefore replicated to each owner rather than left global; the duplicated set is listed in the evidence SQL snapshot so an operator can review it.",
+    "Do not invent a policy for a role that owns none anywhere. The runtime fails closed on a missing row, and backfilling `all` would silently widen a role nobody ever configured.",
+    "Guard the backfill on information_schema, exactly like 000024: a database can record version 24 while 000024's DDL never ran, and on such a database tenant_id does not exist yet. Unguarded, the INSERT turns startup into a failure loop; guarded, it degrades to a no-op and 000024's repair does the work on the next real upgrade.",
+    "Validate deptIds against system_dept under the resolved tenant before persisting, and reject the whole request rather than silently dropping foreign IDs."
+  ],
+  "contractAnchors": [
+    "docs/contracts/TENANT_CONTRACT_V1.md",
+    "docs/designs/TENANT_RESOURCE_SCOPE_MATRIX.md",
+    "docs/runbooks/TENANT_MIGRATION_RUNBOOK.md"
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "permission-policy",
+    "ownerLayer": "consumer-repository",
+    "coverageDimensions": [
+      "tenant predicate coverage",
+      "cross-tenant write rejection",
+      "fail-closed on missing policy row",
+      "migration idempotency and reversibility"
+    ]
+  },
+  "structuralScope": {
+    "affectedSubgraph": [
+      "internal/middleware -> modules/system/iam/permission -> modules/system/iam/role"
+    ],
+    "boundaryCrossings": [
+      "platform (tenant context) <-> system/iam (policy rows) <-> system/org (dept ownership)"
+    ],
+    "riskNodes": [
+      "DataScopeMiddleware (hot path for every governed request)",
+      "UpdateDataScopePolicy (single write entry point)",
+      "loadRoleDataScopes (console echo used by operators to judge policy state)"
+    ],
+    "graphFocus": [
+      "every SQL touching system_role_data_scope and system_role inside the data-scope console"
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "cd backend && go build ./...",
+      "cd backend && gofmt -l internal/ modules/ pkg/",
+      "cd backend && go vet ./internal/middleware/... ./modules/system/iam/...",
+      "cd backend && go test -count=1 ./internal/middleware/... ./modules/system/iam/permission/... ./modules/system/iam/role/...",
+      "cd backend && go test -count=1 ./pkg/database/...",
+      "python cross_tenant_leak.py L2 L3"
+    ],
+    "runtimeEvidence": [
+      "L3 before/after: tenant B's user row count stays constant when tenant A changes the shared role_key policy",
+      "L2: data-scope console total equals the calling tenant's own role count; PUT for a foreign role_key is rejected",
+      "SQL snapshot: no new row with tenant_id = 0 after an operator saves a policy",
+      "migration re-run is a no-op and down leaves data intact"
+    ]
+  },
+  "runtimeSensitive": true,
+  "evidenceRequired": [
+    ".harness/evidence/2026-10-19-w1-data-scope-tenant-dimension/commands.json",
+    ".harness/evidence/2026-10-19-w1-data-scope-tenant-dimension/summary.md",
+    ".harness/evidence/2026-10-19-w1-data-scope-tenant-dimension/review.md",
+    ".harness/evidence/2026-10-19-w1-data-scope-tenant-dimension/sql-snapshots.txt"
+  ],
+  "humanGates": [
+    "Approve the backfill policy: the tenant_id = 0 row is copied (not moved) onto every tenant that owns the role key, because it was the policy every one of those tenants was already governed by; nothing is copied from one tenant onto another.",
+    "Confirm that platform-scope callers (tenant_id = 0 subject) keep seeing the full policy list, since the console is also used by the platform administrator."
+  ],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed",
+    "SystemRoleDataScope carries TenantID and every read path filters on it",
+    "UpdateDataScopePolicy assigns TenantID and conflicts on (tenant_id, role_key)",
+    "ListDataScopePolicies, ensureRoleKeyExists and loadRoleDataScopes all carry tenant predicates",
+    "custom deptIds rejected when they do not belong to the resolved tenant",
+    "Migration 000025 idempotent, reversible, and re-runnable",
+    "cross_tenant_leak.py L2 and L3 green",
+    "No new tenant_id = 0 row produced by any console action"
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-19-w1-data-scope-tenant-dimension/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-19-w1-data-scope-tenant-dimension/",
+    "summaryFile": ".harness/evidence/2026-10-19-w1-data-scope-tenant-dimension/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-19-w1-data-scope-tenant-dimension/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-19-tenant-permission-isolation-remediation.task.md"
+    ]
+  }
+}

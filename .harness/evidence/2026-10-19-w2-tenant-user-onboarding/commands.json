@@ -1,0 +1,66 @@
+{
+  "taskId": "2026-10-19-w2-tenant-user-onboarding",
+  "repo": "pantheon-base",
+  "executedAt": "2026-10-19T11:50:00+08:00",
+  "completedAt": "2026-10-19T11:50:00+08:00",
+  "agent": {
+    "tool": "other",
+    "adapter": "software-workshop-agent"
+  },
+  "runtimeSensitive": true,
+  "runtimeGap": "Verified on a live single-node deployment (backend 127.0.0.1:8081 against MySQL 8 pantheon_base, platform.tenant_mode=multi). Not covered: MySQL replica/read-only paths, a platform administrator creating a user under X-Tenant-Id for a suspended tenant (the tenant gate refuses login, which is the intended behaviour), and concurrent deletes of the same user.",
+  "commands": [
+    {
+      "command": "cd backend && go build ./...",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "Whole module builds after the user-service, membership and migration changes."
+    },
+    {
+      "command": "cd backend && gofmt -l internal/ modules/ pkg/ cmd/",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "No output after formatting user_membership.go once."
+    },
+    {
+      "command": "cd backend && go test -count=1 ./modules/system/iam/user/...",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "MySQL-backed run (PANTHEON_TEST_DSN). New cases: TestCreateUserWritesTenantMembershipForFirstLogin, TestCreateUserRollsBackWhenMembershipWriteFails, TestDeleteUserDeactivatesTenantMembership, TestCreatePlatformUserSkipsTenantMembership."
+    },
+    {
+      "command": "cd backend && go test -count=1 ./pkg/tenant/...",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "Login-gate contract unchanged; GateSessionIssuance still requires an active membership for tenant claims and passes tenant_id = 0."
+    },
+    {
+      "command": "cd backend && go test -count=1 ./pkg/database/ -run TestRunMigrationsDeactivatesMembershipsOfDeletedUsers",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "Migration 000027 deactivates historical ghost memberships and leaves live users active."
+    },
+    {
+      "command": "python tenant_acceptance.py (PANTHEON_BASE=http://127.0.0.1:8081)",
+      "cwd": "acceptance",
+      "status": "passed",
+      "details": "136/136. F1 evidence line: 'tenant-created user is immediately loginable code=200'. A3b now reports member_exists as the expected no-op. A3c reports ghost_members=none."
+    }
+  ],
+  "knownGaps": [
+    "The default membership role is fixed to member per the task packet; changing it to inherit-from-creator is a product decision that has not been taken.",
+    "A platform administrator creating a user while pinned to a tenant gets a membership in that tenant (the packet says yes); this has not been separately confirmed by the maintainer.",
+    "Deactivated membership rows remain in tenant_memberships by design (audit record). The member list filters on status=active, so they no longer surface."
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-19-w2-tenant-user-onboarding/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-19-w2-tenant-user-onboarding/",
+    "summaryFile": ".harness/evidence/2026-10-19-w2-tenant-user-onboarding/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-19-w2-tenant-user-onboarding/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-19-tenant-permission-isolation-remediation.task.md",
+      "docs/contracts/TENANT_CONTRACT_V1.md"
+    ]
+  }
+}

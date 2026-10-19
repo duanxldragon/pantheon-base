@@ -1,0 +1,197 @@
+{
+  "taskId": "2026-10-13-tenant-console-remediation",
+  "title": "Repair the tenant console: reserved-row leak, dead search, open status dimension, and the multi-mode platform lockout",
+  "goal": "A live walkthrough of the tenant console (platform.tenant_mode = multi) surfaced a cluster of defects whose root causes sit in three different layers. Fix all of them in one pass: (1) the `tenants.metadata` column the model/DTO/UI write does not exist, so every create and edit returned 500; (2) multi mode denies every tenant-less subject a tenant context, so the whole platform console (dashboard, dict, settings, operation log, operation-verify) answered 500 `tenant.context.missing` and the UI could not even switch back to compat; (3) the reserved platform/global placeholder was written at id 1 instead of id 0, leaking into the console as an ordinary tenant and producing the raw `__global__` row with zero-value timestamps. Secondary defects (decorative search box, unclosed status dimension, soft-deleted rows still listed, page-scoped summary counts that disagree with the total, missing i18n permission keys, unformatted Go files) are closed in the same change. The tenant/non-tenant coexistence decision is option b+c: gate the fallback on platform capability AND on the route declaring the platform scope, so `multi` becomes a superset of `compat` and both subject kinds share one deployment.",
+  "primaryLayer": "platform",
+  "status": "completed",
+  "priority": "P0",
+  "type": "remediation",
+  "estimatedComplexity": "large",
+  "findings": [
+    "P0-1 (metadata column): `tenants` DDL from migration 000013 declares id/code/name/status/plan/created_at/updated_at/deleted_at only, but tenant_model.go declares `Metadata string` with `gorm:\"type:text\"`, CreateTenantDTO carries it, tenant_service.CreateTenant writes it on every insert, and UpdateTenant has an `if dto.Metadata != nil` branch that the edit form always satisfies (it submits ''). Every console write therefore failed with `Error 1054 (42S22): Unknown column 'metadata' in 'field list'`. Reads stayed green because the list projection is `SELECT *` and the field is `json:\",omitempty\"`, which is exactly why the defect survived review. Fixed forward with 000023 rather than editing 000013, because 000013 is already applied on every environment and migration history is immutable.",
+    "P0-2 (multi-mode platform lockout): `pkg/tenant.GateSessionIssuance` deliberately issues a claim-less session for a user with zero memberships (the 'platform population'), but `TenantContextMiddleware` denied any claim-less subject under multi mode and `parseTenantID` refused the value 0, so tenant 0 could never become a legal context. Live probe: `GET /api/v1/dashboard/summary`, `/system/dict/type/list`, `/system/setting/overview`, `/system/operation-log/list` and `POST /api/v1/auth/operation-verify` all returned `500 tenant.context.missing`. Because the settings page failed the same way, the UI had no route back to compat either (and contract §6 forbids switching back regardless), so the deployment was recoverable only by editing the database.",
+    "P0-2 root cause is a contract gap, not a coding slip: §3.3 requires the platform admin API to be 'explicitly declared', but §3.1 never said how a declared route resolves a context under multi mode. The implementation granted the §3.1 fallback to compat only, so a platform-level subject fell into §3.2's 'missing context' branch. Contract V1.1 (this change) adds §3.1 item 3 and §3.4 to close the gap; §2/§4/§5/§7 stay untouched.",
+    "P0-3 (reserved placeholder leaked): contract §2.3 reserves `tenant_id = 0` for platform/global rows, and 000013 intends to place the `__global__` placeholder there, but it writes it with `INSERT ... SELECT 0, ...`. MySQL reads an inserted 0 in an AUTO_INCREMENT column as 'assign the next counter value' unless `NO_AUTO_VALUE_ON_ZERO` is set, and neither the local testmysql DSN nor CI enables it. Proved with a scratch table: the INSERT-of-0 idiom landed the row at id 2 while `UPDATE ... SET id = 0` assigned 0 literally. Live state was `id=1, code='__global__', status='archived'`. Consequences: `GET /system/tenant/0` returned 400 while `GET /system/tenant/1` returned 200; ListTenants had no exclusion so the internal row rendered as an ordinary tenant (the direct source of the bare `__global__` row and the `01-01-01 08:05:43` cell); DeleteTenant only checked active members, so the UI could soft-delete it.",
+    "P1-1 (decorative search box): `loadData` never sent the keyword, `TenantListQuery` had no such field, backend `Filter` had no `Keyword` and the query had no LIKE branch, so `?keyword=zzz-no-match` returned the same row. The placeholder text promised 'search by name or code'.",
+    "P1-2 (status dimension not closed): `Filter.Status` bound `oneof=active suspended deleted`, so `?status=archived` (a contract §2.1 lifecycle value) was rejected with 400; the console filter dropdown offered only active/suspended; and the edit form had no status control at all, so `UpdateTenantDTO.Status` was never populated and a tenant could never leave `active`.",
+    "P1-3 (soft-deleted rows still listed): DeleteTenant only sets `status='deleted'` and ListTenants had no exclusion, so deleted tenants kept occupying the default view.",
+    "P1-4 (summary not self-consistent): the '总数' card read `state.total` (global) while '启用中'/'已禁用' counted the current page's `state.items`, so any result set larger than one page disagreed, and archived/deleted rows were invisible to the counters entirely (the screenshot's 1 / 0 / 0).",
+    "P1-5 (menu contract red): `npm run check:menu-contract` failed with 10 findings - `system.permission.tenant.{create,update,delete,member_add,member_remove}` are declared as backend action seeds (modules/system/seed.go) and seeded as i18n (modules/system/i18n/seed_data.go) but were absent from the zh-CN and en-US fallback packs.",
+    "P2-1 (zero-value timestamp rendered as a real time): Go's `time.Time` zero value `0001-01-01T00:00:00Z` passed the ISO regex in `parseDate`, and year 1 sits at UTC+08:05:43, which is precisely where the `01-01-01 08:05:43` cells came from. `getInvalidFallback` only special-cased null/undefined/''.",
+    "P2-2 (formatting): `gofmt -l backend/` reported backend/modules/auth/module.go and backend/modules/system/iam/tenant/tenant_platform_handler.go.",
+    "P1-6 (follow-up, reported from the live UI): the five tenant permission rows rendered as TOP-LEVEL entries in 菜单管理 instead of nesting under 访问控制 → 租户管理. Root cause: `resolveMenuParentID` in modules/system/seed.go resolves a seed's ParentKey through a hardcoded `parentPaths` map, and that map had no `\"tenant\"` entry. tenantMenuSeeds declares ParentKey `\"tenant\"`, so the lookup missed and the function returned 0 silently, giving all five F-type rows parent_id=0. The parent 租户管理 row itself was correct (parent_id=1) because `\"access\"` WAS in the map. Verified in MySQL: ids 166-170 had parent_id=0 while id=165 had parent_id=1. The silent `return 0` is what let this through review, so it now logs a warning instead of failing quietly.",
+    "P1-7 (follow-up, maintainer refinement of the UI decision): with `platform.tenant_mode = compat` the 租户管理 menu must be removed from 访问控制. The first implementation of UI option 3 deliberately kept the console visible in both modes and rendered a compat guidance state instead of a table; the maintainer's refinement is that the MENU entry itself should disappear under compat (the mode still gates discoverability, not just behaviour). Implemented as a `tenantEnabled` capability on the existing menu capability filter, mirroring the pre-existing `orgEnabled` / `system.org` gate."
+  ],
+  "scope": {
+    "in": [
+      "backend/pkg/database/migrations/000023_tenant_metadata.up.sql + .down.sql: add tenants.metadata TEXT NULL and normalize the reserved placeholder onto id 0",
+      "backend/pkg/database/migrations/000022_tenant_mode_public.up.sql + .down.sql: make the platform.tenant_mode setting public so the frontend can read it (the tenant console needs the mode to choose between the table and the compat guidance state)",
+      "backend/modules/system/config/setting/setting_seed.go: platform.tenant_mode IsPublic 0 -> 1, and the i18n labels/options for the setting in all five locale packs",
+      "backend/modules/system/seed.go: the tenant console menu tree (menu `tenant` plus the five F-type permission rows) - the console had no menu seed at all before this task",
+      "backend/modules/system/i18n/seed_data.go + builtin_locale_resources.json: seed translations for system.menu.tenant and the five system.permission.tenant.* keys",
+      "backend/modules/system/iam/menu/component_registry.go: register the system/tenant/TenantList component",
+      "backend/modules/system/iam/permission/permission_workbench.go: declare the seven system:tenant:* permission -> route mappings (the tenant console routes were previously unmapped, which is a permission-contract gap)",
+      "frontend/src/core/router/modules.ts + componentRegistry.ts: register the tenant module and the TenantList component",
+      "frontend/src/core/setting/publicSettings.ts: expose tenantMode ('compat' | 'multi') from the public settings payload",
+      "backend/pkg/tenant/tenant.go: ResolveInput/Resolve with the platform-scope fallback branch, ResolvedByPlatformFallback, header may pin tenant 0",
+      "backend/pkg/tenant/membership.go: IsPlatformPopulationUser (fail-closed membership probe)",
+      "backend/internal/middleware/tenant_context_middleware.go: PlatformScopeTenantContextMiddleware plus the strict TenantContextMiddleware, capability probe over global Casbin policies",
+      "backend/internal/middleware/tenant_platform_scope_test.go: resolution matrix, membership guard (real MySQL), failure envelopes",
+      "backend/internal/middleware/tenant_hostile_smoke_test.go: unchanged strict-variant matrix",
+      "backend/modules/{auth,platform,lowcode,system}: declare the platform scope on the 13 admin-console route groups, including the tenant console which previously carried no tenant middleware at all",
+      "backend/modules/system/iam/tenant: exclude the reserved row and honour keyword/status/summary, guard id 0 on read/delete, reject deleting an unknown id",
+      "backend/pkg/tenant/tenant_test.go: header 0 now pins the platform-global scope when the subject is platform-capable",
+      "frontend tenant module: send the keyword, drive the summary from the server facets, close the status dimension (filter + edit control), fall back when a status/plan/role key is missing, render the compat guidance state",
+      "frontend core: useLayoutMenu no longer hides the tenant console; dateTime treats the Go zero time as unset",
+      "backend/modules/system/seed.go: add the `tenant` -> /system/tenant entry to resolveMenuParentID's parentPaths map so the tenant permission rows nest under 租户管理, and log a warning when a seed declares a parent key the map does not know (the silent fallback to parent_id 0 is what produced P1-6)",
+      "frontend/src/core/layout/useLayoutMenu.tsx + AppLayout.tsx: a `tenantEnabled` capability on the menu filter drops module `system.tenant` from the sidebar when platform.tenant_mode is compat, so 租户管理 leaves 访问控制 under 单租户 and returns under 多租户",
+      "frontend i18n: five locale packs gain status.archived, summary.archived, the two compat guidance keys and the five system.permission.tenant.* keys",
+      "docs/contracts/TENANT_CONTRACT_V1.md + .en.md: V1.1 clarification (§3.1 item 3, new §3.4, §3.2 and §6 notes, §9 change log)",
+      "harness packet and evidence for this task"
+    ],
+    "out": [
+      "Reversing platform.tenant_mode to compat. Contract §6 makes the switch one-way; the deployment stays on multi, which is the correct direction.",
+      "Changing the platform.tenant_mode VALUE. The seed default stays 'compat' and the live row stays 'multi'. What this task does change is the setting's is_public flag (0 -> 1, via 000022 and setting_seed.go) and its i18n labels, because the console cannot render the compat guidance state without reading the mode. That is a visibility change, not a mode change.",
+      "Granting any new Casbin policy to any role. The task adds menu/permission DECLARATION seeds for the tenant console and the system:tenant:* permission -> route mappings, but no role-policy grant: the console's permissions still have to be assigned through the normal IAM flow. The five permission keys were already declared as backend action seeds before this task; what was missing was their i18n and their menu rows.",
+      "Editing migration 000013 or any already-applied migration. The fix is appended as 000023 so history stays immutable.",
+      "Making the tenant-scoped route variant (strict TenantContextMiddleware) unreachable in principle: it stays the deny-by-default default for any route group that has not declared the platform scope.",
+      "Relaxing the membership guard so a membership-bearing subject could fall back implicitly. Such a subject reaches tenant 0 only through the explicit X-Tenant-Id override.",
+      "Moving tenants CRUD ownership from modules/system/iam to system/org. Contract §7 assigns it to system/org and the console violates that; it predates this task and is recorded as a follow-up rather than silently re-homed here.",
+      "The unrelated log-governance and CSV-export workstream that shares this working tree (see the interleaved-workstream note below). Its files are out of scope and are not part of this task's evidence."
+    ]
+  },
+  "dependencyLayers": [
+    "system/iam",
+    "system/config",
+    "system/auth",
+    "system/org",
+    "system/i18n",
+    "system/audit"
+  ],
+  "implementationNotes": [
+    "P0-1 was fixed forward, not by editing 000013. golang-migrate applies versioned files in order and 000013 is already recorded on every environment; appending 000023 keeps the applied history immutable and is safe on fresh databases too. The column definition mirrors the model exactly (`TEXT NULL`, no default), so `Metadata string` round-trips.",
+    "The reserved-row normalization has to be DML, not DDL. MySQL treats an inserted 0 in an AUTO_INCREMENT column as 'next value' but `UPDATE ... SET id = 0` assigns 0 literally; the scratch-table experiment showed INSERT-of-0 landing at id 2 while UPDATE landed at 0. The migration therefore normalizes with a guarded UPDATE and only when the id-0 slot is free, so it cannot collide on the primary key.",
+    "No row referenced the placeholder by a non-zero id, which is what makes the id change safe: tenant_memberships, system_setting, sessions and operation logs all held zero rows for it. Verified before writing the migration.",
+    "Option b+c shape: the fallback requires BOTH that the route group declared the platform scope AND that the subject carries a platform-level grant AND that the subject holds no active membership. All three are needed. The declaration alone would let a tenant subject widen itself to global; capability alone would let a claim-less tenant member reach the platform namespace; the membership probe is what keeps the implicit fallback from shadowing a tenant membership (it fails closed when the answer is unavailable).",
+    "The platform-capability probe accepts either the canary's `platform_ops` role key or any global (domain-less) Casbin policy that allows the route being requested. Global policies are the platform namespace by construction, so a tenant-domain grant (`role:<key>@tenant:<id>`) can never satisfy it, which is what keeps contract §4's 'never merged, never implicitly escalated' true.",
+    "Every admin-console route group is declared platform-scoped, because every one of them is a platform-management surface in this base: system/* (user, role, menu, dept, post, dict, setting, i18n, audit, permission, tenant), dashboard, auth/*, upload and lowcode tooling. A tenant subject is unaffected - source 2 (the claim) outranks the fallback. The base ships no `business/*` route, which is where a genuinely tenant-scoped group would use the strict variant.",
+    "The tenant console route group previously carried NO tenant middleware at all, which is why it kept working while the rest of the console 500'd. It is now declared platform-scoped per contract §3.3: it reads and writes `tenants` across every tenant, which is the textbook cross-tenant platform admin API, and the declaration is also what gives its audit rows an explicit platform-global tenant id.",
+    "Header `X-Tenant-Id: 0` is now accepted, and that is a deliberate semantic change: tenant 0 is the reserved platform/global scope (§2.3/§4) and the header is the only path by which a subject that holds a membership can reach it. It stays safe because the header is honoured only for platform-capable subjects. The canary test that asserted the old behaviour was updated rather than left failing.",
+    "Summary counts are served by the database as facets (every list filter except `status`), so they are page-independent. `total` keeps its old meaning (the filtered count the list shows) and `summary.deleted` is reported separately instead of inflating it.",
+    "The keyword LIKE pattern escapes `%`, `_` and the backslash itself. That relies on the backslash being MySQL's default LIKE escape character, which holds for production; the SQLite-backed unit tests deliberately avoid metacharacter input and the behaviour is covered end to end against MySQL instead.",
+    "The Go zero time is treated as 'unset' in the shared formatter, so the fix covers every page that renders a timestamp, not just the tenant console.",
+    "UI option 3: the tenant console is no longer hidden by `platform.tenant_mode`. The menu filter lost its tenant gate, and the page renders a compat guidance state (with a link to platform settings) instead of a table. The mode still gates behaviour; it no longer gates discoverability.",
+    "Both pre-existing gofmt violations were fixed in the same change, since touching those files anyway.",
+    "Interleaved-workstream note (scope honesty). The working tree this task was verified in carries TWO independent changesets. This task owns the tenant-console change. A second, unrelated workstream is also uncommitted in the same tree: log-governance retention-option refresh plus CSV export for admin sessions and security events (backend/modules/auth/login/*, backend/modules/auth/security/security_service.go, backend/modules/auth/session/session_service.go, the system:session:export and system:security-event:export permission rows, frontend/src/modules/auth/*, frontend/src/components/governance/GovernanceCleanupBar.tsx, frontend/src/modules/system/audit/OperationLogList.tsx, frontend/src/modules/system/config/setting/* and a one-line hero key rename in frontend/src/modules/system/iam/menu/MenuList.tsx). Those files are NOT part of this task and are NOT covered by its evidence. Two files are genuinely shared and are touched by both: backend/modules/auth/module.go (this task swaps TenantContextMiddleware for the platform-scope variant; the other adds the two export routes) and backend/modules/system/iam/permission/permission_workbench.go (this task adds the seven system:tenant:* route mappings; the other adds the two export mappings). The reader should not read this task's evidence as validating the export workstream.",
+    "The tenant console menu had to be seeded because it did not exist: before this task the console was reachable by URL but absent from the menu, and its five permission keys were declared as backend action seeds without any menu rows or translations. This task adds the menu tree, the permission rows and the translations - that is why seed.go, seed_data.go, builtin_locale_resources.json and component_registry.go are in scope. It grants no Casbin policy to any role.",
+    "The platform.tenant_mode setting was made public (is_public 0 -> 1, appended as 000022 and mirrored in setting_seed.go) because the frontend cannot decide between the tenant table and the compat guidance state without reading the mode. The setting's VALUE is untouched: the seed default stays 'compat' and the live row stays 'multi' as instructed.",
+    "P1-6 fix: adding `\"tenant\": \"/system/tenant\"` to the parentPaths map is sufficient, because ensureSingleMenuSeed resolves an existing row by perms and then calls updateSeedMenu, which re-writes parent_id. The five rows were therefore repaired by the ordinary startup re-seed - no data migration was needed. Verified in MySQL after restart: ids 166-170 moved from parent_id=0 to parent_id=165. A sweep of every ParentKey used by every seed (access, org, dept, post, user, role, menu, permission, config, setting, lowcode, modules, generator, dict, i18n, tenant, security, session) confirmed `tenant` was the only unmapped key, and the new warning logged zero times on a clean boot, so no other menu is misplaced.",
+    "P1-7 fix: the gate is applied in the frontend capability filter rather than by flipping the menu's `visible` column, because the mode is a runtime setting that can change without a re-seed and the frontend already receives it through the public settings payload. This mirrors exactly how `org.enabled` gates `system.org`. Filtering on `module === 'system.tenant'` covers both the C-type menu row (module system.tenant) and any future tenant-module row; the F-type permission rows carry module `system` by the repo's existing convention, but they are never rendered in the nav tree anyway.",
+    "P1-7 keeps the compat guidance state on the page itself. With the menu entry gone, the page is reachable only by direct URL or a stale bookmark, and it still answers with guidance plus a link to platform settings instead of an empty table. Hiding the menu and keeping the page safe are independent decisions and both are intentional."
+  ],
+  "contractAnchors": [
+    "docs/contracts/TENANT_CONTRACT_V1.md",
+    "docs/contracts/TENANT_CONTRACT_V1.en.md",
+    "docs/designs/TENANT_RESOURCE_SCOPE_MATRIX.md",
+    "docs/designs/TENANT_READY_SINGLE_TENANT_DESIGN.md",
+    "docs/runbooks/TENANT_MIGRATION_RUNBOOK.md"
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "platform-remediation",
+    "portableFailureClass": "tenant-context-resolution-gap",
+    "ownerLayer": "platform",
+    "coverageDimensions": [
+      "behaviour",
+      "runtime-quality",
+      "maintainability"
+    ]
+  },
+  "structuralScope": {
+    "affectedSubgraph": [
+      "HTTP request -> TokenAuthMiddleware -> PlatformScopeTenantContextMiddleware -> pkg/tenant.Resolve -> tenant.Context -> CasbinMiddleware -> handler",
+      "pkg/tenant.GateSessionIssuance (claim-less issuance) -> platform population -> IsPlatformPopulationUser (request-side re-verification)",
+      "tenants master table -> ListTenants/GetTenantByID/DeleteTenant -> tenant console -> frontend tenant module",
+      "public settings (platform.tenant_mode) -> menu capability filter -> tenant console visibility"
+    ],
+    "boundaryCrossings": [
+      "internal/middleware -> pkg/tenant (resolution moves out of the middleware into the contract package)",
+      "modules/{auth,platform,lowcode,system} -> internal/middleware (route groups opt into the platform scope)",
+      "backend/pkg/database/migrations -> tenants DDL (new column + reserved-row normalization)",
+      "docs/contracts -> backend (the contract clarification is the source of truth for the code change)"
+    ],
+    "riskNodes": [
+      "Widening the context resolution could hand a tenant subject the platform-global scope. Mitigated by requiring a platform-level grant AND zero memberships, both fail-closed; the resolution matrix test pins each condition and the 'subject claim outranks the fallback' case.",
+      "Normalizing the placeholder onto id 0 mutates primary keys. Mitigated by the id-0-slot guard and by verifying that no table referenced the old id.",
+      "Declaring the platform scope on a group that should have stayed strict would silently widen it. Mitigated by declaring only admin-console surfaces and by keeping the strict variant as the default for undeclared groups.",
+      "Adding `summary` to the list response changes a shipped payload. It is additive and optional on the client; `total` keeps its meaning.",
+      "Treating the Go zero time as unset changes a shared formatter used across pages. The change only affects a value that was previously rendered as a fabricated timestamp."
+    ],
+    "graphFocus": [
+      "The same tenant context must serve a tenant-less platform operator and a tenant subject in one multi-mode deployment, without letting either reach the other's scope."
+    ]
+  },
+  "executionRoles": {
+    "implementerPosture": "Contract first, then implementation: read §2.3/§3.1/§3.2/§3.3/§4/§6 and the resource-scope matrix before editing, then amend the contract and make the code match it. Reproduce every defect against the live multi-mode stack before and after the fix; prefer a probe over a claim.",
+    "reviewerPosture": [
+      "Verify the fallback cannot be reached by a subject that holds a membership or lacks a platform-level grant.",
+      "Verify the reserved placeholder is gone from every read path (list, get, delete) and that id 0 cannot be soft-deleted.",
+      "Verify the contract amendment did not touch §2/§4/§5/§7 and that §3.1 items 1/2 are unchanged in meaning.",
+      "Verify no new Casbin permission, menu or seed row was granted, and that platform.tenant_mode was not modified.",
+      "Verify the changed canary assertion (header 0) is justified by the contract text rather than by making a test pass."
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "cd backend && go build ./... && gofmt -l modules/ internal/ pkg/",
+      "cd backend && go test ./pkg/tenant/... ./internal/middleware/... ./modules/system/iam/tenant/... -count=1",
+      "cd backend && PANTHEON_TEST_DSN=... go test ./internal/middleware/ -run TestPlatformScopeTenantContextMiddleware_MembershipBlocksImplicitFallback -count=1 -v",
+      "python .tmp/verify_tenant_remediation.py (live multi-mode probe, 30 checks)",
+      "cd frontend && node ./scripts/check-*.mjs (13 contract gates)",
+      "cd frontend && node ./node_modules/typescript/bin/tsc -b && node ./node_modules/vitest/vitest.mjs run tests/unit/core/format/dateTime.test.ts",
+      "node scripts/harness/check-task-packet.mjs --root . && node scripts/harness/check-evidence.mjs --root . --strict && node scripts/harness/check-adoption.mjs --root .",
+      "node scripts/harness/check-doc-frontmatter.mjs --root . && node scripts/harness/check-doc-links.mjs --root . && node scripts/harness/check-doc-inventory.mjs --root ."
+    ],
+    "runtimeEvidence": [
+      "Before/after probe output for the platform console endpoints under multi mode",
+      "Before/after probe output for the tenant console (reserved row absent, keyword, status filters, summary, soft delete)",
+      "schema_migrations 22 -> 23 and the tenants row moving from id 1 to id 0 with the metadata column present",
+      "Unit test output for the resolution matrix and the membership guard"
+    ]
+  },
+  "runtimeSensitive": true,
+  "runtimeGap": "Two verification steps could not run on this host. (1) `node scripts/harness/check-encoding.mjs` aborts with `spawnSync git EBUSY`: Node cannot spawn any subprocess here, which is a host limitation confirmed independently of the sandbox, so the encoding sweep could not enumerate files. (2) `go test ./modules/system/iam/tenant/...` failed to link because the package's SQLite test driver needs cgo and the mingw gcc link step exited 1; `go build ./...`, `go vet` and `gofmt` on the same package all pass, and the new list/filter tests are therefore written and reviewed but not executed here. Everything else in the verification plan ran and is recorded in the evidence.",
+  "evidenceRequired": [
+    ".harness/evidence/2026-10-13-tenant-console-remediation/commands.json with per-command status and real output summaries",
+    ".harness/evidence/2026-10-13-tenant-console-remediation/summary.md covering the root causes, the option b+c reasoning and the residual risks",
+    ".harness/evidence/2026-10-13-tenant-console-remediation/review.md with the review findings and the explicitly-not-run items"
+  ],
+  "humanGates": [
+    "Whether to keep platform.tenant_mode at multi is the maintainer's call; this change keeps it, per contract §6's one-way rule and the explicit instruction to leave it alone.",
+    "The contract amendment makes runbook §8 gate G4 ('no open contract-change') no longer hold automatically. Only the maintainer can decide whether to re-grant G4; this task does not declare it granted, and the production DDL/data-change ban is untouched.",
+    "Whether to re-home tenants CRUD from system/iam to system/org (contract §7) is a separate structural decision and is deliberately not taken here.",
+    "Whether the tenant console menu should be visible under compat is a product decision. It was first implemented as 'visible in both modes' (UI option 3) and then refined by the maintainer to 'hidden under compat, visible under multi'; the current implementation follows the refinement. It remains trivially reversible by dropping the tenantEnabled gate."
+  ],
+  "completionChecklist": [
+    "Contract V1.1 clarification written before the implementation and mirrored in the English version",
+    "P0-1 metadata column added by an appended migration; create and edit verified live",
+    "P0-2 platform console verified reachable under multi mode for every previously failing endpoint",
+    "P0-3 reserved placeholder normalized to id 0 and excluded from list/get/delete",
+    "P1-1..P1-5 and P2-1/P2-2 closed and covered by tests or live probes",
+    "Frontend gates, TypeScript build and the dateTime unit tests green",
+    "Task packet, evidence and review recorded; not-run items declared with their cause"
+  ],
+  "linkage": {
+    "assessment": "docs/harness/tasks/2026-10-13-tenant-console-remediation.task.md",
+    "evidenceDir": ".harness/evidence/2026-10-13-tenant-console-remediation/",
+    "summaryFile": ".harness/evidence/2026-10-13-tenant-console-remediation/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-13-tenant-console-remediation/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/contracts/TENANT_CONTRACT_V1.md",
+      "docs/designs/TENANT_RESOURCE_SCOPE_MATRIX.md",
+      "docs/runbooks/TENANT_MIGRATION_RUNBOOK.md"
+    ]
+  }
+}

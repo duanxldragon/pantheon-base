@@ -6,6 +6,52 @@ Pantheon Base 方法追踪记录。方法论本体位于 `pantheon-harness`。
 
 ---
 
+## [Unreleased] — 2026-10-19
+
+> Tenant isolation closeout. The 2026-10-19 acceptance run measured 179/193 assertions and
+> 13 defects (5 × P0) caused by one missing property: `tenant_id` exists in the schema but is not
+> enforced on every read/write path. All P0/P1 defects are closed; the P2 residual F14 was closed
+> by a post-closeout follow-up (role endpoints now answer `404 role.not_found` on a tenant-scoped
+> miss). Final measurement: 193/193 with 0 findings on a full L0–L4 re-run.
+
+### Security
+
+- Data-scope policies now carry the tenant on both sides: every read filters on `tenant_id`, writes
+  conflict on `(tenant_id, role_key)`, and custom department IDs must belong to the caller's tenant
+  (F7/F8/F9/F10/F11/F13). Migration `000025` copies historical platform rows onto the tenants that
+  own the role key; it never copies one tenant's policy onto another.
+- Role-menu grants are written into the tenant that owns the role (resolved from `system_role`, not
+  from the request), so tenant console grants are readable and survive a second edit (F3).
+  Migration `000026` moves historical `tenant_id = 0` grants to the owning tenant.
+- Login clears the user-level token blacklist only after credentials verify, the tenant gate passes
+  and the token pair is stored; a per-session marker is written at revocation time so tokens minted
+  before a password reset stay dead (F2).
+- Tenant-created users get an active membership in the same transaction as the user row, so the
+  first login succeeds; deleting a user deactivates the membership instead of leaving a ghost (F1/F4).
+  Migration `000027` repairs historical ghost memberships.
+
+### Fixed
+
+- The tenant console no longer calls `GET /system/tenant/list` from a tenant administrator's session:
+  platform capability is resolved from `/auth/tenants/current` scope instead of the
+  `system:tenant:list` permission key, removing the `403 tenant.platformOnly` toasts (F5).
+- The department page paginates the flattened tree, so every level renders and the total is the real
+  department count instead of the root count (F6).
+
+### Added
+
+- `TENANT_CONTRACT_V1` §2.3.1 (V1.2) states the read/write obligations for tenant-owned tables.
+- Two-tenant regression tests for data scope, user membership, menu persistence and blacklist
+  ordering; test Redis can select a logical DB via `PANTHEON_TEST_REDIS_DB`.
+
+### Fixed
+
+- F14 (P2, post-closeout): cross-tenant role reads (`GET /role/:id/users`, `/role/:id/user-candidates`,
+  `PUT /role/:id` and siblings) answered `500 request.failed` because a tenant-scoped miss surfaced as
+  `gorm.ErrRecordNotFound` under the generic error branch. `roleErrorResponse` now maps not-found
+  sentinels to `404 role.not_found` (i18n key added to all 5 locales) and keeps everything else on the
+  generic 500 path. Regression: `role_handler_notfound_test.go`. Full L0–L4 re-run: 34/34, 0 findings.
+
 ## [pantheon-base-v0.16.1] — 2026-10-12
 
 > Patch release. Root-causes the two recurring `main` flakes and closes the release-artifact gap

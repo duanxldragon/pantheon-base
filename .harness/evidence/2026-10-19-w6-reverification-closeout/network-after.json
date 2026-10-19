@@ -1,0 +1,51 @@
+{
+  "base": "http://127.0.0.1:5174",
+  "capturedAt": "2026-10-19T03:47:43.444Z",
+  "usersPage": {
+    "route": "/system/user",
+    "requests": [
+      "http://127.0.0.1:5174/api/v1/system/setting/public",
+      "http://127.0.0.1:5174/api/v1/system/menu/tree?scope=nav",
+      "http://127.0.0.1:5174/api/v1/auth/tenants/current",
+      "http://127.0.0.1:5174/api/v1/auth/tenants/current",
+      "http://127.0.0.1:5174/api/v1/system/user/list?keyword=&username=&nickname=&page=1&pageSize=10",
+      "http://127.0.0.1:5174/api/v1/system/role/list?page=1&pageSize=9999&sortField=sort&sortOrder=asc&status=1",
+      "http://127.0.0.1:5174/api/v1/system/dept/tree?sortField=sort&sortOrder=asc",
+      "http://127.0.0.1:5174/api/v1/system/post/list?page=1&pageSize=9999&sortField=sort&sortOrder=asc&status=1",
+      "http://127.0.0.1:5174/api/v1/system/refresh/state?topics=system:dept:changed,system:dict:changed,system:i18n:changed,system:menu:changed,system:permission:changed,system:post:changed,system:role:changed,system:setting:changed,system:user:changed",
+      "http://127.0.0.1:5174/api/v1/auth/tenants/current",
+      "http://127.0.0.1:5174/api/v1/auth/tenants/current",
+      "http://127.0.0.1:5174/api/v1/system/refresh/state?topics=system:dept:changed,system:dict:changed,system:i18n:changed,system:menu:changed,system:permission:changed,system:post:changed,system:role:changed,system:setting:changed,system:user:changed",
+      "http://127.0.0.1:5174/api/v1/auth/tenants/switchable"
+    ],
+    "tenantConsoleCalls": [],
+    "platformOnly": false,
+    "textSnippet": "P Pantheon Base 工作台 访问控制 用户管理 角色管理 权限管理 租户管理 菜单管理 组织架构 安全审计 低代码平台 平台配置 首页 访问控制 用户管理 搜索菜单、页面、功能… Ctrl K A Acme 管理员 tenant_admin 工作台 用户管理 系统域 / IAM 用户治理 围绕账号、角色与组织归属完成统一用户治理 用户管理 9 启用 9 停用账号 0 治理摘要 状态 部门 导出下载模板导入 新增 已选 0 条 清空选择 批量启用 批量禁用 删除所选 用户名 昵称 状态 部门 岗位 角色 邮箱 手机号 创建时间 操作 amy_1019114608 Amy 串租 启用 研发中心（改名） - 串租探测角色 - - 2026-10-19 11:46 详情 编辑 重置密码 zhangsan_1019114028 张三（已更新） 启用 研发中心（改名） 高级研发工程师 租户"
+  },
+  "deptPage": {
+    "route": "/system/dept",
+    "requests": [
+      "http://127.0.0.1:5174/api/v1/system/setting/public",
+      "http://127.0.0.1:5174/api/v1/system/menu/tree?scope=nav",
+      "http://127.0.0.1:5174/api/v1/auth/tenants/current",
+      "http://127.0.0.1:5174/api/v1/auth/tenants/current",
+      "http://127.0.0.1:5174/api/v1/system/refresh/state?topics=system:dept:changed,system:dict:changed,system:i18n:changed,system:menu:changed,system:permission:changed,system:post:changed,system:role:changed,system:setting:changed,system:user:changed",
+      "http://127.0.0.1:5174/api/v1/auth/tenants/current",
+      "http://127.0.0.1:5174/api/v1/auth/tenants/current",
+      "http://127.0.0.1:5174/api/v1/system/refresh/state?topics=system:dept:changed,system:dict:changed,system:i18n:changed,system:menu:changed,system:permission:changed,system:post:changed,system:role:changed,system:setting:changed,system:user:changed",
+      "http://127.0.0.1:5174/api/v1/system/dept/tree?deptName=&sortField=sort&sortOrder=asc",
+      "http://127.0.0.1:5174/api/v1/system/dept/tree?sortField=sort&sortOrder=asc",
+      "http://127.0.0.1:5174/api/v1/system/dept/overview",
+      "http://127.0.0.1:5174/api/v1/system/dept/governance/tasks?scope=all",
+      "http://127.0.0.1:5174/api/v1/auth/tenants/switchable"
+    ],
+    "tenantConsoleCalls": [],
+    "platformOnly": false,
+    "textSnippet": "P Pantheon Base 工作台 访问控制 组织架构 部门管理 岗位管理 安全审计 低代码平台 平台配置 首页 组织架构 部门管理 搜索菜单、页面、功能… Ctrl K A Acme 管理员 tenant_admin 工作台 用户管理 部门管理 系统域 / 组织治理 围绕负责人补齐与组织问题推进部门治理 部门总数 5 缺负责人部门 0 组织问题数 0 治理视角 部门维护 组织架构 状态 治理视角 导出下载模板导入 新增 已选 0 条 清空选择 批量启用 批量禁用 删除所选 批量补负责人 部门名称 负责人 联系电话 邮箱 排序 治理视角 状态 操作 Pantheon Base 组织根节点 0 组织根节点 启用 编辑 删除 研发中心（改名） 张三 010-88880001 rd2@acme.example 2 治理正常 启用 编辑 删除 研发中心（改名） 张三 010-88880001 "
+  },
+  "deptTotal": "5",
+  "deptChildVisible": true,
+  "tenantConsoleCallsAnyPage": [],
+  "platformOnlyToasts": [],
+  "consoleErrors": []
+}

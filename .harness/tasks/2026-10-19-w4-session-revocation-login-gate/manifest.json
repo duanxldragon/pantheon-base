@@ -1,0 +1,87 @@
+{
+  "taskId": "2026-10-19-w4-session-revocation-login-gate",
+  "title": "Clear the user-level token blacklist on successful login so a credential change does not lock the account out",
+  "goal": "RevokeUserTokens sets a user-level Redis key blacklist:<userID> with TTL AccessTokenTTL+1m, and TokenAuthMiddleware rejects every request while that key exists. Login never clears it, so after a password reset or a disable/enable cycle the user cannot get in for roughly sixteen minutes -- and the error is 401 token.expired.force, which reads like an expired session rather than a lockout. The fix is narrow by design: clear the user-level key only after authentication succeeds, and leave session-level revocation (blacklist:session:*) intact so tokens issued before the reset stay dead.",
+  "primaryLayer": "system/auth",
+  "status": "completed",
+  "priority": "P1",
+  "type": "bug-fix",
+  "estimatedComplexity": "small",
+  "parentTaskId": "2026-10-19-tenant-permission-isolation-remediation",
+  "dependsOn": [
+    "2026-10-19-w0-isolation-contract-guardrails"
+  ],
+  "findings": [
+    "F2 (P1): the user-level blacklist key set by RevokeUserTokens is never cleared at login, so resetting a password or toggling status locks the account out for about sixteen minutes with a misleading 401 token.expired.force."
+  ],
+  "scope": {
+    "in": [
+      "backend/pkg/authtoken/token.go",
+      "backend/modules/auth/login/login_runtime.go",
+      "backend/modules/auth/login/*_test.go"
+    ],
+    "out": [
+      "Removing user-level revocation on password reset or disable",
+      "Clearing session-level blacklist entries at login",
+      "Changing AccessTokenTTL or refresh-token rotation policy"
+    ]
+  },
+  "implementationNotes": [
+    "Add an explicit ClearUserBlacklist (or equivalent) next to BlacklistUser rather than issuing a raw DEL from the login path, so the key format stays owned by one package.",
+    "Call it only after credentials verify and after GateSessionIssuance passes. Clearing earlier would let a failed login reset a lockout that a disable action just imposed.",
+    "Session-level revocation must survive: the requirement is 'the new session works, the old tokens do not', not 'everyone is forgiven'.",
+    "Cover the ordering with a test that disables a user, re-enables, logs in, and asserts both the successful login and the rejection of a token minted before the disable."
+  ],
+  "contractAnchors": [
+    "docs/contracts/PLATFORM_CONTRACT.md",
+    "docs/contracts/TENANT_CONTRACT_V1.md"
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "permission-policy",
+    "ownerLayer": "consumer-repository"
+  },
+  "verificationPlan": {
+    "commands": [
+      "cd backend && go build ./...",
+      "cd backend && go test -count=1 ./modules/auth/login/... ./pkg/authtoken/...",
+      "python tenant_acceptance.py"
+    ],
+    "runtimeEvidence": [
+      "reset password then log in immediately: 200 with a usable session",
+      "a token minted before the reset still returns 401 token.expired.force",
+      "Redis keyspace shows no residual blacklist:<userID> after the successful login"
+    ]
+  },
+  "runtimeSensitive": true,
+  "evidenceRequired": [
+    ".harness/evidence/2026-10-19-w4-session-revocation-login-gate/commands.json",
+    ".harness/evidence/2026-10-19-w4-session-revocation-login-gate/summary.md",
+    ".harness/evidence/2026-10-19-w4-session-revocation-login-gate/redis-keys.txt"
+  ],
+  "humanGates": [
+    "Confirm the product expectation: this packet keeps old refresh tokens revoked after a password reset. A 'sign out every device' requirement is a different feature."
+  ],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed",
+    "Login clears the user-level blacklist only after successful authentication",
+    "Session-level revocation still rejects pre-change tokens",
+    "Immediate login after reset or re-enable succeeds",
+    "A3c acceptance cases pass"
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-19-w4-session-revocation-login-gate/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-19-w4-session-revocation-login-gate/",
+    "summaryFile": ".harness/evidence/2026-10-19-w4-session-revocation-login-gate/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-19-w4-session-revocation-login-gate/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-19-tenant-permission-isolation-remediation.task.md"
+    ]
+  }
+}

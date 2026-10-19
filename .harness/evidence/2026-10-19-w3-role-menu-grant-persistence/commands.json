@@ -1,0 +1,65 @@
+{
+  "taskId": "2026-10-19-w3-role-menu-grant-persistence",
+  "repo": "pantheon-base",
+  "executedAt": "2026-10-19T11:55:00+08:00",
+  "completedAt": "2026-10-19T11:55:00+08:00",
+  "agent": {
+    "tool": "other",
+    "adapter": "software-workshop-agent"
+  },
+  "runtimeSensitive": true,
+  "runtimeGap": "Migration 000026 was exercised on a dedicated probe database (pantheon_mig026_probe) and on the live pantheon_base upgrade to schema_migrations=26; the live database contained no tenant-role grants at tenant_id=0, so the move path itself is proven by the probe, not by production rows. The down file intentionally keeps data and was reviewed rather than executed.",
+  "commands": [
+    {
+      "command": "cd backend && go build ./...",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "Clean build after changing the rbacbind signatures and all four call sites."
+    },
+    {
+      "command": "cd backend && go vet ./...",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "No findings."
+    },
+    {
+      "command": "cd backend && go test -count=1 ./modules/system/iam/role/ ./pkg/rbacbind/ ./modules/system/iam/menu/ ./modules/auth/login/ ./modules/system/",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "MySQL/Redis-backed. New cases: TestCreateTenantRolePersistsMenusInRoleTenant, TestPlatformEditOfTenantRoleKeepsGrantInRoleTenant; rbacbind tests now assert tenant_id in the primary key and reject tenant-0 writes."
+    },
+    {
+      "command": "cd backend && go test -count=1 ./pkg/database/",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "Full migration suite green with 000026 applied (schema_migrations=26, later 27)."
+    },
+    {
+      "command": "mysql pantheon_mig026_probe < 000026_role_menu_tenant_backfill.up.sql (twice)",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "First run: platform grant stays at 0, tenant grant moves 0 -> 282, duplicate 0 row removed where a 291 copy existed, soft-deleted role skipped. Second run: identical 4 rows, no changes. Guard path (no tenant_id columns) executes SELECT 1 and leaves data intact."
+    },
+    {
+      "command": "python tenant_acceptance.py (PANTHEON_BASE=http://127.0.0.1:8081)",
+      "cwd": "acceptance",
+      "status": "passed",
+      "details": "A4: role persists navigation grants menuIds=6 expected=6; update persists narrowed grants menuIds=[6,7]."
+    }
+  ],
+  "knownGaps": [
+    "Menu IDs are global (system_menu has no tenant dimension); only the grant row is tenant-scoped. That is the intended model.",
+    "A pre-existing tenant-owned grant wins over the historical tenant-0 row; the migration removes the 0 row only when the tenant copy is present."
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-19-w3-role-menu-grant-persistence/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-19-w3-role-menu-grant-persistence/",
+    "summaryFile": ".harness/evidence/2026-10-19-w3-role-menu-grant-persistence/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-19-w3-role-menu-grant-persistence/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-19-tenant-permission-isolation-remediation.task.md",
+      "docs/contracts/TENANT_CONTRACT_V1.md"
+    ]
+  }
+}

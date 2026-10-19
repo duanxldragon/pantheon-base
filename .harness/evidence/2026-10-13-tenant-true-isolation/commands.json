@@ -1,0 +1,176 @@
+{
+  "taskId": "2026-10-13-tenant-true-isolation",
+  "repo": "pantheon-base",
+  "executedAt": "2026-10-14T14:05:00+08:00",
+  "completedAt": "2026-10-14T14:40:00+08:00",
+  "agent": {
+    "tool": "other",
+    "adapter": "software-workshop-agent"
+  },
+  "runtimeSensitive": true,
+  "runtimeGap": "go vet and the combined targeted go test run could not complete on this host, and the cause is now measured rather than guessed. Any Go action that must make a fresh compiler/tool invocation blocks indefinitely: `go vet ./pkg/tenant/...` consumed 0.03s of user CPU across a 5-minute window and emitted no output, and `go vet -x` printed 345 `mkdir -p $WORK\\...` lines and then blocked before invoking the compiler or the vet tool (vet.exe is present in GOROOT/pkg/tool). Three hypotheses were eliminated by experiment: it is not network (identical hang with GOPROXY=off, which would otherwise fail fast on a missing module), not test-file dependencies (identical with -tests=false), and not build-cache lock contention (reproduced with zero other Go processes running, immediately after a successful `go build`). Warm-cache operations succeed: `go build ./...` exits 0 in ~14s and `go list ./pkg/tenant/...` completes in 2.1s. Because go vet and go test always require a fresh compile/vet invocation, neither can complete here. Consequence: vet-specific checks and the two new regression tests' assertions remain unverified by execution this session; go build ./... passes, gofmt is clean, and the 34-assertion live probe exercises the same code paths end to end. Recorded as not-run rather than silently omitted.",
+  "commands": [
+    {
+      "command": "cd backend && go build ./...",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "Whole-tree compile gate, re-run after each of the six defect fixes. No output, exit 0. This is the substantive compile gate for the change set: it compiles the new pkg/tenant helpers, the optional authuser.TenantScopedRepository port, the tenant-scoped IAM services, the two new middleware behaviours and the 13 re-declared route groups."
+    },
+    {
+      "command": "cd backend && gofmt -l internal/ modules/ pkg/",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "Empty output, exit 0. One file needed formatting first: modules/system/iam/user/user_service_test.go, whose hand-written CREATE TABLE fixtures had just been patched with the tenant_id column; gofmt -w fixed it and the re-run is clean."
+    },
+    {
+      "command": "cd backend && go vet ./internal/middleware/... ./modules/system/iam/user/...",
+      "cwd": "backend",
+      "status": "not-run",
+      "details": "Not completed, cause measured. `go vet ./pkg/tenant/...` consumed 0.03s of user CPU over a 5-minute window with no output, i.e. it is blocked, not slow. `go vet -x` prints 345 work-directory creations and then blocks before invoking the compiler or vet tool. Reproduced with GOPROXY=off (rules out network), with -tests=false (rules out test deps) and with no other Go process running (rules out build-cache lock contention). go build ./... passes, so the code itself compiles; go vet simply cannot make its fresh tool invocation on this host."
+    },
+    {
+      "command": "cd frontend && npx tsc -b",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "tsc-exit=0, no diagnostics. Type-checks the whole project graph including the new modules/auth/tenant/{api.ts,TenantSwitcher.tsx} and the snake_case change to the tenant create payload."
+    },
+    {
+      "command": "cd frontend && npx eslint src/modules/auth/tenant/ src/modules/system/iam/tenant/ src/core/layout/AppLayout.tsx",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "Clean after fixing react-hooks/set-state-in-effect in TenantSwitcher.tsx: the !enabled branch called setState([]) synchronously inside the effect body, which the rule rejects; the reset was removed and the render guard now covers that case."
+    },
+    {
+      "command": "cd frontend && npm run check:shell-visual-contract",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "Shell visual contract passed. This is the load-bearing frontend gate for this task because a new header control (the tenant switcher) was added to AppLayout."
+    },
+    {
+      "command": "python .tmp/verify_tenant_isolation_phase_g.py",
+      "cwd": ".",
+      "status": "passed",
+      "details": "RESULT: 34/34 checks passed against the live multi stack. Raw output saved to live-probe-phase-g.txt. Covers Phase C provisioning in one call, Phase F per-tenant username uniqueness (two tenants with the same username `admin` and different passwords), Phase B/E tenant context resolution + tenant-console reachability, Phase D IAM isolation + cross-tenant write invisibility + tenant-console lockout, Phase E switchable list + X-Tenant-Id validation + switch rejection, and full teardown. Re-run after every fix; the progression was 14/32 -> 25/33 -> 34/34."
+    },
+    {
+      "command": "mysql -e \"SELECT COUNT(DISTINCT table_name) FROM information_schema.columns WHERE table_schema=DATABASE() AND column_name='tenant_id'\" pantheon_base",
+      "cwd": ".",
+      "status": "passed",
+      "details": "18 tables carry tenant_id: permission_role_data_scope_policy, system_auth_mfa_challenge, system_auth_security_event, system_dept, system_dict_item, system_dict_type, system_log_login, system_log_oper, system_post, system_role, system_role_data_scope, system_role_menu, system_role_permission, system_setting, system_user, system_user_role, system_user_session, tenant_memberships. Confirms the isolation surface the rest of the task depends on. schema_migrations version=24, dirty=0 (was 23)."
+    },
+    {
+      "command": "cd backend && PANTHEON_TEST_DSN='root:***@tcp(127.0.0.1:3306)/pantheon_base_test?...' go test -count=1 -timeout 300s ./modules/system/iam/user/...",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "ok github.com/duanxldragon/pantheon-base/backend/modules/system/iam/user 34.137s. This run is what forced the test-fixture fix: the tenant-scoped queries now reference tenant_id, and the hand-written CREATE TABLE fixtures lacked the column, so the suite failed until tenant_id BIGINT UNSIGNED NOT NULL DEFAULT 0 was added."
+    },
+    {
+      "command": "cd backend && PANTHEON_TEST_DSN='root:***@tcp(127.0.0.1:3306)/pantheon_base_test?...' go test -count=1 -timeout 1800s ./internal/middleware/... ./modules/system/iam/user/... ./modules/system/iam/role/... ./modules/system/org/... ./modules/platform/... ./pkg/tenant/...",
+      "cwd": "backend",
+      "status": "not-run",
+      "details": "Not completed within the session, for the same measured reason as the go vet entry: any Go action requiring a fresh compile/vet invocation blocks indefinitely on this host (0.03s user CPU over 5 minutes, unchanged with GOPROXY=off and -tests=false). The combined run therefore never got past the compile stage; it was stopped after 13m31s with no output. Individual packages that did complete earlier in the session, while the build cache was warm: user (ok 34.137s), role (ok 19.526s), dept (ok 4.594s), post (ok), platform (ok), pkg/tenant (ok), pkg/rbacbind (ok). The two new regression tests (auth_repository_test.go tenant-scoped lookup; data_scope_middleware_test.go tenant-administrator recognition) are compiled by go build but their assertions are unverified by a run this session; the live probe independently exercises the same code paths end to end."
+    },
+    {
+      "command": "cd frontend && node ./node_modules/vitest/vitest.mjs run",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "Full frontend unit suite: 24 files / 193 tests passed, exit 0. Includes the three new files added by this follow-up: tests/unit/core/tenant/viewpoint.test.ts (13 tests, viewpoint storage incl. corrupt values), tests/unit/api/tenantViewpointHeader.test.ts (6 tests, X-Tenant-Id attached by the real axios interceptor for a pinned tenant; absent for viewpoint-off, for platform-global 0, and for /auth/*), tests/unit/modules/system/iam/user/useUserList.joinTenant.test.tsx (9 tests, create-user-then-join-membership integration)."
+    },
+    {
+      "command": "cd frontend && node ./node_modules/eslint/bin/eslint.js tests/unit/core/tenant/viewpoint.test.ts tests/unit/api/tenantViewpointHeader.test.ts tests/unit/modules/system/iam/user/useUserList.joinTenant.test.tsx src/core/tenant/viewpoint.ts src/api/request.ts src/modules/auth/tenant/TenantViewpointSwitcher.tsx",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "Exit 0, no findings."
+    },
+    {
+      "command": "cd frontend && node ./node_modules/typescript/bin/tsc -b",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "Exit 0, no diagnostics, re-run after the comment corrections in src/core/tenant/viewpoint.ts, src/api/request.ts and src/modules/auth/tenant/TenantViewpointSwitcher.tsx.",
+      "notes": "tsc -b compiles only the tsconfig.app include (\"src\"); tests/ is outside the repo typecheck gate."
+    },
+    {
+      "command": "cd frontend && node ./node_modules/typescript/bin/tsc -p tsconfig.followup-tests-check.json --pretty false",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "Exit 0. Temporary project extending tsconfig.app.json (types vite/client + vitest/globals) with include \"src\" plus the three new test files, because the repo gate does not typecheck tests/. Run to prove the new test files are type-clean; the temporary config was removed afterwards. A repo-wide run over tests/ reports 15 pre-existing diagnostics in other test files (see knownGaps)."
+    },
+    {
+      "command": "cd backend && go build -o ../.tmp/pantheon-server.exe ./cmd/server",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "Exit 0 in ~6.6s (warm cache). Rebuilt the dev server used for the live probe below; no backend source was changed by this follow-up."
+    },
+    {
+      "command": "python .tmp/verify_frontend_viewpoint_flow.py",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Exit 0, 22/22 checks passed against the running dev stack (127.0.0.1:8080, MySQL 3306 + Redis 6379) on 2026-10-14. Raw output: .harness/evidence/2026-10-13-tenant-true-isolation/frontend-viewpoint-probe.txt. Covers: platform subject lists active tenants (switcher renders); no-header platform scope; valid X-Tenant-Id resolves resolvedBy=header; pinned scope lists the tenant and hides the platform operator; bogus header 403 tenant.forbidden; X-Tenant-Id:0 drops to platform-global; create user inside the pinned scope lands in that tenant and never in the platform scope; POST /system/tenant/:id/members accepts the join and the member row is active; the created user can log in with the tenant selected and resolves to it; wrong password 401; a non-platform subject sending ANY X-Tenant-Id is refused 403 tenant.forbidden (never unscoped); a tenant member is refused /system/tenant/list with 403 permission.denied (the switcher hides)."
+    },
+    {
+      "command": "mysql -uroot -p*** pantheon_base < .tmp/cleanup_last.sql ; SELECT COUNT(*) FROM tenants WHERE code LIKE 'probe-vp-%'; SELECT COUNT(*) FROM system_user WHERE username LIKE 'vpjoin%' OR username LIKE 'vpadm%'",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Both counts returned 0 after the probe run. DELETE /system/tenant is a soft delete, so probe tenants and their tenant-scoped rows survive it; the teardown deletes them across all 18 tables carrying tenant_id. The probe prints the same SQL for reruns. Note: tenants 24-29 from the earlier phase-G probe runs are still present (created before this follow-up, left untouched)."
+    },
+    {
+      "command": "cd frontend && PANTHEON_VIEWPOINT_EVIDENCE_DIR=../.harness/evidence/2026-10-13-tenant-true-isolation/browser-viewpoint node ./node_modules/@playwright/test/cli.js test tests/smoke-core/tenant-viewpoint-switcher.spec.ts --config=playwright.config.ts --workers=1",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "Real-browser acceptance against the running dev stack (playwright + chromium, vite dev server on 5173 proxying /api to 8080). 5/5 tests passed in 58s; raw output: .harness/evidence/2026-10-13-tenant-true-isolation/browser-viewpoint-acceptance.txt, screenshots in browser-viewpoint/. Cases: platform-global default (no X-Tenant-Id on any business call, no banner, switcher reads 平台全局); pinning through the real dropdown (full shell reload, persistent banner, every /system/user/list call carries X-Tenant-Id=<tenant>, tenant population listed and the platform operator absent); create user inside the pinned view with the join-tenant box checked by default -> 用户已创建并加入租户成员, row appears, API复核 membership active; that user signing in through the login form (new session, no banner, switcher absent, no header); exiting the viewpoint from the banner (banner gone, back to 平台全局, no header)."
+    },
+    {
+      "command": "cd frontend && node ./node_modules/eslint/bin/eslint.js tests/smoke-core/tenant-viewpoint-switcher.spec.ts scripts/cleanup-smoke-fixtures.mjs src/modules/system/iam/user/UserFormModal.tsx",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "Exit 0, no findings, after the checkbox-binding fix and the teardown/registry changes."
+    },
+    {
+      "command": "cd frontend && node ./scripts/check-smoke-coverage-contract.mjs && node ./scripts/check-smoke-web-base.mjs && node ./scripts/check-system-page-admission.mjs",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "coverage contract passed for 34 smoke specs and 20 script entries (the new spec lives in tests/smoke-core, which that contract does not scan; it is registered in test:smoke:tenant / test:smoke:tenant:viewpoint anyway); web-base check passed for 110 files; page admission passed for 16 entries."
+    },
+    {
+      "command": "cd frontend && node ./scripts/run-api-unit-tests.mjs",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "12/12 node:test suites passed after adding the smoke_tadmin_ / smoke_user_viewpoint_ user prefixes to scripts/cleanup-smoke-fixtures.mjs, so an interrupted browser run is swept by npm run smoke:cleanup."
+    },
+    {
+      "command": "cd frontend && node ./node_modules/vitest/vitest.mjs run",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "24 files / 193 tests passed after the UserFormModal checkbox fix."
+    },
+    {
+      "command": "mysql -uroot -p*** pantheon_base < .tmp/cleanup_viewpoint_smoke.sql ; SELECT COUNT(*) FROM tenants WHERE code LIKE 'smoke-vp-%' ; SELECT COUNT(*) FROM system_user WHERE username LIKE 'smoke_tadmin_%' OR username LIKE 'smoke_user_viewpoint_%'",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Both counts 0. The browser spec's own teardown (asserted, code 200) soft-deletes its tenant and purges memberships, but DELETE /system/tenant/:id is refused with 500 tenant.has_active_members while any membership remains, and the tenant's admin user row survives the tenant soft delete; this SQL covers the 18 tenant_id tables plus those user rows. One active tenant (id 30 test-tenant) pre-dates this task and was left alone."
+    }
+  ],
+  "knownGaps": [
+    "go vet could not run: it blocks indefinitely rather than being slow (0.03s of user CPU consumed over a 5-minute window, no output). It is not a network, test-dependency or build-cache-lock problem - all three were eliminated by experiment (GOPROXY=off, -tests=false, and zero concurrent Go processes). go build ./... succeeds, so the code compiles; only the fresh vet/compile invocation blocks. Consequence: vet-specific diagnostics (printf verbs, unreachable code, struct tags) were not collected for the changed packages this session.",
+    "The two new regression tests are written and compiled but unexecuted: modules/system/iam/user/auth_repository_test.go (tenant-scoped credential lookup, cross-tenant miss, platform-first ordering) and internal/middleware/data_scope_middleware_test.go (tenant-administrator recognition, continued fail-closed behaviour for non-administrative roles). Compensating evidence: go build ./... passes and the 34-assertion live probe covers the same behaviours against MySQL end to end.",
+    "The tenant switcher was verified by static gates (tsc, eslint, shell visual contract) and by the backend probe, but not by an in-browser visual pass; the UI change is asserted at the contract level only.",
+    "copyPlatformSettingsToTenant carries a hand-written column list. Another NOT NULL-without-default column on system_setting would repeat defect D1 and break tenant creation again; this is flagged as a human gate in the task packet rather than guarded by a test.",
+    "The tenants CRUD ownership misplacement (contract §7 assigns it to system/org, the console lives in system/iam) is knowingly left in place and is not verified by this task.",
+    "In-browser pass still outstanding for the tenant viewpoint control. The follow-up live probe (frontend-viewpoint-probe.txt, 22/22) exercises the exact HTTP calls the frontend issues - X-Tenant-Id on business requests, create user inside the pinned scope, POST /system/tenant/:id/members, then that user logging in with the tenant selected - and the components are covered by unit tests plus tsc/eslint/vite build, but no real browser clicked the switcher or read the banner this session.",
+    "tests/ is outside the repo typecheck gate: `tsc -b` compiles only tsconfig.app.json's \"src\" include, so test files are never typechecked by CI. A repo-wide run over tests/ reports 15 pre-existing diagnostics in other test files (unrelated to this follow-up and left untouched); the three new test files were verified type-clean through a temporary project.",
+    "This task's review.md still lacks the harness machine-readable JSON block, so check-review.mjs fails it and check-graph-review.mjs cannot compare it against the evidence. Pre-existing and repo-wide: 2026-10-13-tenant-console-remediation, 2026-10-12-v0160-release-closeout and 2026-10-12-v0161-release-cut fail identically. Not repaired here to avoid rewriting a prior review's verdict.",
+    "DELETE /system/tenant/:id reports the business rule \"tenant still has active members\" as HTTP/business code 500 (tenant.has_active_members) rather than a 4xx conflict. Teardown code must therefore purge memberships first; the browser spec's afterAll does that and asserts the delete returned 200. Reported as an API-hygiene observation, not changed here (shared tenant contract)."
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-13-tenant-true-isolation/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-13-tenant-true-isolation/",
+    "summaryFile": ".harness/evidence/2026-10-13-tenant-true-isolation/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-13-tenant-true-isolation/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/contracts/TENANT_CONTRACT_V1.md",
+      "docs/designs/TENANT_RESOURCE_SCOPE_MATRIX.md",
+      "docs/TENANT_INITIALIZATION_FINDINGS_2026-10-13.md"
+    ]
+  }
+}

@@ -1,0 +1,85 @@
+{
+  "taskId": "2026-10-19-w0-isolation-contract-guardrails",
+  "title": "Write the tenant-scope contract clause and land the two-tenant red cases before any fix",
+  "goal": "Every wave in this program needs one written rule to be reviewed against and one executable baseline that fails today. This wave adds the missing clause to TENANT_CONTRACT_V1.md §2.3 -- tenant-scoped resources carry tenant_id AND every read path filters by it while every write path assigns it, with tenant_id = 0 reserved for the platform/global scope -- and converts the acceptance probe into a deterministic two-tenant regression suite that runs against the unfixed tree and fails on exactly the six data-scope defects. Without this wave the later waves would be reviewed against an unwritten convention, which is how the tables ended up with tenant_id columns that half the code ignores.",
+  "primaryLayer": "platform",
+  "status": "completed",
+  "priority": "P0",
+  "type": "remediation",
+  "estimatedComplexity": "small",
+  "parentTaskId": "2026-10-19-tenant-permission-isolation-remediation",
+  "dependsOn": [],
+  "findings": [
+    "F7/F8/F9/F10/F11/F13 share one root cause: the tenant dimension exists in the schema but not in the read/write paths. The contract does not currently state the read/write obligation, so nothing catches a new role_key-only query."
+  ],
+  "scope": {
+    "in": [
+      "docs/contracts/TENANT_CONTRACT_V1.md",
+      "backend/internal/middleware/data_scope_tenant_test.go",
+      "backend/modules/system/iam/permission/permission_data_scope_tenant_test.go",
+      "backend/modules/system/iam/role/role_data_scope_tenant_test.go",
+      "acceptance/cross_tenant_leak.py (harness copy, referenced not vendored)"
+    ],
+    "out": [
+      "Any production code change",
+      "Changing the meaning of tenant_id = 0 for existing platform rows"
+    ]
+  },
+  "implementationNotes": [
+    "The clause must be normative and testable: state the three cases (platform scope passes through, tenant scope filters, missing context fails closed) so a reviewer can reject a predicate-free query by citing a line.",
+    "The red cases must fail on the current tree for the right reason. A case that fails because a fixture is missing teaches nothing; assert on the leak itself (B's visible row count changes, or A's write returns 200).",
+    "A red test cannot be committed failing. Author the tests in W0, capture the red run as evidence, then commit them together with the W1 fix that turns them green (or behind a build tag until W1 lands). The evidence file is what proves the test is meaningful; a permanently red main branch is not.",
+    "Keep the harness script out of the repository build; it is an acceptance artifact, not a unit test. The Go tests are the ones that gate CI.",
+    "The manifest's original `-run Tenant` pattern silently skipped three of the seven cases (TestDataScopeMiddlewareAppliesOnlyTheCallersPolicy, TestUpdateDataScopePolicyRejectsForeignRoleKey, TestUpdateDataScopePolicyRejectsForeignDeptIDs do not contain the substring 'Tenant'). The command was widened to `-run 'Tenant|DataScope'` so the gate cannot report a green package while three leak assertions are red."
+  ],
+  "contractAnchors": [
+    "docs/contracts/TENANT_CONTRACT_V1.md",
+    "docs/designs/TENANT_RESOURCE_SCOPE_MATRIX.md"
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "permission-policy",
+    "ownerLayer": "consumer-repository"
+  },
+  "verificationPlan": {
+    "commands": [
+      "cd backend && go test -count=1 -run 'Tenant|DataScope' ./internal/middleware/...",
+      "cd backend && go test -count=1 -run 'Tenant|DataScope' ./modules/system/iam/permission/...",
+      "cd backend && go test -count=1 -run 'Tenant|DataScope' ./modules/system/iam/role/...",
+      "cd backend && go build ./..."
+    ],
+    "runtimeEvidence": [
+      "red-run log: each new test fails with the expected assertion, not with a compile or fixture error"
+    ]
+  },
+  "runtimeSensitive": false,
+  "evidenceRequired": [
+    ".harness/evidence/2026-10-19-w0-isolation-contract-guardrails/commands.json",
+    ".harness/evidence/2026-10-19-w0-isolation-contract-guardrails/summary.md",
+    ".harness/evidence/2026-10-19-w0-isolation-contract-guardrails/red-run.log"
+  ],
+  "humanGates": [
+    "Confirm the contract clause wording matches how maintainers describe tenant_id = 0 (platform scope, not unknown)."
+  ],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed",
+    "TENANT_CONTRACT_V1 §2.3.1 read/write obligations added and dated as V1.2",
+    "Red cases fail on the unfixed tree and pass after W1, with a md5-verified restore",
+    "The verification command selects every red case (run Tenant|DataScope)"
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-19-w0-isolation-contract-guardrails/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-19-w0-isolation-contract-guardrails/",
+    "summaryFile": ".harness/evidence/2026-10-19-w0-isolation-contract-guardrails/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-19-w0-isolation-contract-guardrails/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-19-tenant-permission-isolation-remediation.task.md"
+    ]
+  }
+}

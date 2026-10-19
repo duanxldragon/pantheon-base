@@ -1,0 +1,53 @@
+{
+  "taskId": "2026-10-19-w5-tenant-console-ux",
+  "repo": "pantheon-base",
+  "executedAt": "2026-10-19T12:10:00+08:00",
+  "completedAt": "2026-10-19T12:10:00+08:00",
+  "agent": {
+    "tool": "other",
+    "adapter": "software-workshop-agent"
+  },
+  "runtimeSensitive": true,
+  "runtimeGap": "UI verified in Chromium against the Vite dev server (127.0.0.1:5174) proxied to the fixed backend. The tenant.admin console was exercised with a tenant administrator; the platform-admin viewpoint was exercised by the existing smoke spec. Screenshots were not retained for this run.",
+  "commands": [
+    {
+      "command": "cd frontend && node node_modules/typescript/bin/tsc -b",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "Whole frontend type-check clean."
+    },
+    {
+      "command": "cd frontend && node node_modules/eslint/bin/eslint.js src/modules/auth/tenant/TenantViewpointSwitcher.tsx src/modules/auth/tenant/TenantSwitcher.tsx src/modules/auth/tenant/usePlatformScope.ts src/modules/system/org/dept/DeptList.tsx",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "No errors; the first draft wrote state synchronously in an effect and was rewritten to derive the compat value at render time."
+    },
+    {
+      "command": "NODE_PATH=<frontend>/node_modules UI_BASE=http://127.0.0.1:5174 node ui_walkthrough.cjs",
+      "cwd": "acceptance",
+      "status": "passed",
+      "details": "23/23 (including tenant-user-login and dept:tree). The F1 probe assertion was corrected to require a redirect into the shell."
+    },
+    {
+      "command": "NODE_PATH=<frontend>/node_modules UI_BASE=http://127.0.0.1:5174 node network_probe.cjs",
+      "cwd": "acceptance",
+      "status": "passed",
+      "details": "network-after.json: no /system/tenant/list call on /system/user or /system/dept, platformOnlyToasts=[], deptTotal=5, deptChildVisible=true, consoleErrors=[]."
+    }
+  ],
+  "knownGaps": [
+    "The setting page still logs 4 console errors in both the baseline and this run; they are not platformOnly and were not investigated here.",
+    "The dept table is now flat (paginated rows) rather than a tree widget; hierarchy is conveyed by the existing ordering, not an expand control. The task packet allowed this option."
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-19-w5-tenant-console-ux/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-19-w5-tenant-console-ux/",
+    "summaryFile": ".harness/evidence/2026-10-19-w5-tenant-console-ux/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-19-w5-tenant-console-ux/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-19-tenant-permission-isolation-remediation.task.md",
+      "docs/contracts/TENANT_CONTRACT_V1.md"
+    ]
+  }
+}

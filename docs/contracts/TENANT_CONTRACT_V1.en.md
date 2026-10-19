@@ -3,7 +3,7 @@ title: Tenant Contract V1 (Shared-Schema MVP)
 doc_type: Contract
 layer: platform / system/auth / system/iam / system/org / system/config
 status: Approved
-updated_at: 2026-09-10
+updated_at: 2026-10-13
 ---
 
 # Tenant Contract V1 (Shared-Schema MVP)
@@ -91,14 +91,29 @@ Invariants:
 
 1. Explicit header `X-Tenant-Id` (platform ops / admin scenarios; requires platform-level permission + audit)
 2. Authenticated subject (`tenant_id` claim in the JWT, issued at login from the user's default tenant or the requested tenant)
-3. Compat-mode fallback: `tenant_id = 0`
+3. Platform-scope fallback: the request landed on a route **explicitly declared as a platform admin API**, the subject holds a platform-level grant, and the subject belongs to no tenant → `tenant_id = 0` (multi mode, see §3.4)
+4. Compat-mode fallback: `tenant_id = 0`
+
+> **V1.1 clarification (2026-10-13)**: V1 listed only items 1/2/4 and confined the fallback to compat mode, so under multi mode a "non-tenant (platform) subject" was classified as §3.2's "missing context" (500 `TENANT_CONTEXT_MISSING`) and the platform console was entirely unusable. The new item 3 lands §3.3's already-acknowledged "platform admin API (explicit, platform-permission-gated, audited)" in the resolution layer: **`multi` is a superset of `compat`**, and `tenant_id = 0` (platform-level / global, §2.3/§4) is a first-class scope in both modes. Items 1/2 keep their priority; the compat fallback keeps its meaning (only its number moved to 4).
 
 ### 3.2 Propagation rules
 
 - Tenant context is resolved **after the auth middleware, before business handlers**, and is read-only afterwards
 - Business code **reads** the context only; rewriting the current request's tenant context inside a handler is forbidden
 - Background/async jobs must carry tenant context explicitly (worker messages carry `tenant_id`); process-level globals are forbidden
-- Missing context outside compat mode → reject (500 class = configuration error; 401/403 = authn/authz classes, see §5)
+- Missing context outside compat mode → reject (500 class = configuration error; 401/403 = authn/authz classes, see §5). **Scope**: route groups that have not declared the platform scope; a route declared as a platform admin API resolves per §3.1 item 3 (see §3.4)
+
+### 3.4 Platform-scope declaration (V1.1 clarification)
+
+§3.3 requires the platform admin API to be "explicitly declared". The declaration carrier is the **route group**, and it is the enablement condition for §3.1 item 3:
+
+- An **undeclared** route group keeps V1 semantics: under multi mode a claim-less subject is rejected (deny-by-default) and gets no platform-scope fallback.
+- A **declared** route group gains one extra fallback, gated on two conditions that must both hold:
+  1. The subject holds a **platform-level grant** — a global role (e.g. `platform_ops`) or a global (domain-less) Casbin policy allowing this route. An in-tenant role (`role:<key>@tenant:<id>`) is not a platform grant (§4: the two namespaces are never merged or implicitly escalated).
+  2. The subject **belongs to no tenant** — no active membership. That subject is exactly the §3.1 item-2 "zero memberships → no claim issued" platform population, so both sides must agree.
+- The fallback therefore never overrides items 1/2: a subject with a claim resolves via item 2, and a subject holding a membership reaches the platform scope only through the explicit header of item 1 (which requires the platform grant).
+- The fallback decides the **context** only; it does not relax §3.3's read invariants: a request resolving to `tenant_id = 0` may only read and write platform/global rows.
+- Reference implementation: `internal/middleware.PlatformScopeTenantContextMiddleware` (declaring side) and `internal/middleware.TenantContextMiddleware` (strict semantics for the undeclared side); resolution logic lives in `pkg/tenant.Resolve`.
 
 ### 3.3 Data-access invariants (most critical)
 
@@ -139,6 +154,7 @@ Invariants:
   - No membership checks; all Casbin domains are `tenant:0`
   - Existing tests and API behavior unchanged — this is the regression baseline during canary (`2026-09-10-tenant-canary-slice`)
 - `multi` mode: fully enables §3/§4/§5
+- **`multi` is a superset of `compat`** (V1.1 clarification): under multi, §3.1 item 4 (the compat fallback) no longer applies, but the platform-level/global scope (`tenant_id = 0`) remains a first-class scope (§3.1 item 3). Non-tenant (platform) subjects and tenant subjects therefore **coexist in one deployment**; `platform.tenant_mode` expresses "is the tenant dimension enabled", not "an all-or-nothing world switch"
 - Mode switching is one-way (per deployment): compat → multi; rollback means data rollback per the runbook — running multi and flipping back to compat to continue writes is forbidden
 
 ---
@@ -162,3 +178,20 @@ Invariants:
 - The [tenant-readiness checks](../acceptances/BUSINESS_MODULE_ACCEPTANCE_MATRIX.md) (matrix T1–T4) apply to every change touching tenancy semantics
 - The canary slice (task 3) is the first runtime validation of this contract's behavioral promises; its isolation tests are the contract's acceptance tests
 - Contract changes: after V1 freeze, modifications follow the contract-change process (bump version + change log + sync runbook/matrix)
+
+---
+
+## 9. Change Log
+
+| Version | Date | Change | Nature |
+|---------|------|--------|--------|
+| V1.1 | 2026-10-13 | §3.1 gains a new item 3 "platform-scope fallback" (the former item 3 becomes item 4 with unchanged meaning); new §3.4 "platform-scope declaration"; §3.2 notes the scope of the reject rule; §6 notes "multi is a superset of compat" | Clarification |
+
+**Trigger and scope of this clarification**
+
+- Trigger: task `2026-10-13-tenant-console-remediation`. Under multi mode, `dashboard` / `system/dict/*` / `system/setting/*` / `system/operation-log/*` / `auth/operation-verify` all returned `500 tenant.context.missing`, `X-Tenant-Id` was unusable for any role other than `platform_ops` (403), and the platform console was unusable as a whole. Because the settings page failed the same way, the UI could not switch back to compat either (§6 also forbids switching back).
+- Gap located: §3.3 requires the platform admin API to be "explicitly declared", but §3.1 never said how a declared route resolves its context. The implementation granted the fallback to compat only, so a platform-level subject under multi fell into §3.2's "missing context".
+- Scope of the clarification: only §3 resolution semantics and §6 mode semantics are completed. **§2 (model), §4 (Casbin domain), §5 (error codes) and §7 (ownership boundaries) are unchanged**; §3.1's priority order and the item 1/2 conditions are unchanged.
+- Implementation: `pkg/tenant.Resolve` (the `platform-fallback` resolution source), `internal/middleware.PlatformScopeTenantContextMiddleware`, `pkg/tenant.IsPlatformPopulationUser`; the route-group declaration list is in the task packet `2026-10-13-tenant-console-remediation`.
+
+> Governance note: this record means runbook `TENANT_MIGRATION_RUNBOOK.md` §8 gate G4 ("no open contract-change") no longer holds automatically. G4 is the maintainer's call; this clarification does not declare G4 granted. The production DDL/data-change ban is unaffected by this document.

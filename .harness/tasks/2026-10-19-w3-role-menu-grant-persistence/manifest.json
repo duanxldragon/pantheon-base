@@ -1,0 +1,90 @@
+{
+  "taskId": "2026-10-19-w3-role-menu-grant-persistence",
+  "title": "Persist tenant role navigation grants with tenant_id so they can be read back and survive re-editing",
+  "goal": "rbacbind.InsertRoleMenus inserts into system_role_menu without tenant_id, so grants written from a tenant console land on tenant_id = 0 while loadRoleMenus reads under the tenant scope. The grants are therefore unreadable the moment they are saved, and re-saving an existing tenant role deletes the rows it then fails to rewrite, silently wiping navigation access. The contrast case proves the intended design: replaceRolePermissions already resolves the owning tenant through roleOwningTenantIDTx and writes TenantID, which is why page/action permission keys are correctly isolated while menu grants are not. This wave gives InsertRoleMenus the same tenant argument, backfills historical tenant_id = 0 rows, and adds the regression that a second edit does not lose grants.",
+  "primaryLayer": "system/iam",
+  "status": "completed",
+  "priority": "P0",
+  "type": "remediation",
+  "estimatedComplexity": "small",
+  "parentTaskId": "2026-10-19-tenant-permission-isolation-remediation",
+  "dependsOn": [
+    "2026-10-19-w0-isolation-contract-guardrails"
+  ],
+  "findings": [
+    "F3 (P0): InsertRoleMenus writes system_role_menu without tenant_id (insertRoleMenuSQL has no tenant column), while loadRoleMenus filters by tenant scope; tenant role navigation grants are unreadable, and updating an existing tenant role deletes them permanently."
+  ],
+  "scope": {
+    "in": [
+      "backend/pkg/rbacbind/rbacbind.go",
+      "backend/modules/system/iam/role/role_menu.go",
+      "backend/pkg/database/migrations/000026_role_menu_tenant_backfill.up.sql",
+      "backend/pkg/database/migrations/000026_role_menu_tenant_backfill.down.sql",
+      "backend/pkg/rbacbind/*_test.go"
+    ],
+    "out": [
+      "Changing the menu tree contract or the role-menu payload shape",
+      "Re-seeding platform role menus",
+      "Touching system_role_permission, which is already tenant-correct"
+    ]
+  },
+  "implementationNotes": [
+    "InsertRoleMenus already takes a db handle; add tenantID as an explicit parameter rather than deriving it inside rbacbind, so the call site stays responsible for resolving the owning tenant exactly as replaceRolePermissions does.",
+    "The call site must resolve the tenant from the role row (roleOwningTenantIDTx), not from the request context: the two can differ for a platform administrator editing a tenant role, and the row must follow the role.",
+    "The backfill can be fully automatic because system_role_menu joins to system_role, whose tenant_id is authoritative. Unlike the data-scope backfill there is no ambiguity to defer.",
+    "Preserve the delete-then-insert semantics of replaceRoleMenus; the bug is the missing column, not the replace strategy."
+  ],
+  "contractAnchors": [
+    "docs/contracts/TENANT_CONTRACT_V1.md",
+    "docs/designs/TENANT_RESOURCE_SCOPE_MATRIX.md"
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "permission-policy",
+    "ownerLayer": "consumer-repository"
+  },
+  "verificationPlan": {
+    "commands": [
+      "cd backend && go build ./...",
+      "cd backend && go test -count=1 ./pkg/rbacbind/... ./modules/system/iam/role/...",
+      "python tenant_acceptance.py"
+    ],
+    "runtimeEvidence": [
+      "create a tenant role with menuIds, read it back, and confirm the same menuIds",
+      "edit the same role twice and confirm the grants survive the second save",
+      "SQL snapshot: no new system_role_menu row with tenant_id = 0 for a tenant role"
+    ]
+  },
+  "runtimeSensitive": true,
+  "evidenceRequired": [
+    ".harness/evidence/2026-10-19-w3-role-menu-grant-persistence/commands.json",
+    ".harness/evidence/2026-10-19-w3-role-menu-grant-persistence/summary.md",
+    ".harness/evidence/2026-10-19-w3-role-menu-grant-persistence/menu-roundtrip.log"
+  ],
+  "humanGates": [
+    "Approve the 000026 backfill running automatically: it rewrites tenant_id = 0 rows to the owning role's tenant, which is a data mutation on existing installs."
+  ],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed",
+    "InsertRoleMenus takes and writes tenantID",
+    "replaceRoleMenus resolves the tenant from the role row",
+    "Menu grants read back identical after create and after a second edit",
+    "Migration 000026 idempotent and reversible",
+    "No new tenant_id = 0 row for tenant roles"
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-19-w3-role-menu-grant-persistence/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-19-w3-role-menu-grant-persistence/",
+    "summaryFile": ".harness/evidence/2026-10-19-w3-role-menu-grant-persistence/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-19-w3-role-menu-grant-persistence/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-19-tenant-permission-isolation-remediation.task.md"
+    ]
+  }
+}

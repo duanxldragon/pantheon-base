@@ -1,0 +1,92 @@
+{
+  "taskId": "2026-10-19-tenant-permission-isolation-remediation",
+  "repo": "pantheon-base",
+  "executedAt": "2026-10-19T08:50:00+08:00",
+  "completedAt": "2026-10-19T09:35:00+08:00",
+  "agent": {
+    "tool": "other",
+    "adapter": "software-workshop-agent"
+  },
+  "runtimeSensitive": true,
+  "runtimeGap": "This packet records the planning and baseline only. No production code has been modified, so no build, vet or test gate has been run against a changed tree; every wave manifest is status=planned. The acceptance suites were executed against the unmodified tree to produce the baseline findings, and those results are recorded below as failures by design.",
+  "commands": [
+    {
+      "command": "python tenant_acceptance.py",
+      "cwd": "C:/Users/xiaolong/WorkBuddy AI/2026-10-19-08-42-36/acceptance",
+      "status": "failed",
+      "details": "136 assertions, 130 passed, 6 failed. Failures map to F1 (tenant-created user cannot log in), F2 (blacklist lockout), F3 (role menu grants lost), F4 (ghost membership). Log: acceptance-run.log."
+    },
+    {
+      "command": "NODE_PATH=<frontend>/node_modules node ui_walkthrough.cjs",
+      "cwd": "C:/Users/xiaolong/WorkBuddy AI/2026-10-19-08-42-36/acceptance",
+      "status": "failed",
+      "details": "23 assertions, 22 passed, 1 failed (F6: department list renders only the root, total reads 1). 14 console pages screenshot-captured. Log: ui-run.log."
+    },
+    {
+      "command": "python cross_tenant_leak.py",
+      "cwd": "C:/Users/xiaolong/WorkBuddy AI/2026-10-19-08-42-36/acceptance",
+      "status": "failed",
+      "details": "34 assertions, 27 passed, 7 failed. Produced F7, F8, F9, F10, F11, F13, F14. Two-tenant fixture: A=acme-demo(282), B=beta-1019091846(291), shared role_key dsp_1019091846. Log: leak-run.log; structured: cross-tenant-result.json."
+    },
+    {
+      "command": "NODE_PATH=<frontend>/node_modules LEAK_KEY=bleak_1019091846 node ui_leak_probe.cjs",
+      "cwd": "C:/Users/xiaolong/WorkBuddy AI/2026-10-19-08-42-36/acceptance",
+      "status": "failed",
+      "details": "UI-level evidence for F7: the data-scope tab reports total 53 while tenant A owns 3 roles, and the permission workbench lists dsp_1019091846, role_test and tenant_admin more than once. Artifacts: evidence/ui/leak-01-data-scope-page.png, evidence/ui/leak-00-workbench.png, ui-leak-result.json."
+    },
+    {
+      "command": "mysql -uroot -p*** pantheon_base -e \"SHOW CREATE TABLE system_role_data_scope\"",
+      "cwd": "D:/workspace/go/pantheon-platform/pantheon-base",
+      "status": "passed",
+      "details": "Confirmed the table already has tenant_id and UNIQUE KEY uk_role_data_scope_tenant_role (tenant_id, role_key). The defect is therefore on the read/write path, not in the schema, which is why the fix is signatures plus one backfill rather than a redesign."
+    },
+    {
+      "command": "mysql -uroot -p*** pantheon_base -e \"SELECT tenant_id, role_key, mode FROM system_role_data_scope WHERE role_key LIKE 'dsp_%'\"",
+      "cwd": "D:/workspace/go/pantheon-platform/pantheon-base",
+      "status": "passed",
+      "details": "Rows observed: (0, dsp_*, custom/self), (282, dsp_*, self), (291, dsp_*, all). Proves the global row written by the permission console coexists with the correct tenant rows written by the role module, and that the middleware's role_key-only read merges all three."
+    },
+    {
+      "command": "python cleanup_leak_probe.py 1019091846",
+      "cwd": "C:/Users/xiaolong/WorkBuddy AI/2026-10-19-08-42-36/acceptance",
+      "status": "passed",
+      "details": "Probe users and roles deleted from both tenants, probe data-scope and casbin rows removed, probe tenant 291 archived. Tenant A verified back to 2 roles / 2 users with status active, so the environment is left deliverable."
+    },
+    {
+      "command": "node scripts/harness/check-task-packet.mjs --root .",
+      "cwd": "D:/workspace/go/pantheon-platform/pantheon-base",
+      "status": "passed",
+      "details": "The new task packet docs/harness/tasks/2026-10-19-tenant-permission-isolation-remediation.task.md passes. All eight new manifests pass validateTaskManifest (taskId matches directory, required scope arrays present)."
+    },
+    {
+      "command": "cd backend && go build ./...",
+      "cwd": "backend",
+      "status": "not-run",
+      "details": "No production code changed in this planning step. This is the first gate of W0."
+    },
+    {
+      "command": "cd backend && go test -count=1 ./internal/middleware/... ./modules/system/iam/... ./modules/auth/login/... ./pkg/rbacbind/... ./pkg/tenant/...",
+      "cwd": "backend",
+      "status": "not-run",
+      "details": "Depends on the W0 red cases and the W1..W4 fixes; nothing to run yet."
+    }
+  ],
+  "knownGaps": [
+    "No fix has been implemented, so the program's own success criteria are all unmet by definition. The 14 failed assertions recorded above are the baseline, not a regression.",
+    "F14 (cross-tenant role reads return 500) is recorded but not scheduled to a wave: it is a response-code quality issue with no data exposure, and folding it into W1 would mix an error-mapping change into the isolation change set.",
+    "The two-tenant probe creates and deletes a tenant per run. Re-running it on a shared database leaves archived tenants behind; the cleanup script archives rather than deletes so the evidence rows stay inspectable.",
+    "The frontend gates (smoke suite) were not run in this planning step; they are W5's first gate."
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-19-tenant-permission-isolation-remediation/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-19-tenant-permission-isolation-remediation/",
+    "summaryFile": ".harness/evidence/2026-10-19-tenant-permission-isolation-remediation/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-19-tenant-permission-isolation-remediation/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-19-tenant-permission-isolation-remediation.task.md",
+      "docs/contracts/TENANT_CONTRACT_V1.md",
+      "docs/TENANT_SCOPE_FREEZE_DECISION_2026-10-15.md"
+    ]
+  }
+}

@@ -1,7 +1,7 @@
 {
   "taskId": "2026-10-12-v0161-release-cut",
   "repo": "pantheon-base",
-  "executedAt": "2026-10-12T15:25:00+08:00",
+  "executedAt": "2026-10-12T15:35:00+08:00",
   "agent": {
     "tool": "other",
     "adapter": "software-workshop-agent"
@@ -86,10 +86,28 @@
       "details": "Validates the fix. Validate inputs now runs immediately after Checkout default branch and before Setup Node, so it still fails fast but with the tree present. The script asserts the ordering explicitly - Checkout at index 0 precedes Validate inputs at index 1 - rather than only re-checking YAML validity, because the original validation checked structure, SHA pins and the S7630 injection surface but never step order, which is exactly why this reached a hosted run. Also re-confirms: parses as YAML, workflow_dispatch only, both uses: entries SHA-pinned, workflow-level permissions contents: read with contents: write scoped to the single cut job, and no run block interpolates ${{ inputs.* }} or ${{ github.event.* }}."
     },
     {
-      "command": "gh workflow run foundation-release-cut.yml --ref main -f release_version=pantheon-base-v0.16.1 -f release_line=release/0.16 -f notes_dir=.harness/evidence/2026-10-12-v0161-release-cut/notes -f base_commit=c83f8e4c865b19ecd5351ecefac4106ec416e0bc -f dry_run=true (retry, after the step-order fix merges)",
+      "command": "gh workflow run foundation-release-cut.yml --ref main -f release_version=pantheon-base-v0.16.1 -f release_line=release/0.16 -f notes_dir=.harness/evidence/2026-10-12-v0161-release-cut/notes -f base_commit=c83f8e4c865b19ecd5351ecefac4106ec416e0bc -f dry_run=true (retry, after the step-order fix merged as 0fed4a39)",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Run 38217942363, success in 17s. 'Releasing pantheon-base-v0.16.1 from c83f8e4c865b19ecd5351ecefac4106ec416e0bc'; then '[ok] local bundle pantheon-base-v0.16.1: foundation-release-pantheon-base-v0.16.1.tgz, repo.tar', which is the four-asset contract satisfied including both .sha256 sidecars; then publish invoked with --dry-run, emitting the planned operations create-tag, push-tag, create-github-release and upload-github-release-assets without executing them. This is the first time the cut/publish chain has ever run end to end in this repository - the scripts had only ever been covered by unit tests of themselves. It also confirms the release content is buildable from c83f8e4c while the runner's worktree sits at the newer main HEAD, which is what the baseCommit-versus-worktree check was designed to allow when the difference is not a sharedPath."
+    },
+    {
+      "command": "gh workflow run foundation-release-cut.yml --ref main -f release_version=pantheon-base-v0.16.1 -f release_line=release/0.16 -f notes_dir=.harness/evidence/2026-10-12-v0161-release-cut/notes -f base_commit=c83f8e4c865b19ecd5351ecefac4106ec416e0bc -f dry_run=false",
+      "cwd": ".",
+      "status": "failed",
+      "details": "SECOND HOSTED FAILURE, run 38218036804, 20s, at the Publish release step: 'git tag -a pantheon-base-v0.16.1 failed: Committer identity unknown ... fatal: empty ident name (for <runner@...>) not allowed'. The dry run never reaches createAnnotatedTag - it returns before the operations are executed - so this failure mode is structurally invisible to a dry run, which is the whole reason the real dispatch is a separate, non-redundant step. Root cause: actions/checkout with persist-credentials false sets no git identity, and the ubuntu-latest runner has no global one, but an annotated tag needs a committer. Verified afterwards that nothing immutable was created: gh api git/ref/tags/pantheon-base-v0.16.1 returns HTTP 404 and gh release view pantheon-base-v0.16.1 returns 'release not found'; the only v0.16 tag on the remote is pantheon-base-v0.16.0."
+    },
+    {
+      "command": "python .tmp/validate-workflow.py",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Validator extended for the second failure class and re-run. It now asserts, in addition to the previous checks, that some step configures a git committer identity, that that step precedes Publish release, that both 'git config user.name' and 'git config user.email' appear in a run block, and that the identity is github-actions[bot] with the GitHub noreply address rather than a personal one. Result: Checkout index 0 precedes Validate inputs index 1; identity step index 3 precedes Publish release index 7; identity is github-actions[bot]. The general lesson now recorded is that both hosted failures were environment-and-ordering assumptions that structural review could not see, and that each one is now pinned by an explicit assertion instead of a comment."
+    },
+    {
+      "command": "gh workflow run foundation-release-cut.yml --ref main -f release_version=pantheon-base-v0.16.1 -f release_line=release/0.16 -f notes_dir=.harness/evidence/2026-10-12-v0161-release-cut/notes -f base_commit=c83f8e4c865b19ecd5351ecefac4106ec416e0bc -f dry_run=false (retry, after the git-identity fix merges)",
       "cwd": ".",
       "status": "not-run",
-      "details": "NOT YET EXECUTED. The retry targets base_commit c83f8e4c deliberately: that is the commit whose Release Gate Summary is completed/success and whose VERSION, README, CHANGELOG and STATUS already read 0.16.1. The fix touches only .github/workflows/foundation-release-cut.yml, which is not a sharedPath, so build-release-bundle.mjs's worktree-versus-baseCommit check still passes even though the runner checks out the newer main HEAD."
+      "details": "NOT YET EXECUTED. This is the dispatch that actually creates the immutable tag, the GitHub release and the four assets. It targets base_commit c83f8e4c deliberately: that is the commit whose Release Gate Summary is completed/success and whose VERSION, README, CHANGELOG and STATUS already read 0.16.1. Both fixes so far touch only .github/workflows/foundation-release-cut.yml, which is not a sharedPath, so build-release-bundle.mjs's worktree-versus-baseCommit check still passes even though the runner checks out the newer main HEAD."
     },
     {
       "command": "gh release view pantheon-base-v0.16.1 --json assets --jq '.assets[].name'",

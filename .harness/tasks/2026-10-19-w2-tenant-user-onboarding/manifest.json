@@ -1,0 +1,89 @@
+{
+  "taskId": "2026-10-19-w2-tenant-user-onboarding",
+  "title": "Make tenant self-service user creation produce a login-capable user and leave no ghost membership on delete",
+  "goal": "POST /system/user returns 200 and the new user shows up in the list with department and roles, but logging in returns 403 tenant.forbidden: CreateUser writes only system_user and never a tenant_memberships row, while GateSessionIssuance requires an active membership. The only workaround today is a platform administrator calling POST /system/tenant/:id/members for every user, which defeats the point of tenant self-service and is exactly the flow a customer hits first. Separately, deleting a user leaves its membership row active, so the member list accumulates __deleted_user_* entries that cannot be cleaned from the console. This wave closes both in the user service transaction.",
+  "primaryLayer": "system/iam",
+  "status": "completed",
+  "priority": "P0",
+  "type": "remediation",
+  "estimatedComplexity": "medium",
+  "parentTaskId": "2026-10-19-tenant-permission-isolation-remediation",
+  "dependsOn": [
+    "2026-10-19-w0-isolation-contract-guardrails"
+  ],
+  "findings": [
+    "F1 (P0): CreateUser writes system_user only, so a tenant-created user has no tenant_memberships row and login is rejected by GateSessionIssuance with 403 tenant.forbidden.",
+    "F4 (P2): DeleteUser does not deactivate the membership, so tenant_memberships keeps an active row for a soft-deleted user and the member list shows __deleted_user_* ghosts."
+  ],
+  "scope": {
+    "in": [
+      "backend/modules/system/iam/user/user_service.go",
+      "backend/modules/system/iam/user/*_test.go",
+      "backend/pkg/tenant/authz.go (read-only reference for membership semantics)"
+    ],
+    "out": [
+      "Changing GateSessionIssuance or the login gate policy itself",
+      "Auto-creating memberships for platform-scope users (tenant_id = 0)",
+      "Changing the default membership role away from member without a product decision"
+    ]
+  },
+  "implementationNotes": [
+    "Write the membership inside the same transaction that inserts system_user, so a failure cannot leave a user that cannot log in -- that half-state is the current defect.",
+    "Only create a membership when the resolved tenant is a real tenant (tenant_id != 0). Platform-scope users must keep working exactly as they do today.",
+    "Deactivation, not deletion, on user delete: the membership is an audit-relevant record of a past relationship, and GateSessionIssuance already treats non-active status as a denial.",
+    "Do not bypass BuiltinAdminUserID protections that BatchUpdateUserStatus already enforces."
+  ],
+  "contractAnchors": [
+    "docs/contracts/TENANT_CONTRACT_V1.md",
+    "docs/designs/TENANT_RESOURCE_SCOPE_MATRIX.md"
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "permission-policy",
+    "ownerLayer": "consumer-repository"
+  },
+  "verificationPlan": {
+    "commands": [
+      "cd backend && go build ./...",
+      "cd backend && go test -count=1 ./modules/system/iam/user/... ./pkg/tenant/...",
+      "python tenant_acceptance.py"
+    ],
+    "runtimeEvidence": [
+      "tenant-created user logs in on the first attempt with tenantId set, without any platform-side membership call",
+      "member list after deleting a user shows no __deleted_user_* row",
+      "platform-scope user creation still produces no membership and still logs in"
+    ]
+  },
+  "runtimeSensitive": true,
+  "evidenceRequired": [
+    ".harness/evidence/2026-10-19-w2-tenant-user-onboarding/commands.json",
+    ".harness/evidence/2026-10-19-w2-tenant-user-onboarding/summary.md",
+    ".harness/evidence/2026-10-19-w2-tenant-user-onboarding/login-after-create.log"
+  ],
+  "humanGates": [
+    "Confirm the default membership role for a tenant-created user is member (not inherit-from-creator).",
+    "Confirm whether a platform administrator creating a user inside a tenant also gets a membership (this packet says yes, because the user still needs to log in)."
+  ],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed",
+    "CreateUser writes the membership in the same transaction for tenant-scope callers",
+    "DeleteUser deactivates the membership",
+    "New user logs in immediately; A3 acceptance passes",
+    "Ghost member rows no longer appear after delete"
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-19-w2-tenant-user-onboarding/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-19-w2-tenant-user-onboarding/",
+    "summaryFile": ".harness/evidence/2026-10-19-w2-tenant-user-onboarding/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-19-w2-tenant-user-onboarding/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-19-tenant-permission-isolation-remediation.task.md"
+    ]
+  }
+}

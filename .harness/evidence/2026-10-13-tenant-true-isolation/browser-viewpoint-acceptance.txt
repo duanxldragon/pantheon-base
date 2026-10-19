@@ -1,0 +1,13 @@
+[WebServer] (!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+[WebServer]   - `__dirname` (vite.config.ts:32:25). Use `import.meta.dirname` instead
+[WebServer] Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+Running 5 tests using 1 worker
+
+  ok 1 tests\smoke-core\tenant-viewpoint-switcher.spec.ts:179:3 › Tenant Viewpoint @priority:critical @smoke:tenant › 平台管理员默认处于平台全局视角：不发 X-Tenant-Id，且没有横幅 (7.6s)
+  ok 2 tests\smoke-core\tenant-viewpoint-switcher.spec.ts:195:3 › Tenant Viewpoint @priority:critical @smoke:tenant › 钉住租户后：全量重载、横幅常驻、业务请求带上 X-Tenant-Id、列表被限定在该租户 (12.1s)
+  ok 3 tests\smoke-core\tenant-viewpoint-switcher.spec.ts:215:3 › Tenant Viewpoint @priority:critical @smoke:tenant › 钉住视角内新建用户并加入本租户：membership 落库 (13.4s)
+  ok 4 tests\smoke-core\tenant-viewpoint-switcher.spec.ts:258:3 › Tenant Viewpoint @priority:critical @smoke:tenant › 该用户能真正登录：新会话回到平台全局视角，不再带头也不再显示切换器 (6.2s)
+  ok 5 tests\smoke-core\tenant-viewpoint-switcher.spec.ts:273:3 › Tenant Viewpoint @priority:critical @smoke:tenant › 退出租户视角：回到平台全局，请求不再带头 (14.7s)
+
+  5 passed (1.0m)

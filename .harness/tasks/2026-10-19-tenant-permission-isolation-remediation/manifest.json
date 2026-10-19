@@ -1,0 +1,187 @@
+{
+  "taskId": "2026-10-19-tenant-permission-isolation-remediation",
+  "title": "Close the tenant permission-isolation defect cluster: role-key global namespace, missing tenant dimension on data-scope policies, and the broken self-service onboarding chain",
+  "goal": "The 2026-10-19 tenant delivery acceptance ran 193 assertions on a live multi-tenant stack and passed 179 (92.7%), leaving 13 defects of which 5 are P0. Those 5 P0 are not five independent bugs but one defect cluster in three layers: `role_key` is treated as a cross-tenant global namespace. `system_role`, `system_role_permission` and `system_role_data_scope` all already carry `tenant_id` and a `(tenant_id, role_key)` unique key, yet half of the read/write paths degrade to role_key-only, and the write path drops the tenant value into `tenant_id = 0`. Proven consequences: a tenant admin sees 53 roles in the data-scope console while owning 3; the same admin can write a data-scope policy for a role that exists only in another tenant; and flipping one policy from `self` to `all` widened another tenant's ordinary user from 1 visible row to 3, in both directions. This program moves tenant scoping from the table definition into the read/write paths, and closes the remaining 8 P1/P2 from the same acceptance run. Delivered in seven waves: W0 contract plus red tests, W1 data-scope tenant dimension (F7/F8/F9/F10/F11/F13), W2 tenant user onboarding and membership (F1/F4), W3 role-menu grant persistence (F3), W4 session revocation and login gate (F2), W5 console UX (F5/F6), W6 re-verification and closeout.",
+  "primaryLayer": "platform",
+  "status": "completed",
+  "priority": "P0",
+  "type": "remediation",
+  "estimatedComplexity": "large",
+  "findings": [
+    "F1 (P0, tenant self-service onboarding is broken): POST /system/user succeeds and the user shows up with dept and roles, but login returns 403 tenant.forbidden because CreateUser writes only system_user and never a tenant_memberships row; GateSessionIssuance requires an active membership.",
+    "F2 (P1, 16-minute lockout after credential changes): RevokeUserTokens sets the user-level blacklist key blacklist:<userID> with TTL AccessTokenTTL+1m, and login never clears it, so a password reset or a disable/enable cycle keeps every new session rejected with 401 token.expired.force.",
+    "F3 (P0, tenant role navigation grants are lost): rbacbind.InsertRoleMenus inserts system_role_menu without tenant_id, so grants land on tenant_id=0 while loadRoleMenus reads under the tenant scope; the grants are unreadable, and re-saving an existing tenant role deletes the rows it then fails to rewrite.",
+    "F4 (P2, ghost memberships): deleting a user leaves its tenant_memberships row active, so the tenant member list keeps showing __deleted_user_* entries.",
+    "F5 (P1, two 403 toasts on every console page): TenantViewpointSwitcher proxies platform capability with hasPerm('system:tenant:list'), which a tenant admin holds because it owns the full console key set, so it calls GET /system/tenant/list and gets 403 tenant.platformOnly on every page load (twice under StrictMode).",
+    "F6 (P1, department tree renders only the root): DeptList binds the nested tree to the table with pagination.total = data.length and no expandable/childrenColumnName, so Arco Table renders the root node only and reports a total of 1.",
+    "F7 (P0, data-scope console lists other tenants' roles): ListDataScopePolicies queries system_role with only `deleted_at IS NULL` and no tenant predicate, so tenant A's console shows 53 rows while A owns 3 roles, including a role key that exists only in tenant B.",
+    "F8 (P0, cross-tenant data-scope write succeeds): UpdateDataScopePolicy validates the role through ensureRoleKeyExists, which only checks that the role_key exists in ANY tenant; tenant A successfully wrote a policy for a role that exists only in tenant B and got code 200.",
+    "F9 (P1, policy writes lose the tenant dimension): UpdateDataScopePolicy builds PermissionRoleDataScopePolicy without assigning TenantID and declares OnConflict on role_key alone, so the row lands on tenant_id=0 while the role module writes the correct (tenant_id, role_key) row for the same key.",
+    "F10 (P0, one tenant can widen another tenant's visible data): the middleware's SystemRoleDataScope struct has no TenantID field, loadRoleDataScopePolicies filters on role_key only, and resolveDataScopeMode returns all if any matching row is all; setting the shared key to all raised tenant B's user from 1 visible row to 3, and the reverse direction behaved identically.",
+    "F11 (P1, custom deptIds are not tenant-validated): UpdateDataScopePolicy accepts any dept_id and stores it verbatim; tenant A submitted tenant B's department 203 and it was persisted, while dept_id is a global sequence whose values collide across tenants.",
+    "F13 (P1, role list echoes another tenant's dataScope): RoleService.loadRoleDataScopes queries system_role_data_scope by `role_key IN (...)` with no tenant predicate, so the last scanned row wins; tenant B's role showed self in its own list while its stored policy was all.",
+    "F14 (P2, cross-tenant role reads return 500): GET /system/role/:id/users, /user-candidates and PUT /system/role/:id return code 500 request.failed instead of 404/403 when the role belongs to another tenant, which makes authorization probes look like service failures."
+  ],
+  "scope": {
+    "in": [
+      "backend/internal/middleware/data_scope_middleware.go",
+      "backend/modules/system/iam/permission/permission_data_scope.go",
+      "backend/modules/system/iam/permission/permission_service.go",
+      "backend/modules/system/iam/role/role_service.go",
+      "backend/modules/system/iam/role/role_menu.go",
+      "backend/modules/system/iam/user/user_service.go",
+      "backend/pkg/rbacbind/rbacbind.go",
+      "backend/modules/auth/login/login_runtime.go",
+      "backend/pkg/authtoken/token.go",
+      "backend/pkg/database/migrations/000025_role_data_scope_tenant_backfill.{up,down}.sql",
+      "backend/pkg/database/migrations/000026_role_menu_tenant_backfill.{up,down}.sql",
+      "frontend/src/modules/auth/tenant/TenantViewpointSwitcher.tsx",
+      "frontend/src/modules/system/org/dept/DeptList.tsx",
+      "docs/contracts/TENANT_CONTRACT_V1.md",
+      "adjacent *_test.go"
+    ],
+    "out": [
+      "Changing the value of platform.tenant_mode or any compat-mode behaviour",
+      "Redesigning the five data-scope modes (all / self / dept / dept_and_children / custom)",
+      "Changing the Casbin domain-subject naming rule role:<key>@tenant:<id>, which is already correct",
+      "Introducing isolation mechanisms beyond row-level tenant_id (schema-per-tenant, database-per-tenant)",
+      "Re-homing tenants CRUD from system/iam to system/org (pre-existing, tracked separately)"
+    ]
+  },
+  "dependencyLayers": [
+    "system/iam",
+    "system/auth",
+    "system/org",
+    "system/config"
+  ],
+  "implementationNotes": [
+    "Contract first: TENANT_CONTRACT_V1.md §2.3 currently only says tenant-scoped resources carry tenant_id; it does not say read paths must filter by it and write paths must assign it. W0 adds that clause so every later wave is reviewed against a written rule instead of a convention.",
+    "tenant_id = 0 means the platform/global scope, not unknown. Every new predicate must distinguish three cases explicitly: platform scope (tenantID == 0 from a platform subject) passes through; tenant scope (tenantID != 0) filters hard; missing context fails closed rather than falling back to all.",
+    "DataScopeMiddleware is the hot path for every data-scope-governed request. Preserve the fail-closed semantics (rolePoliciesCoverAll denies when a role has no row) and add unit tests that two tenants holding the same role_key each read only their own row.",
+    "Migrations stay idempotent and reversible: follow 000021 (INSERT IGNORE + LEFT JOIN, down writes a comment only). Backfill only unambiguous rows where a role_key exists in exactly one tenant; duplicated keys are resolved by an operator with the inspection SQL from the acceptance report §5.6, because guessing an owner is worse than not guessing.",
+    "F2's clear point is a security boundary: the user-level blacklist may only be cleared after successful authentication, never on arbitrary requests, and session-level revocation must survive so old refresh tokens stay dead.",
+    "Both frontend defects are wrong decision inputs, not styling: F5 proxies platform capability with a permission key the tenant admin legitimately holds, and F6 hands a nested tree to a table that was never told to render children.",
+    "Do not touch pkg/tenant/authz.go or pkg/database/scope.go: the domain-subject construction and the row-narrowing hook are correct; the defect is what gets fed into them."
+  ],
+  "contractAnchors": [
+    "docs/contracts/TENANT_CONTRACT_V1.md",
+    "docs/contracts/PLATFORM_CONTRACT.md",
+    "docs/designs/TENANT_RESOURCE_SCOPE_MATRIX.md",
+    "docs/TENANT_SCOPE_FREEZE_DECISION_2026-10-15.md",
+    "docs/runbooks/TENANT_MIGRATION_RUNBOOK.md"
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "permission-policy",
+    "ownerLayer": "consumer-repository",
+    "coverageDimensions": [
+      "tenant predicate coverage on authorization read paths",
+      "cross-tenant write rejection",
+      "fail-closed behaviour when a policy row is missing",
+      "self-service onboarding without platform intervention",
+      "console capability gating correctness"
+    ]
+  },
+  "structuralScope": {
+    "affectedSubgraph": [
+      "internal/middleware -> DataScopeMiddleware -> applyRoleDataScopePolicy -> loadRoleDataScopePolicies -> system_role_data_scope",
+      "modules/system/iam/permission -> ListDataScopePolicies / UpdateDataScopePolicy -> ensureRoleKeyExists -> system_role",
+      "modules/system/iam/role -> replaceRoleMenus -> pkg/rbacbind.InsertRoleMenus -> system_role_menu",
+      "modules/system/iam/user -> CreateUser -> system_user + tenant_memberships -> GateSessionIssuance",
+      "modules/auth/login -> login_runtime -> pkg/authtoken.BlacklistUser / ClearUserBlacklist -> Redis"
+    ],
+    "boundaryCrossings": [
+      "platform (tenant-scope contract) -> system/iam (authorization data read/write)",
+      "platform -> system/auth (session issuance and revocation)",
+      "system/iam -> system/org (department ownership validation for custom data scope)",
+      "pkg/database/migrations -> four authorization tables (DDL and backfill)"
+    ],
+    "riskNodes": [
+      "DataScopeMiddleware (every data-scope-governed request)",
+      "UpdateDataScopePolicy (single policy write entry point)",
+      "CreateUser (onboarding main chain)",
+      "InsertRoleMenus (grant persistence)",
+      "ensureRoleKeyExists (shared by three call sites)"
+    ],
+    "graphFocus": [
+      "every authorization-table read/write path must answer where the tenant comes from",
+      "the answer must be 'resolved from the owning entity' or 'passed explicitly', never 'guessed from the identifier'"
+    ]
+  },
+  "executionRoles": {
+    "implementerPosture": "Advance wave by wave; each wave is an independently reviewable change set; red before green (W0 lands failing cases first). Before editing any SQL, answer where that query's tenant comes from.",
+    "reviewerPosture": [
+      "Check every new or modified authorization-table SQL for a tenant predicate, or an explicit justification that it is platform scope.",
+      "Re-assert fail-closed: a missing policy row must deny, never fall back to all.",
+      "Check that tenant_id = 0 is never used as 'unknown' and that platform scope is not written into tenant scope.",
+      "Check migrations are idempotent, reversible, and never guess an owner during backfill.",
+      "Check the blacklist clear in F2 happens only after successful authentication and that session-level revocation still rejects pre-change tokens.",
+      "Check both frontend fixes correct the decision input rather than swallowing the error toast."
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "cd backend && go build ./...",
+      "cd backend && gofmt -l internal/ modules/ pkg/",
+      "cd backend && go vet ./internal/middleware/... ./modules/system/iam/... ./modules/auth/login/... ./pkg/...",
+      "cd backend && go test -count=1 ./internal/middleware/... ./modules/system/iam/... ./modules/auth/login/... ./pkg/rbacbind/... ./pkg/tenant/...",
+      "cd frontend && node node_modules/vite/bin/vite.js --port 5173",
+      "NODE_PATH=<frontend>/node_modules node ui_walkthrough.cjs",
+      "python tenant_acceptance.py",
+      "python cross_tenant_leak.py"
+    ],
+    "runtimeEvidence": [
+      "A-changes-policy / B-user-row-count-unchanged before and after comparison (cross_tenant_leak.py L3)",
+      "data-scope console role total equals the calling tenant's own role count",
+      "tenant-created user logs in immediately without platform-side membership backfill",
+      "tenant role menu grants read back identical and survive a second edit",
+      "password reset followed by immediate successful login, with the old token still rejected as 401 token.expired.force"
+    ]
+  },
+  "runtimeSensitive": true,
+  "runtimeGap": "None of the seven waves has started; this packet records the plan and the baseline evidence only. All wave manifests are status=planned, and no runtime command has been executed against a modified tree yet.",
+  "evidenceRequired": [
+    ".harness/evidence/2026-10-19-tenant-permission-isolation-remediation/baseline-findings.md: the 13 defects with their measured evidence, captured before any fix",
+    ".harness/evidence/2026-10-19-tenant-permission-isolation-remediation/commands.json: per-command cwd, status and real output summary; anything not executed marked not-run with the reason",
+    ".harness/evidence/2026-10-19-tenant-permission-isolation-remediation/summary.md: wave completion and residual items",
+    ".harness/evidence/2026-10-19-tenant-permission-isolation-remediation/review.md: architecture review of predicate coverage and fail-closed preservation",
+    "per-wave evidence directories under .harness/evidence/<wave-task-id>/ with commands, summary and review"
+  ],
+  "humanGates": [
+    "Whether platform.tenant_mode stays multi: this packet does not change the value, but W1's predicates are only meaningful in multi mode.",
+    "Disposition of historical tenant_id = 0 rows: the migration backfills only unambiguous owners; duplicated global rows need an operator decision after the inspection SQL in report §5.6.",
+    "Default membership role for self-service user creation (member vs inherit creator's roles): this packet implements member as the product default.",
+    "Whether to close out after P0 is green with P1 scheduled separately, or hold the whole program for a single closeout.",
+    "Scope of F2's revocation: clearing only the user-level blacklist keeps session-level revocation intact; a product requirement to sign out every device on password reset needs a separate task."
+  ],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed",
+    "W0 contract clause landed and the two-tenant red cases fail deterministically on the unfixed tree",
+    "W1 all five data-scope read/write entry points carry a tenant predicate and no new tenant_id = 0 row is produced",
+    "W1 migration reversible and historical tenant_id = 0 rows backfilled where the owner is unambiguous",
+    "W2 tenant-created user logs in directly and deleted users leave no ghost membership",
+    "W3 tenant role menu grants persist with tenant_id and survive re-editing",
+    "W4 immediate login after password reset succeeds while the old token stays revoked",
+    "W5 console shows no tenant.platformOnly toast and the department tree renders every level",
+    "W6 tenant_acceptance.py 136, ui_walkthrough.cjs 23 and cross_tenant_leak.py 34 all green",
+    "Acceptance report and STATUS.md updated with every defect closed or explicitly downgraded"
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-19-tenant-permission-isolation-remediation/manifest.json",
+    "taskDoc": "docs/harness/tasks/2026-10-19-tenant-permission-isolation-remediation.task.md",
+    "evidenceDir": ".harness/evidence/2026-10-19-tenant-permission-isolation-remediation/",
+    "summaryFile": ".harness/evidence/2026-10-19-tenant-permission-isolation-remediation/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-19-tenant-permission-isolation-remediation/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-19-tenant-permission-isolation-remediation.task.md",
+      "docs/contracts/TENANT_CONTRACT_V1.md",
+      "docs/TENANT_SCOPE_FREEZE_DECISION_2026-10-15.md"
+    ]
+  }
+}

@@ -1,0 +1,88 @@
+# W1 / 2026-10-19-w1-data-scope-tenant-dimension — SQL snapshots
+# captured 2026-10-19 (Asia/Shanghai) against pantheon_base and a scratch database
+
+## A. Schema of system_role_data_scope — the tenant dimension already existed
+*************************** 1. row ***************************
+       Table: system_role_data_scope
+Create Table: CREATE TABLE `system_role_data_scope` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `tenant_id` bigint unsigned NOT NULL DEFAULT '0',
+  `role_key` varchar(64) NOT NULL,
+  `mode` varchar(32) NOT NULL DEFAULT 'all',
+  `dept_ids` text,
+  `scope_defs` text,
+  `created_at` datetime(3) DEFAULT NULL,
+  `updated_at` datetime(3) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_role_data_scope_tenant_role` (`tenant_id`,`role_key`)
+) ENGINE=InnoDB AUTO_INCREMENT=336 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+
+## B. Migration version across the W1 restart
+before restart (measured before stopping the old binary): 24 / dirty=0
+after  restart: 25 / dirty=0
+
+## C. Policy-row distribution on the live database
+before 000025: total=147  tenant0=144  tenant253=1  tenant282=2
+after  000025 and after the probe cleanup:
+  total=145
+  tenant=0 count=144
+  tenant=253 count=1
+  000025 inserted 0 rows here, which is the expected result: no tenant-local role in this
+  installation had a tenant-0 policy row. Section D proves the statement itself works.
+
+## D. Migration proof on a scratch database (pantheon_mig025_probe)
+seed roles : (0,platform_op) (101,ops_single) (202,ops_shared) (303,ops_shared) (404,no_policy) (505,soft_deleted with deleted_at set)
+seed policy: (0,ops_single,self) (0,ops_shared,dept) (0,soft_deleted,all) (202,ops_shared,self)
+
+before:
+0	ops_shared	dept
+202	ops_shared	self
+0	ops_single	self
+0	soft_deleted	all
+
+after first run:
+0	ops_shared	dept
+202	ops_shared	self
+303	ops_shared	dept
+0	ops_single	self
+101	ops_single	self
+0	soft_deleted	all
+
+after second run (idempotency):
+  total_rows=6
+
+readings:
+  ops_single  : copied onto 101, its only owning tenant.
+  ops_shared  : 202 already owned a row and was NOT overwritten; 303 received a copy of the tenant-0 mode.
+  no_policy   : untouched. No policy is invented for a role that never had one.
+  soft_deleted: untouched. Soft-deleted roles are not migrated.
+  second run  : 6 rows before and after, so the statement is idempotent.
+
+## E. Deliverable state after the probe cleanup
+tenant A roles: tenant_admin,tenant_member
+tenant-local policy rows: 253:e2e_role_mvall69g
+
+## F. Guard paths of 000025 (information_schema check, same shape as 000024)
+# A database that records version 24 while 000024's DDL never ran has no tenant_id column.
+# The statement must degrade to a no-op there instead of failing startup.
+
+path 1 — both tenant_id columns present (pantheon_mig025_probe2):
+  seed roles : (101,ops_single) (202,ops_shared) (303,ops_shared)
+  seed policy: (0,ops_single,self) (0,ops_shared,dept) (202,ops_shared,self)
+  result:
+  0  ops_shared  dept
+  202  ops_shared  self
+  303  ops_shared  dept
+  0  ops_single  self
+  101  ops_single  self
+  => copies onto 101 and 303; 202's own row untouched.
+
+path 2 — no tenant_id column anywhere (pantheon_mig025_noguard):
+  system_role(id, role_key, deleted_at), system_role_data_scope(id, role_key, mode, dept_ids)
+  result: the guard takes the 'SELECT 1' branch, mysql exits 0 and prints 1 twice (SET + EXECUTE). No error,
+  no partial write. Startup is not turned into a failure loop.
+
+## G. Live replay of the guarded migration
+  1. UPDATE schema_migrations SET version = 24  -> rewound to 24
+  2. restart backend                            -> schema_migrations = 25, dirty = 0
+  3. policy rows                                -> 145 (unchanged), health 200, 0 ERROR lines in the boot log

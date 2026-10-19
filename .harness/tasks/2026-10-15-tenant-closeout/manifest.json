@@ -1,0 +1,87 @@
+{
+  "taskId": "2026-10-15-tenant-closeout",
+  "title": "Close the tenant feature out: fix the remaining defects, restore a clean acceptance state, and prove multi-tenant mode is usable with E2E and smoke evidence",
+  "goal": "The 2026-10-13 tenant packets landed the isolation work but left it uncommitted alongside three named defects (A: login-page picker blocked by tenantId's double semantics; B: /auth/tenants/current disagreeing with /auth/tenants/switchable on role/isActive; C: hard-deleting a tenant leaving Casbin domain policies) and a dev database polluted with fixture tenants whose stray memberships put the login picker in front of the platform operator. This task assessed that state against a live stack, fixed the one remaining code defect, documented the ops defect, restored a clean acceptance state, and ran the end-to-end and smoke suites on the real backend + MySQL + Redis + Chromium so that a human reviewer finds multi-tenant mode genuinely usable.",
+  "primaryLayer": "platform",
+  "status": "completed",
+  "priority": "P0",
+  "type": "remediation",
+  "estimatedComplexity": "medium",
+  "runtimeSensitive": true,
+  "findings": [
+    "A1 (assessment): defect A was ALREADY FIXED in the uncommitted worktree. login_service.findCredentialByUsername now tries the named tenant first and falls back to the global lookup, so the picker path reaches GateSessionIssuance instead of dying with 401. Re-verified live: selecting the member-only tenant returns 200 success (previously 401 user.login.error.not_found). No change made.",
+    "A2 (assessment): defect B was STILL PRESENT and was fixed here. GET /auth/tenants/current returned role='' and isActive=false for a tenant whose /auth/tenants/switchable entry reported role='owner' and isActive=true. GetCurrentTenant now resolves the caller's own active membership for the resolved tenant and reports its role with isActive=true, so the two endpoints agree (contract §2.2). No new authority: it reports what tenant_memberships already grants.",
+    "A3 (assessment): defect C was STILL ABSENT from the ops docs and was documented here. casbin_rule has no FK to tenants and the application has no purge path, so a hard delete leaves role:<key>@tenant:<id> grants behind; if the tenants AUTO_INCREMENT recycles the id, the next tenant inherits the old one's authority. Observed live: after the browser spec soft-deleted its tenant, 6 tenant-domain policies remained. docs/runbooks/TENANT_TROUBLESHOOTING.md gains §2b with the full procedure and verification queries, and its stale /api/v1/tenants endpoints were corrected to /api/v1/system/tenant.",
+    "A4 (assessment, acceptance-blocking): the dev database was polluted. ~45 leftover probe/e2e fixture tenants, orphan tenant-scoped users in soft-deleted tenants, and stray active memberships for the platform admin. The last one is what a human would actually notice: with memberships present, POST /auth/login for admin returns tenantSelectionRequired and NO token cookie, so the operator gets the picker instead of the console. All fixture rows were purged across the 18 tenant_id tables plus casbin_rule, and the acceptance state was verified clean: tenant_mode=multi, 0 active memberships, 0 fixture tenants, 0 tenant-domain policies, 40 platform policies.",
+    "A5 (assessment): the go vet / go test blocker recorded by both 2026-10-13 and 2026-10-14 as not-run (any fresh Go tool invocation blocked indefinitely; 0.03s user CPU over 5 minutes) is GONE in this session. go vet ./modules/auth/login/... ./pkg/tenant/... and the matching go test both pass, so those recorded environment exceptions are closed for the packages this work touches.",
+    "S1 (stale fixture, discovered by running it): the tenant hostile browser matrix cannot pass. frontend/scripts/tenant-matrix-fixture-setup.mjs and the three tenant-hostile/tenant-protected specs log the platform admin in with an explicit tenantId against tenants 101/202. Before the isolation change the platform admin's global /api/v1/* policy still applied in-tenant; now a tenant-claim session resolves roles inside the tenant (contract §4), so a platform admin owning no tenant role gets an empty role set and every call is 403 permission.denied. Reproduced by hand: POST /auth/login {username:admin,password:123456,tenantId:101} yields 200 with roles:[] and perms containing platform:dashboard:*, and the next GET /system/dict/type/list returns code 403 permission.denied. Recorded as an explicit gap with a fix path (provision each fixture tenant via POST /system/tenant and log in as its own admin - the pattern the passing viewpoint spec uses) rather than rushed into this pass, because it also needs a decision about how fixture-written policies reach the running Casbin enforcer. The CI job smoke-tenant is continue-on-error, which is why this has been invisible to merge gates.",
+    "S2 (product question surfaced by S1): a platform-capable subject that names a tenant at login (or picks one from the picker) receives a session whose roles are resolved tenant-scoped, i.e. empty for a platform-only operator, so it lands in a console it cannot use. Whether a platform-capable subject should retain platform roles inside a tenant claim is a contract-level product decision.",
+    "S3 (open decision): docs/TENANT_SCOPE_FREEZE_DECISION_2026-10-15.md §6 - whether system_role / system_menu / system_permission are tenant-owned or globally shared - is still unruled. The shipped implementation is per-tenant roles plus global menus/permissions, which is the combination every probe in this pass validates; the document recommends moving roles back to global. Maintainer call."
+  ],
+  "scope": {
+    "in": [
+      "backend/modules/auth/login/login_tenant_switch.go: GetCurrentTenant reports the caller's membership role for the resolved tenant so /auth/tenants/current and /auth/tenants/switchable agree (defect B)",
+      "backend/modules/auth/login/login_tenant_gate_test.go: gofmt fix (joined a string-concatenation continuation line) so the formatting gate is genuinely green",
+      "docs/runbooks/TENANT_TROUBLESHOOTING.md: new §2b (tenant hard-delete must purge casbin_rule first, security rationale, full 18-table procedure, verification queries); §2 corrected to the real /api/v1/system routes and the code-500 behaviour recorded",
+      "dev database hygiene: purge leftover probe/e2e/smoke fixture tenants and their dependent rows across the 18 tenant_id tables plus casbin_rule; restore platform.tenant_mode=multi; verify the clean acceptance state",
+      "this task manifest and its evidence directory (.harness/evidence/2026-10-15-tenant-closeout/{commands.json,summary.md,review.md})"
+    ],
+    "out": [
+      "Rewriting the tenant hostile browser matrix fixtures and specs. Diagnosed and recorded as an explicit gap; the fix path needs a provisioning/enforcer-reload decision and belongs in its own task.",
+      "Ruling on docs/TENANT_SCOPE_FREEZE_DECISION_2026-10-15.md §6 (tenant-owned vs global roles/menus/permissions). Maintainer decision.",
+      "Changing the DELETE /system/tenant refusal from business code 500 to a 4xx conflict. Shared contract surface; recorded, not changed.",
+      "Adding a code-level PurgeTenant path. The contract assigns tenant hard delete to ops; the runbook is the control for now.",
+      "Editing any applied migration, the platform Casbin policy set, or the release/CI workflow files."
+    ]
+  },
+  "evidenceRequired": [
+    "Live tenant lifecycle E2E (62/62) and isolation E2E (34/34) against the real multi-mode stack",
+    "Defect A and defect B re-verification on a clean database (picker member-tenant login returns 200; current and switchable agree)",
+    "Core smoke suite result (26 passed, 3 skipped, 0 failed) and the tenant viewpoint browser spec result (5/5)",
+    "Go gates: go build ./..., gofmt clean, go vet and go test on the changed packages",
+    "The clean acceptance-state database verification and the tenant hostile matrix failure diagnosis"
+  ],
+  "humanGates": [
+    "docs/TENANT_SCOPE_FREEZE_DECISION_2026-10-15.md §6: tenant-owned or globally shared roles/menus/permissions (implementation currently per-tenant roles + global menus/permissions)",
+    "Whether a platform-capable subject should retain platform roles when it holds a tenant claim (the picker/tenantId login path)",
+    "Whether to fund the tenant hostile matrix fixture remediation now or defer it"
+  ],
+  "completionChecklist": [
+    "Assessment completed against a live stack; every gap classified as already-fixed / fixed / documented / open",
+    "Defect B fixed and verified; defect A verified; defect C documented in the ops runbook",
+    "Dev database restored to a clean acceptance state with the platform admin logging in directly",
+    "Tenant lifecycle E2E 62/62 and isolation E2E 34/34 on the live stack",
+    "Core smoke 26 passed / 3 skipped / 0 failed and tenant viewpoint browser spec 5/5",
+    "Go build, gofmt, go vet and go test green for the changed packages",
+    "Residual gaps recorded explicitly with root cause and fix path"
+  ],
+  "verificationPlan": {
+    "commands": [
+      "cd backend && go build ./...",
+      "cd backend && gofmt -l internal/ modules/ pkg/",
+      "cd backend && go vet ./modules/auth/login/... ./pkg/tenant/...",
+      "cd backend && go test -count=1 ./modules/auth/login/... ./pkg/tenant/...",
+      "python .tmp/verify_tenant_full_flow.py",
+      "python .tmp/verify_tenant_isolation_phase_g.py",
+      "python .tmp/verify_picker_defect.py",
+      "cd frontend && node scripts/run-smoke-suite.mjs --host 127.0.0.1 --port 5173 --cleanup-fixtures all --config playwright.config.ts -- <core smoke specs> --workers=1",
+      "cd frontend && node scripts/run-smoke-suite.mjs --host 127.0.0.1 --port 5173 --config playwright.config.ts -- tests/smoke-core/tenant-viewpoint-switcher.spec.ts --workers=1"
+    ],
+    "runtimeEvidence": [
+      ".harness/evidence/2026-10-15-tenant-closeout/browser-viewpoint/ (Chromium screenshots of the tenant viewpoint states)"
+    ]
+  },
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-15-tenant-closeout/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-15-tenant-closeout/",
+    "summaryFile": ".harness/evidence/2026-10-15-tenant-closeout/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-15-tenant-closeout/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/TENANT_SCOPE_FREEZE_DECISION_2026-10-15.md",
+      "docs/TENANT_LOGIN_INIT_EVALUATION_2026-10-15.md",
+      "docs/contracts/TENANT_CONTRACT_V1.md",
+      "docs/runbooks/TENANT_TROUBLESHOOTING.md"
+    ]
+  }
+}
