@@ -111,13 +111,19 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           package-manager-cache: false
 
-      # publish-foundation-release.mjs creates and pushes an annotated tag. The
-      # checkout deliberately does not persist credentials, so git is pointed at
-      # the gh credential helper for the lifetime of this job instead.
-      - name: Configure git credentials for the tag push
+      # publish-foundation-release.mjs creates an annotated tag and pushes it. That
+      # needs two things the runner does not provide on its own:
+      #   - a committer identity, or `git tag -a` dies with "Committer identity
+      #     unknown" (run 38218036804 failed exactly there);
+      #   - credentials. The checkout deliberately does not persist them, so git is
+      #     pointed at the gh credential helper for the lifetime of this job instead.
+      - name: Configure git identity and credentials for the tag push
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh auth setup-git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          gh auth setup-git
 
       - name: Resolve target commit
         shell: bash
