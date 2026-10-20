@@ -20,6 +20,15 @@ import (
 
 const permissionPtypeClause = "ptype = ?"
 
+// permissionRoleKeyLikeClause matches the casbin subject (role key) column.
+// Extracted as a constant because it is repeated across policy query builders
+// (SonarCloud go:S1192).
+const permissionRoleKeyLikeClause = "v0 LIKE ?"
+
+// permissionTenantClause scopes a query to a single tenant. Repeated across the
+// service and workbench query builders (SonarCloud go:S1192).
+const permissionTenantClause = "tenant_id = ?"
+
 const (
 	errPermissionPolicyExists  = "permission.policy.exists"
 	errPermissionRoleInvalid   = "permission.role.invalid"
@@ -117,7 +126,7 @@ func (s *PermissionService) applyPolicyTenantScope(db *gorm.DB) *gorm.DB {
 	if s.isPlatformScope() {
 		return db
 	}
-	return db.Where("v0 LIKE ?", "%@tenant:"+strconv.FormatUint(s.tenantOwnerID(), 10))
+	return db.Where(permissionRoleKeyLikeClause, "%@tenant:"+strconv.FormatUint(s.tenantOwnerID(), 10))
 }
 
 type workbenchRemediationRecord struct {
@@ -193,7 +202,7 @@ func (s *PermissionService) ListPolicies(query *PermissionPolicyQuery) (*Permiss
 			db = db.Where("v0 LIKE ? OR v1 LIKE ?", keyword, keyword)
 		}
 		if strings.TrimSpace(query.RoleKey) != "" {
-			db = db.Where("v0 LIKE ?", "%"+strings.TrimSpace(query.RoleKey)+"%")
+			db = db.Where(permissionRoleKeyLikeClause, "%"+strings.TrimSpace(query.RoleKey)+"%")
 		}
 		if strings.TrimSpace(query.Path) != "" {
 			db = db.Where("v1 LIKE ?", "%"+strings.TrimSpace(query.Path)+"%")
@@ -545,7 +554,7 @@ func (s *PermissionService) ListWorkbenchRemediationEvents(query *PermissionWork
 	var events []PermissionWorkbenchRemediationEvent
 	db := s.db.Model(&PermissionWorkbenchRemediationEvent{})
 	if !s.isPlatformScope() {
-		db = db.Where("tenant_id = ?", s.tenantOwnerID())
+		db = db.Where(permissionTenantClause, s.tenantOwnerID())
 	}
 	if query != nil && strings.TrimSpace(query.RoleKey) != "" {
 		db = db.Where("role_key = ?", strings.TrimSpace(query.RoleKey))
@@ -764,9 +773,9 @@ func (s *PermissionService) validateImportRoleKeys(rows []policyImportRow, resul
 	}
 	db := s.db.Table("system_role").Where("role_key IN ? AND deleted_at IS NULL", roleKeys)
 	if !s.isPlatformScope() {
-		db = db.Where("tenant_id = ?", s.tenantOwnerID())
+		db = db.Where(permissionTenantClause, s.tenantOwnerID())
 	} else {
-		db = db.Where("tenant_id = ?", tenant.PlatformGlobalTenantID)
+		db = db.Where(permissionTenantClause, tenant.PlatformGlobalTenantID)
 	}
 	var existingRoleCount int64
 	if err := db.Count(&existingRoleCount).Error; err != nil {
@@ -778,9 +787,9 @@ func (s *PermissionService) validateImportRoleKeys(rows []policyImportRow, resul
 			var count int64
 			rowDB := s.db.Table("system_role").Where("role_key = ? AND deleted_at IS NULL", row.RoleKey)
 			if !s.isPlatformScope() {
-				rowDB = rowDB.Where("tenant_id = ?", s.tenantOwnerID())
+				rowDB = rowDB.Where(permissionTenantClause, s.tenantOwnerID())
 			} else {
-				rowDB = rowDB.Where("tenant_id = ?", tenant.PlatformGlobalTenantID)
+				rowDB = rowDB.Where(permissionTenantClause, tenant.PlatformGlobalTenantID)
 			}
 			if err := rowDB.Count(&count).Error; err != nil {
 				return err
@@ -808,7 +817,7 @@ func loadExistingPolicyMap(db *gorm.DB, subjects map[string]string, platformScop
 	if platformScope {
 		query = query.Where("v0 IN ?", subjectList)
 	} else {
-		query = query.Where("v0 LIKE ?", "%@tenant:"+strconv.FormatUint(tenantID, 10))
+		query = query.Where(permissionRoleKeyLikeClause, "%@tenant:"+strconv.FormatUint(tenantID, 10))
 	}
 	var policies []database.CasbinRule
 	if err := query.Find(&policies).Error; err != nil {
@@ -851,7 +860,7 @@ func (s *PermissionService) listPoliciesForExport(query *PermissionPolicyQuery) 
 	db := s.applyPolicyTenantScope(s.db.Model(&database.CasbinRule{}).Where(permissionPtypeClause, "p"))
 	if query != nil {
 		if strings.TrimSpace(query.RoleKey) != "" {
-			db = db.Where("v0 LIKE ?", "%"+common.EscapeLikePattern(strings.TrimSpace(query.RoleKey))+"%")
+			db = db.Where(permissionRoleKeyLikeClause, "%"+common.EscapeLikePattern(strings.TrimSpace(query.RoleKey))+"%")
 		}
 		if strings.TrimSpace(query.Path) != "" {
 			db = db.Where("v1 LIKE ?", "%"+common.EscapeLikePattern(strings.TrimSpace(query.Path))+"%")
@@ -925,7 +934,7 @@ func (s *PermissionService) ensureRoleKeyExists(roleKey string) error {
 	var count int64
 	db := s.db.Table("system_role").Where("role_key = ? AND deleted_at IS NULL", roleKey)
 	if !s.isPlatformScope() {
-		db = db.Where("tenant_id = ?", s.tenantOwnerID())
+		db = db.Where(permissionTenantClause, s.tenantOwnerID())
 	}
 	if err := db.Count(&count).Error; err != nil {
 		return err

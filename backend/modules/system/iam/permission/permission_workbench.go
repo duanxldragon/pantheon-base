@@ -93,7 +93,7 @@ func (s *PermissionService) fetchWorkbenchRoles(query *PermissionWorkbenchQuery)
 	// The workbench is the console's role board; without this predicate a tenant
 	// administrator sees every tenant's roles (acceptance F7).
 	if !s.isPlatformScope() {
-		db = db.Where("tenant_id = ?", s.tenantOwnerID())
+		db = db.Where(permissionTenantClause, s.tenantOwnerID())
 	}
 	if query != nil {
 		if strings.TrimSpace(query.RoleKey) != "" {
@@ -482,7 +482,7 @@ func (s *PermissionService) loadLatestWorkbenchRemediationEvents(roleKeys []stri
 	var events []PermissionWorkbenchRemediationEvent
 	query := s.db.Model(&PermissionWorkbenchRemediationEvent{}).Where("role_key IN ?", roleKeys)
 	if !s.isPlatformScope() {
-		query = query.Where("tenant_id = ?", s.tenantOwnerID())
+		query = query.Where(permissionTenantClause, s.tenantOwnerID())
 	}
 	if err := query.
 		Order("created_at desc, id desc").
@@ -509,7 +509,7 @@ func (s *PermissionService) countRecentWorkbenchRemediationEvents(roleKeys []str
 	var events []PermissionWorkbenchRemediationEvent
 	query := s.db.Model(&PermissionWorkbenchRemediationEvent{}).Where("role_key IN ?", roleKeys)
 	if !s.isPlatformScope() {
-		query = query.Where("tenant_id = ?", s.tenantOwnerID())
+		query = query.Where(permissionTenantClause, s.tenantOwnerID())
 	}
 	if err := query.
 		Order("created_at desc, id desc").
@@ -653,7 +653,7 @@ func (s *PermissionService) getRoleMissingAPIPolicies(roleKey string) (*Permissi
 	var role permissionWorkbenchRoleRow
 	db := s.db.Table("system_role").Where("role_key = ? AND deleted_at IS NULL", roleKey)
 	if !s.isPlatformScope() {
-		db = db.Where("tenant_id = ?", s.tenantOwnerID())
+		db = db.Where(permissionTenantClause, s.tenantOwnerID())
 	}
 	if err := db.First(&role).Error; err != nil {
 		return nil, err
