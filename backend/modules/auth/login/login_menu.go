@@ -114,7 +114,39 @@ func ensureSingleMenuSeed(db *gorm.DB, seed menuSeed) error {
 	if menuID == 0 {
 		return nil
 	}
-	return ensureAdminRoleMenuBinding(db, menuID)
+	if err := ensureAdminRoleMenuBinding(db, menuID); err != nil {
+		return err
+	}
+	return ensureAdminRolePermissions(db, seed.PagePerm, seed.Perms)
+}
+
+// ensureAdminRolePermissions grants the seeded menu's page and action keys to
+// the platform administrator.
+//
+// Binding the menu alone is not a complete grant. The navigation tree is
+// resolved from `system_role_menu`, but the console's route guard authorises on
+// the key set resolved from `system_role_permission` — so a menu whose key was
+// never granted shows up in the sidebar and then answers 403 when it is opened.
+// The system module's seeder (seed.go: bindSeedMenuAdminRole) has always written
+// both halves; this module wrote only the menu, which kept
+// system:login-log:*, system:session:* and system:security-event:* out of the
+// platform administrator's key set.
+//
+// That gap did not stay platform-local: tenant provisioning derives a tenant
+// administrator's console surface by copying the platform administrator's key
+// set, so the missing twelve keys were missing for every tenant administrator
+// too. The tenant smoke suite caught it as a 403 on /system/login-log.
+func ensureAdminRolePermissions(db *gorm.DB, keys ...string) error {
+	adminRoleID, err := lookupAdminRoleID(db)
+	if err != nil || adminRoleID == 0 {
+		return err
+	}
+	for _, key := range keys {
+		if err := rbacbind.EnsureRolePermission(db, tenant.PlatformGlobalTenantID, adminRoleID, key); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func upsertSeedMenu(db *gorm.DB, seed menuSeed, parentID uint64) (uint64, error) {

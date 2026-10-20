@@ -139,3 +139,68 @@ func TestProvisionTenant_SeedsTenantAdminMenusIdempotently(t *testing.T) {
 		Count(&count).Error)
 	require.EqualValues(t, 1, count, "grants must not be duplicated")
 }
+
+// A tenant administrator must inherit the platform administrator's *permission
+// keys*, not just the navigation rows.
+//
+// Why this has to exist: the console shell resolves the sidebar from
+// `system_role_menu` but the route guard authorises on the key set resolved from
+// `system_role_permission`. Provisioning copied only the keys the platform
+// administrator actually held, so a menu seeded without its permission half
+// (the auth module's login-log / session / security-event pages) produced a
+// visible sidebar entry that answered 403. The tenant smoke suite caught it as
+// "403 你没有访问当前页面的权限" on /system/login-log.
+func TestProvisionTenant_CopiesPlatformAdminPermissionKeys(t *testing.T) {
+	db := setupTestDB(t)
+	service := NewService(db)
+
+	// Platform administrator: the role whose key set provisioning mirrors.
+	require.NoError(t, db.Exec(
+		"INSERT INTO system_role (id, tenant_id, role_key, role_name, status) VALUES (1, 0, 'admin', 'admin', 1)",
+	).Error)
+	platformKeys := []string{
+		"system:user:list",
+		"system:login-log:list",
+		"system:login-log:export",
+		"system:security-event:list",
+		"system:session:list",
+	}
+	for _, key := range platformKeys {
+		require.NoError(t, db.Exec(
+			"INSERT INTO system_role_permission (tenant_id, role_id, permission_key) VALUES (0, 1, ?)", key,
+		).Error)
+	}
+
+	seedRepairTenant(t, db, 613, "permission-copy", tenantctx.TenantStatusActive)
+
+	result, err := service.ProvisionTenant(ProvisionInput{TenantID: 613})
+	require.NoError(t, err)
+	adminID := result.RoleIDs[TenantRoleAdminKey]
+	require.NotZero(t, adminID)
+
+	require.ElementsMatch(t, platformKeys, tenantPermissionKeys(t, db, 613, adminID),
+		"the tenant administrator must hold every platform administrator key")
+
+	// The member role stays read-only: list/detail/view/tree/export only.
+	memberID := result.RoleIDs[TenantRoleMemberKey]
+	require.NotZero(t, memberID)
+	require.ElementsMatch(t, []string{
+		"system:user:list",
+		"system:login-log:list",
+		"system:login-log:export",
+		"system:security-event:list",
+		"system:session:list",
+	}, tenantPermissionKeys(t, db, 613, memberID))
+}
+
+// tenantPermissionKeys returns the permission keys granted to roleID inside
+// tenantID, read back through the tenant scope the login loader uses.
+func tenantPermissionKeys(t *testing.T, db *gorm.DB, tenantID, roleID uint64) []string {
+	t.Helper()
+	var keys []string
+	require.NoError(t, db.Table("system_role_permission").
+		Where("tenant_id = ? AND role_id = ?", tenantID, roleID).
+		Order("permission_key asc").
+		Pluck("permission_key", &keys).Error)
+	return keys
+}

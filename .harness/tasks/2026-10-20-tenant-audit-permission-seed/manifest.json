@@ -1,0 +1,116 @@
+{
+  "taskId": "2026-10-20-tenant-audit-permission-seed",
+  "title": "Seed the auth module's permission keys so tenant administrators can open the audit pages",
+  "goal": "Tenant Smoke has been red on every commit since the tenant console remediation merged. A provisioned tenant administrator reaches /system/login-log and /system/security-event, sees them in the sidebar, and gets '403 no permission' from the route guard. Navigation is resolved from system_role_menu, but authorisation is resolved from system_role_permission, and the auth module's menu seeder (SeedAuthModuleMenus) only ever wrote the menu half. The system module's seeder writes both halves, so the twelve audit keys (system:login-log:*, system:session:*, system:security-event:*) were missing from the platform administrator itself; tenant provisioning copies that key set, so every tenant administrator inherited the same hole. This task adds a shared idempotent grant primitive, makes both seeders use it, and pins the copy behaviour with tests that run against real MySQL.",
+  "primaryLayer": "platform",
+  "status": "completed",
+  "priority": "P0",
+  "type": "remediation",
+  "estimatedComplexity": "small",
+  "dependsOn": [
+    "2026-10-20-sonarcloud-zero-issues",
+    "2026-10-19-tenant-permission-isolation-remediation"
+  ],
+  "findings": [
+    "P0: SeedAuthModuleMenus (backend/modules/auth/login/login_menu.go) bound the menu and system_role_menu but never wrote system_role_permission, so the login-log, session and security-event pages were navigable and unauthorised at the same time.",
+    "P0: because tenant provisioning copies the platform administrator's key set, the twelve missing keys were missing for every tenant administrator — the visible failure was a tenant-side 403 with a platform-side cause.",
+    "P1: the platform administrator's key set in CI held 85 keys; the twelve audit keys were absent, which also broke those pages for the platform console itself.",
+    "P1: the test fixtures declared system_role_permission without tenant_id, so the old seeder (which omitted tenant_id) passed and the divergence from the production table went unnoticed.",
+    "P2: two independent implementations of 'grant one permission key to the platform administrator' existed (seed.go's ensureAdminPermissionSeed and nothing in the auth module), inviting exactly this kind of drift."
+  ],
+  "scope": {
+    "in": [
+      "backend/pkg/rbacbind/rbacbind.go (add EnsureRolePermission with explicit tenant_id)",
+      "backend/modules/auth/login/login_menu.go (seed PagePerm and Perms after binding the menu)",
+      "backend/modules/auth/login/login_menu_test.go (fixture table + admin key-set assertions)",
+      "backend/modules/system/seed.go (delegate to the shared primitive)",
+      "backend/modules/system/seed_test.go (fixture table gains tenant_id)",
+      "backend/modules/system/iam/tenant/tenant_provision_menus_test.go (copy-path assertions)",
+      "backend/modules/system/iam/tenant/tenant_service_test.go (fixture table gains tenant_id)"
+    ],
+    "out": [
+      "Changing the system_role_permission or system_role_menu schema or migrations",
+      "Adding a tenant dimension to system_menu",
+      "Automatically re-granting keys to already-provisioned tenants (a tenant may have revoked them deliberately)",
+      "Extending requiredAPIRoutesByPermission with the login-log and session routes",
+      "Touching .github/workflows/**, .sonarcloud.properties or release-gate.yml",
+      "Resuming the v0.17.0 release packet"
+    ]
+  },
+  "dependencyLayers": [
+    "platform",
+    "system/iam",
+    "system/auth"
+  ],
+  "implementationNotes": [
+    "The fix belongs upstream. provisionTenantRoleBindings is correct by design (copy the platform administrator's key set, confine by tenant domain); patching the tenant's key set would leave the platform console broken and the next tenant broken again.",
+    "EnsureRolePermission writes tenant_id explicitly. The login permission loader filters on system_role_permission.tenant_id = <login tenant>, so a grant written without it lands in tenant 0 and a tenant subject never sees the key — the same trap already documented on insertRoleMenuSQL.",
+    "The two menu seeders are not merged: they own different menu data (keys, parents, ordering). Only the write primitive is shared, through pkg/rbacbind.",
+    "The fixtures now mirror the production table. The old fixture had no tenant_id column, which is precisely why a seeder that omitted tenant_id could look correct for so long.",
+    "tenant_member stays read-only: isReadOnlyPermissionKey is unchanged, so the member role receives only :list/:detail/:view/:tree/:export keys."
+  ],
+  "contractAnchors": [
+    "docs/contracts/PLATFORM_CONTRACT.md",
+    "docs/contracts/TENANT_CONTRACT_V1.md",
+    "docs/contracts/DOCUMENT_GOVERNANCE_CONTRACT.md",
+    "backend/pkg/database/migrations/000020_tenant_phase1_core_tables.up.sql",
+    ".github/workflows/smoke-core.yml"
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "ci-workflow",
+    "ownerLayer": "consumer-repository"
+  },
+  "verificationPlan": {
+    "commands": [
+      "cd backend && go build ./... && go vet ./...",
+      "cd backend && go test -count=1 ./modules/auth/login/ -run TestSeedAuthModuleMenus",
+      "cd backend && go test -count=1 ./modules/system/iam/tenant/ -run TestProvisionTenant",
+      "cd backend && go test -count=1 ./pkg/rbacbind/... ./modules/system/ ./modules/system/iam/... ./modules/auth/...",
+      "cd backend && golangci-lint run --new-from-rev=HEAD ./...",
+      "npm run check:task-packet && npm run check:docs-frontmatter && npm run check:structure"
+    ],
+    "runtimeEvidence": [
+      "CI backend log for the failing run: INSERT INTO system_role_permission rows for tenant 204 role 4 number 85 and contain no system:login-log:*, system:security-event:* or system:session:* key",
+      "go test ./modules/system/iam/tenant/ -run TestProvisionTenant_CopiesPlatformAdminPermissionKeys proves the copy path end to end against real MySQL",
+      "go test ./modules/auth/login/ -run TestSeedAuthModuleMenusGrantsAdminPermissionKeys proves the platform administrator now holds all twelve keys and that re-seeding does not duplicate them",
+      "The Playwright assertion itself can only be produced by CI: this machine cannot spawn a browser (spawnSync EBUSY)"
+    ]
+  },
+  "runtimeSensitive": true,
+  "evidenceRequired": [
+    ".harness/evidence/2026-10-20-tenant-audit-permission-seed/commands.json",
+    ".harness/evidence/2026-10-20-tenant-audit-permission-seed/summary.md",
+    ".harness/evidence/2026-10-20-tenant-audit-permission-seed/review.md"
+  ],
+  "humanGates": [
+    "Whether existing tenants must be re-provisioned on upgrade, or given an operator-facing backfill command, is a maintainer decision. This packet does not auto-backfill: a tenant administrator may have revoked keys deliberately.",
+    "Whether the login-log and session routes should be added to requiredAPIRoutesByPermission (the permission workbench remediation table) is a product decision and is out of scope here."
+  ],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed",
+    "Gap located at SeedAuthModuleMenus with CI INSERT evidence",
+    "rbacbind.EnsureRolePermission carries tenant_id and matches the production unique key",
+    "Both seeders share one implementation; the platform administrator holds all twelve audit keys",
+    "Tenant administrator inherits the full platform key set and tenant_member stays read-only, both covered by tests",
+    "Fixtures mirror the production system_role_permission table",
+    "CI re-run turns Tenant Smoke (multi-mode advisory) green"
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-20-tenant-audit-permission-seed/manifest.json",
+    "taskDoc": "docs/harness/tasks/2026-10-20-tenant-audit-permission-seed.task.md",
+    "evidenceDir": ".harness/evidence/2026-10-20-tenant-audit-permission-seed/",
+    "summaryFile": ".harness/evidence/2026-10-20-tenant-audit-permission-seed/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-20-tenant-audit-permission-seed/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".github/workflows/smoke-core.yml",
+      "docs/contracts/TENANT_CONTRACT_V1.md"
+    ]
+  }
+}
