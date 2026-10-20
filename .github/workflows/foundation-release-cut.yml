@@ -133,6 +133,16 @@ jobs:
             commit="$(git rev-parse HEAD)"
           fi
           commit="$(git rev-parse "${commit}^{commit}")"
+          # The bundle is built from the working tree, and build-release-bundle
+          # rejects a tree whose shared paths differ from the target commit
+          # (run 39349403190 failed exactly there when main had moved past the
+          # release candidate). A release is a statement about one commit, so
+          # when an explicit base_commit is given the worktree must be that
+          # commit, not the default branch head.
+          if [[ -n "$BASE_COMMIT_INPUT" && "$commit" != "$(git rev-parse HEAD)" ]]; then
+            echo "Checking out ${commit} for the bundle build"
+            git checkout --detach "$commit"
+          fi
           echo "TARGET_COMMIT=${commit}" >> "$GITHUB_ENV"
           echo "Releasing ${RELEASE_VERSION} from ${commit}"
 
