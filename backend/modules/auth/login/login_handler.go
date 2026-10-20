@@ -12,6 +12,7 @@ import (
 	"github.com/duanxldragon/pantheon-base/backend/pkg/authtoken"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/common"
 	commonhttp "github.com/duanxldragon/pantheon-base/backend/pkg/common/http"
+	"github.com/duanxldragon/pantheon-base/backend/pkg/contracts/authuser"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/database"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/impexp"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/logging"
@@ -101,6 +102,61 @@ func writeRefreshSuccessResponse(c *gin.Context, tokenPair *authtoken.Pair) bool
 	return true
 }
 
+// loginServiceFor pins the login service to the tenant the request named. A
+// request without a tenant keeps the platform service, which is the compat path.
+func (h *AuthHandler) loginServiceFor(req *LoginReq) *Runtime {
+	if req.TenantId == 0 {
+		return h.service
+	}
+	return h.service.WithTenantContext(&tenant.Context{TenantID: req.TenantId, Mode: tenant.ModeMulti, ResolvedBy: "login-choice"})
+}
+
+// failLoginTenantClaim answers a failed tenant-claim resolution. A subject that
+// may log into several tenants gets the picker instead of an error; every other
+// cause is mapped to its i18n key and recorded on the login log.
+func failLoginTenantClaim(
+	c *gin.Context,
+	service *Runtime,
+	user *authuser.User,
+	requestedTenantID uint64,
+	cause error,
+	ip string,
+	clientInfo session.ClientInfoResp,
+) {
+	if requestedTenantID == 0 && errors.Is(cause, tenant.ErrTenantForbidden) {
+		if candidates := service.ListLoginTenantCandidates(c.Request.Context(), user.ID); len(candidates) > 1 {
+			common.Success(c, gin.H{
+				"tenantSelectionRequired": true,
+				"tenantCandidates":        candidates,
+			})
+			return
+		}
+	}
+	messageKey := common.ResolveErrorMessageKey(cause, "auth.login.error")
+	service.RecordLoginLog(common.GetRequestID(c), user.Username, ip, clientInfo.Browser, clientInfo.OS, 0, messageKey)
+	common.Fail(c, common.CodeForbidden, messageKey)
+}
+
+// startMFAChallenge issues the MFA challenge that replaces the session response
+// when the runtime policy requires a second factor.
+func startMFAChallenge(
+	c *gin.Context,
+	service *Runtime,
+	user *authuser.User,
+	tenantID uint64,
+	ip string,
+	clientInfo session.ClientInfoResp,
+) {
+	challenge, err := service.CreateMFAChallengeForTenant(user, tenantID)
+	if err != nil {
+		messageKey := common.ResolveErrorMessageKey(err, "auth.mfa.challenge.error")
+		service.RecordLoginLog(common.GetRequestID(c), user.Username, ip, clientInfo.Browser, clientInfo.OS, 0, messageKey)
+		common.Fail(c, common.CodeError, messageKey)
+		return
+	}
+	common.Success(c, challenge)
+}
+
 func (h *AuthHandler) LoginHandler(c *gin.Context) {
 	common.SetAuditMetadata(c, "auth.login.audit.title", common.BusinessOther)
 
@@ -109,10 +165,7 @@ func (h *AuthHandler) LoginHandler(c *gin.Context) {
 		common.Fail(c, common.CodeParamInvalid, msgParamInvalid)
 		return
 	}
-	service := h.service
-	if req.TenantId > 0 {
-		service = h.service.WithTenantContext(&tenant.Context{TenantID: req.TenantId, Mode: tenant.ModeMulti, ResolvedBy: "login-choice"})
-	}
+	service := h.loginServiceFor(&req)
 
 	ip := c.ClientIP()
 	userAgent := c.GetHeader(headerUserAgent)
@@ -129,30 +182,12 @@ func (h *AuthHandler) LoginHandler(c *gin.Context) {
 
 	tenantClaim, tenantErr := service.resolveLoginTenantClaim(currentUser, req.TenantId)
 	if tenantErr != nil {
-		if errors.Is(tenantErr, tenant.ErrTenantForbidden) && req.TenantId == 0 {
-			if candidates := service.ListLoginTenantCandidates(c.Request.Context(), currentUser.ID); len(candidates) > 1 {
-				common.Success(c, gin.H{
-					"tenantSelectionRequired": true,
-					"tenantCandidates":        candidates,
-				})
-				return
-			}
-		}
-		messageKey := common.ResolveErrorMessageKey(tenantErr, "auth.login.error")
-		service.RecordLoginLog(common.GetRequestID(c), currentUser.Username, ip, clientInfo.Browser, clientInfo.OS, 0, messageKey)
-		common.Fail(c, common.CodeForbidden, messageKey)
+		failLoginTenantClaim(c, service, currentUser, req.TenantId, tenantErr, ip, clientInfo)
 		return
 	}
 
 	if service.getAuthRuntimePolicy().MFAEnabled {
-		challenge, err := service.CreateMFAChallengeForTenant(currentUser, tenantClaim)
-		if err != nil {
-			messageKey := common.ResolveErrorMessageKey(err, "auth.mfa.challenge.error")
-			service.RecordLoginLog(common.GetRequestID(c), currentUser.Username, ip, clientInfo.Browser, clientInfo.OS, 0, messageKey)
-			common.Fail(c, common.CodeError, messageKey)
-			return
-		}
-		common.Success(c, challenge)
+		startMFAChallenge(c, service, currentUser, tenantClaim, ip, clientInfo)
 		return
 	}
 
@@ -253,13 +288,13 @@ func (h *AuthHandler) RefreshTokenHandler(c *gin.Context) {
 		refreshToken = req.RefreshToken
 	}
 	if refreshToken == "" {
-		common.Fail(c, common.CodeUnauthorized, "token.invalid")
+		common.Fail(c, common.CodeUnauthorized, msgTokenInvalid)
 		return
 	}
 
 	refreshClaims, err := parseRefreshTokenWithContext(c.Request.Context(), refreshToken)
 	if err != nil {
-		common.FailWithError(c, common.CodeUnauthorized, err, "token.invalid")
+		common.FailWithError(c, common.CodeUnauthorized, err, msgTokenInvalid)
 		return
 	}
 
@@ -705,7 +740,7 @@ func buildLoginSourceKey(ip string) string {
 
 func parseRefreshTokenWithContext(ctx context.Context, refreshToken string) (*TokenRefreshClaims, error) {
 	if refreshToken == "" {
-		return nil, errors.New("token.invalid")
+		return nil, errors.New(msgTokenInvalid)
 	}
 
 	if ctx == nil {

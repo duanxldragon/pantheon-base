@@ -89,6 +89,12 @@
       "details": "0."
     },
     {
+      "command": "curl -s https://sonarcloud.io/api/issues/search?componentKeys=duanxldragon_pantheon-base&pullRequest=391&resolved=false&ps=100",
+      "cwd": ".",
+      "status": "passed",
+      "details": "PR analysis caught two follow-ups the local checks could not: the new msgTokenInvalid constant made login_handler.go hold four occurrences (so the remaining three literals were folded into it), and LoginHandler sat at cognitive complexity 18. Both were fixed in the same PR: the handler now delegates tenant-claim failure and the MFA challenge to helpers. PR quality gate was already OK at that point (new_security_rating 1, so the S2068 fix holds)."
+    },
+    {
       "command": "SonarCloud re-analysis of the merged commit (issues API resolved=false on branch main)",
       "cwd": ".",
       "status": "not-run",

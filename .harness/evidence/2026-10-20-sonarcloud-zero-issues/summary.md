@@ -49,7 +49,19 @@
 - `SECURITY{,.en}.md` 增加 "GitHub Security Surfaces" 一节（六个入口 + 关闭告警必须留痕），
   `docs/GITHUB_GOVERNANCE_CHECKLIST{,.en}.md` 增加对应条目。
 
-## 5. 残余风险
+## 5. PR 分析补充（本轮自证）
+
+PR #391 的 SonarCloud 分析给出 `new_security_rating = 1`，说明 S2068 的修法成立；同时它浮出两条**本次修改自身**带来的新问题：
+
+1. `login_handler.go` 里新增 `msgTokenInvalid` 常量后，该文件里仍有 3 处 `"token.invalid"` 字面量，
+   合计 4 处触发 `go:S1192` —— 已把这 3 处也换成常量。
+2. `LoginHandler` 认知复杂度 18（`go:S3776`）—— 已把租户归属失败分支与 MFA 挑战分支抽成
+   `failLoginTenantClaim` 与 `startMFAChallenge`，并把「按请求租户选服务」抽成 `loginServiceFor`。
+
+这两条是本轮改动让文件重新进入分析视野后才被报出的，修完后净新增为 0。它们也说明
+「本地 lint 全绿」不等于 Sonar 全绿：Sonar 的规则集比 `golangci-lint` 的默认配置更宽。
+
+## 6. 残余风险
 
 1. SonarCloud 的最终判定只能由主干重分析给出。本机可读 issues API，但关闭/标记问题需要 `SONAR_TOKEN`
    （仅存在于仓库 secret），因此本轮**没有**在 Sonar 侧做任何标记，清零完全靠改代码。
