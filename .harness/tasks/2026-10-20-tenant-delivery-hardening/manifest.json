@@ -1,0 +1,128 @@
+{
+  "taskId": "2026-10-20-tenant-delivery-hardening",
+  "title": "Close the tenant-to-platform permission escapes and restore the tenant smoke signal",
+  "goal": "A delivery audit of pantheon-base after the tenant remediation found three blockers: (1) the permission policy console ran the unbound service and took the target tenant from the request body, so a tenant administrator could create GLOBAL Casbin policies for its own role key, write into another tenant's domain, and list/export every tenant's policies; (2) role keys had no reserved namespace, so a tenant could create role_key=admin or platform_ops and inherit the platform Casbin/global grants at login; (3) Tenant Smoke (multi-mode advisory) was red on main because platform.tenant_mode was seeded non-public and Bootstrap never repaired an existing row, so the frontend hid the tenant controls. This task fixes all three, repairs the role-policy lifecycle (delete/rename/purge), makes the tenant-mode flag public and self-healing, and pins every boundary with two-tenant MySQL-backed tests.",
+  "primaryLayer": "platform",
+  "status": "completed",
+  "priority": "P0",
+  "type": "remediation",
+  "estimatedComplexity": "medium",
+  "dependsOn": [
+    "2026-10-20-tenant-audit-permission-seed",
+    "2026-10-19-tenant-permission-isolation-remediation"
+  ],
+  "findings": [
+    "P0: permission_handler.go called h.service (unbound) for ListPolicies/CreatePolicy/UpdatePolicy/DeletePolicy/BatchDelete/ImportPolicies/ExportPolicies, so the tenant context was dropped and the service behaved as platform scope (isPlatformScope == true, ensureRoleKeyExists unscoped).",
+    "P0: PermissionPolicyCreateReq/UpdateReq carried tenantId from the JSON body straight into resolvePolicySubject; tenantId=0 produced a global policy for the tenant's own role key, which CasbinDomainPolicySubjects consults for every tenant, and tenantId=<other> wrote into that tenant's domain for a shared role key (tenant_admin).",
+    "P0: ImportPolicies and the workbench remediation wrote the bare role key as V0, i.e. a global policy, from a tenant-scoped request; requiredAPIRoutesByPermission includes system:tenant:list/create/update/delete, and subjectHasPlatformCapability treats any global policy for the routed path as platform capability.",
+    "P0: role creation only checked per-tenant uniqueness; a tenant could create role_key=admin or platform_ops. Login loads role keys verbatim from system_role.role_key, Casbin consults the global subject of the same name first, and PlatformCapabilityMiddleware admits platform_ops by name.",
+    "P1: deleteRoleBindings removed only v0=roleKey, leaving role:<key>@tenant:<id> policies behind so a recreated role key inherited the old grants; role renames did not move the policies at all (silent loss of API access).",
+    "P1: PermissionService.Bootstrap deleted every policy whose v0 was not a bare live role_key — which is every tenant-domain subject — on each boot, so tenant-configured policies were reverted to the default wildcard.",
+    "P1: the role CSV import created SystemRole without TenantID, so a tenant import wrote a platform-global role (tenant_id = 0).",
+    "P1: validateImportRoleKeys counted roles by bare role_key across every tenant; the bootstrap admin lookup (ensureAdminRoleBinding / ensureAdminUserBinding) also matched a tenant-owned role keyed admin.",
+    "P1: platform.tenant_mode was seeded with isPublic=0 while the Go fallback said 1, and bootstrapSettingSeed only inserts missing keys, so upgraded deployments never published the flag; the frontend gates the tenant picker/switcher/viewpoint switcher on it (AppLayout.tsx:1804-1805). Tenant Smoke failed at tenant-viewpoint-switcher.spec.ts:179 on every main commit since 8ffb00bf, masked by continue-on-error.",
+    "P2: the permission package fixture omitted system_role.tenant_id, which is why the unscoped behaviour looked correct in tests."
+  ],
+  "scope": {
+    "in": [
+      "backend/modules/system/iam/permission/permission_handler.go (bind every policy surface to the request tenant)",
+      "backend/modules/system/iam/permission/permission_service.go (subject resolution, scoped list/export/import/remediation, bootstrap purge)",
+      "backend/modules/system/iam/permission/permission_workbench.go (subject-aware policy reads, tenant-scoped remediation events)",
+      "backend/modules/system/iam/permission/permission_workbench_remediation_model.go + migration 000028 (tenant_id)",
+      "backend/modules/system/iam/role/role_helper.go (reserved role namespace, platform-scoped admin lookup)",
+      "backend/modules/system/iam/role/role_service.go (policy cleanup on delete, subject migration on rename)",
+      "backend/modules/system/iam/role/role_export.go (tenant-owned import rows)",
+      "backend/modules/system/iam/user/user_username.go (platform-scoped admin binding)",
+      "backend/modules/system/config/setting/setting_service.go + seed_data.yaml (public flag repair)",
+      "frontend i18n resources (role.key.reserved in five languages)",
+      "two-tenant regression tests for the policy console and role lifecycle"
+    ],
+    "out": [
+      "Changing the Casbin domain model or the platform-capability definition (contract §4/§3.4)",
+      "Adding tenant-customisable menus or permissions (frozen decision 2026-10-15)",
+      "Backfilling existing tenant rows that already carry a reserved role key (operator runbook item)",
+      "Touching .github/workflows/** or release-gate.yml",
+      "Cutting v0.17.0 (separate release packet)"
+    ]
+  },
+  "dependencyLayers": [
+    "platform",
+    "system/iam",
+    "system/config"
+  ],
+  "implementationNotes": [
+    "The tenant of a policy write now comes from the resolved request context. Tenant scope forces role:<key>@tenant:<ctx>; a body tenantId that disagrees is rejected with TENANT_FORBIDDEN. Platform scope keeps the explicit-target behaviour.",
+    "Reads (list/export/workbench) resolve the caller's role keys to domain subjects and filter on those; global rows are platform state and are not visible to a tenant subject (contract §2.3.1).",
+    "Import and workbench remediation compute the stored subject before writing, so a tenant row can never become a global policy. Role keys are validated inside the target namespace.",
+    "Reserved role keys are any key owned by the platform namespace (tenant 0) plus platform_ops. This is a namespace guard, not a per-tenant allowlist: tenant_admin/tenant_member remain usable.",
+    "Role deletion removes exactly the role's own subject; renaming moves p rows from the old subject to the new one. The bootstrap purge now recognises the domain form, so tenant-configured policies survive a restart.",
+    "platform.tenant_mode becomes public in the seed and Bootstrap raises is_public on an existing row; it never lowers it, so an operator-exposed key is not hidden.",
+    "No schema change to system_role/system_role_permission/system_role_menu. The only DDL is permission_workbench_remediation_event.tenant_id (migration 000028), guarded and idempotent."
+  ],
+  "contractAnchors": [
+    "docs/contracts/TENANT_CONTRACT_V1.md",
+    "docs/contracts/PLATFORM_CONTRACT.md",
+    "docs/contracts/SYSTEM_IAM_CONTRACT.md",
+    "backend/pkg/database/migrations/000020_tenant_phase1_core_tables.up.sql",
+    "backend/pkg/database/migrations/000028_permission_remediation_event_tenant.up.sql",
+    ".github/workflows/smoke-core.yml"
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "permission-policy",
+    "ownerLayer": "consumer-repository"
+  },
+  "verificationPlan": {
+    "commands": [
+      "cd backend && go build ./... && go vet ./modules/system/...",
+      "cd backend && go test -count=1 ./...",
+      "cd backend && go test -count=1 ./modules/system/iam/permission/ -run 'TestPermissionPolicyTenantScope|TestPermissionBootstrapPreservesTenantDomainPolicies'",
+      "cd backend && go test -count=1 ./modules/system/iam/role/ -run 'TestRoleTenantScope_'",
+      "cd backend && go test -count=1 ./modules/system/config/setting/ -run 'TestSettingSeed|TestSettingBootstrapRepairs'",
+      "cd frontend && npx tsc -b",
+      "node scripts/harness/check-task-packet.mjs --root . && node scripts/frontmatter-check.mjs"
+    ],
+    "runtimeEvidence": [
+      "Two-tenant MySQL tests prove a tenant-scoped create stores role:<key>@tenant:<id>, rejects a foreign tenantId, cannot read or export the other tenant's policy, imports into its own domain, and remediates only its own domain.",
+      "Role tests prove admin/platform_ops are rejected, deletion removes only the domain subject (the platform admin policy survives), rename moves the policy, and CSV import stamps the tenant.",
+      "Bootstrap test proves a live tenant-domain policy survives the orphan purge while a role-less subject is removed.",
+      "Tenant Smoke is the only browser-level proof that the public flag renders the switcher; it can only run in CI (this host cannot spawn a browser)."
+    ]
+  },
+  "runtimeSensitive": true,
+  "evidenceRequired": [
+    ".harness/evidence/2026-10-20-tenant-delivery-hardening/commands.json",
+    ".harness/evidence/2026-10-20-tenant-delivery-hardening/summary.md",
+    ".harness/evidence/2026-10-20-tenant-delivery-hardening/review.md"
+  ],
+  "humanGates": [
+    "Existing tenants that already created a reserved role key (admin/platform_ops) must be remediated by an operator: rename the role and delete its Casbin policies. This packet blocks new ones but does not auto-rename live rows.",
+    "Whether Tenant Smoke should leave continue-on-error after this fix is a maintainer decision; the packet only makes the job green."
+  ],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed",
+    "Every policy surface is bound to the request tenant and the body cannot choose the namespace",
+    "Reserved platform role keys are rejected in tenant scope and CSV import stays tenant-owned",
+    "Role delete/rename and the bootstrap purge handle the tenant-domain subject form",
+    "platform.tenant_mode is public in the seed and repaired on bootstrap",
+    "Two-tenant regression tests cover create/list/export/import/remediation and the role lifecycle",
+    "Full backend suite, frontend typecheck and repo gates pass"
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-20-tenant-delivery-hardening/manifest.json",
+    "taskDoc": "docs/harness/tasks/2026-10-20-tenant-delivery-hardening.task.md",
+    "evidenceDir": ".harness/evidence/2026-10-20-tenant-delivery-hardening/",
+    "summaryFile": ".harness/evidence/2026-10-20-tenant-delivery-hardening/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-20-tenant-delivery-hardening/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/contracts/TENANT_CONTRACT_V1.md",
+      ".github/workflows/smoke-core.yml"
+    ]
+  }
+}

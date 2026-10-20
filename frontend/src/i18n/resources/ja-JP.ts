@@ -1458,6 +1458,7 @@ const jaJPFallback = {
   'user.post.dept_required': '役職を選ぶ前に部門を選択してください',
   'user.post.dept_mismatch': '選択した役職は現在の部門に属していません',
   'role.key.exists': 'ロールキーはすでに存在します',
+  'role.key.reserved': 'このロールキーはプラットフォームロール専用です',
   'role.export.error': 'ロールのエクスポートに失敗しました',
   'role.batch.empty': 'まずロールを選択してください',
   'role.batch.not_found': '一部のロールは存在しなくなりました。更新して再試行してください',

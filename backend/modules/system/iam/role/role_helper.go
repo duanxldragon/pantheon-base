@@ -22,7 +22,7 @@ const (
 
 func (s *RoleService) ensureAdminRoleSeed() error {
 	var adminRole SystemRole
-	err := s.db.Where(condRoleKeyEquals, "admin").First(&adminRole).Error
+	err := s.db.Where("tenant_id = ?", tenant.PlatformGlobalTenantID).Where(condRoleKeyEquals, "admin").First(&adminRole).Error
 	switch {
 	case errors.Is(err, gorm.ErrRecordNotFound):
 		adminRole = SystemRole{
@@ -65,7 +65,10 @@ func (s *RoleService) ensureAdminUserBinding() error {
 	}
 
 	var adminRoleID uint64
-	if err := s.db.Table("system_role").Select("id").Where(condRoleKeyEquals, "admin").Limit(1).Pluck("id", &adminRoleID).Error; err != nil {
+	if err := s.db.Table("system_role").Select("id").
+		Where("tenant_id = ?", tenant.PlatformGlobalTenantID).
+		Where(condRoleKeyEquals, "admin").
+		Limit(1).Pluck("id", &adminRoleID).Error; err != nil {
 		return err
 	}
 	if adminRoleID == 0 {
@@ -89,6 +92,9 @@ func (s *RoleService) validateRoleCreate(req *RoleCreateReq) error {
 	if strings.TrimSpace(req.RoleName) == "" || strings.TrimSpace(req.RoleKey) == "" {
 		return common.NewBadRequest(errParamInvalid)
 	}
+	if err := s.ensureRoleKeyAllowed(req.RoleKey); err != nil {
+		return err
+	}
 	if err := s.ensureRoleKeyUnique(0, req.RoleKey); err != nil {
 		return err
 	}
@@ -102,8 +108,12 @@ func (s *RoleService) validateRoleUpdate(role *SystemRole, req *RoleUpdateReq) e
 	if strings.TrimSpace(req.RoleName) == "" || strings.TrimSpace(req.RoleKey) == "" {
 		return common.NewBadRequest(errParamInvalid)
 	}
-	if role.RoleKey == "admin" && (strings.TrimSpace(req.RoleKey) != "admin" || req.Status == common.StatusDisabled) {
+	if role.RoleKey == "admin" && role.TenantID == tenant.PlatformGlobalTenantID &&
+		(strings.TrimSpace(req.RoleKey) != "admin" || req.Status == common.StatusDisabled) {
 		return common.NewConflict("role.update.error.protected")
+	}
+	if err := s.ensureRoleKeyAllowed(req.RoleKey); err != nil {
+		return err
 	}
 	if err := s.ensureRoleKeyUnique(role.ID, req.RoleKey); err != nil {
 		return err
@@ -112,6 +122,38 @@ func (s *RoleService) validateRoleUpdate(role *SystemRole, req *RoleUpdateReq) e
 		return err
 	}
 	return s.ensurePermissionKeysExist(req.PermissionKeys)
+}
+
+// ensureRoleKeyAllowed blocks the platform role namespace for tenant callers.
+//
+// Role keys are unique per tenant, so a tenant could otherwise create a role
+// keyed `admin` (or any other platform role key) and hand it to a user. Login
+// then puts that bare key into the session, and Casbin consults the GLOBAL
+// subject of the same name (contract §4: global first, then domain), so the
+// tenant role inherits the platform `admin` policies — a full tenant→platform
+// escape. `platform_ops` is reserved even without a role row because the
+// platform-capability middleware admits it by name.
+func (s *RoleService) ensureRoleKeyAllowed(roleKey string) error {
+	if s.tenantOwnerID() == tenant.PlatformGlobalTenantID {
+		return nil
+	}
+	key := strings.TrimSpace(roleKey)
+	if key == "" {
+		return nil
+	}
+	if key == "platform_ops" {
+		return common.NewConflict("role.key.reserved")
+	}
+	var count int64
+	if err := s.db.Table("system_role").
+		Where("tenant_id = ? AND role_key = ?", tenant.PlatformGlobalTenantID, key).
+		Count(&count).Error; err != nil {
+		return err
+	}
+	if count > 0 {
+		return common.NewConflict("role.key.reserved")
+	}
+	return nil
 }
 
 func (s *RoleService) ensureRoleKeyUnique(roleID uint64, roleKey string) error {

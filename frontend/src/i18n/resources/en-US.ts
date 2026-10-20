@@ -2398,6 +2398,7 @@ const enUSFallback = {
   'user.post.dept_required': 'Select a department before selecting a post',
   'user.post.dept_mismatch': 'The selected post does not belong to the current department',
   'role.key.exists': 'Role key already exists',
+  'role.key.reserved': 'This role key is reserved for platform roles',
   'role.export.error': 'Failed to export roles',
   'role.batch.empty': 'Please select roles first',
   'role.batch.not_found': 'Some roles no longer exist. Please refresh and try again',

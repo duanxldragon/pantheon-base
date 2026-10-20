@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/duanxldragon/pantheon-base/backend/pkg/database"
+	tenantctx "github.com/duanxldragon/pantheon-base/backend/pkg/tenant"
 
 	"gorm.io/gorm/clause"
 )
@@ -426,22 +427,41 @@ func (s *PermissionService) loadWorkbenchPermissions(roleIDs []uint64) (map[uint
 	return result, nil
 }
 
+// loadWorkbenchPolicies reads the workbench's API policies for the given role
+// keys, resolving each key to the subject form of the caller's namespace.
+// Reading the bare key in tenant scope showed every tenant's policies for a
+// same-named role and made the补齐 write the wrong namespace.
 func (s *PermissionService) loadWorkbenchPolicies(roleKeys []string) (map[string][]PermissionWorkbenchAPIPolicyResp, error) {
 	result := make(map[string][]PermissionWorkbenchAPIPolicyResp, len(roleKeys))
 	if len(roleKeys) == 0 {
 		return result, nil
 	}
 
+	subjectToRoleKey := make(map[string]string, len(roleKeys))
+	subjects := make([]string, 0, len(roleKeys))
+	for _, roleKey := range roleKeys {
+		subject := roleKey
+		if !s.isPlatformScope() {
+			subject = tenantctx.RoleSubject(roleKey, s.tenantOwnerID())
+		}
+		subjectToRoleKey[subject] = roleKey
+		subjects = append(subjects, subject)
+	}
+
 	var policies []database.CasbinRule
 	if err := s.db.Model(&database.CasbinRule{}).
-		Where("ptype = ? AND v0 IN ?", "p", roleKeys).
+		Where("ptype = ? AND v0 IN ?", "p", subjects).
 		Order("v0 asc, v1 asc, v2 asc, id asc").
 		Find(&policies).Error; err != nil {
 		return nil, err
 	}
 
 	for _, policy := range policies {
-		result[policy.V0] = append(result[policy.V0], PermissionWorkbenchAPIPolicyResp{
+		roleKey, ok := subjectToRoleKey[policy.V0]
+		if !ok {
+			continue
+		}
+		result[roleKey] = append(result[roleKey], PermissionWorkbenchAPIPolicyResp{
 			ID:     policy.ID,
 			Path:   policy.V1,
 			Method: policy.V2,
@@ -460,8 +480,11 @@ func (s *PermissionService) loadLatestWorkbenchRemediationEvents(roleKeys []stri
 	}
 
 	var events []PermissionWorkbenchRemediationEvent
-	if err := s.db.Model(&PermissionWorkbenchRemediationEvent{}).
-		Where("role_key IN ?", roleKeys).
+	query := s.db.Model(&PermissionWorkbenchRemediationEvent{}).Where("role_key IN ?", roleKeys)
+	if !s.isPlatformScope() {
+		query = query.Where("tenant_id = ?", s.tenantOwnerID())
+	}
+	if err := query.
 		Order("created_at desc, id desc").
 		Find(&events).Error; err != nil {
 		return nil, err
@@ -484,8 +507,11 @@ func (s *PermissionService) countRecentWorkbenchRemediationEvents(roleKeys []str
 	}
 
 	var events []PermissionWorkbenchRemediationEvent
-	if err := s.db.Model(&PermissionWorkbenchRemediationEvent{}).
-		Where("role_key IN ?", roleKeys).
+	query := s.db.Model(&PermissionWorkbenchRemediationEvent{}).Where("role_key IN ?", roleKeys)
+	if !s.isPlatformScope() {
+		query = query.Where("tenant_id = ?", s.tenantOwnerID())
+	}
+	if err := query.
 		Order("created_at desc, id desc").
 		Limit(limit).
 		Find(&events).Error; err != nil {
@@ -625,9 +651,11 @@ func requiredAPIPoliciesByPermissionKey(permissionKey string) []permissionRequir
 // remediation events, integrity/coverage filters, and unrelated roles.
 func (s *PermissionService) getRoleMissingAPIPolicies(roleKey string) (*PermissionWorkbenchRoleResp, error) {
 	var role permissionWorkbenchRoleRow
-	if err := s.db.Table("system_role").
-		Where("role_key = ? AND deleted_at IS NULL", roleKey).
-		First(&role).Error; err != nil {
+	db := s.db.Table("system_role").Where("role_key = ? AND deleted_at IS NULL", roleKey)
+	if !s.isPlatformScope() {
+		db = db.Where("tenant_id = ?", s.tenantOwnerID())
+	}
+	if err := db.First(&role).Error; err != nil {
 		return nil, err
 	}
 

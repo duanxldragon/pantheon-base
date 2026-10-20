@@ -6,6 +6,41 @@ Pantheon Base 方法追踪记录。方法论本体位于 `pantheon-harness`。
 
 ---
 
+## [Unreleased] — 2026-10-20 (tenant delivery hardening)
+
+> A post-acceptance audit found two tenant→platform permission escapes and a permanently red
+> tenant smoke job. This slice closes them at the namespace layer: policy writes take their tenant
+> from the request context, role keys cannot shadow the platform namespace, and the role lifecycle
+> (delete/rename/bootstrap purge) understands the `role:<key>@tenant:<id>` form.
+
+### Security
+
+- The permission policy console is bound to the request tenant on every surface. A tenant-scoped
+  write always stores `role:<key>@tenant:<id>`; a body `tenantId` that names another tenant is
+  rejected with `TENANT_FORBIDDEN`, and `tenantId=0` no longer produces a global policy. List,
+  export, update and delete only touch the caller's domain (contract §2.3.1).
+- Policy import and workbench remediation resolve the stored subject from the context instead of
+  writing the bare role key, so neither can create a global grant from a tenant session.
+- Tenant role keys may not shadow the platform namespace: keys owned by tenant 0 (`admin`, …) and
+  `platform_ops` are rejected on create/rename/import. Previously a tenant could create `admin`,
+  assign it, and inherit the platform Casbin grants at login.
+- The permission bootstrap only purges policies whose subject no longer names a live role,
+  recognising the tenant-domain form. It used to delete every tenant policy on each boot.
+- Role delete removes exactly the role's own subject; rename moves the policies in the same
+  transaction instead of leaving stale grants and a role with no API surface.
+- `permission_workbench_remediation_event` gains `tenant_id` (migration `000028`), so remediation
+  history is no longer shared between tenants that own the same role key.
+
+### Fixed
+
+- `platform.tenant_mode` is seeded public and `Bootstrap` raises `is_public` on an existing row
+  (never lowers it). Upgraded deployments now publish the flag, so the tenant picker, switcher and
+  viewpoint switcher render again — the cause of the red `Tenant Smoke` job on every main commit.
+- CSV role import stamps the caller's tenant; it used to write `tenant_id = 0` (a platform role).
+- Import role-key validation and the bootstrap admin binding are scoped to the target namespace.
+
+---
+
 ## [Unreleased] — 2026-10-19
 
 > Tenant isolation closeout. The 2026-10-19 acceptance run measured 179/193 assertions and
