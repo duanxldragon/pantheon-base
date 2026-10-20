@@ -29,6 +29,7 @@ type AuthHandler struct {
 
 const csrfGenerateErrorKey = "csrf.generate.error"
 const msgParamInvalid = "param.invalid"
+const msgTokenInvalid = "token.invalid"
 const headerUserAgent = "User-Agent"
 
 func NewAuthHandler(s *Runtime, invalidators ...func(string)) *AuthHandler {

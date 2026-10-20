@@ -25,7 +25,7 @@ type credentialRepository struct {
 }
 
 var _ authuser.Repository = (*credentialRepository)(nil)
-var _ authuser.TenantScopedRepository = (*credentialRepository)(nil)
+var _ authuser.TenantUserFinder = (*credentialRepository)(nil)
 
 // NewCredentialRepository publishes the system user credential port for the
 // composition root to inject into the auth module.

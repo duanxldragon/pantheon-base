@@ -36,7 +36,7 @@ type OrgGovernanceTask struct {
 	RelatedUserCount      int
 }
 
-// OrgGovernanceTaskLoader supplies the dashboard's org-governance todo list.
+// OrgGovernanceTaskLoader supplies the dashboard's org-governance task list.
 // It takes the resolved tenant context so the list is confined to the caller's
 // tenant in multi mode (contract §3.3); a nil/compat context means global.
 type OrgGovernanceTaskLoader interface {

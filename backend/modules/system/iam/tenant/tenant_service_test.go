@@ -119,6 +119,10 @@ func setupTestDB(t *testing.T) *gorm.DB {
 	for _, stmt := range tenantTestDDL {
 		require.NoError(t, db.Exec(stmt).Error)
 	}
+	// Provisioning seeds tenant-scoped role-menu grants, so the navigation
+	// tables are part of the provisioning fixture, not an optional extra.
+	require.NoError(t, db.Exec(tenantMenuTestDDL).Error)
+	require.NoError(t, db.Exec(tenantRoleMenuTestDDL).Error)
 	return db
 }
 

@@ -36,6 +36,21 @@ Preferred reporting flow:
 - high-risk auth, authorization, and sensitive configuration issues are prioritized
 - related tests and docs should be updated after the fix to prevent regression
 
+## GitHub Security Surfaces
+
+The repository's Security tab is the entry point for this project's security signals. Each surface has a handling rule:
+
+| Surface | Current state | Handling rule |
+| --- | --- | --- |
+| Security policy | `SECURITY.md` (this file; Chinese version in `SECURITY.md`) | Update it in the same PR that changes a security control |
+| Private vulnerability reporting | Enabled | Preferred private channel; email remains the fallback |
+| Code scanning (CodeQL) | Analyzes every push to `main` and every PR | Fix, or dismiss with a recorded reason |
+| Dependabot alerts | Enabled, security updates on | No unhandled high/critical alert may remain at release time |
+| Secret scanning | Enabled with push protection | Rotate the credential when hit; never bypass push protection |
+| SonarCloud | Automatic analysis | The release gate requires a green quality gate and zero unresolved issues |
+
+A dismissal always leaves a trail. Each of `false positive`, `won't fix`, and `used in tests` must state its basis: why the code is safe and which file it covers. The `js/file-access-to-http` alerts in `frontend/scripts/tenant-matrix-fixture-setup.mjs` are exactly that case — the script replays the credentials this run generated in `.tmp/smoke-tenant-matrix.json` to a local API, which is the fixture's job, and the directory never ships. They are dismissed as `used in tests`.
+
 ## Runtime Security Baseline
 
 - `system/auth` browser flows are cookie-first: `/api/v1/auth/login`, `/api/v1/auth/mfa/verify`, and `/api/v1/auth/refresh` set HttpOnly session cookies plus CSRF header/cookie and return session metadata; tokens live in Redis and are never exposed to the frontend.

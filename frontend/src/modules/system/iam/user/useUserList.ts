@@ -2,8 +2,8 @@ import { useCallback, useEffect, useMemo, useReducer } from 'react';
 import type { FormInstance } from '@arco-design/web-react/es/Form';
 import { message } from '../../../../components/feedback/message';
 import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import { showImportResult } from '../../../../api/importExport';
-import { isArcoFormValidationError } from '../../../../core/arco/formValidation';
 import { publishRefresh, useRefreshSubscription } from '../../../../core/refresh/refreshBus';
 import { invalidateRouteWarmDataMany, resolveRouteWarmData } from '../../../../core/router/prefetch';
 import { readTenantViewpointId } from '../../../../core/tenant/viewpoint';
@@ -107,6 +107,47 @@ const emptyFormValues: UserFormValues = {
   joinTenant: true,
   membershipRole: 'member',
 };
+
+// buildUserWritePayload maps form values onto the write payload. `orgEnabled`
+// gates the org fields so a deployment without the org module never sends a
+// stale dept/post id, and the create and update paths share one shape.
+function buildUserWritePayload(values: UserFormValues, orgEnabled: boolean) {
+  return {
+    nickname: values.nickname ?? '',
+    email: values.email,
+    phone: values.phone,
+    avatar: values.avatar,
+    status: values.status ?? 1,
+    roleIds: values.roleIds || [],
+    deptId: orgEnabled ? (values.deptId ?? 0) : 0,
+    postId: orgEnabled ? (values.postId ?? 0) : 0,
+  };
+}
+
+// joinViewpointIfNeeded completes the "can log in" loop after a create while a
+// tenant viewpoint is pinned: multi-mode login requires an active membership,
+// so the fresh row joins the pinned tenant in the same gesture. A failed
+// membership add is reported on its own — the user creation already succeeded
+// and is never rolled back here.
+async function joinViewpointIfNeeded(
+  tenantId: number | null,
+  createdId: number,
+  values: UserFormValues,
+  t: TFunction,
+) {
+  if (tenantId === null || tenantId <= 0 || createdId <= 0 || values.joinTenant === false) {
+    return;
+  }
+  try {
+    await addTenantMember(tenantId, {
+      user_id: createdId,
+      role: values.membershipRole || 'member',
+    });
+    message.success(t('system.user.joinTenantDone'));
+  } catch {
+    message.error(t('system.tenant.viewpoint.joinMembershipFailed'));
+  }
+}
 
 function isDefaultUserListQuery(query: UserListQuery) {
   return (
@@ -407,62 +448,25 @@ export function useUserList(form: FormInstance<UserCreatePayload>) {
     let values: UserFormValues;
     try {
       values = (await form.validate()) as UserFormValues;
-    } catch (error) {
-      if (isArcoFormValidationError(error)) {
-        return;
-      }
+    } catch {
+      // Arco surfaces validation failures on the fields themselves; the submit
+      // path only needs to stop.
       return;
     }
     dispatch({ type: 'SET_SUBMITTING', submitting: true });
     try {
       if (state.editingRow) {
-        await updateUser(state.editingRow.id, {
-          nickname: values.nickname ?? '',
-          email: values.email,
-          phone: values.phone,
-          avatar: values.avatar,
-          deptId: orgEnabled ? (values.deptId ?? 0) : 0,
-          postId: orgEnabled ? (values.postId ?? 0) : 0,
-          status: values.status ?? 1,
-          roleIds: values.roleIds || [],
-        });
+        await updateUser(state.editingRow.id, buildUserWritePayload(values, orgEnabled));
         message.success(t('common.updateSuccess'));
       } else {
         const created = await createUser({
+          ...buildUserWritePayload(values, orgEnabled),
           username: values.username,
           password: values.password,
-          nickname: values.nickname ?? '',
-          avatar: values.avatar,
-          email: values.email,
-          phone: values.phone,
-          status: values.status ?? 1,
-          roleIds: values.roleIds || [],
-          deptId: orgEnabled ? (values.deptId ?? 0) : 0,
-          postId: orgEnabled ? (values.postId ?? 0) : 0,
           profileExt: values.profileExt,
         });
         message.success(t('common.createSuccess'));
-        // While a tenant viewpoint is pinned, the fresh row already belongs
-        // to that tenant. Multi-mode login requires an active membership, so
-        // the integration call completes the "can log in" loop in the same
-        // gesture. A failed membership add is reported separately: the user
-        // creation itself already succeeded, so we never undo it here.
-        if (
-          viewpointTenantId !== null &&
-          viewpointTenantId > 0 &&
-          values.joinTenant !== false &&
-          Number(created?.id) > 0
-        ) {
-          try {
-            await addTenantMember(viewpointTenantId, {
-              user_id: Number(created.id),
-              role: values.membershipRole || 'member',
-            });
-            message.success(t('system.user.joinTenantDone'));
-          } catch {
-            message.error(t('system.tenant.viewpoint.joinMembershipFailed'));
-          }
-        }
+        await joinViewpointIfNeeded(viewpointTenantId, Number(created?.id ?? 0), values, t);
       }
       invalidateUserCaches();
       publishRefresh('system:user:changed', 'system/user');

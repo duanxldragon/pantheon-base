@@ -36,6 +36,21 @@ Pantheon Base 当前优先维护以下范围：
 - 对高风险认证、授权、敏感配置泄露问题优先处理；
 - 修复后会同步更新相关测试与文档，避免回归。
 
+## GitHub Security Surfaces
+
+仓库的 Security 页签是本项目的安全信号入口。各入口的处理规则如下：
+
+| 入口 | 当前状态 | 处理规则 |
+| --- | --- | --- |
+| Security policy | `SECURITY.md`（本文件，英文版见 `SECURITY.en.md`） | 安全控制发生变化时，同 PR 更新本文件 |
+| Private vulnerability reporting | 已启用 | 首选私有上报通道；邮件作为备用通道 |
+| Code scanning（CodeQL） | 每次 push 到 `main` 与每个 PR 都分析 | 修复，或带理由关闭 |
+| Dependabot alerts | 已启用，含安全更新 | 发布前不得存在未处理的 high/critical 告警 |
+| Secret scanning | 已启用，并开启 push protection | 命中时轮换凭据；不得绕过 push protection |
+| SonarCloud | 自动分析 | 发布门禁要求质量门禁为绿且未处理问题为 0 |
+
+关闭告警必须留痕。`false positive`、`won't fix`、`used in tests` 三种理由都要写明依据：为什么这段代码是安全的、覆盖哪个文件。`frontend/scripts/tenant-matrix-fixture-setup.mjs` 的 `js/file-access-to-http` 即属此类——它把 `.tmp/smoke-tenant-matrix.json` 中本次运行生成的凭据回放给本地 API，这是冒烟夹具的职责，且该目录不随产物发布，因此以 `used in tests` 关闭。
+
 ## Runtime Security Baseline
 
 - `system/auth` 浏览器主链路采用 cookie-first：`/api/v1/auth/login`、`/api/v1/auth/mfa/verify`、`/api/v1/auth/refresh` 负责设置 HttpOnly 会话 cookie 与 CSRF header/cookie，同步返回会话元数据，但 token 存储在 Redis 而非暴露给前端。

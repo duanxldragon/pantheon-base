@@ -521,6 +521,34 @@ const TenantList: React.FC = () => {
       />
     );
 
+  // Resolve the body once, as a plain conditional chain: compat guide, first
+  // load, request error, table. Reading top-to-bottom keeps the four states
+  // legible, which a nested ternary inside the JSX did not.
+  let bodyContent: React.ReactNode;
+  if (!tenantModeEnabled) {
+    bodyContent = (
+      <Space direction="vertical" size={16} className="tenant-list__compat-guide">
+        <PageEmpty description={t('system.tenant.compat.desc')} />
+        <Button type="primary" onClick={() => navigate('/system/setting/platform')}>
+          {t('system.tenant.compat.action')}
+        </Button>
+      </Space>
+    );
+  } else if (loading && tableData.length === 0) {
+    bodyContent = <PageLoading />;
+  } else if (error && tableData.length === 0) {
+    bodyContent = (
+      <PageRequestError
+        error={error}
+        onRetry={() => {
+          void loadData(query);
+        }}
+      />
+    );
+  } else {
+    bodyContent = tableContent;
+  }
+
   return (
     <PageContainer>
       <Space direction="vertical" size={16} className="system-page-template tenant-list-page">
@@ -594,25 +622,7 @@ const TenantList: React.FC = () => {
                 </PermissionAction>
               }
             />
-            {!tenantModeEnabled ? (
-              <Space direction="vertical" size={16} className="tenant-list__compat-guide">
-                <PageEmpty description={t('system.tenant.compat.desc')} />
-                <Button type="primary" onClick={() => navigate('/system/setting/platform')}>
-                  {t('system.tenant.compat.action')}
-                </Button>
-              </Space>
-            ) : loading && tableData.length === 0 ? (
-              <PageLoading />
-            ) : error && tableData.length === 0 ? (
-              <PageRequestError
-                error={error}
-                onRetry={() => {
-                  void loadData(query);
-                }}
-              />
-            ) : (
-              tableContent
-            )}
+            {bodyContent}
           </Card>
         </>
       </Space>

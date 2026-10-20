@@ -106,7 +106,7 @@ func userOwningTenantIDTx(tx *gorm.DB, userID uint64) (uint64, error) {
 	var tenantID uint64
 	if err := tx.Table("system_user").
 		Select("tenant_id").
-		Where("id = ?", userID).
+		Where(condIDEquals, userID).
 		Scan(&tenantID).Error; err != nil {
 		return 0, err
 	}
@@ -268,7 +268,7 @@ func (s *UserService) ensureDeptID(deptID uint64) error {
 		return nil
 	}
 	var count int64
-	if err := s.scoped(s.db.Table("system_dept")).Where("id = ?", deptID).Count(&count).Error; err != nil {
+	if err := s.scoped(s.db.Table("system_dept")).Where(condIDEquals, deptID).Count(&count).Error; err != nil {
 		return err
 	}
 	if count == 0 {
@@ -289,7 +289,7 @@ func (s *UserService) ensurePostForDept(deptID, postID uint64) error {
 		DeptID uint64 `gorm:"column:dept_id"`
 	}
 	var post postRow
-	if err := s.scoped(s.db.Table("system_post")).Select("id, dept_id").Where("id = ?", postID).First(&post).Error; err != nil {
+	if err := s.scoped(s.db.Table("system_post")).Select("id, dept_id").Where(condIDEquals, postID).First(&post).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return common.NewBadRequest("user.post.invalid")
 		}

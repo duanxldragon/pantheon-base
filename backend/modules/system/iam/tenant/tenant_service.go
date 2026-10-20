@@ -15,6 +15,15 @@ import (
 	"gorm.io/gorm"
 )
 
+// Shared predicates for the tenant table. They are declared once so the
+// placeholder style stays identical across every query, and so a reader cannot
+// mistake a literal for an interpolated value.
+const (
+	condIDEquals     = "id = ?"
+	condIDNotEquals  = "id <> ?"
+	condStatusEquals = "status = ?"
+)
+
 var (
 	// ErrTenantNotFound is returned when no tenant matches the given id/code.
 	ErrTenantNotFound = errors.New("tenant not found")
@@ -219,7 +228,7 @@ func (s *Service) GetTenantByID(id uint64) (*Tenant, error) {
 	}
 	var tenant Tenant
 	// Use Where clause with placeholder to satisfy SonarCloud taint analysis
-	if err := s.db.Where("id = ?", id).First(&tenant).Error; err != nil {
+	if err := s.db.Where(condIDEquals, id).First(&tenant).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, ErrTenantNotFound
 		}
@@ -254,7 +263,7 @@ func (s *Service) ListTenants(filter Filter) (*ListResponse, error) {
 		filter.Size = 20
 	}
 
-	base := s.db.Model(&Tenant{}).Where("id <> ?", platformGlobalTenantID)
+	base := s.db.Model(&Tenant{}).Where(condIDNotEquals, platformGlobalTenantID)
 
 	if keyword := strings.TrimSpace(filter.Keyword); keyword != "" {
 		pattern := "%" + likeEscape(keyword) + "%"
@@ -268,7 +277,7 @@ func (s *Service) ListTenants(filter Filter) (*ListResponse, error) {
 	// status=deleted filter is the only way to reach them.
 	scoped := base.Session(&gorm.Session{})
 	if filter.Status != "" {
-		scoped = scoped.Where("status = ?", filter.Status)
+		scoped = scoped.Where(condStatusEquals, filter.Status)
 	} else {
 		scoped = scoped.Where("status <> ?", tenantStatusDeleted)
 	}
@@ -407,7 +416,7 @@ func (s *Service) DeleteTenant(id uint64) error {
 	// routine expects.
 	return s.db.Transaction(func(tx *gorm.DB) error {
 		var row Tenant
-		if err := tx.Select("id", "code").Where("id = ?", id).Take(&row).Error; err != nil {
+		if err := tx.Select("id", "code").Where(condIDEquals, id).Take(&row).Error; err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				return ErrTenantNotFound
 			}
@@ -418,11 +427,11 @@ func (s *Service) DeleteTenant(id uint64) error {
 		if err != nil {
 			return err
 		}
-		if err := tx.Model(&Tenant{}).Where("id = ?", row.ID).
+		if err := tx.Model(&Tenant{}).Where(condIDEquals, row.ID).
 			Update("code", archivedCode).Error; err != nil {
 			return fmt.Errorf("archive tenant code: %w", err)
 		}
-		if err := tx.Model(&Tenant{}).Where("id = ?", row.ID).
+		if err := tx.Model(&Tenant{}).Where(condIDEquals, row.ID).
 			Update("status", tenantStatusDeleted).Error; err != nil {
 			return fmt.Errorf("delete tenant: %w", err)
 		}
@@ -469,8 +478,8 @@ func (s *Service) EnsureTenantRootDepts() error {
 
 	var tenantIDs []uint64
 	if err := s.db.Model(&Tenant{}).
-		Where("status = ?", tenant.TenantStatusActive).
-		Where("id <> ?", platformGlobalTenantID).
+		Where(condStatusEquals, tenant.TenantStatusActive).
+		Where(condIDNotEquals, platformGlobalTenantID).
 		Order("id asc").
 		Pluck("id", &tenantIDs).Error; err != nil {
 		return fmt.Errorf("list active tenants for root dept repair: %w", err)
@@ -541,8 +550,8 @@ func (s *Service) EnsureTenantRolePolicies() error {
 
 	var tenantIDs []uint64
 	if err := s.db.Model(&Tenant{}).
-		Where("status = ?", tenant.TenantStatusActive).
-		Where("id <> ?", platformGlobalTenantID).
+		Where(condStatusEquals, tenant.TenantStatusActive).
+		Where(condIDNotEquals, platformGlobalTenantID).
 		Order("id asc").
 		Pluck("id", &tenantIDs).Error; err != nil {
 		return fmt.Errorf("list active tenants for policy repair: %w", err)
@@ -593,7 +602,7 @@ func (s *Service) ReleaseDeletedTenantCodes() error {
 			if err != nil {
 				return err
 			}
-			if err := tx.Model(&Tenant{}).Where("id = ?", row.ID).
+			if err := tx.Model(&Tenant{}).Where(condIDEquals, row.ID).
 				Update("code", archivedCode).Error; err != nil {
 				return err
 			}

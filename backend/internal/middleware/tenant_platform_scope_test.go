@@ -90,7 +90,10 @@ func TestPlatformScopeTenantContextMiddleware_ResolutionMatrix(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			recorder := runTenantScopeRequest(t, tt.platformScoped, tt.mode, tt.subjectTenant, tt.headerTenant, tt.roles, db, tenantLessUserID)
+			recorder := runTenantScopeRequest(t, tenantScopeRequest{
+				platformScoped: tt.platformScoped, mode: tt.mode, subjectTenant: tt.subjectTenant,
+				headerTenant: tt.headerTenant, roles: tt.roles, membershipDB: db, userID: tenantLessUserID,
+			})
 			assertTenantSmokeResponse(t, recorder, http.StatusOK, tt.wantCode, tt.wantTenantID, tt.wantMode)
 		})
 	}
@@ -139,7 +142,10 @@ func TestPlatformScopeTenantContextMiddleware_MembershipBlocksImplicitFallback(t
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			recorder := runTenantScopeRequest(t, true, tenant.ModeMulti, "", tt.headerTenant, []string{"platform_ops"}, db, tt.userID)
+			recorder := runTenantScopeRequest(t, tenantScopeRequest{
+				platformScoped: true, mode: tenant.ModeMulti, headerTenant: tt.headerTenant,
+				roles: []string{"platform_ops"}, membershipDB: db, userID: tt.userID,
+			})
 			assertTenantSmokeResponse(t, recorder, http.StatusOK, tt.wantCode, tt.wantTenantID, tenant.ModeMulti)
 		})
 	}
@@ -176,25 +182,39 @@ func setupTenantContextTestDB(t *testing.T) *gorm.DB {
 // runTenantScopeRequest issues the protected request through either the strict
 // or the platform-scoped tenant context middleware, with the same stub context
 // keys the hostile matrix uses.
-func runTenantScopeRequest(t *testing.T, platformScoped bool, mode, subjectTenant, headerTenant string, roles []string, membershipDB *gorm.DB, userID uint64) *httptest.ResponseRecorder {
+// tenantScopeRequest is the input of one protected request: which middleware
+// variant runs, the subject's stub context, and the database the membership
+// lookup reads. Grouping the fields keeps the helper's signature readable and
+// makes each call site name what it is varying.
+type tenantScopeRequest struct {
+	platformScoped bool
+	mode           string
+	subjectTenant  string
+	headerTenant   string
+	roles          []string
+	membershipDB   *gorm.DB
+	userID         uint64
+}
+
+func runTenantScopeRequest(t *testing.T, spec tenantScopeRequest) *httptest.ResponseRecorder {
 	t.Helper()
-	loader := tenant.NewModeLoader(func() string { return mode }, 0)
+	loader := tenant.NewModeLoader(func() string { return spec.mode }, 0)
 	engine := gin.New()
 	engine.Use(func(c *gin.Context) {
-		if subjectTenant != "" {
-			c.Set("tenantId", subjectTenant)
+		if spec.subjectTenant != "" {
+			c.Set("tenantId", spec.subjectTenant)
 		}
-		if len(roles) > 0 {
-			c.Set("roleKeys", roles)
+		if len(spec.roles) > 0 {
+			c.Set("roleKeys", spec.roles)
 		}
-		if userID != 0 {
-			c.Set("userID", userID)
+		if spec.userID != 0 {
+			c.Set("userID", spec.userID)
 		}
 	})
-	if platformScoped {
-		engine.Use(PlatformScopeTenantContextMiddleware(loader, membershipDB))
+	if spec.platformScoped {
+		engine.Use(PlatformScopeTenantContextMiddleware(loader, spec.membershipDB))
 	} else {
-		engine.Use(TenantContextMiddleware(loader, membershipDB))
+		engine.Use(TenantContextMiddleware(loader, spec.membershipDB))
 	}
 	engine.GET("/protected", func(c *gin.Context) {
 		ctx := tenant.FromGin(c)
@@ -208,8 +228,8 @@ func runTenantScopeRequest(t *testing.T, platformScoped bool, mode, subjectTenan
 	})
 
 	req := httptest.NewRequest(http.MethodGet, "/protected", nil)
-	if headerTenant != "" {
-		req.Header.Set(tenant.HeaderTenantID, headerTenant)
+	if spec.headerTenant != "" {
+		req.Header.Set(tenant.HeaderTenantID, spec.headerTenant)
 	}
 	recorder := httptest.NewRecorder()
 	engine.ServeHTTP(recorder, req)
@@ -222,7 +242,7 @@ func runTenantScopeRequest(t *testing.T, platformScoped bool, mode, subjectTenan
 func TestPlatformScopeTenantContextMiddleware_FailureEnvelopes(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
-	recorder := runTenantScopeRequest(t, true, tenant.ModeMulti, "", "", nil, nil, 0)
+	recorder := runTenantScopeRequest(t, tenantScopeRequest{platformScoped: true, mode: tenant.ModeMulti})
 	var payload struct {
 		Code    int    `json:"code"`
 		Message string `json:"message"`
@@ -235,7 +255,7 @@ func TestPlatformScopeTenantContextMiddleware_FailureEnvelopes(t *testing.T) {
 			tenant.ErrTenantContextMissing.Error(), common.CodeError, payload)
 	}
 
-	recorder = runTenantScopeRequest(t, true, tenant.ModeMulti, "", "202", nil, nil, 0)
+	recorder = runTenantScopeRequest(t, tenantScopeRequest{platformScoped: true, mode: tenant.ModeMulti, headerTenant: "202"})
 	if err := json.Unmarshal(recorder.Body.Bytes(), &payload); err != nil {
 		t.Fatalf("decode response: %v", err)
 	}

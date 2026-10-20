@@ -30,6 +30,9 @@ import (
 const (
 	condEventAcknowledged = "acknowledged_at IS NOT NULL"
 	condUserIDEquals      = "user_id = ?"
+	// orderEventRecent is the list order shared by every security-event read
+	// path, so a page and its export always agree on the sequence.
+	orderEventRecent = "created_at desc, id desc"
 )
 
 // PolicyProvider abstracts runtime auth policy.
@@ -223,7 +226,7 @@ func (s *Service) ListSecurityEvents(query *SecurityEventQuery) (*SecurityEventP
 		return nil, err
 	}
 	var events []SystemAuthSecurityEvent
-	if err := db.Order("created_at desc, id desc").Offset((page - 1) * pageSize).Limit(pageSize).Find(&events).Error; err != nil {
+	if err := db.Order(orderEventRecent).Offset((page - 1) * pageSize).Limit(pageSize).Find(&events).Error; err != nil {
 		return nil, err
 	}
 	return &SecurityEventPageResp{
@@ -246,7 +249,7 @@ func (s *Service) ExportSecurityEvents(query *SecurityEventQuery) (*impexp.CSVFi
 	}
 	var events []SystemAuthSecurityEvent
 	db := applySecurityEventFilters(s.scoped(s.db.Model(&SystemAuthSecurityEvent{})), query)
-	if err := db.Order("created_at desc, id desc").Limit(impexp.MaxExportRows()).Find(&events).Error; err != nil {
+	if err := db.Order(orderEventRecent).Limit(impexp.MaxExportRows()).Find(&events).Error; err != nil {
 		return nil, err
 	}
 
@@ -524,7 +527,7 @@ func (s *Service) ListRecentSecurityEvents(userID uint64, limit int) []SecurityE
 		return []SecurityEventResp{}
 	}
 	var events []SystemAuthSecurityEvent
-	if err := s.scoped(s.db).Where(condUserIDEquals, userID).Order("created_at desc, id desc").Limit(limit).Find(&events).Error; err != nil {
+	if err := s.scoped(s.db).Where(condUserIDEquals, userID).Order(orderEventRecent).Limit(limit).Find(&events).Error; err != nil {
 		return []SecurityEventResp{}
 	}
 	return toSecurityEventRespList(events)

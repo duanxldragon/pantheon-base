@@ -11,6 +11,10 @@ import (
 	"gorm.io/gorm/clause"
 )
 
+// condTenantIDEquals is the tenant confinement predicate every data-scope read
+// applies when the caller is not platform-scoped (contract §4).
+const condTenantIDEquals = "tenant_id = ?"
+
 type permissionDataScopeRoleRow struct {
 	ID       uint64 `gorm:"column:id"`
 	RoleName string `gorm:"column:role_name"`
@@ -32,7 +36,7 @@ func (s *PermissionService) ListDataScopePolicies(query *PermissionDataScopeQuer
 	var roles []permissionDataScopeRoleRow
 	db := s.db.Table("system_role").Where("deleted_at IS NULL")
 	if !s.isPlatformScope() {
-		db = db.Where("tenant_id = ?", s.tenantOwnerID())
+		db = db.Where(condTenantIDEquals, s.tenantOwnerID())
 	}
 	if query != nil {
 		if strings.TrimSpace(query.RoleKey) != "" {
@@ -154,7 +158,7 @@ func (s *PermissionService) ensureDeptIDsBelongToTenant(deptIDs []uint64) error 
 	var found int64
 	db := s.db.Table("system_dept").Where("id IN ?", deptIDs).Where("deleted_at IS NULL")
 	if !s.isPlatformScope() {
-		db = db.Where("tenant_id = ?", s.tenantOwnerID())
+		db = db.Where(condTenantIDEquals, s.tenantOwnerID())
 	}
 	if err := db.Count(&found).Error; err != nil {
 		return err
@@ -176,7 +180,7 @@ func (s *PermissionService) loadRoleDataScopePolicies(roleKeys []string) (map[st
 	var policies []PermissionRoleDataScopePolicy
 	db := s.db.Where("role_key IN ?", roleKeys)
 	if !s.isPlatformScope() {
-		db = db.Where("tenant_id = ?", s.tenantOwnerID())
+		db = db.Where(condTenantIDEquals, s.tenantOwnerID())
 	}
 	if err := db.Find(&policies).Error; err != nil {
 		return nil, err

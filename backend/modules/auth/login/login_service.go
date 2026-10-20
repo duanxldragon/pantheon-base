@@ -155,7 +155,7 @@ func (s *LoginService) loadLoginUser(username, sourceKey string, policy RuntimeP
 // tenant to name.
 func (s *LoginService) findCredentialByUsername(username string) (*authuser.User, error) {
 	if tenantID, ok := s.loginTenantID(); ok {
-		if repo, ok := s.userRepo.(authuser.TenantScopedRepository); ok {
+		if repo, ok := s.userRepo.(authuser.TenantUserFinder); ok {
 			user, err := repo.FindByUsernameInTenant(context.Background(), tenantID, username)
 			if err == nil {
 				return user, nil

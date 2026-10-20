@@ -77,8 +77,8 @@ type Repository interface {
 	RotatePassword(ctx context.Context, userID uint64, newHash string, inTx TxFunc) error
 }
 
-// TenantScopedRepository is the optional extension of Repository for
-// tenant-aware credential lookup.
+// TenantUserFinder is the optional extension of Repository for tenant-aware
+// credential lookup.
 //
 // Under multi mode a username is unique only WITHIN a tenant (contract §2.2:
 // the unique key is (tenant_id, username)), so a login that names a tenant must
@@ -86,8 +86,19 @@ type Repository interface {
 // resolve to the platform `admin` and report a password mismatch. The login
 // service asserts this interface and falls back to the plain global lookup only
 // when no tenant was named (compat mode, or the tenant-selection flow).
-type TenantScopedRepository interface {
+//
+// The name follows the Go convention for a single-method interface (the method
+// noun plus -er). TenantScopedRepository is kept below as a deprecated alias so
+// downstream repositories that already name this contract keep compiling.
+type TenantUserFinder interface {
 	// FindByUsernameInTenant loads the credential record for a login subject
 	// whose username is unique only within tenantID.
 	FindByUsernameInTenant(ctx context.Context, tenantID uint64, username string) (*User, error)
 }
+
+// TenantScopedRepository is the former name of TenantUserFinder.
+//
+// Deprecated: use TenantUserFinder. The alias is an identical type, so
+// satisfying one satisfies the other; it will be removed in the next major
+// release.
+type TenantScopedRepository = TenantUserFinder

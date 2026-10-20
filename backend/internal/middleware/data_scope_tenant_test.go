@@ -83,41 +83,52 @@ func scopedRequest(db *gorm.DB, tenantID uint64, roleKeys []string) (bool, strin
 	return reached, mode, recorder.Body.String()
 }
 
+// dataScopeTenantCase is one row of the F10 matrix: the tenant under test and
+// the policy its shared role key must resolve to.
+type dataScopeTenantCase struct {
+	name     string
+	tenantID uint64
+	want     string
+	wantRows int
+}
+
 // TestLoadRoleDataScopePoliciesIsTenantScoped 是 F10 的最小复现：同一 role_key
 // 在多个租户各有一条策略时，读取必须只返回调用方租户的那一条。
 func TestLoadRoleDataScopePoliciesIsTenantScoped(t *testing.T) {
 	db := seedDataScopeFixtures(t)
-
-	for _, tc := range []struct {
-		name     string
-		tenantID uint64
-		want     string
-		wantRows int
-	}{
+	cases := []dataScopeTenantCase{
 		{name: "self-only tenant", tenantID: dsTenantSelfOnly, want: common.DataScopeModeSelf, wantRows: 1},
 		{name: "dept tenant", tenantID: dsTenantDept, want: common.DataScopeModeDept, wantRows: 1},
 		{name: "tenant without policy", tenantID: dsTenantNoPolicy, want: "", wantRows: 0},
 		{name: "platform scope", tenantID: tenant.PlatformGlobalTenantID, want: common.DataScopeModeAll, wantRows: 1},
-	} {
+	}
+	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			policies, ok := loadRoleDataScopePolicies(db, tc.tenantID, []string{dsSharedRoleKey})
-			if !ok {
-				t.Fatalf("policy lookup must succeed")
-			}
-			if len(policies) != tc.wantRows {
-				t.Fatalf("expected %d policy row(s) for tenant %d, got %d: %+v",
-					tc.wantRows, tc.tenantID, len(policies), policies)
-			}
-			if tc.want == "" {
-				return
-			}
-			if got := policies[0].Mode; got != tc.want {
-				t.Fatalf("expected mode %q for tenant %d, got %q", tc.want, tc.tenantID, got)
-			}
-			if policies[0].TenantID != tc.tenantID {
-				t.Fatalf("expected policy row owned by tenant %d, got %d", tc.tenantID, policies[0].TenantID)
-			}
+			assertTenantResolvesOwnPolicy(t, db, tc)
 		})
+	}
+}
+
+// assertTenantResolvesOwnPolicy asserts that the shared role key resolves to
+// exactly one policy row, owned by the case's tenant, with the expected mode.
+func assertTenantResolvesOwnPolicy(t *testing.T, db *gorm.DB, tc dataScopeTenantCase) {
+	t.Helper()
+	policies, ok := loadRoleDataScopePolicies(db, tc.tenantID, []string{dsSharedRoleKey})
+	if !ok {
+		t.Fatalf("policy lookup must succeed")
+	}
+	if len(policies) != tc.wantRows {
+		t.Fatalf("expected %d policy row(s) for tenant %d, got %d: %+v",
+			tc.wantRows, tc.tenantID, len(policies), policies)
+	}
+	if tc.want == "" {
+		return
+	}
+	if policies[0].Mode != tc.want {
+		t.Fatalf("expected mode %q for tenant %d, got %q", tc.want, tc.tenantID, policies[0].Mode)
+	}
+	if policies[0].TenantID != tc.tenantID {
+		t.Fatalf("expected policy row owned by tenant %d, got %d", tc.tenantID, policies[0].TenantID)
 	}
 }
 

@@ -26,10 +26,18 @@ function resolveLocale() {
 // branch below happily parses it and renders a fabricated local timestamp —
 // year 1 sits at UTC+08:05:43, which is exactly where the bogus
 // "01-01-01 08:05:43" cells in the tenant console came from.
-const GO_ZERO_TIME_PATTERN = /^0001-01-01(?:[T ]00:00:00(?:\.0+)?(?:Z|[+-]\d{2}:\d{2})?)?$/;
+//
+// Split into the bare date and the zero-clock instant so neither expression
+// carries the nesting the combined pattern needed.
+const GO_ZERO_DATE_PATTERN = /^0001-01-01$/;
+const GO_ZERO_DATETIME_PATTERN = /^0001-01-01[T ]00:00:00(?:\.0+)?(?:Z|[+-]\d{2}:\d{2})?$/;
 
 function isGoZeroTime(value: DateValue) {
-  return typeof value === 'string' && GO_ZERO_TIME_PATTERN.test(value.trim());
+  if (typeof value !== 'string') {
+    return false;
+  }
+  const normalized = value.trim();
+  return GO_ZERO_DATE_PATTERN.test(normalized) || GO_ZERO_DATETIME_PATTERN.test(normalized);
 }
 
 function parseDate(value: DateValue) {

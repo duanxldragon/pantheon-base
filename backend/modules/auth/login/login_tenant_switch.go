@@ -39,7 +39,7 @@ type tenantSummary struct {
 func (h *AuthHandler) ListSwitchableTenants(c *gin.Context) {
 	userID := common.GetUserID(c)
 	if userID == 0 {
-		common.Fail(c, common.CodeUnauthorized, "token.invalid")
+		common.Fail(c, common.CodeUnauthorized, msgTokenInvalid)
 		return
 	}
 
@@ -91,21 +91,33 @@ func (h *AuthHandler) GetCurrentTenant(c *gin.Context) {
 			// Both must answer with the same role/isActive for the same tenant;
 			// reporting an empty role here would mislead any UI that renders the
 			// current tenant's controls from it.
-			if userID := common.GetUserID(c); userID != 0 {
-				if memberships, err := tenant.ListActiveMemberships(h.service.db, userID); err == nil {
-					for _, m := range memberships {
-						if m.TenantID == ctx.TenantID {
-							summary.Role = m.Role
-							summary.IsActive = true
-							break
-						}
-					}
-				}
-			}
+			h.attachCallerMembershipRole(c, &summary, ctx.TenantID)
 			resp["tenant"] = summary
 		}
 	}
 	common.Success(c, resp)
+}
+
+// attachCallerMembershipRole stamps the caller's own membership role onto the
+// summary of the tenant the request resolved to. A caller with no membership in
+// that tenant keeps the summary untouched, which is the correct answer for a
+// platform operator inspecting a tenant it does not belong to.
+func (h *AuthHandler) attachCallerMembershipRole(c *gin.Context, summary *tenantSummary, tenantID uint64) {
+	userID := common.GetUserID(c)
+	if userID == 0 {
+		return
+	}
+	memberships, err := tenant.ListActiveMemberships(h.service.db, userID)
+	if err != nil {
+		return
+	}
+	for _, m := range memberships {
+		if m.TenantID == tenantID {
+			summary.Role = m.Role
+			summary.IsActive = true
+			return
+		}
+	}
 }
 
 // SwitchTenant re-issues the caller's session bound to another tenant
@@ -127,7 +139,7 @@ func (h *AuthHandler) SwitchTenant(c *gin.Context) {
 	userID := common.GetUserID(c)
 	sessionID := c.GetString("sessionId")
 	if userID == 0 || strings.TrimSpace(sessionID) == "" {
-		common.Fail(c, common.CodeUnauthorized, "token.invalid")
+		common.Fail(c, common.CodeUnauthorized, msgTokenInvalid)
 		return
 	}
 
@@ -201,7 +213,7 @@ func tenantSwitchErrorCode(err error) int {
 func tenantSwitchMessageKey(err error) string {
 	switch {
 	case errors.Is(err, gorm.ErrRecordNotFound):
-		return "token.invalid"
+		return msgTokenInvalid
 	case errors.Is(err, tenant.ErrTenantSuspended):
 		return "tenant.suspended"
 	case errors.Is(err, tenant.ErrTenantArchived):
