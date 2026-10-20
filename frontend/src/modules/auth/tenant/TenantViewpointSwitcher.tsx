@@ -35,7 +35,7 @@ interface TenantViewpointSwitcherProps {
  * Switching is a full shell reload — the same pattern `TenantSwitcher` uses —
  * so menus/permissions/caches regenerate for the pinned scope.
  */
-export function TenantViewpointSwitcher({ enabled, t }: TenantViewpointSwitcherProps) {
+export function TenantViewpointSwitcher({ enabled, t }: Readonly<TenantViewpointSwitcherProps>) {
   const { isAdmin } = usePermission();
   const platformScope = usePlatformScope(enabled);
   const [tenants, setTenants] = useState<TenantRow[]>([]);
@@ -150,7 +150,7 @@ interface TenantViewpointBannerProps {
   t: TFunction;
 }
 
-export function TenantViewpointBanner({ t }: TenantViewpointBannerProps) {
+export function TenantViewpointBanner({ t }: Readonly<TenantViewpointBannerProps>) {
   const viewpointId = useMemo(() => readTenantViewpointId(), []);
   const [name, setName] = useState<string | null>(null);
 
@@ -183,7 +183,7 @@ export function TenantViewpointBanner({ t }: TenantViewpointBannerProps) {
   }
 
   return (
-    <div className="tenant-viewpoint-banner" role="status">
+    <output className="tenant-viewpoint-banner">
       <Tag color="arcoblue">{t('system.tenant.viewpoint.title')}</Tag>
       <span className="tenant-viewpoint-banner__text">
         {t('system.tenant.viewpoint.banner', { name: name ?? '#' + viewpointId })}
@@ -199,6 +199,6 @@ export function TenantViewpointBanner({ t }: TenantViewpointBannerProps) {
       >
         {t('system.tenant.viewpoint.exit')}
       </Button>
-    </div>
+    </output>
   );
 }

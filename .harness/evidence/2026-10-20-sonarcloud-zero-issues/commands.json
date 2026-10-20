@@ -1,0 +1,130 @@
+{
+  "taskId": "2026-10-20-sonarcloud-zero-issues",
+  "repo": "pantheon-base",
+  "executedAt": "2026-10-20T11:20:00+08:00",
+  "completedAt": "2026-10-20T12:30:00+08:00",
+  "agent": {
+    "tool": "other",
+    "adapter": "workbuddy-agent"
+  },
+  "runtimeSensitive": true,
+  "runtimeGap": "Two checks can only be produced by CI. (1) The SonarCloud re-analysis of the merged commit is the only proof that the unresolved total reaches 0; the SonarCloud API is readable anonymously but issue dismissal needs a token that exists only as the repository secret SONAR_TOKEN, so nothing was dismissed and the fix has to be judged by the next analysis. (2) Tenant Smoke is a Playwright suite and this machine cannot spawn the browser (spawnSync EBUSY, same limitation recorded in 2026-10-11-sonar-smoke-helper-smells), so the menu-seeding regression is proven by the Go tests plus the CI advisory run, not locally.",
+  "commands": [
+    {
+      "command": "curl -s https://sonarcloud.io/api/qualitygates/project_status?projectKey=duanxldragon_pantheon-base&branch=main",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Baseline: status ERROR. Conditions: new_security_rating actualValue 3.0 (threshold GT 1) is the only failure; reliability 1, maintainability 1, duplicated lines 2.2, hotspots reviewed 100."
+    },
+    {
+      "command": "curl -s https://sonarcloud.io/api/issues/search?componentKeys=duanxldragon_pantheon-base&branch=main&resolved=false&ps=100",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Baseline: total 32 unresolved (1 VULNERABILITY typescript:S2068 at tenant-fixture.ts:58, 31 CODE_SMELL). Facets: go:S1192 x9, typescript:S9382 x6, go:S3776 x3, typescript:S6759 x3, godre:S8193 x2, typescript:S3358 x2, typescript:S3776, typescript:S2068, go:S107, go:S1135, godre:S8196, typescript:S5843, typescript:S6819."
+    },
+    {
+      "command": "cd backend && go build ./...",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "Clean build after the constant extraction, the interface rename and the provisioning split."
+    },
+    {
+      "command": "cd backend && go vet ./...",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "No findings. Also run scoped to ./modules/system/iam/tenant/ and ./internal/middleware/ so the new test file was compiled."
+    },
+    {
+      "command": "cd backend && go test -count=1 ./internal/middleware/ ./modules/auth/login/ ./modules/auth/security/ ./modules/system/i18n/ ./modules/system/iam/permission/ ./modules/system/iam/tenant/ ./modules/system/iam/user/ ./modules/platform/ ./pkg/contracts/...",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "MySQL-backed. ok middleware 8.6s, auth/login 115.7s, auth/security 2.5s, i18n 148.1s, permission 18.8s, tenant 45.0s, user 44.7s, platform 5.0s, pkg/contracts 0.2s."
+    },
+    {
+      "command": "cd backend && golangci-lint run --new-from-rev=origin/main ./...",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "0 issues on new code (v2.6.2). Cache-persist warnings only, from a read-only cache directory."
+    },
+    {
+      "command": "cd frontend && npx tsc -b --pretty false",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "Clean after moving the tenant-list body chain below the tableContent declaration (the first attempt referenced it before assignment)."
+    },
+    {
+      "command": "cd frontend && npx eslint src/core/format/dateTime.ts src/modules/auth/tenant/TenantSwitcher.tsx src/modules/auth/tenant/TenantViewpointSwitcher.tsx src/modules/system/iam/tenant/TenantList.tsx src/modules/system/iam/user/useUserList.ts tests/smoke-core/tenant-fixture.ts",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "No warnings on the changed files."
+    },
+    {
+      "command": "cd frontend && npx vitest run",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "24 test files, 193 tests, all passing in 29.4s."
+    },
+    {
+      "command": "npm run check:docs-frontmatter && npm run check:structure && npm run check:harness-encoding",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Frontmatter 329 docs / 236 with frontmatter; structure 0 findings across 2373 tracked files; encoding 0 findings across 2149 files."
+    },
+    {
+      "command": "gh api -X PUT repos/duanxldragon/pantheon-base/private-vulnerability-reporting && gh api repos/duanxldragon/pantheon-base/private-vulnerability-reporting",
+      "cwd": ".",
+      "status": "passed",
+      "details": "enabled: false -> true, so the private advisory channel documented in SECURITY.md now exists."
+    },
+    {
+      "command": "gh api -X PATCH repos/duanxldragon/pantheon-base/code-scanning/alerts/{90..94} (state=dismissed, dismissed_reason=used in tests)",
+      "cwd": ".",
+      "status": "passed",
+      "details": "All five js/file-access-to-http alerts dismissed with the 249-character comment naming the fixture, the gitignored manifest and the policy section. Open code-scanning alerts afterwards: 0 (5 used-in-tests, 10 historical false positives)."
+    },
+    {
+      "command": "gh api repos/duanxldragon/pantheon-base/code-scanning/alerts?state=open --jq length",
+      "cwd": ".",
+      "status": "passed",
+      "details": "0."
+    },
+    {
+      "command": "curl -s https://sonarcloud.io/api/issues/search?componentKeys=duanxldragon_pantheon-base&pullRequest=391&resolved=false&ps=100",
+      "cwd": ".",
+      "status": "passed",
+      "details": "PR analysis caught two follow-ups the local checks could not: the new msgTokenInvalid constant made login_handler.go hold four occurrences (so the remaining three literals were folded into it), and LoginHandler sat at cognitive complexity 18. Both were fixed in the same PR: the handler now delegates tenant-claim failure and the MFA challenge to helpers. PR quality gate was already OK at that point (new_security_rating 1, so the S2068 fix holds)."
+    },
+    {
+      "command": "SonarCloud re-analysis of the merged commit (issues API resolved=false on branch main)",
+      "cwd": ".",
+      "status": "not-run",
+      "details": "Runs automatically after the merge. This is the only authoritative check that the total reaches 0 and the gate returns OK; it cannot be produced locally and must not be reported as passed."
+    },
+    {
+      "command": "cd frontend && npm run test:smoke:tenant",
+      "cwd": "frontend",
+      "status": "not-run",
+      "details": "Playwright cannot start on this machine (spawnSync EBUSY). The menu-seeding fix is covered by Go tests; the browser proof is the CI Tenant Smoke advisory run."
+    }
+  ],
+  "knownGaps": [
+    "The SonarCloud issue count and quality gate are only proven after the merge re-analysis; the local evidence is the 32-issue baseline plus a rule-by-rule fix mapping.",
+    "No issue was dismissed in SonarCloud. Clearing the count was done by changing the code, so the mapping table in summary.md is the audit trail.",
+    "system_menu has no tenant dimension: only the grant row is tenant-scoped. That is the intended model and is unchanged here.",
+    "Tenant Smoke cannot run locally; the sidebar regression is proven by TestProvisionTenant_SeedsTenantAdminMenus and the idempotency case, and by CI.",
+    "The deprecated TenantScopedRepository alias keeps the old name alive until the next major release, so a future major must remove it."
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-20-sonarcloud-zero-issues/manifest.json",
+    "taskDoc": "docs/harness/tasks/2026-10-20-sonarcloud-zero-issues.task.md",
+    "evidenceDir": ".harness/evidence/2026-10-20-sonarcloud-zero-issues/",
+    "summaryFile": ".harness/evidence/2026-10-20-sonarcloud-zero-issues/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-20-sonarcloud-zero-issues/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".github/workflows/release-gate.yml",
+      ".sonarcloud.properties",
+      "SECURITY.md"
+    ]
+  }
+}

@@ -34,7 +34,7 @@ interface TenantSwitcherProps {
  * platform operator owns none, so the result would be a console the operator
  * cannot use. Offering one control per subject kind is both clearer and safer.
  */
-export function TenantSwitcher({ enabled, t }: TenantSwitcherProps) {
+export function TenantSwitcher({ enabled, t }: Readonly<TenantSwitcherProps>) {
   const { isAdmin } = usePermission();
   const platformScope = usePlatformScope(enabled);
   const [tenants, setTenants] = useState<SwitchableTenant[]>([]);

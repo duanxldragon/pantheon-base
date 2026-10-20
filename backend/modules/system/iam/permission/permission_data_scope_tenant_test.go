@@ -235,10 +235,10 @@ func TestWithTenantContextKeepsCompatBaseline(t *testing.T) {
 	db := setupDataScopeTenantDB(t)
 	base := NewPermissionService(db)
 
-	if got := base.WithTenantContext(nil); got != base {
+	if base.WithTenantContext(nil) != base {
 		t.Fatalf("a nil context must return the receiver unchanged")
 	}
-	if got := base.WithTenantContext(&tenant.Context{TenantID: dsScopeTenantA, Mode: tenant.ModeCompat}); got != base {
+	if base.WithTenantContext(&tenant.Context{TenantID: dsScopeTenantA, Mode: tenant.ModeCompat}) != base {
 		t.Fatalf("a compat context must return the receiver unchanged")
 	}
 

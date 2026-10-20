@@ -214,8 +214,8 @@ func TestCredentialRepositoryImplementsAuthUserPort(t *testing.T) {
 func TestCredentialRepositoryImplementsTenantScopedPort(t *testing.T) {
 	t.Helper()
 	repo := NewCredentialRepository(nil)
-	if _, ok := repo.(authuser.TenantScopedRepository); !ok {
-		t.Fatalf("factory must return a repo satisfying authuser.TenantScopedRepository, got %T", repo)
+	if _, ok := repo.(authuser.TenantUserFinder); !ok {
+		t.Fatalf("factory must return a repo satisfying authuser.TenantUserFinder, got %T", repo)
 	}
 }
 
@@ -243,7 +243,7 @@ func seedTenantCredentialUser(t *testing.T, db *gorm.DB, tenantID uint64, userna
 // password mismatch (live: verify_tenant_isolation_phase_g.py, Phase F).
 func TestCredentialRepositoryFindByUsernameInTenantScopesToTenant(t *testing.T) {
 	db := setupUserTestDB(t)
-	repo := NewCredentialRepository(db).(authuser.TenantScopedRepository)
+	repo := NewCredentialRepository(db).(authuser.TenantUserFinder)
 
 	const sharedUsername = "shared_login_subject"
 	platformUser := seedTenantCredentialUser(t, db, 0, sharedUsername, "platform-hash")
@@ -271,7 +271,7 @@ func TestCredentialRepositoryFindByUsernameInTenantScopesToTenant(t *testing.T) 
 // another tenant's subject.
 func TestCredentialRepositoryFindByUsernameInTenantMissesOtherTenant(t *testing.T) {
 	db := setupUserTestDB(t)
-	repo := NewCredentialRepository(db).(authuser.TenantScopedRepository)
+	repo := NewCredentialRepository(db).(authuser.TenantUserFinder)
 
 	seedTenantCredentialUser(t, db, 22, "tenant_only_subject", "tenant-hash")
 

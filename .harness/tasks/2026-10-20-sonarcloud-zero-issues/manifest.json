@@ -1,0 +1,124 @@
+{
+  "taskId": "2026-10-20-sonarcloud-zero-issues",
+  "title": "Clear every unresolved SonarCloud issue and seed tenant console menus during provisioning",
+  "goal": "Main f6579ad8 fails the SonarCloud quality gate on new_security_rating = 3.0 (one S2068 hard-coded password), and release-gate.yml additionally requires zero unresolved issues while 32 are open. The previous S2068 fix only moved the literal into an env fallback, so Sonar still saw a constant credential. This task removes the constant entirely (the smoke password is generated per run and recorded in the fixture manifest), clears the remaining 31 code smells by refactoring rather than by exclusion or dismissal, and fixes the regression that made Tenant Smoke fail on every commit after the remediation merge: tenant provisioning created the roles and Casbin policies but never wrote system_role_menu, so a new tenant administrator signed in to a console with an empty sidebar.",
+  "primaryLayer": "platform",
+  "status": "completed",
+  "priority": "P0",
+  "type": "remediation",
+  "estimatedComplexity": "medium",
+  "dependsOn": [],
+  "findings": [
+    "S2068 (P0): frontend/tests/smoke-core/tenant-fixture.ts kept 'SmokeMatrix#2026' as an env fallback, so the credential stayed hard-coded and new_security_rating stayed at 3.0 after the previous fix.",
+    "go:S1192 x9 (P1): duplicated SQL predicates and message keys (token.invalid, created_at desc id desc, system.tenant, tenant_id = ?, role_id = ?, id = ?, id <> ?, status = ?).",
+    "go:S3776 x3 / typescript:S3776 x1 (P1): GetCurrentTenant 16, the F10 data-scope test 16, provisionTenantRoleBindings 26, submitForm 20 — all over the 15 budget.",
+    "go:S107 (P2): runTenantScopeRequest carried 8 parameters.",
+    "godre:S8193 x2 / godre:S8196 x1 (P2): a single-use temporary and a single-method interface named after its noun instead of its method.",
+    "typescript:S9382 x6 (P2): sequential awaits over independent tenants, members and dictionary fixtures.",
+    "typescript:S3358 x2 / S6759 x3 / S6819 x1 / S5843 x1 / go:S1135 x1 (P2): nested ternaries, mutable props, role=status instead of <output>, an over-complex zero-time regex, and a TODO in a doc comment.",
+    "Tenant Smoke regression (P0): provisioning never wrote system_role_menu, so a freshly provisioned tenant resolved an empty navigation tree and the console had no sidebar."
+  ],
+  "scope": {
+    "in": [
+      "backend/internal/middleware/{data_scope_tenant_test.go,tenant_platform_scope_test.go}",
+      "backend/modules/auth/login/{login_handler.go,login_service.go,login_tenant_switch.go}",
+      "backend/modules/auth/security/security_service.go",
+      "backend/modules/platform/dashboard_service.go",
+      "backend/modules/system/i18n/{i18n_seed.go,seed_data.go}",
+      "backend/modules/system/iam/permission/{permission_data_scope.go,permission_data_scope_tenant_test.go}",
+      "backend/modules/system/iam/tenant/{tenant_provision.go,tenant_provision_menus_test.go,tenant_service.go,tenant_service_test.go}",
+      "backend/modules/system/iam/user/{auth_repository.go,auth_repository_test.go,user_helper.go}",
+      "backend/pkg/contracts/authuser/authuser.go",
+      "frontend/src/core/format/dateTime.ts",
+      "frontend/src/modules/auth/tenant/{TenantSwitcher.tsx,TenantViewpointSwitcher.tsx}",
+      "frontend/src/modules/system/iam/{tenant/TenantList.tsx,user/useUserList.ts}",
+      "frontend/tests/smoke-core/tenant-fixture.ts",
+      "SECURITY.md, SECURITY.en.md, docs/GITHUB_GOVERNANCE_CHECKLIST{,.en}.md"
+    ],
+    "out": [
+      "Excluding files from .sonarcloud.properties to hide findings",
+      "Bulk-marking issues as won't fix through the SonarCloud API",
+      "Changing the release-gate.yml thresholds",
+      "Adding a tenant dimension to system_menu (menu rows stay global; only the grant is tenant-scoped)",
+      "Resuming the v0.17.0 release packet"
+    ]
+  },
+  "dependencyLayers": [
+    "platform",
+    "system/iam",
+    "system/auth",
+    "system/config"
+  ],
+  "implementationNotes": [
+    "The S2068 root cause is a literal credential in the source tree. An env fallback keeps the literal, which is why the finding only changed line number. The password is now generated per run with randomBytes and written into the fixture manifest, so specs and teardown read the same value.",
+    "The six S9382 sites are genuinely independent (two tenants, their members, their dictionary fixtures), so Promise.all is safe. This does not contradict the earlier decision to keep delete ordering sequential in the smoke helpers.",
+    "provisionTenantRoleBindings was split without changing order or idempotency: read the platform admin bindings, then per role read the existing set and insert only the missing rows.",
+    "Menu seeding excludes module = 'system.tenant' so a tenant administrator never sees the platform-level tenant console entry.",
+    "TenantScopedRepository is kept as a deprecated alias so downstream repositories do not have to change code in a minor release."
+  ],
+  "contractAnchors": [
+    "docs/contracts/PLATFORM_CONTRACT.md",
+    "docs/contracts/TENANT_CONTRACT_V1.md",
+    "docs/contracts/DOCUMENT_GOVERNANCE_CONTRACT.md",
+    ".github/workflows/release-gate.yml",
+    ".sonarcloud.properties",
+    "SECURITY.md"
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "ci-workflow",
+    "ownerLayer": "consumer-repository"
+  },
+  "verificationPlan": {
+    "commands": [
+      "cd backend && go build ./... && go vet ./...",
+      "cd backend && go test -count=1 ./internal/middleware/ ./modules/auth/login/ ./modules/auth/security/ ./modules/system/i18n/ ./modules/system/iam/permission/ ./modules/system/iam/tenant/ ./modules/system/iam/user/ ./modules/platform/ ./pkg/contracts/...",
+      "cd backend && golangci-lint run --new-from-rev=origin/main ./...",
+      "cd frontend && npx tsc -b && npx vitest run",
+      "npm run check:docs-frontmatter && npm run check:structure && npm run check:harness-encoding"
+    ],
+    "runtimeEvidence": [
+      "SonarCloud issues API on branch main: 32 unresolved before the change, with new_security_rating = 3.0 as the only failing gate condition",
+      "SonarCloud issues API after the merge re-analysis: unresolved total must reach 0 and the quality gate must be OK",
+      "go test ./modules/system/iam/tenant/ covers both first-time menu seeding and idempotent re-provisioning",
+      "GitHub code-scanning API: 0 open alerts, 5 dismissed as used in tests with a recorded reason"
+    ]
+  },
+  "runtimeSensitive": true,
+  "evidenceRequired": [
+    ".harness/evidence/2026-10-20-sonarcloud-zero-issues/commands.json",
+    ".harness/evidence/2026-10-20-sonarcloud-zero-issues/summary.md",
+    ".harness/evidence/2026-10-20-sonarcloud-zero-issues/review.md"
+  ],
+  "humanGates": [
+    "Whether the deprecated TenantScopedRepository alias stays until the next major release, or is removed now, is a maintainer decision.",
+    "Whether the 31 code smells had to reach zero, rather than relaxing the release-gate rule, is a governance decision. This packet follows the existing gate."
+  ],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed",
+    "Backend 17 findings cleared (S1192 x9, S3776 x3, S107, S1135, S8193 x2, S8196)",
+    "Frontend 15 findings cleared (S2068, S9382 x6, S3358 x2, S6759 x3, S6819, S5843, S3776)",
+    "Tenant provisioning seeds tenant_admin menus, with first-run and idempotency tests",
+    "GitHub open code-scanning alerts at 0 and private vulnerability reporting enabled",
+    "SECURITY and governance docs record the security surfaces and the dismissal policy",
+    "CI re-analysis on main reports 0 unresolved SonarCloud issues and a green Release Gate"
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-20-sonarcloud-zero-issues/manifest.json",
+    "taskDoc": "docs/harness/tasks/2026-10-20-sonarcloud-zero-issues.task.md",
+    "evidenceDir": ".harness/evidence/2026-10-20-sonarcloud-zero-issues/",
+    "summaryFile": ".harness/evidence/2026-10-20-sonarcloud-zero-issues/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-20-sonarcloud-zero-issues/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".github/workflows/release-gate.yml",
+      ".sonarcloud.properties",
+      "SECURITY.md"
+    ]
+  }
+}

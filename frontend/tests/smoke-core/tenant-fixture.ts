@@ -1,3 +1,4 @@
+import { randomBytes } from 'node:crypto';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
@@ -53,9 +54,18 @@ type ApiEnvelope<T> = { code: number; message?: string; data: T };
 
 const manifestPath = join(process.cwd(), '..', '.tmp', 'smoke-tenant-matrix.json');
 const run = `${Date.now()}`;
-// Ephemeral smoke-tenant admin password; override via env when a run needs a
-// different value. Never a real credential — tenants are torn down per run.
-const adminPassword = process.env.PANTHEON_SMOKE_MATRIX_ADMIN_PASSWORD ?? 'SmokeMatrix#2026';
+// Ephemeral smoke-tenant admin password. It is generated per run rather than
+// checked in, and the value the run used is recorded in the fixture manifest, so
+// the specs and the teardown always agree on it. Set
+// PANTHEON_SMOKE_MATRIX_ADMIN_PASSWORD to pin a specific value instead.
+function generateEphemeralPassword() {
+  // 3 + 12 + 4 characters: comfortably above the deployment's minimum length
+  // and mixed enough for any composition rule the deployment configures.
+  return `Smk${randomBytes(6).toString('hex')}#Aa1`;
+}
+
+const adminPassword =
+  process.env.PANTHEON_SMOKE_MATRIX_ADMIN_PASSWORD ?? generateEphemeralPassword();
 
 const RUN_TENANT_SPEC = [
   { key: 'a', dictCode: 'matrix_browser_a' },
@@ -147,9 +157,9 @@ export function setupMatrixTenants(request: APIRequestContext): Promise<MatrixTe
     const tenants = await Promise.all(
       RUN_TENANT_SPEC.map((spec) => provisionOne(request, session, spec)),
     );
-    for (const tenant of tenants) {
-      await ensureDictFixture(tenant);
-    }
+    // Each tenant owns a distinct dictionary fixture, so the seeds are
+    // independent and run concurrently instead of one round-trip at a time.
+    await Promise.all(tenants.map((tenant) => ensureDictFixture(tenant)));
     return tenants;
   })();
   return matrixPromise;
@@ -243,21 +253,31 @@ export async function teardownMatrixTenants(
   if (owned.length === 0) return;
   const operationToken = await getApiOperationToken(request, login);
   const headers = { ...apiRequestHeaders(login), 'X-Operation-Token': operationToken };
-  for (const tenant of owned) {
-    const response = await request.get(`${apiBaseUrl}/system/tenant/${tenant.id}/members`, {
-      headers,
-    });
-    const payload = (await response.json()) as ApiEnvelope<{ items?: Array<{ user_id: number }> }>;
-    for (const member of payload.data?.items ?? []) {
-      await request.delete(`${apiBaseUrl}/system/tenant/${tenant.id}/members/${member.user_id}`, {
+  // Tenants are independent, so they are torn down concurrently.
+  await Promise.all(owned.map((tenant) => teardownOneTenant(request, tenant, headers)));
+}
+
+/** Purges one owned tenant: every membership first, then the tenant row. */
+async function teardownOneTenant(
+  request: APIRequestContext,
+  tenant: MatrixTenant,
+  headers: Record<string, string>,
+): Promise<void> {
+  const response = await request.get(`${apiBaseUrl}/system/tenant/${tenant.id}/members`, {
+    headers,
+  });
+  const payload = (await response.json()) as ApiEnvelope<{ items?: Array<{ user_id: number }> }>;
+  const members = payload.data?.items ?? [];
+  await Promise.all(
+    members.map((member) =>
+      request.delete(`${apiBaseUrl}/system/tenant/${tenant.id}/members/${member.user_id}`, {
         headers,
-      });
-    }
-    const deleted = await request.delete(`${apiBaseUrl}/system/tenant/${tenant.id}`, { headers });
-    const deletedPayload = (await deleted.json()) as ApiEnvelope<unknown>;
-    expect(
-      deletedPayload.code,
-      `teardown tenant ${tenant.id}: ${JSON.stringify(deletedPayload)}`,
-    ).toBe(200);
-  }
+      }),
+    ),
+  );
+  const deleted = await request.delete(`${apiBaseUrl}/system/tenant/${tenant.id}`, { headers });
+  const deletedPayload = (await deleted.json()) as ApiEnvelope<unknown>;
+  expect(deletedPayload.code, `teardown tenant ${tenant.id}: ${JSON.stringify(deletedPayload)}`).toBe(
+    200,
+  );
 }

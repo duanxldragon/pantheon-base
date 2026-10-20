@@ -8,6 +8,7 @@ import (
 	"github.com/duanxldragon/pantheon-base/backend/pkg/common"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/common/security"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/database"
+	"github.com/duanxldragon/pantheon-base/backend/pkg/rbacbind"
 	tenantctx "github.com/duanxldragon/pantheon-base/backend/pkg/tenant"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
@@ -117,6 +118,10 @@ func (s *Service) ProvisionTenant(in ProvisionInput) (*ProvisionResult, error) {
 		}
 		result.RoleIDs = roleIDs
 
+		if err := provisionTenantRoleMenus(tx, in.TenantID, roleIDs); err != nil {
+			return err
+		}
+
 		if err := provisionTenantRoleBindings(tx, in.TenantID, roleIDs); err != nil {
 			return err
 		}
@@ -200,6 +205,57 @@ func provisionTenantRoles(tx *gorm.DB, tenantID uint64) (map[string]uint64, erro
 		roleIDs[def.Key] = created.ID
 	}
 	return roleIDs, nil
+}
+
+// tenantPlatformMenuModule is the module key of the platform tenancy menus
+// (`/system/tenant`). It mirrors modules/system's moduleTenant constant, which
+// cannot be imported here without a package cycle.
+const tenantPlatformMenuModule = "system.tenant"
+
+// condRoleIDEquals is the predicate both role-binding tables are read and
+// written by, so the placeholder style stays identical across the four queries.
+const condRoleIDEquals = "role_id = ?"
+
+// provisionTenantRoleMenus grants the tenant administrator the tenant console
+// navigation.
+//
+// Role-menu grants are tenant-scoped (system_role_menu.tenant_id), so a freshly
+// provisioned tenant starts with an empty sidebar unless the grants are seeded
+// here: the navigation resolver joins system_role_menu by role id, and a new
+// tenant's role ids have no rows at all. The symptom is silent — the tenant
+// administrator logs in, the shell renders, and every page is unreachable
+// because the menu tree is empty. The tenant smoke suite caught it on main
+// immediately after role-menu grants became tenant-scoped.
+//
+// Platform-only menus (module system.tenant) are deliberately excluded: a tenant
+// administrator must not see platform tenancy management, which is the same
+// boundary the console capability signal enforces.
+func provisionTenantRoleMenus(tx *gorm.DB, tenantID uint64, roleIDs map[string]uint64) error {
+	if tenantID == tenantctx.PlatformGlobalTenantID {
+		// The platform console keeps its own menu model (tenant 0 grants). A
+		// tenant-scoped grant set here would be invisible to platform subjects
+		// and would only add noise.
+		return nil
+	}
+	adminRoleID := roleIDs[TenantRoleAdminKey]
+	if adminRoleID == 0 {
+		return errors.New("tenant provision: tenant_admin role missing")
+	}
+	var menuIDs []uint64
+	if err := tx.Table("system_menu").
+		Select("id").
+		Where("is_visible = ? AND type <> ?", 1, "F").
+		Where("module IS NULL OR module <> ?", tenantPlatformMenuModule).
+		Order("sort asc, id asc").
+		Pluck("id", &menuIDs).Error; err != nil {
+		return fmt.Errorf("list tenant navigation menus: %w", err)
+	}
+	for _, menuID := range menuIDs {
+		if err := rbacbind.EnsureRoleMenu(tx, tenantID, adminRoleID, menuID); err != nil {
+			return fmt.Errorf("grant tenant admin menu %d: %w", menuID, err)
+		}
+	}
+	return nil
 }
 
 // tenantRootDeptName is the display name of the root department every tenant
@@ -341,13 +397,9 @@ func provisionTenantRoleBindings(tx *gorm.DB, tenantID uint64, roleIDs map[strin
 	if tenantID == 0 || len(roleIDs) == 0 {
 		return nil
 	}
-	var platformRoleID uint64
-	if err := tx.Table("system_role").
-		Select("id").
-		Where("tenant_id = 0 AND role_key = ? AND status = ? AND deleted_at IS NULL", "admin", 1).
-		Limit(1).
-		Scan(&platformRoleID).Error; err != nil {
-		return fmt.Errorf("look up platform admin role: %w", err)
+	platformRoleID, err := platformAdminRoleID(tx)
+	if err != nil {
+		return err
 	}
 	if platformRoleID == 0 {
 		// No platform seed in this database (fresh schema, canary, unit-test
@@ -356,22 +408,9 @@ func provisionTenantRoleBindings(tx *gorm.DB, tenantID uint64, roleIDs map[strin
 		// role without bindings.
 		return nil
 	}
-
-	var permissionKeys []string
-	if err := tx.Table("system_role_permission").
-		Select("permission_key").
-		Where("role_id = ?", platformRoleID).
-		Order("permission_key asc").
-		Pluck("permission_key", &permissionKeys).Error; err != nil {
-		return fmt.Errorf("read platform admin permissions: %w", err)
-	}
-	var menuIDs []uint64
-	if err := tx.Table("system_role_menu").
-		Select("menu_id").
-		Where("role_id = ?", platformRoleID).
-		Order("menu_id asc").
-		Pluck("menu_id", &menuIDs).Error; err != nil {
-		return fmt.Errorf("read platform admin menus: %w", err)
+	permissionKeys, menuIDs, err := readPlatformAdminBindings(tx, platformRoleID)
+	if err != nil {
+		return err
 	}
 	if len(permissionKeys) == 0 && len(menuIDs) == 0 {
 		return nil
@@ -387,58 +426,118 @@ func provisionTenantRoleBindings(tx *gorm.DB, tenantID uint64, roleIDs map[strin
 		if roleID == 0 {
 			continue
 		}
+		if err := grantTenantRolePermissions(tx, tenantID, roleID, binding.roleKey, permissionKeys, binding.readOnlyOnly); err != nil {
+			return err
+		}
+		if err := grantTenantRoleMenus(tx, tenantID, roleID, binding.roleKey, menuIDs); err != nil {
+			return err
+		}
+	}
+	return nil
+}
 
-		existingKeys := make(map[string]struct{})
-		var currentKeys []string
-		if err := tx.Table("system_role_permission").
-			Select("permission_key").
-			Where("role_id = ?", roleID).
-			Pluck("permission_key", &currentKeys).Error; err != nil {
-			return fmt.Errorf("read existing permissions for %s: %w", binding.roleKey, err)
-		}
-		for _, key := range currentKeys {
-			existingKeys[key] = struct{}{}
-		}
-		for _, key := range permissionKeys {
-			if binding.readOnlyOnly && !isReadOnlyPermissionKey(key) {
-				continue
-			}
-			if _, taken := existingKeys[key]; taken {
-				continue
-			}
-			row := struct {
-				TenantID      uint64
-				RoleID        uint64
-				PermissionKey string
-			}{TenantID: tenantID, RoleID: roleID, PermissionKey: key}
-			if err := tx.Table("system_role_permission").Create(&row).Error; err != nil {
-				return fmt.Errorf("grant %s permission %s: %w", binding.roleKey, key, err)
-			}
-		}
+// platformAdminRoleID resolves the platform `admin` role, whose bindings are the
+// source of the tenant console surface. A zero result means this database has no
+// platform seed.
+func platformAdminRoleID(tx *gorm.DB) (uint64, error) {
+	var platformRoleID uint64
+	if err := tx.Table("system_role").
+		Select("id").
+		Where("tenant_id = 0 AND role_key = ? AND status = ? AND deleted_at IS NULL", "admin", 1).
+		Limit(1).
+		Scan(&platformRoleID).Error; err != nil {
+		return 0, fmt.Errorf("look up platform admin role: %w", err)
+	}
+	return platformRoleID, nil
+}
 
-		existingMenus := make(map[uint64]struct{})
-		var currentMenus []uint64
-		if err := tx.Table("system_role_menu").
-			Select("menu_id").
-			Where("role_id = ?", roleID).
-			Pluck("menu_id", &currentMenus).Error; err != nil {
-			return fmt.Errorf("read existing menus for %s: %w", binding.roleKey, err)
+// readPlatformAdminBindings reads the platform admin role's permission keys and
+// menu ids, the two surfaces a tenant role is derived from.
+func readPlatformAdminBindings(tx *gorm.DB, platformRoleID uint64) ([]string, []uint64, error) {
+	var permissionKeys []string
+	if err := tx.Table("system_role_permission").
+		Select("permission_key").
+		Where(condRoleIDEquals, platformRoleID).
+		Order("permission_key asc").
+		Pluck("permission_key", &permissionKeys).Error; err != nil {
+		return nil, nil, fmt.Errorf("read platform admin permissions: %w", err)
+	}
+	var menuIDs []uint64
+	if err := tx.Table("system_role_menu").
+		Select("menu_id").
+		Where(condRoleIDEquals, platformRoleID).
+		Order("menu_id asc").
+		Pluck("menu_id", &menuIDs).Error; err != nil {
+		return nil, nil, fmt.Errorf("read platform admin menus: %w", err)
+	}
+	return permissionKeys, menuIDs, nil
+}
+
+// grantTenantRolePermissions copies the missing permission keys onto one tenant
+// role. readOnlyOnly keeps a read-only role on the GET-only subset, so the
+// console never advertises an action the server would refuse.
+func grantTenantRolePermissions(
+	tx *gorm.DB,
+	tenantID, roleID uint64,
+	roleKey string,
+	permissionKeys []string,
+	readOnlyOnly bool,
+) error {
+	existing := make(map[string]struct{})
+	var currentKeys []string
+	if err := tx.Table("system_role_permission").
+		Select("permission_key").
+		Where(condRoleIDEquals, roleID).
+		Pluck("permission_key", &currentKeys).Error; err != nil {
+		return fmt.Errorf("read existing permissions for %s: %w", roleKey, err)
+	}
+	for _, key := range currentKeys {
+		existing[key] = struct{}{}
+	}
+	for _, key := range permissionKeys {
+		if readOnlyOnly && !isReadOnlyPermissionKey(key) {
+			continue
 		}
-		for _, id := range currentMenus {
-			existingMenus[id] = struct{}{}
+		if _, taken := existing[key]; taken {
+			continue
 		}
-		for _, id := range menuIDs {
-			if _, taken := existingMenus[id]; taken {
-				continue
-			}
-			row := struct {
-				RoleID   uint64
-				MenuID   uint64
-				TenantID uint64
-			}{RoleID: roleID, MenuID: id, TenantID: tenantID}
-			if err := tx.Table("system_role_menu").Create(&row).Error; err != nil {
-				return fmt.Errorf("grant %s menu %d: %w", binding.roleKey, id, err)
-			}
+		row := struct {
+			TenantID      uint64
+			RoleID        uint64
+			PermissionKey string
+		}{TenantID: tenantID, RoleID: roleID, PermissionKey: key}
+		if err := tx.Table("system_role_permission").Create(&row).Error; err != nil {
+			return fmt.Errorf("grant %s permission %s: %w", roleKey, key, err)
+		}
+	}
+	return nil
+}
+
+// grantTenantRoleMenus copies the missing menu grants onto one tenant role, so
+// the tenant console renders the same navigation as the platform one.
+func grantTenantRoleMenus(tx *gorm.DB, tenantID, roleID uint64, roleKey string, menuIDs []uint64) error {
+	existing := make(map[uint64]struct{})
+	var currentMenus []uint64
+	if err := tx.Table("system_role_menu").
+		Select("menu_id").
+		Where(condRoleIDEquals, roleID).
+		Pluck("menu_id", &currentMenus).Error; err != nil {
+		return fmt.Errorf("read existing menus for %s: %w", roleKey, err)
+	}
+	for _, id := range currentMenus {
+		existing[id] = struct{}{}
+	}
+	for _, id := range menuIDs {
+		if _, taken := existing[id]; taken {
+			continue
+		}
+		row := struct {
+			RoleID   uint64
+			MenuID   uint64
+			TenantID uint64
+		}{RoleID: roleID, MenuID: id, TenantID: tenantID}
+		if err := tx.Table("system_role_menu").Create(&row).Error; err != nil {
+			return fmt.Errorf("grant %s menu %d: %w", roleKey, id, err)
 		}
 	}
 	return nil
