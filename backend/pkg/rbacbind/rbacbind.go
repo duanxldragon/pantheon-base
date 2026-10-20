@@ -4,7 +4,11 @@
 // SQL in one place means a schema change to these join tables is a single edit.
 package rbacbind
 
-import "gorm.io/gorm"
+import (
+	"strings"
+
+	"gorm.io/gorm"
+)
 
 const (
 	// insertRoleMenuSQL carries tenant_id explicitly. `system_role_menu` is
@@ -12,6 +16,11 @@ const (
 	// tenant scope, so a grant written without it lands in tenant 0 and is
 	// invisible the moment it is saved (acceptance F3).
 	insertRoleMenuSQL = "INSERT INTO system_role_menu (tenant_id, role_id, menu_id) VALUES (?, ?, ?)"
+	// insertRolePermissionSQL carries tenant_id explicitly for the same reason:
+	// the login permission loader filters on
+	// `system_role_permission.tenant_id = <login tenant>`, so a grant written
+	// without it lands in tenant 0 and a tenant subject never sees the key.
+	insertRolePermissionSQL = "INSERT INTO system_role_permission (tenant_id, role_id, permission_key) VALUES (?, ?, ?)"
 	// insertUserRoleSQL carries tenant_id explicitly. `system_user_role` is
 	// keyed by (tenant_id, user_id, role_id): the tenant namespace is what the
 	// login role loader filters on (system_user_role.tenant_id = <login
@@ -105,4 +114,29 @@ func EnsureUserRole(db *gorm.DB, tenantID, userID, roleID uint64) error {
 		return nil
 	}
 	return InsertUserRole(db, tenantID, userID, roleID)
+}
+
+// EnsureRolePermission grants one permission key to a role in the given tenant
+// namespace, skipping the write when the grant already exists.
+//
+// This is the permission half of a menu grant and must be written next to
+// EnsureRoleMenu, not instead of it: the navigation tree is resolved from
+// `system_role_menu`, while the console's route guard authorises on the key set
+// resolved from `system_role_permission`. Granting only the menu renders a
+// sidebar entry that answers 403 when it is opened.
+func EnsureRolePermission(db *gorm.DB, tenantID, roleID uint64, permissionKey string) error {
+	permissionKey = strings.TrimSpace(permissionKey)
+	if permissionKey == "" {
+		return nil
+	}
+	var count int64
+	if err := db.Table("system_role_permission").
+		Where("tenant_id = ? AND role_id = ? AND permission_key = ?", tenantID, roleID, permissionKey).
+		Count(&count).Error; err != nil {
+		return err
+	}
+	if count > 0 {
+		return nil
+	}
+	return db.Exec(insertRolePermissionSQL, tenantID, roleID, permissionKey).Error
 }

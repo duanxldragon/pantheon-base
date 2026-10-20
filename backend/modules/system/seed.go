@@ -607,20 +607,10 @@ func bindSeedMenuAdminRole(db *gorm.DB, seed menuSeed, menuID uint64) error {
 }
 
 func ensureAdminPermissionSeed(db *gorm.DB, adminRoleID uint64, permissionKey string) error {
-	permissionKey = strings.TrimSpace(permissionKey)
-	if permissionKey == "" {
-		return nil
-	}
-	var count int64
-	if err := db.Table("system_role_permission").
-		Where("role_id = ? AND permission_key = ?", adminRoleID, permissionKey).
-		Count(&count).Error; err != nil {
-		return err
-	}
-	if count > 0 {
-		return nil
-	}
-	return db.Exec("INSERT INTO system_role_permission (role_id, permission_key) VALUES (?, ?)", adminRoleID, permissionKey).Error
+	// One implementation, shared with the auth module's menu seeder: both write
+	// the platform administrator's key set, and tenant provisioning copies that
+	// set, so a divergence here silently narrows every tenant console.
+	return rbacbind.EnsureRolePermission(db, tenant.PlatformGlobalTenantID, adminRoleID, permissionKey)
 }
 
 func cleanupActionMenuRoleBindings(db *gorm.DB) error {

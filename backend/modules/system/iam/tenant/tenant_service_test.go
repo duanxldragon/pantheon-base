@@ -17,10 +17,10 @@ import (
 //
 // This package only owns `tenants` and `tenant_memberships` (AutoMigrated from
 // Tenant/Membership below). Provisioning, however, also writes `system_role`,
-// `system_user`, `system_user_role`, `system_setting` and `system_dept` —
-// tables owned by other modules. They are declared here explicitly, mirroring
-// the production DDL, so a test failure means the service is wrong rather than
-// the fixture.
+// `system_user`, `system_user_role`, `system_role_permission`, `system_setting`
+// and `system_dept` — tables owned by other modules. They are declared here
+// explicitly, mirroring the production DDL, so a test failure means the service
+// is wrong rather than the fixture.
 //
 // Statements are separate because the MySQL driver runs with
 // multiStatements=false, so one Exec can only carry one statement.
@@ -54,6 +54,12 @@ var tenantTestDDL = []string{
 		user_id BIGINT UNSIGNED NOT NULL,
 		role_id BIGINT UNSIGNED NOT NULL,
 		PRIMARY KEY (tenant_id, user_id, role_id)
+	) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
+	`CREATE TABLE system_role_permission (
+		tenant_id BIGINT UNSIGNED NOT NULL DEFAULT 0,
+		role_id BIGINT UNSIGNED NOT NULL,
+		permission_key VARCHAR(128) NOT NULL,
+		PRIMARY KEY (tenant_id, role_id, permission_key)
 	) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
 	`CREATE TABLE system_setting (
 		id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,

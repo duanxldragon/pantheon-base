@@ -1,0 +1,98 @@
+{
+  "taskId": "2026-10-20-tenant-audit-permission-seed",
+  "repo": "pantheon-base",
+  "executedAt": "2026-10-20T12:55:00+08:00",
+  "completedAt": "2026-10-20T13:10:00+08:00",
+  "agent": {
+    "tool": "other",
+    "adapter": "workbuddy-agent"
+  },
+  "runtimeSensitive": true,
+  "runtimeGap": "The failing assertion is a Playwright check and this machine cannot spawn a browser (spawnSync EBUSY, the same limitation recorded in 2026-10-11-sonar-smoke-helper-smells and 2026-10-20-sonarcloud-zero-issues), so the final proof that /system/login-log renders for a tenant administrator has to come from the CI smoke-tenant job. Everything up to the browser — the platform administrator's key set and the tenant copy — is proven locally against real MySQL.",
+  "commands": [
+    {
+      "command": "gh run download 39371188249 -n smoke-tenant-artifacts -D /d/tmp/smoke-art2",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Baseline evidence from the failing run on main 8ffb00bf. error-context.md for the failing spec shows the sidebar rendered ('listitem: 登录日志') while main rendered '403 你没有访问当前页面的权限'."
+    },
+    {
+      "command": "grep -o \"INSERT INTO `system_role_permission` (`tenant_id`,`role_id`,`permission_key`) VALUES ([0-9]*, *[0-9]*\" pantheon-tenant-backend.log | sed 's/.*VALUES (//' | sort | uniq -c",
+      "cwd": "/d/tmp/smoke-art2/_temp",
+      "status": "passed",
+      "details": "Baseline: 85 rows for tenant 203 role 2, 23 for 203 role 3, 85 for 204 role 4, 23 for 204 role 5. The tenant administrator copy equals the platform administrator's key set exactly."
+    },
+    {
+      "command": "grep -o \"VALUES (204,4,'[^']*')\" pantheon-tenant-backend.log | sed \"s/.*,'//;s/')//\" | sort",
+      "cwd": "/d/tmp/smoke-art2/_temp",
+      "status": "passed",
+      "details": "Baseline: the 85 copied keys contain system:operation-log:list but none of system:login-log:*, system:security-event:* or system:session:* — the three pages the failing spec opens."
+    },
+    {
+      "command": "grep -o \"WHERE role_id = 1 AND permission_key = '[^']*'\" pantheon-tenant-backend.log | sed \"s/.*= '//;s/'//\" | sort -u | wc -l",
+      "cwd": "/d/tmp/smoke-art2/_temp",
+      "status": "passed",
+      "details": "Baseline root cause: the system module's seeder checked exactly 85 distinct keys for the platform admin role and zero audit keys. No INSERT into system_role_permission without tenant_id appears in the log, i.e. the auth module's seeder never wrote a permission row at all."
+    },
+    {
+      "command": "cd backend && go build ./...",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "Clean build after adding rbacbind.EnsureRolePermission and rewiring both seeders."
+    },
+    {
+      "command": "cd backend && go vet ./modules/system/... ./modules/auth/... ./pkg/rbacbind/...",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "No findings."
+    },
+    {
+      "command": "cd backend && go test -count=1 ./modules/auth/login/ -run TestSeedAuthModuleMenus",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "ok 1.418s. Covers the legacy reparenting case plus the new key-set assertion: the platform administrator receives all twelve audit keys and a second seeding run does not duplicate them."
+    },
+    {
+      "command": "cd backend && go test -count=1 ./modules/system/iam/tenant/ -run TestProvisionTenant -v",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "ok 3.674s, 5/5 PASS: SeedsTenantAdminMenus, SeedsTenantAdminMenusIdempotently, CopiesPlatformAdminPermissionKeys, CreatesRootDept, RootDeptIsIdempotent."
+    },
+    {
+      "command": "cd backend && go test -count=1 ./modules/system/",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "ok 3.236s after the fixture gained tenant_id. The first attempt failed with 'Error 1054 Unknown column tenant_id in where clause' in four seed tests, which is the fixture/production divergence this packet also fixes."
+    },
+    {
+      "command": "cd backend && go test -count=1 ./pkg/rbacbind/... ./modules/system/ ./modules/system/iam/... ./modules/auth/...",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "Final sweep: system 3.2s, iam/menu 7.0s, iam/permission 20.6s, iam/role 30.0s, iam/tenant 53.9s, iam/user 51.1s, auth/login 131.7s, auth/mfa 0.4s, auth/security 2.8s, auth/session 7.9s — all ok."
+    },
+    {
+      "command": "cd backend && golangci-lint run --new-from-rev=HEAD ./...",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "0 issues on new code."
+    },
+    {
+      "command": "npm run check:task-packet && npm run check:docs-frontmatter && npm run check:structure && npm run check:harness-encoding",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Task packet, frontmatter, structure (0 findings across 2379 files) and encoding (0 findings across 2155 files) all green after the packet was brought up to the template."
+    },
+    {
+      "command": "npm run test:smoke:tenant",
+      "cwd": "frontend",
+      "status": "not-run",
+      "details": "Playwright cannot start on this machine (spawnSync EBUSY). The browser-level assertion is deferred to the CI smoke-tenant job; the two Go suites above cover every step before the browser."
+    }
+  ],
+  "knownGaps": [
+    "The /system/login-log and /system/security-event pages were not opened in a browser locally; only the key sets that authorise them were asserted.",
+    "Tenants provisioned before this change keep their 85-key set until they are re-provisioned; this packet deliberately does not auto-backfill because a tenant administrator may have revoked keys on purpose.",
+    "system:login-log:* and system:session:* remain absent from requiredAPIRoutesByPermission, so the permission workbench has no opinion about those routes. Pre-existing gap, out of scope.",
+    "The SonarCloud analysis of the new commit has not run yet; the change is small but the gate result is CI-only."
+  ]
+}

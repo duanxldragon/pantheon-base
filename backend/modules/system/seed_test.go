@@ -257,9 +257,10 @@ CREATE TABLE system_role_menu (
 	}
 	return db.Exec(`
 CREATE TABLE system_role_permission (
+	tenant_id BIGINT UNSIGNED NOT NULL DEFAULT 0,
 	role_id BIGINT NOT NULL,
 	permission_key VARCHAR(128) NOT NULL,
-	PRIMARY KEY (role_id, permission_key)
+	PRIMARY KEY (tenant_id, role_id, permission_key)
 )`).Error
 }
 
