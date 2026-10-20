@@ -88,3 +88,50 @@ resolves exactly once — including the two files touched by v0.16.0's package r
 - **The new workflow has never executed.** Its first run is the post-merge dry-run.
 - **Neither release check is a required check.** Until a maintainer adds them to branch protection,
   a broken release goes red without blocking.
+
+## Closeout (2026-10-20): v0.16.1 is published
+
+`pantheon-base-v0.16.1` was published on 2026-10-20 and carries all four consumable assets:
+
+| Asset | Bytes |
+|-------|-------|
+| `foundation-release-pantheon-base-v0.16.1.tgz` | 18500303 |
+| `foundation-release-pantheon-base-v0.16.1.tgz.sha256` | 111 |
+| `repo.tar` | 31477760 |
+| `repo.tar.sha256` | 75 |
+
+`Foundation Release Verify` fired on `release: published` and passed (run 39352195137), so the asset
+set is confirmed by CI rather than by the publisher's own claim. This is the first pantheon-base
+release since v0.13.0 that a consumer can actually materialize.
+
+### How it was cut, and why not by CI
+
+Four defects had to be cleared before the release could exist, each found by a hosted run rather than
+by review:
+
+1. **`base_commit` was ignored by the checkout.** Run 39349403190 failed with "shared release paths
+   contain changes outside manifest baseCommit" because the worktree sat at main HEAD while the target
+   was the candidate. Fixed in #387 (`7d0224ab`): detach the worktree onto the target commit.
+2. **`git push` of the tag is refused for the job token.** Run 39350509094: the candidate commit adds
+   `.github/workflows/foundation-release-cut.yml`, and a GitHub App needs `workflows` permission to
+   create a ref that introduces a workflow file — a permission no workflow can grant `GITHUB_TOKEN`.
+3. **The Git database API is also refused.** Run 39351236715, after #388 moved tag creation to the
+   REST API: 403 "Resource not accessible by integration", because this repository's
+   `default_workflow_permissions` is `read`.
+4. **Release creation is refused for the same reason.** Run 39351991489, after #389 reduced the
+   workflow to a read-only `git ls-remote` precheck plus fetch: the tag check passed, then
+   `gh release create` returned the same 403.
+
+The conclusion is a property of the repository, not of the workflow: with `default_workflow_permissions:
+read`, no step can write through the API. The tag was therefore created with a maintainer credential,
+and the canonical scripts (`cut` → `check-release-assets` → `publish --dry-run` → `publish`) were run
+locally against a detached worktree at `c83f8e4c`, which is the same code path the workflow invokes.
+The workflow keeps the repeatable, verified path for the bundle build, the asset check and the tag
+check; only its create-release/upload steps remain unproven in CI.
+
+### What remains
+
+- A PAT with `contents:write`, stored as a repository secret, is the only way to make publishing fully
+  unattended. That is a maintainer authorisation decision.
+- The pantheon-ops lock still pins v0.13.0; advancing it is a consumer-repository change.
+- `rebuild:from-base` has still not been run against v0.16.1.

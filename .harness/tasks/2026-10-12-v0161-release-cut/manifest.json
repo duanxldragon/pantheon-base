@@ -3,7 +3,7 @@
   "title": "Cut and publish pantheon-base-v0.16.1 with a consumable asset set",
   "goal": "Two changes merged after the v0.16.0 tag: root-cause fixes for the two recurring main-branch flakes (#377) and the foundation release asset gate (#380). Cut them as a patch release (v0.16.1) and, unlike v0.14.0/v0.15.0/v0.16.0, publish the four consumable assets so pantheon-ops can actually advance its lock. Because the release scripts shell out to git, tar and gh, they cannot run on the machine that prepared this change, so the release is cut by a new dispatch-only Foundation Release Cut workflow on a runner where those tools work.",
   "primaryLayer": "platform",
-  "status": "in-progress",
+  "status": "completed",
   "priority": "P1",
   "type": "release-closeout",
   "estimatedComplexity": "medium",
@@ -14,7 +14,9 @@
     "The release scripts are canonical but uninvokable here: build-release-bundle.mjs and publish-foundation-release.mjs spawn git, tar and gh, and Node cannot spawn any subprocess on the preparing host (spawnSync returns status null with error.code EBUSY for git, gh, tar, node and echo alike). Confirmed independently with the sandbox disabled, so it is a host limitation rather than sandbox policy. CI on ubuntu-latest is therefore the only environment where a release can be cut, which is what foundation-release-cut.yml provides.",
     "publish-foundation-release.mjs enforces its own preconditions and they are all satisfiable here: the worktree stays clean because releases/*/ and dist/ are gitignored; Release Gate Summary is already completed/success on the candidate commit because release-gate.yml triggers on push to main; and the manifest baseCommit must equal the target commit, which the workflow passes explicitly via --base-commit and --target-commit.",
     "sharedPaths is unchanged across v0.13.0, v0.16.0 and v0.16.1: the same 52 entries (backend 4, frontend 46, docs 2). Verified by generating a v0.16.1 manifest and diffing it against both the committed v0.13.0 manifest and the ops lock. The consumer lock therefore needs only its version, commit and checksums advanced, not its path declaration.",
-    "The business overlay anchors on exact source lines and throws 'Base assembly contract changed' if an anchor does not appear exactly once. All six anchors were re-checked against the v0.16.1 base tree and each still resolves exactly once, including the two files that v0.16.0's package rename and directory move touched. This is the single most likely way this release could break the consumer, and it does not."
+    "The business overlay anchors on exact source lines and throws 'Base assembly contract changed' if an anchor does not appear exactly once. All six anchors were re-checked against the v0.16.1 base tree and each still resolves exactly once, including the two files that v0.16.0's package rename and directory move touched. This is the single most likely way this release could break the consumer, and it does not.",
+    "Published on 2026-10-20, but not by CI: with the repository's default_workflow_permissions set to read, no workflow step can write through the GitHub API. Three hosted real cuts failed at three different walls - App `workflows` permission on the tag push (run 39350509094), 403 on the Git database API (run 39351236715), 403 on release creation (run 39351991489) - while the same token's git transport was allowed far enough to hit the workflow-file rule, which is what made the first two attempts look like endpoint problems rather than a permission ceiling. The tag was created with a maintainer credential and the canonical cut/check/publish scripts were run locally against a detached worktree at c83f8e4c. Unattended publishing now needs a PAT with contents:write stored as a repository secret; that is an authorisation decision recorded in the evidence knownGaps, not an engineering gap.",
+    "Two workflow defects were fixed on the way and both were found only by a hosted run. #387 (7d0224ab): base_commit was validated and forwarded to the scripts but never applied to the checkout, so the bundle build compared a worktree at main HEAD against a candidate commit and failed on shared paths. #389 (1b902f44): the tag is now verified with git ls-remote (plain and peeled) and fetched, because the workflow cannot create it; a missing or misdirected tag fails with the exact remediation instead of a 403."
   ],
   "scope": {
     "in": [
@@ -60,7 +62,8 @@
       "Local gate output for task-packet, evidence, failure-registry, duplication and PR governance",
       "The workflow's dry-run and real dispatch runs, with the release URL and the four asset names",
       "Foundation Release Verify conclusion on the published release",
-      "The ops lock diff and the materialized bundle checksums, recorded in the consumer change"
+      "The ops lock diff and the materialized bundle checksums, recorded in the consumer change",
+      "Published release read-back: four assets on pantheon-base-v0.16.1 (tgz 18500303 B, tgz.sha256 111 B, repo.tar 31477760 B, repo.tar.sha256 75 B); Foundation Release Verify run 39352195137 passed on release:published."
     ]
   },
   "runtimeSensitive": true,

@@ -1,7 +1,7 @@
 {
   "taskId": "2026-10-12-v0161-release-cut",
   "repo": "pantheon-base",
-  "executedAt": "2026-10-12T15:35:00+08:00",
+  "executedAt": "2026-10-20T09:30:00+08:00",
   "agent": {
     "tool": "other",
     "adapter": "software-workshop-agent"
@@ -104,28 +104,104 @@
       "details": "Validator extended for the second failure class and re-run. It now asserts, in addition to the previous checks, that some step configures a git committer identity, that that step precedes Publish release, that both 'git config user.name' and 'git config user.email' appear in a run block, and that the identity is github-actions[bot] with the GitHub noreply address rather than a personal one. Result: Checkout index 0 precedes Validate inputs index 1; identity step index 3 precedes Publish release index 7; identity is github-actions[bot]. The general lesson now recorded is that both hosted failures were environment-and-ordering assumptions that structural review could not see, and that each one is now pinned by an explicit assertion instead of a comment."
     },
     {
-      "command": "gh workflow run foundation-release-cut.yml --ref main -f release_version=pantheon-base-v0.16.1 -f release_line=release/0.16 -f notes_dir=.harness/evidence/2026-10-12-v0161-release-cut/notes -f base_commit=c83f8e4c865b19ecd5351ecefac4106ec416e0bc -f dry_run=false (retry, after the git-identity fix merges)",
+      "command": "gh workflow run foundation-release-cut.yml ... -f dry_run=false (three dispatches: 39350509094, 39351236715, 39351991489)",
       "cwd": ".",
-      "status": "not-run",
-      "details": "NOT YET EXECUTED. This is the dispatch that actually creates the immutable tag, the GitHub release and the four assets. It targets base_commit c83f8e4c deliberately: that is the commit whose Release Gate Summary is completed/success and whose VERSION, README, CHANGELOG and STATUS already read 0.16.1. Both fixes so far touch only .github/workflows/foundation-release-cut.yml, which is not a sharedPath, so build-release-bundle.mjs's worktree-versus-baseCommit check still passes even though the runner checks out the newer main HEAD."
+      "status": "failed",
+      "details": "All three hosted real cuts failed before creating anything immutable, each at a different environment boundary. 39350509094: 'refusing to allow a GitHub App to create or update workflow .github/workflows/foundation-release-cut.yml without `workflows` permission' at the tag push - the release candidate is the commit that adds that workflow, and `workflows` cannot be granted to GITHUB_TOKEN. 39351236715: after PR #388 moved tag creation to the Git database API, 'Resource not accessible by integration' (403), because this repository's default_workflow_permissions is read. 39351991489: after PR #389 reduced the workflow to a read-only ls-remote precheck plus fetch, the tag check passed but `gh release create` returned the same 403. Conclusion: no workflow step in this repository can write through the API with GITHUB_TOKEN, so publishing requires a token with contents:write. Nothing was tagged, released or uploaded by any of the three runs."
     },
     {
       "command": "gh release view pantheon-base-v0.16.1 --json assets --jq '.assets[].name'",
       "cwd": ".",
-      "status": "not-run",
-      "details": "NOT YET EXECUTED. The expected result is the four consumable assets: foundation-release-pantheon-base-v0.16.1.tgz, foundation-release-pantheon-base-v0.16.1.tgz.sha256, repo.tar, repo.tar.sha256. For contrast, the same command against v0.13.0 returns four names and against v0.14.0/v0.15.0/v0.16.0 returns nothing at all."
+      "status": "passed",
+      "details": "Final read-back after publishing: four assets - foundation-release-pantheon-base-v0.16.1.tgz (18500303 bytes), .tgz.sha256 (111), repo.tar (31477760), repo.tar.sha256 (75) - on a non-draft, non-prerelease release named v0.16.1 at tag pantheon-base-v0.16.1. For contrast the same command returns four names for v0.13.0 and nothing at all for v0.14.0/v0.15.0/v0.16.0."
+    },
+    {
+      "command": "gh workflow run foundation-release-cut.yml ... -f base_commit=c83f8e4c... -f dry_run=true (run 39349403190, first dispatch on 2026-10-20)",
+      "cwd": ".",
+      "status": "failed",
+      "details": "Failed in 'Cut manifest and bundle': 'shared release paths contain changes outside manifest baseCommit'. build-release-bundle.mjs compares the worktree with the target commit, but the workflow only checked out the default branch head (8b5a3012, which carries the tenant remediation); the sharedPaths include the IAM and frontend console paths that remediation touched, so the comparison was guaranteed to fail for any candidate behind main. This is a real defect in the workflow, not in the release content: base_commit was accepted as an input but never honoured by the checkout."
+    },
+    {
+      "command": "gh pr create --head fix/release-cut-base-commit-checkout (#387) && gh pr checks 387 && gh pr merge 387 --squash",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Fix: after resolving TARGET_COMMIT, detach the worktree onto it whenever an explicit base_commit differs from HEAD, so the bundle is built from the released commit. Default path (no base_commit) unchanged. All required checks green; merged as 7d0224ab. Also corrected STATUS.md, which still named the pre-squash branch SHAs."
+    },
+    {
+      "command": "gh workflow run foundation-release-cut.yml ... -f dry_run=true (run 39350459932)",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Full dry run green: cut manifest and bundle, verify the built asset set, publish in --dry-run mode. Confirms the checkout fix works and that the four-asset contract is satisfied for c83f8e4c."
+    },
+    {
+      "command": "gh pr create --head fix/release-tag-via-api (#388) && gh pr merge 388 --squash",
+      "cwd": ".",
+      "status": "passed",
+      "details": "First attempted remediation of the tag-push wall: create the annotated tag object and ref through the REST API, then fetch it. Merged as ab24122d after all required checks passed. Superseded by #389 once the API route also returned 403."
+    },
+    {
+      "command": "gh pr create --head fix/release-tag-precheck (#389) && gh pr merge 389 --squash",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Final workflow shape: the tag is created before dispatch by a maintainer credential, and the workflow only verifies it with `git ls-remote` (plain and peeled refs, so annotated tags resolve to their commit) and fetches it; a missing or misdirected tag fails with the exact remediation. Merged as 1b902f44 after all required checks passed."
+    },
+    {
+      "command": "gh api repos/duanxldragon/pantheon-base/git/tags -f tag=pantheon-base-v0.16.1 -f object=c83f8e4c... -f type=commit && gh api .../git/refs -f ref=refs/tags/pantheon-base-v0.16.1",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Creates the immutable annotated tag with a credential that has contents:write (the maintainer's gh session), after a throwaway probe tag proved the endpoint works and was deleted again. Tag object b74c7764 resolves to c83f8e4c. The workflow's precheck then passed on run 39351991489, proving the read-only verification path works."
+    },
+    {
+      "command": "git worktree add --detach /d/tmp/rel0161 c83f8e4c && git tag -a pantheon-base-v0.16.1 c83f8e4c -m 'Foundation release pantheon-base-v0.16.1'",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Builds the release from the candidate tree in an isolated worktree, so the main checkout (which sits on a remediation branch) cannot contaminate the bundle, and materialises the tag locally so publish-foundation-release.mjs skips its own tag creation and push - the exact step the hosted runner cannot perform."
+    },
+    {
+      "command": "node scripts/foundation-release/cut-foundation-release.mjs --release-version pantheon-base-v0.16.1 --release-line release/0.16 --base-commit c83f8e4c... --release-notes ... --upgrade-notes ... --consumer-impact ...",
+      "cwd": "/d/tmp/rel0161",
+      "status": "passed",
+      "details": "Builds releases/pantheon-base-v0.16.1/manifest.json plus dist/foundation-releases/pantheon-base-v0.16.1/: the .tgz bundle, repo.tar and both .sha256 sidecars. This is the same canonical script the workflow calls; the EBUSY host limitation recorded earlier no longer applies in this session, which is why the local route became viable."
+    },
+    {
+      "command": "node scripts/foundation-release/check-release-assets.mjs --release-version pantheon-base-v0.16.1 --dist dist/foundation-releases --local-only",
+      "cwd": "/d/tmp/rel0161",
+      "status": "passed",
+      "details": "'[ok] local bundle pantheon-base-v0.16.1: foundation-release-pantheon-base-v0.16.1.tgz, repo.tar' - the four-asset contract holds before anything is published."
+    },
+    {
+      "command": "node scripts/foundation-release/publish-foundation-release.mjs --release-version pantheon-base-v0.16.1 --release-line release/0.16 --target-commit c83f8e4c... --repo duanxldragon/pantheon-base --remote origin --dry-run",
+      "cwd": "/d/tmp/rel0161",
+      "status": "passed",
+      "details": "Plans only create-github-release and upload-github-release-assets - no create-tag or push-tag, because the tag already exists at the target commit. This is the precondition the script was designed around, and it is what makes the local publish safe to run twice."
+    },
+    {
+      "command": "node scripts/foundation-release/publish-foundation-release.mjs ... (without --dry-run)",
+      "cwd": "/d/tmp/rel0161",
+      "status": "passed",
+      "details": "Creates the GitHub release and uploads the four assets with the maintainer credential. No tag or ref was modified."
+    },
+    {
+      "command": "gh release view pantheon-base-v0.16.1 --json assets",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Read-back confirms the four assets on a published (non-draft, non-prerelease) release."
+    },
+    {
+      "command": "gh run list --workflow foundation-release-verify.yml (run 39352195137)",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Foundation Release Verify fired on release:published and passed, so the asset set the gate exists to protect is confirmed by CI rather than by the publisher's own claim."
     }
   ],
   "runtimeSensitive": true,
-  "runtimeGap": "Node cannot spawn subprocesses on the host that prepared this change: spawnSync returns status null with error.code EBUSY for git, gh, tar, node and echo, and the result is unchanged with the sandbox disabled. build-release-bundle.mjs and publish-foundation-release.mjs both depend on spawning, so the release cannot be cut here, and the consumer's rebuild-from-base.mjs cannot be run here either. The release is therefore delivered as a dispatch-only CI workflow and verified statically beforehand: the manifest generates, all 52 sharedPaths exist at the candidate commit, all six overlay anchors resolve exactly once, the workflow parses, is SHA-pinned and interpolates no dispatch input into a run block. The hosted run is the authoritative verification, and the release is not reported as published until the four asset names are read back from the GitHub API.",
+  "runtimeGap": "Two environment facts shaped this release. First, the preparing host could not spawn subprocesses on 2026-10-12 (spawnSync EBUSY for git/gh/tar), which is why the cut was rebuilt as a dispatch-only workflow; that limitation was gone by 2026-10-20, when the same canonical scripts ran locally in a detached worktree. Second, and decisively, no workflow step can write through the GitHub API in this repository: git push of a tag is refused for GitHub Apps without `workflows` permission (the candidate commit adds the workflow itself), and the Git database and release APIs return 403 'Resource not accessible by integration' because default_workflow_permissions is read. The tag was therefore created with a maintainer credential and the publish ran locally with the same credential. The workflow now verifies the tag read-only and remains the repeatable path for the bundle build and asset verification; fully unattended publishing needs a PAT secret with contents:write, which is a maintainer authorisation decision and is recorded as a known gap.",
   "knownGaps": [
-    "The release has not been cut at the time this evidence was written. The Foundation Release Cut workflow does not exist on the default branch until this change merges, and workflow_dispatch cannot target a workflow that is not on the default branch. The dispatch, the published asset list and the Foundation Release Verify conclusion are appended to this file afterwards.",
-    "The bundle build itself was never executed on this host, for the EBUSY reason above. Feasibility rests on the manifest generating successfully, 52/52 sharedPaths existing, and all six overlay anchors resolving - not on producing an archive.",
-    "The consumer-side rebuild (npm run rebuild:from-base) could not be run here either, for the same reason. The anchor check is a text-level substitute for the most likely failure mode, not a full assembly. The first real rebuild against v0.16.1 is the authoritative verification of consumption.",
-    "No local execution of the spawn-dependent repository gates was possible (check:structure and the harness checks that enumerate changed files via git ls-files), so those remain CI-only signals for this change.",
-    "The new workflow has never been exercised by GitHub Actions. Its first hosted run is the dry-run dispatch that follows the merge, and its first real run is the one that publishes v0.16.1.",
-    "The first dispatch did fail, and it failed for a reason static validation did not cover: Validate inputs ran before Checkout, so it inspected an empty workspace. The pre-dispatch validation checked YAML validity, trigger shape, SHA pins and the S7630 injection surface, but not step ordering relative to the checkout. That gap is now closed by an explicit ordering assertion in .tmp/validate-workflow.py, and the recorded lesson is that a dispatch-only workflow's first hosted run is part of its verification, not a formality.",
-    "The release is pinned to c83f8e4c rather than to main HEAD at dispatch time, because the step-order fix necessarily lands as a commit after the release content commit. The tag therefore points at the version-bump commit, not at whatever main has moved on to, which is the intended shape: the fix is release infrastructure, not release content."
+    "CI cannot publish in this repository without a token that has contents:write. Three hosted attempts (39350509094, 39351236715, 39351991489) each failed at a different wall - App `workflows` permission on tag push, then 403 on the Git database API, then 403 on release creation - so v0.16.1 was published locally with a maintainer credential. Closing this needs a PAT stored as a repository secret; that is an authorisation decision, not an engineering one.",
+    "The publish path exercised in production is therefore the local script invocation, not the workflow's publish step. The workflow's cut, asset-verification and tag-verification steps are proven green (runs 39350459932 and 39351991489); only its create-release/upload steps remain unproven in CI.",
+    "The consumer lock in pantheon-ops still points at pantheon-base-v0.13.0. Advancing it to v0.16.1, with the checksums read from the published release, is a separate consumer-repository change and was explicitly out of scope.",
+    "The consumer rebuild (npm run rebuild:from-base) has still not been run against v0.16.1. The six overlay anchors resolve exactly once in the candidate tree, but the first real assembly remains the authoritative verification of consumption.",
+    "Neither Foundation Release Cut nor Foundation Release Verify is a required check. Until a maintainer adds them to branch protection, a broken release goes red without blocking the next merge."
   ],
   "linkage": {
     "taskManifest": ".harness/tasks/2026-10-12-v0161-release-cut/manifest.json",

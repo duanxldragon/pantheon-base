@@ -5,16 +5,18 @@
 
 ## 当前最终验收状态
 
-**判定：v0.16.1 发布准备中。**（2026-10-19 补记：main 在发布候选之上新增租户整改，以 PR #386 压缩合并为
-`8b5a3012`（分支内原始提交 `b07cd2a1`/`ae277910`/`6803f18a`/`fc6672ab`/`a4574a6c` 等）；经维护者确认，v0.16.1 发布范围为**候选提交
-`c83f8e4c`**，租户整改随 v0.17.0 minor 发布；release-cut 人工门就此关闭） v0.16.0 发布时镜像了 v0.15.0 的"零产物"发布方式，导致消费侧（`pantheon-ops`）的 `foundation-release.lock.json` 至今仍锁定在 `pantheon-base-v0.13.0`。v0.16.1 是一次**补丁发布**，其唯一目的是重新产出四件可消费产物（`foundation-release-<v>.tgz` + `.sha256` + `repo.tar` + `repo.tar.sha256`），并把发布流程从"人工本地执行"改为"CI 可重复执行"。版本号与收口文档已进入候选提交，tag 与 GitHub Release 待 `Foundation Release Cut` 工作流（base_commit=c83f8e4c）触发后产出。
+**判定：v0.16.1 已发布（2026-10-20）。** tag `pantheon-base-v0.16.1` → `c83f8e4c`，GitHub Release 带齐四件可消费产物（`foundation-release-pantheon-base-v0.16.1.tgz` 18,500,303 B / `.tgz.sha256` 111 B / `repo.tar` 31,477,760 B / `repo.tar.sha256` 75 B），`Foundation Release Verify` 在 `release: published` 上通过（run 39352195137）。这是自 v0.13.0 以来第一个真正可被消费的发布，`pantheon-ops` 的锁终于可以前进（属消费仓单独变更）。
+
+发布方式需要如实记录：**tag 与 Release 由维护者凭据产出，不是 CI 产出**。仓库 `default_workflow_permissions=read`，三次 hosted 正式切（39350509094 / 39351236715 / 39351991489）分别撞在 App `workflows` 权限、Git database API 403、release 创建 403 上；工作流已收敛为"只读校验 tag + 构建/校验产物"的可重复路径，全自动发布需配置带 `contents:write` 的 PAT secret（维护者授权项）。详见 `.harness/evidence/2026-10-12-v0161-release-cut/`。
+
+（2026-10-19 补记：main 在发布候选之上新增租户整改，以 PR #386 压缩合并为 `8b5a3012`；经维护者确认，v0.16.1 发布范围为**候选提交 `c83f8e4c`**，租户整改随 v0.17.0 minor 发布。）
 
 ## 任务状态总览
 
 | 状态 | 说明 |
 |------|------|
 | ✅ 已完成 | 全部历史任务 + 2026-10-07 整改任务包 + v0.15.0/v0.16.0 发布收口 |
-| 🔄 进行中 | v0.16.1 发布收口（`2026-10-12-v0161-release-cut`） |
+| ✅ 已完成 | v0.16.1 发布收口（`2026-10-12-v0161-release-cut`，四件产物已发布并过 Verify；全自动发布待 PAT secret） |
 | ✅ 已完成 | 租户权限隔离整改（`2026-10-19-tenant-permission-isolation-remediation`，W0–W6 全部完成 + F14 收口后关闭，**零残留**） |
 | ⏸️ 暂停 | 无 |
 
