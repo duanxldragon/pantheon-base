@@ -116,3 +116,33 @@ dispatch-only workflow's first hosted run is part of its verification, not a for
 No tag, release or asset was created by the failed run, so the release identity (`pantheon-base-v0.16.1`
 on `c83f8e4c`) is unaffected and the retry reuses it unchanged.
 
+
+## Post-publication review (2026-10-20)
+
+The release is published and its asset set is verified by `Foundation Release Verify` (run
+39352195137). What the hosted attempts taught, in order:
+
+**A dispatch-only workflow's inputs are only as real as the steps that consume them.** `base_commit`
+was accepted, validated with a regex, echoed into the log and passed to the scripts — and then
+contradicted by a checkout that stayed on the default branch. Nothing in the YAML looked wrong; the
+defect only appeared as a diff between two trees. The general lesson: an input that selects *what to
+build* must be applied to the worktree, not just forwarded as a flag.
+
+**"The token can write" is not one permission but several paths.** The same `GITHUB_TOKEN` could reach
+the git receive-pack far enough to be refused on a workflow-file rule, could not create a tag object
+through the Git database API, and could not create a release through the releases API. Three different
+walls, one root cause: the repository's `default_workflow_permissions` is `read`. The engineering
+conclusion is not "try another endpoint" but "this repository cannot publish unattended until a token
+with `contents:write` exists". That is now recorded as the first known gap instead of being retried a
+fourth time.
+
+**A release cut by hand must still be cut by the canonical scripts.** The local publish used
+`cut-foundation-release.mjs`, `check-release-assets.mjs` and `publish-foundation-release.mjs` unchanged,
+in a detached worktree at the candidate commit, with the tag already materialised so the script's own
+precondition (an existing tag at the target is tolerated) held. The result is byte-for-byte what the
+workflow would have produced, and the workflow's own cut and verification steps are green on the same
+commit — so the only unproven part is the upload, and the uploaded set was read back and independently
+verified.
+
+**Residual risk.** The published release is consumable, but the consumer lock has not moved and the
+assembly has not been run. Those are the next two steps, and they live in another repository.
