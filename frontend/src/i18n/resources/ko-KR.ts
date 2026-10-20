@@ -1398,6 +1398,7 @@ const koKRFallback = {
   'user.post.dept_required': '직책을 선택하기 전에 부서를 먼저 선택하세요',
   'user.post.dept_mismatch': '선택한 직책이 현재 부서에 속하지 않습니다',
   'role.key.exists': '역할 키는 이미 존재합니다',
+  'role.key.reserved': '이 역할 키는 플랫폼 역할 전용입니다',
   'role.export.error': '역할을 내보내지 못했습니다',
   'role.batch.empty': '먼저 역할을 선택하세요',
   'role.batch.not_found': '일부 역할이 더 이상 존재하지 않습니다. 새로고침 후 다시 시도하세요',

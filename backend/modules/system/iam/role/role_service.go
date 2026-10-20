@@ -427,7 +427,33 @@ func (s *RoleService) updateRoleInTransaction(tx *gorm.DB, role *SystemRole, old
 	if err := s.replaceRolePermissions(tx, role.ID, permissionKeys); err != nil {
 		return err
 	}
+	if oldRoleKey != role.RoleKey {
+		if err := migrateRolePolicySubject(tx, oldRoleKey, role.RoleKey, role.TenantID); err != nil {
+			return err
+		}
+	}
 	return s.upsertRoleDataScopePolicyPreservingCustomDepts(tx, oldRoleKey, role.RoleKey, dataScope)
+}
+
+// rolePolicySubject returns the Casbin subject a role's API policies live under.
+// Tenant roles use the domain form `role:<key>@tenant:<id>` (contract §4);
+// platform roles keep the bare key.
+func rolePolicySubject(roleKey string, tenantID uint64) string {
+	if tenantID == tenant.PlatformGlobalTenantID {
+		return tenant.GlobalRoleSubject(roleKey)
+	}
+	return tenant.RoleSubject(roleKey, tenantID)
+}
+
+// migrateRolePolicySubject moves a role's API policies when its key changes.
+// Without this, a renamed role lost its Casbin surface (the policies still
+// pointed at the old subject) and left a stale grant behind for the old key.
+func migrateRolePolicySubject(tx *gorm.DB, oldRoleKey, newRoleKey string, tenantID uint64) error {
+	oldSubject := rolePolicySubject(oldRoleKey, tenantID)
+	newSubject := rolePolicySubject(newRoleKey, tenantID)
+	return tx.Model(&database.CasbinRule{}).
+		Where("ptype = ? AND v0 = ?", "p", oldSubject).
+		Update("v0", newSubject).Error
 }
 
 // upsertRoleDataScopePolicyPreservingCustomDepts 在角色常规编辑时保留已配置的自定义部门集合。
@@ -508,7 +534,7 @@ func (s *RoleService) deleteRoleInTransaction(tx *gorm.DB, roleID uint64) error 
 	if err != nil {
 		return err
 	}
-	if err := deleteRoleBindings(tx, role.ID, role.RoleKey); err != nil {
+	if err := deleteRoleBindings(tx, role.ID, role.RoleKey, role.TenantID); err != nil {
 		return err
 	}
 	if err := deleteRoleDataScopes(tx, role.TenantID, role.RoleKey); err != nil {
@@ -547,15 +573,18 @@ func (s *RoleService) loadDeletableRole(tx *gorm.DB, roleID uint64) (SystemRole,
 	return role, nil
 }
 
-func deleteRoleBindings(tx *gorm.DB, roleID uint64, roleKey string) error {
+func deleteRoleBindings(tx *gorm.DB, roleID uint64, roleKey string, tenantID uint64) error {
 	if err := tx.Exec("DELETE FROM system_role_menu WHERE role_id = ?", roleID).Error; err != nil {
 		return err
 	}
 	if err := tx.Exec("DELETE FROM system_role_permission WHERE role_id = ?", roleID).Error; err != nil {
 		return err
 	}
+	// Delete exactly the subject this role owns. A tenant role's policies live
+	// under role:<key>@tenant:<id>; deleting only the bare key left them behind,
+	// so recreating the same role key silently inherited the old grants.
 	return tx.Model(&database.CasbinRule{}).
-		Where("ptype = ? AND v0 = ?", "p", roleKey).
+		Where("ptype = ? AND v0 = ?", "p", rolePolicySubject(roleKey, tenantID)).
 		Delete(&database.CasbinRule{}).Error
 }
 

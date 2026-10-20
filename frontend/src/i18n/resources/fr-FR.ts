@@ -1504,6 +1504,7 @@ const frFRFallback = {
   'user.post.dept_required': 'Sélectionnez d’abord un département avant de choisir un poste',
   'user.post.dept_mismatch': 'Le poste sélectionné n’appartient pas au département courant',
   'role.key.exists': 'La clé du rôle existe déjà',
+  'role.key.reserved': 'Cette clé de rôle est réservée aux rôles de plateforme',
   'role.export.error': 'Échec de l’export des rôles',
   'role.batch.empty': 'Veuillez d’abord sélectionner des rôles',
   'role.batch.not_found': 'Certains rôles n’existent plus. Actualisez puis réessayez',

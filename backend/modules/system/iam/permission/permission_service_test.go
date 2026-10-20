@@ -14,10 +14,15 @@ import (
 	"gorm.io/gorm"
 )
 
+// permissionTestRole mirrors the production system_role table: TenantID and
+// the (tenant_id, role_key) unique key. The old fixture omitted tenant_id,
+// which is why a policy service that never filtered by tenant could look
+// correct here while a tenant could read every tenant's policies in production.
 type permissionTestRole struct {
 	ID        uint64         `gorm:"primaryKey;autoIncrement"`
+	TenantID  uint64         `gorm:"not null;default:0;uniqueIndex:uk_system_role_tenant_key,priority:1"`
 	RoleName  string         `gorm:"size:64;not null"`
-	RoleKey   string         `gorm:"size:64;not null;uniqueIndex"`
+	RoleKey   string         `gorm:"size:64;not null;uniqueIndex:uk_system_role_tenant_key,priority:2"`
 	Sort      int            `gorm:"default:0"`
 	Status    int            `gorm:"default:1"`
 	DeletedAt gorm.DeletedAt `gorm:"index"`

@@ -2220,6 +2220,7 @@ const zhCNFallback = {
   'user.post.dept_required': '选择岗位前必须先选择部门',
   'user.post.dept_mismatch': '所选岗位不属于当前部门',
   'role.key.exists': '角色标识已存在',
+  'role.key.reserved': '该角色标识为平台角色保留',
   'role.export.error': '角色导出失败',
   'role.batch.empty': '请先选择角色',
   'role.batch.not_found': '存在已不存在的角色，请刷新后重试',

@@ -22,6 +22,7 @@ const (
 	settingKeyUploadDriver       = "upload.storage_driver"
 	settingKeyI18nLanguage       = "i18n.default_language"
 	settingKeyAppMode            = "platform.app_mode"
+	settingKeyPlatformTenantMode = "platform.tenant_mode"
 	settingKeyUploadAllowedTypes = "upload.allowed_types"
 )
 
@@ -147,6 +148,10 @@ func (s *SettingService) Bootstrap() error {
 		}
 	}
 
+	if err := s.syncPublicSettingFlags(); err != nil {
+		return err
+	}
+
 	if err := s.normalizeLegacySettingValue(settingKeyUITheme); err != nil {
 		return err
 	}
@@ -163,6 +168,40 @@ func (s *SettingService) Bootstrap() error {
 		return err
 	}
 
+	return nil
+}
+
+// syncPublicSettingFlags raises is_public for every key the seed declares
+// public.
+//
+// Public visibility is a property of the key, not an operator-editable value:
+// the frontend reads GET /system/setting/public before sign-in, and gates the
+// whole multi-mode surface (tenant picker, tenant switcher, tenant viewpoint
+// switcher, tenant console) on `platform.tenant_mode` arriving through it.
+//
+// bootstrapSettingSeed only inserts *missing* keys, so a row created by an
+// older seed keeps whatever is_public it was born with — which is how
+// platform.tenant_mode stayed non-public in every deployment seeded after the
+// YAML list gained the key: the flag was absent from the public payload, the
+// frontend fell back to `compat`, and no multi-mode control ever rendered even
+// after the deployment was switched to multi. The repair only ever raises the
+// flag, so it cannot hide a setting an operator deliberately exposed.
+func (s *SettingService) syncPublicSettingFlags() error {
+	publicKeys := make([]string, 0, len(settingSeeds()))
+	for _, item := range settingSeeds() {
+		if item.IsPublic == 1 {
+			publicKeys = append(publicKeys, item.SettingKey)
+		}
+	}
+	if len(publicKeys) == 0 {
+		return nil
+	}
+	if err := s.db.Model(&SystemSetting{}).
+		Where("tenant_id = ? AND setting_key IN ? AND is_public <> ?", 0, publicKeys, 1).
+		Update("is_public", 1).Error; err != nil {
+		return err
+	}
+	s.invalidateSettingCache()
 	return nil
 }
 

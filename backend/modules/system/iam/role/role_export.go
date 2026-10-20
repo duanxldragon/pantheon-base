@@ -370,6 +370,10 @@ func (s *RoleService) applyImportRow(tx *gorm.DB, result *impexp.ImportResult, r
 	}
 
 	role := SystemRole{
+		// Tenant scope: the imported role belongs to the caller's tenant. This
+		// used to omit TenantID, so a tenant's CSV import created a platform-
+		// global role (tenant_id = 0).
+		TenantID: s.tenantOwnerID(),
 		RoleName: row.Create.RoleName,
 		RoleKey:  row.Create.RoleKey,
 		Sort:     row.Create.Sort,

@@ -113,7 +113,13 @@ func (s *UserService) ensureAdminRoleBinding() error {
 	}
 
 	var adminRoleID uint64
-	if err := s.db.Table("system_role").Select("id").Where("role_key = ?", "admin").Limit(1).Pluck("id", &adminRoleID).Error; err != nil {
+	// Platform bootstrap only: pin the lookup to the platform namespace so a
+	// tenant-owned role that happens to be keyed `admin` can never be bound to
+	// the builtin platform user.
+	if err := s.db.Table("system_role").Select("id").
+		Where("tenant_id = ?", tenant.PlatformGlobalTenantID).
+		Where("role_key = ?", "admin").
+		Limit(1).Pluck("id", &adminRoleID).Error; err != nil {
 		return err
 	}
 	if adminRoleID == 0 {

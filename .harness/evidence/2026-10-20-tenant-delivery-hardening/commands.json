@@ -1,0 +1,74 @@
+{
+  "taskId": "2026-10-20-tenant-delivery-hardening",
+  "repo": "pantheon-base",
+  "executedAt": "2026-10-20T16:00:00+08:00",
+  "completedAt": "2026-10-20T17:30:00+08:00",
+  "agent": {
+    "tool": "other",
+    "adapter": "codebuff-agent"
+  },
+  "runtimeSensitive": true,
+  "runtimeGap": "The final proof that the viewpoint switcher renders is a Playwright assertion; this host cannot spawn a browser, so Tenant Smoke can only be confirmed by CI. Everything below the browser (policy subjects, role lifecycle, seed repair) is proven locally against real MySQL.",
+  "commands": [
+    {
+      "command": "go test ./modules/system/iam/permission/ -run 'TestAuditEscape_' -v",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "Baseline reproduction with temporary two-tenant cases (deleted after the fix): tenant-scoped CreatePolicy(TenantId=0) stored the global subject `tenant_admin`; CreatePolicy(TenantId=202) wrote `role:tenant_admin@tenant:202`; ListPolicies returned tenant 202's `role:editor@tenant:202`; ImportPolicies wrote the bare key. A handler-level httptest also returned 200 for the tenant admin POST /system/permission and produced a global row."
+    },
+    {
+      "command": "go test ./modules/system/iam/role/ -run 'TestAuditEscape_' -v",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "Baseline reproduction: tenant 101 CreateRole accepted role_key=admin and role_key=platform_ops; CasbinDomainPolicySubjects('admin', tenant ctx) consults the global subject first, which is how the key became a platform grant."
+    },
+    {
+      "command": "go build ./... && go vet ./modules/system/...",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "Clean build and vet after the handler binding, subject resolution, reserved-key guard and role lifecycle changes."
+    },
+    {
+      "command": "go test -count=1 ./modules/system/iam/permission/ -run 'TestPermissionPolicyTenantScope|TestPermissionBootstrapPreservesTenantDomainPolicies' -v",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "6/6 PASS: create stays in the domain; foreign tenantId is forbidden; list/export do not see tenant 202; import writes the domain subject and no bare key; workbench remediation writes role:tenant_admin@tenant:101 for /system/tenant/list and no global row; Bootstrap keeps the live domain policy and removes the role-less one."
+    },
+    {
+      "command": "go test -count=1 ./modules/system/iam/role/ -run 'TestRoleTenantScope_' -v",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "4/4 PASS: admin/platform_ops rejected in tenant scope; delete removes only role:editor@tenant:101 while the platform `admin` policy survives; rename moves the subject; CSV import stamps tenant_id=101."
+    },
+    {
+      "command": "go test -count=1 ./modules/system/config/setting/ -run 'TestSettingSeed|TestSettingBootstrapRepairs' -v",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "3/3 PASS: YAML and Go seed agree, platform.tenant_mode is declared public, and Bootstrap raises is_public on a legacy row so GetPublicSettings returns platform.tenant_mode=compat."
+    },
+    {
+      "command": "go test -count=1 ./...",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "Full backend suite (46 packages) passed with real MySQL. No package reported a failure."
+    },
+    {
+      "command": "node node_modules/typescript/bin/tsc -b",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "Frontend typecheck passed after adding role.key.reserved to the five i18n resources."
+    },
+    {
+      "command": "node scripts/harness/check-task-packet.mjs --root .",
+      "cwd": ".",
+      "status": "passed",
+      "details": "All task packets pass, including the new tenant-delivery-hardening packet."
+    },
+    {
+      "command": "node scripts/frontmatter-check.mjs",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Frontmatter check passed for every doc."
+    }
+  ]
+}
