@@ -170,37 +170,34 @@ jobs:
       # create or update workflow ... without `workflows` permission" (run
       # 39350509094 failed exactly there, because the release candidate is the
       # commit that added this workflow). `workflows` is not a permission a
-      # workflow can grant its own GITHUB_TOKEN, so the annotated tag object and
-      # its ref are created through the API, which is not subject to the
-      # push-time check, and then fetched into the workspace.
-      # publish-foundation-release.mjs tolerates a tag that already points at the
-      # target commit and then skips its own `git tag -a` + push.
-      - name: Create the immutable tag through the API
+      # workflow can grant its own GITHUB_TOKEN, and this repository's
+      # default_workflow_permissions is `read`, so the Git database API also
+      # refuses tag writes for the job token (run 39351236715: "Resource not
+      # accessible by integration").
+      #
+      # The tag is therefore expected to exist before dispatch, created by a
+      # maintainer with a token that can write (see the release task packet).
+      # This step only verifies it points at the target commit and fetches it;
+      # publish-foundation-release.mjs tolerates an existing tag at the target
+      # and then skips its own `git tag -a` + push. Existence is checked with
+      # `git ls-remote` (read-only, always permitted) rather than the API.
+      - name: Verify and fetch the immutable tag
         if: env.DRY_RUN != 'true'
-        env:
-          GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
           set -euo pipefail
-          if gh api "repos/${REPO}/git/ref/tags/${RELEASE_VERSION}" >/dev/null 2>&1; then
-            existing="$(gh api "repos/${REPO}/commits/${RELEASE_VERSION}" --jq .sha)"
-            if [[ "$existing" != "$TARGET_COMMIT" ]]; then
-              echo "::error::tag ${RELEASE_VERSION} already exists at ${existing}, not ${TARGET_COMMIT}"
-              exit 1
-            fi
-            echo "tag ${RELEASE_VERSION} already points at ${TARGET_COMMIT}"
-          else
-            tag_object="$(gh api "repos/${REPO}/git/tags" \
-              -f tag="${RELEASE_VERSION}" \
-              -f message="Foundation release ${RELEASE_VERSION}" \
-              -f object="${TARGET_COMMIT}" \
-              -f type=commit \
-              --jq .sha)"
-            gh api "repos/${REPO}/git/refs" \
-              -f ref="refs/tags/${RELEASE_VERSION}" \
-              -f sha="${tag_object}" >/dev/null
-            echo "created tag ${RELEASE_VERSION} -> ${TARGET_COMMIT}"
+          plain="$(git ls-remote origin "refs/tags/${RELEASE_VERSION}" | cut -f1)"
+          peeled="$(git ls-remote origin "refs/tags/${RELEASE_VERSION}^{}" | cut -f1)"
+          resolved="${peeled:-$plain}"
+          if [[ -z "$resolved" ]]; then
+            echo "::error::tag ${RELEASE_VERSION} does not exist; create it at ${TARGET_COMMIT} with a token that has contents:write before dispatching"
+            exit 1
           fi
+          if [[ "$resolved" != "$TARGET_COMMIT" ]]; then
+            echo "::error::tag ${RELEASE_VERSION} points at ${resolved}, not ${TARGET_COMMIT}"
+            exit 1
+          fi
+          echo "tag ${RELEASE_VERSION} points at ${TARGET_COMMIT}"
           git fetch --no-tags origin "refs/tags/${RELEASE_VERSION}:refs/tags/${RELEASE_VERSION}"
 
       - name: Publish release
