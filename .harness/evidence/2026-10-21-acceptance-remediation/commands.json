@@ -231,6 +231,12 @@
       "cwd": ".",
       "status": "passed",
       "details": "Local main was at ce82b94e, which is not an ancestor of origin/main because #395 was squash-merged. Verified first that ce82b94e is still reachable from acceptance/remediation-2026-10-21 and acceptance/remediation-2026-10-21-followup, and that the working branch tree ed274ae5bf943bce8e49ab7b002c3fe9720986f9 equals origin/main tree, then moved the pointer. Recoverable, non-destructive, and no commit is orphaned."
+    },
+    {
+      "command": "git push -u origin docs/transport-verified",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Corrected retry result: the first real push failed with `Failed to connect to github.com port 443 after 21110 ms`, the second attempt created refs/heads/docs/transport-verified and set upstream, and the third reported `Everything up-to-date`. The transport is therefore usable but intermittent - retrying and reading the remote ref back is part of the procedure, not an optional courtesy. Since this push was ordinary git, the remote commit sha equals the local one (5221b5e4), so the tree-parity assertion the API replay needed is no longer the interesting check."
     }
   ],
   "knownGaps": [
