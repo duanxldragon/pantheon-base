@@ -159,5 +159,7 @@ evidence directory.
   for one reason: the branch-level Sonar analysis puts `Security Rating on New Code` at E (threshold A) because `gosecurity:S3649`
   reports two remaining BLOCKERs in `Service.AddMember()` (the `(tenant_id, user_id)` read at `:711` and the update at `:726`), which are
   bound-parameter false positives. Two semantics-preserving restructurings took that rule from 3 blockers to 2; the remaining edge is the
-  tenant/user lookup itself, so it cannot be removed without suppressing the scanner or changing what the endpoint does. Neither was done.
-  Cut the `pantheon-base-v0.17.0` tag only after that finding is dispositioned in Sonar by the maintainer.
+  tenant/user lookup itself, so it cannot be removed without suppressing the scanner or changing what the endpoint does.
+  The maintainer then chose the suppression path (2026-10-21): both `AddMember` sinks carry a trailing `// NOSONAR gosecurity:S3649`, while the
+  Sonar rule configuration, the Quality Gate thresholds and the `Release Gate` definition stay untouched. Cut the `pantheon-base-v0.17.0` tag
+  only after the next hosted branch analysis shows the rating back at A and `Release Gate` green — a locally passing suite does not prove it.
