@@ -100,6 +100,38 @@ var tenantTestDDL = []string{
 		PRIMARY KEY (id),
 		KEY idx_system_dept_tenant_id (tenant_id)
 	) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
+	`CREATE TABLE system_dict_type (
+		id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+		tenant_id BIGINT UNSIGNED NOT NULL DEFAULT 0,
+		dict_code VARCHAR(64) NOT NULL,
+		dict_name VARCHAR(64) NOT NULL,
+		module VARCHAR(64) NOT NULL DEFAULT 'system',
+		status TINYINT DEFAULT 1,
+		remark VARCHAR(255) DEFAULT '',
+		created_at DATETIME(3) NULL,
+		updated_at DATETIME(3) NULL,
+		deleted_at DATETIME(3) NULL,
+		PRIMARY KEY (id),
+		UNIQUE KEY idx_dict_type_tenant_code (tenant_id, dict_code)
+	) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
+	`CREATE TABLE system_dict_item (
+		id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+		tenant_id BIGINT UNSIGNED NOT NULL DEFAULT 0,
+		dict_code VARCHAR(64) NOT NULL,
+		item_label_key VARCHAR(128) NOT NULL,
+		item_value VARCHAR(255) NOT NULL,
+		item_color VARCHAR(32) DEFAULT '',
+		sort INT DEFAULT 0,
+		status TINYINT DEFAULT 1,
+		remark VARCHAR(255) DEFAULT '',
+		tag_type VARCHAR(32) DEFAULT '',
+		css_class VARCHAR(64) DEFAULT '',
+		created_at DATETIME(3) NULL,
+		updated_at DATETIME(3) NULL,
+		deleted_at DATETIME(3) NULL,
+		PRIMARY KEY (id),
+		KEY idx_dict_item_tenant_code_value (tenant_id, dict_code, item_value)
+	) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
 }
 
 // setupTestDB opens an isolated MySQL database for a single test.
@@ -284,9 +316,36 @@ func TestAddMember_Duplicate(t *testing.T) {
 	err = service.AddMember(tenant.ID, 100, "admin")
 	require.NoError(t, err)
 
-	// Try to add same user again
+	// Re-adding a non-owner row is idempotent and updates the role: user
+	// create in a tenant viewpoint already inserts the `member` row
+	// server-side, and the console's join submit must not fail on it.
 	err = service.AddMember(tenant.ID, 100, "member")
-	assert.Equal(t, ErrMembershipExists, err)
+	require.NoError(t, err)
+
+	members, total, err := service.ListTenantMembers(tenant.ID, 1, 20)
+	require.NoError(t, err)
+	assert.Equal(t, int64(1), total)
+	assert.Equal(t, "member", members[0].Role)
+}
+
+func TestAddMember_OwnerIsProtected(t *testing.T) {
+	db := setupTestDB(t)
+	service := NewService(db)
+
+	tenant, err := service.CreateTenant(CreateTenantDTO{
+		Code: "test-tenant",
+		Name: "Test Tenant",
+	})
+	require.NoError(t, err)
+
+	require.NoError(t, service.AddMember(tenant.ID, 100, "owner"))
+	// Re-adding owner is a no-op; a non-owner role can never demote the owner.
+	require.NoError(t, service.AddMember(tenant.ID, 100, "owner"))
+	assert.Equal(t, ErrMembershipExists, service.AddMember(tenant.ID, 100, "member"))
+
+	members, _, err := service.ListTenantMembers(tenant.ID, 1, 20)
+	require.NoError(t, err)
+	assert.Equal(t, "owner", members[0].Role)
 }
 
 func TestRemoveMember(t *testing.T) {

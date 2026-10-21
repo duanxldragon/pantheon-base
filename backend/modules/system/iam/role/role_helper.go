@@ -92,7 +92,7 @@ func (s *RoleService) validateRoleCreate(req *RoleCreateReq) error {
 	if strings.TrimSpace(req.RoleName) == "" || strings.TrimSpace(req.RoleKey) == "" {
 		return common.NewBadRequest(errParamInvalid)
 	}
-	if err := s.ensureRoleKeyAllowed(req.RoleKey); err != nil {
+	if err := s.ensureRoleKeyAllowed(req.RoleKey, 0); err != nil {
 		return err
 	}
 	if err := s.ensureRoleKeyUnique(0, req.RoleKey); err != nil {
@@ -112,7 +112,7 @@ func (s *RoleService) validateRoleUpdate(role *SystemRole, req *RoleUpdateReq) e
 		(strings.TrimSpace(req.RoleKey) != "admin" || req.Status == common.StatusDisabled) {
 		return common.NewConflict("role.update.error.protected")
 	}
-	if err := s.ensureRoleKeyAllowed(req.RoleKey); err != nil {
+	if err := s.ensureRoleKeyAllowed(req.RoleKey, role.ID); err != nil {
 		return err
 	}
 	if err := s.ensureRoleKeyUnique(role.ID, req.RoleKey); err != nil {
@@ -124,36 +124,66 @@ func (s *RoleService) validateRoleUpdate(role *SystemRole, req *RoleUpdateReq) e
 	return s.ensurePermissionKeysExist(req.PermissionKeys)
 }
 
-// ensureRoleKeyAllowed blocks the platform role namespace for tenant callers.
+// ensureRoleKeyAllowed enforces the bidirectional role-key namespace mutex
+// (contract §7: "两个命名空间互斥").
 //
-// Role keys are unique per tenant, so a tenant could otherwise create a role
-// keyed `admin` (or any other platform role key) and hand it to a user. Login
-// then puts that bare key into the session, and Casbin consults the GLOBAL
-// subject of the same name (contract §4: global first, then domain), so the
-// tenant role inherits the platform `admin` policies — a full tenant→platform
+// Forward direction — tenant callers must not take a platform key: role keys
+// are unique per tenant, so a tenant could otherwise create a role keyed
+// `admin` (or any other platform role key) and hand it to a user. Login then
+// puts that bare key into the session, and Casbin consults the GLOBAL subject
+// of the same name (contract §4: global first, then domain), so the tenant
+// role inherits the platform `admin` policies — a full tenant→platform
 // escape. `platform_ops` is reserved even without a role row because the
 // platform-capability middleware admits it by name.
-func (s *RoleService) ensureRoleKeyAllowed(roleKey string) error {
-	if s.tenantOwnerID() == tenant.PlatformGlobalTenantID {
-		return nil
-	}
+//
+// Reverse direction — platform callers must not take a key a live tenant
+// already owns: the same global-first lookup works the other way, so a new
+// platform role keyed like a tenant role would hand that tenant's users the
+// platform policies the moment they log in. Soft-deleted roles are excluded
+// via the model scope; released keys are already archived under
+// deletedRoleKeyPrefix, so legitimate re-use is unaffected.
+// reverse mutex must not fire on the role being renamed itself: a platform
+// edit of a tenant role that keeps the key would otherwise collide with the
+// live tenant row it is updating (excludeRoleID).
+func (s *RoleService) ensureRoleKeyAllowed(roleKey string, excludeRoleID uint64) error {
 	key := strings.TrimSpace(roleKey)
 	if key == "" {
 		return nil
 	}
-	if key == "platform_ops" {
+	ownerID := s.tenantOwnerID()
+	if ownerID != tenant.PlatformGlobalTenantID && key == "platform_ops" {
 		return common.NewConflict("role.key.reserved")
 	}
+
+	column, value := roleKeyBlockingNamespace(ownerID)
 	var count int64
-	if err := s.db.Table("system_role").
-		Where("tenant_id = ? AND role_key = ?", tenant.PlatformGlobalTenantID, key).
-		Count(&count).Error; err != nil {
+	// Model-based count: gorm pins the statement to system_role and appends
+	// `deleted_at IS NULL`, so only live roles in the opposite namespace block.
+	q := s.db.Model(&SystemRole{}).
+		Where(condRoleKeyEquals, key).
+		Where("tenant_id "+column+" ?", value)
+	if excludeRoleID > 0 {
+		q = q.Where("id <> ?", excludeRoleID)
+	}
+	if err := q.Count(&count).Error; err != nil {
 		return err
 	}
 	if count > 0 {
 		return common.NewConflict("role.key.reserved")
 	}
 	return nil
+}
+
+// roleKeyBlockingNamespace is the pure half of the mutex: which side of the
+// namespace pair an operator of the given tenant is checked against. A
+// platform operator (tenant 0) is blocked by any tenant-owned role
+// (tenant_id <> 0); a tenant operator is blocked by platform roles
+// (tenant_id = 0).
+func roleKeyBlockingNamespace(ownerID uint64) (operator string, value uint64) {
+	if ownerID == tenant.PlatformGlobalTenantID {
+		return "<>", tenant.PlatformGlobalTenantID
+	}
+	return "=", tenant.PlatformGlobalTenantID
 }
 
 func (s *RoleService) ensureRoleKeyUnique(roleID uint64, roleKey string) error {

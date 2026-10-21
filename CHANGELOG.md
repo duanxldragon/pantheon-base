@@ -6,7 +6,7 @@ Pantheon Base 方法追踪记录。方法论本体位于 `pantheon-harness`。
 
 ---
 
-## [Unreleased] — 2026-10-20 (tenant delivery hardening)
+## [pantheon-base-v0.17.0] — 2026-10-21 (tenant isolation remediation)
 
 > A post-acceptance audit found two tenant→platform permission escapes and a permanently red
 > tenant smoke job. This slice closes them at the namespace layer: policy writes take their tenant
@@ -30,14 +30,68 @@ Pantheon Base 方法追踪记录。方法论本体位于 `pantheon-harness`。
   transaction instead of leaving stale grants and a role with no API surface.
 - `permission_workbench_remediation_event` gains `tenant_id` (migration `000028`), so remediation
   history is no longer shared between tenants that own the same role key.
+- 2026-10-21 full acceptance review closed a further tenant-isolation P0 and P1/P2 set before this
+  cut: menu and i18n system writes are gated by `PlatformCapabilityMiddleware` (a `tenant_admin`
+  domain grant can no longer rewrite the global menu tree or cascade cross-tenant
+  `system_role_permission` cleanup), compat-mode tenant scope is pinned rather than skipped,
+  tenant suspend/member removal revokes sessions, the OIDC schema moved into guarded migration
+  `000029` with a tenant-scoped unique key, the role-key mutex became bidirectional, and the
+  frontend session boundary clears route-warm data and the operation token. Evidence:
+  `docs/reviews/PANTHEON_BASE_ISSUES_AND_REMEDIATION_2026-10-21.md` (FIX-1…FIX-11).
 
 ### Fixed
 
 - `platform.tenant_mode` is seeded public and `Bootstrap` raises `is_public` on an existing row
   (never lowers it). Upgraded deployments now publish the flag, so the tenant picker, switcher and
-  viewpoint switcher render again — the cause of the red `Tenant Smoke` job on every main commit.
+  viewpoint switcher render again — one cause of the red `Tenant Smoke` job on every main commit.
+  A second, independent trigger (server-side auto-join colliding with the console's re-add call,
+  `tenant.member_exists`) was removed by the idempotent membership write below. The job is not
+  claimed fixed: the same commit both failed and passed it, so the remaining red is flakiness.
+- Tenant membership writes are idempotent: re-adding an existing member updates or reactivates the
+  row instead of failing, and owner rows cannot be demoted through this path. This also removes the
+  false "join failed" toast on every tenant-viewpoint user create.
+- `AddMember` / `RemoveMember` select the membership row through bound map conditions instead of a
+  raw `tenant_id = ? AND user_id = ?` fragment. Same placeholders and same semantics; it clears the
+  SonarCloud `gosecurity:S3649` blocker that held the Quality Gate's Security Rating on New Code
+  below A, along with the duplicated-literal and cognitive-complexity findings on the new code.
+- The compat admin session test asserted the maintenance inventory total as an active-session count,
+  so it failed against real Redis while silently skipping without it (`Total 3`, revoked rows
+  included). The assertion now pins `Total = 3` with `ActiveCount = 2` and requires all three
+  tenants' sessions to be present, which is the behaviour `applyAdminSessionFilters` documents.
 - CSV role import stamps the caller's tenant; it used to write `tenant_id = 0` (a platform role).
 - Import role-key validation and the bootstrap admin binding are scoped to the target namespace.
+
+### Changed
+
+- The auth module now seeds its own permission keys, not only its menus, so a fresh tenant gets a
+  working login surface without a global policy grant.
+- Tenant menu seeds and the security-surface documentation were completed as part of the
+  SonarCloud cleanup; every open SonarCloud finding on `main` is closed.
+- `MigrateDataScopePolicy` backfills tenant-scoped role data-scope and role-menu rows
+  (migrations `000025`–`000027`) before the permission policy console is exposed.
+
+### Dependencies
+
+- Frontend npm dependency group: 18 package updates.
+- Root dev-dependency group: 2 updates.
+- GitHub Actions group: 4 updates (all actions stay SHA-pinned).
+
+### Release tooling
+
+- The cut workflow now validates its inputs after the checkout, builds the bundle from the
+  requested `base_commit` rather than the default-branch head, creates the tag through the API, and
+  verifies the tag with `git ls-remote` instead of a read-permission-limited API call.
+- The v0.16.1 closeout evidence and harness status were repaired so the release record matches what
+  was actually published.
+
+### Consumer impact
+
+- `sharedPaths` is unchanged at 52 entries (backend 4, frontend 46, docs 2), so the consumer lock
+  moves only version, commit and checksums.
+- Migrations `000025`–`000028` are additive and run through the standard startup migrator; no
+  consumer-side schema work is required.
+- No API route, permission code or menu key is removed. Tenant-scoped policy writes are now
+  rejected when the body names another tenant, which is the intended security fix.
 
 ---
 

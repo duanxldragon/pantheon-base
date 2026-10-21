@@ -75,11 +75,13 @@ type ProvisionInput struct {
 
 // ProvisionResult reports what provisioning actually created.
 type ProvisionResult struct {
-	AdminUserID    uint64
-	RoleIDs        map[string]uint64
-	RootDeptID     uint64
-	PolicyCount    int
-	SettingsCopied int64
+	AdminUserID     uint64
+	RoleIDs         map[string]uint64
+	RootDeptID      uint64
+	PolicyCount     int
+	SettingsCopied  int64
+	DictTypesCopied int64
+	DictItemsCopied int64
 }
 
 // ProvisionTenant turns a bare `tenants` row into a usable tenant.
@@ -95,6 +97,7 @@ type ProvisionResult struct {
 //  4. the owner membership that the login issuance gate requires
 //  5. Casbin policies for role:<key>@tenant:<id>
 //  6. a copy of the platform settings so the tenant renders with sane defaults
+//  7. a copy of the platform default dictionaries (same idempotent pattern)
 //
 // Everything is idempotent: re-running for an existing tenant re-creates only
 // what is missing, so it doubles as a repair entry point.
@@ -162,6 +165,13 @@ func (s *Service) ProvisionTenant(in ProvisionInput) (*ProvisionResult, error) {
 		return nil, err
 	}
 	result.SettingsCopied = settings
+
+	dictTypes, dictItems, err := s.copyPlatformDictsToTenant(in.TenantID)
+	if err != nil {
+		return nil, err
+	}
+	result.DictTypesCopied = dictTypes
+	result.DictItemsCopied = dictItems
 
 	return result, nil
 }
@@ -680,4 +690,63 @@ func (s *Service) copyPlatformSettingsToTenant(tenantID uint64) (int64, error) {
 		return 0, fmt.Errorf("copy platform settings to tenant: %w", res.Error)
 	}
 	return res.RowsAffected, nil
+}
+
+// copyPlatformDictsToTenant seeds the tenant with the platform's default
+// dictionaries (system_dict_type + system_dict_item) so tenant-scoped pages
+// resolve their labels out of the box instead of showing empty select options.
+//
+// Same idempotent INSERT…SELECT + NOT EXISTS shape as
+// copyPlatformSettingsToTenant:
+//   - existing tenant-owned keys win — a tenant's private dict (or its own
+//     customization of a copied one) is never overwritten, which is also how
+//     tenant-private key conflicts are excluded;
+//   - the dst existence check deliberately does NOT filter deleted_at: soft
+//     deleted rows still occupy the (tenant_id, dict_code[, item_value]) unique
+//     keys, so re-inserting them would fail as a duplicate — skipping them
+//     keeps the statement retry-safe;
+//   - deleted platform rows are not copied (src.deleted_at IS NULL);
+//   - every NOT-NULL-without-default column is listed explicitly
+//     (dict_name / item_label_key / item_value), matching the MySQL 1364 rule
+//     documented on the settings copy.
+func (s *Service) copyPlatformDictsToTenant(tenantID uint64) (int64, int64, error) {
+	if tenantID == 0 {
+		return 0, 0, nil
+	}
+	types := s.db.Exec(`
+		INSERT INTO system_dict_type (
+			tenant_id, dict_code, dict_name, module, status, remark, created_at, updated_at
+		)
+		SELECT ?, src.dict_code, src.dict_name, src.module, src.status, src.remark, NOW(), NOW()
+		FROM system_dict_type src
+		WHERE src.tenant_id = 0
+		  AND src.deleted_at IS NULL
+		  AND NOT EXISTS (
+		    SELECT 1 FROM system_dict_type dst
+		    WHERE dst.tenant_id = ? AND dst.dict_code = src.dict_code
+		  )
+	`, tenantID, tenantID)
+	if types.Error != nil {
+		return 0, 0, fmt.Errorf("copy platform dict types to tenant: %w", types.Error)
+	}
+
+	items := s.db.Exec(`
+		INSERT INTO system_dict_item (
+			tenant_id, dict_code, item_label_key, item_value, item_color,
+			sort, status, remark, created_at, updated_at
+		)
+		SELECT ?, src.dict_code, src.item_label_key, src.item_value, src.item_color,
+		       src.sort, src.status, src.remark, NOW(), NOW()
+		FROM system_dict_item src
+		WHERE src.tenant_id = 0
+		  AND src.deleted_at IS NULL
+		  AND NOT EXISTS (
+		    SELECT 1 FROM system_dict_item dst
+		    WHERE dst.tenant_id = ? AND dst.dict_code = src.dict_code AND dst.item_value = src.item_value
+		  )
+	`, tenantID, tenantID)
+	if items.Error != nil {
+		return types.RowsAffected, 0, fmt.Errorf("copy platform dict items to tenant: %w", items.Error)
+	}
+	return types.RowsAffected, items.RowsAffected, nil
 }

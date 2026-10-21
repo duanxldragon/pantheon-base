@@ -43,6 +43,7 @@ import {
   usePublicSettings,
 } from '../../../../core/setting/publicSettings';
 import { COOKIE_TOKEN_PLACEHOLDER } from '../../../../core/auth/sessionSnapshot';
+import { invalidateAllRouteWarmData } from '../../../../core/router/prefetch';
 import { resolveDefaultAuthedPath } from '../../../../core/router/defaultPath';
 import { SUPPORTED_LOCALES, switchI18nLanguage, type SupportedLocale } from '../../../../i18n';
 import './Login.css';
@@ -246,6 +247,11 @@ export function LoginPageComponent() {
     // subjects opt back in explicitly). sessionStorage is per-tab but a
     // re-login in the same tab would otherwise inherit the stale pin.
     clearTenantViewpoint();
+    // Same boundary rule for the route warm-data cache: it is keyed by path
+    // only, so a sign-in that followed a logout in this tab must not be served
+    // the previous subject's warmed rows. The logout path clears it too; this
+    // side covers exits that never reached it.
+    invalidateAllRouteWarmData();
     setTokens(COOKIE_TOKEN_PLACEHOLDER, COOKIE_TOKEN_PLACEHOLDER);
     setUserInfo(res.user);
     const menuTree = await fetchMenuTree();

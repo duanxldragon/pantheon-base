@@ -37,7 +37,7 @@ import {
 } from '@arco-design/web-react/icon';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { beginLogoutTransition, endLogoutTransition } from '../../api/request';
+import { beginLogoutTransition, clearOperationToken, endLogoutTransition } from '../../api/request';
 import { type MenuNode } from '../../modules/system/iam/menu/api';
 import { logout as logoutApi, reportActivity } from '../../modules/auth/session/api';
 import { TenantSwitcher } from '../../modules/auth/tenant/TenantSwitcher';
@@ -63,7 +63,7 @@ import { clearPantheonThemePreference } from '../theme/theme';
 import { usePantheonColorMode, type PantheonColorMode } from '../theme/colorMode';
 import { AppModal, shouldShowIdentityLabel, UserAvatarContent } from '../../components';
 import { getDashboardSummary, type DashboardSummary } from '../../modules/platform/api';
-import { resolveRouteWarmData } from '../router/prefetch';
+import { invalidateAllRouteWarmData, resolveRouteWarmData } from '../router/prefetch';
 import { clearClientAuthSession } from '../auth/clientSession';
 import {
   getBrandInitial,
@@ -1103,8 +1103,18 @@ const BaseLayout: React.FC = () => {
       await resolveSilently(switchI18nLanguage(nextLanguage));
       clearShellSessionState();
       clearClientAuthSession();
+      // The secondary-verification token is bound to the session that was
+      // verified, and this logout only navigates: leaving it in sessionStorage
+      // makes the next subject's first sensitive request carry a token the
+      // backend refuses with verification_mismatch.
+      clearOperationToken();
       setOpenedTabs([]);
       resetMenuTree();
+      // Route warm data is module state and this logout only navigates, so the
+      // cache would outlive the session it was read for: drop it before the
+      // shell tears down. Keyed by path alone, an entry left here is what the
+      // next subject in this tab would read as its first page of data.
+      invalidateAllRouteWarmData();
       clearAuth();
       setLocked(false);
       setUnlockPassword('');

@@ -26,6 +26,8 @@ func TestRunMigrationsAlignsRuntimeSchemaWithCurrentContracts(t *testing.T) {
 		},
 		"system_user": {
 			"preference_json", "failed_login_attempts", "login_locked_until",
+			// 000029: OIDC fields folded in from the removed orphan add_oidc_fields.sql.
+			"oidc_subject", "oidc_provider", "oidc_last_sync", "auth_type",
 		},
 		"system_dept": {
 			"is_root", "leader", "phone", "email",
@@ -92,6 +94,11 @@ func TestRunMigrationsAlignsRuntimeSchemaWithCurrentContracts(t *testing.T) {
 	assertMigrationIndexExists(t, db, "system_user_session", "idx_system_user_session_tenant_id")
 	assertMigrationIndexExists(t, db, "system_log_oper", "idx_system_log_oper_tenant")
 	assertMigrationIndexDoesNotExist(t, db, "system_dept", "idx_system_dept_dept_code")
+	// 000029 replaces the orphan file's global unique on oidc_subject with the
+	// tenant-scoped composite key; both halves must hold after the chain runs.
+	assertMigrationIndexExists(t, db, "system_user", "uk_system_user_tenant_oidc_subject")
+	assertMigrationIndexExists(t, db, "system_user", "idx_system_user_auth_type")
+	assertMigrationIndexDoesNotExist(t, db, "system_user", "idx_system_user_oidc_subject")
 	assertLegacyColumnDoesNotBlockRuntimeWrites(t, db, "system_user_session", "expires_at")
 	assertLegacyColumnDoesNotBlockRuntimeWrites(t, db, "system_i18n", "locale_key")
 
