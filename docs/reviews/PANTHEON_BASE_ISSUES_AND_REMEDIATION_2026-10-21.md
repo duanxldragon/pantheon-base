@@ -14,6 +14,7 @@ updated_at: 2026-10-21
 # Pantheon Base 企业级验收问题清单与整改记录（2026-10-21）
 
 审查对象：`github.com/duanxldragon/pantheon-base`，`origin/main = ffb22988`，本地 main 含未推送 release-cut 提交 `ce82b94e`（PR #395，分支 `release/v0.17.0`）。
+（收口更新：#395 已合并，网络修复后本地 `main` 已同步到 `origin/main = 73d36ecc`；`ce82b94e` 仍可从两个本地 acceptance 分支到达。见 §5 末条。）
 严重度：P0 跨租户泄露/严重绕过；P1 隔离缺陷/核心闭环失效；P2 一般缺陷；P3 建议。
 状态图例：**已修复（本地，待 CI 复验）** / **已修复（文档）** / **延期（有理由）** / **维护者动作**。
 
@@ -159,3 +160,9 @@ updated_at: 2026-10-21
   在此之前不得打 `pantheon-base-v0.17.0` tag；本包未加 `NOSONAR`、未排除规则、未贴 `solo-override`。
   取证失误也记在这里：#398 内的记录提交 `f421d9dc`（远端 `3bb7f3d8`）在 PR 尚未跑完时就写下「承载 S3649 的二次处置」「CI 与 Sonar 结论以本轮 hosted run 为准」，
   读者容易把「已提交处置」当成「门禁已收口」；该提交已合并、历史不可改写，故以本条记录显式更正而不是回滚。
+- **传输通道复测与本地主干同步（2026-10-21 追加）**：维护者修复网络后重跑，`git ls-remote --heads origin`、`git fetch origin --prune`、
+  `git push --dry-run origin HEAD:refs/heads/transport-check` 对 `github.com` 全部成功（dry-run 只解析 pack，未写任何 ref；`curl https://github.com` 的 HTML 请求仍超时，
+  因此只宣称 git-http 通道可用）。fetch 将本地 `ffb22988..73d36ecc` 同步并清理已合并分支（含 `release/v0.17.0` 的远端引用）。
+  本地 `main` 原停在 `ce82b94e`（#395 为 squash 合并，故不是 `origin/main` 的祖先，不能直接 ff）：先确认 `ce82b94e` 仍可从
+  `acceptance/remediation-2026-10-21` 与 `acceptance/remediation-2026-10-21-followup` 到达，且当前工作分支 tree `ed274ae5` 与 `origin/main` tree 相等，
+  再以 `git branch -f main origin/main` 移动指针 ⇒ 无提交丢失、可回退。**结论：Git Data API 重放是整改窗口的历史事实与取证方式，不再是后续工作的必需通道。**
