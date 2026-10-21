@@ -65,7 +65,7 @@ owner 行的拒绝路径与重复添加的复活路径保持原状；读路径�
 - Auto-merge：not-enabled
 - Duplication Gate 结果：pending（本提交 CI 结论；#397 上为绿）
 - 是否高风险改动：no（成员写路径定位方式与文档结论，不改权限判定与数据形状）
-- Residual risk / follow-up：①`gosecurity:S3649` 读侧污点边需维护者在 Sonar 侧标记误报或在门禁上让步，这是本轮唯一未闭合门禁；②`release/v0.17.0` 的测试维度已由 #397 证明，安全维度待处置，处置前不打 `pantheon-base-v0.17.0` tag；③建议补 checker：runtime-sensitive 套件缺 `PANTHEON_TEST_REDIS_ADDR` 时失败而非 skip；④Tenant Smoke flaky 完整成因、凭据轮换（D2）、main 分支保护（F2）、advisory→blocking（B10）与台账延期项由维护者排期，明细见 `docs/reviews/PANTHEON_BASE_ISSUES_AND_REMEDIATION_2026-10-21.md` §4/§5
+- Residual risk / follow-up：①`gosecurity:S3649` 读侧污点边需维护者在 Sonar 侧标记误报或在门禁上让步，这是本轮唯一未闭合门禁；②`release/v0.17.0` 已由 PR #395 合入 `main`（merge commit `762d94a5`，tree `f7135e30`），除 `SonarCloud Code Analysis` FAILURE 外全部 required checks 为绿；因此本 PR 的 base 改为 `main`，`pantheon-base-v0.17.0` tag 在 Sonar 处置与本轮 CI 结论落地前仍不打；③建议补 checker：runtime-sensitive 套件缺 `PANTHEON_TEST_REDIS_ADDR` 时失败而非 skip；④Tenant Smoke flaky 完整成因、凭据轮换（D2）、main 分支保护（F2）、advisory→blocking（B10）与台账延期项由维护者排期，明细见 `docs/reviews/PANTHEON_BASE_ISSUES_AND_REMEDIATION_2026-10-21.md` §4/§5
 
 ## 检查清单
 

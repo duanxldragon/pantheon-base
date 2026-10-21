@@ -233,5 +233,5 @@ platform
 - [x] CI 实跑确认 `Backend Tests` / `Unit Tests` / `Coverage Gate` / `CI Summary` / `Quality Gates` 转绿（PR #397，head f0f650a5）
 - [ ] `go test -race ./...` 全量：本机无 C 工具链，CI 侧 `-race` 结论仍需确认（`quality.yml` 的 `Unit Tests` 腿）
 - [ ] SonarCloud 新代码异味（`go:S1192`、`go:S3776`）已清除；`gosecurity:S3649` 三条 BLOCKER 属绑定参数误报，需维护者在 Sonar 侧处置（不抑制、不排除规则）
-- [ ] 安全门禁处置到位后，`release/v0.17.0` 方可打 `pantheon-base-v0.17.0` tag
+- [ ] 安全门禁处置到位后，方可在 `main`（#395 已把 `release/v0.17.0` 合入并删除该分支，merge commit `762d94a5`）上打 `pantheon-base-v0.17.0` tag
 - [ ] 补一条 checker：runtime-sensitive 套件在缺 `PANTHEON_TEST_REDIS_ADDR` 时应失败而非 skip（与 B10 同族，显式延期）
