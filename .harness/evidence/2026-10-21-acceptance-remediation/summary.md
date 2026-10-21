@@ -88,7 +88,9 @@ R1-R4 全部记录而非隐藏：其中三条只有在套件真的跑在 MySQL �
   （`:711` 读、`:722` 写两条）⇒ 规则不看绑定，只看请求值是否参与构造查询。PR #398 实测：写路径改为按主键 + `Select` 类型化更新后剩两条
   （`:711`、`:726`），PR 级门禁 OK 但分支级 `new_security_rating` 仍为 E ⇒ `Release Gate` 红，tag 被挡。
   读路径的污点边无法在不抑制的前提下消除，最终收口需要维护者在 Sonar 侧标记误报或让步；本包未加 `NOSONAR`、未排除规则。
-- `github.com` 在本机不可达（`api.github.com` 可达）：跟进提交只能通过 Git Data API 重放；本地 `main` 也无法 fetch/ff。
+- `github.com` 在本机不可达（`api.github.com` 可达）：#396–#399 的分支只能通过 Git Data API 重放；本地 `main` 也无法 fetch/ff。
+  **2026-10-21 维护者修好网络后复测**：`git ls-remote`、`git fetch origin --prune`、`git push --dry-run` 对 `github.com` 均成功，
+  本地 `main` 已推进到 `origin/main = 73d36ecc`（原 `ce82b94e` 仍可从两个本地 acceptance 分支到达，未丢弃任何提交）；后续提交可用常规 git 通道。
 - 本机不能起浏览器：Playwright 层 Tenant Smoke 与视觉/交互验收未执行。
 - HTTP 层跨租户 curl 对抗矩阵、备份/恢复与升级演练未在本机执行。
 - ops 消费侧继承是独立变更；迁移 000029 需在部署前先跑。

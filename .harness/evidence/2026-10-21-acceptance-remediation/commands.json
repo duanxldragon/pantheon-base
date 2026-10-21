@@ -8,7 +8,7 @@
     "adapter": "qoder-agent"
   },
   "runtimeSensitive": true,
-  "runtimeGap": "This host reaches api.github.com but not github.com, so git push over HTTPS cannot complete and the branch is published through the Git Data API instead; it cannot start a browser, so the Playwright Tenant Smoke assertion and the maintainer's visual acceptance are CI/maintainer obligations; and it has no C toolchain, so go test -race fails at cgo and the race detector can only be re-verified by CI. Below those three layers the suite runs locally against real MySQL, and after the R5 finding also against real Redis.",
+  "runtimeGap": "Three limits bound this task. (1) Transport: for the whole remediation window (PRs #395-#399) this host reached api.github.com but not github.com, so every branch was published through the Git Data API (blob -> tree -> commit -> ref) instead of git push. The maintainer fixed the network on 2026-10-21 and the retry measured git ls-remote, git fetch and git push --dry-run all working against github.com, so local main was fast-forwarded to origin/main (73d36ecc) and the remaining ledger update ships over ordinary git. (2) No browser: the Playwright Tenant Smoke assertion and the maintainer visual acceptance are CI/maintainer obligations. (3) No C toolchain: go test -race fails at cgo locally, and the race verdict lives in CI. Below those layers the suite runs against real MySQL and, after the R5 finding, real Redis.",
   "commands": [
     {
       "command": "go build ./...",
@@ -219,6 +219,24 @@
       "cwd": ".",
       "status": "passed",
       "details": "Race detector is now CI-proven: ci.yml `unit-tests` runs `go test -race -short ./...` and quality.yml `backend-tests` runs `go test -race ./...`, and both check-runs conclude success on main's c17ef999. This closes the local gap recorded earlier - the host still cannot run -race (no C toolchain), so the proof lives in CI, not in a local run."
+    },
+    {
+      "command": "git ls-remote --heads origin ; git fetch origin --prune ; git push --dry-run origin HEAD:refs/heads/transport-check",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Transport retry after the maintainer fixed the network. ls-remote lists refs/heads/main at 73d36ecc; fetch moved ffb22988..73d36ecc and pruned the merged branches (including release/v0.17.0); dry-run push resolved the pack and reported it would create refs/heads/transport-check, and no ref was written because the run was --dry-run. curl to https://github.com HTML still times out on this host, so only the git-http path is claimed working."
+    },
+    {
+      "command": "git branch -f main origin/main ; git rev-parse HEAD^{tree} origin/main^{tree}",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Local main was at ce82b94e, which is not an ancestor of origin/main because #395 was squash-merged. Verified first that ce82b94e is still reachable from acceptance/remediation-2026-10-21 and acceptance/remediation-2026-10-21-followup, and that the working branch tree ed274ae5bf943bce8e49ab7b002c3fe9720986f9 equals origin/main tree, then moved the pointer. Recoverable, non-destructive, and no commit is orphaned."
+    },
+    {
+      "command": "git push -u origin docs/transport-verified",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Corrected retry result: the first real push failed with `Failed to connect to github.com port 443 after 21110 ms`, the second attempt created refs/heads/docs/transport-verified and set upstream, and the third reported `Everything up-to-date`. The transport is therefore usable but intermittent - retrying and reading the remote ref back is part of the procedure, not an optional courtesy. Since this push was ordinary git, the remote commit sha equals the local one (5221b5e4), so the tree-parity assertion the API replay needed is no longer the interesting check."
     }
   ],
   "knownGaps": [
@@ -226,7 +244,7 @@
     "No browser on this host: the Playwright Tenant Smoke assertion and the maintainer's visual/functional acceptance are not executed here.",
     "No HTTP-level cross-tenant adversarial matrix through a real gateway with Redis-backed opaque tokens; the isolation conclusions rest on handler/middleware httptest and SQL-predicate assertions.",
     "No backup/restore or upgrade drill, including taking over a database where add_oidc_fields.sql was already applied manually before migration 000029.",
-    "github.com is unreachable from this host (connection reset / timeout) while api.github.com works, so the branch is published via the Git Data API rather than `git push`. The same limit means local `main` cannot be fetched or fast-forwarded; syncing local main is a maintainer action.",
+    "Transport, re-measured after the maintainer fixed the network on 2026-10-21: git ls-remote, git fetch origin --prune and git push --dry-run against github.com all succeed, so the Git Data API replay is no longer required for future work. It remains the honest record of how #396-#399 were published (the host could not reach github.com at the time). Local main was stale at ce82b94e (the squash-merged release cut); it was moved to origin/main 73d36ecc, and ce82b94e stays reachable from the two local acceptance branches, so nothing was discarded.",
     "Skip masking is an open methodology gap, not a closed one: pkg/testmysql.Open and pkg/testredis.Open both report 'ok' when their store is missing, so a local green suite proves nothing about Redis-backed paths until PANTHEON_TEST_REDIS_ADDR is set. R5 was discovered by CI, not by local verification; a checker that fails when a required store is absent has not been built.",
     "SonarCloud disposition for `gosecurity:S3649` on `Service.AddMember()` (:711 read, :726 update) is an open maintainer decision: main's branch-level new-code security rating is E, so `Release Gate` is red on c17ef999 and no `pantheon-base-v0.17.0` tag may be cut. Two semantics-preserving restructurings landed (#397 map conditions, #398 primary-key typed update) and cut 3 blockers to 2; the rule's taint model still treats any GORM builder call fed from the request as a sink. No `NOSONAR`, no rule exclusion, no `solo-override` was added, and no further code reshuffle is proposed without that disposition.",
     "Corrected: the release content is on main and every functional gate on main is green. PR #395 merged release/v0.17.0 into main as 762d94a5 (tree f7135e30); #397 turned the four R5 test gates green; #398 (main tip c17ef999) is green on CI, Full Smoke Suite, Core Smoke Tests, Security Gates, CodeQL and Lint Workflows. The only red is Release Gate, caused by the Sonar branch-analysis S3649 residue recorded in the gap above, so no v0.17.0 tag may be cut from main yet.",

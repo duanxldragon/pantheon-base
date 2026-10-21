@@ -33,9 +33,11 @@ updated_at: 2026-10-21
 
 ## 1. 审查对象与方法
 
-- 仓库 `github.com/duanxldragon/pantheon-base`；审查起点为 `origin/main = ffb22988`。收口时点 main 已推进到 `c17ef999`：
-  #396/#397 进入 `release/v0.17.0`，#395 将该分支 squash 合入 main（`762d94a5`，tree `f7135e30`，分支随后删除），#398 携带 S3649 二次处置与文档收口（tree `90b4beeb`）。
-  推送通道限制记录在案：本机 `github.com` 不可达而 `api.github.com` 可达，故分支通过 Git Data API 重放（blob→tree→commit→ref），每次均以本地/远端 tip tree 相等收口。
+- 仓库 `github.com/duanxldragon/pantheon-base`；审查起点为 `origin/main = ffb22988`。收口时点 main 已推进到 `73d36ecc`（内容 tree `ed274ae5`）：
+  #396/#397 进入 `release/v0.17.0`，#395 将该分支 squash 合入 main（`762d94a5`，tree `f7135e30`，分支随后删除），#398 携带 S3649 二次处置与文档收口（`c17ef999`，tree `90b4beeb`），#399 收正门禁口径。
+  推送通道限制记录在案：整改窗口内本机 `github.com` 不可达而 `api.github.com` 可达，故 #396–#399 的分支通过 Git Data API 重放（blob→tree→commit→ref），每次均以本地/远端 tip tree 相等收口。
+  维护者 2026-10-21 修复网络后复测：`git ls-remote`、`git fetch origin --prune`、`git push --dry-run` 对 `github.com` 均成功，本地 `main` 已同步到 `origin/main = 73d36ecc`
+  （原 `ce82b94e` 仍可从两个本地 acceptance 分支到达，未丢弃提交）⇒ 后续工作可走常规 git 通道。
 - 方法：六个并行维度审查（单租户闭环 / 多租户与隔离 / 架构与数据库 / 安全 / 前端 / 测试与治理）→ 主代理对全部 P0/P1 亲自复核证据 → 分级整改 → 真实 MySQL 回归。全程以代码与测试为据，README/接口名/按钮不作为完成证据。
 - 架构事实（经代码还原）：共享库+共享 schema+行级 `tenant_id`；Casbin domain subject `role:<key>@tenant:<id>`，全局 subject 优先；部署级 `platform.tenant_mode`（compat/multi，TTL 缓存），compat ⇒ TenantID 钉 0；opaque token 存 Redis + HttpOnly cookie；迁移为 golang-migrate 编号链（000001–000029）。
 
