@@ -65,7 +65,9 @@ func (s *DictService) WithTenantContext(ctx *tenant.Context) *DictService {
 }
 
 // tenantScope applies the tenant read filter (contract §3.3): multi mode
-// restricts to the request tenant; compat/global behavior is unchanged.
+// restricts to the request tenant; compat restricts to the global tenant_id=0
+// population (pinning, not unfiltering, keeps multi-era rows invisible after
+// a downgrade).
 func (s *DictService) tenantScope() func(db *gorm.DB) *gorm.DB {
 	return tenant.WithTenantScope(s.tenantCtx)
 }

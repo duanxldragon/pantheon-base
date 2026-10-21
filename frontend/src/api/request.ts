@@ -96,6 +96,14 @@ const clearClientSession = () => {
   // logout, otherwise a freshly logged-in non-platform subject could carry
   // a header the backend refuses with 403 and the shell a stale banner.
   clearTenantViewpoint();
+  // The secondary-verification token is bound to the *session* it was issued
+  // for (the backend compares its session claim against the current cookie),
+  // so sessionStorage must not outlive that session either: otherwise the new
+  // session's first sensitive request goes out with the previous subject's
+  // token and is refused with verification_mismatch. /auth/logout itself is
+  // not a secure-action route, so dropping the token before that POST is sent
+  // cannot trip the verification retry.
+  clearOperationToken();
   clearShellSessionState();
   clearPantheonThemePreference();
   const nextLanguage = clearExplicitLanguagePreference();
@@ -288,7 +296,7 @@ const readStoredOperationToken = (): StoredOperationToken | null => {
 };
 
 const readOperationToken = () => readStoredOperationToken()?.token ?? null;
-const clearOperationToken = () => sessionStorage.removeItem(OPERATION_TOKEN_KEY);
+export const clearOperationToken = () => sessionStorage.removeItem(OPERATION_TOKEN_KEY);
 
 const decodeJwtPayload = (token: string): Record<string, unknown> | null => {
   const segments = token.split('.');

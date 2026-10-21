@@ -72,8 +72,9 @@ func (s *Service) WithTenantContext(ctx *tenant.Context) *Service {
 	return &clone
 }
 
-// scoped restricts tenant-bound session rows. Compat mode (and a nil context)
-// stays unfiltered; multi mode reads only the active tenant's rows.
+// scoped restricts tenant-bound session rows. A nil context (maintenance /
+// platform-internal paths) stays unfiltered; a request-bound scope pins
+// tenant_id — compat resolves to 0, multi to the active tenant.
 func (s *Service) scoped(db *gorm.DB) *gorm.DB {
 	return db.Scopes(tenant.WithTenantScope(s.tenantCtx))
 }
@@ -461,8 +462,9 @@ func (s *Service) ListAllSessions(query *AdminSessionQuery) (*AdminSessionPageRe
 	base := func() *gorm.DB {
 		db := s.db.Table("system_user_session").
 			Joins("LEFT JOIN system_user ON system_user.id = system_user_session.user_id")
-		// F03: tenant-scoped managers only see their tenant's sessions;
-		// compat/platform context keeps the unfiltered view.
+		// F03 + FIX-2: every request-bound context pins tenant_id — compat to
+		// 0, multi to the active tenant; only the nil-context internal
+		// maintenance paths keep the unfiltered view.
 		db = s.scoped(db)
 		return applyAdminSessionFilters(db, query, now, policy)
 	}

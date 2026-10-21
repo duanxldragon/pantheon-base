@@ -186,11 +186,18 @@ func initIAMModules(deps *systemModuleDependencies) []contracts.BackendModule {
 			SeedMenusFunc: seedMenuModuleMenus,
 			Register: func(r *gin.RouterGroup) {
 				systemProtected := r.Group(routeGroupSystem).Use(middleware.TokenAuthMiddleware(database.RDB)).Use(middleware.PlatformScopeTenantContextMiddleware(deps.tenantModeLoader, deps.db)).Use(middleware.CasbinMiddleware()).Use(RefreshSyncMiddleware(deps.refreshSyncSvc))
+				// Menu writes mutate the platform-global `system_menu` table.
+				// A tenant administrator's `/api/v1/*` tenant-domain Casbin
+				// grant satisfies the route check above, so authoring the
+				// shared menu tree must additionally require a platform
+				// capability (same contract §3.3 gate as the tenant console
+				// below). The tree read stays tenant-accessible: tenants need
+				// their own navigation.
 				{
 					systemProtected.GET("/menu/tree", deps.menuHandler.GetMenuTree)
-					systemProtected.POST("/menu", deps.menuHandler.CreateMenu)
-					systemProtected.PUT("/menu/:id", deps.menuHandler.UpdateMenu)
-					systemProtected.DELETE("/menu/:id", middleware.SecureActionMiddleware(), deps.menuHandler.DeleteMenu)
+					systemProtected.POST("/menu", middleware.PlatformCapabilityMiddleware(), deps.menuHandler.CreateMenu)
+					systemProtected.PUT("/menu/:id", middleware.PlatformCapabilityMiddleware(), deps.menuHandler.UpdateMenu)
+					systemProtected.DELETE("/menu/:id", middleware.PlatformCapabilityMiddleware(), middleware.SecureActionMiddleware(), deps.menuHandler.DeleteMenu)
 				}
 			},
 		},
@@ -443,7 +450,14 @@ func initI18nModules(deps *systemModuleDependencies) []contracts.BackendModule {
 					sysPublic.GET("/i18n/pack", deps.i18nHandler.GetLangPack)
 				}
 
-				sysProtected := r.Group(routeGroupSystem).Use(middleware.TokenAuthMiddleware(database.RDB)).Use(middleware.PlatformScopeTenantContextMiddleware(deps.tenantModeLoader, deps.db)).Use(middleware.CasbinMiddleware())
+				// The i18n console writes the platform-global `sys_i18n`
+				// catalogue; a tenant administrator's blanket `/api/v1/*`
+				// tenant-domain Casbin grant would otherwise let it rewrite
+				// shared language packs, so the whole management group is a
+				// platform capability (contract §3.3, same gate as the tenant
+				// console). The public `/i18n/pack` read stays open — every
+				// tenant's UI loads its language pack from it.
+				sysProtected := r.Group(routeGroupSystem).Use(middleware.TokenAuthMiddleware(database.RDB)).Use(middleware.PlatformScopeTenantContextMiddleware(deps.tenantModeLoader, deps.db)).Use(middleware.CasbinMiddleware()).Use(middleware.PlatformCapabilityMiddleware())
 				{
 					sysProtected.GET("/i18n/overview", deps.i18nHandler.GetOverview)
 					sysProtected.GET("/i18n/audit", deps.i18nHandler.GetAudit)
