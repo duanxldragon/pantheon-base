@@ -67,38 +67,41 @@ R1-R4 全部记录而非隐藏：其中三条只有在套件真的跑在 MySQL �
 | #397 | 修 R5 掩盖的会话断言 + map 条件清异味 → `release/v0.17.0`（`21de18ee`） | 已合并；四项红灯实测转绿，仅 `SonarCloud Code Analysis` 仍红（`gosecurity:S3649`×3） |
 | #395 | `release/v0.17.0` → `main`（merge `762d94a5`，tree `f7135e30`） | 已合并；rollup 除 Sonar FAILURE 外全绿（Draft PR Handler / PR Smoke Core Optional 为 SKIPPED），分支随后删除 |
 | #398 | 写路径按主键更新（S3649 二次处置）+ evidence/文档收口 → `main`（head `2d035ef1`） | 已合并（merge `c17ef999`，tree `90b4beeb`）：全部 GitHub 门禁 pass，PR 级 Sonar 门禁 OK、新代码问题 0 |
+| #402 | 代码层抑制 S3649（`// NOSONAR`）+ 文档 → `main`（远端 `8dd7c960`，tree `b237fc35`） | 已合并（merge `8c12d4cb`）：34 项检查 pass、2 项按设计 skip；PR 级 Sonar 新代码问题 0、门禁 OK、`new_security_rating` = A |
+| #400 | Dependabot：`klauspost/compress` 1.18.6 → 1.18.7（alert #44，high） | 已合并（`1783543d`）；alert #44 于 10:10:12Z 标记 fixed |
+| #403 | Dependabot：frontend `follow-redirects` 1.16.0 → 1.16.1（alerts #45/#46，high） | 已合并（`17af0d85`）；合并后 open Dependabot alerts = 0 |
 
-- 合并后 main（`c17ef999`）实测：`CI` / `Full Smoke Suite` / `Core Smoke Tests` / `Security Gates` / `CodeQL` / `Lint Workflows` 全 success，唯一红的是 `Release Gate`，
+- **最终 main（`17af0d85`）门禁全绿（实测）**：Sonar 分支分析 revision `17af0d85`，Quality Gate = OK（reliability 1、security 1、maintainability 1、duplication 2.1%、hotspots 100%），**open issues = 0**（此前 2 条 S3649 已关闭）；`Release Gate` = success。
+  `Release Gate` 第一次跑时 `Dependabot Alerts` job 在 #403 合并后、GitHub 处理告警前启动，仍看到 #45/#46 open 而失败；告警清零后 `gh run rerun --failed` 在同一 commit、同一规则下复跑，五个 job 与 Summary 全部 success。这是竞态 + 复跑，不是首次即绿，也不是绕过规则。
+- 合并后 main（`c17ef999`）曾经的状态：`CI` / `Full Smoke Suite` / `Core Smoke Tests` / `Security Gates` / `CodeQL` / `Lint Workflows` 全 success，唯一红的是 `Release Gate`，
   起因是分支级 Sonar 分析 `Security Rating on New Code` = E（条件 ≥ A）⇒ `Candidate Checks` 判 `A required check failed on c17ef999`。
 - PR 级「0 新代码问题」与分支级「E」不是同一口径：PR 泄漏期只算本次 diff，分支泄漏期覆盖落入 main 的全部新增行。
-  取证见 `commands.json` 的三条 hosted 记录；不得把前者当成安全门禁收口。
-- `gosecurity:S3649` 现状：`Service.AddMember()` 剩两条 OPEN（`:711` 读、`:726` 写），全仓 main 历史仅 4 条且全部在该函数（2 条随旧行关闭）⇒ 不是全仓污点模式，
+  取证见 `commands.json` 的 hosted 记录；#402 之后两者已同时为 0/A。
+- `gosecurity:S3649` 历史：`Service.AddMember()` 曾有两 OPEN（`:711` 读、`:726` 写），全仓 main 历史仅 4 条且全部在该函数（2 条随旧行关闭）⇒ 不是全仓污点模式，
   也不是 `pkg/tenant` 抽象能吸收的类别。两次保语义重构（map 条件、按主键 + `Select` 类型化更新）把 3 条压到 2 条，
-  但规则只看「请求值是否作为参数进入 GORM 构造调用」，与是否绑定占位符无关 ⇒ 剩余收口手段只有维护者在 Sonar 侧的误报/风险接受处置。
-- **处置定案（2026-10-21，维护者决定）**：「既然是误报，那应该可以处理，我希望在代码层面屏蔽，sonar 上的规则我不想动」⇒
+  但规则只看「请求值是否作为参数进入 GORM 构造调用」，与是否绑定占位符无关。
+- **处置定案与实测（2026-10-21，维护者决定）**：「既然是误报，那应该可以处理，我希望在代码层面屏蔽，sonar 上的规则我不想动」⇒
   在两条 sink 的行尾加 `// NOSONAR gosecurity:S3649`，不动 Sonar 规则配置、不动 Quality Gate 阈值、不贴 `solo-override`、不屏蔽失败测试。
   为容纳行尾注释，两处调用由链式换行改写为单语句，语义等价（条件、列名、错误路径逐一对应）。
-  本地已验：`gofmt -l` 干净、`go build ./...`、`go vet ./modules/system/iam/tenant/`、该包成员相关单测（真实 MySQL + Redis）全通过；
-  hosted 侧 `Release Gate` 是否转绿仍需下一次分支分析证明，本表在实测前不预先宣称。
+  本地验证：`gofmt -l` 干净、`go build ./...`、`go vet ./modules/system/iam/tenant/`、该包成员相关单测与全量套件（46 包，真实 MySQL + Redis）全通过。
+  Hosted 实测：#402 PR 级 0 新代码问题/门禁 OK；合并后 main 分支级 open issues = 0、门禁 OK、`Release Gate` success。
+- `pantheon-base-v0.17.0` tag 仍未创建：主因已不是门禁（已全绿），而是 tag/release 发布属维护者动作（F5）；远端 tags 最新仍为 `pantheon-base-v0.16.1` 序列。
 - base 改指 `main` 的原因：#395 合并后 `release/v0.17.0` 已不存在，`gh pr create --base release/v0.17.0` 报 `Base ref must be a branch`。
 - `main` 内容等价性已核对：`git/commits/762d94a5` 的 tree == 本地 `597548e4` 的 tree（`f7135e30`），且 `main` 上的 `tenant_service.go` 含 `membershipScope`、`session_tenant_scope_test.go` 含修正断言，
   证明 #396/#397 内容已进入 `main`；#395 为 squash 合并，故 `21de18ee` 不是 `main` 的祖先（object API 404 属预期）。
-- `pantheon-base-v0.17.0` tag 仍未创建：远端 tags 最新为 `v0.12.0`/`pantheon-base-v0.16.1` 序列，`main` 仍带 Sonar 红灯，处置权在维护者。
-
 ## 残余风险与未验证项
 
 - 本机无 C 工具链：`go test -race ./...` 无法执行，只有 CI 能复验（`quality.yml` / `ci.yml`）。
-- SonarCloud 红灯 `gosecurity:S3649`（`Service.AddMember()` 被判注入源，BLOCKER）：占位符其实已参数绑定，属污点跟踪模型的误报。
-  PR #397 实测：map 条件 + `assertScopedSQL` 清掉了 `go:S1192` / `go:S3776` 两条异味，但 `S3649` 依旧在该函数报三条 BLOCKER
-  （`:711` 读、`:722` 写两条）⇒ 规则不看绑定，只看请求值是否参与构造查询。PR #398 实测：写路径改为按主键 + `Select` 类型化更新后剩两条
-  （`:711`、`:726`），PR 级门禁 OK 但分支级 `new_security_rating` 仍为 E ⇒ `Release Gate` 红，tag 被挡。
-  读路径的污点边无法在不抑制的前提下消除，最终收口需要维护者在 Sonar 侧标记误报或让步；此前的 #396–#398 三包确实未加 `NOSONAR`、未排除规则，
-  而维护者 2026-10-21 选定的是第三条路径——代码层行内抑制，规则与门禁配置保持不动（见上一节）。
-- `github.com` 在本机不可达（`api.github.com` 可达）：#396–#399 的分支只能通过 Git Data API 重放；本地 `main` 也无法 fetch/ff。
-  **2026-10-21 维护者修好网络后复测**：`git ls-remote`、`git fetch origin --prune`、`git push --dry-run` 对 `github.com` 均成功，
-  本地 `main` 已推进到 `origin/main = 73d36ecc`（原 `ce82b94e` 仍可从两个本地 acceptance 分支到达，未丢弃任何提交）；后续提交可用常规 git 通道。
+- SonarCloud `gosecurity:S3649`（`Service.AddMember()` 被判注入源，BLOCKER）的完整轨迹：
+  PR #397 实测 map 条件 + `assertScopedSQL` 清掉 `go:S1192` / `go:S3776`，但 `S3649` 仍报三条；PR #398 实测写路径按主键 + `Select` 后剩两条
+  （`:711`、`:726`），PR 级门禁 OK 但分支级 `new_security_rating` = E。维护者 2026-10-21 选定代码层行内抑制；
+  PR #402 实测 PR 级 0 新代码问题、门禁 OK，合并后 main `8c12d4cb` 与 `17af0d85` 两次分支分析均 open issues = 0、门禁 OK、`Release Gate` success。
+  ⇒ 该风险项已按「误报 + 显式理由链」关闭；残余风险是未来同一 sink 若被改成真实拼接 SQL，红灯不会再来，审阅该函数时须优先核对。
+- `github.com` 在本机不可达（`api.github.com` 可达），且 2026-10-21 收口轮再次回归：`git push` 四次与 `git fetch` 均失败，`curl https://github.com` 超时。
+  #396–#403 与本次记录提交均通过 Git Data API 重放，且每次都断言本地 tree 与远端 parent tree 相等；本地 `main` 仍停在 `ec3a311d`，
+  收口提交以一个「与远端 `17af0d85` tree 相等」的本地同步提交为祖先，未丢失任何本地提交。此前「常规 git 通道可用」的结论修正为「间歇可用，必须逐次复测」。
 - 本机不能起浏览器：Playwright 层 Tenant Smoke 与视觉/交互验收未执行。
 - HTTP 层跨租户 curl 对抗矩阵、备份/恢复与升级演练未在本机执行。
 - ops 消费侧继承是独立变更；迁移 000029 需在部署前先跑。
 - 台账延期项（A4-A10、B7-B11、C3-C12、D3-D6、E3-E7、F10-F14）与需要维护者动作的项
-  （凭据轮换、分支保护、advisory→blocking、tag/release 发布）保持显式 open。
+  （凭据轮换 D2、分支保护 F2、advisory→blocking B10、tag/release 发布 F5）保持显式 open。
