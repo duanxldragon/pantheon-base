@@ -44,11 +44,20 @@ Pantheon Base 方法追踪记录。方法论本体位于 `pantheon-harness`。
 - `platform.tenant_mode` is seeded public and `Bootstrap` raises `is_public` on an existing row
   (never lowers it). Upgraded deployments now publish the flag, so the tenant picker, switcher and
   viewpoint switcher render again — one cause of the red `Tenant Smoke` job on every main commit.
-  The second, independent cause (server-side auto-join colliding with the console's re-add call,
-  `tenant.member_exists`) was closed by the idempotent membership write below.
+  A second, independent trigger (server-side auto-join colliding with the console's re-add call,
+  `tenant.member_exists`) was removed by the idempotent membership write below. The job is not
+  claimed fixed: the same commit both failed and passed it, so the remaining red is flakiness.
 - Tenant membership writes are idempotent: re-adding an existing member updates or reactivates the
   row instead of failing, and owner rows cannot be demoted through this path. This also removes the
   false "join failed" toast on every tenant-viewpoint user create.
+- `AddMember` / `RemoveMember` select the membership row through bound map conditions instead of a
+  raw `tenant_id = ? AND user_id = ?` fragment. Same placeholders and same semantics; it clears the
+  SonarCloud `gosecurity:S3649` blocker that held the Quality Gate's Security Rating on New Code
+  below A, along with the duplicated-literal and cognitive-complexity findings on the new code.
+- The compat admin session test asserted the maintenance inventory total as an active-session count,
+  so it failed against real Redis while silently skipping without it (`Total 3`, revoked rows
+  included). The assertion now pins `Total = 3` with `ActiveCount = 2` and requires all three
+  tenants' sessions to be present, which is the behaviour `applyAdminSessionFilters` documents.
 - CSV role import stamps the caller's tenant; it used to write `tenant_id = 0` (a platform role).
 - Import role-key validation and the bootstrap admin binding are scoped to the target namespace.
 

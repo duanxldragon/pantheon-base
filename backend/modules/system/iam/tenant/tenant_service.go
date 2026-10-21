@@ -682,6 +682,14 @@ func (s *Service) allocateDeletedTenantCode(tx *gorm.DB, tenantID uint64) (strin
 	return "", common.NewConflict("tenant.delete.error.archive_code_conflict")
 }
 
+// membershipScope returns GORM's bound-parameter condition for one
+// (tenant, user) membership row. Both keys are always supplied, so unlike a
+// struct condition it cannot silently drop a zero tenant id, and the generated
+// SQL keeps the same placeholders as the raw fragment it replaces.
+func membershipScope(tenantID, userID uint64) map[string]any {
+	return map[string]any{"tenant_id": tenantID, "user_id": userID}
+}
+
 // AddMember adds a user to a tenant with specified role.
 //
 // Re-adding is idempotent for non-owner rows: user create inside a tenant
@@ -701,7 +709,7 @@ func (s *Service) AddMember(tenantID, userID uint64, role string) error {
 
 	var existing Membership
 	err := s.db.Model(&Membership{}).
-		Where("tenant_id = ? AND user_id = ?", tenantID, userID).
+		Where(membershipScope(tenantID, userID)).
 		Limit(1).
 		First(&existing).Error
 	if err == nil {
@@ -712,7 +720,7 @@ func (s *Service) AddMember(tenantID, userID uint64, role string) error {
 			return ErrMembershipExists
 		}
 		if err := s.db.Model(&Membership{}).
-			Where("tenant_id = ? AND user_id = ?", tenantID, userID).
+			Where(membershipScope(tenantID, userID)).
 			Updates(map[string]any{"role": role, "status": "active"}).Error; err != nil {
 			return fmt.Errorf("update membership: %w", err)
 		}
@@ -738,7 +746,7 @@ func (s *Service) AddMember(tenantID, userID uint64, role string) error {
 
 // RemoveMember removes a user from a tenant
 func (s *Service) RemoveMember(tenantID, userID uint64) error {
-	result := s.db.Where("tenant_id = ? AND user_id = ?", tenantID, userID).
+	result := s.db.Where(membershipScope(tenantID, userID)).
 		Delete(&Membership{})
 
 	if result.Error != nil {

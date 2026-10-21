@@ -66,6 +66,28 @@ skip 面抽样（`go test ./modules/system/iam/tenant/... ./pkg/tenant/... ./pkg
 - `pkg/database` 迁移测试覆盖 `000029` up/down（FIX-8）。
 - `TestAddMember_Duplicate`（幂等更新角色并复活）、`TestAddMember_OwnerIsProtected`（owner 拒降级）（FIX-11）。
 
+### 2.3 MySQL + Redis 全量（修正 §2.2 的决定性主张）
+
+§2.2 把「真 MySQL 全量」当作决定性证据，这个定性过高：`pkg/testredis.Open` 在未配置 Redis 地址时同样静默 skip，
+所以 §2.2 的 46 包 ok 只覆盖 DB 维度，Redis 维度（会话撤销黑名单、token 失效）当时依然没跑。
+
+```
+$ PANTHEON_TEST_DSN=... PANTHEON_TEST_REDIS_ADDR=127.0.0.1:6379 PANTHEON_TEST_REDIS_PASSWORD=*** \
+  go test -count=1 ./...          # exit 0；46 包 ok，0 FAIL，日志内 0 次 "redis addr is not configured"
+```
+
+同一轮配置下先暴露出 R5：`TestSessionAdminOps_CompatPinsToPlatformTenant` 在本地由绿转红，报错与 CI 完全一致
+（`session_tenant_scope_test.go:225: nil-context view must still span tenants, got total=3`）。定位结论：
+
+- **产品代码无错**。`applyAdminSessionFilters`（`backend/modules/auth/session/session_helpers.go:124`）在 `query == nil` 时原样返回 db，
+  即内部维护视图按设计不加任何过滤，`Total` 天然含 revoked 行；`ListAllSessions` 另外用 `SUM(CASE …)` 分别给出 `ActiveCount` / `RevokedCount`。
+- **测试期望写错**：把 `Total` 当成活跃会话数断言。已改为 `Total = 3 && ActiveCount = 2`，并要求 `platform-compat` /
+  `tenant-a-compat` / `tenant-b-compat` 三个会话 ID 全部在场，跨租户覆盖强度不降反升。
+
+方法论记录（比这条用例本身更重要）：本仓库的 skip 与 pass 在 CI 输出里长得一样，
+「本地全绿」在未核对 skip 日志前不构成证据。CI 侧实况见 §5。
+
+
 ## 3. 前端门禁（全部真实执行）
 
 ```
@@ -92,10 +114,31 @@ $ node ./node_modules/vite/bin/vite.js build                   # ✓ built in 71
 ### 4.2 CI 证据（gh 实测，2026-10-21）
 
 - `smoke-tenant`（run 39533828246，advisory）红根因取证：trace network JSONL 显示 `POST /api/v1/system/user` 成功返回 id=5 后，`POST /api/v1/system/tenant/205/members {"user_id":5,"role":"member"}` 返回 `{"code":400,"message":"tenant.member_exists"}`；后端日志确认 `ensureTenantMembership` 已在建用户事务内插入 member 行。⇒ FIX-11。
-- SonarCloud：main 最新 analysis（revision ffb22988）Quality Gate **OK**、unresolved **0**（匿名 API 可达，已验证）。
+- **同一 commit 上 Tenant Smoke 既红又绿**（job 119005706470 FAIL / 119067519288 PASS，`10 passed`）⇒ 该作业 flaky，上面这条取证只关闭了其中一个真实触发条件，不能表述成「根因已关闭、将恢复绿色」。
+- SonarCloud：main 最新 analysis（revision ffb22988）Quality Gate **OK**、unresolved **0**（匿名 API 可达，已验证）。整改分支上则出现新问题，详见 §4.4。
 - PR #395（release/v0.17.0）：OPEN；Docs Governance 红于 PR-body 仪式字段（机械项），Enforce quality results 聚合其失败。本地整改就绪，尚未推送（推送/合并需维护者授权）。
 - main 分支保护：`gh api repos/…/branches/main/protection` → 404 `Branch not protected`（F2，维护者动作）。
 - tag `pantheon-base-v0.17.0`：本地与远端均不存在；GitHub Releases 最新 v0.16.1（F5）。
+
+### 4.4 PR #396 复核实况（2026-10-21，gh 实测）
+
+整改 PR #396（`acceptance/remediation-2026-10-21` → `release/v0.17.0`）已合并为 `462216ec`，但合并发生在四项红灯之下，
+且合并后 push 触发的 run 39553427164 / 39553427175 复现同样四项：
+
+| 门禁 | 结果 | 取证 |
+|---|---|---|
+| Backend Tests | 失败 | job 119067894874 唯一失败用例 `TestSessionAdminOps_CompatPinsToPlatformTenant`（§2.3 的 R5） |
+| Unit Tests | 失败 | job 119067544459 同一用例、同一断言行 |
+| CI Summary | 失败 | job 119069015404 关键项判据只读 `UNIT_TESTS` / `COVERAGE_GATE`；前者 failure、后者 skipped（Coverage Gate 本身未失败） |
+| Quality Gates | 失败 | job 119069653739 输入里仅 `Backend Tests: failure`，其余全绿 |
+| SonarCloud Code Analysis | 失败 | check-run 119067749735，`Quality Gate failed`：Security Rating on New Code 未达 A；新代码问题 `gosecurity:S3649`（BLOCKER，`tenant_service.go:714`）、`go:S1192`、`go:S3776` |
+| Core Smoke Tests / Security Gates / CodeQL / Go Lint / Secret Scan / Docs Governance / PR Governance Prereq / Frontend 全套 / Boundary / Duplication / Change Scope | 通过 | 同一 commit |
+
+⇒ 四条测试类红灯是**一个根因**（R5），跟进提交已修正测试期望；`gosecurity:S3649` 属污点跟踪误报（值只进入绑定的 `?` 占位符），
+但为让门禁可读，`AddMember` / `RemoveMember` 的原样 SQL 片段已改为 GORM map 条件（同一批占位符、零字符串拼接），
+顺带消掉 `go:S1192` 的字面量重复，并把表驱动断言拆成 `assertScopedSQL` 清掉 `go:S3776`。三者均不改运行语义，
+本地 `go build ./...` + MySQL/Redis 下 `pkg/tenant` `modules/system/iam/tenant` `modules/auth/session` 全 ok；
+门禁是否转绿只能在下一轮 hosted CI 证明。
 
 ### 4.3 未执行/无法执行（显式 gap，不得视为通过）
 

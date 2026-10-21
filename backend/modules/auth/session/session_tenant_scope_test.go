@@ -216,12 +216,24 @@ func TestSessionAdminOps_CompatPinsToPlatformTenant(t *testing.T) {
 	assertSessionFullyRevoked(t, svc, rdb, "platform-compat", 41)
 	assertSessionActive(t, svc, rdb, "tenant-a-compat")
 
-	// Nil context = internal maintenance view: still unfiltered by design.
+	// Nil context = internal maintenance view: still unfiltered by design. The
+	// inventory sweep deliberately counts every row of every tenant, revoked
+	// included (Total 3 = platform 0 + 101 + 202), while ActiveCount reports
+	// only the sessions that have not been revoked.
 	allPage, err := svc.ListAllSessions(&AdminSessionQuery{})
 	if err != nil {
 		t.Fatalf("nil-context maintenance list: %v", err)
 	}
-	if allPage.Total != 2 {
-		t.Fatalf("nil-context view must still span tenants, got total=%d", allPage.Total)
+	if allPage.Total != 3 || allPage.ActiveCount != 2 {
+		t.Fatalf("nil-context view must still span tenants, got total=%d active=%d", allPage.Total, allPage.ActiveCount)
+	}
+	seen := map[string]bool{}
+	for _, item := range allPage.Items {
+		seen[item.SessionID] = true
+	}
+	for _, sid := range []string{"platform-compat", "tenant-a-compat", "tenant-b-compat"} {
+		if !seen[sid] {
+			t.Fatalf("nil-context maintenance view must span tenants, missing %q", sid)
+		}
 	}
 }

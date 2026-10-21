@@ -226,7 +226,11 @@ platform
 - [x] 角色键命名空间双向互斥且重命名不自冲突
 - [x] OIDC schema 并入编号迁移链 000029，唯一键含租户
 - [x] 会话边界（预热缓存、operation token）随登出失效
-- [x] AddMember 幂等，Tenant Smoke 第二根因关闭
+- [x] AddMember 幂等，消除 Tenant Smoke 的一条真实触发条件（job 仍 flaky，见下）
 - [x] 生产构建强制 Gin release mode
 - [x] 后端测试、前端 tsc/vitest/eslint/build、文档门禁本地全绿
 - [ ] CI 实跑确认 `-race` 全量与 `Tenant Smoke` 转绿
+- [ ] 修正被 Redis-skip 掩盖的会话用例断言（R5），并在配好 MySQL+Redis 的环境复跑
+- [ ] 清掉 SonarCloud 新代码三项（`gosecurity:S3649` BLOCKER、`go:S1192`、`go:S3776`）并使 Security Rating on New Code 达 A
+- [ ] `release/v0.17.0` 门禁复绿后才允许打 `pantheon-base-v0.17.0` tag
+- [ ] 补一条 checker：runtime-sensitive 套件在缺 `PANTHEON_TEST_REDIS_ADDR` 时应失败而非 skip（与 B10 同族，显式延期）

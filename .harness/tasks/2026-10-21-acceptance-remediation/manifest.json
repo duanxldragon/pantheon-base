@@ -4,7 +4,7 @@
   "title": "Close the tenant-isolation P0/P1 defects found by the 2026-10-21 full acceptance review",
   "goal": "A full-repo enterprise acceptance review (single-tenant capability, multi-tenant lifecycle/IAM/data-permission/platform management, compat\u21c4multi switching, plus code, architecture, security, performance, frontend, tests, CI and docs) found one tenant-isolation P0 and a set of P1/P1-latent defects, a permanently red Tenant Smoke job and a batch of engineering and governance gaps. This packet closes every defect that blocks staged acceptance, lands the regression tests that keep them closed, and records the four review deliverables with their evidence, gaps and environment limits.",
   "primaryLayer": "platform",
-  "status": "completed",
+  "status": "in-progress",
   "priority": "P0",
   "type": "acceptance-remediation",
   "estimatedComplexity": "high",
@@ -18,9 +18,13 @@
     "C1/C4 (P1/P2): the OIDC schema lived in a free-standing add_oidc_fields.sql outside the numbered migration chain and its unique key had no tenant dimension. Both folded into guarded migration 000029.",
     "C2 (P1): tenant_handler still returned the legacy error body and, on some paths, the raw internal error string.",
     "E1/E2 (P1): route warm data survived an account switch and logout did not clear the second-factor operation token, so both leaked across a session boundary.",
-    "F1 (P1): Tenant Smoke had a second, independent root cause: AddMember returned 400 tenant.member_exists for a member the smoke setup had already created, so the job could not go green from the #393 seed fix alone.",
+    "F1 (P1): AddMember returned 400 tenant.member_exists for a member the smoke setup had already created, so the #393 seed fix alone could not turn Tenant Smoke green. This is one real trigger, not the whole story: the same commit both failed and passed the job, so Tenant Smoke is flaky and its remaining causes are open.",
     "D1 (P2): production builds did not force Gin release mode, so debug-mode behaviour shipped in the image.",
-    "Four regressions were introduced and fixed by this packet itself (R1 SQL placeholder, R2 rename self-collision, R3 a test missing .Error so it was vacuous, R4 tenant fixtures missing the dictionary tables). They are recorded rather than hidden, because three of them were only visible once the suite ran against real MySQL instead of skipping on a missing DSN."
+    "Four regressions were introduced and fixed by this packet itself (R1 SQL placeholder, R2 rename self-collision, R3 a test missing .Error so it was vacuous, R4 tenant fixtures missing the dictionary tables). They are recorded rather than hidden, because three of them were only visible once the suite ran against real MySQL instead of skipping on a missing DSN.",
+    "R5 (P2, follow-up): the same skip-masking class recurred on the Redis axis. pkg/testredis.Open skips when no address is configured, so TestSessionAdminOps_CompatPinsToPlatformTenant was locally green while never running, and red in CI with got total=3. The product code is correct (applyAdminSessionFilters applies no filter for a nil query, so the maintenance total includes revoked rows); the assertion was wrong and now pins Total=3 / ActiveCount=2 plus the presence of all three tenants' sessions. This also withdraws the claim that a MySQL-only full run was decisive evidence.",
+    "R6 (P2, environment): modules/lowcode/dynamicmodule fails with module.generate.server_export_failed when PANTHEON_NODE_BIN / PANTHEON_WORKSPACE_ROOT are unset (internal/scaffold/workspace.go shells out to the frontend exporter). Documented so a locally red generator suite is not mistaken for a product regression.",
+    "G1 (P1, gate): SonarCloud Quality Gate failed on Security Rating on New Code for the merged remediation (gosecurity:S3649 blocker on the raw tenant_id = ? AND user_id = ? fragment in Service.AddMember, plus go:S1192 and go:S3776). The S3649 finding is taint-tracking noise since the values only reach bound placeholders, but the gate block is real, so the call sites now use GORM map conditions and the table-test body was extracted; semantics unchanged, gate outcome pending the next hosted run.",
+    "G2 (P1, methodology): release/v0.17.0 currently carries a red test gate because #396 merged under Backend Tests / Unit Tests / CI Summary / Quality Gates failures, all traceable to R5. Until the follow-up commit turns those green on CI the branch is not tag-eligible, and a checker that fails (rather than skips) when a runtime-sensitive suite is missing its store is recorded as an explicit deferred item."
   ],
   "scope": {
     "in": [
@@ -32,8 +36,10 @@
       "OIDC schema folded into numbered guarded migration 000029 with a tenant-scoped unique key (C1/C4)",
       "Unified tenant handler error envelope without internal error leakage (C2)",
       "Route warm-data invalidation and operation-token clearing at session boundaries (E1/E2)",
-      "Idempotent AddMember, the second Tenant Smoke root cause (F1)",
+      "Idempotent AddMember, one real trigger of the flaky Tenant Smoke job (F1)",
       "Forced Gin release mode in production builds (D1)",
+      "Follow-up: corrected Redis-backed session assertion exposed by CI (R5)",
+      "Follow-up: membership row lookups through bound map conditions and the extracted table-test assertion to clear the SonarCloud new-code findings (G1)",
       "docs/reviews/PANTHEON_BASE_*_2026-10-21.md deliverables plus CHANGELOG, RELEASE_NOTES, scope matrix and freeze decision sync",
       ".harness/tasks/2026-10-21-acceptance-remediation/ and .harness/evidence/2026-10-21-acceptance-remediation/"
     ],
@@ -48,10 +54,11 @@
   "acceptanceCriteria": [
     "Every P0 and P1 raised by the review is either fixed with a regression test or explicitly deferred with a recorded reason in docs/reviews/PANTHEON_BASE_ISSUES_AND_REMEDIATION_2026-10-21.md.",
     "No cross-tenant write or privilege-escape path remains reachable from a tenant-scoped token on the reviewed surfaces.",
-    "The backend suite passes against real MySQL locally (not by skipping on a missing DSN) and the frontend typecheck, unit tests, lint and build pass.",
+    "The backend suite passes against real MySQL and real Redis locally (neither store may be silently skipped) and the frontend typecheck, unit tests, lint and build pass.",
     "node scripts/harness/check-task-packet.mjs and node scripts/frontmatter-check.mjs pass.",
     "The four review deliverables exist, are linked from docs/README.md, and state the unverified items and environment limits instead of claiming full coverage.",
-    "Tenant Smoke's second root cause is closed in code; the browser-level confirmation is recorded as a CI obligation, not asserted locally."
+    "Tenant Smoke's membership trigger is closed in code and the job's flakiness is stated as such; the browser-level confirmation is recorded as a CI obligation, not asserted locally.",
+    "Backend Tests, Unit Tests, CI Summary, Quality Gates and SonarCloud Code Analysis are green on release/v0.17.0 before any v0.17.0 tag is cut; until then the branch's test status is recorded as unproven."
   ],
   "harnessProfile": {
     "template": "admin-platform",
@@ -62,7 +69,7 @@
   "verificationPlan": {
     "commands": [
       "cd backend && go build ./... && go vet ./modules/... ./pkg/...",
-      "cd backend && PANTHEON_TEST_DSN=<.env.test DSN> go test -count=1 ./pkg/tenant/... ./internal/... ./modules/system/... ./modules/auth/... ./pkg/database/... ./cmd/...",
+      "cd backend && PANTHEON_TEST_DSN=<.env.test DSN> PANTHEON_TEST_REDIS_ADDR=127.0.0.1:6379 PANTHEON_TEST_REDIS_PASSWORD=<.env.test password> PANTHEON_NODE_BIN=<node> PANTHEON_WORKSPACE_ROOT=<repo root> go test -count=1 ./...",
       "cd backend && go test -count=1 ./modules/system/iam/tenant/ -run 'TestProvision|TestRevoke|TestCopyPlatformDicts' -v",
       "cd backend && go test -count=1 ./modules/system/iam/role/ -run 'TestPlatformEditOfTenantRole|TestRoleKeyNamespace' -v",
       "cd frontend && node ./node_modules/typescript/bin/tsc -b",

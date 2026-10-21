@@ -54,10 +54,12 @@ history is no longer shared between tenants that own the same role key.
 
 The seed marks it public and `Bootstrap` raises `is_public` on an existing row, never lowers it.
 Upgraded deployments now render the tenant picker, switcher and viewpoint switcher again — this was
-one cause of the red `Tenant Smoke` job on every `main` commit. A second, independent cause (the
+one cause of the red `Tenant Smoke` job on every `main` commit. A second, independent trigger (the
 server-side auto-join colliding with the console's re-add call, returning `tenant.member_exists`)
-was root-caused from the CI trace artifacts and closed by the idempotent membership write described
-below.
+was root-caused from the CI trace artifacts and removed by the idempotent membership write described
+below. The job is not claimed fixed: the same commit both failed (`119005706470`, the membership
+assertion in `tenant-viewpoint-switcher.spec.ts`) and passed (`119067519288`, 10 passed), so the
+remaining red is flakiness whose full cause set is still open.
 
 ### The auth module seeds its own permission keys (#392)
 
@@ -146,3 +148,12 @@ evidence directory.
 - The 2026-10-21 acceptance remediation (FIX-1…FIX-11) is verified by local unit tests and the full
   local gate; its browser-level confirmation lands only when the remediation reaches CI, and the
   `smoke-tenant` job remains advisory (`continue-on-error: true`).
+- "Full local gate" needed a qualifier: `pkg/testmysql.Open` and `pkg/testredis.Open` both report a
+  pass-shaped result when their store is missing, so a MySQL-only run silently skipped every
+  Redis-backed test. One such test (`TestSessionAdminOps_CompatPinsToPlatformTenant`) was therefore
+  locally green and red in CI; the assertion itself was wrong and is corrected in the follow-up
+  commit. With both stores configured the backend suite is 46 packages ok, exit 0.
+- `release/v0.17.0` is **not** release-ready yet: #396 merged while `Backend Tests`, `Unit Tests`,
+  `CI Summary`, `Quality Gates` and `SonarCloud Code Analysis` were red (single test root cause plus
+  three new-code Sonar findings). Cut the `pantheon-base-v0.17.0` tag only after the follow-up
+  commit turns those gates green on the branch.
