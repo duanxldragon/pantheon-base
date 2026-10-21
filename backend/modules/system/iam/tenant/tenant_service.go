@@ -708,10 +708,14 @@ func (s *Service) AddMember(tenantID, userID uint64, role string) error {
 	}
 
 	var existing Membership
-	err := s.db.Model(&Membership{}).
-		Where(membershipScope(tenantID, userID)).
-		Limit(1).
-		First(&existing).Error
+	// The two NOSONAR marks below suppress gosecurity:S3649 only. tenantID and userID arrive as
+	// parsed uint64 (path id via strconv.ParseUint, body via the DTO's required binding) and reach
+	// GORM exclusively as bound `?` arguments from membershipScope; nothing is concatenated into SQL
+	// text. The analyzer flags any builder call fed from the request regardless of binding, so the
+	// rule cannot be satisfied from this code path - suppression is done here on the maintainer's
+	// instruction instead of changing the Sonar rule configuration or the Quality Gate.
+	memberRow := s.db.Model(&Membership{}).Where(membershipScope(tenantID, userID)) // NOSONAR gosecurity:S3649 - bound placeholders only, no dynamic SQL text
+	err := memberRow.Limit(1).First(&existing).Error
 	if err == nil {
 		if existing.Role == "owner" {
 			if role == "owner" {
@@ -722,10 +726,11 @@ func (s *Service) AddMember(tenantID, userID uint64, role string) error {
 		// Update the row that was just loaded, by its primary key, and name the
 		// columns explicitly: nothing request-supplied reaches a column or
 		// condition position, and the target row is the one whose role was
-		// already checked above.
-		if err := s.db.Model(&existing).
-			Select("role", "status").
-			Updates(Membership{Role: role, Status: "active"}).Error; err != nil {
+		// already checked above. The NOSONAR mark suppresses the same
+		// gosecurity:S3649 false positive described above - `role` is a validated
+		// enum value bound as a parameter, never SQL text.
+		membershipUpdate := s.db.Model(&existing).Select("role", "status").Updates(Membership{Role: role, Status: "active"}) // NOSONAR gosecurity:S3649 - bound parameters only, see the note above
+		if err := membershipUpdate.Error; err != nil {
 			return fmt.Errorf("update membership: %w", err)
 		}
 		return nil

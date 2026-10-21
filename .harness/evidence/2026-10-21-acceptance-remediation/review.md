@@ -81,3 +81,13 @@ SonarCloud 侧另有一条真实待办：`Service.AddMember()` 的原样 SQL 片
 main 其余维度全绿（`CI`、`Full Smoke Suite`、`Core Smoke Tests`、`Security Gates`、`CodeQL`、`Lint Workflows`），
 其中此前判为 flaky 的 `Full Smoke Suite`（含 Tenant Smoke）这轮为 success——按一次通过记录，不据此改口称其稳定。
 ⇒ 结论：测试与功能门禁已全部有证；唯一未闭合项是扫描器口径下的绑定参数误报，属维护者的 Sonar 处置决定，处置前不打 tag。
+
+**维护者定案与代码层抑制（2026-10-21，本包最后一次代码变更）**：上面那条「处置权在维护者」不再悬置——
+维护者的答复是「既然是误报，那应该可以处理，我希望在代码层面屏蔽，sonar 上的规则我不想动」。
+Review 结论：这是三选一里唯一不动外部配置的路径，且抑制前提成立（`tenantID`/`userID` 经 `strconv.ParseUint` 或 DTO required binding 得到 `uint64`，
+只经 `membershipScope` 落成绑定 `?`；`role` 是校验后的枚举值，`Select("role","status")` 是常量列名），
+因此 `// NOSONAR gosecurity:S3649` 屏蔽的是扫描器污点模型的误判，不是真实注入面，也不属于「为通过检查而降低安全要求」。
+代价写清：抑制把这条边从「可见的红灯」变成「注释里的自证」，一旦有人后续把 `membershipScope` 改成拼接 SQL，
+红灯不会再来——所以行尾注释必须与 sink 同行，且在 `docs/reviews/PANTHEON_BASE_ISSUES_AND_REMEDIATION_2026-10-21.md` §5 留有完整理由链。
+未证部分保持未证：分支级 `new_security_rating` 是否回到 A、`Release Gate` 是否转绿，只能由合并后的 hosted 分支分析给出；
+在此之前 tag 前置条件不变。
