@@ -719,9 +719,13 @@ func (s *Service) AddMember(tenantID, userID uint64, role string) error {
 			}
 			return ErrMembershipExists
 		}
-		if err := s.db.Model(&Membership{}).
-			Where(membershipScope(tenantID, userID)).
-			Updates(map[string]any{"role": role, "status": "active"}).Error; err != nil {
+		// Update the row that was just loaded, by its primary key, and name the
+		// columns explicitly: nothing request-supplied reaches a column or
+		// condition position, and the target row is the one whose role was
+		// already checked above.
+		if err := s.db.Model(&existing).
+			Select("role", "status").
+			Updates(Membership{Role: role, Status: "active"}).Error; err != nil {
 			return fmt.Errorf("update membership: %w", err)
 		}
 		return nil

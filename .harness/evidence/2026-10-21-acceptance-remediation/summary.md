@@ -59,12 +59,27 @@ R1-R4 全部记录而非隐藏：其中三条只有在套件真的跑在 MySQL �
 - 数据库：新增迁移 000029（守卫式、幂等、带 down）；无破坏性变更。
 - 未删除任何 API 路由、权限码、菜单键或 i18n key。
 
+## PR 链路与门禁实况（2026-10-21 收口）
+
+| PR | 范围 | 结果 |
+|----|------|------|
+| #396 | 整改主体 → `release/v0.17.0`（`462216ec`） | 已合并，但合并时 `Backend Tests` / `Unit Tests` / `CI Summary` / `Quality Gates` 四项红于 R5 |
+| #397 | 修 R5 掩盖的会话断言 + map 条件清异味 → `release/v0.17.0`（`21de18ee`） | 已合并；四项红灯实测转绿，仅 `SonarCloud Code Analysis` 仍红（`gosecurity:S3649`×3） |
+| #395 | `release/v0.17.0` → `main`（merge `762d94a5`，tree `f7135e30`） | 已合并；rollup 除 Sonar FAILURE 外全绿（Draft PR Handler / PR Smoke Core Optional 为 SKIPPED），分支随后删除 |
+| #398 | 写路径按主键更新（S3649 二次处置）+ evidence/文档收口 → `main`（head `3bb7f3d8`） | 本 PR；CI 与 Sonar 结论以本轮 hosted run 为准 |
+
+- base 改指 `main` 的原因：#395 合并后 `release/v0.17.0` 已不存在，`gh pr create --base release/v0.17.0` 报 `Base ref must be a branch`。
+- `main` 内容等价性已核对：`git/commits/762d94a5` 的 tree == 本地 `597548e4` 的 tree（`f7135e30`），且 `main` 上的 `tenant_service.go` 含 `membershipScope`、`session_tenant_scope_test.go` 含修正断言，
+  证明 #396/#397 内容已进入 `main`；#395 为 squash 合并，故 `21de18ee` 不是 `main` 的祖先（object API 404 属预期）。
+- `pantheon-base-v0.17.0` tag 仍未创建：远端 tags 最新为 `v0.12.0`/`pantheon-base-v0.16.1` 序列，`main` 仍带 Sonar 红灯，处置权在维护者。
+
 ## 残余风险与未验证项
 
 - 本机无 C 工具链：`go test -race ./...` 无法执行，只有 CI 能复验（`quality.yml` / `ci.yml`）。
 - SonarCloud 红灯 `gosecurity:S3649`（`Service.AddMember()` 的 `tenant_id = ? AND user_id = ?` 原样 SQL 片段被判注入源，BLOCKER）：
-  占位符其实已参数绑定，属污点跟踪误报；本次仍改用 GORM map 条件（同一批占位符、零拼接）把误报连同 `go:S1192` 字面量重复一起消掉，
-  并拆出 `assertScopedSQL` 清掉新代码上的 `go:S3776`。门禁是否转绿只能在下一轮 CI 证明。
+  占位符其实已参数绑定，属污点跟踪误报。PR #397 实测：map 条件 + `assertScopedSQL` 清掉了 `go:S1192` / `go:S3776` 两条异味，
+  但 `S3649` 依旧在该函数报三条 BLOCKER ⇒ 规则不看绑定，只看请求值是否参与构造查询。写路径进一步改为按主键 + `Select` 类型化更新，
+  读路径的污点边无法在不抑制的前提下消除，最终收口需要维护者在 Sonar 侧标记误报；本包未加 `NOSONAR`、未排除规则。
 - `github.com` 在本机不可达（`api.github.com` 可达）：跟进提交只能通过 Git Data API 重放；本地 `main` 也无法 fetch/ff。
 - 本机不能起浏览器：Playwright 层 Tenant Smoke 与视觉/交互验收未执行。
 - HTTP 层跨租户 curl 对抗矩阵、备份/恢复与升级演练未在本机执行。

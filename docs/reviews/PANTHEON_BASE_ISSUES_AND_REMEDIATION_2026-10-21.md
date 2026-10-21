@@ -86,7 +86,7 @@ updated_at: 2026-10-21
 - **F2（高）** main 无分支保护（`gh api branches/main/protection` → 404），红门禁不阻合并 — 维护者 GitHub 设置动作，需授权。
 - **F3（中）** 12 个 workflow 无 sonar-scanner 步骤，分析外部触发；`release-gate.yml:174` 按 SHA 精确匹配可能误挡 — 维护者流程决策。
 - **F4（中）** `check-security-patterns.mjs` 无任何引用（死门禁，手动跑必红 295 errors，无 baseline）。记录为发现；不静默删除/屏蔽。
-- **F5（高）** 发布未闭环：v0.17.0 tag 不存在，PR #395 红（Docs Governance 的 PR-body 仪式字段 + 聚合）。整改已本地就绪，随 #395 收口。
+- **F5（高）** 发布未闭环：v0.17.0 tag 不存在；PR #395 已于 2026-10-21 合入 `main`（`762d94a5`，仅 Sonar 红，见 §5 追加记录），Docs Governance 的 PR-body 仪式字段与聚合红灯已随 #396/#397 收口。剩余缺口只在 tag/release 发布与 Sonar 处置。
 - **F6（低）** 陈旧分支残留（10 个本地/远端分支内容全部已 squash 并入 main，经 `git cherry` 交叉验证，无未交付修复）；**F7（低）** 历史中 node_modules blob 致仓库膨胀（真实凭证抽查 AKIA/ghp_/RSA 无命中，仅压缩 JS 误影）。
 - **F8（高）** RELEASE_NOTES/CHANGELOG 宣称"Tenant Smoke 红因已修复"— **失实**（当时 membership 触发条件未修）。**已修复（文档）**：两处加入 FIX-1…FIX-11 验收整改小节与验证边界声明；"两个独立根因均已关闭"的叙述同样证据不足（同 commit 上该 job 先红后绿，属 flaky），改为"两条真实触发条件，其中 membership 一条由 FIX-11 消除，job 稳定性与最终转绿仍需 CI 复验"。
 - **F9（中）** `TENANT_SCOPE_FREEZE_DECISION_2026-10-15` 头部"待批准"与文内 §6.1 维护者裁决矛盾 — **已修复（文档）**：状态改为已批准并指向本清单。
@@ -123,7 +123,23 @@ updated_at: 2026-10-21
   `gosecurity:S3649` BLOCKER @ `tenant_service.go:714`（`Service.AddMember()`，污点跟踪误报——值只进绑定 `?` 占位符）、
   `go:S1192` @ `:704`（字面量重复 3 次）、`go:S3776` @ `tenant_scope_sql_test.go:62`（认知复杂度 25）。
   处置（不改运行语义）：`AddMember`/`RemoveMember` 改 GORM map 条件 `membershipScope(tenantID, userID)`（两键恒在，不像 struct 条件会丢零值租户 ID），
-  表驱动断言拆出 `assertScopedSQL`。本地 `go build ./...` + 三包（`pkg/tenant`、`iam/tenant`、`auth/session`）真 MySQL+Redis 全 ok；**门禁转绿只能在下一轮 hosted CI 证明**。
+  表驱动断言拆出 `assertScopedSQL`。**PR #397 实测**：两条异味消失，`gosecurity:S3649` 仍在 `Service.AddMember` 报三条 BLOCKER
+  （`:711` 读、`:722` 写两条）⇒ 该规则把「用请求传入的值构造查询」一律视作 sink，与是否绑定占位符无关。
+  二次处置：写路径改为对上一步刚读到的行按主键更新（`Model(&existing)` + `Select("role","status")` + 类型化 struct），
+  请求值不再出现在列名或条件位置；读路径按 id 查行是业务本质，无法在不做抑制的前提下消除该污点边。
+  **因此 S3649 的最终处置是维护者在 Sonar 侧标记误报（或在门禁规则上让步），本轮不加 `NOSONAR`、不做规则排除、不贴 `solo-override`。**
+  其余三项红灯（Backend/Unit/Summary/Quality Gates）已在 #397 实测转绿。
 - **G2（P1，方法论）skip 掩盖是复发型缺陷**：本轮两次（R1-R4 缺 DSN、R5 缺 Redis 地址）都是 helper 静默 skip 把红变成绿。
   建议补一条 checker/CI 步骤：当 task packet 声明 runtime-sensitive 且涉及会话/撤销面时，未配置 `PANTHEON_TEST_REDIS_ADDR` 应视为失败而非 skip（属 B10 同族，未在本次实施，显式延期）。
-- **合并状态结论**：`release/v0.17.0` 的测试门禁目前是「未证明」，跟进提交转绿前不得从该分支打 `pantheon-base-v0.17.0` tag。
+- **合并状态结论**：#397 实测 `Backend Tests` / `Unit Tests` / `CI Summary` / `Coverage Gate` / `Quality Gates` 全绿（四项红灯的根因确认为 R5 一条），
+  唯 `SonarCloud Code Analysis` 仍因 `gosecurity:S3649` 误报为红（见 G1 二次处置）。在该项得到维护者处置前，
+  `release/v0.17.0` 的测试门禁可称「已证」，安全门禁仍「未证」，不得据此打 `pantheon-base-v0.17.0` tag。
+- **PR #395 合并实况（2026-10-21 追加，覆盖上文 F5 与旧状态）**：#395（`release/v0.17.0` → `main`）已被仓库自动化合并，
+  merge commit `762d94a545adb53dd606d8e093704ea8abfc02f4`，`statusCheckRollup` 中除 `SonarCloud Code Analysis` FAILURE 外全部为绿
+  （Draft PR Handler / PR Smoke Core Optional 为 SKIPPED，非可选门禁失败），且 `release/v0.17.0` 分支已随之删除。
+  核对方式：`git/commits/762d94a5` 的 tree 为 `f7135e3066b39ed95024d0df0864b60aa9842bd4`，与本地 release-cut 提交 `597548e4` 的 tree 完全一致；
+  `main` 上的 `tenant_service.go` 已含 `membershipScope`、`session_tenant_scope_test.go` 已含修正后的 `Total=3 / ActiveCount=2` 断言，
+  证明 #396/#397 的整改内容确实进入 `main`（#395 为 squash 合并，故 `21de18ee` 不是 `main` 的祖先，object API 返回 404 属预期）。
+  因此 S3649 二次处置提交（写路径按主键更新 + PR body）的 base 改为 `main`，分支以 Git Data API 重放为
+  `fix/tenant-membership-update-by-primary-key`（tip `b6507e0e`，remote tree `feb48c2f` == local tree `feb48c2f`）。
+  v0.17.0 的 tag/release 仍未发布——这不是遗漏：见 §4 残余风险 1 与 G1 的处置结论，需维护者先处置 Sonar。

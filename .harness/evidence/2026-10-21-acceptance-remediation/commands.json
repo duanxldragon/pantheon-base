@@ -41,6 +41,12 @@
       "details": "Exit 0. 23 packages ok, 0 FAIL, 3 [no test files]. Key timings against real MySQL: internal/middleware 10.685s, modules/system 10.259s, config/setting 16.134s, config/dict 9.631s, iam/menu 7.728s, iam/permission 33.334s, iam/role 45.619s, iam/tenant 78.227s, iam/user 62.097s, auth/session 8.764s, auth/login 138.555s, pkg/database 70.235s, pkg/tenant 0.289s."
     },
     {
+      "command": "curl -s https://sonarcloud.io/api/issues/search?componentKeys=duanxldragon_pantheon-base&pullRequest=397&sinceLeakPeriod=true",
+      "cwd": ".",
+      "status": "failed",
+      "details": "Second measurement, on the follow-up head f0f650a5 (map conditions already in place): the code smells cleared (go:S1192 and go:S3776 no longer reported), but gosecurity:S3649 persists with three BLOCKER findings inside Service.AddMember (tenant_service.go:711 read, :722 update twice). The rule therefore treats any query built from request-supplied values as a sink regardless of binding, so the map form alone does not satisfy it. Response: the update now targets the row that was just loaded, by its primary key, naming the columns through Select + a typed struct, so no request value reaches a column or condition position (verified by TestAddMember, TestAddMember_Duplicate, TestAddMember_OwnerIsProtected, TestRemoveMember against real MySQL). The remaining read-side sink is inherent to looking a row up by ids that came from the request and cannot be removed without either ignoring the input or marking the finding in Sonar; the latter is a maintainer disposition, not an agent action, and no suppression comment or rule exclusion was added."
+    },
+    {
       "command": "PANTHEON_TEST_DSN=<.env.test DSN> PANTHEON_TEST_REDIS_ADDR=127.0.0.1:6379 PANTHEON_TEST_REDIS_PASSWORD=<.env.test password> PANTHEON_NODE_BIN=D:\\nodejs\\node.exe PANTHEON_WORKSPACE_ROOT=<repo root> go test -count=1 ./...",
       "cwd": "backend",
       "status": "passed",
@@ -171,6 +177,30 @@
       "cwd": "backend",
       "status": "passed",
       "details": "Follow-up commit verification: build clean, gofmt clean on the touched packages, pkg/tenant 0.120s, modules/system/iam/tenant 44.602s, modules/auth/session 4.988s all ok after the corrected session assertion, the membershipScope map-condition conversion and the assertScopedSQL extraction."
+    },
+    {
+      "command": "gh pr view 395 --json state,mergedAt,mergeCommit,statusCheckRollup",
+      "cwd": ".",
+      "status": "passed",
+      "details": "PR #395 (release/v0.17.0 -> main) is MERGED at 2026-10-21T06:58:32Z as merge commit 762d94a545adb53dd606d8e093704ea8abfc02f4. Non-green rollup entries: SonarCloud Code Analysis = FAILURE, Draft PR Handler and PR Smoke Core (Optional) = SKIPPED. Every functional gate is green, so the only red carried into main is the S3649 false positive recorded as G1. The release/v0.17.0 branch was deleted by the merge, which is why the follow-up PR's base has to be main."
+    },
+    {
+      "command": "gh api repos/duanxldragon/pantheon-base/git/commits/762d94a5 --jq .tree.sha ; git rev-parse 597548e4^{tree}",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Tree parity check before retargeting: both report f7135e3066b39ed95024d0df0864b60aa9842bd4, so main's content equals the local release-cut content and the follow-up commits can be replayed onto main without re-introducing release diffs. Cross-checked by content: main's tenant_service.go contains membershipScope and main's session_tenant_scope_test.go contains the corrected `Total=3 / ActiveCount=2` assertion. `git/commits/21de18ee` returns 404 and compare reports divergence because #395 was squash-merged, so the release-branch shas are not ancestors of main."
+    },
+    {
+      "command": "gh pr create --base main --head fix/tenant-membership-update-by-primary-key --title \"fix(iam): update the loaded membership row by primary key\" --body-file .harness/evidence/2026-10-21-acceptance-remediation/pr-body-sonar.md",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Created https://github.com/duanxldragon/pantheon-base/pull/398 . Branch fix/tenant-membership-update-by-primary-key was published through the Git Data API onto main's tip (762d94a5), replaying a809a641 -> ef4a918d, f8e4f8e6 -> b6507e0e and the record commit f421d9dc -> 3bb7f3d8, with remote tip tree efa3d8c3d7cd34dfb47f311403d494435102de83 equal to the local tip tree. Diff is 8 files (one Go file plus evidence/docs), i.e. no duplicated release content."
+    },
+    {
+      "command": "gh pr view 398 --json statusCheckRollup ; curl -s https://sonarcloud.io/api/issues/search?componentKeys=duanxldragon_pantheon-base&pullRequest=398&sinceLeakPeriod=true",
+      "cwd": ".",
+      "status": "not-run",
+      "details": "Pending on the PR head: this is where the S3649 write-path disposition and the Sonar gate verdict get proven. Not claimed green in advance; the hosted result is written here once available."
     }
   ],
   "knownGaps": [
@@ -181,7 +211,7 @@
     "github.com is unreachable from this host (connection reset / timeout) while api.github.com works, so the branch is published via the Git Data API rather than `git push`. The same limit means local `main` cannot be fetched or fast-forwarded; syncing local main is a maintainer action.",
     "Skip masking is an open methodology gap, not a closed one: pkg/testmysql.Open and pkg/testredis.Open both report 'ok' when their store is missing, so a local green suite proves nothing about Redis-backed paths until PANTHEON_TEST_REDIS_ADDR is set. R5 was discovered by CI, not by local verification; a checker that fails when a required store is absent has not been built.",
     "The SonarCloud Security Rating on New Code outcome for the follow-up commit is unproven: map conditions and the test refactor are semantics-preserving locally, but only the next hosted analysis can show the gate green.",
-    "release/v0.17.0 (462216ec) currently carries a red test gate: it was merged while Backend Tests / Unit Tests / CI Summary / Quality Gates were failing on R5. Until the follow-up commit lands and CI re-runs green, the branch's test status must be recorded as unproven and no v0.17.0 tag may be cut from it.",
+    "Corrected: the release content is on main. PR #395 merged release/v0.17.0 into main as 762d94a5 (tree f7135e30) with only SonarCloud red, and #397 turned the four R5 test gates green, so the branch's test status is no longer unproven. What remains unproven is the security gate, and the `pantheon-base-v0.17.0` tag is still deliberately not cut: main carries a red Sonar gate and the follow-up S3649 disposition is a maintainer action.",
     "Deferred register items (A4-A10, B7-B11, C3-C12, D3-D6, E3-E7, F10-F14) and the maintainer-only actions (credential rotation D2, main branch protection F2, advisory-to-blocking promotion B10, tag/release publication) remain open by decision, not by omission."
   ],
   "linkage": {

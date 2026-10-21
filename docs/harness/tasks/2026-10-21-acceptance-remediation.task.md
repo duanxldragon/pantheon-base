@@ -229,8 +229,9 @@ platform
 - [x] AddMember 幂等，消除 Tenant Smoke 的一条真实触发条件（job 仍 flaky，见下）
 - [x] 生产构建强制 Gin release mode
 - [x] 后端测试、前端 tsc/vitest/eslint/build、文档门禁本地全绿
-- [ ] CI 实跑确认 `-race` 全量与 `Tenant Smoke` 转绿
-- [ ] 修正被 Redis-skip 掩盖的会话用例断言（R5），并在配好 MySQL+Redis 的环境复跑
-- [ ] 清掉 SonarCloud 新代码三项（`gosecurity:S3649` BLOCKER、`go:S1192`、`go:S3776`）并使 Security Rating on New Code 达 A
-- [ ] `release/v0.17.0` 门禁复绿后才允许打 `pantheon-base-v0.17.0` tag
+- [x] 修正被 Redis-skip 掩盖的会话用例断言（R5），并在配好 MySQL+Redis 的环境复跑
+- [x] CI 实跑确认 `Backend Tests` / `Unit Tests` / `Coverage Gate` / `CI Summary` / `Quality Gates` 转绿（PR #397，head f0f650a5）
+- [ ] `go test -race ./...` 全量：本机无 C 工具链，CI 侧 `-race` 结论仍需确认（`quality.yml` 的 `Unit Tests` 腿）
+- [ ] SonarCloud 新代码异味（`go:S1192`、`go:S3776`）已清除；`gosecurity:S3649` 三条 BLOCKER 属绑定参数误报，需维护者在 Sonar 侧处置（不抑制、不排除规则）
+- [ ] 安全门禁处置到位后，方可在 `main`（#395 已把 `release/v0.17.0` 合入并删除该分支，merge commit `762d94a5`）上打 `pantheon-base-v0.17.0` tag
 - [ ] 补一条 checker：runtime-sensitive 套件在缺 `PANTHEON_TEST_REDIS_ADDR` 时应失败而非 skip（与 B10 同族，显式延期）
