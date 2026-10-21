@@ -1,6 +1,7 @@
 package tenant
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"strconv"
@@ -8,6 +9,7 @@ import (
 	"time"
 
 	"github.com/duanxldragon/pantheon-base/backend/pkg/common"
+	"github.com/duanxldragon/pantheon-base/backend/pkg/database"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/logging"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/tenant"
 
@@ -344,35 +346,36 @@ func summarizeTenants(base *gorm.DB) (*Summary, error) {
 
 // UpdateTenant updates tenant fields
 func (s *Service) UpdateTenant(id uint64, dto UpdateTenantDTO) error {
-	tenant, err := s.GetTenantByID(id)
+	row, err := s.GetTenantByID(id)
 	if err != nil {
 		return err
 	}
+	previousStatus := row.Status
 
 	// Update fields individually to satisfy SonarCloud taint analysis
 	// This avoids map/struct updates that trigger false positive SQL injection warnings
 	hasUpdates := false
 
 	if dto.Name != nil && *dto.Name != "" {
-		if err := s.db.Model(tenant).Update("name", *dto.Name).Error; err != nil {
+		if err := s.db.Model(row).Update("name", *dto.Name).Error; err != nil {
 			return fmt.Errorf("update tenant name: %w", err)
 		}
 		hasUpdates = true
 	}
 	if dto.Status != nil && *dto.Status != "" {
-		if err := s.db.Model(tenant).Update("status", *dto.Status).Error; err != nil {
+		if err := s.db.Model(row).Update("status", *dto.Status).Error; err != nil {
 			return fmt.Errorf("update tenant status: %w", err)
 		}
 		hasUpdates = true
 	}
 	if dto.Plan != nil && *dto.Plan != "" {
-		if err := s.db.Model(tenant).Update("plan", *dto.Plan).Error; err != nil {
+		if err := s.db.Model(row).Update("plan", *dto.Plan).Error; err != nil {
 			return fmt.Errorf("update tenant plan: %w", err)
 		}
 		hasUpdates = true
 	}
 	if dto.Metadata != nil {
-		if err := s.db.Model(tenant).Update("metadata", *dto.Metadata).Error; err != nil {
+		if err := s.db.Model(row).Update("metadata", *dto.Metadata).Error; err != nil {
 			return fmt.Errorf("update tenant metadata: %w", err)
 		}
 		hasUpdates = true
@@ -382,7 +385,51 @@ func (s *Service) UpdateTenant(id uint64, dto UpdateTenantDTO) error {
 		return nil // No updates
 	}
 
+	// A tenant leaving `active` must not leave its members' sessions running:
+	// suspension is only real once the live tokens die. Revocation failures
+	// are logged, never rolled back — the status change is already committed
+	// and GateSessionRefresh still denies the next refresh as backstop
+	// (pkg/tenant authz.go: "Membership changes invalidate affected sessions").
+	if dto.Status != nil && statusChangeRequiresSessionRevocation(previousStatus, *dto.Status) {
+		s.revokeTenantMemberSessions(id)
+	}
+
 	return nil
+}
+
+// statusChangeRequiresSessionRevocation is the pure decision half of the
+// suspension wiring: only a transition INTO a non-active lifecycle state
+// (suspended / archived / deleted marker) kills sessions; reactivation must
+// not revoke anything, and a no-op status write is not a transition.
+func statusChangeRequiresSessionRevocation(previous, next string) bool {
+	next = strings.TrimSpace(next)
+	if next == "" || next == previous {
+		return false
+	}
+	return next != tenant.TenantStatusActive
+}
+
+// revokeTenantMemberSessions force-expires the live sessions of every active
+// member through the production primitive tenant.RevokeUserSessionsInTenant.
+// Best-effort by design: a redis/database hiccup is logged with both ids so
+// it stays traceable, and the login/refresh gates keep the tenant locked even
+// if the kill did not land.
+func (s *Service) revokeTenantMemberSessions(tenantID uint64) {
+	var userIDs []uint64
+	if err := s.db.Model(&Membership{}).
+		Where(activeTenantMemberPredicate, tenantID, "active").
+		Pluck("user_id", &userIDs).Error; err != nil {
+		logging.Warn("tenant session revocation: member lookup failed",
+			zap.Uint64("tenantId", tenantID), zap.Error(err))
+		return
+	}
+	ctx := context.Background()
+	for _, userID := range userIDs {
+		if _, err := tenant.RevokeUserSessionsInTenant(ctx, database.RDB, s.db, userID); err != nil {
+			logging.Warn("tenant session revocation failed",
+				zap.Uint64("tenantId", tenantID), zap.Uint64("userId", userID), zap.Error(err))
+		}
+	}
 }
 
 // DeleteTenant soft-deletes a tenant and releases its code.
@@ -635,22 +682,44 @@ func (s *Service) allocateDeletedTenantCode(tx *gorm.DB, tenantID uint64) (strin
 	return "", common.NewConflict("tenant.delete.error.archive_code_conflict")
 }
 
-// AddMember adds a user to a tenant with specified role
+// AddMember adds a user to a tenant with specified role.
+//
+// Re-adding is idempotent for non-owner rows: user create inside a tenant
+// viewpoint already inserts a `member` membership server-side
+// (user.ensureTenantMembership — the login gate needs it), so the console's
+// "join this tenant" submit posts the same pair again right after. Rejecting
+// that with member_exists made every in-viewpoint user create report a
+// membership failure for a membership that exists. An existing row therefore
+// updates its role and re-activates instead. `owner` rows stay protected:
+// re-adding owner is a no-op, adding a non-owner role over owner is rejected
+// so this endpoint can never demote the tenant owner.
 func (s *Service) AddMember(tenantID, userID uint64, role string) error {
 	// Verify tenant exists
 	if _, err := s.GetTenantByID(tenantID); err != nil {
 		return err
 	}
 
-	// Check if membership already exists
-	var exists int64
-	if err := s.db.Model(&Membership{}).
+	var existing Membership
+	err := s.db.Model(&Membership{}).
 		Where("tenant_id = ? AND user_id = ?", tenantID, userID).
-		Count(&exists).Error; err != nil {
-		return fmt.Errorf("check membership existence: %w", err)
+		Limit(1).
+		First(&existing).Error
+	if err == nil {
+		if existing.Role == "owner" {
+			if role == "owner" {
+				return nil
+			}
+			return ErrMembershipExists
+		}
+		if err := s.db.Model(&Membership{}).
+			Where("tenant_id = ? AND user_id = ?", tenantID, userID).
+			Updates(map[string]any{"role": role, "status": "active"}).Error; err != nil {
+			return fmt.Errorf("update membership: %w", err)
+		}
+		return nil
 	}
-	if exists > 0 {
-		return ErrMembershipExists
+	if !errors.Is(err, gorm.ErrRecordNotFound) {
+		return fmt.Errorf("check membership existence: %w", err)
 	}
 
 	membership := &Membership{
@@ -678,6 +747,15 @@ func (s *Service) RemoveMember(tenantID, userID uint64) error {
 
 	if result.RowsAffected == 0 {
 		return ErrMembershipNotFound
+	}
+
+	// Wiring contract from pkg/tenant authz.go ("Membership changes invalidate
+	// affected sessions"): dropping the membership must kill the member's live
+	// sessions immediately, not only at the next refresh. Best-effort with a
+	// logged failure; GateSessionRefresh remains the backstop.
+	if _, err := tenant.RevokeUserSessionsInTenant(context.Background(), database.RDB, s.db, userID); err != nil {
+		logging.Warn("tenant member removal session revocation failed",
+			zap.Uint64("tenantId", tenantID), zap.Uint64("userId", userID), zap.Error(err))
 	}
 
 	return nil

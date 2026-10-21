@@ -7,7 +7,7 @@ linked_contracts:
   - docs/contracts/PLATFORM_CONTRACT.md
   - docs/contracts/SYSTEM_CONFIG_CONTRACT.md
   - docs/contracts/TENANT_CONTRACT_V1.md
-updated_at: 2026-09-10
+updated_at: 2026-10-21
 ---
 
 # 租户资源 scope 矩阵模板与全局唯一键登记
@@ -49,10 +49,10 @@ English version: [TENANT_RESOURCE_SCOPE_MATRIX.en.md](./TENANT_RESOURCE_SCOPE_MA
 | :--- | :--- | :--- |
 | `system_user` | `tenant-replicated` | 用户名**租户内唯一**（2026-10-13 维护者决策，迁移 000024 落地 `uk_system_user_tenant_username`） |
 | `system_role` | `tenant-replicated` | **2026-10-15 维护者裁决：角色按租户复制**。每个租户持有自己的 `tenant_admin` / `tenant_member` 副本；角色**定义**是全局统一的，单一来源为 `pkg/tenant` 的角色常量与 `modules/system/iam/tenant` 的 `tenantRoleDefinitions`，由 `ProvisionTenant` 代码生成而非人工逐租户维护，因此不会产生漂移 |
-| `system_menu` / `system_permission` | `platform-global` | **2026-10-15 维护者裁决：菜单与权限保持全局共享**（无 `tenant_id` 列）。租户差异只由 Casbin domain 表达（契约 §4），不做租户内菜单/权限定制 |
+| `system_menu` / `system_permission` | `platform-global` | **2026-10-15 维护者裁决：菜单与权限保持全局共享**。注意：迁移 000020 已为两表加了 `tenant_id` 列，但菜单/权限读写路径不按该列过滤，列当前未参与隔离语义（占位）。2026-10-21 验收整改：菜单写接口与 i18n 系统域写接口已加 `PlatformCapabilityMiddleware`，租户管理员不能再写全局菜单/权限表。租户差异只由 Casbin domain 表达（契约 §4），不做租户内菜单/权限定制 |
 | `system_dept` / `system_post` | `platform-global`（倾向） | 组织是组织，租户是租户，不混用 |
 | 系统设置（`system_setting`） | `tenant-overridable` 候选 | canary 首选资源域（`system/config`） |
-| 字典（`system_dict`） | `tenant-overridable` 候选 | 平台默认 + 租户覆盖 |
+| 字典（`system_dict_type` / `system_dict_item`） | `tenant-replicated`（自平台默认复制） | 表已带 `tenant_id`（000013 canary）。2026-10-21 验收整改：`ProvisionTenant` 初始化时将平台（tenant_id=0）字典类型与字典项幂等复制到新租户（INSERT…SELECT + NOT EXISTS），平台字典为单一来源、租户持有副本可覆盖 |
 | 审计日志 | `derived`（跟随写操作来源） | 需保留可切分维度 |
 | 导出文件 / 上传对象 | `derived`（跟随来源资源） | key 必须可携带租户维度，避免串租户命中 |
 | 缓存 key | `derived`（跟随来源资源） | key 设计必须允许租户段 |

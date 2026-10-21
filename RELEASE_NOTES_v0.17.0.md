@@ -14,7 +14,9 @@ Three P0/P1 security defects are closed: a tenant could write a **global** permi
 tenant could create a role key that shadows the platform namespace (`admin`, `platform_ops`) and
 inherit platform grants at login, and `platform.tenant_mode` was never made public so the tenant
 controls never rendered and `Tenant Smoke` was red on every `main` commit. Each is fixed at the
-namespace layer, not by hiding the surface.
+namespace layer, not by hiding the surface. A subsequent full-repository acceptance review
+(2026-10-21) closed one further tenant-isolation P0 and a set of P1/P2 defects before this release
+was cut; they are listed under **Acceptance remediation** below.
 
 No consumer-facing interface is removed. The only data change is additive: migrations `000025`
 through `000028` backfill tenant-scoped rows and add `tenant_id` to the remediation event table.
@@ -51,8 +53,11 @@ history is no longer shared between tenants that own the same role key.
 ### `platform.tenant_mode` is published on upgraded deployments (#393)
 
 The seed marks it public and `Bootstrap` raises `is_public` on an existing row, never lowers it.
-Upgraded deployments now render the tenant picker, switcher and viewpoint switcher again — the
-cause of the red `Tenant Smoke` job on every `main` commit.
+Upgraded deployments now render the tenant picker, switcher and viewpoint switcher again — this was
+one cause of the red `Tenant Smoke` job on every `main` commit. A second, independent cause (the
+server-side auto-join colliding with the console's re-add call, returning `tenant.member_exists`)
+was root-caused from the CI trace artifacts and closed by the idempotent membership write described
+below.
 
 ### The auth module seeds its own permission keys (#392)
 
@@ -63,6 +68,40 @@ surface whose actions could not be authorised without a global grant.
 
 Tenant menu seeds were completed and every open SonarCloud finding on `main` was closed, including
 the security-surface documentation the quality gate requires.
+
+## Acceptance remediation (2026-10-21 review)
+
+Full evidence, severity classification and per-issue call chains live in
+`docs/reviews/PANTHEON_BASE_ISSUES_AND_REMEDIATION_2026-10-21.md`. Summary of what changed:
+
+- **FIX-1 (P0, tenant isolation):** menu write routes (`POST/PUT/DELETE /menu`) and the i18n system
+  group writes were reachable by any tenant-scoped grant. `tenant_admin` holds `/api/v1/*` in its
+  own domain, so it could rewrite the global menu tree — and menu save cascades a
+  `system_role_permission` cleanup that crosses tenants. Both surfaces now carry
+  `PlatformCapabilityMiddleware`; `/menu/tree` and `/i18n/pack` stay tenant-readable.
+- **FIX-2 (P1, compat hardening):** `WithTenantScope`/`WithTenantWrite` no longer skip filtering in
+  compat mode; a nil-safe context always pins `tenant_id`, so a mis-flipped `tenant_mode` cannot
+  silently expose tenant rows. A downgrade guard rejects `multi → compat` while non-zero tenants
+  exist.
+- **FIX-3 (P1, lifecycle):** suspending a tenant or removing a member now revokes the affected
+  users' sessions in that tenant instead of leaving live tokens until TTL.
+- **FIX-4 (P2, provisioning):** tenant provisioning copies platform dictionary types/items
+  (idempotent INSERT…SELECT), so a new tenant starts with usable dictionaries.
+- **FIX-5 (P2):** the role-key namespace mutex is now bidirectional — platform-side create/rename
+  can no longer take a key owned by a tenant role.
+- **FIX-6 (P3):** production builds run Gin in release mode.
+- **FIX-7 (P2):** the legacy tenant handler's raw `{"error": …}` responses were unified to the
+  standard envelope without leaking internal error strings.
+- **FIX-8 (P1, schema):** OIDC columns lived in an untracked stray SQL file; folded into guarded
+  migration `000029`, with the global `oidc_subject` unique key replaced by
+  `(tenant_id, oidc_provider, oidc_subject)` and all queries tenant-scoped.
+- **FIX-9 (P1, frontend):** route-warm data is invalidated at logout/login boundaries, so a second
+  account in the same tab can no longer see the first account's pre-fetched pages.
+- **FIX-10 (P2, frontend):** the second-factor operation token is cleared on every session teardown.
+- **FIX-11 (P2, membership):** `AddMember` is idempotent — re-adding an existing member updates or
+  reactivates the row instead of failing, which was the second root cause of the red
+  `Tenant Smoke` job and a false "join failed" toast for every tenant-viewpoint user create.
+  Owner rows are protected from demotion through this path.
 
 ## Changed
 
@@ -104,3 +143,6 @@ evidence directory.
   Operators must run the documented cleanup before upgrading an existing deployment.
 - The browser-level `Tenant Smoke` assertion is confirmed by CI, not by a local run; the underlying
   seeding defect is covered by unit tests.
+- The 2026-10-21 acceptance remediation (FIX-1…FIX-11) is verified by local unit tests and the full
+  local gate; its browser-level confirmation lands only when the remediation reaches CI, and the
+  `smoke-tenant` job remains advisory (`continue-on-error: true`).

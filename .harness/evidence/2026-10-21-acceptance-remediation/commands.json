@@ -1,0 +1,149 @@
+{
+  "taskId": "2026-10-21-acceptance-remediation",
+  "repo": "pantheon-base",
+  "executedAt": "2026-10-21T11:00:00+08:00",
+  "completedAt": "2026-10-21T14:20:00+08:00",
+  "agent": {
+    "tool": "other",
+    "adapter": "qoder-agent"
+  },
+  "runtimeSensitive": true,
+  "runtimeGap": "This host reaches api.github.com but not github.com, so git push over HTTPS cannot complete and the branch is published through the Git Data API instead; it cannot start a browser, so the Playwright Tenant Smoke assertion and the maintainer's visual acceptance are CI/maintainer obligations; and it has no C toolchain, so go test -race fails at cgo and the race detector can only be re-verified by CI. Everything below those three layers is executed locally against real MySQL.",
+  "commands": [
+    {
+      "command": "go build ./...",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "Clean build of the remediation branch."
+    },
+    {
+      "command": "go vet ./modules/... ./pkg/... ./internal/...",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "No vet findings."
+    },
+    {
+      "command": "gofmt -l ./modules ./pkg ./internal ./cmd",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "Empty output: every touched file is formatted."
+    },
+    {
+      "command": "go test -race -count=1 ./pkg/tenant/... ./internal/... ./modules/system/... ./modules/auth/... ./pkg/database/... ./cmd/...",
+      "cwd": "backend",
+      "status": "failed",
+      "details": "Not a code failure: `runtime/cgo: ... cgo.exe: exit status 2`, i.e. `-race requires cgo` and this Windows host has no C toolchain. Recorded as failed rather than dropped; CI runs `go test -race ./...` in quality.yml and ci.yml."
+    },
+    {
+      "command": "PANTHEON_TEST_DSN=<.env.test DSN> go test -count=1 ./pkg/tenant/... ./internal/... ./modules/system/... ./modules/auth/... ./pkg/database/... ./cmd/...",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "Exit 0. 23 packages ok, 0 FAIL, 3 [no test files]. Key timings against real MySQL: internal/middleware 10.685s, modules/system 10.259s, config/setting 16.134s, config/dict 9.631s, iam/menu 7.728s, iam/permission 33.334s, iam/role 45.619s, iam/tenant 78.227s, iam/user 62.097s, auth/session 8.764s, auth/login 138.555s, pkg/database 70.235s, pkg/tenant 0.289s."
+    },
+    {
+      "command": "PANTHEON_TEST_DSN=<.env.test DSN> go test -count=1 ./...",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "Full backend suite on the remediation branch: GO_TEST_FULL_EXIT=0, 46 packages ok, 0 FAIL, 6 [no test files]. Same MySQL DSN source as the targeted run (pkg/tenant 0.309s, pkg/database 71.103s, iam/tenant 76.483s, iam/role 43.582s, cmd/server 1.728s)."
+    },
+    {
+      "command": "PANTHEON_TEST_DSN=<.env.test DSN> go test -count=1 ./modules/system/iam/tenant/",
+      "cwd": "backend",
+      "status": "failed",
+      "details": "First real-MySQL run of the tenant package: 40 failures. Two root causes, both in the test layer rather than the fix: (R4) tenantTestDDL did not declare system_dict_type / system_dict_item, so FIX-4's dictionary copy died with MySQL 1146; (R3) the session revocation test wrote `db.Exec(...)` without `.Error`, so the assertion was always false once a DSN existed. Both fixtures repaired and the package then passed (see the passing entries above)."
+    },
+    {
+      "command": "PANTHEON_TEST_DSN=<.env.test DSN> go test -count=1 ./modules/system/iam/role/ -run TestPlatformEditOfTenantRoleKeepsGrantInRoleTenant",
+      "cwd": "backend",
+      "status": "failed",
+      "details": "Regression introduced by FIX-5 itself (R2): the new reverse namespace mutex matched the very role being renamed, so editing a platform role shadowed by a tenant key failed with `role.key.reserved`. Fixed by threading excludeRoleID through ensureRoleKeyAllowed; role package then passed (43.582s ok)."
+    },
+    {
+      "command": "PANTHEON_TEST_DSN=<.env.test DSN> go test -count=1 ./modules/system/iam/role/ -run TestRoleKeyNamespace",
+      "cwd": "backend",
+      "status": "failed",
+      "details": "First FIX-5 attempt (R1): the scope condition was assembled as `\"tenant_id \"+column` with no `?` placeholder, so MySQL answered 1064 near 'AND deleted_at IS NULL'. Placeholder added; suite green afterwards."
+    },
+    {
+      "command": "node ./node_modules/typescript/bin/tsc -b",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "Exit 0 after the session-boundary changes to request.ts, prefetch.ts, AppLayout.tsx and Login.tsx."
+    },
+    {
+      "command": "node ./node_modules/vitest/vitest.mjs run",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "Test Files 26 passed (26), Tests 200 passed (200), duration 12.45s. Includes the two new boundary suites requestOperationTokenSession.test.ts and routeWarmDataSessionBoundary.test.ts (4 tests)."
+    },
+    {
+      "command": "node ./node_modules/eslint/bin/eslint.js .",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "Exit 0, no findings."
+    },
+    {
+      "command": "node ./node_modules/vite/bin/vite.js build",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "built in 741ms."
+    },
+    {
+      "command": "node scripts/frontmatter-check.mjs",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Frontmatter check passed. Checked 337 docs, 244 with frontmatter. Covers the four new docs/reviews/PANTHEON_BASE_*_2026-10-21.md deliverables and the new task packet."
+    },
+    {
+      "command": "node scripts/harness/check-task-packet.mjs --root .",
+      "cwd": ".",
+      "status": "passed",
+      "details": "[PASS] docs/harness/tasks/2026-10-21-acceptance-remediation.task.md with no warnings once review.md and manifest.json exist."
+    },
+    {
+      "command": "node -e \"import('./scripts/check-pr-governance.mjs').then(m => m.validatePrBody(fs.readFileSync(prBodyPath)))\"",
+      "cwd": ".",
+      "status": "passed",
+      "details": "The remediation pr-body.md and the corrected #395 body both validate with zero findings locally. The CI failures on PR Governance Prereq and Docs Governance were reproduced first: the #395 body was missing `## 审核留痕`, `## 检查清单` and the 7 governance fields inside them."
+    },
+    {
+      "command": "node scripts/create-pr.mjs --title ... --body-file .harness/evidence/2026-10-21-acceptance-remediation/pr-body.md --base release/v0.17.0",
+      "cwd": ".",
+      "status": "not-run",
+      "details": "Executed when the branch is published; the branch push itself goes through the Git Data API because github.com is unreachable from this host while api.github.com is not."
+    },
+    {
+      "command": "go test -race ./... (hosted)",
+      "cwd": "backend",
+      "status": "not-run",
+      "details": "CI obligation on the new PR head; local equivalent without the race detector is the passing full-suite entry above."
+    },
+    {
+      "command": "Tenant Smoke (multi-mode advisory) (hosted)",
+      "cwd": ".",
+      "status": "not-run",
+      "details": "CI obligation. Both root causes are closed in code (#393 for the public tenant_mode flag, FIX-11 for the non-idempotent AddMember); `continue-on-error` was not touched and no failing test was silenced."
+    }
+  ],
+  "knownGaps": [
+    "No C toolchain on this host: `go test -race` cannot run locally, only CI can re-verify it.",
+    "No browser on this host: the Playwright Tenant Smoke assertion and the maintainer's visual/functional acceptance are not executed here.",
+    "No HTTP-level cross-tenant adversarial matrix through a real gateway with Redis-backed opaque tokens; the isolation conclusions rest on handler/middleware httptest and SQL-predicate assertions.",
+    "No backup/restore or upgrade drill, including taking over a database where add_oidc_fields.sql was already applied manually before migration 000029.",
+    "github.com is unreachable from this host (connection reset / timeout) while api.github.com works, so the branch is published via the Git Data API rather than `git push`.",
+    "Deferred register items (A4-A10, B7-B11, C3-C12, D3-D6, E3-E7, F10-F14) and the maintainer-only actions (credential rotation D2, main branch protection F2, advisory-to-blocking promotion B10, tag/release publication) remain open by decision, not by omission."
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-21-acceptance-remediation/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-21-acceptance-remediation/",
+    "reviewFile": ".harness/evidence/2026-10-21-acceptance-remediation/review.md",
+    "summaryFile": ".harness/evidence/2026-10-21-acceptance-remediation/summary.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/reviews/PANTHEON_BASE_ISSUES_AND_REMEDIATION_2026-10-21.md",
+      "docs/reviews/PANTHEON_BASE_TEST_AND_ACCEPTANCE_REPORT_2026-10-21.md",
+      "docs/contracts/TENANT_CONTRACT_V1.md",
+      "docs/designs/TENANT_RESOURCE_SCOPE_MATRIX.md"
+    ]
+  }
+}

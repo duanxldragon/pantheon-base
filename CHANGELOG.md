@@ -30,12 +30,25 @@ Pantheon Base 方法追踪记录。方法论本体位于 `pantheon-harness`。
   transaction instead of leaving stale grants and a role with no API surface.
 - `permission_workbench_remediation_event` gains `tenant_id` (migration `000028`), so remediation
   history is no longer shared between tenants that own the same role key.
+- 2026-10-21 full acceptance review closed a further tenant-isolation P0 and P1/P2 set before this
+  cut: menu and i18n system writes are gated by `PlatformCapabilityMiddleware` (a `tenant_admin`
+  domain grant can no longer rewrite the global menu tree or cascade cross-tenant
+  `system_role_permission` cleanup), compat-mode tenant scope is pinned rather than skipped,
+  tenant suspend/member removal revokes sessions, the OIDC schema moved into guarded migration
+  `000029` with a tenant-scoped unique key, the role-key mutex became bidirectional, and the
+  frontend session boundary clears route-warm data and the operation token. Evidence:
+  `docs/reviews/PANTHEON_BASE_ISSUES_AND_REMEDIATION_2026-10-21.md` (FIX-1…FIX-11).
 
 ### Fixed
 
 - `platform.tenant_mode` is seeded public and `Bootstrap` raises `is_public` on an existing row
   (never lowers it). Upgraded deployments now publish the flag, so the tenant picker, switcher and
-  viewpoint switcher render again — the cause of the red `Tenant Smoke` job on every main commit.
+  viewpoint switcher render again — one cause of the red `Tenant Smoke` job on every main commit.
+  The second, independent cause (server-side auto-join colliding with the console's re-add call,
+  `tenant.member_exists`) was closed by the idempotent membership write below.
+- Tenant membership writes are idempotent: re-adding an existing member updates or reactivates the
+  row instead of failing, and owner rows cannot be demoted through this path. This also removes the
+  false "join failed" toast on every tenant-viewpoint user create.
 - CSV role import stamps the caller's tenant; it used to write `tenant_id = 0` (a platform role).
 - Import role-key validation and the bootstrap admin binding are scoped to the target namespace.
 

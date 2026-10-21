@@ -260,8 +260,13 @@ func defaultNowNano() int64 { return timeNowNano() }
 
 // WithTenantScope returns the GORM scope injecting `tenant_id = ctx.TenantID`
 // for tenant-scoped tables (contract §3.3). Behavior:
-//   - ctx nil or compat mode: no filter — global rows only semantics preserved
-//     (compat data is exactly the tenant_id=0 population).
+//   - ctx nil: no filter — reserved for platform-internal paths (bootstrap,
+//     maintenance, background jobs) that run outside any request context.
+//   - compat mode: hard filter tenant_id = ctx.TenantID, which Resolve pins to
+//     0 for every compat request (compat fallback). Pinning 0 instead of
+//     leaving the query unfiltered keeps rows created while the deployment ran
+//     in multi mode out of the global view after a downgrade; compat data is
+//     exactly the tenant_id=0 population by construction.
 //   - multi mode: hard filter tenant_id = ctx.TenantID (0 excluded on purpose:
 //     a multi-mode subject never reads platform-global rows through this scope).
 //
@@ -272,7 +277,7 @@ func defaultNowNano() int64 { return timeNowNano() }
 // be qualified or MySQL rejects them with error 1052.
 func WithTenantScope(ctx *Context) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
-		if !ctx.IsMulti() {
+		if ctx == nil {
 			return db
 		}
 		table := ""
@@ -310,10 +315,13 @@ func qualifyTenantColumn(table string) string {
 }
 
 // WithTenantWrite stamps tenant_id on create paths (contract §3.3: ownership
-// never comes from the request body). No-op under compat (column default 0).
+// never comes from the request body). It mirrors WithTenantScope: a nil
+// context is a platform-internal write (no stamp); every request-bound write
+// stamps ctx.TenantID — under compat that is always 0, the same value the
+// column default produces, so the pin is explicit and downgrade-proof.
 func WithTenantWrite(ctx *Context) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
-		if !ctx.IsMulti() {
+		if ctx == nil {
 			return db
 		}
 		return db.Set("gorm:tenant_id", ctx.TenantID)

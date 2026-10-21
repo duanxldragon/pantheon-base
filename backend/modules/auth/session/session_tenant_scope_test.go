@@ -181,10 +181,14 @@ func TestBatchRevokeSessions_IsTenantScoped(t *testing.T) {
 	assertSessionActive(t, svc, rdb, "tenant-b-batch")
 }
 
-// F03 explicit platform exception: a compat (platform-global) context keeps
-// the unfiltered view and can revoke across tenants.
-func TestSessionAdminOps_CompatSeesAllTenants(t *testing.T) {
+// FIX-2: compat is no longer an unfiltered platform view. A request-bound
+// compat context pins to tenant 0 like every other resolved context (compat
+// resolves TenantID=0 by contract), so it can only list/revoke platform rows.
+// The cross-tenant view stays reserved for nil-context internal maintenance
+// paths — deliberately exercised here to keep that exception documented.
+func TestSessionAdminOps_CompatPinsToPlatformTenant(t *testing.T) {
 	svc, rdb := newTenantScopeHarness(t)
+	seedTenantRevocationCase(t, svc, rdb, "platform-compat", 41, tenant.PlatformGlobalTenantID)
 	seedTenantRevocationCase(t, svc, rdb, "tenant-a-compat", 42, 101)
 	seedTenantRevocationCase(t, svc, rdb, "tenant-b-compat", 43, 202)
 
@@ -193,17 +197,31 @@ func TestSessionAdminOps_CompatSeesAllTenants(t *testing.T) {
 	if err != nil {
 		t.Fatalf("ListAllSessions: %v", err)
 	}
-	if page.Total != 2 {
-		t.Fatalf("platform operator must see both tenants, got total=%d", page.Total)
+	if page.Total != 1 {
+		t.Fatalf("compat context must pin to tenant 0, got total=%d", page.Total)
+	}
+	for _, item := range page.Items {
+		if item.SessionID != "platform-compat" {
+			t.Fatalf("compat pinning leaked session %q", item.SessionID)
+		}
 	}
 
-	revoked, err := platform.BatchRevokeSessions("platform-current", []string{"tenant-a-compat", "tenant-b-compat"})
+	revoked, err := platform.BatchRevokeSessions("platform-current", []string{"platform-compat", "tenant-a-compat"})
 	if err != nil {
-		t.Fatalf("platform batch revoke: %v", err)
+		t.Fatalf("compat batch revoke: %v", err)
 	}
-	if revoked != 2 {
-		t.Fatalf("platform operator must revoke both tenants, got %d", revoked)
+	if revoked != 1 {
+		t.Fatalf("compat operator must only revoke tenant-0 sessions, got %d", revoked)
 	}
-	assertSessionFullyRevoked(t, svc, rdb, "tenant-a-compat", 42)
-	assertSessionFullyRevoked(t, svc, rdb, "tenant-b-compat", 43)
+	assertSessionFullyRevoked(t, svc, rdb, "platform-compat", 41)
+	assertSessionActive(t, svc, rdb, "tenant-a-compat")
+
+	// Nil context = internal maintenance view: still unfiltered by design.
+	allPage, err := svc.ListAllSessions(&AdminSessionQuery{})
+	if err != nil {
+		t.Fatalf("nil-context maintenance list: %v", err)
+	}
+	if allPage.Total != 2 {
+		t.Fatalf("nil-context view must still span tenants, got total=%d", allPage.Total)
+	}
 }

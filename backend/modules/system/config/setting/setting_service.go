@@ -404,6 +404,9 @@ func updateSettingGroupItem(tx *gorm.DB, groupKey string, item SettingUpdateItem
 	if err != nil {
 		return err
 	}
+	if err := guardTenantModeDowngrade(tx, current.SettingKey, normalizedValue, current.SettingValue); err != nil {
+		return err
+	}
 	storedValue, err := prepareSettingStoredValue(normalizedValue, current.IsEncrypted)
 	if err != nil {
 		return err
@@ -428,6 +431,41 @@ func updateSettingGroupItem(tx *gorm.DB, groupKey string, item SettingUpdateItem
 		IsEncrypted:  current.IsEncrypted,
 		Remark:       current.Remark,
 	}).Error
+}
+
+// isTenantModeDowngradeToCompat is the pure decision half of the downgrade
+// guard: the key is the tenant-mode flag, the next value normalizes to compat,
+// and the currently stored value is multi. Everything else needs no guard.
+func isTenantModeDowngradeToCompat(settingKey, nextValue, currentValue string) bool {
+	if strings.TrimSpace(settingKey) != settingKeyPlatformTenantMode {
+		return false
+	}
+	if tenant.NormalizeMode(nextValue) != tenant.ModeCompat {
+		return false
+	}
+	return tenant.NormalizeMode(currentValue) == tenant.ModeMulti
+}
+
+// guardTenantModeDowngrade blocks the multi -> compat switch while live
+// tenants exist. WHY: compat pins every scoped read to tenant_id = 0
+// (tenant.WithTenantScope), so flipping the flag with tenant rows present
+// would merge each tenant's data into the platform-global view. The
+// soft-delete marker (status = "deleted") is the state DeleteTenant writes and
+// such tenants can no longer host sessions, so they do not block the switch.
+func guardTenantModeDowngrade(tx *gorm.DB, settingKey, nextValue, currentValue string) error {
+	if !isTenantModeDowngradeToCompat(settingKey, nextValue, currentValue) {
+		return nil
+	}
+	var live int64
+	if err := tx.Table("tenants").
+		Where("id <> ? AND status <> ?", tenant.PlatformGlobalTenantID, tenant.TenantStatusDeleted).
+		Count(&live).Error; err != nil {
+		return err
+	}
+	if live > 0 {
+		return common.NewBadRequest("setting.tenantMode.downgradeBlocked")
+	}
+	return nil
 }
 
 func (s *SettingService) GetPublicSettings() (*PublicSettingResp, error) {
