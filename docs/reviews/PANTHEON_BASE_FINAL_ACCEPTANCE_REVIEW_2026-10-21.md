@@ -25,21 +25,21 @@ updated_at: 2026-10-21
 - **单租户模式**：**验收通过**（无未解决 P0/P1；P2/P3 全部清单化延期）。
 - **多租户模式**：**整改后通过**。形式条件已在 hosted CI 兑现：整改链 #396→#397→#398 全部合入，main `c17ef999` 上 `CI`（含 `-race`）、`Backend Tests`、`Full Smoke Suite`（含 `smoke-tenant`）、`Core Smoke Tests`、`Security Gates`、`CodeQL` 全绿；`smoke-tenant` 此前在同 commit 上既红又绿，本轮为一次通过，仍按 flaky 登记而非宣称稳定。
 - **跨租户数据泄露/权限绕过**：**不存在已知未解决路径**。审查确认的 P0（B1：tenant_admin 可写全局菜单并跨租户剥离权限键）已由路由级平台能力门闭合；数据层 P1（B2：compat 不过滤）由租户钉租+降级守卫闭合。
-- **阻塞冻结的 P0/P1 代码缺陷**：**无**。移交维护者的放行前置项四个（均非代码缺陷）：D2 已入库凭证的轮换、F2 main 分支保护、F5 tag/release 发布、
-  以及 `gosecurity:S3649` 在 `Service.AddMember()` 的两条残留 BLOCKER（`:711` 读、`:726` 写）——这是绑定参数的污点跟踪误报，
-  是 main 上 `Release Gate` 唯一红项。该项的处置方式已由维护者定案（2026-10-21）：在代码层用行尾 `// NOSONAR gosecurity:S3649` 屏蔽，
-  Sonar 规则配置与 Quality Gate 阈值不动；此前的整改包确实未加 `NOSONAR`、未排除规则、未贴 `solo-override`，本次抑制是维护者显式授权的结果。
-  抑制后的 `Release Gate` 绿态仍需下一次 hosted 分支分析证明，见问题清单 §5。
+- **阻塞冻结的 P0/P1 代码缺陷**：**无**。移交维护者的放行前置项收敛为三项：D2 已入库凭证的轮换、F2 main 分支保护、F5 tag/release 发布。
+  此前的第四项 `gosecurity:S3649`（`Service.AddMember()` 两条绑定参数误报）已由维护者定案并在代码层用行尾 `// NOSONAR gosecurity:S3649` 屏蔽（PR #402），
+  Sonar 规则配置与 Quality Gate 阈值未动，未屏蔽测试、未贴 `solo-override`。Hosted 实测：PR 级新代码问题 0、门禁 OK；
+  合并后 main `17af0d85` 分支分析五项条件全 OK、open issues = 0、`Release Gate` success。
 - **整改完成度**：FIX-1…FIX-11 共 11 项代码整改 + 4 项文档失实修正（F8/F9/scope 矩阵/dict 归类），另有整改自身被真库运行捕获并修复的 4 个回归（R1–R4，诚实记录）。延期项全部登记且逐条给出理由。
-- **建议**：**阶段性验收通过，进入维护冻结**。开发重心转向 `pantheon-ops`；Base 仅修真实缺陷、安全与兼容问题。
+- **建议**：**阶段性验收通过，进入维护冻结**。开发重心转向 `pantheon-ops`；Base 仅修真实缺陷、安全与兼容问题。`pantheon-base-v0.17.0` 的发布门禁已全绿，tag/release 只待维护者执行。
 
 ## 1. 审查对象与方法
 
-- 仓库 `github.com/duanxldragon/pantheon-base`；审查起点为 `origin/main = ffb22988`。收口时点 main 已推进到 `73d36ecc`（内容 tree `ed274ae5`）：
-  #396/#397 进入 `release/v0.17.0`，#395 将该分支 squash 合入 main（`762d94a5`，tree `f7135e30`，分支随后删除），#398 携带 S3649 二次处置与文档收口（`c17ef999`，tree `90b4beeb`），#399 收正门禁口径。
-  推送通道限制记录在案：整改窗口内本机 `github.com` 不可达而 `api.github.com` 可达，故 #396–#399 的分支通过 Git Data API 重放（blob→tree→commit→ref），每次均以本地/远端 tip tree 相等收口。
-  维护者 2026-10-21 修复网络后复测：`git ls-remote`、`git fetch origin --prune`、`git push --dry-run` 对 `github.com` 均成功，本地 `main` 已同步到 `origin/main = 73d36ecc`
-  （原 `ce82b94e` 仍可从两个本地 acceptance 分支到达，未丢弃提交）⇒ 后续工作可走常规 git 通道。
+- 仓库 `github.com/duanxldragon/pantheon-base`；审查起点为 `origin/main = ffb22988`。收口时点 main 已推进到 `17af0d85`：
+  #396/#397 进入 `release/v0.17.0`，#395 将该分支 squash 合入 main（`762d94a5`，tree `f7135e30`，分支随后删除），#398 携带 S3649 二次处置（`c17ef999`），
+  #399/#401 收正门禁与传输口径，#402 落地代码层 S3649 抑制（`8c12d4cb`），#400/#403 清理两条 Dependabot 高危（`1783543d`、`17af0d85`）。
+  推送通道限制记录在案：本机 `github.com` 在整改窗口不可达，#402 与收口记录再次复现该故障（`api.github.com` 正常），
+  故相关分支通过 Git Data API 重放（blob→tree→commit→ref），每次均以本地/远端 parent tree 相等收口；维护者修复网络后的短暂可用是间歇性的，不能假设常通。
+  最终 main 实测：Sonar 分支分析（revision `17af0d85`）五项条件全 OK、open issues = 0、open Dependabot alerts = 0、`Release Gate` success。
 - 方法：六个并行维度审查（单租户闭环 / 多租户与隔离 / 架构与数据库 / 安全 / 前端 / 测试与治理）→ 主代理对全部 P0/P1 亲自复核证据 → 分级整改 → 真实 MySQL 回归。全程以代码与测试为据，README/接口名/按钮不作为完成证据。
 - 架构事实（经代码还原）：共享库+共享 schema+行级 `tenant_id`；Casbin domain subject `role:<key>@tenant:<id>`，全局 subject 优先；部署级 `platform.tenant_mode`（compat/multi，TTL 缓存），compat ⇒ TenantID 钉 0；opaque token 存 Redis + HttpOnly cookie；迁移为 golang-migrate 编号链（000001–000029）。
 
@@ -91,7 +91,7 @@ P0×1（B1）、P1×5（B2/B3/B4/B5/B6-latent）全部修复并有回归测试�
 
 ## 8. 冻结决定与建议
 
-满足冻结线的全部代码条件；四项移交动作（D2 轮换、F2 保护、Sonar `S3649` 残留的误报处置、tag/release 发布）不改变代码状态判断，但建议作为 v0.17.0 发布的收口清单执行。据此：
+满足冻结线的全部代码条件；三项移交动作（D2 轮换、F2 保护、tag/release 发布）不改变代码状态判断，但建议作为 v0.17.0 发布的收口清单执行。据此：
 
 **建议状态：阶段性验收通过，进入维护冻结。** 冻结语义沿用 `docs/TENANT_SCOPE_FREEZE_DECISION_2026-10-15.md`：不推倒、不扩张、只收尾；Base 仅接受正确性/稳定性/安全性必要修改；新需求先判归属再决定是否进入下一阶段；`pantheon-ops` 通过 foundation release 消费 Base，不再反向注入业务。
 

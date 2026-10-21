@@ -161,5 +161,6 @@ evidence directory.
   bound-parameter false positives. Two semantics-preserving restructurings took that rule from 3 blockers to 2; the remaining edge is the
   tenant/user lookup itself, so it cannot be removed without suppressing the scanner or changing what the endpoint does.
   The maintainer then chose the suppression path (2026-10-21): both `AddMember` sinks carry a trailing `// NOSONAR gosecurity:S3649`, while the
-  Sonar rule configuration, the Quality Gate thresholds and the `Release Gate` definition stay untouched. Cut the `pantheon-base-v0.17.0` tag
-  only after the next hosted branch analysis shows the rating back at A and `Release Gate` green — a locally passing suite does not prove it.
+  Sonar rule configuration, the Quality Gate thresholds and the `Release Gate` definition stay untouched. Verified on the hosted service: PR #402
+  reported 0 new-code issues, and `main` at `17af0d85` reports open issues = 0, Quality Gate OK on all five conditions, open Dependabot alerts = 0
+  and `Release Gate` success. The `pantheon-base-v0.17.0` tag is the remaining maintainer action; nothing is red.
