@@ -231,7 +231,7 @@ platform
 - [x] 后端测试、前端 tsc/vitest/eslint/build、文档门禁本地全绿
 - [x] 修正被 Redis-skip 掩盖的会话用例断言（R5），并在配好 MySQL+Redis 的环境复跑
 - [x] CI 实跑确认 `Backend Tests` / `Unit Tests` / `Coverage Gate` / `CI Summary` / `Quality Gates` 转绿（PR #397，head f0f650a5）
-- [ ] `go test -race ./...` 全量：本机无 C 工具链，CI 侧 `-race` 结论仍需确认（`quality.yml` 的 `Unit Tests` 腿）
-- [ ] SonarCloud 新代码异味（`go:S1192`、`go:S3776`）已清除；`gosecurity:S3649` 三条 BLOCKER 属绑定参数误报，需维护者在 Sonar 侧处置（不抑制、不排除规则）
-- [ ] 安全门禁处置到位后，方可在 `main`（#395 已把 `release/v0.17.0` 合入并删除该分支，merge commit `762d94a5`）上打 `pantheon-base-v0.17.0` tag
+- [x] `go test -race` 由 CI 复验：main `c17ef999` 上 `Unit Tests`（`ci.yml` 的 `go test -race -short ./...`）与 `Backend Tests`（`quality.yml` 的 `go test -race ./...`）均 success；本机仍无 C 工具链，本地未执行
+- [ ] SonarCloud 新代码异味（`go:S1192`、`go:S3776`）已清除；`gosecurity:S3649` 经两轮保语义重构（map 条件、按主键 + `Select` 类型化更新）由 3 条降为 2 条（`:711` 读、`:726` 写），属绑定参数的污点跟踪误报，需维护者在 Sonar 侧处置（不抑制、不排除规则）；main 分支 `new_security_rating` = E 导致 `Release Gate` 红
+- [ ] 安全门禁处置到位后，方可在 `main`（#395 已把 `release/v0.17.0` 合入并删除该分支，merge commit `762d94a5`；当前 tip `c17ef999`）上打 `pantheon-base-v0.17.0` tag
 - [ ] 补一条 checker：runtime-sensitive 套件在缺 `PANTHEON_TEST_REDIS_ADDR` 时应失败而非 skip（与 B10 同族，显式延期）

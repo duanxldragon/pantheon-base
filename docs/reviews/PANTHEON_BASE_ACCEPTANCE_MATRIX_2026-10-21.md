@@ -52,7 +52,7 @@ updated_at: 2026-10-21
 | 工程质量 | 性能与稳定性 | 已实现，风险清单化 | 分页封顶（100/200）、session 分页索引（000018）、审计异步队列带指标 | 无压测环境，未做容量声明（诚实缺口） | C5/C6/C7/C12 P2-P3 延期 | **通过（以清单形式记录风险）** |
 | 工程质量 | 前端 UI/UX | 已修复（本地），浏览器验收移交 | 会话边界清理（FIX-9/10）；租户控制台与平台管理界面边界由能力门保障 | tsc/vitest(26 files)/eslint(--max-warnings 0)/vite build 全绿；Playwright 全量矩阵未本地运行（gap，CI 覆盖） | E1 P1→FIX-9；E2 P2→FIX-10；E3-E7 延期 | **通过（视觉终验属维护者三触点③）** |
 | 交付治理 | 测试体系 | 已实现且验证通过 | 后端 46 个含测试包，DB 套件真 MySQL；前端 26 个测试文件；smoke 矩阵含 multi-mode 对抗 job | `go test -count=1` 四批次全绿；vitest 全绿 | R3/R4 暴露的 skip 掩盖风险已收口 | **通过** |
-| 交付治理 | CI / 代码质量 | 部分达标（外部项标注） | SonarCloud main QG=OK、unresolved=0（匿名 API 实测）；`smoke-tenant` advisory 红根因已本地修复（FIX-11）；PR #395 红点=Docs Governance PR-body 仪式字段 | gh 实测：main 无分支保护（F2）、无 v0.17.0 tag（F5）；F3/F4/F13/F14 记录在案 | F1 高→FIX-11+文档；F2/F5 高（维护者动作） | **不阻塞冻结，但发布闭环（#395→tag）与 F2 属放行前置** |
+| 交付治理 | CI / 代码质量 | 部分达标（外部项标注） | 收口实测（main `c17ef999`）：`CI`（含 `-race`）、`Backend Tests`、`Full Smoke Suite`、`Core Smoke Tests`、`Security Gates`、`CodeQL`、`Lint Workflows` 全绿；PR #395 的 Docs Governance 红灯已随 #396/#397/#398 转绿 | `Release Gate` failure：分支级 Sonar `new_security_rating` = E（`gosecurity:S3649` 剩 2 条，`Service.AddMember()` 绑定参数误报）；main 无分支保护（F2）、无 v0.17.0 tag（F5）；F3/F4/F13/F14 记录在案 | F1 高→FIX-11+文档；F2/F5 高（维护者动作）；Sonar 残留为门禁处置项 | **不阻塞冻结；发布闭环前置=Sonar 误报处置 → tag，另加 F2/D2** |
 | 交付治理 | 文档一致性 | 已修复（文档） | RELEASE_NOTES v0.17.0 与 CHANGELOG 的 Tenant Smoke 因果叙述改为双根因并加入验收整改节；冻结决策状态已批准；scope 矩阵 menu/dict 行更新 | `node scripts/frontmatter-check.mjs` 见测试报告 | F8/F9 已修；F10-F12 记录为维护项 | **通过（剩余 F10-F12 为低优先维护项）** |
 
 ## 4. 结论行
@@ -60,4 +60,4 @@ updated_at: 2026-10-21
 - 单租户模式：**验收通过**（无未解决 P0/P1；P2/P3 全部清单化延期）。
 - 多租户模式：**整改后通过**——1×P0 + 6×P1 已在本地修复并经真 MySQL 单测验证；最终确认以 CI（含 smoke-tenant）复验为形式条件。
 - 无已知未解决的跨租户数据泄露或权限绕过路径。
-- 冻结阻塞移交项：D2 凭证轮换、F2 分支保护、F5/#395 发布收口（均为维护者/外部状态动作）。
+- 冻结阻塞移交项：D2 凭证轮换、F2 分支保护、Sonar `gosecurity:S3649` 残留误报处置（`Release Gate` 唯一红项）、F5 tag/release 发布（均为维护者/外部状态动作）。

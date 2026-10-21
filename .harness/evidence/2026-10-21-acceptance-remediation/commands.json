@@ -197,10 +197,28 @@
       "details": "Created https://github.com/duanxldragon/pantheon-base/pull/398 . Branch fix/tenant-membership-update-by-primary-key was published through the Git Data API onto main's tip (762d94a5), replaying a809a641 -> ef4a918d, f8e4f8e6 -> b6507e0e and the record commit f421d9dc -> 3bb7f3d8, with remote tip tree efa3d8c3d7cd34dfb47f311403d494435102de83 equal to the local tip tree. Diff is 8 files (one Go file plus evidence/docs), i.e. no duplicated release content."
     },
     {
-      "command": "gh pr view 398 --json statusCheckRollup ; curl -s https://sonarcloud.io/api/issues/search?componentKeys=duanxldragon_pantheon-base&pullRequest=398&sinceLeakPeriod=true",
+      "command": "gh pr checks 398 ; curl -s https://sonarcloud.io/api/qualitygates/project_status?projectKey=duanxldragon_pantheon-base&pullRequest=398",
       "cwd": ".",
-      "status": "not-run",
-      "details": "Pending on the PR head: this is where the S3649 write-path disposition and the Sonar gate verdict get proven. Not claimed green in advance; the hosted result is written here once available."
+      "status": "passed",
+      "details": "PR #398 merged as c17ef999ff650b887923beba4688ae2055dc89ff at 07:23:33Z with every check pass/skipping: Backend Tests, Unit Tests (x2), Coverage Gate (x2), CI Summary, Code Quality Gates, Fast Checks, Go Lint (x3), Boundary Gate, Duplication Gate, Docs Governance, Change Scope, Frontend Contract, Frontend Unit Tests, Secret Scan, CodeQL, Security Gates, Workflow Security, Dependency Vulnerabilities, Bench Perf Smoke. SonarCloud PR analysis: gate status OK, new-code issues total = 0."
+    },
+    {
+      "command": "gh api repos/duanxldragon/pantheon-base/actions/runs?branch=main (head c17ef999) ; gh api repos/…/commits/c17ef999/check-runs",
+      "cwd": ".",
+      "status": "failed",
+      "details": "Main's post-merge push run on c17ef999: CI = success, Full Smoke Suite = success, Core Smoke Tests = success, Security Gates = success, Lint Workflows = success, but Release Gate = failure. Cause: the `SonarCloud Code Analysis` check-run on the branch analysis is FAILURE with condition `Security Rating on New Code` (required >= A) unmet, and Release Gate's `Candidate Checks` step therefore reports `A required check failed on c17ef999`. Corrected claim: the write-path change reduced S3649 from three BLOCKERs to two (`:711` read, `:726` update) and the PR-scoped leak period reported zero, but the branch-scoped new-code period still flags AddMember, so the security gate is NOT closed. The PR-level 'OK' reading is not the branch-level verdict and must not be quoted as one."
+    },
+    {
+      "command": "curl -s https://sonarcloud.io/api/issues/search?componentKeys=duanxldragon_pantheon-base&branch=main&rules=gosecurity:S3649 ; curl -s https://sonarcloud.io/api/qualitygates/project_status?projectKey=duanxldragon_pantheon-base&branch=main",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Rule prevalence, measured: only 4 S3649 issues have ever existed on main and all four are in `Service.AddMember()` (2 OPEN at :711/:726, 2 CLOSED from the superseded lines). Branch gate status = ERROR, sole unmet condition `new_security_rating` actual E (5) against threshold A; reliability, maintainability, duplication and hotspot conditions are OK. So this is not a repo-wide taint pattern and not something the scoping abstraction in pkg/tenant would absorb - the rule fires on this function's GORM builder calls regardless of whether the value reaches a bound placeholder, a map key set, a primary-key Model or a Select-named typed struct. Two legitimate restructurings (map conditions, PK-scoped typed update) each removed flags but cannot reach zero, and the residue requires a scanner disposition decision rather than another code reshuffle."
+    },
+    {
+      "command": "gh api repos/duanxldragon/pantheon-base/commits/c17ef999/check-runs (Backend Tests, Unit Tests)",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Race detector is now CI-proven: ci.yml `unit-tests` runs `go test -race -short ./...` and quality.yml `backend-tests` runs `go test -race ./...`, and both check-runs conclude success on main's c17ef999. This closes the local gap recorded earlier - the host still cannot run -race (no C toolchain), so the proof lives in CI, not in a local run."
     }
   ],
   "knownGaps": [
@@ -210,8 +228,8 @@
     "No backup/restore or upgrade drill, including taking over a database where add_oidc_fields.sql was already applied manually before migration 000029.",
     "github.com is unreachable from this host (connection reset / timeout) while api.github.com works, so the branch is published via the Git Data API rather than `git push`. The same limit means local `main` cannot be fetched or fast-forwarded; syncing local main is a maintainer action.",
     "Skip masking is an open methodology gap, not a closed one: pkg/testmysql.Open and pkg/testredis.Open both report 'ok' when their store is missing, so a local green suite proves nothing about Redis-backed paths until PANTHEON_TEST_REDIS_ADDR is set. R5 was discovered by CI, not by local verification; a checker that fails when a required store is absent has not been built.",
-    "The SonarCloud Security Rating on New Code outcome for the follow-up commit is unproven: map conditions and the test refactor are semantics-preserving locally, but only the next hosted analysis can show the gate green.",
-    "Corrected: the release content is on main. PR #395 merged release/v0.17.0 into main as 762d94a5 (tree f7135e30) with only SonarCloud red, and #397 turned the four R5 test gates green, so the branch's test status is no longer unproven. What remains unproven is the security gate, and the `pantheon-base-v0.17.0` tag is still deliberately not cut: main carries a red Sonar gate and the follow-up S3649 disposition is a maintainer action.",
+    "SonarCloud disposition for `gosecurity:S3649` on `Service.AddMember()` (:711 read, :726 update) is an open maintainer decision: main's branch-level new-code security rating is E, so `Release Gate` is red on c17ef999 and no `pantheon-base-v0.17.0` tag may be cut. Two semantics-preserving restructurings landed (#397 map conditions, #398 primary-key typed update) and cut 3 blockers to 2; the rule's taint model still treats any GORM builder call fed from the request as a sink. No `NOSONAR`, no rule exclusion, no `solo-override` was added, and no further code reshuffle is proposed without that disposition.",
+    "Corrected: the release content is on main and every functional gate on main is green. PR #395 merged release/v0.17.0 into main as 762d94a5 (tree f7135e30); #397 turned the four R5 test gates green; #398 (main tip c17ef999) is green on CI, Full Smoke Suite, Core Smoke Tests, Security Gates, CodeQL and Lint Workflows. The only red is Release Gate, caused by the Sonar branch-analysis S3649 residue recorded in the gap above, so no v0.17.0 tag may be cut from main yet.",
     "Deferred register items (A4-A10, B7-B11, C3-C12, D3-D6, E3-E7, F10-F14) and the maintainer-only actions (credential rotation D2, main branch protection F2, advisory-to-blocking promotion B10, tag/release publication) remain open by decision, not by omission."
   ],
   "linkage": {
