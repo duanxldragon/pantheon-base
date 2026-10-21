@@ -60,8 +60,16 @@ Pantheon Base 方法追踪记录。方法论本体位于 `pantheon-harness`。
   or condition position. Measured on SonarCloud: main went from three `S3649` blockers to two
   (`:711` read, `:726` update) and the PR-scoped quality gate reads OK, but the branch-scoped
   `Security Rating on New Code` is still E, so `Release Gate` remains red on `c17ef999`. The residue
-  is the tenant/user lookup itself; closing it needs a scanner disposition by the maintainer, not a
-  third reshuffle. No `NOSONAR`, no rule exclusion, no gate override was added.
+  is the tenant/user lookup itself; no third reshuffle was attempted.
+- `Service.AddMember` carries two trailing `// NOSONAR gosecurity:S3649` marks, one per sink, on the
+  maintainer's explicit instruction ("suppress it in the code; I do not want to touch the Sonar
+  rule"). The finding is taint-tracking noise: `tenantID`/`userID` reach GORM only as bound `?`
+  arguments built by `membershipScope`, and `role` is a validated enum bound as a parameter, never SQL
+  text. The rule flags any request-fed builder call regardless of binding, so the taint edge cannot
+  be removed without either suppression or changing what the lookup is. Sonar rule configuration,
+  the Quality Gate thresholds and the `Release Gate` definition are unchanged, no test was silenced
+  and no `solo-override` label was applied. Whether the branch-level rating returns to A is proven
+  only by the next hosted analysis, so the `pantheon-base-v0.17.0` tag waits for that measurement.
 - The compat admin session test asserted the maintenance inventory total as an active-session count,
   so it failed against real Redis while silently skipping without it (`Total 3`, revoked rows
   included). The assertion now pins `Total = 3` with `ActiveCount = 2` and requires all three

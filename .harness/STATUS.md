@@ -15,7 +15,8 @@ v0.16.1 之后合入的 13 个提交（租户隔离整改 #386、#391–#394，�
 `CI`（含 `go test -race` 两条腿）、`Backend Tests`、`Unit Tests`、`Full Smoke Suite`、`Core Smoke Tests`、
 `Security Gates`、`CodeQL`、`Lint Workflows` 全绿；唯一红项是 `Release Gate`，起因是分支级 Sonar 分析
 `Security Rating on New Code` = E——`gosecurity:S3649` 在 `Service.AddMember()` 剩两条绑定参数误报（`:711` 读、`:726` 写）。
-tag/release 在该项由维护者处置前不发布。任务包 `2026-10-21-acceptance-remediation` 已置 `completed`，
+维护者 2026-10-21 定案：在代码层用行尾 `// NOSONAR gosecurity:S3649` 屏蔽这两条误报，Sonar 规则配置与 Quality Gate 阈值不动。
+抑制后 `Release Gate` 是否转绿由下一次 hosted 分支分析证明；tag/release 在该项实测绿之前不发布。任务包 `2026-10-21-acceptance-remediation` 已置 `completed`，
 残余动作逐项登记在 `docs/reviews/PANTHEON_BASE_ISSUES_AND_REMEDIATION_2026-10-21.md` §5。
 
 ## 租户交付硬化（2026-10-20，已完成，待 CI 确认冒烟）

@@ -159,6 +159,16 @@ diff 为 8 个文件（1 个 Go 文件 + 治理与文档），不含任何 relea
 ⇒ 功能与安全测试维度已全部有据转绿，`Tenant Smoke` 所在的 Full Smoke Suite 这轮为 success（该作业此前在同 commit 上既红又绿，仍按 flaky 处理）；
 剩余唯一阻塞是扫描器口径下的污点误报，需维护者在 Sonar 侧处置，处置前不打 `pantheon-base-v0.17.0` tag。
 
+**S3649 处置落地（分支 `fix/sonar-s3649-nosonar` → `main`，PR 号见本节末与 evidence）**：维护者对上一条「需维护者在 Sonar 侧处置」给出了决定——
+「既然是误报，那应该可以处理，我希望在代码层面屏蔽，sonar 上的规则我不想动」。
+落地方式是 `Service.AddMember()` 两条 sink 各加一行行尾 `// NOSONAR gosecurity:S3649`（改写后行号 `:717` 读、`:732` 写），
+Sonar 规则配置、Quality Gate 阈值、`Release Gate` 定义一律不动，未屏蔽失败测试、未贴 `solo-override`。
+本地验证（真实 MySQL + Redis）：`gofmt -l` 干净、`go build ./...` 通过、`go vet ./modules/system/iam/tenant/` 通过、
+`go test -count=1 ./...` 全绿；其中 `modules/lowcode/dynamicmodule` 首轮因未设 `PANTHEON_NODE_BIN` / `PANTHEON_WORKSPACE_ROOT` 报
+`module.generate.server_export_failed`（R6 已知环境项），补齐两个变量后该包 `ok 16.738s`。
+**hosted 结论仍未证**：`Release Gate` 是否转绿、分支级 `new_security_rating` 是否回到 A，只能由合并后的下一次分支级 Sonar 分析给出；
+本条不把「已抑制」写成「门禁已收口」。
+
 ### 4.3 未执行/无法执行（显式 gap，不得视为通过）
 
 1. **浏览器级 Tenant Smoke 复验**：需后端+MySQL+Redis+前端全栈；本地未运行。FIX-11 的 CI 复验在整改进入 #395/CI 后自动完成。当前"Tenant Smoke 将恢复绿色"是基于取证链的推断，非实测。

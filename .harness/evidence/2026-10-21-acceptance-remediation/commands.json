@@ -237,6 +237,42 @@
       "cwd": ".",
       "status": "passed",
       "details": "Corrected retry result: the first real push failed with `Failed to connect to github.com port 443 after 21110 ms`, the second attempt created refs/heads/docs/transport-verified and set upstream, and the third reported `Everything up-to-date`. The transport is therefore usable but intermittent - retrying and reading the remote ref back is part of the procedure, not an optional courtesy. Since this push was ordinary git, the remote commit sha equals the local one (5221b5e4), so the tree-parity assertion the API replay needed is no longer the interesting check."
+    },
+    {
+      "command": "git push origin --delete acceptance/remediation-2026-10-21-sonar",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Deleted the superseded remote branch on the maintainer's instruction (`删除该遗留分支`). Pre-delete sha bfcbe645bb3d1da82e54ab43c0588e724045eb22; `git ls-remote --heads origin` afterwards returns no matching ref. It was not the head of any open PR (the only open PR at the time was Dependabot #400), so nothing in review depends on it. Deletion is recoverable from the reflog/sha if ever needed."
+    },
+    {
+      "command": "curl -s https://sonarcloud.io/api/issues/search?componentKeys=duanxldragon_pantheon-base&branch=main&resolved=false ; curl -s .../api/qualitygates/project_status?projectKey=duanxldragon_pantheon-base&branch=main",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Pre-change baseline for the maintainer's new acceptance condition (Quality Gate all-pass, open issues zero): open issues total = 2, both gosecurity:S3649 BLOCKER in Service.AddMember (tenant_service.go:711 read, :726 update). project_status = ERROR; the only failing condition is new_security_rating actual 5 (E) > threshold 1 (A); reliability 1, maintainability 1, duplication 2.2%, hotspot review 100% are all OK. So the entire delta to a green gate is these two findings."
+    },
+    {
+      "command": "gofmt -l backend/modules/system/iam/tenant/ ; go build ./... ; go vet ./modules/system/iam/tenant/",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "After adding the two trailing NOSONAR marks and restructuring each chain into a single statement so the comments sit on the sink line: gofmt reports no file, build and vet are clean."
+    },
+    {
+      "command": "go test -count=1 ./modules/system/iam/tenant/ -run 'TestAddMember|TestRemoveMember|TestMember' -v",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "Against real MySQL and Redis (PANTHEON_TEST_DSN / PANTHEON_TEST_REDIS_ADDR set, quotes stripped): ok, 2.812s. The restructured read and update paths behave identically, including the owner-demotion guard and the idempotent re-add case."
+    },
+    {
+      "command": "go test -count=1 ./... (real MySQL + Redis; PANTHEON_NODE_BIN and PANTHEON_WORKSPACE_ROOT set)",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "Full backend suite after the suppression change: exit 0, 46 packages ok, no FAIL lines, against real MySQL and Redis. A first attempt without PANTHEON_NODE_BIN / PANTHEON_WORKSPACE_ROOT failed only in modules/lowcode/dynamicmodule with the known R6 environment error module.generate.server_export_failed; with both variables set that package passes in 16.738s."
+    },
+    {
+      "command": "gh api repos/duanxldragon/pantheon-base/dependabot/alerts?state=open ; gh pr view 400",
+      "cwd": ".",
+      "status": "passed",
+      "details": "New independent finding while cleaning up: Dependabot alert #44 is OPEN on the default branch, high severity - github.com/klauspost/compress v1.18.6, integer overflow / OOB write in compress. backend/go.mod pins it as an indirect dependency. PR #400 (bump to 1.18.7) already exists and its visible checks are green except that it is still open; this is a release prerequisite independent of S3649, not caused by this change."
     }
   ],
   "knownGaps": [
@@ -246,8 +282,10 @@
     "No backup/restore or upgrade drill, including taking over a database where add_oidc_fields.sql was already applied manually before migration 000029.",
     "Transport, re-measured after the maintainer fixed the network on 2026-10-21: git ls-remote, git fetch origin --prune and git push --dry-run against github.com all succeed, so the Git Data API replay is no longer required for future work. It remains the honest record of how #396-#399 were published (the host could not reach github.com at the time). Local main was stale at ce82b94e (the squash-merged release cut); it was moved to origin/main 73d36ecc, and ce82b94e stays reachable from the two local acceptance branches, so nothing was discarded.",
     "Skip masking is an open methodology gap, not a closed one: pkg/testmysql.Open and pkg/testredis.Open both report 'ok' when their store is missing, so a local green suite proves nothing about Redis-backed paths until PANTHEON_TEST_REDIS_ADDR is set. R5 was discovered by CI, not by local verification; a checker that fails when a required store is absent has not been built.",
-    "SonarCloud disposition for `gosecurity:S3649` on `Service.AddMember()` (:711 read, :726 update) is an open maintainer decision: main's branch-level new-code security rating is E, so `Release Gate` is red on c17ef999 and no `pantheon-base-v0.17.0` tag may be cut. Two semantics-preserving restructurings landed (#397 map conditions, #398 primary-key typed update) and cut 3 blockers to 2; the rule's taint model still treats any GORM builder call fed from the request as a sink. No `NOSONAR`, no rule exclusion, no `solo-override` was added, and no further code reshuffle is proposed without that disposition.",
+    "SonarCloud disposition for `gosecurity:S3649` on `Service.AddMember()` (:711 read, :726 update) is CLOSED BY DECISION (2026-10-21): the maintainer chose code-level suppression - two trailing `// NOSONAR gosecurity:S3649` marks, Sonar rule configuration, Quality Gate thresholds and the Release Gate definition untouched, no test silenced, no solo-override. The suppression premise is measured, not assumed: the values reach GORM only as bound `?` arguments and the update names constant columns. What is NOT yet proven is the hosted outcome: whether the branch-level new-code security rating returns to A, Release Gate turns green and open issues reach zero is only knowable from the next hosted branch analysis after merge. Until that measurement exists, no pantheon-base-v0.17.0 tag may be cut.",
     "Corrected: the release content is on main and every functional gate on main is green. PR #395 merged release/v0.17.0 into main as 762d94a5 (tree f7135e30); #397 turned the four R5 test gates green; #398 (main tip c17ef999) is green on CI, Full Smoke Suite, Core Smoke Tests, Security Gates, CodeQL and Lint Workflows. The only red is Release Gate, caused by the Sonar branch-analysis S3649 residue recorded in the gap above, so no v0.17.0 tag may be cut from main yet.",
+    "Maintainer acceptance condition added 2026-10-21: the Quality Gate must pass every condition and the Open issues count must reach zero, not merely the PR-scoped leak period. Baseline before this change: 2 open S3649 issues and ERROR only on new_security_rating. The post-merge measurement (open issues total, project_status per condition, Release Gate conclusion) is the acceptance evidence and must be recorded here once it exists; a locally green suite cannot satisfy this condition.",
+    "Independent release prerequisite found during cleanup: Dependabot alert #44 is open on the default branch (high, github.com/klauspost/compress v1.18.6). PR #400 bumps it to 1.18.7 and is still open. This is not caused by the remediation and not fixed by the NOSONAR change, but a v0.17.0 tag that leaves a high advisory open should not be published without the maintainer deciding to merge or explicitly defer #400.",
     "Deferred register items (A4-A10, B7-B11, C3-C12, D3-D6, E3-E7, F10-F14) and the maintainer-only actions (credential rotation D2, main branch protection F2, advisory-to-blocking promotion B10, tag/release publication) remain open by decision, not by omission."
   ],
   "linkage": {

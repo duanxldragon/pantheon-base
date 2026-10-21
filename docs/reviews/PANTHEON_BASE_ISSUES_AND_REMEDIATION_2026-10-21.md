@@ -160,6 +160,22 @@ updated_at: 2026-10-21
   在此之前不得打 `pantheon-base-v0.17.0` tag；本包未加 `NOSONAR`、未排除规则、未贴 `solo-override`。
   取证失误也记在这里：#398 内的记录提交 `f421d9dc`（远端 `3bb7f3d8`）在 PR 尚未跑完时就写下「承载 S3649 的二次处置」「CI 与 Sonar 结论以本轮 hosted run 为准」，
   读者容易把「已提交处置」当成「门禁已收口」；该提交已合并、历史不可改写，故以本条记录显式更正而不是回滚。
+- **S3649 最终处置：维护者选择在代码层抑制（2026-10-21 追加，取代上文「处置权在维护者」的悬置）**：
+  维护者决定「既然是误报，那应该可以处理，我希望在代码层面屏蔽，sonar 上的规则我不想动」⇒
+  `Service.AddMember()` 的两条 sink（读侧 `memberRow`、写侧 `membershipUpdate`）各加一行行尾 `// NOSONAR gosecurity:S3649`，
+  Sonar 规则配置、Quality Gate 阈值与 `Release Gate` 定义均未改动，也未贴 `solo-override`、未屏蔽任何失败测试。
+  抑制的技术依据（逐条可核）：`tenantID`/`userID` 进入服务前已是 `strconv.ParseUint`/DTO required binding 产出的 `uint64`，
+  只经 `membershipScope` 落成 GORM 的绑定 `?` 参数；`role` 是校验后的枚举值，同样只作为绑定参数，`Select("role","status")` 是常量列名。
+  该规则把「请求值参与构造 GORM 调用」一律视作注入源，与是否参数绑定无关，因此这条污点边无法在不引入抑制或改变业务定位语义的前提下消除——
+  这正是选择行内抑制而非第三次 reshuffle 的理由。
+  为配合行尾注释，两处调用从链式换行改写为单语句（`memberRow := …Where(…)` + `err := memberRow.Limit(1).First(…)`；
+  `membershipUpdate := …Updates(…)` + `if err := membershipUpdate.Error`），语义等价：查询条件、更新列与错误返回路径逐一对应，未增删功能。
+  行号随该改写移动：Sonar 在 `c17ef999` 上报的 `:711`（读）与 `:726`（写）在改写后分别落在 `tenant_service.go:717` 与 `:732`，
+  两条行尾注释就放在这两个 sink 行上。
+  本地验证：`gofmt -l` 无输出、`go build ./...` 通过、`go vet ./modules/system/iam/tenant/` 通过、
+  该包 `go test -count=1 -run 'TestAddMember|TestRemoveMember|TestMember'`（真实 MySQL + Redis）通过。
+  **门禁结论仍待 hosted 分析**：`Release Gate` 转绿与否只能由下一次分支级 Sonar 分析证明；在此之前不打 `pantheon-base-v0.17.0` tag。
+
 - **传输通道复测与本地主干同步（2026-10-21 追加）**：维护者修复网络后重跑，`git ls-remote --heads origin`、`git fetch origin --prune`、
   `git push --dry-run origin HEAD:refs/heads/transport-check` 对 `github.com` 全部成功（dry-run 只解析 pack，未写任何 ref；`curl https://github.com` 的 HTML 请求仍超时，
   因此只宣称 git-http 通道可用）。fetch 将本地 `ffb22988..73d36ecc` 同步并清理已合并分支（含 `release/v0.17.0` 的远端引用）。
