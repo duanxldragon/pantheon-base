@@ -1,0 +1,70 @@
+{
+  "taskId": "2026-10-21-v0170-release-cut",
+  "repo": "pantheon-base",
+  "executedAt": "2026-10-21T10:00:00+08:00",
+  "agent": {
+    "tool": "other",
+    "adapter": "software-workshop-agent"
+  },
+  "commands": [
+    {
+      "command": "git log --oneline pantheon-base-v0.16.1..HEAD",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Release scope: 13 commits. Tenant isolation and permission work (#386, #391, #392, #393, #394), three dependency groups (#381, #384, #385) and five release-pipeline/closeout changes (#383, #387, #388, #389, #390). No commit outside that list, so the release is fully accounted for."
+    },
+    {
+      "command": "cat VERSION && grep -n 'pantheon-base-v0.17.0' CHANGELOG.md RELEASE_NOTES_v0.17.0.md .harness/STATUS.md",
+      "cwd": ".",
+      "status": "passed",
+      "details": "VERSION reads 0.17.0. CHANGELOG carries [pantheon-base-v0.17.0], RELEASE_NOTES_v0.17.0.md names the tag, and .harness/STATUS.md records v0.17.0 as the current version and the release scope. Version references agree."
+    },
+    {
+      "command": "node scripts/foundation-release/build-release-manifest.mjs --release-version pantheon-base-v0.17.0 --release-line release/0.17 --base-commit $(git rev-parse HEAD) --release-notes ... --upgrade-notes ... --consumer-impact ...",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Dry manifest build through the canonical builder. sharedPaths is backend 4, frontend 46, docs 2 — the same 52 entries the consumer lock already declares — and baseCommit resolves to the release commit. The generated releases/ directory is gitignored and was removed again before committing."
+    },
+    {
+      "command": "node -e '<assert each of the six business-overlay assembly anchors appears exactly once in the base tree>'",
+      "cwd": ".",
+      "status": "passed",
+      "details": "All six anchors match exactly once: business.go InitGeneratedBusinessModules, both modules.ts anchors, both componentRegistry.ts anchors, and the mergeMenuComponentKeys line in system/iam/menu/component_registry.go. anchors_bad=0. The menu package rename from v0.16.0 is already reflected in the tree."
+    },
+    {
+      "command": "node scripts/harness/check-task-packet.mjs --root .",
+      "cwd": ".",
+      "status": "passed",
+      "details": "The new task packet passes. One warning remains at the time of the run — the linked review.md did not exist yet — which is resolved by this evidence directory."
+    },
+    {
+      "command": "node scripts/harness/check-failure-registry.mjs --root . --strict",
+      "cwd": ".",
+      "status": "passed",
+      "details": "1 file, 0 errors, 0 warnings."
+    },
+    {
+      "command": "node scripts/harness/check-evidence.mjs --root . --strict",
+      "cwd": ".",
+      "status": "failed",
+      "details": "One pre-existing failure, untouched by this release: .harness/evidence/2026-10-20-tenant-delivery-hardening/commands.json is missing the root knownGaps array and linkage object. This release adds its own evidence directory in the required shape; the older directory is out of scope and recorded as a known gap rather than rewritten."
+    }
+  ],
+  "runtimeSensitive": true,
+  "runtimeGap": "Local gates cover the release metadata and the contract checks. The release commit's required checks, the published asset set and the Foundation Release Verify conclusion can only be confirmed after the push, and are appended to this file once they exist.",
+  "knownGaps": [
+    "The 2026-10-20 tenant-delivery-hardening evidence predates the current evidence schema and fails check-evidence --strict. It was not rewritten here because it records a different change.",
+    "Repository default_workflow_permissions is read, so the hosted cut workflow cannot create the GitHub Release; the tag and release are created with the maintainer credential, as recorded for v0.16.1."
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-21-v0170-release-cut/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-21-v0170-release-cut/",
+    "reviewFile": ".harness/evidence/2026-10-21-v0170-release-cut/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/VERSION_MANAGEMENT_GUIDE.md",
+      "docs/designs/FOUNDATION_RELEASE_MODEL.md",
+      ".github/workflows/release-gate.yml"
+    ]
+  }
+}

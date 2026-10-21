@@ -6,7 +6,7 @@ Pantheon Base 方法追踪记录。方法论本体位于 `pantheon-harness`。
 
 ---
 
-## [Unreleased] — 2026-10-20 (tenant delivery hardening)
+## [pantheon-base-v0.17.0] — 2026-10-21 (tenant isolation remediation)
 
 > A post-acceptance audit found two tenant→platform permission escapes and a permanently red
 > tenant smoke job. This slice closes them at the namespace layer: policy writes take their tenant
@@ -38,6 +38,38 @@ Pantheon Base 方法追踪记录。方法论本体位于 `pantheon-harness`。
   viewpoint switcher render again — the cause of the red `Tenant Smoke` job on every main commit.
 - CSV role import stamps the caller's tenant; it used to write `tenant_id = 0` (a platform role).
 - Import role-key validation and the bootstrap admin binding are scoped to the target namespace.
+
+### Changed
+
+- The auth module now seeds its own permission keys, not only its menus, so a fresh tenant gets a
+  working login surface without a global policy grant.
+- Tenant menu seeds and the security-surface documentation were completed as part of the
+  SonarCloud cleanup; every open SonarCloud finding on `main` is closed.
+- `MigrateDataScopePolicy` backfills tenant-scoped role data-scope and role-menu rows
+  (migrations `000025`–`000027`) before the permission policy console is exposed.
+
+### Dependencies
+
+- Frontend npm dependency group: 18 package updates.
+- Root dev-dependency group: 2 updates.
+- GitHub Actions group: 4 updates (all actions stay SHA-pinned).
+
+### Release tooling
+
+- The cut workflow now validates its inputs after the checkout, builds the bundle from the
+  requested `base_commit` rather than the default-branch head, creates the tag through the API, and
+  verifies the tag with `git ls-remote` instead of a read-permission-limited API call.
+- The v0.16.1 closeout evidence and harness status were repaired so the release record matches what
+  was actually published.
+
+### Consumer impact
+
+- `sharedPaths` is unchanged at 52 entries (backend 4, frontend 46, docs 2), so the consumer lock
+  moves only version, commit and checksums.
+- Migrations `000025`–`000028` are additive and run through the standard startup migrator; no
+  consumer-side schema work is required.
+- No API route, permission code or menu key is removed. Tenant-scoped policy writes are now
+  rejected when the body names another tenant, which is the intended security fix.
 
 ---
 

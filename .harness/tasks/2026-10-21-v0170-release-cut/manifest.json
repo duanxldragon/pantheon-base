@@ -1,0 +1,80 @@
+{
+  "taskId": "2026-10-21-v0170-release-cut",
+  "title": "Cut and publish pantheon-base-v0.17.0 with the tenant isolation remediation",
+  "goal": "Thirteen commits merged after v0.16.1 carry the tenant isolation remediation (#386, #391-#394), three dependency bumps (#381, #384, #385) and the release-pipeline repairs (#383, #387-#390). Cut them as the minor release the harness status already planned (v0.17.0) and publish the four consumable assets so pantheon-ops can move its lock off v0.16.1 onto a base that contains the permission escape fixes.",
+  "primaryLayer": "platform",
+  "status": "completed",
+  "priority": "P1",
+  "type": "release-closeout",
+  "estimatedComplexity": "medium",
+  "findings": [
+    "docs/VERSION_MANAGEMENT_GUIDE.md section 2.3 puts new capability and behaviour changes on a minor bump. This range changes behaviour on purpose: a tenant-scoped policy write naming another tenant now fails with TENANT_FORBIDDEN, tenant role keys cannot shadow the platform namespace, and migrations 000025-000028 add tenant-scoped state. .harness/STATUS.md already recorded that the tenant remediation would ship with v0.17.0 after the v0.16.1 cut was scoped back to its release candidate c83f8e4c.",
+    "sharedPaths is unchanged at 52 entries (backend 4, frontend 46, docs 2), verified against the generated v0.17.0 manifest and the v0.13.0/v0.16.1 manifests. The consumer lock therefore moves only version, release line, commit and checksums.",
+    "Every migration in this range is additive and carries a down migration: 000025/000026 backfill tenant scoping, 000027 cleans ghost memberships, 000028 adds tenant_id to the remediation event table. No consumer-owned table or business schema is touched.",
+    "The business overlay anchors on exact source lines. All six anchors resolve exactly once against the v0.17.0 tree; system/iam/menu stays package menu, which the consumer generator now derives from the base tree rather than hardcoding.",
+    "The base main branch is not protected, so the release prep commit can be pushed directly. Release Gate already runs on push and produces the Release Gate Summary check run that publish-foundation-release.mjs requires, and the six required checks run on the same commit.",
+    "Repository default_workflow_permissions is read, so a workflow token cannot create the GitHub Release; the v0.16.1 evidence recorded three hosted attempts failing at tag push, Git database API and release creation. Publishing therefore uses the maintainer's gh credential locally against the canonical cut/check/publish scripts.",
+    "The consumer side is a separate change: this packet only produces the immutable release and its assets; pantheon-ops advances its lock and swaps its baseline afterwards."
+  ],
+  "scope": {
+    "in": [
+      "VERSION -> 0.17.0",
+      "CHANGELOG.md [pantheon-base-v0.17.0] entry",
+      "RELEASE_NOTES_v0.17.0.md",
+      ".harness/STATUS.md version and release section",
+      ".harness/tasks/2026-10-21-v0170-release-cut/",
+      ".harness/evidence/2026-10-21-v0170-release-cut/ including notes/",
+      "docs/harness/tasks/2026-10-21-v0170-release-cut.task.md"
+    ],
+    "out": [
+      "Any product source change: backend/** and frontend/** are untouched; this release records work already merged to main",
+      "Editing release-gate.yml, foundation-release-verify.yml or any existing required check",
+      "Committing gitignored releases/** or dist/** output",
+      "Updating the pantheon-ops consumer lock: that is a separate consumer-repository change"
+    ]
+  },
+  "acceptanceCriteria": [
+    "VERSION reads 0.17.0 and CHANGELOG, RELEASE_NOTES and .harness/STATUS.md all point at pantheon-base-v0.17.0.",
+    "The release commit carries successful CI Summary, Quality Gates, Security Gates, Actionlint, Full Smoke, SonarCloud Code Analysis and Release Gate Summary check runs.",
+    "The immutable tag pantheon-base-v0.17.0 points at that commit and its GitHub Release carries all four assets with matching SHA-256 digests.",
+    "Foundation Release Verify passes on the published release.",
+    "check-task-packet, check-evidence --strict and check-failure-registry pass locally."
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "ci-workflow",
+    "ownerLayer": "consumer-repository"
+  },
+  "verificationPlan": {
+    "commands": [
+      "cat VERSION && grep -n 'pantheon-base-v0.17.0' CHANGELOG.md RELEASE_NOTES_v0.17.0.md .harness/STATUS.md",
+      "node scripts/harness/check-task-packet.mjs --root .",
+      "node scripts/harness/check-evidence.mjs --root . --strict",
+      "node scripts/harness/check-failure-registry.mjs --root . --strict",
+      "gh api repos/duanxldragon/pantheon-base/commits/<sha>/check-runs --jq '.check_runs[] | \"\\(.name): \\(.status)/\\(.conclusion)\"'",
+      "npm run release:foundation:cut -- --release-version pantheon-base-v0.17.0 --release-line release/0.17 --base-commit <sha> --release-notes ... --upgrade-notes ... --consumer-impact ...",
+      "node scripts/foundation-release/check-release-assets.mjs --release-version pantheon-base-v0.17.0 --local-only",
+      "npm run release:foundation:publish -- --release-version pantheon-base-v0.17.0 --release-line release/0.17 --target-commit <sha> --repo duanxldragon/pantheon-base --remote origin",
+      "gh release view pantheon-base-v0.17.0 --json assets --jq '.assets[] | \"\\(.name) \\(.size)\"'"
+    ],
+    "runtimeEvidence": [
+      "Required check conclusions on the release commit",
+      "Peeled tag target and the four asset names, sizes and SHA-256 digests",
+      "Foundation Release Verify conclusion on release: published"
+    ]
+  },
+  "runtimeSensitive": true,
+  "linkage": {
+    "assessment": "docs/harness/tasks/2026-10-21-v0170-release-cut.task.md",
+    "evidenceDir": ".harness/evidence/2026-10-21-v0170-release-cut/",
+    "summaryFile": ".harness/evidence/2026-10-21-v0170-release-cut/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-21-v0170-release-cut/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/VERSION_MANAGEMENT_GUIDE.md",
+      "docs/designs/FOUNDATION_RELEASE_MODEL.md",
+      ".harness/STATUS.md"
+    ]
+  }
+}
