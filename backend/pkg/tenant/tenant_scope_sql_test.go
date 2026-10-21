@@ -106,33 +106,36 @@ func TestWithTenantScopeRendersTenantPinSQL(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			var rows []scopeSQLRow
 			stmt := tc.build().Scopes(WithTenantScope(tc.ctx)).Find(&rows).Statement
-			sqlText := stmt.SQL.String()
-			if tc.wantClause == "" {
-				if strings.Contains(sqlText, "tenant_id") {
-					t.Fatalf("nil-context path must not filter, got %q", sqlText)
-				}
-				return
-			}
-			if !strings.Contains(sqlText, tc.wantClause) {
-				t.Fatalf("rendered %q, want clause %q", sqlText, tc.wantClause)
-			}
-			if len(stmt.Vars) == 0 {
-				t.Fatalf("expected tenant id bound for %q", sqlText)
-			}
-			// Locate the tenant arg by clause position rather than assuming it
-			// is first (other predicates may share the statement).
-			found := false
-			for _, v := range stmt.Vars {
-				if id, ok := v.(uint64); ok && id == tc.wantArg {
-					found = true
-					break
-				}
-			}
-			if !found {
-				t.Fatalf("vars %v do not carry tenant pin %d", stmt.Vars, tc.wantArg)
-			}
+			assertScopedSQL(t, stmt.SQL.String(), stmt.Vars, tc.wantClause, tc.wantArg)
 		})
 	}
+}
+
+// assertScopedSQL keeps the case assertions out of the table loop so the
+// rendered statement stays readable as a single decision per expectation.
+func assertScopedSQL(t *testing.T, sqlText string, vars []any, wantClause string, wantArg uint64) {
+	t.Helper()
+
+	if wantClause == "" {
+		if strings.Contains(sqlText, "tenant_id") {
+			t.Fatalf("nil-context path must not filter, got %q", sqlText)
+		}
+		return
+	}
+	if !strings.Contains(sqlText, wantClause) {
+		t.Fatalf("rendered %q, want clause %q", sqlText, wantClause)
+	}
+	if len(vars) == 0 {
+		t.Fatalf("expected tenant id bound for %q", sqlText)
+	}
+	// Locate the tenant arg by clause position rather than assuming it
+	// is first (other predicates may share the statement).
+	for _, v := range vars {
+		if id, ok := v.(uint64); ok && id == wantArg {
+			return
+		}
+	}
+	t.Fatalf("vars %v do not carry tenant pin %d", vars, wantArg)
 }
 
 // TestWithTenantWriteStampsCompatZero pins the write-side twin: a compat

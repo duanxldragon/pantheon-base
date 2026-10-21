@@ -33,13 +33,13 @@ updated_at: 2026-10-21
 | C4 | **P2** | `oidc_subject` 全局唯一索引跨租户互斥，违反"租户内唯一" | 旧 SQL 全局 unique | **FIX-8**：替换为 `uk_system_user_tenant_oidc_subject (tenant_id, oidc_provider, oidc_subject)`（`000029:62-73`） | 同上 |
 | C2 | **P1** | `tenant_handler.go` 39 处裸 `{"error": err.Error()}` 绕过统一信封且透传内部错误 | 原 handler 全文 | **FIX-7**：错误路径统一 `common.Fail/FailWithError` + sentinel 映射 `failServiceError`；成功数据保持 legacy 裸 JSON 形状（该端点组未挂载、前端只消费信封，兼容性已论证） | `TestLegacyTenantHandlerErrorEnvelopeIsUnifiedAndLeakFree`（12 子用例） |
 | E1 | **P1** | 路由预热缓存无会话维度：同页签换账号存在跨账号数据泄漏窗口 | `frontend/src/core/router/prefetch.ts`（warm 数据不清理） | **FIX-9**：`invalidateAllRouteWarmData()`（`prefetch.ts:215`）在 `performLogout` 与 `completeLogin` 调用；warmers 改懒加载避免循环依赖 | `routeWarmDataSessionBoundary.test.ts`（4 例，含同页签 logout→login 模拟） |
-| F1 | **高** | Tenant Smoke 常年红且被 advisory 化（`continue-on-error: true`），release notes 宣称已修复=失实 | 运行 39533828246 trace：`POST /system/user`→id 5，`POST /system/tenant/205/members {"user_id":5,"role":"member"}`→`{"code":400,"message":"tenant.member_exists"}`；服务端建用户事务已 `ensureTenantMembership`（`user_service.go:417`），前端加入视角再 POST 撞唯一键 | **FIX-11**：`AddMember` 幂等（存在则更新角色/复活，owner 行拒降级）；同时消除每次"租户视角建用户"必然出现的假性失败 toast。文档修正见 F8 | `TestAddMember_Duplicate`（改为断言幂等成功）、`TestAddMember_OwnerIsProtected`（真 MySQL 通过）。浏览器级断言待 CI 复验（本地无全栈，显式 gap） |
+| F1 | **高** | Tenant Smoke 常年红且被 advisory 化（`continue-on-error: true`），release notes 宣称已修复=失实 | 运行 39533828246 trace：`POST /system/user`→id 5，`POST /system/tenant/205/members {"user_id":5,"role":"member"}`→`{"code":400,"message":"tenant.member_exists"}`；服务端建用户事务已 `ensureTenantMembership`（`user_service.go:417`），前端加入视角再 POST 撞唯一键 | **FIX-11**：`AddMember` 幂等（存在则更新角色/复活，owner 行拒降级）；同时消除每次"租户视角建用户"必然出现的假性失败 toast。文档修正见 F8 | `TestAddMember_Duplicate`（改为断言幂等成功）、`TestAddMember_OwnerIsProtected`（真 MySQL 通过）。**Tenant Smoke 判定修正**：同一 commit `ce82b94e` 上该作业先 FAIL（job 119005706470，`tenant-viewpoint-switcher.spec.ts:233`）后 PASS（job 119067519288，`10 passed`）⇒ 作业 flaky，FIX-11 只关闭了其中一个真实触发条件，不得表述成单根因收口；浏览器级断言仍待 CI 复验（本地无全栈，显式 gap） |
 | D1 | **P2** | 生产未强制 Gin ReleaseMode（debug 日志含路由表与堆栈面） | `cmd/server/main.go` 原无 SetMode | **FIX-6**：`isProductionEnv` ⇒ `gin.SetMode(gin.ReleaseMode)`（`main.go:130-131,253`）；Dockerfile `ENV GIN_MODE=release` | build/vet 通过；cmd/server 测试绿 |
 | E2 | **P2** | 二次验证 operation token 登出不清理（sessionStorage 残留） | `api/request.ts` teardown 路径 | **FIX-10**：`clearOperationToken()`（`request.ts:299`），在 `clearClientSession`/`performLogout` 调用（`:106,:347,:365`） | `requestOperationTokenSession.test.ts`（3 例） |
 
 ### 既有冻结决策文档所列缺陷（A/B/C 旧编号）的当前结论
 
-- 旧缺陷 A（登录租户选择器 401）：**已修复**（v0.17.0 切片，`platform.tenant_mode` 发布为 public + Bootstrap 提升 `is_public`；CI multi-mode smoke 的 picker 断言已通过，红点仅余 viewpoint membership，即本次 F1/B 组之外的第二根因，已由 FIX-11 收口）。
+- 旧缺陷 A（登录租户选择器 401）：**已修复**（v0.17.0 切片，`platform.tenant_mode` 发布为 public + Bootstrap 提升 `is_public`；CI multi-mode smoke 的 picker 断言已通过，红点仅余 viewpoint membership，即本次 F1/B 组之外的第二条触发条件，由 FIX-11 消除；该 job 同 commit 上先红后绿，属 flaky，不能声称单一根因收口，见 §5）。
 - 旧缺陷 B（current 端点）：**已修复**（租户控制台改用信封化 PlatformHandler 面，legacy 裸 JSON 组未挂载；FIX-7 统一其错误路径）。
 - 旧缺陷 C（硬删 casbin 策略）：**已修复并收口**（runbook `docs/runbooks/TENANT_TROUBLESHOOTING.md` 存在；角色生命周期 delete/rename 已识别 `role:<key>@tenant:<id>` 形态，见 v0.17.0 Security 条目）。
 
@@ -88,7 +88,7 @@ updated_at: 2026-10-21
 - **F4（中）** `check-security-patterns.mjs` 无任何引用（死门禁，手动跑必红 295 errors，无 baseline）。记录为发现；不静默删除/屏蔽。
 - **F5（高）** 发布未闭环：v0.17.0 tag 不存在，PR #395 红（Docs Governance 的 PR-body 仪式字段 + 聚合）。整改已本地就绪，随 #395 收口。
 - **F6（低）** 陈旧分支残留（10 个本地/远端分支内容全部已 squash 并入 main，经 `git cherry` 交叉验证，无未交付修复）；**F7（低）** 历史中 node_modules blob 致仓库膨胀（真实凭证抽查 AKIA/ghp_/RSA 无命中，仅压缩 JS 误影）。
-- **F8（高）** RELEASE_NOTES/CHANGELOG 宣称"Tenant Smoke 红因已修复"— **失实**（当时 membership 第二根因未修）。**已修复（文档）**：两处改为"两个独立根因"叙述并加入 FIX-1…FIX-11 验收整改小节与验证边界声明。
+- **F8（高）** RELEASE_NOTES/CHANGELOG 宣称"Tenant Smoke 红因已修复"— **失实**（当时 membership 触发条件未修）。**已修复（文档）**：两处加入 FIX-1…FIX-11 验收整改小节与验证边界声明；"两个独立根因均已关闭"的叙述同样证据不足（同 commit 上该 job 先红后绿，属 flaky），改为"两条真实触发条件，其中 membership 一条由 FIX-11 消除，job 稳定性与最终转绿仍需 CI 复验"。
 - **F9（中）** `TENANT_SCOPE_FREEZE_DECISION_2026-10-15` 头部"待批准"与文内 §6.1 维护者裁决矛盾 — **已修复（文档）**：状态改为已批准并指向本清单。
 - **F10（中）** `TENANT_INITIALIZATION_GUIDE` §2.2 "事务写 6 步"清单过期（另有 roleMenus/rootDept 及本次 dict 复制步骤）— 建议随 #395 文档收口一并更新。
 - **F11（中）** `DEPLOYMENT_GUIDE` 全文无 tenant_mode/multi/compat — 缺口记录，文档维护项。
@@ -103,6 +103,11 @@ updated_at: 2026-10-21
 - **R2（P2，FIX-5 回归）** 反向互斥在"平台管理员编辑租户角色且键不变"时命中被编辑行自身，误报 `role.key.reserved`（`TestPlatformEditOfTenantRoleKeepsGrantInRoleTenant` 捕获）。修复：`ensureRoleKeyAllowed(roleKey, excludeRoleID)`，更新路径传 `role.ID`、创建路径传 0（`role_helper.go:95,115,145-170`）。
 - **R3（P3，FIX-3 测试缺陷）** `tenant_service_session_revocation_test.go:55` `db.Exec(...)` 漏 `.Error`，判空恒真——该测试在有 DB 环境必红、无 DB 环境 skip，从未真正验证过。修复占位符后该测试真 MySQL 通过。
 - **R4（P3，FIX-4 fixture 缺口）** `tenantTestDDL` 未建 `system_dict_type/system_dict_item`，含 FIX-4 后所有走 provisioning 的租户测试在真 MySQL 下 1146。修复：按 000001/000002/000013 权威形状补两张表 DDL（`tenant_service_test.go:103-133`）。
+- **R5（P2，Redis-skip 掩盖 + 断言写错）** `TestSessionAdminOps_CompatPinsToPlatformTenant` 在本地"通过"仅因 `pkg/testredis.Open` 未配地址时静默 skip（`redis.go:73`），CI 才暴露真红：`session_tenant_scope_test.go:225 got total=3`。
+  定位：`applyAdminSessionFilters`（`session_helpers.go:124-154`）在 `query == nil` 时不加任何过滤，维护视图 `Total` 按设计含 revoked 行，`ActiveCount` 才是活跃数——错的是测试期望，不是产品代码。
+  修复：断言改为 `Total=3 && ActiveCount=2`，并要求三个租户的会话 ID 全部在场（跨租户覆盖比原断言更强）。配 MySQL+Redis 复跑 46 包全绿、日志无 skip 提示。
+  **这一条推翻了我此前"真 MySQL 全量=决定性证据"的定性**：只配 DSN 的全量对 Redis 维度等于没跑。
+- **R6（P2，门禁掩盖）** 上一轮全量把 `PANTHEON_NODE_BIN` 之外的 scaffold 环境变量留空时，`modules/lowcode/dynamicmodule` 会以 `module.generate.server_export_failed` 硬失败（`internal/scaffold/workspace.go:238-245` 需要 node 与 exporter 脚本）——这是环境缺口而非回归；补齐 `PANTHEON_NODE_BIN`/`PANTHEON_WORKSPACE_ROOT` 后同包 16.0s ok。记录以免被误读为产品缺陷，也提示：本地全绿依赖一小组必须显式设置的环境变量，未设置时的失败/skip 形态各异。
 
 ## 4. 剩余风险
 
@@ -110,3 +115,15 @@ updated_at: 2026-10-21
 2. D2 凭证轮换未完成前，仓库暴露面持续存在（维护者动作，冻结放行条件之一）。
 3. compat⇒multi 升级路径与历史数据归属由迁移与守卫保障，但真实升级演练（备份库回放）未在本次执行。
 4. A2/A3/B7-B9 类时效与并发项为已知窗口（≤15min），无跨租户越界后果。
+
+## 5. PR #396 合并实况与新增门禁项（2026-10-21 追加）
+
+- **#396 在四项红灯下合并**（`462216ec` → `release/v0.17.0`）：`Backend Tests` / `Unit Tests` 红于 R5，`CI Summary`（关键项读 `UNIT_TESTS`/`COVERAGE_GATE`）与 `Quality Gates`（输入仅 `Backend Tests: failure`）是其下游聚合；合并后 push run 39553427164 / 39553427175 复现同样四项。其余门禁（Core Smoke Tests、Security Gates、CodeQL、Go Lint、Secret Scan、Docs/PR Governance、前端全套、Boundary、Duplication、Change Scope）全绿。
+- **G1（P1，门禁红）SonarCloud Quality Gate**：`Security Rating on New Code ≥ A` 未达（check-run 119067749735）。新代码问题三条：
+  `gosecurity:S3649` BLOCKER @ `tenant_service.go:714`（`Service.AddMember()`，污点跟踪误报——值只进绑定 `?` 占位符）、
+  `go:S1192` @ `:704`（字面量重复 3 次）、`go:S3776` @ `tenant_scope_sql_test.go:62`（认知复杂度 25）。
+  处置（不改运行语义）：`AddMember`/`RemoveMember` 改 GORM map 条件 `membershipScope(tenantID, userID)`（两键恒在，不像 struct 条件会丢零值租户 ID），
+  表驱动断言拆出 `assertScopedSQL`。本地 `go build ./...` + 三包（`pkg/tenant`、`iam/tenant`、`auth/session`）真 MySQL+Redis 全 ok；**门禁转绿只能在下一轮 hosted CI 证明**。
+- **G2（P1，方法论）skip 掩盖是复发型缺陷**：本轮两次（R1-R4 缺 DSN、R5 缺 Redis 地址）都是 helper 静默 skip 把红变成绿。
+  建议补一条 checker/CI 步骤：当 task packet 声明 runtime-sensitive 且涉及会话/撤销面时，未配置 `PANTHEON_TEST_REDIS_ADDR` 应视为失败而非 skip（属 B10 同族，未在本次实施，显式延期）。
+- **合并状态结论**：`release/v0.17.0` 的测试门禁目前是「未证明」，跟进提交转绿前不得从该分支打 `pantheon-base-v0.17.0` tag。

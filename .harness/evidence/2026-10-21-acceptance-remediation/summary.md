@@ -18,7 +18,7 @@
 | C2 | tenant handler 旧式错误体且透出内部错误 | P1 | FIX-7 统一 `common` 错误信封，内部错误只落日志 | closed |
 | E1 | 路由预热缓存跨账号/会话复用 | P1 | FIX-9 `prefetch.ts` + `AppLayout.tsx` 会话边界失效 | closed |
 | E2 | 登出不清理二次验证 operation token | P1 | FIX-10 `request.ts` + `Login.tsx` 清理 | closed |
-| F1 | Tenant Smoke 第二根因：AddMember 非幂等返回 400 | P1 | FIX-11 AddMember 幂等化 | closed（代码层） |
+| F1 | AddMember 非幂等返回 400，钉住视角建用户后加入本租户报 membership 失败 | P1 | FIX-11 AddMember 幂等化 | closed（代码层）；Tenant Smoke 判定见下 |
 | D1 | 生产构建未强制 Gin release mode | P2 | FIX-6 `main.go` + `Dockerfile` | closed |
 
 ## 关键根因说明
@@ -42,6 +42,16 @@
 R1-R4 全部记录而非隐藏：其中三条只有在套件真的跑在 MySQL 上时才可见，之前它们因为缺 DSN 而静默 skip。
 这正是本仓库反复出现的「DB-skip 掩盖」问题（见验收报告环境限制章节）。
 
+### Redis-skip 掩盖（R5）与 CI 复核结论
+
+| 编号 | 现象 | 根因 | 修复 |
+|---|---|---|---|
+| R5 | `TestSessionAdminOps_CompatPinsToPlatformTenant` 本机“通过”、CI 失败 `session_tenant_scope_test.go:225: nil-context view must still span tenants, got total=3` | 两层问题叠加：① 本机未配 `PANTHEON_TEST_REDIS_ADDR`，该用例在 `pkg/testredis.Open` 处静默 skip，本机根本没跑；② 断言本身写错——把维护视图的 `Total` 当成活跃会话数 | 配好 MySQL+Redis 复现出与 CI 一致的红；按 `applyAdminSessionFilters`（`query == nil` 时不加任何过滤）的真实语义改为断言 `Total=3 / ActiveCount=2` 并要求三个会话 ID 全部在场。改的是测试期望，产品代码未动 |
+
+- 配好 MySQL **和** Redis 后全量重跑：46 个包 `ok`、`EXIT=0`，日志中不再出现 `redis addr is not configured` 的 skip 提示，说明此前被 Redis-skip 掩盖的用例已全部真实执行。
+- **Tenant Smoke 是 flaky，不是单一根因**：同一 commit `ce82b94e` 上先出现 FAIL（job 119005706470，`tenant-viewpoint-switcher.spec.ts:233` 等不到「用户已创建并加入租户成员」）又出现 PASS（job 119067519288，同一条断言 7.6s 通过，10 passed）。FIX-11 消除的是其中一个真实触发条件（membership 重复插入返回 400），不能声称它关闭了全部原因。
+- **PR #396 合并时的门禁实况**：`Backend Tests` / `Unit Tests` 因 R5 的红失败，`CI Summary`（`UNIT_TESTS` 与 `COVERAGE_GATE` 为关键项）与 `Quality Gates`（`Backend Tests: failure`）是其下游聚合，`SonarCloud Code Analysis` 独立失败于 Quality Gate 条件「Security Rating on New Code ≥ A」。合并发生在这些红灯之下，因此本文件的“closed”只表示代码层修复，不表示门禁已复验通过。
+
 ## 影响面
 
 - 收紧的判定：共享写面能力判定、compat 作用域解析、角色键命名空间、OIDC 唯一键、会话撤销。
@@ -52,6 +62,10 @@ R1-R4 全部记录而非隐藏：其中三条只有在套件真的跑在 MySQL �
 ## 残余风险与未验证项
 
 - 本机无 C 工具链：`go test -race ./...` 无法执行，只有 CI 能复验（`quality.yml` / `ci.yml`）。
+- SonarCloud 红灯 `gosecurity:S3649`（`Service.AddMember()` 的 `tenant_id = ? AND user_id = ?` 原样 SQL 片段被判注入源，BLOCKER）：
+  占位符其实已参数绑定，属污点跟踪误报；本次仍改用 GORM map 条件（同一批占位符、零拼接）把误报连同 `go:S1192` 字面量重复一起消掉，
+  并拆出 `assertScopedSQL` 清掉新代码上的 `go:S3776`。门禁是否转绿只能在下一轮 CI 证明。
+- `github.com` 在本机不可达（`api.github.com` 可达）：跟进提交只能通过 Git Data API 重放；本地 `main` 也无法 fetch/ff。
 - 本机不能起浏览器：Playwright 层 Tenant Smoke 与视觉/交互验收未执行。
 - HTTP 层跨租户 curl 对抗矩阵、备份/恢复与升级演练未在本机执行。
 - ops 消费侧继承是独立变更；迁移 000029 需在部署前先跑。
