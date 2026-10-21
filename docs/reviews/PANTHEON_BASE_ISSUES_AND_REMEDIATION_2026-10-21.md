@@ -123,7 +123,14 @@ updated_at: 2026-10-21
   `gosecurity:S3649` BLOCKER @ `tenant_service.go:714`（`Service.AddMember()`，污点跟踪误报——值只进绑定 `?` 占位符）、
   `go:S1192` @ `:704`（字面量重复 3 次）、`go:S3776` @ `tenant_scope_sql_test.go:62`（认知复杂度 25）。
   处置（不改运行语义）：`AddMember`/`RemoveMember` 改 GORM map 条件 `membershipScope(tenantID, userID)`（两键恒在，不像 struct 条件会丢零值租户 ID），
-  表驱动断言拆出 `assertScopedSQL`。本地 `go build ./...` + 三包（`pkg/tenant`、`iam/tenant`、`auth/session`）真 MySQL+Redis 全 ok；**门禁转绿只能在下一轮 hosted CI 证明**。
+  表驱动断言拆出 `assertScopedSQL`。**PR #397 实测**：两条异味消失，`gosecurity:S3649` 仍在 `Service.AddMember` 报三条 BLOCKER
+  （`:711` 读、`:722` 写两条）⇒ 该规则把「用请求传入的值构造查询」一律视作 sink，与是否绑定占位符无关。
+  二次处置：写路径改为对上一步刚读到的行按主键更新（`Model(&existing)` + `Select("role","status")` + 类型化 struct），
+  请求值不再出现在列名或条件位置；读路径按 id 查行是业务本质，无法在不做抑制的前提下消除该污点边。
+  **因此 S3649 的最终处置是维护者在 Sonar 侧标记误报（或在门禁规则上让步），本轮不加 `NOSONAR`、不做规则排除、不贴 `solo-override`。**
+  其余三项红灯（Backend/Unit/Summary/Quality Gates）已在 #397 实测转绿。
 - **G2（P1，方法论）skip 掩盖是复发型缺陷**：本轮两次（R1-R4 缺 DSN、R5 缺 Redis 地址）都是 helper 静默 skip 把红变成绿。
   建议补一条 checker/CI 步骤：当 task packet 声明 runtime-sensitive 且涉及会话/撤销面时，未配置 `PANTHEON_TEST_REDIS_ADDR` 应视为失败而非 skip（属 B10 同族，未在本次实施，显式延期）。
-- **合并状态结论**：`release/v0.17.0` 的测试门禁目前是「未证明」，跟进提交转绿前不得从该分支打 `pantheon-base-v0.17.0` tag。
+- **合并状态结论**：#397 实测 `Backend Tests` / `Unit Tests` / `CI Summary` / `Coverage Gate` / `Quality Gates` 全绿（四项红灯的根因确认为 R5 一条），
+  唯 `SonarCloud Code Analysis` 仍因 `gosecurity:S3649` 误报为红（见 G1 二次处置）。在该项得到维护者处置前，
+  `release/v0.17.0` 的测试门禁可称「已证」，安全门禁仍「未证」，不得据此打 `pantheon-base-v0.17.0` tag。

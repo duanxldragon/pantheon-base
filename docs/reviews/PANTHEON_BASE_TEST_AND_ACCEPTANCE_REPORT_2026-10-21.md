@@ -140,6 +140,16 @@ $ node ./node_modules/vite/bin/vite.js build                   # ✓ built in 71
 本地 `go build ./...` + MySQL/Redis 下 `pkg/tenant` `modules/system/iam/tenant` `modules/auth/session` 全 ok；
 门禁是否转绿只能在下一轮 hosted CI 证明。
 
+**跟进 PR #397 实测（head `f0f650a5`，2026-10-21）**：`CI` 工作流整体 success——`Unit Tests`、`Coverage Gate`、`CI Summary`、
+`Fast Checks`、`Go Lint`、`Boundary Gate`、`Frontend Unit Tests`、`Bench Perf Smoke` 全绿；`Code Quality Gates` 的
+`Backend Tests`、`Docs Governance`、`Duplication Gate`、`Change Scope`、`Frontend Contract` 全绿。
+⇒ R5 的诊断与修复被 CI 证实，四项红灯收敛为一项。
+唯 `SonarCloud Code Analysis` 仍红：异味两条（`go:S1192`、`go:S3776`）消失，但 `gosecurity:S3649` 在 `Service.AddMember`
+报三条 BLOCKER，说明该规则不看绑定与否——只要请求传入的值参与构造查询就视作 sink。
+写路径随后改为对上一步读到的行按主键 + `Select("role","status")` 类型化更新（请求值不再出现在列名或条件位置），
+读路径按 id 取行是业务本质，无法在不做抑制的前提下消掉这条边 ⇒ 安全门禁的收口属维护者在 Sonar 侧的误报处置决定，
+本轮不加 `NOSONAR`、不做规则排除、不贴 `solo-override`。
+
 ### 4.3 未执行/无法执行（显式 gap，不得视为通过）
 
 1. **浏览器级 Tenant Smoke 复验**：需后端+MySQL+Redis+前端全栈；本地未运行。FIX-11 的 CI 复验在整改进入 #395/CI 后自动完成。当前"Tenant Smoke 将恢复绿色"是基于取证链的推断，非实测。

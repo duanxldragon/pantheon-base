@@ -63,8 +63,9 @@ R1-R4 全部记录而非隐藏：其中三条只有在套件真的跑在 MySQL �
 
 - 本机无 C 工具链：`go test -race ./...` 无法执行，只有 CI 能复验（`quality.yml` / `ci.yml`）。
 - SonarCloud 红灯 `gosecurity:S3649`（`Service.AddMember()` 的 `tenant_id = ? AND user_id = ?` 原样 SQL 片段被判注入源，BLOCKER）：
-  占位符其实已参数绑定，属污点跟踪误报；本次仍改用 GORM map 条件（同一批占位符、零拼接）把误报连同 `go:S1192` 字面量重复一起消掉，
-  并拆出 `assertScopedSQL` 清掉新代码上的 `go:S3776`。门禁是否转绿只能在下一轮 CI 证明。
+  占位符其实已参数绑定，属污点跟踪误报。PR #397 实测：map 条件 + `assertScopedSQL` 清掉了 `go:S1192` / `go:S3776` 两条异味，
+  但 `S3649` 依旧在该函数报三条 BLOCKER ⇒ 规则不看绑定，只看请求值是否参与构造查询。写路径进一步改为按主键 + `Select` 类型化更新，
+  读路径的污点边无法在不抑制的前提下消除，最终收口需要维护者在 Sonar 侧标记误报；本包未加 `NOSONAR`、未排除规则。
 - `github.com` 在本机不可达（`api.github.com` 可达）：跟进提交只能通过 Git Data API 重放；本地 `main` 也无法 fetch/ff。
 - 本机不能起浏览器：Playwright 层 Tenant Smoke 与视觉/交互验收未执行。
 - HTTP 层跨租户 curl 对抗矩阵、备份/恢复与升级演练未在本机执行。

@@ -41,6 +41,12 @@
       "details": "Exit 0. 23 packages ok, 0 FAIL, 3 [no test files]. Key timings against real MySQL: internal/middleware 10.685s, modules/system 10.259s, config/setting 16.134s, config/dict 9.631s, iam/menu 7.728s, iam/permission 33.334s, iam/role 45.619s, iam/tenant 78.227s, iam/user 62.097s, auth/session 8.764s, auth/login 138.555s, pkg/database 70.235s, pkg/tenant 0.289s."
     },
     {
+      "command": "curl -s https://sonarcloud.io/api/issues/search?componentKeys=duanxldragon_pantheon-base&pullRequest=397&sinceLeakPeriod=true",
+      "cwd": ".",
+      "status": "failed",
+      "details": "Second measurement, on the follow-up head f0f650a5 (map conditions already in place): the code smells cleared (go:S1192 and go:S3776 no longer reported), but gosecurity:S3649 persists with three BLOCKER findings inside Service.AddMember (tenant_service.go:711 read, :722 update twice). The rule therefore treats any query built from request-supplied values as a sink regardless of binding, so the map form alone does not satisfy it. Response: the update now targets the row that was just loaded, by its primary key, naming the columns through Select + a typed struct, so no request value reaches a column or condition position (verified by TestAddMember, TestAddMember_Duplicate, TestAddMember_OwnerIsProtected, TestRemoveMember against real MySQL). The remaining read-side sink is inherent to looking a row up by ids that came from the request and cannot be removed without either ignoring the input or marking the finding in Sonar; the latter is a maintainer disposition, not an agent action, and no suppression comment or rule exclusion was added."
+    },
+    {
       "command": "PANTHEON_TEST_DSN=<.env.test DSN> PANTHEON_TEST_REDIS_ADDR=127.0.0.1:6379 PANTHEON_TEST_REDIS_PASSWORD=<.env.test password> PANTHEON_NODE_BIN=D:\\nodejs\\node.exe PANTHEON_WORKSPACE_ROOT=<repo root> go test -count=1 ./...",
       "cwd": "backend",
       "status": "passed",

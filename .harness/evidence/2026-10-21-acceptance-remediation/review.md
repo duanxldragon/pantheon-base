@@ -67,3 +67,10 @@ SonarCloud 侧另有一条真实待办：`Service.AddMember()` 的原样 SQL 片
 `SonarCloud Code Analysis` 独立失败（Security Rating on New Code 未达 A）。
 本轮跟进提交只携带经复现证实的最小修复：修正测试期望、消除 Sonar 三条新代码问题、把 skip 掩盖写进 evidence。
 在 CI 用真实 MySQL+Redis 复跑转绿之前，`release/v0.17.0` 的测试门禁状态仍是「未证明」，不得据此打 v0.17.0 tag。
+
+**跟进 PR #397 的结果改变了这个判断的一半**：`Backend Tests` / `Unit Tests` / `Coverage Gate` / `CI Summary` / `Quality Gates`
+已在同一 head 上实测全绿，R5 的根因诊断被 CI 证实；仍红的是 `SonarCloud Code Analysis`，其 `gosecurity:S3649` 在改成 map 条件后依旧报三条 BLOCKER，
+说明该规则不看绑定、只看请求值是否参与构造查询。写路径已进一步收敛为按主键 + 显式列的类型化更新，
+读路径的污点边无法在不抑制的前提下消除。⇒ 安全门禁的收口只能是维护者在 Sonar 侧标记误报或在门禁上让步；
+本包没有加 `NOSONAR`、没有排除规则、没有贴 `solo-override`。因此 v0.17.0 的 tag 前置条件由「测试+安全门禁全绿」变为「安全门禁有维护者处置」，
+测试维度已证。
