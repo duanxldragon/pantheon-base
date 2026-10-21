@@ -68,8 +68,10 @@ Pantheon Base 方法追踪记录。方法论本体位于 `pantheon-harness`。
   text. The rule flags any request-fed builder call regardless of binding, so the taint edge cannot
   be removed without either suppression or changing what the lookup is. Sonar rule configuration,
   the Quality Gate thresholds and the `Release Gate` definition are unchanged, no test was silenced
-  and no `solo-override` label was applied. Whether the branch-level rating returns to A is proven
-  only by the next hosted analysis, so the `pantheon-base-v0.17.0` tag waits for that measurement.
+  and no `solo-override` label was applied. Measured after merge: PR #402 reported 0 new-code issues
+  and gate OK; main at `17af0d85` reports open issues = 0, Quality Gate OK on every condition and
+  `Release Gate` success. The `pantheon-base-v0.17.0` tag is still unpublished only because tag and
+  release publication is a maintainer action.
 - The compat admin session test asserted the maintenance inventory total as an active-session count,
   so it failed against real Redis while silently skipping without it (`Total 3`, revoked rows
   included). The assertion now pins `Total = 3` with `ActiveCount = 2` and requires all three

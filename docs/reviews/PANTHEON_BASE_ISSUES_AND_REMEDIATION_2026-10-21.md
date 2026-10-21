@@ -174,11 +174,19 @@ updated_at: 2026-10-21
   两条行尾注释就放在这两个 sink 行上。
   本地验证：`gofmt -l` 无输出、`go build ./...` 通过、`go vet ./modules/system/iam/tenant/` 通过、
   该包 `go test -count=1 -run 'TestAddMember|TestRemoveMember|TestMember'`（真实 MySQL + Redis）通过。
-  **门禁结论仍待 hosted 分析**：`Release Gate` 转绿与否只能由下一次分支级 Sonar 分析证明；在此之前不打 `pantheon-base-v0.17.0` tag。
+  **hosted 实测收口（2026-10-21）**：PR #402（`8dd7c960`）合并为 `8c12d4cb`；PR 级 Sonar 新代码问题 `total = 0`、门禁 `OK`、`new_security_rating = 1`，
+  合并后 main 分支分析（09:57:38Z）open issues = 0、五项条件全 OK。随后 #400（`klauspost/compress` → 1.18.7）与 #403（frontend `follow-redirects` → 1.16.1）
+  两条 Dependabot 高危清理合入（`1783543d`、`17af0d85`），open alerts 归零。
+  最终 main `17af0d85`：Sonar 分支分析（10:25:38Z）五项条件全 OK、open issues = 0；`Release Gate` success
+  （首次执行时 `Dependabot Alerts` job 与告警清零竞态而失败，告警归零后在同一 commit、同一规则下 `gh run rerun --failed` 复跑转绿，不按首次即绿记录）。
+  ⇒ 维护者的验收条件「Quality Gate 全过、Open issues 清零」已在 Sonar 侧满足；剩余发布动作只有维护者打 tag/发布（F5）。
 
 - **传输通道复测与本地主干同步（2026-10-21 追加）**：维护者修复网络后重跑，`git ls-remote --heads origin`、`git fetch origin --prune`、
   `git push --dry-run origin HEAD:refs/heads/transport-check` 对 `github.com` 全部成功（dry-run 只解析 pack，未写任何 ref；`curl https://github.com` 的 HTML 请求仍超时，
   因此只宣称 git-http 通道可用）。fetch 将本地 `ffb22988..73d36ecc` 同步并清理已合并分支（含 `release/v0.17.0` 的远端引用）。
   本地 `main` 原停在 `ce82b94e`（#395 为 squash 合并，故不是 `origin/main` 的祖先，不能直接 ff）：先确认 `ce82b94e` 仍可从
   `acceptance/remediation-2026-10-21` 与 `acceptance/remediation-2026-10-21-followup` 到达，且当前工作分支 tree `ed274ae5` 与 `origin/main` tree 相等，
-  再以 `git branch -f main origin/main` 移动指针 ⇒ 无提交丢失、可回退。**结论：Git Data API 重放是整改窗口的历史事实与取证方式，不再是后续工作的必需通道。**
+  再以 `git branch -f main origin/main` 移动指针 ⇒ 无提交丢失、可回退。**当时的结论是「常规 git 通道可用」；2026-10-21 收口轮已修正为「间歇可用」**：
+  #402 与本次记录的推送再次遇到 `git push` 连续四次连接超时/重置、`git fetch` 失败，而 `api.github.com` 正常，
+  因此仍以 Git Data API 重放（本地 tree 与远端 parent tree 相等才写 ref），本地 `main` 无法 ff，收口提交以一个「tree 等于远端 `17af0d85`」的本地同步提交为祖先。
+  ⇒ 后续推送必须逐次复测通道并在失败时回退到 API 重放，不能假设 git 一定可用。

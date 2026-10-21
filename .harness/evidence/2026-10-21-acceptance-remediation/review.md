@@ -91,3 +91,12 @@ Review 结论：这是三选一里唯一不动外部配置的路径，且抑制�
 红灯不会再来——所以行尾注释必须与 sink 同行，且在 `docs/reviews/PANTHEON_BASE_ISSUES_AND_REMEDIATION_2026-10-21.md` §5 留有完整理由链。
 未证部分保持未证：分支级 `new_security_rating` 是否回到 A、`Release Gate` 是否转绿，只能由合并后的 hosted 分支分析给出；
 在此之前 tag 前置条件不变。
+
+**Hosted 实测收口（2026-10-21，取代上面所有「尚未证明」的门禁表述）**：
+PR #402 的 PR 级 Sonar 为 `new-code issues = 0`、`gate = OK`、`new_security_rating = 1 (A)`，34 项检查 pass、2 项按设计 skip；
+合并为 `8c12d4cb` 后，main 分支分析（09:57:38Z）即 open issues = 0、门禁全 OK。随后清理两条遗留安全遗项：
+#400（`klauspost/compress` 1.18.6→1.18.7，alert #44）合并为 `1783543d`，#403（frontend `follow-redirects` 1.16.0→1.16.1，alerts #45/#46）合并为 `17af0d85`，
+open Dependabot alerts 归零。最终 main `17af0d85`：Sonar 分支分析（10:25:38Z）五项条件全 OK、open issues = 0；`Release Gate` success。
+`Release Gate` 首次执行时 `Dependabot Alerts` job 与告警清零存在竞态而失败，告警归零后以 `gh run rerun --failed` 在同一 commit、同一规则下复跑转绿——
+这是竞态复跑，不写成首次即绿，也不构成规则让步。
+维护者新增的验收条件（Quality Gate 全过、Open issues 清零）在 Sonar 侧已满足；唯一剩余发布动作是维护者打 `pantheon-base-v0.17.0` tag 并发布产物（F5）。
