@@ -1,0 +1,94 @@
+{
+  "taskId": "2026-10-21-acceptance-remediation",
+  "taskDoc": "docs/harness/tasks/2026-10-21-acceptance-remediation.task.md",
+  "title": "Close the tenant-isolation P0/P1 defects found by the 2026-10-21 full acceptance review",
+  "goal": "A full-repo enterprise acceptance review (single-tenant capability, multi-tenant lifecycle/IAM/data-permission/platform management, compat\u21c4multi switching, plus code, architecture, security, performance, frontend, tests, CI and docs) found one tenant-isolation P0 and a set of P1/P1-latent defects, a permanently red Tenant Smoke job and a batch of engineering and governance gaps. This packet closes every defect that blocks staged acceptance, lands the regression tests that keep them closed, and records the four review deliverables with their evidence, gaps and environment limits.",
+  "primaryLayer": "platform",
+  "status": "completed",
+  "priority": "P0",
+  "type": "acceptance-remediation",
+  "estimatedComplexity": "high",
+  "findings": [
+    "B1 (P0): the shared menu tree and the system i18n resources are writable from tenant-scoped routes. /system/menu and the i18n system writes had no PlatformCapabilityMiddleware, so a tenant admin holding the menu permission key could rewrite resources that every tenant renders. This is a cross-tenant influence path, not a read leak.",
+    "B2 (P1): compat mode does not pin the tenant scope. TenantScope resolution still honoured an incoming tenant_id header/parameter, so a compat deployment could address another tenant's rows; and multi -> compat had no guard, so downgrading silently widens every query to the whole dataset.",
+    "B3 (P1): the same capability gap on the i18n system resource surface, verified by a handler-level test that a tenant-domain policy grant cannot satisfy the platform predicate.",
+    "B4 (P1): provisioning copies platform settings but not dictionaries, so a new tenant opens every page with empty label selects. Fixed with the same idempotent INSERT\u2026SELECT + NOT EXISTS shape used for settings.",
+    "B5 (P1): suspending a tenant or removing a member left live sessions valid. Sessions now gain revoked_at for the tenant's active members only.",
+    "B6 (P1): the role-key namespace mutex was one-directional. A platform role could be created shadowing a tenant key, and the reverse guard fired on the very role being renamed, which is regression R2 recorded in the evidence.",
+    "C1/C4 (P1/P2): the OIDC schema lived in a free-standing add_oidc_fields.sql outside the numbered migration chain and its unique key had no tenant dimension. Both folded into guarded migration 000029.",
+    "C2 (P1): tenant_handler still returned the legacy error body and, on some paths, the raw internal error string.",
+    "E1/E2 (P1): route warm data survived an account switch and logout did not clear the second-factor operation token, so both leaked across a session boundary.",
+    "F1 (P1): Tenant Smoke had a second, independent root cause: AddMember returned 400 tenant.member_exists for a member the smoke setup had already created, so the job could not go green from the #393 seed fix alone.",
+    "D1 (P2): production builds did not force Gin release mode, so debug-mode behaviour shipped in the image.",
+    "Four regressions were introduced and fixed by this packet itself (R1 SQL placeholder, R2 rename self-collision, R3 a test missing .Error so it was vacuous, R4 tenant fixtures missing the dictionary tables). They are recorded rather than hidden, because three of them were only visible once the suite ran against real MySQL instead of skipping on a missing DSN."
+  ],
+  "scope": {
+    "in": [
+      "Platform capability gate on the shared menu and i18n write routes (B1/B3)",
+      "compat tenant-scope pinning plus the multi -> compat downgrade guard (B2)",
+      "Session revocation on tenant suspend and member removal (B5)",
+      "Idempotent platform dictionary replication during tenant provisioning (B4)",
+      "Bidirectional role-key namespace mutex with rename self-exclusion (B6)",
+      "OIDC schema folded into numbered guarded migration 000029 with a tenant-scoped unique key (C1/C4)",
+      "Unified tenant handler error envelope without internal error leakage (C2)",
+      "Route warm-data invalidation and operation-token clearing at session boundaries (E1/E2)",
+      "Idempotent AddMember, the second Tenant Smoke root cause (F1)",
+      "Forced Gin release mode in production builds (D1)",
+      "docs/reviews/PANTHEON_BASE_*_2026-10-21.md deliverables plus CHANGELOG, RELEASE_NOTES, scope matrix and freeze decision sync",
+      ".harness/tasks/2026-10-21-acceptance-remediation/ and .harness/evidence/2026-10-21-acceptance-remediation/"
+    ],
+    "out": [
+      "Casbin model, domain subject format and the definition of platform capability (contract \u00a73.4/\u00a74)",
+      "CMDB, Kubernetes, CI/CD, monitoring, OA, workflow, message centre and scheduling capability",
+      "Tenant-custom menus and permissions (frozen by the 2026-10-15 decision)",
+      "Microservice splitting and performance-specific rewrites",
+      "Credential rotation, main branch protection, advisory-to-blocking smoke promotion and the v0.17.0 tag/release: maintainer actions"
+    ]
+  },
+  "acceptanceCriteria": [
+    "Every P0 and P1 raised by the review is either fixed with a regression test or explicitly deferred with a recorded reason in docs/reviews/PANTHEON_BASE_ISSUES_AND_REMEDIATION_2026-10-21.md.",
+    "No cross-tenant write or privilege-escape path remains reachable from a tenant-scoped token on the reviewed surfaces.",
+    "The backend suite passes against real MySQL locally (not by skipping on a missing DSN) and the frontend typecheck, unit tests, lint and build pass.",
+    "node scripts/harness/check-task-packet.mjs and node scripts/frontmatter-check.mjs pass.",
+    "The four review deliverables exist, are linked from docs/README.md, and state the unverified items and environment limits instead of claiming full coverage.",
+    "Tenant Smoke's second root cause is closed in code; the browser-level confirmation is recorded as a CI obligation, not asserted locally."
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "permission-policy",
+    "ownerLayer": "consumer-repository"
+  },
+  "verificationPlan": {
+    "commands": [
+      "cd backend && go build ./... && go vet ./modules/... ./pkg/...",
+      "cd backend && PANTHEON_TEST_DSN=<.env.test DSN> go test -count=1 ./pkg/tenant/... ./internal/... ./modules/system/... ./modules/auth/... ./pkg/database/... ./cmd/...",
+      "cd backend && go test -count=1 ./modules/system/iam/tenant/ -run 'TestProvision|TestRevoke|TestCopyPlatformDicts' -v",
+      "cd backend && go test -count=1 ./modules/system/iam/role/ -run 'TestPlatformEditOfTenantRole|TestRoleKeyNamespace' -v",
+      "cd frontend && node ./node_modules/typescript/bin/tsc -b",
+      "cd frontend && node ./node_modules/vitest/vitest.mjs run",
+      "cd frontend && node ./node_modules/eslint/bin/eslint.js .",
+      "node scripts/harness/check-task-packet.mjs --root .",
+      "node scripts/frontmatter-check.mjs"
+    ],
+    "runtimeEvidence": [
+      "Per-package PASS lines from the real-MySQL backend run recorded in .harness/evidence/2026-10-21-acceptance-remediation/commands.json",
+      "Frontend tsc / vitest / eslint / build conclusions",
+      "CI go test -race ./... and Tenant Smoke (multi-mode advisory) conclusions on the PR, which cannot be produced on this host (no C toolchain, no browser)"
+    ]
+  },
+  "runtimeSensitive": true,
+  "linkage": {
+    "assessment": "docs/reviews/PANTHEON_BASE_FINAL_ACCEPTANCE_REVIEW_2026-10-21.md",
+    "evidenceDir": ".harness/evidence/2026-10-21-acceptance-remediation/",
+    "summaryFile": ".harness/evidence/2026-10-21-acceptance-remediation/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-21-acceptance-remediation/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/reviews/PANTHEON_BASE_ISSUES_AND_REMEDIATION_2026-10-21.md",
+      "docs/contracts/TENANT_CONTRACT_V1.md",
+      "docs/designs/TENANT_RESOURCE_SCOPE_MATRIX.md",
+      "docs/TENANT_SCOPE_FREEZE_DECISION_2026-10-15.md"
+    ]
+  }
+}
