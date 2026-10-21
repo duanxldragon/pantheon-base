@@ -23,15 +23,19 @@ updated_at: 2026-10-21
 
 - **项目整体状态**：完成一轮全仓库、以真实调用链为据的企业级验收；单租户链路完整，多租户在整改前存在 1×P0、6×P1，现已全部在本地修复并经真实 MySQL 测试验证。
 - **单租户模式**：**验收通过**（无未解决 P0/P1；P2/P3 全部清单化延期）。
-- **多租户模式**：**整改后通过**。最终确认的形式条件：整改提交进入 CI 后 `smoke-tenant` 与全量门禁复验为绿（本地无全栈，浏览器级验证移交 CI——这是记录在案的边界，不是宣称）。
+- **多租户模式**：**整改后通过**。形式条件已在 hosted CI 兑现：整改链 #396→#397→#398 全部合入，main `c17ef999` 上 `CI`（含 `-race`）、`Backend Tests`、`Full Smoke Suite`（含 `smoke-tenant`）、`Core Smoke Tests`、`Security Gates`、`CodeQL` 全绿；`smoke-tenant` 此前在同 commit 上既红又绿，本轮为一次通过，仍按 flaky 登记而非宣称稳定。
 - **跨租户数据泄露/权限绕过**：**不存在已知未解决路径**。审查确认的 P0（B1：tenant_admin 可写全局菜单并跨租户剥离权限键）已由路由级平台能力门闭合；数据层 P1（B2：compat 不过滤）由租户钉租+降级守卫闭合。
-- **阻塞冻结的 P0/P1 代码缺陷**：**无**。移交维护者的放行前置项三个（均非代码缺陷）：D2 已入库凭证的轮换、F2 main 分支保护、F5/PR #395 发布收口。
+- **阻塞冻结的 P0/P1 代码缺陷**：**无**。移交维护者的放行前置项四个（均非代码缺陷）：D2 已入库凭证的轮换、F2 main 分支保护、F5 tag/release 发布、
+  以及 `gosecurity:S3649` 在 `Service.AddMember()` 的两条残留 BLOCKER（`:711` 读、`:726` 写）——这是绑定参数的污点跟踪误报，
+  是 main 上 `Release Gate` 唯一红项，需要 Sonar 侧的误报标记或门禁让步；本包未加 `NOSONAR`、未排除规则、未贴 `solo-override`。
 - **整改完成度**：FIX-1…FIX-11 共 11 项代码整改 + 4 项文档失实修正（F8/F9/scope 矩阵/dict 归类），另有整改自身被真库运行捕获并修复的 4 个回归（R1–R4，诚实记录）。延期项全部登记且逐条给出理由。
 - **建议**：**阶段性验收通过，进入维护冻结**。开发重心转向 `pantheon-ops`；Base 仅修真实缺陷、安全与兼容问题。
 
 ## 1. 审查对象与方法
 
-- 仓库 `github.com/duanxldragon/pantheon-base`；`origin/main = ffb22988`，本地 main 含未推送 release-cut `ce82b94e`（PR #395，OPEN）。
+- 仓库 `github.com/duanxldragon/pantheon-base`；审查起点为 `origin/main = ffb22988`。收口时点 main 已推进到 `c17ef999`：
+  #396/#397 进入 `release/v0.17.0`，#395 将该分支 squash 合入 main（`762d94a5`，tree `f7135e30`，分支随后删除），#398 携带 S3649 二次处置与文档收口（tree `90b4beeb`）。
+  推送通道限制记录在案：本机 `github.com` 不可达而 `api.github.com` 可达，故分支通过 Git Data API 重放（blob→tree→commit→ref），每次均以本地/远端 tip tree 相等收口。
 - 方法：六个并行维度审查（单租户闭环 / 多租户与隔离 / 架构与数据库 / 安全 / 前端 / 测试与治理）→ 主代理对全部 P0/P1 亲自复核证据 → 分级整改 → 真实 MySQL 回归。全程以代码与测试为据，README/接口名/按钮不作为完成证据。
 - 架构事实（经代码还原）：共享库+共享 schema+行级 `tenant_id`；Casbin domain subject `role:<key>@tenant:<id>`，全局 subject 优先；部署级 `platform.tenant_mode`（compat/multi，TTL 缓存），compat ⇒ TenantID 钉 0；opaque token 存 Redis + HttpOnly cookie；迁移为 golang-migrate 编号链（000001–000029）。
 
@@ -60,7 +64,7 @@ P0×1（B1）、P1×5（B2/B3/B4/B5/B6-latent）全部修复并有回归测试�
 
 - 后端真 MySQL 四批次全绿（含 auth/login 104s、i18n 114s、tenant 47s、database 迁移 33s）；前端 tsc/vitest(26 文件)/eslint/build 全绿；`frontmatter-check` 335 文档通过。
 - CI：SonarCloud main QG OK、unresolved 0（API 实测）。`smoke-tenant` 常年红的**两个独立根因**均已定位：其一 tenant_mode 未发布（#393 已修），其二服务端自动入组与前端再添加冲突（本次 FIX-11 修复）；该 job 目前仍为 advisory（B10/F1），建议复验绿后转 blocking。
-- 发布治理：PR #395 红于 Docs Governance 的 PR-body 仪式字段（机械项）；main 无分支保护（F2）；v0.17.0 未打 tag（F5）。以上全部是共享状态动作，**未在本审查中代做**，移交维护者决定。
+- 发布治理：PR #395 的 Docs Governance 红灯（PR-body 仪式字段，机械项）已随 #396/#397/#398 转绿并合并；main 仍无分支保护（F2，`gh api …/branches/main/protection` → 404）；v0.17.0 仍未打 tag（F5，`Release Gate` 因 Sonar 残留红项挡住发布线）。以上全部是共享状态动作，**未在本审查中代做**，移交维护者决定。
 - 文档失实与漂移四处已修正（发布说明双根因化、冻结决策状态、scope 矩阵 menu 占位列与 dict 归类）；F10–F12 记录为低优先维护项。
 
 ## 7. 验收标准逐项判定（任务书 §13.1）
@@ -83,7 +87,7 @@ P0×1（B1）、P1×5（B2/B3/B4/B5/B6-latent）全部修复并有回归测试�
 
 ## 8. 冻结决定与建议
 
-满足冻结线的全部代码条件；三项移交动作（D2 轮换、F2 保护、#395 收口+tag）不改变代码状态判断，但建议作为 v0.17.0 发布的收口清单执行。据此：
+满足冻结线的全部代码条件；四项移交动作（D2 轮换、F2 保护、Sonar `S3649` 残留的误报处置、tag/release 发布）不改变代码状态判断，但建议作为 v0.17.0 发布的收口清单执行。据此：
 
 **建议状态：阶段性验收通过，进入维护冻结。** 冻结语义沿用 `docs/TENANT_SCOPE_FREEZE_DECISION_2026-10-15.md`：不推倒、不扩张、只收尾；Base 仅接受正确性/稳定性/安全性必要修改；新需求先判归属再决定是否进入下一阶段；`pantheon-ops` 通过 foundation release 消费 Base，不再反向注入业务。
 

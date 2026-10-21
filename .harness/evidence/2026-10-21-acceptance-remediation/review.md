@@ -48,7 +48,7 @@ SonarCloud 侧另有一条真实待办：`Service.AddMember()` 的原样 SQL 片
 
 ## 4. 未覆盖 / CI 待证（显式 gap，不包装成已完成）
 
-1. `go test -race ./...`：本机无 C 工具链（cgo 启动失败），未执行。由 CI `quality.yml` / `ci.yml` 复验。
+1. ~~`go test -race ./...`~~ 已由 CI 复验关闭：main `c17ef999` 上 `Unit Tests`（`ci.yml`：`go test -race -short ./...`）与 `Backend Tests`（`quality.yml`：`go test -race ./...`）均 success。本机仍无 C 工具链，所以证据在 CI 而不在本地。
 2. 浏览器层：Playwright L1/L2、`Tenant Smoke (multi-mode advisory)` 实跑、维护者的最终视觉/功能验收，本机不可执行。
 3. HTTP 层端到端跨租户 curl 对抗矩阵（经真实网关 + Redis token）未搭建；结论建立在 handler/中间件层 httptest 与 SQL 断言之上。
 4. 备份/恢复与升级演练（含 000029 在既有库上的接管）未执行。
@@ -74,3 +74,10 @@ SonarCloud 侧另有一条真实待办：`Service.AddMember()` 的原样 SQL 片
 读路径的污点边无法在不抑制的前提下消除。⇒ 安全门禁的收口只能是维护者在 Sonar 侧标记误报或在门禁上让步；
 本包没有加 `NOSONAR`、没有排除规则、没有贴 `solo-override`。因此 v0.17.0 的 tag 前置条件由「测试+安全门禁全绿」变为「安全门禁有维护者处置」，
 测试维度已证。
+
+**PR #398 合并后的最终口径（2026-10-21，实测）**：#398 合并为 main 的 `c17ef999`，合并前所有 GitHub 门禁 pass，PR 级 Sonar `project_status = OK`、新代码问题 0；
+但 main 的 push run 显示 `Release Gate` failure——分支级 Sonar 分析 `new_security_rating` = E，`gosecurity:S3649` 在 `Service.AddMember()` 剩两条 OPEN（`:711` 读、`:726` 写）。
+两个口径不能混用：PR 泄漏期只覆盖本次 diff，分支泄漏期覆盖落入 main 的全部新增行，因此「PR 绿」不推翻「分支红」，本轮不把它写成安全门禁收口。
+main 其余维度全绿（`CI`、`Full Smoke Suite`、`Core Smoke Tests`、`Security Gates`、`CodeQL`、`Lint Workflows`），
+其中此前判为 flaky 的 `Full Smoke Suite`（含 Tenant Smoke）这轮为 success——按一次通过记录，不据此改口称其稳定。
+⇒ 结论：测试与功能门禁已全部有证；唯一未闭合项是扫描器口径下的绑定参数误报，属维护者的 Sonar 处置决定，处置前不打 tag。

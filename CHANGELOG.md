@@ -51,9 +51,17 @@ Pantheon Base 方法追踪记录。方法论本体位于 `pantheon-harness`。
   row instead of failing, and owner rows cannot be demoted through this path. This also removes the
   false "join failed" toast on every tenant-viewpoint user create.
 - `AddMember` / `RemoveMember` select the membership row through bound map conditions instead of a
-  raw `tenant_id = ? AND user_id = ?` fragment. Same placeholders and same semantics; it clears the
-  SonarCloud `gosecurity:S3649` blocker that held the Quality Gate's Security Rating on New Code
-  below A, along with the duplicated-literal and cognitive-complexity findings on the new code.
+  raw `tenant_id = ? AND user_id = ?` fragment. Same placeholders and same semantics; it cleared the
+  duplicated-literal and cognitive-complexity findings on the new code. It did **not** clear
+  `gosecurity:S3649`: that rule treats any GORM builder call fed from the request as a sink, whether
+  the value reaches a bound placeholder or not.
+- The membership update now rewrites the row that was just loaded, by primary key, with `Select`
+  naming the columns and a typed struct for the values, so no request-supplied value sits in a column
+  or condition position. Measured on SonarCloud: main went from three `S3649` blockers to two
+  (`:711` read, `:726` update) and the PR-scoped quality gate reads OK, but the branch-scoped
+  `Security Rating on New Code` is still E, so `Release Gate` remains red on `c17ef999`. The residue
+  is the tenant/user lookup itself; closing it needs a scanner disposition by the maintainer, not a
+  third reshuffle. No `NOSONAR`, no rule exclusion, no gate override was added.
 - The compat admin session test asserted the maintenance inventory total as an active-session count,
   so it failed against real Redis while silently skipping without it (`Total 3`, revoked rows
   included). The assertion now pins `Total = 3` with `ActiveCount = 2` and requires all three

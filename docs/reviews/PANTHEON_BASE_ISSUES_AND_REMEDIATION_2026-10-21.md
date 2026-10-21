@@ -141,5 +141,21 @@ updated_at: 2026-10-21
   `main` 上的 `tenant_service.go` 已含 `membershipScope`、`session_tenant_scope_test.go` 已含修正后的 `Total=3 / ActiveCount=2` 断言，
   证明 #396/#397 的整改内容确实进入 `main`（#395 为 squash 合并，故 `21de18ee` 不是 `main` 的祖先，object API 返回 404 属预期）。
   因此 S3649 二次处置提交（写路径按主键更新 + PR body）的 base 改为 `main`，分支以 Git Data API 重放为
-  `fix/tenant-membership-update-by-primary-key`（tip `b6507e0e`，remote tree `feb48c2f` == local tree `feb48c2f`）。
-  v0.17.0 的 tag/release 仍未发布——这不是遗漏：见 §4 残余风险 1 与 G1 的处置结论，需维护者先处置 Sonar。
+  `fix/tenant-membership-update-by-primary-key`，经 PR #398 合并为 main 的 `c17ef999`（tree `90b4beeb`，与本地 `f02eda1e` tree 一致）。
+  v0.17.0 的 tag/release 仍未发布——这不是遗漏：见下方「PR #398 与 main 门禁实况」，`Release Gate` 仍红，处置权在维护者。
+
+- **PR #398 与 main 门禁实况（2026-10-21 追加，取代上文「待下一轮 hosted analysis」的悬置）**：
+  #398 合并前全部门禁 pass（`Backend Tests`、`Unit Tests`×2、`Coverage Gate`×2、`CI Summary`、`Code Quality Gates`、`Fast Checks`、`Go Lint`×3、
+  `Boundary Gate`、`Duplication Gate`、`Docs Governance`、`Change Scope`、`Frontend Contract`、`Frontend Unit Tests`、`Secret Scan`、`CodeQL`、
+  `Security Gates`、`Workflow Security`、`Dependency Vulnerabilities`、`Bench Perf Smoke`），PR 级 Sonar 门禁 `status = OK`、新代码问题 `total = 0`。
+  合并后 main（`c17ef999`）的 push run：`CI` / `Full Smoke Suite` / `Core Smoke Tests` / `Security Gates` / `Lint Workflows` 全 success，
+  **`Release Gate` failure**——其 `Candidate Checks` 步骤读到 `SonarCloud Code Analysis` 在分支分析里 FAILURE。
+  口径差别必须写清：PR 泄漏期只覆盖本次 diff，分支泄漏期覆盖落入 main 的全部新增行，因此「PR 级 0 问题」不等于「分支级门禁绿」。
+  分支实测 `project_status`：`new_security_rating` 实际 E（阈值 ≥ A），其余条件（reliability、maintainability、duplication、hotspot reviewed）OK。
+  规则存量：main 上 `gosecurity:S3649` 历史共 4 条，全部在 `Service.AddMember()`（2 OPEN @ `:711`/`:726`，2 CLOSED 随被替换的旧行关闭）。
+  ⇒ 结论修正：两次保语义重构把 3 条 BLOCKER 压到 2 条，但该规则把「请求值作为参数进入 GORM 构造调用」一律视作 sink，
+  按主键 + `Select` 类型化更新只解决了写侧的一条半边（`:722` 的两条并为一条 `:726`），读侧 `:711` 无法在不做抑制或不改变业务定位语义的前提下消除。
+  **剩余动作是维护者的门禁处置（在 Sonar 侧标记误报 / 接受风险，或在 `Release Gate` 规则上让步），不是第三次代码 reshuffle。**
+  在此之前不得打 `pantheon-base-v0.17.0` tag；本包未加 `NOSONAR`、未排除规则、未贴 `solo-override`。
+  取证失误也记在这里：#398 内的记录提交 `f421d9dc`（远端 `3bb7f3d8`）在 PR 尚未跑完时就写下「承载 S3649 的二次处置」「CI 与 Sonar 结论以本轮 hosted run 为准」，
+  读者容易把「已提交处置」当成「门禁已收口」；该提交已合并、历史不可改写，故以本条记录显式更正而不是回滚。

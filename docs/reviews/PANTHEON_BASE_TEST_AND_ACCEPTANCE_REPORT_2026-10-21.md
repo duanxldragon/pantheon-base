@@ -152,8 +152,12 @@ $ node ./node_modules/vite/bin/vite.js build                   # ✓ built in 71
 读路径按 id 取行是业务本质，无法在不做抑制的前提下消掉这条边 ⇒ 安全门禁的收口属维护者在 Sonar 侧的误报处置决定，
 本轮不加 `NOSONAR`、不做规则排除、不贴 `solo-override`。
 
-**PR #398（`fix/tenant-membership-update-by-primary-key` → `main`，head `3bb7f3d8`，tree `efa3d8c3`）**：承载上述写路径二次处置与 evidence/文档收口，
-diff 为 8 个文件（1 个 Go 文件 + 治理与文档），不含任何 release 重复改动。其 CI 与 Sonar 结论只能由该轮 hosted run 给出，本文件不预判。
+**PR #398（`fix/tenant-membership-update-by-primary-key` → `main`，head `2d035ef1`，合并为 `c17ef999`）**：承载上述写路径二次处置与 evidence/文档收口，
+diff 为 8 个文件（1 个 Go 文件 + 治理与文档），不含任何 release 重复改动。合并前实测全部 GitHub 门禁 pass，PR 级 Sonar `project_status = OK`、新代码问题 0。
+合并后 main 的 push run 实测：`CI` / `Full Smoke Suite` / `Core Smoke Tests` / `Security Gates` / `CodeQL` / `Lint Workflows` 全 success，
+唯一红项是 `Release Gate`——分支级 Sonar 分析 `new_security_rating` = E（阈值 ≥ A），`gosecurity:S3649` 在 `Service.AddMember()` 剩两条 OPEN（`:711` 读、`:726` 写）。
+⇒ 功能与安全测试维度已全部有据转绿，`Tenant Smoke` 所在的 Full Smoke Suite 这轮为 success（该作业此前在同 commit 上既红又绿，仍按 flaky 处理）；
+剩余唯一阻塞是扫描器口径下的污点误报，需维护者在 Sonar 侧处置，处置前不打 `pantheon-base-v0.17.0` tag。
 
 ### 4.3 未执行/无法执行（显式 gap，不得视为通过）
 

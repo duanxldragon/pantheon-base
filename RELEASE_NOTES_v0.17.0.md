@@ -153,7 +153,11 @@ evidence directory.
   Redis-backed test. One such test (`TestSessionAdminOps_CompatPinsToPlatformTenant`) was therefore
   locally green and red in CI; the assertion itself was wrong and is corrected in the follow-up
   commit. With both stores configured the backend suite is 46 packages ok, exit 0.
-- `release/v0.17.0` is **not** release-ready yet: #396 merged while `Backend Tests`, `Unit Tests`,
-  `CI Summary`, `Quality Gates` and `SonarCloud Code Analysis` were red (single test root cause plus
-  three new-code Sonar findings). Cut the `pantheon-base-v0.17.0` tag only after the follow-up
-  commit turns those gates green on the branch.
+- Release-readiness, measured on `main` at `c17ef999` (2026-10-21): #396/#397 landed on `release/v0.17.0`, #395 squash-merged that branch into
+  `main`, and #398 carried the Sonar follow-up. All functional gates are now green on `main` — `CI` (which runs `go test -race`),
+  `Backend Tests`, `Full Smoke Suite`, `Core Smoke Tests`, `Security Gates`, `CodeQL`, `Lint Workflows`. **`Release Gate` is still red**,
+  for one reason: the branch-level Sonar analysis puts `Security Rating on New Code` at E (threshold A) because `gosecurity:S3649`
+  reports two remaining BLOCKERs in `Service.AddMember()` (the `(tenant_id, user_id)` read at `:711` and the update at `:726`), which are
+  bound-parameter false positives. Two semantics-preserving restructurings took that rule from 3 blockers to 2; the remaining edge is the
+  tenant/user lookup itself, so it cannot be removed without suppressing the scanner or changing what the endpoint does. Neither was done.
+  Cut the `pantheon-base-v0.17.0` tag only after that finding is dispositioned in Sonar by the maintainer.

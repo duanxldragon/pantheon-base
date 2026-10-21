@@ -66,8 +66,15 @@ R1-R4 全部记录而非隐藏：其中三条只有在套件真的跑在 MySQL �
 | #396 | 整改主体 → `release/v0.17.0`（`462216ec`） | 已合并，但合并时 `Backend Tests` / `Unit Tests` / `CI Summary` / `Quality Gates` 四项红于 R5 |
 | #397 | 修 R5 掩盖的会话断言 + map 条件清异味 → `release/v0.17.0`（`21de18ee`） | 已合并；四项红灯实测转绿，仅 `SonarCloud Code Analysis` 仍红（`gosecurity:S3649`×3） |
 | #395 | `release/v0.17.0` → `main`（merge `762d94a5`，tree `f7135e30`） | 已合并；rollup 除 Sonar FAILURE 外全绿（Draft PR Handler / PR Smoke Core Optional 为 SKIPPED），分支随后删除 |
-| #398 | 写路径按主键更新（S3649 二次处置）+ evidence/文档收口 → `main`（head `3bb7f3d8`） | 本 PR；CI 与 Sonar 结论以本轮 hosted run 为准 |
+| #398 | 写路径按主键更新（S3649 二次处置）+ evidence/文档收口 → `main`（head `2d035ef1`） | 已合并（merge `c17ef999`，tree `90b4beeb`）：全部 GitHub 门禁 pass，PR 级 Sonar 门禁 OK、新代码问题 0 |
 
+- 合并后 main（`c17ef999`）实测：`CI` / `Full Smoke Suite` / `Core Smoke Tests` / `Security Gates` / `CodeQL` / `Lint Workflows` 全 success，唯一红的是 `Release Gate`，
+  起因是分支级 Sonar 分析 `Security Rating on New Code` = E（条件 ≥ A）⇒ `Candidate Checks` 判 `A required check failed on c17ef999`。
+- PR 级「0 新代码问题」与分支级「E」不是同一口径：PR 泄漏期只算本次 diff，分支泄漏期覆盖落入 main 的全部新增行。
+  取证见 `commands.json` 的三条 hosted 记录；不得把前者当成安全门禁收口。
+- `gosecurity:S3649` 现状：`Service.AddMember()` 剩两条 OPEN（`:711` 读、`:726` 写），全仓 main 历史仅 4 条且全部在该函数（2 条随旧行关闭）⇒ 不是全仓污点模式，
+  也不是 `pkg/tenant` 抽象能吸收的类别。两次保语义重构（map 条件、按主键 + `Select` 类型化更新）把 3 条压到 2 条，
+  但规则只看「请求值是否作为参数进入 GORM 构造调用」，与是否绑定占位符无关 ⇒ 剩余收口手段只有维护者在 Sonar 侧的误报/风险接受处置。
 - base 改指 `main` 的原因：#395 合并后 `release/v0.17.0` 已不存在，`gh pr create --base release/v0.17.0` 报 `Base ref must be a branch`。
 - `main` 内容等价性已核对：`git/commits/762d94a5` 的 tree == 本地 `597548e4` 的 tree（`f7135e30`），且 `main` 上的 `tenant_service.go` 含 `membershipScope`、`session_tenant_scope_test.go` 含修正断言，
   证明 #396/#397 内容已进入 `main`；#395 为 squash 合并，故 `21de18ee` 不是 `main` 的祖先（object API 404 属预期）。
@@ -76,10 +83,11 @@ R1-R4 全部记录而非隐藏：其中三条只有在套件真的跑在 MySQL �
 ## 残余风险与未验证项
 
 - 本机无 C 工具链：`go test -race ./...` 无法执行，只有 CI 能复验（`quality.yml` / `ci.yml`）。
-- SonarCloud 红灯 `gosecurity:S3649`（`Service.AddMember()` 的 `tenant_id = ? AND user_id = ?` 原样 SQL 片段被判注入源，BLOCKER）：
-  占位符其实已参数绑定，属污点跟踪误报。PR #397 实测：map 条件 + `assertScopedSQL` 清掉了 `go:S1192` / `go:S3776` 两条异味，
-  但 `S3649` 依旧在该函数报三条 BLOCKER ⇒ 规则不看绑定，只看请求值是否参与构造查询。写路径进一步改为按主键 + `Select` 类型化更新，
-  读路径的污点边无法在不抑制的前提下消除，最终收口需要维护者在 Sonar 侧标记误报；本包未加 `NOSONAR`、未排除规则。
+- SonarCloud 红灯 `gosecurity:S3649`（`Service.AddMember()` 被判注入源，BLOCKER）：占位符其实已参数绑定，属污点跟踪模型的误报。
+  PR #397 实测：map 条件 + `assertScopedSQL` 清掉了 `go:S1192` / `go:S3776` 两条异味，但 `S3649` 依旧在该函数报三条 BLOCKER
+  （`:711` 读、`:722` 写两条）⇒ 规则不看绑定，只看请求值是否参与构造查询。PR #398 实测：写路径改为按主键 + `Select` 类型化更新后剩两条
+  （`:711`、`:726`），PR 级门禁 OK 但分支级 `new_security_rating` 仍为 E ⇒ `Release Gate` 红，tag 被挡。
+  读路径的污点边无法在不抑制的前提下消除，最终收口需要维护者在 Sonar 侧标记误报或让步；本包未加 `NOSONAR`、未排除规则。
 - `github.com` 在本机不可达（`api.github.com` 可达）：跟进提交只能通过 Git Data API 重放；本地 `main` 也无法 fetch/ff。
 - 本机不能起浏览器：Playwright 层 Tenant Smoke 与视觉/交互验收未执行。
 - HTTP 层跨租户 curl 对抗矩阵、备份/恢复与升级演练未在本机执行。
