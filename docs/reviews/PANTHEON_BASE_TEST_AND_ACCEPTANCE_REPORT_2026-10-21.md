@@ -116,7 +116,9 @@ $ node ./node_modules/vite/bin/vite.js build                   # ✓ built in 71
 - `smoke-tenant`（run 39533828246，advisory）红根因取证：trace network JSONL 显示 `POST /api/v1/system/user` 成功返回 id=5 后，`POST /api/v1/system/tenant/205/members {"user_id":5,"role":"member"}` 返回 `{"code":400,"message":"tenant.member_exists"}`；后端日志确认 `ensureTenantMembership` 已在建用户事务内插入 member 行。⇒ FIX-11。
 - **同一 commit 上 Tenant Smoke 既红又绿**（job 119005706470 FAIL / 119067519288 PASS，`10 passed`）⇒ 该作业 flaky，上面这条取证只关闭了其中一个真实触发条件，不能表述成「根因已关闭、将恢复绿色」。
 - SonarCloud：main 最新 analysis（revision ffb22988）Quality Gate **OK**、unresolved **0**（匿名 API 可达，已验证）。整改分支上则出现新问题，详见 §4.4。
-- PR #395（release/v0.17.0）：OPEN；Docs Governance 红于 PR-body 仪式字段（机械项），Enforce quality results 聚合其失败。本地整改就绪，尚未推送（推送/合并需维护者授权）。
+- PR #395（release/v0.17.0 → main）：已合并（本机取证时点为 OPEN，结论已被 §5 的实测取代）。merge commit `762d94a545adb53dd606d8e093704ea8abfc02f4`，tree `f7135e30`；
+  `statusCheckRollup` 除 `SonarCloud Code Analysis` FAILURE 外全绿，Docs Governance 的 PR-body 仪式字段红灯已随 #396/#397 转绿，`release/v0.17.0` 分支随合并删除。
+  S3649 的二次处置因此改以 `main` 为 base，作为 PR #398 提交。
 - main 分支保护：`gh api repos/…/branches/main/protection` → 404 `Branch not protected`（F2，维护者动作）。
 - tag `pantheon-base-v0.17.0`：本地与远端均不存在；GitHub Releases 最新 v0.16.1（F5）。
 
@@ -149,6 +151,9 @@ $ node ./node_modules/vite/bin/vite.js build                   # ✓ built in 71
 写路径随后改为对上一步读到的行按主键 + `Select("role","status")` 类型化更新（请求值不再出现在列名或条件位置），
 读路径按 id 取行是业务本质，无法在不做抑制的前提下消掉这条边 ⇒ 安全门禁的收口属维护者在 Sonar 侧的误报处置决定，
 本轮不加 `NOSONAR`、不做规则排除、不贴 `solo-override`。
+
+**PR #398（`fix/tenant-membership-update-by-primary-key` → `main`，head `3bb7f3d8`，tree `efa3d8c3`）**：承载上述写路径二次处置与 evidence/文档收口，
+diff 为 8 个文件（1 个 Go 文件 + 治理与文档），不含任何 release 重复改动。其 CI 与 Sonar 结论只能由该轮 hosted run 给出，本文件不预判。
 
 ### 4.3 未执行/无法执行（显式 gap，不得视为通过）
 

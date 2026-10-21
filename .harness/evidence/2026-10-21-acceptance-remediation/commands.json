@@ -194,7 +194,13 @@
       "command": "gh pr create --base main --head fix/tenant-membership-update-by-primary-key --title \"fix(iam): update the loaded membership row by primary key\" --body-file .harness/evidence/2026-10-21-acceptance-remediation/pr-body-sonar.md",
       "cwd": ".",
       "status": "passed",
-      "details": "Branch fix/tenant-membership-update-by-primary-key was published through the Git Data API onto main's tip (762d94a5), replaying a809a641 -> ef4a918d and f8e4f8e6 -> b6507e0e with remote tip tree feb48c2f617eb4d2172166da4184977e296cd973 equal to the local tip tree. PR URL recorded in summary.md."
+      "details": "Created https://github.com/duanxldragon/pantheon-base/pull/398 . Branch fix/tenant-membership-update-by-primary-key was published through the Git Data API onto main's tip (762d94a5), replaying a809a641 -> ef4a918d, f8e4f8e6 -> b6507e0e and the record commit f421d9dc -> 3bb7f3d8, with remote tip tree efa3d8c3d7cd34dfb47f311403d494435102de83 equal to the local tip tree. Diff is 8 files (one Go file plus evidence/docs), i.e. no duplicated release content."
+    },
+    {
+      "command": "gh pr view 398 --json statusCheckRollup ; curl -s https://sonarcloud.io/api/issues/search?componentKeys=duanxldragon_pantheon-base&pullRequest=398&sinceLeakPeriod=true",
+      "cwd": ".",
+      "status": "not-run",
+      "details": "Pending on the PR head: this is where the S3649 write-path disposition and the Sonar gate verdict get proven. Not claimed green in advance; the hosted result is written here once available."
     }
   ],
   "knownGaps": [
