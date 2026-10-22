@@ -7,16 +7,21 @@
 
 ## Harness 链路
 
-- Task ID：`2026-10-22-v0171-release-closeout`（+ 收口 `2026-10-22-delivery-audit-remediation`）
-- Task Manifest：`.harness/tasks/2026-10-22-v0171-release-closeout/manifest.json`
-- Evidence：`.harness/evidence/2026-10-22-v0171-release-closeout/`
-- Verification evidence：`commands.json`（15 条命令，含未执行项与 CI-only 项）
-- Review Artifact：`.harness/evidence/2026-10-22-v0171-release-closeout/review.md`
+- Task ID：2026-10-22-v0171-release-closeout
+- Task Manifest：.harness/tasks/2026-10-22-v0171-release-closeout/manifest.json
+- Evidence：.harness/evidence/2026-10-22-v0171-release-closeout/commands.json
+- Verification evidence：.harness/evidence/2026-10-22-v0171-release-closeout/summary.md
+- Review Artifact：.harness/evidence/2026-10-22-v0171-release-closeout/review.md
 - OpenSpec change：none
 - Trivial change：no
 - Quality Profile：permission-policy
-- Ratchet Decision：checker-tightened
+- Ratchet Decision：sensor-added
 - GitHub Signal：method-gate
+
+> 收口任务包 `2026-10-22-delivery-audit-remediation`（证据在
+> `.harness/evidence/2026-10-22-delivery-audit-remediation/`）记录"审计发现已修复并验证"，
+> 本包记录"修复已提交、过门禁并发布"。两者刻意分开：在本地构建绿、但改动还没提交的状态下冻结，
+> 正是审计点名的缺陷。
 
 ## Harness adoption markers
 
