@@ -2250,6 +2250,9 @@ const zhCNFallback = {
   'tenant.code_reserved':
     '该租户编码仍被一个已删除的租户占用（已删除租户不显示在默认列表中）。请更换编码，或先清理该已删除的租户',
   'tenant.member_exists': '该用户已是本租户成员',
+  'tenant.member.last_owner': '租户必须保留至少一名所有者，不能移除最后一名',
+  'tenant.status.terminal': '租户已归档，归档状态不可回退',
+  'user.not_found': '用户不存在或不属于当前租户',
   'tenant.not_found': '租户不存在',
   'tenant.has_active_members': '该租户仍有关联成员，请先移除成员后再删除',
   'tenant.delete.error.archive_code_conflict': '释放租户编码失败，请重试',
@@ -2814,9 +2817,6 @@ const zhCNFallback = {
   'system.dict.hero.title': '在统一工作台里治理字典类型、字典项与运行时缓存',
   'system.dict.hero.desc':
     '字典页沿用系统页统一模板：主任务区继续保留类型/字典项双工作台，右侧只承接当前治理面摘要和动作提示，不再额外扩散顶部概览。',
-  'system.dict.hero.typeHint': '当前已纳入平台与业务治理的字典类型数量。',
-  'system.dict.hero.activeHint': '仍处于启用状态、可被业务消费的字典类型数量。',
-  'system.dict.hero.itemHint': '所有字典类型下的字典项总量，用于评估枚举规模。',
   'system.dict.hero.currentType': '当前字典',
   'system.dict.hero.currentHint': '当前主从工作台聚焦的字典编码。',
   'system.dict.hero.summaryTitle': '治理摘要',

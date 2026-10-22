@@ -2431,6 +2431,9 @@ const enUSFallback = {
   'tenant.code_reserved':
     'This tenant code is still held by a deleted tenant, which the default list does not show. Choose a different code, or purge the deleted tenant first.',
   'tenant.member_exists': 'This user is already a member of the tenant.',
+  'tenant.member.last_owner': 'A tenant must keep at least one owner; the last owner cannot be removed.',
+  'tenant.status.terminal': 'The tenant is archived; that state is terminal.',
+  'user.not_found': 'The user does not exist in this tenant.',
   'tenant.not_found': 'Tenant not found.',
   'tenant.has_active_members': 'This tenant still has active members. Remove them before deleting the tenant.',
   'tenant.delete.error.archive_code_conflict': 'Could not release the tenant code. Please try again.',
@@ -3048,10 +3051,6 @@ const enUSFallback = {
     'Govern dictionary types, dictionary items, and runtime cache in one workbench',
   'system.dict.hero.desc':
     'The dictionary page adopts the shared system template while keeping its type/item dual workbench in the main task area. The side rail now holds only governance summary and action guidance.',
-  'system.dict.hero.typeHint':
-    'Dictionary types currently governed across platform and business modules.',
-  'system.dict.hero.activeHint': 'Dictionary types still enabled for runtime consumption.',
-  'system.dict.hero.itemHint': 'Total dictionary items across all types.',
   'system.dict.hero.currentType': 'Current Dictionary',
   'system.dict.hero.currentHint':
     'Dictionary code currently selected in the master-detail workbench.',

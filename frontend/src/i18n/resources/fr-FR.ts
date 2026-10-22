@@ -1517,6 +1517,9 @@ const frFRFallback = {
   'tenant.code_reserved':
     'Ce code de locataire est encore réservé par un locataire supprimé, qui n’apparaît pas dans la liste par défaut. Choisissez un autre code ou purgez d’abord le locataire supprimé.',
   'tenant.member_exists': 'Cet utilisateur est déjà membre du locataire.',
+  'tenant.member.last_owner': 'Un locataire doit conserver au moins un propriétaire ; le dernier ne peut pas être retiré.',
+  'tenant.status.terminal': 'Le locataire est archivé ; cet état est définitif.',
+  'user.not_found': "L'utilisateur n'existe pas ou n'appartient pas à ce locataire.",
   'tenant.not_found': 'Locataire introuvable.',
   'tenant.has_active_members':
     'Ce locataire a encore des membres actifs. Retirez-les avant de le supprimer.',
@@ -2766,12 +2769,6 @@ const frFRFallback = {
   'system.dict.usage.error': 'Échec du chargement de l’analyse d’usage du dictionnaire',
   'system.dict.hero.desc':
     'La page des dictionnaires reprend le modèle unifié des pages système : la zone principale conserve l’atelier double type/éléments, tandis que la droite ne porte que le résumé courant de gouvernance et les rappels d’action, sans étendre une vue d’ensemble supplémentaire en haut.',
-  'system.dict.hero.typeHint':
-    'Nombre de types de dictionnaire actuellement intégrés à la gouvernance plateforme et métier.',
-  'system.dict.hero.activeHint':
-    'Nombre de types de dictionnaire encore actifs et consommables par les métiers.',
-  'system.dict.hero.itemHint':
-    'Nombre total d’éléments sous tous les types de dictionnaire, utile pour évaluer le volume des énumérations.',
   'system.dict.hero.currentHint':
     'Code du dictionnaire actuellement ciblé par l’atelier maître/détail.',
   'system.dict.hero.disabledHint':

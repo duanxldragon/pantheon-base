@@ -10,7 +10,7 @@ interface PlanFeatureBoundaryProps {
   children: React.ReactElement;
 }
 
-function PlanFeatureBoundary({ feature, children }: PlanFeatureBoundaryProps) {
+function PlanFeatureBoundary({ feature, children }: Readonly<PlanFeatureBoundaryProps>) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { hasFeature, plan } = usePlanEntitlements();
@@ -56,7 +56,7 @@ interface PlanFeatureGuardProps {
  * Replaces a plan-gated page with an explicit upgrade state instead of letting
  * a tenant reach a page whose menu entry its plan already hides.
  */
-export default function PlanFeatureGuard({ feature, children }: PlanFeatureGuardProps) {
+export default function PlanFeatureGuard({ feature, children }: Readonly<PlanFeatureGuardProps>) {
   if (!feature) {
     return children;
   }
