@@ -15,7 +15,8 @@
     "B1 (P2): DeleteTenant required zero active members while RemoveMember refuses to drop the last owner, so an archived (retired) tenant could never be deleted through the API.",
     "B2 (P2): CreateTenant inserted the tenant row outside the provisioning transaction; a provisioning failure left the row holding its UNIQUE code with no owner, repairable only by hand.",
     "C1 (P3, UI): the dictionary page's governance bar rendered a description under each of its three metrics, unlike every other system list, pushing the table down by three lines.",
-    "D1 (P2, found while preparing this release): 000020_tenant_phase1_core_tables.down.sql dropped indexes and columns unconditionally while 000024.down had already removed several of them, so `migrate down` aborted part-way with 'Error 1091: Can't DROP tenant_id' and left schema_migrations dirty with a half-dropped schema."
+    "D1 (P2, found while preparing this release): 000020_tenant_phase1_core_tables.down.sql dropped indexes and columns unconditionally while 000024.down had already removed several of them, so `migrate down` aborted part-way with 'Error 1091: Can't DROP tenant_id' and left schema_migrations dirty with a half-dropped schema.",
+    "C2 (P3, UI): the settings governance bar has four metrics but the shared grid starts at 120px and its column is ~450px wide, so the fourth metric wrapped to a second row (2x2) and made the bar 152px tall instead of 82px."
   ],
   "scope": {
     "in": [
@@ -26,7 +27,8 @@
       "Dictionary governance bar: drop the per-metric descriptions and the three now-unused i18n keys",
       "Version material: VERSION 0.17.1, CHANGELOG, RELEASE_NOTES_v0.17.1.md, README(zh/en), STATUS",
       "Close the 2026-10-22-delivery-audit-remediation packet",
-      "Publish v0.17.1 with the four foundation-release assets"
+      "Publish v0.17.1 with the four foundation-release assets",
+      "Settings governance bar: page-scoped override so four metrics stay on one row down to a 960px viewport"
     ],
     "out": [
       "Casbin model, permission semantics, PlatformCapabilityMiddleware rules",
@@ -43,7 +45,8 @@
     "The dictionary governance bar shows only label + value, matching /system/user and /system/post; no unused i18n key remains in any of the five locales.",
     "README(zh/en), CHANGELOG, RELEASE_NOTES and VERSION all state 0.17.1; TENANT_API documents the mounted /system/tenant surface; the scope matrix no longer calls the runtime single-tenant; DEPLOYMENT_GUIDE documents tenant_mode.",
     "go build/vet/gofmt clean, go test ./... against real MySQL + Redis with 0 failures and 0 skips; frontend tsc/eslint/vitest/prebuild/vite build pass; docs governance checkers pass.",
-    "v0.17.1 is tagged and published with tgz / tgz.sha256 / repo.tar / repo.tar.sha256, checksums verified, and Foundation Release Verify green."
+    "v0.17.1 is tagged and published with tgz / tgz.sha256 / repo.tar / repo.tar.sha256, checksums verified, and Foundation Release Verify green.",
+    "The settings governance bar renders its four metrics on one row from 960px up with no horizontal overflow, and falls back to 2x2 only at the existing <=920px mobile breakpoint; the other system pages are unchanged."
   ],
   "harnessProfile": {
     "template": "admin-platform",
@@ -52,7 +55,11 @@
     "portableFailureClass": "gate-debt-blocks-release / lifecycle-deadlock / half-initialized-entity / ui-pattern-drift",
     "ownerLayer": "consumer-repository",
     "ratchetDecision": "checker-tightened",
-    "coverageDimensions": ["behaviour", "maintainability", "architecture-fitness"]
+    "coverageDimensions": [
+      "behaviour",
+      "maintainability",
+      "architecture-fitness"
+    ]
   },
   "expectedFiles": {
     "create": [
@@ -80,7 +87,8 @@
       "README.md",
       "README.en.md",
       ".harness/STATUS.md",
-      ".harness/tasks/2026-10-22-delivery-audit-remediation/manifest.json"
+      ".harness/tasks/2026-10-22-delivery-audit-remediation/manifest.json",
+      "frontend/src/assets/list-page.css"
     ],
     "doNotTouch": [
       "backend/pkg/database/migrations/**",

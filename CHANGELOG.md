@@ -41,6 +41,11 @@ Pantheon Base 方法追踪记录。方法论本体位于 `pantheon-harness`。
   keeps the explanation in the governance rail, so the dictionary page was the odd one out and
   three lines of prose pushed the table down. The three now-unused i18n keys were removed from all
   five locales.
+- The settings page's governance bar lays its four metrics on one row instead of wrapping to a
+  2×2 block. The default metric grid starts at 120px, which only fits three across, so the fourth
+  dropped to a second row and the bar doubled in height (152px → 82px). The page now gives the
+  metrics column more width and a 96px floor, so it stays on one row down to a 960px viewport and
+  falls back to 2×2 only at the existing ≤920px mobile breakpoint.
 - The migration chain can be rolled back again. `000020_tenant_phase1_core_tables.down.sql` dropped
   indexes and columns unconditionally, but `000024.down` had already removed several of them, so
   `migrate down` aborted part-way with `Error 1091: Can't DROP 'tenant_id'; check that column/key

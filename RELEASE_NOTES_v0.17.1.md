@@ -67,6 +67,12 @@ both the code and the published release. Each of those is now closed on `main`.
   other system list (`/system/user`, `/system/post`, …) shows only label + value and keeps the
   explanation in the governance rail; the dictionary page was the odd one out, and the three extra
   lines pushed the table down. The three now-unused i18n keys were removed from all five locales.
+- The settings page's governance bar lays its four metrics on one row instead of wrapping to a 2×2
+  block. The shared metric grid starts at 120px, which fits only three across, so the fourth metric
+  dropped to a second row and the bar doubled in height (152px → 82px). The page now widens the
+  metrics column and lowers the floor to 96px: one row down to a 960px viewport, 2×2 only at the
+  existing ≤920px mobile breakpoint. Verified at 1600 / 1440 / 1280 / 1100 / 960 / 900 px with no
+  horizontal overflow at any width.
 
 ## Changed
 

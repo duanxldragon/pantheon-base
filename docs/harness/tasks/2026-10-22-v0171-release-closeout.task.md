@@ -82,6 +82,8 @@ platform
   `information_schema`，修复回滚链在 `000024.down` 已删列后报 `Error 1091` 中断的问题（forward 路径不变）。
 - `backend/pkg/database/migrate_down_test.go`：新增 `TestMigrationChainRollsBackAndReapplies`（up→down→up）。
 - `frontend/src/modules/system/config/dict/DictPage.tsx`：移除三个指标的 `description`。
+- `frontend/src/assets/list-page.css`：设置页治理栏四个指标保持单行（页面级覆盖，`auto-fit` 下限 120→96px），
+  960px 以上一行、≤920px 移动断点回到 2×2，其他系统页不受影响。
 - `frontend/src/i18n/resources/{zh-CN,en-US,ja-JP,ko-KR,fr-FR}.ts`：删除随之失效的 3 个 key。
 - 版本材料：`VERSION` → 0.17.1、`CHANGELOG.md`、`RELEASE_NOTES_v0.17.1.md`、`README(.en).md`、`.harness/STATUS.md`。
 - 收口任务包：`2026-10-22-delivery-audit-remediation` 置 `completed`。

@@ -32,6 +32,24 @@
       "details": "PASS 12.3s on real MySQL. Migrates a throwaway database up to version 29, steps all the way down, asserts system_user.tenant_id and system_role.tenant_id are gone, then re-applies and asserts the version returns to 29 and the columns come back. Reverse check: after `git checkout --` on 000020_tenant_phase1_core_tables.down.sql (the previous unconditional version) the same test FAILS in 5.97s with `Error 1091 (42000): Can't DROP 'tenant_id'; check that column/key exists`, which is the defect this release fixes. The fixed file was restored and the test passes again."
     },
     {
+      "command": "node inspect-setting-bar.mjs (Playwright, 1440x1000)",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "Measured /system/setting before and after. Before: four .governance-summary-bar__metric boxes at two distinct top offsets (144 and 214), i.e. a 2x2 block, bar height 152px. After: all four at top 144, bar height 82px. The same script also checked /system/setting/basic, which renders the same bar."
+    },
+    {
+      "command": "node narrow2.mjs (Playwright, 1600/1440/1280/1100/960/900 widths)",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "Per-width metric row grouping plus a horizontal-overflow probe. 1600/1440/1280/1100/960 each render 4 metrics in one row (widths 165/143/120/119/100px) with no horizontal overflow; 900 renders 2x2 (366px), which is the intended <=920px mobile layout. This run is what caught the first attempt's <=1280px fallback re-creating the two-row layout, so the fallback was replaced with auto-fit."
+    },
+    {
+      "command": "cd frontend && npx vitest run",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "30 test files / 214 tests passed. One intermediate run reported 3 timeouts (SubmitBar 6392ms, LayoutOpenedTabs 6090ms, operationalPrimitives 7360ms against the 5000ms limit) while the machine was loaded and jsdom setup alone took 356s across 30 instances; those three files pass 16/16 in 7.18s when run together in isolation, and the full suite passed 214/214 twice, so this is load-induced timeout flake rather than a regression. Recorded as a residual."
+    },
+    {
       "command": "cd frontend && npx tsc --noEmit",
       "cwd": "frontend",
       "status": "passed",
@@ -42,12 +60,6 @@
       "cwd": "frontend",
       "status": "passed",
       "details": "Exit 0. Zero warnings and zero errors, so the --max-warnings 0 budget is intact."
-    },
-    {
-      "command": "cd frontend && npx vitest run",
-      "cwd": "frontend",
-      "status": "passed",
-      "details": "30 test files / 214 tests passed. One earlier run had a single 5000ms timeout in operationalPrimitives.test.tsx; the same file passes in 319ms when run alone (10/10) and the full suite passed 214/214 on re-run, so it is jsdom setup contention under full parallelism, not a regression. Recorded as a residual."
     },
     {
       "command": "cd frontend && npm run prebuild",

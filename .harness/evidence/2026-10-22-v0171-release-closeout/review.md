@@ -21,6 +21,7 @@ no route removal.
 | Frontend menu | `useLayoutMenu.tsx` | Complexity extraction into a pure helper; the menu tree result is identical. |
 | Frontend store | `useTenantSessionStore.ts` | Optional chaining only. |
 | Dictionary page | `DictPage.tsx` | The three metrics no longer pass `description`. Label, value, action and the governance rail are untouched. Verified in the browser against `/system/user` and `/system/post`: all three render 0 `.governance-summary-bar__metric-desc`. |
+| Settings bar layout | `src/assets/list-page.css` | Page-scoped override only (`setting-page__governance-bar`), following the existing `module-manager-page__governance-bar` and `permission-page__governance-bar` precedent in the same file. Widens the metrics column and lowers the track floor from 120px to 96px. `auto-fit` rather than a fixed 4 columns, so nothing overflows: it wraps only when the metrics truly do not fit. No shared selector changed, so the other system pages are unaffected - re-checked, still 0 metric descriptions. |
 | i18n | `zh-CN/en-US/ja-JP/ko-KR/fr-FR.ts` | Removes exactly the three keys that became unused (`system.dict.hero.{typeHint,activeHint,itemHint}`). No other key touched; the five locales stay aligned. |
 | Migration rollback | `000020_tenant_phase1_core_tables.down.sql` | Was an unreviewed worktree edit; exercised rather than trusted. The previous file drops `tenant_id` unconditionally while `000024.down` already removed it, so `migrate down` aborted with `Error 1091` and left the version dirty. Every destructive step now checks `information_schema` first. The guards are all `IF(@x > 0, ...)` shapes, so a no-op path degrades to `SELECT 1` rather than an error. Forward path untouched. |
 | Version material | `VERSION`, `CHANGELOG.md`, `README.md`, `README.en.md`, `RELEASE_NOTES_v0.17.1.md`, `.harness/STATUS.md` | All state 0.17.1 / 2026-10-22 and point at the same evidence directory. |
@@ -45,6 +46,8 @@ no route removal.
   `TestMigrationChainRollsBackAndReapplies` asserts the tenant columns are actually gone after `Down()` and
   present again after `Up()`, which closes that gap.
 - **Dictionary bar**: presentation only; no data path.
+- **Settings bar**: presentation only, and scoped to one page class. The risk of a CSS change is collateral
+  layout shift elsewhere, which is why the other system pages were re-measured rather than assumed safe.
 - **Release**: v0.17.1 is a new tag. The published v0.17.0 tag and assets are not rewritten.
 
 ## Verification reviewed

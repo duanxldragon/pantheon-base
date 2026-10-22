@@ -76,6 +76,33 @@ Browser confirmation, same session, same viewport:
 | `/system/user` | 0 |
 | `/system/post` | 0 |
 
+### C2 (P3, UI) — the settings governance bar wrapped to two rows
+
+`/system/setting` has four metrics, but the shared metric grid starts at `minmax(120px, 1fr)` and its
+column is only about 450px wide at a 1440px viewport, so only three fit and the fourth dropped to a second
+row — a 2×2 block that doubled the bar's height (152px) and broke the single-row rhythm every other system
+page has.
+
+The page now widens the metrics column and lowers the floor to 96px. Measured at six widths, with a
+horizontal-overflow check at each:
+
+| Viewport | Metrics per row | Metric width | Horizontal overflow |
+|---|---|---|---|
+| 1600 | 4 | 165px | none |
+| 1440 | 4 | 143px | none |
+| 1280 | 4 | 120px | none |
+| 1100 | 4 | 119px | none |
+| 960 | 4 | 100px | none |
+| 900 | 2×2 | 366px | none |
+
+900px is the existing ≤920px mobile breakpoint, where 2×2 is the intended phone layout. Bar height at 1440
+went from 152px to 82px.
+
+An earlier attempt pinned `repeat(4, minmax(96px, 1fr))` with a `≤1280px` fallback to 2×2; measuring at
+1280 showed that fallback re-created the two-row layout the change was meant to remove, so the fallback was
+dropped in favour of `auto-fit`, which only wraps when the metrics genuinely do not fit.
+
+
 ### D1 (P2, found while preparing this release) — the rollback chain aborted
 
 The worktree carried an unreviewed edit to `000020_tenant_phase1_core_tables.down.sql`. Rather than ship it on
