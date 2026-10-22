@@ -6,8 +6,8 @@ database or seed change.
 ## What was wrong and what changed
 
 **1. Committed dev credentials.** `docs/README.md` documented
-`PANTHEON_REDIS_PASSWORD=DHCCdhcc2025`, two evidence transcripts carried that
-password plus `root:DHCCroot@2025`, and
+`PANTHEON_REDIS_PASSWORD=<redacted-dev-credential>`, two evidence transcripts carried that
+password plus `root:<redacted-dev-credential>`, and
 `frontend/scripts/database-import-qa-setup.mjs` shipped a hardcoded fallback list
 containing the MySQL password. Docs now use placeholders, the transcripts are
 redacted, and the QA script takes probe passwords from

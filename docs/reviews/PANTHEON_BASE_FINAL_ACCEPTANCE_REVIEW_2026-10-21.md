@@ -14,7 +14,7 @@ linked_contracts:
   - docs/contracts/SYSTEM_AUTH_CONTRACT.md
   - docs/contracts/SYSTEM_IAM_CONTRACT.md
   - docs/contracts/SYSTEM_CONFIG_CONTRACT.md
-updated_at: 2026-10-21
+updated_at: 2026-10-22
 ---
 
 # Pantheon Base 企业级最终验收审查报告（2026-10-21）
@@ -103,3 +103,22 @@ P0×1（B1）、P1×5（B2/B3/B4/B5/B6-latent）全部修复并有回归测试�
 - 功能验收矩阵：[`PANTHEON_BASE_ACCEPTANCE_MATRIX_2026-10-21.md`](./PANTHEON_BASE_ACCEPTANCE_MATRIX_2026-10-21.md)
 - 问题清单与整改记录：[`PANTHEON_BASE_ISSUES_AND_REMEDIATION_2026-10-21.md`](./PANTHEON_BASE_ISSUES_AND_REMEDIATION_2026-10-21.md)
 - 测试与验收记录：[`PANTHEON_BASE_TEST_AND_ACCEPTANCE_REPORT_2026-10-21.md`](./PANTHEON_BASE_TEST_AND_ACCEPTANCE_REPORT_2026-10-21.md)
+
+## 10. 2026-10-22 发布与遗留项收口（追加，不改变 §0–§9 的历史判定）
+
+三项原移交动作与两项治理遗留已关闭：
+
+| 项 | 状态 | 实测证据 |
+|---|---|---|
+| F5 tag/release | ✅ 已发布 | tag `pantheon-base-v0.17.0` → `728feb2b`；release 四资产；`Foundation Release Verify` run `39698850076` success |
+| F2 main 保护 | ✅ 已生效 | ruleset `17011510` active，required checks 含 Quality/Security/Unit/CI Summary/Sonar，无 bypass |
+| B10 Tenant Smoke | ✅ 已转阻塞 | `smoke-tenant` 移除 `continue-on-error`；main 连续 5 次 smoke-core 全绿；push-only 语义已注明 |
+| G2 skip 掩盖 | ✅ 已加固 | `PANTHEON_TEST_DSN_REQUIRED` + 单测 + CI 环境；required 无 DSN 实测 FAIL，未设置 SKIP |
+| D2 凭据 | ✅ 轮换完成（工件残留） | 旧口令拒绝、新口令可用；HEAD 跟踪文件 0 命中；v0.17.0 `repo.tar` 内仍含已失效旧值 |
+| 浏览器终验 | ✅ 本轮完成 | 本机全栈 18 路由 + 8 组交互，0 console error / 0 failed API（截图见证据目录） |
+
+验证基线：真实 MySQL + Redis、`PANTHEON_TEST_DSN_REQUIRED=true`、`PANTHEON_TEST_REDIS_REQUIRED=true` 下 `go test ./...` **exit 0，0 FAIL，0 SKIP**。
+
+证据：[`.harness/evidence/2026-10-22-release-and-residual-closeout/summary.md`](../../.harness/evidence/2026-10-22-release-and-residual-closeout/summary.md)。
+
+**追加后的冻结判定：维持「阶段性验收通过，进入维护冻结」。** 唯一新增的显式残留是 v0.17.0 发布工件中的失效旧凭据（建议 v0.17.1 或经授权替换资产），不构成代码或运行时风险；其余 gap（生产备份恢复演练、G3 sizing、B7 并发初始化、跨租户 HTTP 攻击矩阵）保持原登记。

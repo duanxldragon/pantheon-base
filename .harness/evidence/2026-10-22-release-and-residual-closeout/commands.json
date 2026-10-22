@@ -1,0 +1,108 @@
+{
+  "taskId": "2026-10-22-release-and-residual-closeout",
+  "repo": "pantheon-base",
+  "executedAt": "2026-10-22T08:50:00+08:00",
+  "agent": {
+    "tool": "other",
+    "adapter": "software-workshop-agent"
+  },
+  "commands": [
+    {
+      "command": "gh release view pantheon-base-v0.17.0 --json tagName,targetCommitish,isDraft,isPrerelease,publishedAt,assets",
+      "cwd": ".",
+      "status": "passed",
+      "details": "tag pantheon-base-v0.17.0 -> 728feb2b66e0ed5f915cafc785c287fc2b3eca2a; published 2026-10-22T00:17:53Z; not draft or prerelease; four assets with digests: tgz 4f24787947317fa746e8a64fd1fd7fa5d764e85bd01a948d834f6865a358922f (19,903,712 B), repo.tar 0badc9848ef540f0e9aa49b496392deceece95c96e536e81560ff1ca27c19ebe (34,058,240 B)."
+    },
+    {
+      "command": "gh run list --workflow foundation-release-verify.yml --limit 5",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Run 39698850076, event=release, headBranch=pantheon-base-v0.17.0, conclusion=success."
+    },
+    {
+      "command": "gh api repos/duanxldragon/pantheon-base/rulesets/17011510",
+      "cwd": ".",
+      "status": "passed",
+      "details": "enforcement=active, target=branch, conditions include ~DEFAULT_BRANCH, bypass_actors=[]. Required status checks: Quality Gates, Security Gates, Unit Tests, CI Summary, SonarCloud Code Analysis. Classic branches/main/protection still returns 404; the ruleset is the effective control."
+    },
+    {
+      "command": "gh run list --workflow smoke-core.yml --branch main --limit 6",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Last five main runs success: 39598957879, 39584482520, 39582453605, 39580935995, 39572335644. This is the basis for removing continue-on-error from smoke-tenant."
+    },
+    {
+      "command": "git grep -l \"<old-dev-credential-pattern>\"",
+      "cwd": ".",
+      "status": "passed",
+      "details": "0 tracked matches at HEAD after redacting the archive evidence. MySQL root and Redis passwords were rotated on the local instance; old authentication was rejected and new authentication succeeded. The v0.17.0 repo.tar (and the copy nested in the tgz) was built from 728feb2b before this redaction and still contains the now-invalid values; recorded as a known gap rather than replaced without authorization."
+    },
+    {
+      "command": "PANTHEON_TEST_DSN= PANTHEON_DSN= PANTHEON_TEST_DSN_REQUIRED=true go test ./pkg/database -run TestRunMigrationsAlignsRuntimeSchemaWithCurrentContracts -count=1",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "Expected failure confirmed: 'mysql is required (PANTHEON_TEST_DSN_REQUIRED is set) but neither PANTHEON_TEST_DSN nor PANTHEON_DSN is configured' followed by --- FAIL. A renamed variable can no longer turn this gate green by skipping."
+    },
+    {
+      "command": "PANTHEON_TEST_DSN= PANTHEON_DSN= PANTHEON_TEST_DSN_REQUIRED= go test ./pkg/database -run TestRunMigrationsAlignsRuntimeSchemaWithCurrentContracts -count=1 -v",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "Expected skip confirmed: --- SKIP with the optional flag unset, preserving bare-checkout usability."
+    },
+    {
+      "command": "go build ./... && gofmt -l pkg/testmysql && go vet ./pkg/testmysql/ && go test ./pkg/testmysql -count=1 -v",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "Build and vet clean, gofmt no output, 17 testmysql cases pass, including resolveDSN fail/skip/fallback and the truthy/falsy matrices."
+    },
+    {
+      "command": "PANTHEON_TEST_DSN_REQUIRED=true PANTHEON_TEST_REDIS_REQUIRED=true go test ./... -count=1",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "Real MySQL 8 and Redis 7 with rotated credentials. Exit 0; 0 lines matching --- SKIP and 0 matching --- FAIL across all packages, including database (69.342s), i18n (184.149s) and tenant (72.638s)."
+    },
+    {
+      "command": "node .tmp/browser-acceptance/sweep.mjs",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Logged in through the Vite console, then visited 18 routes (dashboard, tenant, user, role, permission, menu, dept, post, dict, setting, i18n, session, login log, security event, operation log, modules, generator, security center). All rendered content; 0 console errors and 0 /api/ responses >=400. Results in browser-sweep.json and artifacts/01-05."
+    },
+    {
+      "command": "node .tmp/browser-acceptance/interact.mjs",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Eight read interactions: tenant search filter, tenant members drawer, user detail, role edit with navigation/button authorization tree, role members, i18n search, session filter and current-session detail. Modals rendered, 0 console errors and 0 failed requests. Results in browser-interactions.json and artifacts/06-08. No write operation was submitted."
+    },
+    {
+      "command": "node scripts/frontmatter-check.mjs && node scripts/harness/check-task-packet.mjs --root . && node scripts/harness/check-evidence.mjs --root . --strict",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Frontmatter check passed (337 docs, 244 with frontmatter); task packet present and linked; this evidence directory passes the strict schema. One pre-existing failure remains in .harness/evidence/2026-10-20-tenant-delivery-hardening/commands.json (missing knownGaps/linkage), untouched by this task."
+    },
+    {
+      "command": "actionlint -shellcheck=\"\" .github/workflows/ci.yml .github/workflows/quality.yml .github/workflows/smoke-core.yml",
+      "cwd": ".",
+      "status": "passed",
+      "details": "actionlint 1.7.10 exits 0 on all three edited workflows."
+    }
+  ],
+  "runtimeSensitive": true,
+  "runtimeGap": "Local race detection is unavailable: -race requires cgo and the only gcc on the host is Cygwin, which Go rejects. The hosted go-race job covers that matrix. Browser acceptance did not submit writes; AddMember idempotency and tenant suspend/member removal session revocation were covered by the real-DB Go suite and CI Tenant Smoke.",
+  "knownGaps": [
+    "v0.17.0 repo.tar and the nested copy in the tgz still contain the pre-rotation development credentials. The values are invalid after rotation; removing them requires a follow-up release or explicit authorization to replace published assets.",
+    "Historical git objects retain the pre-rotation credentials; rotation invalidates them and history was not rewritten.",
+    "Cross-tenant HTTP attack matrix, production backup restore drill (runbook G2 gate), G3 production sizing and B7 concurrent provisioning remain open from the 2026-10-21 report.",
+    "The pre-existing 2026-10-20 tenant-delivery-hardening evidence file fails the current strict schema and was not rewritten."
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-22-release-and-residual-closeout/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-22-release-and-residual-closeout/",
+    "reviewFile": ".harness/evidence/2026-10-22-release-and-residual-closeout/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/reviews/PANTHEON_BASE_FINAL_ACCEPTANCE_REVIEW_2026-10-21.md",
+      "docs/reviews/PANTHEON_BASE_ISSUES_AND_REMEDIATION_2026-10-21.md",
+      "docs/operations/RUNBOOK.md"
+    ]
+  }
+}

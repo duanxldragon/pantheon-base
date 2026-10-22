@@ -3,7 +3,7 @@
   "status": "verified",
   "commands": [
     {
-      "command": "git grep -n \"DHCCdhcc2025\\|DHCCroot\"",
+      "command": "git grep -n \"<redacted-dev-credential>\\|<redacted-dev-credential>\"",
       "cwd": "pantheon-base",
       "status": "passed",
       "notes": "No matches in tracked files: both dev credentials are gone from docs and from the historical evidence transcripts. Worktree-only copies remain in the gitignored .env.test, dist/ and pantheon-ops/.foundation/ (release payloads built before this fix)."

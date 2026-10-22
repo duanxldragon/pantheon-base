@@ -1,0 +1,72 @@
+{
+  "steps": [
+    {
+      "name": "tenant-search",
+      "url": "http://127.0.0.1:5173/system/tenant",
+      "modalCount": 0,
+      "modalText": [],
+      "bodyTail": "P | Pantheon Base | 工作台 | 访问控制 | 用户管理 | 角色管理 | 权限管理 | 租户管理 | 菜单管理 | 组织架构 | 安全审计 | 低代码平台 | 平台配置 | 首页 | 访问控制 | 租户管理 | 搜索菜单、页面、功能… | Ctrl K | 平台全局 | 0 | A | admin | 工作台 | 租户管理 | 平台管理 / 租户治理 | 管理平台租户与成员 | 租户总数 | 1 | 启用中 | 1 | 已停用 | 0 | 已归档 | 0 | 租户概览 | 按状态筛选 | 按套餐筛选 | 清空筛选 | 新增 | 租户编码 | \t | 租户名称 | \t | 套餐 | \t | 状态 | \t | 创建时间 | \t | 操作 |  |  | acme-demo | \t | Acme 交付示范租户 | \t | 旗舰版 | \t | 启用中 | \t | 2026-10-19 08:49:12 | \t | 成员 | 编辑 | 删除 | 总数 | 1 | 1 | 10 条/页 | Pantheon Platform · Enterprise Admin Foundation"
+    },
+    {
+      "name": "tenant-members",
+      "url": "http://127.0.0.1:5173/system/tenant",
+      "modalCount": 1,
+      "modalText": [
+        "租户成员：Acme 交付示范租户 |  用户 ID | 成员角色 | 普通成员 | 新增 | 成员 | \t | 成员角色 | \t | 加入时间 | \t | 操作 |  |  | Acme 管理员 | \t | 所有者 | \t | - | \t | 移除 |  |  | 张三（已更新） | \t | 普通成员 | \t | - | \t | 移除 |  |  | 张三（已更新） | \t | 普通成员 | \t | - | \t | 移除 |  |  | Old Token | \t | 普通成员 | \t | - | \t | 移除 |  |  | p | \t | 普通成员 | \t | - | \t | 移除 |  |  | 张三（已更新） | \t | 普通成员 | \t | - | \t | 移除 |  |  | 张三（已更新） | \t | 普通成员 | \t | 2026-10-19 09:00:15 | \t | 移除 | 总数 | 7 | 1 | 10 条/页"
+      ],
+      "bodyTail": "串租探测租户 | \t | 专业版 | \t | 已归档 | \t | 2026-10-19 09:57:36 | \t | 成员 | 编辑 | 删除 |  |  | beta-1019091846 | \t | Beta 串租探测租户 | \t | 专业版 | \t | 已归档 | \t | 2026-10-19 09:18:46 | \t | 成员 | 编辑 | 删除 |  |  | acme-demo | \t | Acme 交付示范租户 | \t | 旗舰版 | \t | 启用中 | \t | 2026-10-19 08:49:12 | \t | 成员 | 编辑 | 删除 |  |  | e2e-repro-1792113061528 | \t | E2E Repro 1792113061528 | \t | 免费版 | \t | 启用中 | \t | 2026-10-16 09:11:06 | \t | 成员 | 编辑 | 删除 |  |  | test-tenant | \t | test-tenant | \t | 免费版 | \t | 启用中 | \t | 2026-10-15 17:16:23 | \t | 成员 | 编辑 | 删除 | 总数 | 8 | 1 | 10 条/页 | Pantheon Platform · Enterprise Admin Foundation | 租户成员：Acme 交付示范租户 |  用户 ID | 成员角色 | 普通成员 | 新增 | 成员 | \t | 成员角色 | \t | 加入时间 | \t | 操作 |  |  | Acme 管理员 | \t | 所有者 | \t | - | \t | 移除 |  |  | 张三（已更新） | \t | 普通成员 | \t | - | \t | 移除 |  |  | 张三（已更新） | \t | 普通成员 | \t | - | \t | 移除 |  |  | Old Token | \t | 普通成员 | \t | - | \t | 移除 |  |  | p | \t | 普通成员 | \t | - | \t | 移除 |  |  | 张三（已更新） | \t | 普通成员 | \t | - | \t | 移除 |  |  | 张三（已更新） | \t | 普通成员 | \t | 2026-10-19 09:00:15 | \t | 移除 | 总数 | 7 | 1 | 10 条/页"
+    },
+    {
+      "name": "user-detail",
+      "url": "http://127.0.0.1:5173/system/user",
+      "modalCount": 1,
+      "modalText": [
+        "admin / admin | a | admin | admin | 启用 | 基础信息 | 用户名\tadmin | 昵称\tadmin | 头像\t- | 邮箱\t- | 手机号\t- | 账号摘要 | 部门\t- | 岗位\t- | 角色\t | 系统管理员 |  | 最近成功登录\t2026-10-22 08:40:39 | 创建时间\t2026-06-29 08:19:50 | 更新时间\t2026-10-15 10:50:06"
+      ],
+      "bodyTail": "P | Pantheon Base | 工作台 | 访问控制 | 用户管理 | 角色管理 | 权限管理 | 租户管理 | 菜单管理 | 组织架构 | 安全审计 | 低代码平台 | 平台配置 | 首页 | 访问控制 | 用户管理 | 搜索菜单、页面、功能… | Ctrl K | 平台全局 | 0 | A | admin | 工作台 | 租户管理 | 用户管理 | 系统域 / IAM 用户治理 | 围绕账号、角色与组织归属完成统一用户治理 | 用户管理 | 2 | 启用 | 2 | 停用账号 | 0 | 治理摘要 | 状态 | 部门 | 导出下载模板导入 | 新增 | 已选 0 条 | 清空选择 | 批量启用 | 批量禁用 | 删除所选 | \t | 用户名 | \t | 昵称 | \t | 状态 | \t | 部门 | \t | 岗位 | \t | 角色 | \t | 邮箱 | \t | 操作 |  |  | \t | sys_user | \t | sys_user | \t | 启用 | \t | 系统部 | \t | 运维工程师 | \t | role_test | \t | - | \t | 详情 | 编辑 | 重置密码 |  |  | \t | admin | \t | admin | \t | 启用 | \t | - | \t | - | \t | 系统管理员 | \t | - | \t | 详情 | 编辑 | 重置密码 | 总数 | 2 | 1 | 10 条/页 | Pantheon Platform · Enterprise Admin Foundation | admin / admin | a | admin | admin | 启用 | 基础信息 | 用户名\tadmin | 昵称\tadmin | 头像\t- | 邮箱\t- | 手机号\t- | 账号摘要 | 部门\t- | 岗位\t- | 角色\t | 系统管理员 |  | 最近成功登录\t2026-10-22 08:40:39 | 创建时间\t2026-06-29 08:19:50 | 更新时间\t2026-10-15 10:50:06"
+    },
+    {
+      "name": "role-edit",
+      "url": "http://127.0.0.1:5173/system/role",
+      "modalCount": 1,
+      "modalText": [
+        "编辑角色 | 基础信息 |  角色名称 |  角色标识 | 排序 | 状态 | 启用 | 数据权限 | 访问与授权 | 按“导航、页面、操作”三层配置角色权限，接口策略仍在权限管理页维护。 | 这里不会修改 Casbin 接口策略；保存角色后，请在权限管理页核对接口访问边界。 | 导航授权 | 已选 22 | 决定角色能在侧边栏看到哪些目录和菜单，不代表页面或接口一定可访问。 | 导航菜单 | 全展开 | 全收起 | 工作台 | /dashboard | 访问控制 | /system/access | 用户管理 | /system/user | 角色管理 | /system/role | 权限管理 | /system/permission | 租户管理 | /system/tenant | 菜单管理 | /system/menu | 组织架构 | /system/org | 部门管理 | /system/dept | 岗位管理 | /system/post | 安全审计 | /system/security | 登录日志 | /system/login-log | 会话管理 | /system/session | 操作日志 | /system/operation-log | 安全事件 | /system/security-event | 低代码平台 | /system/lowcode | 模块管理 | /system/modules | 模块生成器 | /system/generator | 平台配置 | /system/config | 字典管理 | /system/dict"
+      ],
+      "bodyTail": "em:session:list | 操作日志 | system:operation-log:list | 安全事件 | system:security-event:list | 低代码平台 | 模块管理 | system:module:list | 模块生成器 | system:generator:use | 平台配置 | 字典管理 | system:dict:list | 系统设置 | system:setting:list | 国际化管理 | system:i18n:list | 操作授权 | 已选 80 | 决定页面内新增、编辑、删除等按钮是否展示，按页面归属展示对应动作权限。 | 操作权限 | 全展开 | 全收起 | 访问控制 | 用户管理 | system:user:list | 角色管理 | system:role:list | 权限管理 | system:permission:list | 租户管理 | system:tenant:list | 菜单管理 | system:menu:list | 组织架构 | 部门管理 | system:dept:list | 岗位管理 | system:post:list | 安全审计 | 登录日志 | system:login-log:list | 会话管理 | system:session:list | 操作日志 | system:operation-log:list | 安全事件 | system:security-event:list | 低代码平台 | 模块管理 | system:module:list | 模块生成器 | system:generator:use | 平台配置 | 字典管理 | system:dict:list | 系统设置 | system:setting:list | 国际化管理 | system:i18n:list | 取消 | 保存"
+    },
+    {
+      "name": "role-members",
+      "url": "http://127.0.0.1:5173/system/role",
+      "modalCount": 1,
+      "modalText": [
+        "系统管理员 | admin · 角色成员 | 直接在角色下维护成员绑定 | 新增用户时可暂不分配角色，后续统一在角色侧补齐或移除成员关系。 | 启用 | 总数 1 / 角色成员 | 新增 | 刷新 | __deleted_user_636 / 烟测批量用户 | __deleted_user_635 / 烟测用户_已修改 | __deleted_user_634 / 烟测用户 | __deleted_user_591 / Probe Tenant User | __deleted_user_590 / Probe Tenant User | __deleted_user_564 / Probe Tenant User | __deleted_user_538 | __deleted_user_521 / Probe Tenant User | __deleted_user_520 / 烟测批量用户 | __deleted_user_519 / 烟测用户_已修改 | __deleted_user_518 / 烟测用户 | __deleted_user_517 / 导入导出烟测用户 | __deleted_user_516 / Smoke Batch Delete User | __deleted_user_515 / 岗位占用用户1790059431440 | __deleted_user_514 / 批量烟测用户1790059418913 | __deleted_user_513 / 待分配角色用户1790059411279 | __deleted_user_512 / 烟测用户"
+      ],
+      "bodyTail": "eleted_user_564 / Probe Tenant User | __deleted_user_538 | __deleted_user_521 / Probe Tenant User | __deleted_user_520 / 烟测批量用户 | __deleted_user_519 / 烟测用户_已修改 | __deleted_user_518 / 烟测用户 | __deleted_user_517 / 导入导出烟测用户 | __deleted_user_516 / Smoke Batch Delete User | __deleted_user_515 / 岗位占用用户1790059431440 | __deleted_user_514 / 批量烟测用户1790059418913 | __deleted_user_513 / 待分配角色用户1790059411279 | __deleted_user_512 / 烟测用户1790059406363-已编辑 | __deleted_user_511 / smoke_cross_page_1790059397468_11 | __deleted_user_510 / smoke_cross_page_1790059397468_10 | __deleted_user_509 / smoke_cross_page_1790059397468_09 | 筛选成员状态 | 搜索 | 重置 | 用户名 | \t | 昵称 | \t | 状态 | \t | 部门 | \t | 岗位 | \t | 创建时间 | \t | 操作 |  |  | admin | \t | admin | \t | 启用 | \t | - | \t | - | \t | 2026-06-29 08:19 | \t | 删除 | 总数 | 1 | 1 | 10 条/页"
+    },
+    {
+      "name": "i18n-filter",
+      "url": "http://127.0.0.1:5173/system/i18n",
+      "modalCount": 0,
+      "modalText": [],
+      "bodyTail": " | \t | 翻译键 | \t | 语言 | \t | 内容 | \t | 操作 |  |  | \t | system.menu.dashboard | \t | en-US | \t | Workbench | \t | 详情 | 编辑 | 删除 |  |  | \t | system.menu.operationLog | \t | en-US | \t | Operation Logs | \t | 详情 | 编辑 | 删除 |  |  | \t | system.menu.loginLog | \t | en-US | \t | Login Logs | \t | 详情 | 编辑 | 删除 |  |  | \t | system.menu.security | \t | en-US | \t | Security & Audit | \t | 详情 | 编辑 | 删除 |  |  | \t | system.menu.securityEvent | \t | en-US | \t | Security Events | \t | 详情 | 编辑 | 删除 |  |  | \t | system.menu.session | \t | en-US | \t | Sessions | \t | 详情 | 编辑 | 删除 |  |  | \t | system.menu.config | \t | en-US | \t | System Configuration | \t | 详情 | 编辑 | 删除 |  |  | \t | system.menu.dict | \t | en-US | \t | Dictionaries | \t | 详情 | 编辑 | 删除 |  |  | \t | system.menu.i18n | \t | en-US | \t | Internationalization | \t | 详情 | 编辑 | 删除 |  |  | \t | system.menu.setting | \t | en-US | \t | Settings | \t | 详情 | 编辑 | 删除 | 总数 | 113 | 《 | 1 | 2 | 3 | 4 | 5 | 12 | 》 | 10 条/页 | Pantheon Platform · Enterprise Admin Foundation"
+    },
+    {
+      "name": "session-filter",
+      "url": "http://127.0.0.1:5173/system/session",
+      "modalCount": 0,
+      "modalText": [],
+      "bodyTail": "AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.8078.4 Safari/537.36 | \t | 2026-10-22 08:37:51 | \t | 已下线 | \t | 详情 | 下线会话 |  |  | \t | admin | \t | 127.0.0.1 | \t | Desktop · Chrome · Windows | Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.8078.4 Safari/537.36 | \t | 2026-10-22 08:37:30 | \t | 已下线 | \t | 详情 | 下线会话 |  |  | \t | admin | \t | 127.0.0.1 | \t | Desktop | Python-urllib/3.13 | \t | 2026-10-19 14:16:00 | \t | 已下线 | \t | 详情 | 下线会话 |  |  | \t | admin | \t | 127.0.0.1 | \t | Desktop | Python-urllib/3.13 | \t | 2026-10-19 14:14:55 | \t | 已下线 | \t | 详情 | 下线会话 |  |  | \t | admin | \t | 127.0.0.1 | \t | Desktop | Python-urllib/3.12 | \t | 2026-10-19 11:55:41 | \t | 已下线 | \t | 详情 | 下线会话 | 总数 | 479 | 《 | 1 | 2 | 3 | 4 | 5 | 48 | 》 | 10 条/页 | Pantheon Platform · Enterprise Admin Foundation | 浏览器 | 浏览器 | 操作系统 | 操作系统 | 设备 | 设备"
+    },
+    {
+      "name": "security-detail",
+      "url": "http://127.0.0.1:5173/auth/security",
+      "modalCount": 1,
+      "modalText": [
+        "详情 | Desktop · Chrome · Windows | 当前会话摘要 | 当前设备 | 活跃 | 登录 IP\t127.0.0.1\t最近活动\t2026-10-22 08:40:39 | 会话过期时间\t2026-10-29 08:40:39\t创建时间\t2026-10-22 08:40:39 | 状态\t活跃\t会话 ID\tcc2603b6-3c3f-423d-8f1c-86b36b77265e | 设备信息 | 设备\tDesktop | 浏览器\tChrome | 操作系统\tWindows | 原始 User-Agent | Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.8078.4 Safari/537.36"
+      ],
+      "bodyTail": "控制开关；默认关闭时不展示伪能力。 | 启用 MFA | 否 | 控制登录时是否要求 TOTP 二次验证；关闭时保持原账号密码登录链路。 | 启用 SSO | 否 | 为后续 SSO / OIDC 接入预留的控制开关；默认关闭时仅使用本地账号登录。 | 安全事件 | 密码错误 | 中 | 2026-10-15 10:50:03 | 密码错误 | 中 | 2026-10-13 19:42:50 | 密码错误 | 中 | 2026-10-13 19:42:50 | 密码错误 | 中 | 2026-10-13 19:42:50 | 治理提示 | 当前会话摘要 | 密码修改会联动其他会话下线；如发现陌生设备或异常 IP，请先撤销对应会话，再回查登录日志与统一审计。 | Pantheon Platform · Enterprise Admin Foundation | 详情 | Desktop · Chrome · Windows | 当前会话摘要 | 当前设备 | 活跃 | 登录 IP\t127.0.0.1\t最近活动\t2026-10-22 08:40:39 | 会话过期时间\t2026-10-29 08:40:39\t创建时间\t2026-10-22 08:40:39 | 状态\t活跃\t会话 ID\tcc2603b6-3c3f-423d-8f1c-86b36b77265e | 设备信息 | 设备\tDesktop | 浏览器\tChrome | 操作系统\tWindows | 原始 User-Agent | Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.8078.4 Safari/537.36"
+    }
+  ],
+  "consoleErrors": [],
+  "failedRequests": []
+}
