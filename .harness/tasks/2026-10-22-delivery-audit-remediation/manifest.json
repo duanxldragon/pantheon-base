@@ -4,7 +4,7 @@
   "title": "Close the independent delivery-audit findings: Release Gate Sonar debt, tenant lifecycle contract deviations, cross-tenant error shaping, and stale consumer docs",
   "goal": "An independent delivery audit (2026-10-22) of main 92b94474 found no P0 and no unresolved P1, but left four classes of debt: (1) Release Gate is red with 8 unresolved SonarCloud issues introduced by #407, so no release can be cut from main; (2) two tenant-lifecycle invariants from TENANT_CONTRACT_V1 are not enforced (the last owner can be removed, an archived tenant can return to active); (3) cross-tenant user read/update by id answers 500 instead of 404/403, and a reserved-role-key conflict answers envelope code 500; (4) consumer-facing docs disagree with the code (README/CHANGELOG still name v0.16.1, TENANT_API documents an unmounted route group, the scope matrix calls the runtime single-tenant, the deployment guide never mentions tenant_mode). This packet closes all of it, records the evidence, and prepares (but does not publish) v0.17.1.",
   "primaryLayer": "platform",
-  "status": "in-progress",
+  "status": "completed",
   "priority": "P1",
   "type": "acceptance-remediation",
   "estimatedComplexity": "medium",

@@ -1,7 +1,7 @@
 # Pantheon Base - Harness 任务状态
 
 **最后更新**: 2026-10-22
-**当前版本**: v0.17.1（发布中）；v0.17.0 为上一个可消费版本
+**当前版本**: v0.17.1（已发布，`1f68d56b`）；v0.17.0 为上一个可消费版本
 
 ## 交付收口与租户生命周期修复（2026-10-22，v0.17.1）
 
@@ -30,7 +30,14 @@
 - **验证**：后端 `go build`/`go vet`/`gofmt` 干净，真库全量 `go test ./...` 0 失败 0 跳过；
   新增 5 条真库用例（归档删除、初始化回滚、最后 owner、归档终态、回滚重放）；前端 tsc / eslint /
   vitest（30 文件 214 用例）/ prebuild 13 步 / vite build 通过；浏览器 17 路由 0 console error、0 个 `/api/` ≥400。
-- **结论**：三项阻塞、两项生命周期缺口与一处回滚断链闭合；`v0.17.1` 待 CI 门禁转绿后打标发布四件产物。
+- **发布事实（实测）**：PR #408 squash 合并为 `1f68d56b`；`Release Gate` 在该提交上 **success**
+  （审计阻塞项 P1-1 由 CI 证实闭合）；标签 `pantheon-base-v0.17.1` 为 annotated tag 指向 `1f68d56b`；
+  Release 非草稿非预发布，四件产物齐备，`tgz` = `3b0b7949…`、`repo.tar` = `3b804a8e…` 与本地 `sha256sum -c`
+  及 GitHub asset digest 逐字节一致；`check:release-assets` 通过；`Foundation Release Verify` **success**。
+- **测试夹具修正**：`tenant-viewpoint-switcher` teardown 与 `tenant-matrix-fixture-setup` 原先「删光成员再删租户」，
+  在 §2.2 最后 owner 保护下永远达不到 `member=0`，Tenant Smoke 因此报 `tenant.has_active_members`。
+  两者改为先尽量清成员、再归档、再删除，走契约的退役路径。
+- **结论**：三项阻塞、两项生命周期缺口、一处回滚断链与两处治理栏呈现问题全部闭合，`v0.17.1` 已发布。
 
 ## 租户菜单、审计归属与套餐差异化修复（2026-10-22）
 

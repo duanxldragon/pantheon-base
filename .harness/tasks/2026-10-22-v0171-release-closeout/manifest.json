@@ -4,7 +4,7 @@
   "title": "Close the delivery-audit blockers, fix two tenant-lifecycle gaps and one UI inconsistency, and publish v0.17.1",
   "goal": "The 2026-10-22 independent delivery audit of main 92b94474 returned FAIL on delivery completeness: no P0, but (1) Release Gate was red with 8 unresolved SonarCloud issues so no release could be cut from main, (2) the remediation lived only in an uncommitted worktree, and (3) consumer-facing docs contradicted the code and the published release. The same audit found two tenant-lifecycle gaps (an archived tenant could never be deleted because the archived-terminal rule and the last-owner rule deadlock; a failed provisioning stranded its tenant row holding a UNIQUE code) and one UI inconsistency (the dictionary governance bar rendered a description under each metric while every other system list does not). This packet closes all of them, records the evidence, and publishes v0.17.1 with the four consumable assets.",
   "primaryLayer": "platform",
-  "status": "in-progress",
+  "status": "completed",
   "priority": "P1",
   "type": "acceptance-remediation",
   "estimatedComplexity": "medium",
