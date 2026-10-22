@@ -266,9 +266,7 @@ func (s *MenuService) loadAllowedNavigationMenuIDs(roleKeys []string) ([]uint64,
 	if !capability.Load(s.db).OrgEnabled {
 		db = db.Where("system_menu.module <> ?", "system.org")
 	}
-	err := db.
-		Order("system_menu.sort asc, system_menu.id asc").
-		Pluck("system_menu.id", &menuIDs).Error
+	err := db.Pluck("system_menu.id", &menuIDs).Error
 	return menuIDs, err
 }
 
