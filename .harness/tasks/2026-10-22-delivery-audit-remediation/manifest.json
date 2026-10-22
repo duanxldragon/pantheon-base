@@ -1,0 +1,146 @@
+{
+  "taskId": "2026-10-22-delivery-audit-remediation",
+  "taskDoc": "docs/harness/tasks/2026-10-22-delivery-audit-remediation.task.md",
+  "title": "Close the independent delivery-audit findings: Release Gate Sonar debt, tenant lifecycle contract deviations, cross-tenant error shaping, and stale consumer docs",
+  "goal": "An independent delivery audit (2026-10-22) of main 92b94474 found no P0 and no unresolved P1, but left four classes of debt: (1) Release Gate is red with 8 unresolved SonarCloud issues introduced by #407, so no release can be cut from main; (2) two tenant-lifecycle invariants from TENANT_CONTRACT_V1 are not enforced (the last owner can be removed, an archived tenant can return to active); (3) cross-tenant user read/update by id answers 500 instead of 404/403, and a reserved-role-key conflict answers envelope code 500; (4) consumer-facing docs disagree with the code (README/CHANGELOG still name v0.16.1, TENANT_API documents an unmounted route group, the scope matrix calls the runtime single-tenant, the deployment guide never mentions tenant_mode). This packet closes all of it, records the evidence, and prepares (but does not publish) v0.17.1.",
+  "primaryLayer": "platform",
+  "status": "in-progress",
+  "priority": "P1",
+  "type": "acceptance-remediation",
+  "estimatedComplexity": "medium",
+  "findings": [
+    "A1 (P2, blocking release): Release Gate on main 92b94474 failed (run 39733491324) with 'Release blocked: 8 unresolved SonarCloud issue(s)'. The eight: go:S1192 x2 and go:S3776 x1 in backend/modules/system/iam/tenant/tenant_provision.go; typescript:S3776 in frontend/src/core/layout/useLayoutMenu.tsx; typescript:S6759 x3 in PlanFeatureGuard.tsx (two components) and TenantPlanMatrix.tsx; typescript:S6582 in frontend/src/store/useTenantSessionStore.ts.",
+    "B1 (P2): Service.RemoveMember deletes a membership without checking the tenant's last active owner, while contract TENANT_CONTRACT_V1 §2.2 requires at least one owner on every non-archived tenant. AddMember already refuses to demote an owner, so the delete path is the only hole.",
+    "B2 (P2): UpdateTenant only validates the status enum; an archived tenant can be written back to active, but contract §2.1 declares archived terminal and irreversible.",
+    "B3 (P2): Cross-tenant user read/update by id returns envelope code 500 (user.detail.error / user.update.error) instead of 404/403. No data leaks (verified against a real second tenant) but contract §5 requires not distinguishing missing from foreign, and the role-member endpoint already answers 404.",
+    "B4 (P3): A role-key conflict (role.key.reserved) answers envelope code 500 even though pkg/common.CodeForError maps ErrConflict to 400; the role handler bypasses the helper.",
+    "C1 (P2): README.md, README.en.md and the README changelog link still name v0.16.1 as the current foundation release while VERSION is 0.17.0 and v0.17.0 is published, so a consumer following the README pins a version that lacks the three P1 fixes shipped after it.",
+    "C2 (P2): docs/api/TENANT_API.md documents /api/v1/tenants* but tenant.RegisterRoutes has no call site; the mounted surface is /api/v1/system/tenant* behind PlatformCapabilityMiddleware.",
+    "C3 (P2): docs/designs/TENANT_RESOURCE_SCOPE_MATRIX.md (and .en.md) still state 'the current runtime is single-tenant', contradicting the delivered multi-tenant capability and the contract.",
+    "C4 (P2): docs/DEPLOYMENT_GUIDE.md contains zero mentions of tenant_mode/multi, so an operator cannot learn from the deployment guide that multi exists, is one-way, or needs a platform subject.",
+    "C5 (P3): .harness/STATUS.md claims 'no known P0-P3 residue' and 'open issues 0' while Release Gate is red on main, and two task packets (2026-10-12-flake-signal-remediation, 2026-10-12-foundation-release-asset-gate) stayed in-progress although their acceptance criteria were met."
+  ],
+  "scope": {
+    "in": [
+      "SonarCloud debt in backend/modules/system/iam/tenant/tenant_provision.go (go:S1192 x2, go:S3776)",
+      "SonarCloud debt in frontend/src/core/entitlements/PlanFeatureGuard.tsx, frontend/src/modules/system/iam/tenant/TenantPlanMatrix.tsx, frontend/src/core/layout/useLayoutMenu.tsx, frontend/src/store/useTenantSessionStore.ts",
+      "Last-owner protection in tenant member removal",
+      "Terminal archived status in tenant updates",
+      "Not-found mapping for cross-tenant user read/update",
+      "Envelope code mapping for role-key conflicts",
+      "README/CHANGELOG current-release statements",
+      "TENANT_API route-surface documentation",
+      "Tenant resource scope matrix runtime statement",
+      "Deployment guide tenant-mode section",
+      "STATUS and stale task-packet closeout",
+      "v0.17.1 release preparation (VERSION, CHANGELOG, RELEASE_NOTES) without publishing"
+    ],
+    "out": [
+      "Publishing, tagging or replacing the v0.17.0 release assets (maintainer credential action)",
+      "Casbin model, role/permission semantics, or PlatformCapabilityMiddleware rules",
+      "Database schema and the migration chain",
+      "CI workflow required checks or gate thresholds",
+      "Concurrent-provisioning hardening (B7), Redis fail-open (A5), audit-table indexes (C5), i18n coverage (E4) - recorded as post-freeze items"
+    ]
+  },
+  "acceptanceCriteria": [
+    "The eight SonarCloud rules flagged on 92b94474 are addressed in code (duplicate literals extracted, cognitive complexity reduced, props read-only, optional chain preferred) without adding suppressions.",
+    "Removing the last active owner of a non-archived tenant is refused with a stable error key and covered by a real-MySQL test.",
+    "archived -> active is refused; active <-> suspended and -> archived remain allowed, with a table-driven test.",
+    "Cross-tenant user read/update answers 404 (same as a genuinely missing id) and writes nothing; covered by a real-MySQL test.",
+    "Role-key conflicts answer envelope code 400 through common.CodeForError.",
+    "README (zh/en), CHANGELOG and RELEASE_NOTES state the same current version; TENANT_API documents the mounted /system/tenant surface and its platform-only boundary; the scope matrix no longer calls the runtime single-tenant; DEPLOYMENT_GUIDE documents tenant_mode.",
+    "STATUS records the audit verdict and the residual items; the two stale in-progress packets are closed with evidence references.",
+    "go build ./..., go vet ./..., go test ./... (real MySQL + Redis, PANTHEON_TEST_DSN_REQUIRED=true) pass; frontend tsc/eslint/vitest/prebuild/vite build pass; task-packet, docs-frontmatter and duplication checkers pass."
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "permission-policy",
+    "portableFailureClass": "gate-debt-blocks-release / contract-invariant-unenforced / error-shape-disagrees-with-contract / consumer-doc-drift",
+    "ownerLayer": "consumer-repository",
+    "ratchetDecision": "checker-tightened",
+    "coverageDimensions": [
+      "behaviour",
+      "maintainability",
+      "architecture-fitness"
+    ]
+  },
+  "expectedFiles": {
+    "create": [
+      "docs/harness/tasks/2026-10-22-delivery-audit-remediation.task.md",
+      "docs/reviews/PANTHEON_BASE_DELIVERY_REMEDIATION_2026-10-22.md",
+      "RELEASE_NOTES_v0.17.1.md",
+      ".harness/evidence/2026-10-22-delivery-audit-remediation/"
+    ],
+    "modify": [
+      "backend/modules/system/iam/tenant/tenant_provision.go",
+      "backend/modules/system/iam/tenant/tenant_service.go",
+      "backend/modules/system/iam/tenant/tenant_service_test.go",
+      "backend/modules/system/iam/user/user_service.go",
+      "backend/modules/system/iam/user/user_error_test.go",
+      "backend/modules/system/iam/role/role_handler.go",
+      "frontend/src/core/entitlements/PlanFeatureGuard.tsx",
+      "frontend/src/core/layout/useLayoutMenu.tsx",
+      "frontend/src/modules/system/iam/tenant/TenantPlanMatrix.tsx",
+      "frontend/src/store/useTenantSessionStore.ts",
+      "README.md",
+      "README.en.md",
+      "CHANGELOG.md",
+      "VERSION",
+      "docs/api/TENANT_API.md",
+      "docs/designs/TENANT_RESOURCE_SCOPE_MATRIX.md",
+      "docs/designs/TENANT_RESOURCE_SCOPE_MATRIX.en.md",
+      "docs/DEPLOYMENT_GUIDE.md",
+      ".harness/STATUS.md",
+      ".harness/tasks/2026-10-12-flake-signal-remediation/manifest.json",
+      ".harness/tasks/2026-10-12-foundation-release-asset-gate/manifest.json"
+    ],
+    "doNotTouch": [
+      "backend/pkg/database/migrations/**",
+      "backend/pkg/database/casbin*.go",
+      "backend/internal/middleware/platform_capability_middleware.go",
+      ".github/workflows/**",
+      "dist/** and the published v0.17.0 release assets"
+    ]
+  },
+  "implementationNotes": [
+    "The two duplicate literals in tenant_provision.go become named constants; the complexity comes from repairTenantPlatformGrants, so the platform-only menu collection and the two grant deletions move into helpers with the same SQL.",
+    "The last-owner guard runs inside RemoveMember before the delete, counts active owners for the tenant, and only refuses when the target row is the last owner; removal of a non-owner or of one of several owners is unchanged.",
+    "Status transitions use a pure helper so the rule is testable without a database; the existing session-revocation decision is untouched.",
+    "User not-found paths wrap the gorm error in common.ErrNotFound; the handler then maps it through common.CodeForError so a foreign id and a missing id answer the same 404.",
+    "Frontend fixes are mechanical: Readonly<Props> on the three components, optional chaining in isTenantScopedSession, and capability/short-circuit extraction in filterMenuTreeByCapabilities to drop cognitive complexity below 15.",
+    "Docs state the mounted surface and the boundary first, then point at the contract for detail; no new normative rule is introduced.",
+    "v0.17.1 is prepared but not published: tag creation and asset upload stay a maintainer action."
+  ],
+  "verificationPlan": {
+    "commands": [
+      "cd backend && go build ./... && go vet ./...",
+      "cd backend && PANTHEON_TEST_DSN=<real mysql> PANTHEON_TEST_DSN_REQUIRED=true go test ./...",
+      "cd backend && go test -count=1 ./modules/system/iam/tenant/ ./modules/system/iam/user/ ./modules/system/iam/role/",
+      "cd frontend && ./node_modules/.bin/tsc -b",
+      "cd frontend && ./node_modules/.bin/eslint .",
+      "cd frontend && ./node_modules/.bin/vitest run",
+      "cd frontend && node scripts/<12 prebuild contract scripts>",
+      "cd frontend && ./node_modules/.bin/vite build",
+      "node scripts/harness/check-task-packet.mjs --root .",
+      "node scripts/frontmatter-check.mjs",
+      "node scripts/check-duplication.mjs"
+    ],
+    "runtimeEvidence": [
+      "Real MySQL + Redis full backend suite with PANTHEON_TEST_DSN_REQUIRED=true (zero skips)",
+      "Targeted real-MySQL tests for last owner, archived terminal status, cross-tenant 404 and role conflict code"
+    ]
+  },
+  "linkage": {
+    "assessment": "docs/harness/tasks/2026-10-22-delivery-audit-remediation.task.md",
+    "evidenceDir": ".harness/evidence/2026-10-22-delivery-audit-remediation/",
+    "summaryFile": ".harness/evidence/2026-10-22-delivery-audit-remediation/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-22-delivery-audit-remediation/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/contracts/TENANT_CONTRACT_V1.md",
+      "docs/reviews/PANTHEON_BASE_ISSUES_AND_REMEDIATION_2026-10-21.md"
+    ]
+  }
+}
