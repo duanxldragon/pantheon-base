@@ -215,6 +215,7 @@ updated_at: 2026-10-22
 | 范围 | 命令 | 结果 |
 |---|---|---|
 | 后端全量（真实 MySQL/Redis） | `cd backend && PATH="/d/msys64/mingw64/bin:/d/nodejs:$PATH" CGO_ENABLED=1 CC='D:\msys64\mingw64\bin\gcc.exe' go test -race -p 1 -count=1 ./...` | exit 0；46 包 ok；无 FAIL、无 data race |
+| 后端 MySQL 8 严格模式 | `cd backend && go test -count=1 ./modules/system/iam/menu/`（DSN 追加 `sql_mode=ONLY_FULL_GROUP_BY`） | 整包通过；修复 hosted 首轮 Unit Tests 暴露的 Error 3065 |
 | 前端单测 | `cd frontend && node ./node_modules/vitest/vitest.mjs run` | 30 文件 / 214 用例通过 |
 | 前端类型 | `cd frontend && node ./node_modules/typescript/bin/tsc -b` | exit 0 |
 | 前端 lint | `cd frontend && node ./node_modules/eslint/bin/eslint.js .` | exit 0 |
@@ -232,7 +233,10 @@ updated_at: 2026-10-22
    最终信号，本报告不把本地串行结果外推为 CI 结论。
 3. **npm 递归调用依赖 PATH**：prebuild 脚本内部递归调用 `npm`，本机 cmd.exe 默认找不到 npm；
    实际构建命令为 `PATH="/d/nodejs:$PATH" npm run build`，并另以 `node` 逐条执行同一组 prebuild 步骤复核。
-3. **浏览器工具限制**：本会话 browser-use MCP 的快照工具被策略拦截，浏览器验收使用 Playwright
+4. **MySQL 8 严格模式**：hosted 首轮 Unit Tests 在新增租户导航用例上返回 Error 3065
+   （`DISTINCT system_menu.id ... ORDER BY system_menu.sort` 与 `ONLY_FULL_GROUP_BY` 不兼容）。
+   已移除该未被消费的排序，并以相同 `sql_mode` 在本地复跑 menu 整包通过；hosted 复跑结论为准。
+5. **浏览器工具限制**：本会话 browser-use MCP 的快照工具被策略拦截，浏览器验收使用 Playwright
    （Node + Chromium）完成；截图与 JSON 是实际运行产物。
 4. **浏览器复验范围**：四套餐验收与标签栏探针均针对本机 multi 部署；hosted CI 的并行 `-race`
    腿仍需在 PR 上确认，本地串行结果不作 CI 结论外推。

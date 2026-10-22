@@ -12,12 +12,12 @@ The project is not intended to be just a login shell plus CRUD scaffolding. Its 
 
 | Item | Value |
 | --- | --- |
-| Current foundation release | [`pantheon-base-v0.16.1`](https://github.com/duanxldragon/pantheon-base/releases/tag/pantheon-base-v0.16.1) (with the four consumable assets) |
+| Current foundation release | [`pantheon-base-v0.17.1`](https://github.com/duanxldragon/pantheon-base/releases/tag/pantheon-base-v0.17.1) (with the four consumable assets) |
 | Shell/Harness baseline | `1.4.0` (see [VERSION](./VERSION) / [SHELL_VERSION.json](./SHELL_VERSION.json)) |
 | Deployment guide | [docs/DEPLOYMENT_GUIDE.md](./docs/DEPLOYMENT_GUIDE.md) (MySQL 8, Redis 7, migrations + runtime seed, health checks, telemetry, backup/restore, and schema-aware rollback) |
-| Changelog | [CHANGELOG.md](./CHANGELOG.md) / [RELEASE_NOTES_v0.16.1.md](./RELEASE_NOTES_v0.16.1.md) |
+| Changelog | [CHANGELOG.md](./CHANGELOG.md) / [RELEASE_NOTES_v0.17.1.md](./RELEASE_NOTES_v0.17.1.md) |
 
-Delivery status: v0.16.1 is a patch release that root-causes two recurring `main` flakes and restores the release-artifact channel, with no consumer-facing interface change. This change adds the `Foundation Release Cut` workflow, which publishes v0.16.1's immutable tag and a GitHub Release carrying the four consumable assets; `Foundation Release Verify` then asserts the asset set on publication. v0.14.0, v0.15.0 and v0.16.0 each shipped with zero assets and are therefore unconsumable, so v0.16.1 is the first release `pantheon-ops` can consume since v0.13.0.
+Delivery status: v0.17.1 is the delivery-closeout patch. Its tag `pantheon-base-v0.17.1` carries all four consumable assets (tgz / tgz.sha256 / repo.tar / repo.tar.sha256), asserted by `Foundation Release Verify`. It closes the three blocking items from the 2026-10-22 independent delivery audit (a red `Release Gate` on main, a remediation that lived only in an uncommitted worktree, and consumer docs that contradicted the code and the published release), two tenant-lifecycle gaps the same audit found (an archived tenant could never be deleted, and a failed provisioning stranded its row), and one UI inconsistency on the dictionary page. No consumer-facing interface change and no new migration. The v0.17.0 assets still contain two already-invalidated dev credentials in plaintext; v0.17.1 is built from the sanitized tree.
 
 ## Positioning
 
