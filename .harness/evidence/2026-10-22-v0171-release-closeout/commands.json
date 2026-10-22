@@ -96,6 +96,36 @@
       "cwd": ".",
       "status": "passed",
       "details": "Task packet checker passes both 2026-10-22 packets after the linkage fields were aligned with the evidence schema (evidenceDir / changeRef / planRefs). Template check OK; generated artifact check 0 findings across 11 artifacts."
+    },
+    {
+      "command": "gh pr create --base main --head release/v0.17.1 ... (PR #408)",
+      "cwd": ".",
+      "status": "passed",
+      "details": "51 checks passed, 3 skipped (PR Smoke Core optional, Draft PR Handler, Automate Solo PR). SonarCloud Code Analysis passed on the PR, which is the first CI evidence that the eight unresolved issues are gone. Tenant Smoke (multi-mode) failed on the first attempt with tenant.has_active_members in teardown; the fixture was fixed to retire tenants through the archive path and the job then passed in 6m08s."
+    },
+    {
+      "command": "gh run view 39762170632 (Release Gate on main 1f68d56b)",
+      "cwd": ".",
+      "status": "passed",
+      "details": "completed/success. This is the audit's P1-1 blocker closed with CI evidence rather than a local claim: CodeQL Alerts, Dependabot Alerts, Open PRs and Candidate Checks all green. The previous run on 92b94474 was failure with 'Release blocked: 8 unresolved SonarCloud issue(s)'."
+    },
+    {
+      "command": "node scripts/foundation-release/publish-foundation-release.mjs --release-version pantheon-base-v0.17.1 --release-line release/0.17 --base-commit $(git rev-parse HEAD)",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Created annotated tag pantheon-base-v0.17.1 pointing at 1f68d56b680a6018264a92ed983dde94ec7642ca, pushed it, and published a non-draft, non-prerelease GitHub release with all four assets. Note: --release-notes/--upgrade-notes take literal text, not file paths; passing a path embeds the path string as the body. The manifest was rebuilt with $(cat RELEASE_NOTES_v0.17.1.md) and an inline upgrade note before publishing."
+    },
+    {
+      "command": "node scripts/foundation-release/check-release-assets.mjs --release-version pantheon-base-v0.17.1",
+      "cwd": ".",
+      "status": "passed",
+      "details": "All 4 required assets present on the release; local bundle matches. GitHub asset digests equal the local checksums byte for byte: tgz sha256:3b0b7949e6125b4490da86ea245347568d695e7ce8ae02381b2447b02b82c4d2, repo.tar sha256:3b804a8e08dc39d06229c53b35dbdcfa15c137a7ddc26896fcfdf33f544651a5. sha256sum -c passes for both."
+    },
+    {
+      "command": "gh run list (Foundation Release Verify)",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Run 39765421119 on tag pantheon-base-v0.17.1: completed/success. CI, Code Quality Gates, Core Smoke Tests, Lint Workflows and Release Gate all success on main 1f68d56b."
     }
   ],
   "runtimeSensitive": [
