@@ -25,9 +25,9 @@ updated_at: 2026-10-22
      租户审计页可见自己的记录；compat 仍写平台 0。
   3. **套餐差异化**：免费/基础/专业/旗舰四个版本在前台呈现明确差异；差异由前台注册表驱动，
      模块只声明 feature，后端不按套餐初始化或写死控制台功能。
-- **严重度结论**：无未解决 P0/P1；1 项 P3 外观残留（直连被禁 URL 后已打开标签栏保留标签）。
-- **验证**：后端真实 MySQL + Redis `go test -race -p 1 ./...` exit 0（46 包）；前端 29 文件 /
-  212 用例、tsc、ESLint、13 步 prebuild（Arco patch + 12 项 contract）、Vite build、i18n 五语言对齐全部通过；四套餐浏览器验收通过。
+- **严重度结论**：无未解决 P0/P1/P2/P3；原 P3 标签栏残留已修复并经浏览器探针复验。
+- **验证**：后端真实 MySQL + Redis `go test -race -p 1 ./...` exit 0（46 包）；前端 30 文件 /
+  214 用例、tsc、ESLint、13 步 prebuild（Arco patch + 12 项 contract）、Vite build、i18n 五语言对齐全部通过；四套餐浏览器验收在登录重置与标签修复后重跑通过。
 - **授权边界声明**：套餐门禁是 UX 呈现层，不是授权。后端角色权限与 `PlatformCapabilityMiddleware`
   仍是最终判定；绕过前端直接调用 API 不会因套餐被放行。这是本次设计的显式边界，不是缺口。
 
@@ -97,15 +97,23 @@ updated_at: 2026-10-22
 - **验证**：真库测试覆盖重跑 provisioning 的修复路径；全量 `-race` 通过；浏览器复验存量验收租户
   （创建于修复后）无平台菜单。
 
-### A3 — 直连被禁 URL 后已打开标签残留（P3，显式延期）
+### A3 — 直连被禁 URL 后已打开标签残留（P3，已修复）
 
 - **编号/严重度**：A3 / P3（外观）
-- **文件:行号**：`frontend/src/core/layout/AppLayout.tsx` 已打开标签栏与 `clearShellSessionState` 相关逻辑。
+- **文件:行号**：
+  - `frontend/src/core/layout/AppLayout.tsx:1039`、`:1046`、`:1262`、`:1529`
+  - `frontend/src/core/layout/layoutTabs.ts:77`
 - **复现**：租户管理员在地址栏直接输入 `/system/tenant`，页面 403；顶部已打开标签栏仍出现
   「租户管理」标签，可再次点击（仍 403）。
-- **根因**：标签栏在路由跳转时先记录标签；权限拒绝发生后未回滚该标签。
+- **根因**：标签栏在路由跳转时只按路径记录标签，既不检查路由的 `pagePermission`，也不检查套餐
+  门禁；权限拒绝发生在页面层，标签层没有回滚依据。
 - **影响**：无数据加载、无权限提升、不跨登录边界（登录时清空 shell 状态）；仅是视觉不一致。
-- **处置**：本轮不为该外观问题扩大标签状态改动，登记为 P3 延期；如维护者要求可单独修复。
+- **修复**：标签层统一用 `isPathAccessible` 判定——套餐 `isPathEntitled` 与路由 `pagePermission`
+  同时满足才记录/展示；已存在但不满足的标签不进入标签栏与命令面板。套餐上下文解析前允许临时
+  记录，解析后派生列表自动收敛。
+- **验证**：免费租户登录后直连 `/system/tenant` 与 `/system/generator`，标签栏始终只有「工作台」，
+  `tenantTabLeaked=false`、`generatorTabLeaked=false`、403/升级页正常；证据
+  `tab-residual-result.json` 与两张截图。
 
 ## 3. 问题 2：租户登录日志为空（P1）
 
@@ -207,7 +215,7 @@ updated_at: 2026-10-22
 | 范围 | 命令 | 结果 |
 |---|---|---|
 | 后端全量（真实 MySQL/Redis） | `cd backend && PATH="/d/msys64/mingw64/bin:/d/nodejs:$PATH" CGO_ENABLED=1 CC='D:\msys64\mingw64\bin\gcc.exe' go test -race -p 1 -count=1 ./...` | exit 0；46 包 ok；无 FAIL、无 data race |
-| 前端单测 | `cd frontend && node ./node_modules/vitest/vitest.mjs run` | 29 文件 / 212 用例通过 |
+| 前端单测 | `cd frontend && node ./node_modules/vitest/vitest.mjs run` | 30 文件 / 214 用例通过 |
 | 前端类型 | `cd frontend && node ./node_modules/typescript/bin/tsc -b` | exit 0 |
 | 前端 lint | `cd frontend && node ./node_modules/eslint/bin/eslint.js .` | exit 0 |
 | 前端构建 | `cd frontend && npm run build` | 13 步 prebuild（Arco patch + 12 项 contract）+ Vite build 通过 |
@@ -226,20 +234,20 @@ updated_at: 2026-10-22
    实际构建命令为 `PATH="/d/nodejs:$PATH" npm run build`，并另以 `node` 逐条执行同一组 prebuild 步骤复核。
 3. **浏览器工具限制**：本会话 browser-use MCP 的快照工具被策略拦截，浏览器验收使用 Playwright
    （Node + Chromium）完成；截图与 JSON 是实际运行产物。
-4. **晚于浏览器验收的改动**：四套餐 Playwright 验收录制于 `Login.tsx` 登录边界重置之前；该改动由
-   3 个 store 单测、类型检查、lint 与生产构建覆盖，但未重跑浏览器，属显式证据 gap。
+4. **浏览器复验范围**：四套餐验收与标签栏探针均针对本机 multi 部署；hosted CI 的并行 `-race`
+   腿仍需在 PR 上确认，本地串行结果不作 CI 结论外推。
 5. **套餐门禁非授权**：套餐只影响前台呈现；后端权限仍是边界。若未来需要商业级强制（例如按套餐
    拒绝 API），必须新增后端 entitlement 校验，属于新需求，不在本轮范围。
-6. **P3 残留 A3**：直连被禁 URL 后标签栏保留标签，页面 403、无数据加载、登录边界清空。
-7. **未做生产数据修改**：存量租户授权修复在服务启动时幂等执行；本报告未执行任何生产库写操作。
+6. **未做生产数据修改**：存量租户授权修复在服务启动时幂等执行；本报告未执行任何生产库写操作。
 
 ## 7. 变更文件与证据
 
 - 后端：`pkg/tenant/platform_scope.go`、`modules/system/iam/{menu,tenant,role}/*`、
   `modules/auth/{login,mfa}/*` 及对应测试。
-- 前端：`core/entitlements/*`、`core/layout/*`、`core/router/types.ts`、`App.tsx`、
-  `store/useTenantSessionStore.ts`、`modules/auth/tenant/usePlatformScope.ts`、
-  `modules/lowcode/*`、`modules/platform/*`、`modules/system/iam/tenant/*`、五语言资源、单测。
+- 前端：`core/entitlements/*`、`core/layout/*`（含标签可达性过滤）、`core/router/types.ts`、`App.tsx`、
+  `store/useTenantSessionStore.ts`、`modules/auth/login/components/Login.tsx`、
+  `modules/auth/tenant/usePlatformScope.ts`、`modules/lowcode/*`、`modules/platform/*`、
+  `modules/system/iam/tenant/*`、五语言资源、单测。
 - 任务包：`docs/harness/tasks/2026-10-22-tenant-plan-entitlements-and-audit.task.md`；
   清单 `.harness/tasks/2026-10-22-tenant-plan-entitlements-and-audit/manifest.json`。
 - 证据：`.harness/evidence/2026-10-22-tenant-plan-entitlements-and-audit/`。

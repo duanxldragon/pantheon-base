@@ -4,7 +4,7 @@
 **Scope**: 维护者人工验收提出的三类问题（平台专用菜单泄漏、租户登录日志为空、套餐版本无差异）
 **Baseline**: main `aef57e30`
 **Plan gate**: 前台呈现层差异化；后端角色权限仍是授权边界
-**Verification**: 后端真实 MySQL/Redis `-race` 串行全量通过；前端 29 文件 / 212 用例通过；四套餐浏览器验收通过
+**Verification**: 后端真实 MySQL/Redis `-race` 串行全量通过；前端 30 文件 / 214 用例通过；四套餐浏览器验收在登录重置与标签修复后重跑通过
 
 ## 1. 问题与修复
 
@@ -26,6 +26,10 @@
     权限查询本身也对租户用户过滤。
   - 前端 `useLayoutMenu.tsx` + `AppLayout.tsx`：按租户会话再次过滤平台专用项（镜像后端分类，
     兜底网关/过期缓存返回的树）；`usePlatformScope` 改读共享的租户会话 store，消除重复请求与视图不一致。
+  - **A3 标签栏残留（P3，已修复）**：标签层新增 `isPathAccessible`，同时检查套餐 entitlement 与路由
+    `pagePermission`；不满足的路径不记入已打开标签/命令面板，套餐解析前临时记录的标签在解析后
+    自动从派生列表消失。浏览器探针在免费租户上直连 `/system/tenant` 与 `/system/generator`，
+    标签栏均只有「工作台」。
 
 ### B. 租户登录日志为空（P1）
 
@@ -78,6 +82,8 @@
 | 会话套餐 hook | `frontend/src/core/entitlements/usePlanEntitlements.ts` | 34 |
 | 路由升级页 | `frontend/src/core/entitlements/PlanFeatureGuard.tsx` | 59 |
 | 菜单过滤 | `frontend/src/core/layout/useLayoutMenu.tsx` | 169 / 202 / 212 |
+| 标签可达性判定 | `frontend/src/core/layout/AppLayout.tsx` | 1039 / 1046 / 1262 / 1529 |
+| 标签可达性选择器 | `frontend/src/core/layout/layoutTabs.ts` | 77 |
 | 租户会话 store | `frontend/src/store/useTenantSessionStore.ts` | 22 / 62 |
 | 登录边界重置 | `frontend/src/modules/auth/login/components/Login.tsx` | 248 |
 | 会话 store 单测 | `frontend/tests/unit/store/useTenantSessionStore.test.ts` | 25 / 39 / 59 |
@@ -90,7 +96,7 @@
 | 命令 | 结果 |
 |---|---|
 | `cd backend && PATH="/d/msys64/mingw64/bin:/d/nodejs:$PATH" CGO_ENABLED=1 CC='D:\msys64\mingw64\bin\gcc.exe' go test -race -p 1 -count=1 ./...`（`.env.test` 注入 MySQL/Redis，`PANTHEON_TEST_DSN` 指向真实库） | exit 0；46 个包 ok；无 FAIL、无 data race |
-| `cd frontend && node ./node_modules/vitest/vitest.mjs run` | 29 文件 / 212 用例通过（含本轮新增 6 个套餐单测、2 个菜单回归、1 个 widget 门禁用例、3 个会话 store 用例） |
+| `cd frontend && node ./node_modules/vitest/vitest.mjs run` | 30 文件 / 214 用例通过（含本轮新增 6 个套餐单测、2 个菜单回归、1 个 widget 门禁用例、3 个会话 store 用例、2 个标签可达性用例） |
 | `cd frontend && node ./node_modules/typescript/bin/tsc -b` | exit 0 |
 | `cd frontend && node ./node_modules/eslint/bin/eslint.js .` | exit 0 |
 | `cd frontend && npm run build` | prebuild 13 步（Arco patch + 12 项 contract）+ Vite build 通过 |
@@ -108,16 +114,22 @@ Chromium headless（Playwright 1440×900）。脚本 `acceptance.mjs`、`tenant-
 
 | 套餐 | 侧栏平台专用项 | 直连 `/system/tenant` | 登录日志 | 低代码入口 | 数据源管理 |
 |---|---|---|---|---|---|
-| free (300) | 无 | 403 页，无租户数据 | 7 行 | 无入口；两路由均升级页 | 未暴露 |
-| basic (301) | 无 | 403 页，无租户数据 | 6 行 | 模块管理可见；生成器升级页 | 未暴露 |
-| professional (302) | 无 | 403 页，无租户数据 | 8 行 | 模块管理 + 生成器可见 | 锁定标签 + 按钮禁用 |
-| enterprise (303) | 无 | 403 页，无租户数据 | 6 行 | 模块管理 + 生成器可见 | 无锁定标签；按钮可用 |
+| free (300) | 无 | 403 页，无租户数据 | 8 行 | 无入口；两路由均升级页 | 未暴露 |
+| basic (301) | 无 | 403 页，无租户数据 | 7 行 | 模块管理可见；生成器升级页 | 未暴露 |
+| professional (302) | 无 | 403 页，无租户数据 | 9 行 | 模块管理 + 生成器可见 | 锁定标签 + 按钮禁用 |
+| enterprise (303) | 无 | 403 页，无租户数据 | 7 行 | 模块管理 + 生成器可见 | 无锁定标签；按钮可用 |
 | 平台管理员 | 租户/菜单/国际化管理均可见 | 可进入 | — | 全部可见 | 可用 |
 
 平台管理员新建租户弹窗渲染「套餐功能对照」：3 个功能行、4 个套餐列、当前套餐标签。
 截图见 `artifacts/`（`menu-*.png`、`tenant-page-free.png`、`login-log-basic.png`、
 `generator-page-free.png`、`generator-datasource-professional.png`、
 `generator-datasource-enterprise.png`、`tenant-create-matrix.png`）。
+
+本轮在登录边界重置改动之后重跑了同一套四套餐验收（`acceptance-result.json` 已刷新，登录行数
+随验收次数增加）。随后用 `tab-residual.mjs` 做标签栏专项探针：免费租户直连 `/system/tenant`
+得到 403、标签栏保持 `["工作台"]`（`tenantTabLeaked=false`）；直连 `/system/generator` 得到升级页、
+标签栏仍为 `["工作台"]`（`generatorTabLeaked=false`）。原始结果 `tab-residual-result.json`，
+截图 `tab-residual-tenant.png`、`tab-residual-generator.png`。
 
 ## 5. 环境限制与显式 gap
 
@@ -126,14 +138,13 @@ Chromium headless（Playwright 1440×900）。脚本 `acceptance.mjs`、`tenant-
 - 全量 `-race` 并行运行曾出现 Redis 状态竞争与 generator 环境变量相关的假失败；本轮采用 `-p 1`
   串行运行，结果为 0 FAIL。CI 的并行 `-race` leg 仍以 hosted 结果为准。
 - 浏览器验收使用 Playwright（Node）直接驱动；本会话的 browser-use MCP 快照工具被策略拦截，
-  因此交互证据来自 Playwright 脚本与截图，不是 MCP 记录。四套餐浏览器验收录制于登录边界重置
-  改动之前；该末次改动由 store 单测、类型检查、lint 与生产构建覆盖，未重新跑浏览器，属于显式 gap。
+  因此交互证据来自 Playwright 脚本与截图，不是 MCP 记录。四套餐验收与标签探针均在登录边界
+  重置、标签可达性修复之后重跑，已无“改动晚于浏览器验收”的 gap。
 - 前端 `npm run build` 的 prebuild 会递归调用 `npm`；本机 cmd.exe 找不到 npm，若 PATH 未显式包含
   `/d/nodejs` 会失败。本轮实际命令为 `PATH="/d/nodejs:$PATH" npm run build`，已通过；同一组
   prebuild 步骤也用 `node` 直接逐条执行并确认通过。
-- **残留 A1（P3，外观）**：租户管理员直接打开被禁 URL 后，已打开标签栏会保留该标签；
-  页面本身 403、无数据请求成功，`clearShellSessionState()` 在登录时清空标签，不跨登录边界。
-  未为本轮扩大改动去改标签解析逻辑。
+- **原 A3（P3，外观）已关闭**：被套餐锁定或缺少路由权限的页面不再进入已打开标签栏；403 页面、
+  无数据请求成功的原有安全属性不变。
 - **套餐门禁是 UX**：隐藏菜单/升级页不授予或撤销权限；绕过前端直接调用后端仍由角色权限与
   `PlatformCapabilityMiddleware` 决定。这是刻意设计，不是未完成项。
 - 未对生产数据做修改；存量租户授权修复在应用启动时执行，只删除租户命名空间内的平台专用键。
@@ -142,4 +153,4 @@ Chromium headless（Playwright 1440×900）。脚本 `acceptance.mjs`、`tenant-
 
 三类问题均已在真实运行环境中复现、修复并回归：租户会话不再看到平台专用菜单且直连得 403；
 租户登录日志按会话归属可见；四套餐在前台呈现明确差异，且差异完全由前台注册表驱动。
-无已知 P0/P1 残留；A1 为已登记的 P3 外观残留。
+无已知 P0/P1/P2/P3 残留；原 A3 标签栏外观问题已修复并经浏览器探针复验。

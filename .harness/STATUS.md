@@ -18,11 +18,13 @@
 - **套餐无差异（P1）**：差异改由前台 `core/entitlements/plans.ts` 注册表驱动，模块声明 feature，
   shell 过滤菜单/路由/dashboard，直连被锁页渲染升级页，租户表单展示只读套餐矩阵。后端不按套餐
   初始化控制台功能，角色权限仍是授权边界；套餐门禁是 UX。
-- **验证**：后端真实 MySQL/Redis `-race -p 1` 全量 46 包通过；前端 29 文件 / 212 用例、tsc、ESLint、
-  prebuild 13 步（Arco patch + 12 项 contract）、Vite build 通过；四套餐浏览器验收通过。
+- **验证**：后端真实 MySQL/Redis `-race -p 1` 全量 46 包通过；前端 30 文件 / 214 用例、tsc、ESLint、
+  prebuild 13 步（Arco patch + 12 项 contract）、Vite build 通过；四套餐浏览器验收与标签探针通过。
 - **登录边界**：收尾审查修复了同标签页重新登录复用上一主体租户上下文的问题（`Login.tsx` 调用
-  `resetTenantSession()`，新增 3 个 store 单测）；四套餐浏览器验收录制于该改动之前，属显式 gap。
-- **显式残留**：直连被禁 URL 后已打开标签栏保留标签（P3，页面 403、无数据加载、登录边界清空）。
+  `resetTenantSession()`，新增 3 个 store 单测）；末次改动后已重跑四套餐浏览器验收。
+- **标签残留（原 P3，已修复）**：标签栏改为派生过滤，同时检查套餐 entitlement 与路由 `pagePermission`；
+  免费租户直连 `/system/tenant` 得 403、`/system/generator` 得升级页，标签栏均只有「工作台」。
+- **结论**：三类问题均已闭合，无已知 P0–P3 残留；剩余仅为设计说明（套餐门禁是 UX）与环境限制。
 
 ## 发布收口（2026-10-21，v0.17.0）
 

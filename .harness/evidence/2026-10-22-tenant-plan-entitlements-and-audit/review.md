@@ -1,8 +1,8 @@
 # Review — 2026-10-22 tenant entitlements and audit fixes
 
-**Verdict**: PASS with one recorded P3 cosmetic residual.
+**Verdict**: PASS, no unresolved P0–P3 findings.
 **Reviewer posture**: implementation evidence re-derived from code, tests, and a real four-plan browser run; no claim rests on README or UI labels.
-**Baseline**: `aef57e30`; uncommitted working tree on `main` at review time.
+**Baseline**: `aef57e30`; branch `fix/tenant-plan-entitlements-and-audit` at `e7825ed5` plus the review follow-up commit.
 
 ## 1. Scope correctness
 
@@ -24,23 +24,25 @@
 ## 3. Behavior review against the reported symptoms
 
 - Tenant admin sidebar contains no `system.tenant`, `/system/menu`, or `/system/i18n`; direct URL renders 403 with no tenant data (browser JSON `issue1` for all four plans).
-- Login log pages show the tenant's own rows (7/6/8/6 across free/basic/professional/enterprise). Dashboard activity is populated as a consequence of the same attribution.
+- Login log pages show the tenant's own rows (8/7/9/7 across free/basic/professional/enterprise). Dashboard activity is populated as a consequence of the same attribution.
 - Plan surfaces: free has no low-code group and both routes show the upgrade page; basic has module management only; professional has generator with locked datasource; enterprise unlocks it. Platform operator sees all three platform menus and the create dialog matrix.
 - Mixed-content case: a free tenant's direct `/system/modules` request renders the upgrade page rather than a blank shell; a basic tenant's `/system/generator` does the same.
+- Opened-tab accessibility: the tab bar and command palette derive from `selectAccessibleTabs` with the same plan-entitlement plus route-`pagePermission` predicate used for rendering (`AppLayout.tsx:1039`, `:1046`, `:1529`; `layoutTabs.ts:77`). A direct visit to `/system/tenant` on a free tenant renders 403 and leaves the tab bar at `["工作台"]`; a direct visit to `/system/generator` renders the upgrade page with no tab. Raw probe output is `tab-residual-result.json`.
 
 ## 4. Regression risk and tests
 
 - Backend regression tests added: menu filtering (`menu_service_test.go`), provisioning/repair (`tenant_provision_menus_test.go`), role assignment (`role_menu_tenant_test.go`), login attribution success/failure/compat (`login_log_tenant_attribution_test.go`).
-- Frontend regression tests added: plan registry semantics (6), menu group pruning and entitlement filtering (2), dashboard widget feature gating (1), tenant session store dedupe/reset/scope (3).
-- Full suite: backend `-race -p 1` on real MySQL/Redis exit 0 (46 packages); frontend 29 files / 212 tests, tsc, ESLint, 13 contracts, Vite build all pass.
+- Frontend regression tests added: plan registry semantics (6), menu group pruning and entitlement filtering (2), dashboard widget feature gating (1), tenant session store dedupe/reset/scope (3), opened-tab accessibility filtering (2).
+- Full suite: backend `-race -p 1` on real MySQL/Redis exit 0 (46 packages); frontend 30 files / 214 tests, tsc, ESLint, 13 contracts, Vite build all pass.
+- The four-plan Playwright acceptance and the tab probe were rerun after the final login-boundary reset and tab-accessibility changes; no evidence predates the code under review.
 - Risk considered and rejected: sharing the tenant session store changes `usePlatformScope` from local state to a global store. The store deduplicates in-flight requests and resets on logout and now at the login boundary (`Login.tsx:248`), so a re-login cannot inherit the previous subject's plan or viewpoint; no consumer writes plan data. The platform-scope classification is unchanged (`tenantId === 0 || resolvedBy platform-fallback/header`).
 
 ## 5. Residual findings
 
-- **R1 (P3, cosmetic)**: opened-tabs retains a forbidden tab after direct navigation. The page is 403, no successful data fetch occurs, and tabs reset at login. Not fixed to avoid widening tab-state changes in this packet.
-- **R2 (environment, not product)**: race testing on this Windows host requires the mingw PATH/CC workaround; `npm run build` needs `/d/nodejs` on PATH because its recursive prebuild calls `npm` through cmd.exe. The commands recorded in `commands.json` are the ones actually run.
-- **R3 (design, explicit)**: plan differences are not a security boundary. A tenant that bypasses the UI and holds a role permission could still call generator endpoints on a lower plan. If commercial enforcement is required later, it must be a backend entitlement check tied to `tenants.plan` — deliberately out of scope here.
-- **R4 (evidence gap, explicit)**: the four-plan Playwright run was recorded before the login-boundary session reset. The reset is covered by the new store tests plus tsc/ESLint/build, but the browser acceptance was not repeated after that last change.
+No product finding remains open. Two explicit non-product notes:
+
+- **R1 (environment, not product)**: race testing on this Windows host requires the mingw PATH/CC workaround; `npm run build` needs `/d/nodejs` on PATH because its recursive prebuild calls `npm` through cmd.exe. The commands recorded in `commands.json` are the ones actually run.
+- **R2 (design, explicit)**: plan differences are not a security boundary. A tenant that bypasses the UI and holds a role permission could still call generator endpoints on a lower plan. If commercial enforcement is required later, it must be a backend entitlement check tied to `tenants.plan` — deliberately out of scope here.
 
 ## 6. Evidence cross-check
 

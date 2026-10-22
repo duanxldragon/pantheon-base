@@ -104,6 +104,7 @@ import {
   mergeOpenedTabsIntoState,
   orderOpenedTabs,
   readOpenedTabs,
+  selectAccessibleTabs,
   type OpenedPageTab,
   type TabActionKey,
 } from './layoutTabs';
@@ -1035,6 +1036,14 @@ const BaseLayout: React.FC = () => {
   const currentRouteTitleKey = resolveRouteTitleKey(matchedRoute, location.pathname);
   const activeMenuPath = pickText(matchedRoute?.activeMenu, location.pathname);
   const { isPathEntitled } = usePlanEntitlements();
+  const isPathAccessible = (path: string) => {
+    if (!isPathEntitled(path)) {
+      return false;
+    }
+    const permission = findRouteByPath(path)?.pagePermission;
+    return !permission || hasPerm(permission);
+  };
+  const accessibleTabs = selectAccessibleTabs(openedTabs, isPathAccessible);
   const {
     visibleMenuTree,
     currentMenuTitleKey,
@@ -1250,7 +1259,12 @@ const BaseLayout: React.FC = () => {
     return () => globalThis.removeEventListener('keydown', handleKeyDown);
   }, [locked]);
 
+  const locationAccessible = isPathAccessible(location.pathname);
+
   useEffect(() => {
+    if (!locationAccessible) {
+      return;
+    }
     const nextTab = buildOpenedPageTab(location.pathname, currentPageTitle, {
       titleKey: currentTabTitleKey,
     });
@@ -1262,7 +1276,7 @@ const BaseLayout: React.FC = () => {
       );
     }, 0);
     return () => globalThis.clearTimeout(timer);
-  }, [currentPageTitle, currentTabTitleKey, location.pathname, t]);
+  }, [currentPageTitle, currentTabTitleKey, location.pathname, locationAccessible, t]);
 
   useEffect(() => {
     if (!token || sessionIdleMs <= 0) {
@@ -1389,7 +1403,7 @@ const BaseLayout: React.FC = () => {
       handleGoSecurity,
     });
 
-    openedTabs.forEach((item) => {
+    accessibleTabs.forEach((item) => {
       const title = item.titleKey ? t(item.titleKey) : item.fallbackTitle;
       items.push({
         key: `tab-${item.path}`,
@@ -1407,8 +1421,8 @@ const BaseLayout: React.FC = () => {
     canAccessDashboard,
     handleGoProfile,
     handleGoSecurity,
+    accessibleTabs,
     navigate,
-    openedTabs,
     t,
     visibleMenuTree,
   ]);
@@ -1512,7 +1526,7 @@ const BaseLayout: React.FC = () => {
     <LayoutOpenedTabs
       enabled={publicSettings.enableTabBar}
       layoutMode={layoutMode}
-      tabs={openedTabs}
+      tabs={accessibleTabs}
       currentPath={location.pathname}
       onNavigate={navigate}
       onMoveTab={moveTab}

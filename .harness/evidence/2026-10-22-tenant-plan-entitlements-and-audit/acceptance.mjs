@@ -2,7 +2,7 @@ import { createRequire } from 'node:module';
 import fs from 'node:fs';
 import path from 'node:path';
 
-const require = createRequire('D:/workspace/go/pantheon-platform/pantheon-base/frontend/package.json');
+const require = createRequire(new URL('../../../frontend/package.json', import.meta.url));
 const { chromium } = require('playwright');
 
 const BASE = 'http://127.0.0.1:5173';

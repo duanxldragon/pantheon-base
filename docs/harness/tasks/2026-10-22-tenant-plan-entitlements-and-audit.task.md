@@ -86,7 +86,9 @@ platform
 - `backend/modules/system/iam/role/role_helper.go`：租户角色拒绝平台专用菜单/权限键。
 - `backend/modules/auth/login/*` + `mfa/*`：登录成功/失败、MFA、安全事件的租户归属；权限缓存清理平台键。
 - `frontend/src/core/entitlements/*`：套餐注册表、会话套餐 hook、路由升级页。
-- `frontend/src/core/layout/*` + `App.tsx` + `modules/platform/*`：菜单、路由、dashboard 组件按 feature 过滤。
+- `frontend/src/core/layout/*` + `App.tsx` + `modules/platform/*`：菜单、路由、dashboard 组件按 feature 过滤；
+  已打开标签与命令面板按套餐 entitlement + 路由权限派生过滤。
+- `frontend/src/store/useTenantSessionStore.ts`：租户/套餐会话上下文，登录获取、登出与登录边界重置。
 - `frontend/src/modules/lowcode/*`：模块管理/生成器/外部数据源 feature 标签与前台锁定态。
 - `frontend/src/modules/system/iam/tenant/*`：租户新建/编辑表单的套餐功能对照矩阵。
 - i18n 五语言资源、单元测试、验收与任务证据。
@@ -107,10 +109,12 @@ platform
 - `backend/modules/auth/login/login_tenant_audit.go`
 - `backend/modules/auth/login/login_log_tenant_attribution_test.go`
 - `frontend/src/core/entitlements/{plans.ts,usePlanEntitlements.ts,PlanFeatureGuard.tsx}`
+- `frontend/src/core/layout/layoutTabs.ts`
 - `frontend/src/store/useTenantSessionStore.ts`
 - `frontend/src/modules/system/iam/tenant/TenantPlanMatrix.{tsx,css}`
 - `frontend/tests/unit/core/entitlements/plans.test.ts`
 - `frontend/tests/unit/core/layout/useLayoutMenu.test.tsx`
+- `frontend/tests/unit/core/layout/layoutTabs.test.ts`
 - `frontend/tests/unit/store/useTenantSessionStore.test.ts`
 - `docs/reviews/PANTHEON_BASE_TENANT_PLAN_AND_AUDIT_FIXES_2026-10-22.md`
 - `.harness/tasks/2026-10-22-tenant-plan-entitlements-and-audit/manifest.json`
@@ -150,6 +154,8 @@ platform
 - 登录审计的租户归属来自会话实际签发的 tenant claim；失败登录在已知主体时归属主体租户；
   compat 模式保持 0，避免写入 compat 管理员读不到的行。
 - 存量租户通过启动时 `RepairTenantPlatformGrants()` 幂等收敛；不重写历史、不触碰平台命名空间。
+- 已打开标签不再在 effect 里同步改写 state：标签栏与命令面板都从 `selectAccessibleTabs(openedTabs, isPathAccessible)` 派生，
+  `isPathAccessible` 同时检查套餐 entitlement 与路由 `pagePermission`，避免套餐上下文解析前记录的标签残留。
 
 ## Verification Plan
 
@@ -162,6 +168,7 @@ platform
 - `node scripts/frontmatter-check.mjs`
 - `node scripts/harness/check-task-packet.mjs --root .`
 - 浏览器级四套餐验收：真实租户创建/登录，菜单、直连路由、登录日志、生成器数据源锁定态、平台创建矩阵，截图与 JSON 归档。
+- 标签专项探针：免费租户直连 `/system/tenant`（403）与 `/system/generator`（升级页），断言标签栏不保留对应标签。
 
 ## Linkage
 
@@ -178,7 +185,8 @@ platform
 - 真实 MySQL/Redis 下的 Go 测试输出（含 `-race` 串行全量）。
 - 前端单测、type-check、ESLint、prebuild 13 步（Arco patch + 12 项 contract）、Vite build、i18n 五语言对齐结果。
 - 四套餐浏览器验收 JSON 与截图：菜单快照、403 兜底、登录日志行数、套餐升级页、数据源锁定态、创建矩阵。
-- 明确记录环境限制与残留 gap（套餐门禁为 UX、opened-tabs 视觉残留、CGO/mingw 工作区限制）。
+- 标签探针 JSON 与截图：403 页与升级页均不进入已打开标签栏。
+- 明确记录环境限制与残留 gap（套餐门禁为 UX、CGO/mingw 工作区限制）。
 
 ## Human Gates
 

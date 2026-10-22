@@ -28,7 +28,7 @@
 - backend DTO contract: unchanged
 - permission contract: tenant-owned roles can no longer be assigned platform-only menu/permission keys; platform roles unchanged
 - audit coverage: improved — login success/failure/MFA/security events attributed to the session tenant; compat stays tenant 0
-- visual evidence: .harness/evidence/2026-10-22-tenant-plan-entitlements-and-audit/artifacts/（13 张，四套餐菜单/403/登录日志/生成器锁定态/创建矩阵）
+- visual evidence: .harness/evidence/2026-10-22-tenant-plan-entitlements-and-audit/artifacts/（27 张，四套餐菜单/403/登录日志/低代码入口/生成器锁定态/创建矩阵）+ 标签探针截图 2 张
 - inheritance contract: no sharedPaths change; no foundation release cut in this PR
 - base drift: none introduced
 - Base/ops inheritance: no ops-side changes; consumption requires a future foundation release
@@ -44,14 +44,14 @@
 
 - [x] 后端全量：真实 MySQL 8 + Redis 7，`go test -race -p 1 -count=1 ./...` exit 0，46 包 ok，无 FAIL、无 data race
 - [x] 后端定向：`login`、`menu`、`tenant`、`role` 四包回归通过（新增审计归属、菜单过滤、provisioning 修复、角色可分配性用例）
-- [x] 前端单测：`vitest run` 29 文件 / 212 用例通过（含套餐注册表 6、菜单回归 2、widget 门禁 1、会话 store 3）
+- [x] 前端单测：`vitest run` 30 文件 / 214 用例通过（含套餐注册表 6、菜单回归 2、widget 门禁 1、会话 store 3、标签可达性 2）
 - [x] 前端类型与 lint：`tsc -b`、`eslint .` exit 0
 - [x] 前端构建：13 步 prebuild（Arco patch + 12 项 contract）+ Vite build 通过
 - [x] i18n：2929 key，zh-CN/en-US/ja-JP/ko-KR/fr-FR 缺失 0
-- [x] 浏览器级：四套餐真实租户（300/301/302/303）创建并登录；菜单、直连 403、登录日志、低代码入口、数据源锁定态、平台创建矩阵均有 JSON + 截图证据
+- [x] 浏览器级：四套餐真实租户（300/301/302/303）创建并登录；菜单、直连 403、登录日志、低代码入口、数据源锁定态、平台创建矩阵均有 JSON + 截图证据；在最终登录重置与标签修复后已重跑
+- [x] 标签专项：免费租户直连 `/system/tenant` 得 403、直连 `/system/generator` 得升级页，标签栏均保持 `["工作台"]`（`tab-residual-result.json`）
 - [x] 文档门禁：`frontmatter-check`（340 docs / 247 with frontmatter）、`check-task-packet`（本包 PASS）
 - [x] 未删除功能、未绕过校验、未降低安全要求、未屏蔽失败测试
-- [ ] 四套餐 Playwright 验收录制于 `Login.tsx` 登录边界重置之前；末次改动由会话 store 单测、tsc、ESLint、build 覆盖，未重跑浏览器（显式 gap）
 - [ ] 本地全量并行 `-race` 曾出现 Redis 状态竞争假失败，本轮采用 `-p 1` 串行；hosted 并行腿是最终信号
 - [ ] CodeQL / Sonar / GitHub required checks：pending（本提交 CI 结论）
 
@@ -63,7 +63,7 @@
 - Auto-merge：not-enabled
 - Duplication Gate 结果：pending（本提交 CI 结论）
 - 是否高风险改动：yes（权限面、审计归属、租户菜单）
-- Residual risk / follow-up：①直连被禁 URL 后已打开标签栏保留标签（P3，外观，页面 403/无数据加载）；②套餐门禁是 UX，若需 API 级商业强制须另立后端 entitlement 需求；③v0.17.0 `repo.tar`/tgz 仍含已失效旧凭据，处置需维护者决定；④历史延期 P2/P3（C3/C5/C6/C7、E3、C8–C12、D3–D6）不在本 PR 范围
+- Residual risk / follow-up：①套餐门禁是 UX，若需 API 级商业强制须另立后端 entitlement 需求；②v0.17.0 `repo.tar`/tgz 仍含已失效旧凭据，处置需维护者决定；③历史延期 P2/P3（C3/C5/C6/C7、E3、C8–C12、D3–D6）不在本 PR 范围
 
 ## 检查清单
 

@@ -1,7 +1,7 @@
 {
   "taskId": "2026-10-22-tenant-plan-entitlements-and-audit",
   "repo": "pantheon-base",
-  "executedAt": "2026-10-22T11:56:00+08:00",
+  "executedAt": "2026-10-22T13:36:00+08:00",
   "agent": {
     "tool": "other",
     "adapter": "software-workshop-agent"
@@ -23,7 +23,7 @@
       "command": "cd frontend && node ./node_modules/vitest/vitest.mjs run",
       "cwd": "frontend",
       "status": "passed",
-      "details": "29 test files / 212 tests passed. Includes 6 entitlement registry tests, 2 menu-tree regression tests, the dashboard widget feature-gating case, and 3 tenant session store tests (in-flight dedupe, reset-before-next-login, tenant-scope classification). Re-run after Login.tsx began resetting the tenant session at the login boundary."
+      "details": "30 test files / 214 tests passed. Includes 6 entitlement registry tests, 2 menu-tree regression tests, the dashboard widget feature-gating case, 3 tenant session store tests (in-flight dedupe, reset-before-next-login, tenant-scope classification), and 2 opened-tab accessibility tests (plan-entitled vs permission-forbidden paths)."
     },
     {
       "command": "cd frontend && node ./node_modules/typescript/bin/tsc -b",
@@ -41,7 +41,7 @@
       "command": "cd frontend && PATH=\"/d/nodejs:$PATH\" npm run build",
       "cwd": "frontend",
       "status": "passed",
-      "details": "Prebuild 13 steps passed (Arco React 19 patch plus 12 contract checks: menu, i18n hardcode, generated i18n scope, datetime presentation, shell visual, UI contract, search toolbar, !important budget, system-page admission, smoke web-base, smoke coverage, import-path case), followed by tsc -b and vite build. Re-run after the Login.tsx session reset; Vite built in 912ms. The PATH prefix is required on this host because the recursive prebuild calls npm through cmd.exe; the same 13 steps were also executed directly with node and passed."
+      "details": "Prebuild 13 steps passed (Arco React 19 patch plus 12 contract checks: menu, i18n hardcode, generated i18n scope, datetime presentation, shell visual, UI contract, search toolbar, !important budget, system-page admission, smoke web-base, smoke coverage, import-path case), followed by tsc -b and vite build. Re-run after the login-boundary and opened-tab fixes; Vite built in 1.10s. The PATH prefix is required on this host because the recursive prebuild calls npm through cmd.exe; the same 13 steps were also executed directly with node and passed."
     },
     {
       "command": "cd frontend && node ./scripts/audit-i18n-locales.mjs",
@@ -66,11 +66,22 @@
       "cwd": "%TEMP%/pantheon-accept",
       "status": "passed",
       "details": "Playwright (Chromium headless, 1440x900) against the local multi-mode deployment at 127.0.0.1:5173. Created four real tenants through the tenant API (free 300, basic 301, professional 302, enterprise 303), logged in as each owner, and recorded menu labels, direct-URL 403 behavior, login-log rows, low-code surfaces, datasource lock state, and the platform tenant-create matrix. Raw output: acceptance-result.json; screenshots in artifacts/. The acceptance scripts are archived alongside the result."
+    },
+    {
+      "command": "cd %TEMP%/pantheon-accept && node acceptance.mjs",
+      "cwd": "%TEMP%/pantheon-accept",
+      "status": "passed",
+      "details": "Re-ran the four-plan acceptance after the Login.tsx tenant-session reset and the opened-tab accessibility fix, against the same four tenants. All four plans show zero platform-only sidebar entries, direct /system/tenant renders 403 with no tenant console, login logs show the owner's own rows (free 8 / basic 7 / professional 9 / enterprise 7 at run time), free/basic/professional plan gates match expectations, and the platform tenant-create matrix renders. Refreshed acceptance-result.json and artifacts/ in the evidence directory."
+    },
+    {
+      "command": "cd %TEMP%/pantheon-accept && node tab-residual.mjs",
+      "cwd": "%TEMP%/pantheon-accept",
+      "status": "passed",
+      "details": "Targeted browser probe as the free tenant. Direct /system/tenant shows 403 and the tab bar stays ['工作台'] (tenantTabLeaked=false); direct /system/generator shows the upgrade page and the tab bar stays ['工作台'] (generatorTabLeaked=false). Raw output: tab-residual-result.json; screenshots tab-residual-tenant.png and tab-residual-generator.png; runner archived as tab-residual.mjs."
     }
   ],
   "notVerified": [
     "Hosted CI for this change has not run yet; the local -race result is not a substitute for the parallel hosted legs.",
-    "The four-plan Playwright acceptance was recorded before the final Login.tsx tenant-session reset. That late change is covered by unit tests, tsc, ESLint and a production build, but the browser run was not repeated.",
     "The plan gate is UX-only. API-level plan enforcement was not implemented or verified because it is outside the requested scope and would change the authorization model.",
     "No production database was modified. The startup repair path was exercised through provisioning tests, not by running the server against production data."
   ]
