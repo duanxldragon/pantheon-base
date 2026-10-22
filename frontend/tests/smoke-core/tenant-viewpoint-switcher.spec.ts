@@ -152,10 +152,12 @@ test.describe('Tenant Viewpoint @priority:critical @smoke:tenant', () => {
     const headers = { ...apiRequestHeaders(login), 'X-Operation-Token': operationToken };
     const tenantHeaders = { ...headers, 'X-Tenant-Id': String(tenantId) };
 
-    // Tenants are deleted only when no active member is left, so purge every
-    // membership first -- including the owner created by provisioning. The
-    // created user's row is then removed (the tenant's own admin row goes away
-    // with the tenant).
+    // Retire the tenant the way the contract says to. §2.2 refuses to remove the
+    // last owner, so a tenant can never reach "no active members" by purging
+    // memberships alone; §2.1 makes archived the retirement path, and deleting an
+    // archived tenant disables whatever memberships are left. Purging is still
+    // attempted first so the fixture does not depend on the archived path working
+    // for tenants it could clean up directly.
     const members = await request.get(`${apiBaseUrl}/system/tenant/${tenantId}/members`, {
       headers,
     });
@@ -170,6 +172,12 @@ test.describe('Tenant Viewpoint @priority:critical @smoke:tenant', () => {
     if (createdUserId > 0) {
       await request.delete(`${apiBaseUrl}/system/user/${createdUserId}`, { headers: tenantHeaders });
     }
+
+    const archived = await request.put(`${apiBaseUrl}/system/tenant/${tenantId}`, {
+      headers,
+      data: { status: 'archived' },
+    });
+    expect((await archived.json()).code, 'tenant teardown: archive before delete').toBe(200);
 
     const deleted = await request.delete(`${apiBaseUrl}/system/tenant/${tenantId}`, { headers });
     const deletedPayload = await deleted.json();
