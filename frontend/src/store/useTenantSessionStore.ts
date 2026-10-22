@@ -62,5 +62,5 @@ export const useTenantSessionStore = create<TenantSessionState>((set, get) => ({
 export function isTenantScopedSession(
   context: CurrentTenantResp | null | undefined,
 ): boolean {
-  return Boolean(context && context.mode === 'multi' && context.tenantId > 0);
+  return Boolean(context?.mode === 'multi' && (context?.tenantId ?? 0) > 0);
 }

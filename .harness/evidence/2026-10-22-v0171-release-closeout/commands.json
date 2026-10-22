@@ -1,0 +1,125 @@
+{
+  "taskId": "2026-10-22-v0171-release-closeout",
+  "repo": "pantheon-base",
+  "executedAt": "2026-10-22T17:10:00+08:00",
+  "agent": {
+    "tool": "other",
+    "adapter": "software-workshop-agent"
+  },
+  "commands": [
+    {
+      "command": "cd backend && go build ./... && go vet ./... && gofmt -l .",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "Exit 0. gofmt printed nothing, so the tree is formatted. No build or vet diagnostics across the whole module."
+    },
+    {
+      "command": "cd backend && export PANTHEON_TEST_DSN=<real mysql> PANTHEON_TEST_REDIS_ADDR=127.0.0.1:6379 PANTHEON_TEST_REDIS_PASSWORD=<redacted> PANTHEON_TEST_DSN_REQUIRED=true PANTHEON_TEST_REDIS_REQUIRED=true && go test -count=1 -p 1 ./...",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "Exit 0. 46 packages ok, no FAIL and no SKIP lines: cmd/server 0.4s, cmd/tenantmatrixdb 0.3s, cmd/tenantsizing 0.5s, internal/middleware 3.9s, internal/scaffold 1.1s, auth/login 159.3s, auth/mfa 0.2s, auth/security 2.0s, auth/session 4.8s, business 1.0s, lowcode/dynamicmodule 29.4s, lowcode/generator 0.7s, platform 2.5s, system 4.4s, system/audit 5.6s, system/config/dict 3.1s, system/config/setting 8.4s, system/i18n 169.2s, system/iam/menu 4.1s, system/iam/permission 17.8s, system/iam/role 29.1s, system/iam/tenant 49.7s, system/iam/user 32.1s, system/org/dept 3.5s, system/org/post 4.2s, pkg/* all ok, pkg/database 41.0s. Both required flags were set, so a missing DSN or Redis would have been fatal rather than a silent skip. -p 1 avoids the known parallel-package Redis key-space contention; the two new lifecycle tests were also verified green in isolation."
+    },
+    {
+      "command": "cd backend && go test -count=1 -run 'TestDeleteTenantArchivedWithMembersSucceeds|TestCreateTenantRollsBackWhenProvisioningFails|TestTenantStatusTransitionAllowed|TestUpdateTenantRejectsArchivedReactivation|TestRemoveMemberRefusesLastOwner' -v ./modules/system/iam/tenant/",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "The five lifecycle guards all pass against real MySQL. TestDeleteTenantArchivedWithMembersSucceeds asserts the memberships end disabled and the tenant row ends deleted; TestCreateTenantRollsBackWhenProvisioningFails injects a GORM create-callback failure on system_user and asserts the tenant row is gone so the same code can be created again."
+    },
+    {
+      "command": "cd backend && go test -count=1 -run 'TestMigrationChainRollsBackAndReapplies' -v ./pkg/database/",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "PASS 12.3s on real MySQL. Migrates a throwaway database up to version 29, steps all the way down, asserts system_user.tenant_id and system_role.tenant_id are gone, then re-applies and asserts the version returns to 29 and the columns come back. Reverse check: after `git checkout --` on 000020_tenant_phase1_core_tables.down.sql (the previous unconditional version) the same test FAILS in 5.97s with `Error 1091 (42000): Can't DROP 'tenant_id'; check that column/key exists`, which is the defect this release fixes. The fixed file was restored and the test passes again."
+    },
+    {
+      "command": "node inspect-setting-bar.mjs (Playwright, 1440x1000)",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "Measured /system/setting before and after. Before: four .governance-summary-bar__metric boxes at two distinct top offsets (144 and 214), i.e. a 2x2 block, bar height 152px. After: all four at top 144, bar height 82px. The same script also checked /system/setting/basic, which renders the same bar."
+    },
+    {
+      "command": "node narrow2.mjs (Playwright, 1600/1440/1280/1100/960/900 widths)",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "Per-width metric row grouping plus a horizontal-overflow probe. 1600/1440/1280/1100/960 each render 4 metrics in one row (widths 165/143/120/119/100px) with no horizontal overflow; 900 renders 2x2 (366px), which is the intended <=920px mobile layout. This run is what caught the first attempt's <=1280px fallback re-creating the two-row layout, so the fallback was replaced with auto-fit."
+    },
+    {
+      "command": "cd frontend && npx vitest run",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "30 test files / 214 tests passed. One intermediate run reported 3 timeouts (SubmitBar 6392ms, LayoutOpenedTabs 6090ms, operationalPrimitives 7360ms against the 5000ms limit) while the machine was loaded and jsdom setup alone took 356s across 30 instances; those three files pass 16/16 in 7.18s when run together in isolation, and the full suite passed 214/214 twice, so this is load-induced timeout flake rather than a regression. Recorded as a residual."
+    },
+    {
+      "command": "cd frontend && npx tsc --noEmit",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "Exit 0, no diagnostics."
+    },
+    {
+      "command": "cd frontend && npx eslint src --max-warnings 0",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "Exit 0. Zero warnings and zero errors, so the --max-warnings 0 budget is intact."
+    },
+    {
+      "command": "cd frontend && npm run prebuild",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "13 steps green: patch:arco-react19, check:menu-contract, check:i18n-hardcode, check:i18n-generated-scope, check:system-datetime-presentation, check:shell-visual-contract, check:ui-contract, check:search-toolbar-contract (0 findings / 95 modules), check:important-budget (0 / budget 0), check:system-page-admission (16 entries), check:smoke-web-base (110 files), check:smoke-coverage-contract (34 specs / 20 script entries), check:import-path-case (262 files)."
+    },
+    {
+      "command": "cd frontend && npx vite build",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "Exit 0, 1411 modules transformed, 'built in 1.94s'. An earlier attempt reported a rolldown error because it ran concurrently with prebuild, which deletes node_modules/.vite; re-running alone succeeded, so the failure was cache interference from two builds on the same directory, not a code defect."
+    },
+    {
+      "command": "node inspect-dict-bar.mjs (Playwright, 1440x1000, login as admin)",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "Compared the governance bar on /system/dict, /system/user and /system/post in one session. .governance-summary-bar__metric-desc count is now 0 on all three; /system/dict previously rendered 3. The eyebrow, title and three label+value metrics are structurally identical across the three pages."
+    },
+    {
+      "command": "npm run check:docs-frontmatter",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Frontmatter check passed. 343 docs, 250 with frontmatter."
+    },
+    {
+      "command": "npm run check:structure",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Structure contract check (strict): 0 findings across 2498 tracked files."
+    },
+    {
+      "command": "npm run check:task-packet && npm run check:task-packet-template && npm run check:generated",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Task packet checker passes both 2026-10-22 packets after the linkage fields were aligned with the evidence schema (evidenceDir / changeRef / planRefs). Template check OK; generated artifact check 0 findings across 11 artifacts."
+    }
+  ],
+  "runtimeSensitive": [
+    "The backend suite requires a reachable MySQL 8.0.36 and Redis 7. Both *_REQUIRED flags were set to true, so an unreachable dependency fails the run instead of skipping.",
+    "go test -race cannot run on this host: the MinGW gcc.exe fails at link time. Race coverage is therefore CI-only and is not claimed from local evidence."
+  ],
+  "runtimeGap": [
+    "SonarCloud unresolved-issue count and the Release Gate verdict are produced only by CI. Local work can show the code shape changed but cannot assert the gate is green."
+  ],
+  "knownGaps": [
+    "TestBatchRevokeSessions_IsTenantScoped flakes when many packages run in parallel (shared Redis key space); single-package and -p 1 runs pass.",
+    "Concurrent CreateTenant for two different codes is not serialized.",
+    "Browser verification is read-only; write paths are covered by Go integration tests.",
+    "The published v0.17.0 assets still contain the pre-rotation development credential; the value is invalid but the assets are immutable."
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-22-v0171-release-closeout/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-22-v0171-release-closeout/",
+    "reviewFile": ".harness/evidence/2026-10-22-v0171-release-closeout/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/contracts/TENANT_CONTRACT_V1.md",
+      "docs/reviews/PANTHEON_BASE_DELIVERY_REMEDIATION_2026-10-22.md",
+      "docs/reviews/PANTHEON_BASE_ISSUES_AND_REMEDIATION_2026-10-21.md"
+    ]
+  }
+}

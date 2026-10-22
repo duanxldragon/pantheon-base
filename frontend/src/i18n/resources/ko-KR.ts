@@ -1409,6 +1409,9 @@ const koKRFallback = {
   'tenant.code_reserved':
     '이 테넌트 코드는 삭제된 테넌트가 보유하고 있습니다(기본 목록에는 표시되지 않습니다). 다른 코드를 입력하거나 먼저 삭제된 테넌트를 정리하세요.',
   'tenant.member_exists': '이 사용자는 이미 테넌트의 멤버입니다.',
+  'tenant.member.last_owner': '테넌트에는 최소 한 명의 소유자가 필요하며 마지막 소유자는 제거할 수 없습니다.',
+  'tenant.status.terminal': '테넌트가 아카이브되었으며 이 상태는 되돌릴 수 없습니다.',
+  'user.not_found': '사용자가 없거나 현재 테넌트에 속하지 않습니다.',
   'tenant.not_found': '테넌트를 찾을 수 없습니다.',
   'tenant.has_active_members': '이 테넌트에 활성 멤버가 남아 있습니다. 먼저 멤버를 제거하세요.',
   'tenant.delete.error.archive_code_conflict': '테넌트 코드를 해제하지 못했습니다. 다시 시도하세요.',
@@ -2581,9 +2584,6 @@ const koKRFallback = {
   'system.dict.usage.error': '사전 사용 분석을 불러오지 못했습니다',
   'system.dict.hero.desc':
     '사전 페이지는 시스템 페이지 공통 템플릿을 이어갑니다. 주 작업 영역은 유형/항목 이중 워크벤치를 유지하고, 우측만 현재 거버넌스 요약과 작업 힌트를 담당하여 추가 상단 개요를 확장하지 않습니다.',
-  'system.dict.hero.typeHint': '현재 플랫폼과 비즈니스 거버넌스에 포함된 사전 유형 수입니다.',
-  'system.dict.hero.activeHint': '아직 활성 상태로 비즈니스에서 사용할 수 있는 사전 유형 수입니다.',
-  'system.dict.hero.itemHint': '모든 사전 유형 아래 사전 항목 총수로, 열거 규모 평가에 사용합니다.',
   'system.dict.hero.currentHint': '현재 마스터-디테일 워크벤치가 집중하는 사전 코드입니다.',
   'system.dict.hero.disabledHint': '비활성화된 사전 유형 수로, 정리와 재검토의 진입점이 됩니다.',
   'system.dict.hero.refreshHint':

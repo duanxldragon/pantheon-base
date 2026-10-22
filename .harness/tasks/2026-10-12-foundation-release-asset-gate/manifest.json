@@ -3,7 +3,7 @@
   "title": "Gate the foundation release artifact set so a release can no longer be published without its bundle",
   "goal": "A foundation release is only consumable through its published artifacts: pantheon-ops materializes a release from repo.tar plus the bundle archive, both verified by SHA-256. pantheon-base-v0.14.0, v0.15.0 and v0.16.0 were all published with zero assets while the Release Gate, CI and the smoke suites stayed green, so every consumer that pinned those versions had nothing to consume and the release line silently stopped advancing. The release scripts were only ever covered by unit tests of the scripts themselves; nothing asserted the published outcome. Add a check that verifies a release carries its complete, checksum-consistent artifact set, wire it to the `release: published` event so the state is caught immediately, and provide a dispatch-only, dry-run-by-default workflow that can rebuild and upload the missing assets from the release commit.",
   "primaryLayer": "platform",
-  "status": "in-progress",
+  "status": "completed",
   "priority": "P1",
   "type": "ci",
   "estimatedComplexity": "medium",

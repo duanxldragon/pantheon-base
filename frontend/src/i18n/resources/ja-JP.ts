@@ -1469,6 +1469,9 @@ const jaJPFallback = {
   'tenant.code_reserved':
     'このテナントコードは削除済みテナントが保持しています（既定の一覧には表示されません）。別のコードを指定するか、先に削除済みテナントを整理してください。',
   'tenant.member_exists': 'このユーザーはすでにこのテナントのメンバーです。',
+  'tenant.member.last_owner': 'テナントには少なくとも 1 名のオーナーが必要で、最後のオーナーは削除できません。',
+  'tenant.status.terminal': 'テナントはアーカイブ済みで、この状態は元に戻せません。',
+  'user.not_found': 'ユーザーが存在しないか、このテナントに属していません。',
   'tenant.not_found': 'テナントが見つかりません。',
   'tenant.has_active_members': 'このテナントには有効なメンバーが残っています。先にメンバーを削除してください。',
   'tenant.delete.error.archive_code_conflict': 'テナントコードを解放できませんでした。もう一度お試しください。',
@@ -2610,10 +2613,6 @@ const jaJPFallback = {
   'system.dict.usage.error': '辞書利用分析の読み込みに失敗しました',
   'system.dict.hero.desc':
     '辞書ページはシステムページ共通テンプレートを継承します。主作業領域はタイプ/項目の二重ワークベンチを維持し、右側だけが現在のガバナンス要約と操作ヒントを引き受け、追加のトップ概要は広げません。',
-  'system.dict.hero.typeHint':
-    '現在プラットフォームと業務ガバナンスに取り込まれている辞書タイプ数です。',
-  'system.dict.hero.activeHint': 'まだ有効で業務に利用可能な辞書タイプ数です。',
-  'system.dict.hero.itemHint': 'すべての辞書タイプ配下の辞書項目総数で、列挙規模の評価に使います。',
   'system.dict.hero.currentHint': '現在主従ワークベンチが注目している辞書コードです。',
   'system.dict.hero.disabledHint': '無効化済み辞書タイプ数で、整理と再確認の入口になります。',
   'system.dict.hero.refreshHint':

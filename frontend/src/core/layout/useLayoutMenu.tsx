@@ -180,6 +180,37 @@ function isPlatformOnlyMenu(item: MenuNode): boolean {
   );
 }
 
+// isHiddenByCapabilities is the single place the capability rules apply:
+// module disablement (org / tenant) and the platform-only surface a tenant
+// session must never see.
+function isHiddenByCapabilities(item: MenuNode, caps: CapabilityFilter): boolean {
+  if (!caps.orgEnabled && item.module === 'system.org') {
+    return true;
+  }
+  // 单租户（compat）下没有租户维度可管，租户管理菜单从访问控制移除。
+  // 多租户（multi）下保留。与 org.enabled / system.org 同一套能力过滤机制。
+  if (!caps.tenantEnabled && item.module === 'system.tenant') {
+    return true;
+  }
+  return caps.tenantScoped && isPlatformOnlyMenu(item);
+}
+
+// isNavigableGroup keeps a group that still has a visible child, or that
+// navigates somewhere the plan includes. Resolving the navigation target
+// against the filtered children stops a hidden child from keeping its parent
+// group alive as an empty expandable row.
+function isNavigableGroup(
+  item: MenuNode,
+  children: MenuNode[],
+  entitled: boolean,
+  isPathEntitled: (path: string) => boolean,
+): boolean {
+  if (children.length > 0) {
+    return true;
+  }
+  return entitled && Boolean(findMenuNavigationPath({ ...item, children }, isPathEntitled));
+}
+
 function filterMenuTreeByCapabilities(
   nodes: MenuNode[],
   caps: CapabilityFilter,
@@ -187,33 +218,17 @@ function filterMenuTreeByCapabilities(
 ): MenuNode[] {
   const filtered: MenuNode[] = [];
   for (const item of nodes) {
-    if (!caps.orgEnabled && item.module === 'system.org') {
-      continue;
-    }
-    // 单租户（compat）下没有租户维度可管，租户管理菜单从访问控制移除。
-    // 多租户（multi）下保留。与 org.enabled / system.org 同一套能力过滤机制。
-    if (!caps.tenantEnabled && item.module === 'system.tenant') {
-      continue;
-    }
-    if (caps.tenantScoped && isPlatformOnlyMenu(item)) {
+    if (isHiddenByCapabilities(item, caps)) {
       continue;
     }
     const children = item.children?.length
       ? filterMenuTreeByCapabilities(item.children, caps, isPathEntitled)
       : [];
     const entitled = !item.path || isPathEntitled(item.path);
-    if (item.children?.length) {
-      // A group whose every child was filtered away would render as an empty
-      // expandable row; drop it unless the group itself navigates somewhere the
-      // plan still includes. Resolve the navigation target against the filtered
-      // children, otherwise a hidden child keeps its parent group alive.
-      if (
-        children.length === 0 &&
-        (!entitled || !findMenuNavigationPath({ ...item, children }, isPathEntitled))
-      ) {
-        continue;
-      }
-    } else if (!entitled) {
+    const keep = item.children?.length
+      ? isNavigableGroup(item, children, entitled, isPathEntitled)
+      : entitled;
+    if (!keep) {
       continue;
     }
     filtered.push({ ...item, children });

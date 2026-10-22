@@ -68,6 +68,15 @@ func (h *PlatformHandler) failServiceError(c *gin.Context, err error, fallback s
 		common.FailWithError(c, common.CodeParamInvalid, err, "tenant.code_reserved")
 	case errors.Is(err, ErrMembershipExists):
 		common.FailWithError(c, common.CodeParamInvalid, err, "tenant.member_exists")
+	case errors.Is(err, ErrLastOwner):
+		// Contract §2.2: removing the last active owner would leave a tenant
+		// nobody can administer. Same HTTP class as a rejected input.
+		common.FailWithError(c, common.CodeParamInvalid, err, "tenant.member.last_owner")
+	case errors.Is(err, common.ErrConflict):
+		// Lifecycle conflicts (archived is terminal, contract §2.1) carry their
+		// own i18n key; the envelope has no 409 sentinel, so they report as a
+		// caller error instead of a server fault.
+		common.FailWithError(c, common.CodeParamInvalid, err, fallback)
 	case errors.Is(err, ErrTenantHasActiveUsers):
 		// A state conflict, not a fault: DELETE /tenant is refused while an
 		// active membership remains (contract §2.2), so the caller must purge

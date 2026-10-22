@@ -50,6 +50,10 @@ func (h *Handler) failServiceError(c *gin.Context, err error) {
 		common.FailWithError(c, common.CodeParamInvalid, err, "tenant.code_reserved")
 	case errors.Is(err, ErrMembershipExists):
 		common.FailWithError(c, common.CodeParamInvalid, err, "tenant.member_exists")
+	case errors.Is(err, ErrLastOwner):
+		common.FailWithError(c, common.CodeParamInvalid, err, "tenant.member.last_owner")
+	case errors.Is(err, common.ErrConflict):
+		common.FailWithError(c, common.CodeParamInvalid, err, errRequestFailed)
 	case errors.Is(err, ErrTenantHasActiveUsers):
 		common.FailWithError(c, common.CodeParamInvalid, err, "tenant.has_active_members")
 	case errors.Is(err, ErrTenantAdminUsernameTaken):

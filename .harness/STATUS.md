@@ -1,7 +1,36 @@
 # Pantheon Base - Harness 任务状态
 
 **最后更新**: 2026-10-22
-**当前版本**: v0.17.0（已发布）；v0.16.1 为上一个可消费版本
+**当前版本**: v0.17.1（发布中）；v0.17.0 为上一个可消费版本
+
+## 交付收口与租户生命周期修复（2026-10-22，v0.17.1）
+
+独立交付验收（基线 `main 92b94474` / 发布 `v0.17.0 → 728feb2b`）判定 **FAIL（暂不可交付）**：无 P0，
+但三项交付完整性阻塞——主干 `Release Gate` 红、整改仅存于未提交工作区、消费侧文档与实现/发布矛盾。
+本包把三项阻塞与验收新发现的两项租户生命周期缺口一并收口，并发布 `v0.17.1`。
+任务包 `2026-10-22-v0171-release-closeout`，证据在 `.harness/evidence/2026-10-22-v0171-release-closeout/`。
+
+- **Release Gate**：`92b94474` 上 8 条 SonarCloud 未处理（`go:S1192`×3、`go:S3776`×2、`S6759`×3、`S6582`）
+  已按规则整改（提取常量、拆分 `repairTenantPlatformGrants`、`Readonly<Props>`、可选链、纯函数提取），
+  无 suppression；修复随本包合入主干后由 CI 复验。
+- **整改落库**：此前停留在 `fix/tenant-plan-entitlements-and-audit` 工作区的 30 个修改 + 4 个未跟踪文件
+  已提交；任务包 `2026-10-22-delivery-audit-remediation` 置 `completed`。
+- **消费侧文档**：README(zh/en) 指向 v0.17.1；`TENANT_API` 改为实际挂载的 `/api/v1/system/tenant*`
+  （原 `/api/v1/tenants*` 实测 404）；scope 矩阵不再称"当前运行态是单租户"；部署指南补 `tenant_mode` 章节。
+- **租户生命周期（验收新发现）**：①归档租户可删除（同一事务内停用成员 + 释放编码 + 置 deleted），
+  解除「§2.1 归档是退场路径」与「§2.2 最后 owner 不可移除」的死锁；活跃租户仍有成员时仍拒绝删除。
+  ②`CreateTenant` 在 provisioning 失败时删除租户行，编码可复用，重试即重建。
+- **UI 一致性**：字典页治理栏去掉三个指标下的描述文案（其余系统列表只有 label + value，说明在治理抽屉），
+  同步删除 5 个语言包中失效的 3 个 key。
+- **迁移回滚断链（P2，准备发布时实测发现）**：`000020.down` 无条件删索引/列，而 `000024.down` 已删掉其中
+  几个，`migrate down` 走到一半报 `Error 1091: Can't DROP 'tenant_id'`，schema version 停在 dirty ——
+  照 runbook 回滚会得到半删的库。现每个破坏性步骤先查 `information_schema`，回滚可完成且可重新 up。
+  新增 `TestMigrationChainRollsBackAndReapplies`（up→down→up）；把 `000020.down` 换回上一版该用例即失败，
+  反向证明缺陷与用例都真实。
+- **验证**：后端 `go build`/`go vet`/`gofmt` 干净，真库全量 `go test ./...` 0 失败 0 跳过；
+  新增 5 条真库用例（归档删除、初始化回滚、最后 owner、归档终态、回滚重放）；前端 tsc / eslint /
+  vitest（30 文件 214 用例）/ prebuild 13 步 / vite build 通过；浏览器 17 路由 0 console error、0 个 `/api/` ≥400。
+- **结论**：三项阻塞、两项生命周期缺口与一处回滚断链闭合；`v0.17.1` 待 CI 门禁转绿后打标发布四件产物。
 
 ## 租户菜单、审计归属与套餐差异化修复（2026-10-22）
 

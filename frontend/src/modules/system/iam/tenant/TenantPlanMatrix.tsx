@@ -18,7 +18,7 @@ interface TenantPlanMatrixProps {
  * registry. The tenant form never hardcodes feature names or tiers, so adding a
  * paid feature is one registry entry plus the surface declaration on its module.
  */
-export default function TenantPlanMatrix({ plan }: TenantPlanMatrixProps) {
+export default function TenantPlanMatrix({ plan }: Readonly<TenantPlanMatrixProps>) {
   const { t } = useTranslation();
 
   return (

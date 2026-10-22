@@ -1,0 +1,151 @@
+{
+  "taskId": "2026-10-22-v0171-release-closeout",
+  "taskDoc": "docs/harness/tasks/2026-10-22-v0171-release-closeout.task.md",
+  "title": "Close the delivery-audit blockers, fix two tenant-lifecycle gaps and one UI inconsistency, and publish v0.17.1",
+  "goal": "The 2026-10-22 independent delivery audit of main 92b94474 returned FAIL on delivery completeness: no P0, but (1) Release Gate was red with 8 unresolved SonarCloud issues so no release could be cut from main, (2) the remediation lived only in an uncommitted worktree, and (3) consumer-facing docs contradicted the code and the published release. The same audit found two tenant-lifecycle gaps (an archived tenant could never be deleted because the archived-terminal rule and the last-owner rule deadlock; a failed provisioning stranded its tenant row holding a UNIQUE code) and one UI inconsistency (the dictionary governance bar rendered a description under each metric while every other system list does not). This packet closes all of them, records the evidence, and publishes v0.17.1 with the four consumable assets.",
+  "primaryLayer": "platform",
+  "status": "in-progress",
+  "priority": "P1",
+  "type": "acceptance-remediation",
+  "estimatedComplexity": "medium",
+  "findings": [
+    "A1 (P1, blocks release): Release Gate on main 92b94474 failed (run 39733491324) with 'Release blocked: 8 unresolved SonarCloud issue(s)': go:S1192 x3 and go:S3776 x1 in tenant_provision.go, typescript:S3776 in useLayoutMenu.tsx, typescript:S6759 x3, typescript:S6582 in useTenantSessionStore.ts.",
+    "A2 (P1, delivery completeness): the remediation for A1 and the tenant contract deviations existed only as 30 modified + 4 untracked files on branch fix/tenant-plan-entitlements-and-audit, with no evidence directory and an in-progress task packet, so nothing could be frozen.",
+    "A3 (P1, downstream consumption): README/README.en named v0.16.1 while v0.17.0 was published; docs/api/TENANT_API.md documented /api/v1/tenants* which answers 404 in the running build; the scope matrix still called the runtime single-tenant; the deployment guide never mentioned tenant_mode.",
+    "B1 (P2): DeleteTenant required zero active members while RemoveMember refuses to drop the last owner, so an archived (retired) tenant could never be deleted through the API.",
+    "B2 (P2): CreateTenant inserted the tenant row outside the provisioning transaction; a provisioning failure left the row holding its UNIQUE code with no owner, repairable only by hand.",
+    "C1 (P3, UI): the dictionary page's governance bar rendered a description under each of its three metrics, unlike every other system list, pushing the table down by three lines.",
+    "D1 (P2, found while preparing this release): 000020_tenant_phase1_core_tables.down.sql dropped indexes and columns unconditionally while 000024.down had already removed several of them, so `migrate down` aborted part-way with 'Error 1091: Can't DROP tenant_id' and left schema_migrations dirty with a half-dropped schema.",
+    "C2 (P3, UI): the settings governance bar has four metrics but the shared grid starts at 120px and its column is ~450px wide, so the fourth metric wrapped to a second row (2x2) and made the bar 152px tall instead of 82px."
+  ],
+  "scope": {
+    "in": [
+      "SonarCloud debt in tenant_provision.go, useLayoutMenu.tsx, PlanFeatureGuard.tsx, TenantPlanMatrix.tsx, useTenantSessionStore.ts",
+      "DeleteTenant: archived tenants delete even with active members (memberships disabled in the same transaction)",
+      "CreateTenant: compensating delete when provisioning fails",
+      "000020 down migration: guard every destructive step on information_schema so the rollback chain completes and can be re-applied",
+      "Dictionary governance bar: drop the per-metric descriptions and the three now-unused i18n keys",
+      "Version material: VERSION 0.17.1, CHANGELOG, RELEASE_NOTES_v0.17.1.md, README(zh/en), STATUS",
+      "Close the 2026-10-22-delivery-audit-remediation packet",
+      "Publish v0.17.1 with the four foundation-release assets",
+      "Settings governance bar: page-scoped override so four metrics stay on one row down to a 960px viewport"
+    ],
+    "out": [
+      "Casbin model, permission semantics, PlatformCapabilityMiddleware rules",
+      "Database schema and the migration chain (stays at 29)",
+      "Concurrent provisioning serialization (B7), Redis fail-open (A5), audit indexes (C5), ja/ko/fr coverage (E4)",
+      "Replacing or rewriting the published v0.17.0 assets"
+    ]
+  },
+  "acceptanceCriteria": [
+    "The eight SonarCloud rules are addressed in code without suppressions; Release Gate is green on the release commit.",
+    "An archived tenant with active members can be deleted; the memberships are disabled, the code is released and the status becomes deleted, all in one transaction. A live tenant with members is still refused with tenant.has_active_members.",
+    "A provisioning failure removes the tenant row, so the same code can be created again immediately.",
+    "The migration chain rolls back to version 0 and re-applies to the same clean version on a throwaway database; the down file is guarded rather than unconditional.",
+    "The dictionary governance bar shows only label + value, matching /system/user and /system/post; no unused i18n key remains in any of the five locales.",
+    "README(zh/en), CHANGELOG, RELEASE_NOTES and VERSION all state 0.17.1; TENANT_API documents the mounted /system/tenant surface; the scope matrix no longer calls the runtime single-tenant; DEPLOYMENT_GUIDE documents tenant_mode.",
+    "go build/vet/gofmt clean, go test ./... against real MySQL + Redis with 0 failures and 0 skips; frontend tsc/eslint/vitest/prebuild/vite build pass; docs governance checkers pass.",
+    "v0.17.1 is tagged and published with tgz / tgz.sha256 / repo.tar / repo.tar.sha256, checksums verified, and Foundation Release Verify green.",
+    "The settings governance bar renders its four metrics on one row from 960px up with no horizontal overflow, and falls back to 2x2 only at the existing <=920px mobile breakpoint; the other system pages are unchanged."
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "permission-policy",
+    "portableFailureClass": "gate-debt-blocks-release / lifecycle-deadlock / half-initialized-entity / ui-pattern-drift",
+    "ownerLayer": "consumer-repository",
+    "ratchetDecision": "checker-tightened",
+    "coverageDimensions": [
+      "behaviour",
+      "maintainability",
+      "architecture-fitness"
+    ]
+  },
+  "expectedFiles": {
+    "create": [
+      "RELEASE_NOTES_v0.17.1.md",
+      "docs/harness/tasks/2026-10-22-v0171-release-closeout.task.md",
+      ".harness/tasks/2026-10-22-v0171-release-closeout/manifest.json",
+      ".harness/evidence/2026-10-22-v0171-release-closeout/summary.md",
+      ".harness/evidence/2026-10-22-v0171-release-closeout/review.md",
+      ".harness/evidence/2026-10-22-v0171-release-closeout/commands.json",
+      "backend/pkg/database/migrate_down_test.go",
+      "docs/reviews/PANTHEON_BASE_DELIVERY_REMEDIATION_2026-10-22.md"
+    ],
+    "modify": [
+      "backend/modules/system/iam/tenant/tenant_service.go",
+      "backend/modules/system/iam/tenant/tenant_lifecycle_guard_test.go",
+      "backend/pkg/database/migrations/000020_tenant_phase1_core_tables.down.sql",
+      "frontend/src/modules/system/config/dict/DictPage.tsx",
+      "frontend/src/i18n/resources/zh-CN.ts",
+      "frontend/src/i18n/resources/en-US.ts",
+      "frontend/src/i18n/resources/ja-JP.ts",
+      "frontend/src/i18n/resources/ko-KR.ts",
+      "frontend/src/i18n/resources/fr-FR.ts",
+      "VERSION",
+      "CHANGELOG.md",
+      "README.md",
+      "README.en.md",
+      ".harness/STATUS.md",
+      ".harness/tasks/2026-10-22-delivery-audit-remediation/manifest.json",
+      "frontend/src/assets/list-page.css"
+    ],
+    "doNotTouch": [
+      "backend/pkg/database/migrations/**",
+      "backend/internal/middleware/platform_capability_middleware.go",
+      ".github/workflows/**",
+      "the published v0.17.0 tag and assets"
+    ]
+  },
+  "implementationNotes": [
+    "DeleteTenant reads id/code/status first, then counts active members: memberCount > 0 && status != archived still returns tenant.has_active_members. For an archived tenant the transaction disables the active memberships, releases the code and sets status=deleted, so contract §2.2 (non-archived only) stays intact while §2.1's retirement path becomes reachable.",
+    "CreateTenant compensates with Unscoped().Delete on the tenant row: the row never became usable, and keeping it would hold a UNIQUE code with no owner. When the compensating delete itself fails, both errors are logged and the original failure is still returned.",
+    "The dictionary page only drops the description field of the three metrics; label/value/action and the governance rail are untouched.",
+    "Version material follows docs/VERSION_MANAGEMENT_GUIDE.md §6: patch release, no migration, no consumer-facing interface change."
+  ],
+  "verificationPlan": {
+    "backend": [
+      "go build ./...",
+      "go vet ./...",
+      "gofmt -l .",
+      "PANTHEON_TEST_DSN=<real mysql> PANTHEON_TEST_DSN_REQUIRED=true PANTHEON_TEST_REDIS_REQUIRED=true go test ./...",
+      "go test -count=1 ./modules/system/iam/tenant/ ./modules/system/iam/user/ ./modules/system/iam/role/ ./modules/system/iam/permission/"
+    ],
+    "frontend": [
+      "tsc --noEmit",
+      "eslint src --max-warnings 0",
+      "vitest run",
+      "npm run prebuild",
+      "vite build"
+    ],
+    "browser": [
+      "compare the dictionary governance bar with /system/user and /system/post",
+      "sweep 17 system routes for console errors and /api/ responses >= 400"
+    ],
+    "governance": [
+      "npm run check:docs-frontmatter",
+      "npm run check:task-packet",
+      "npm run check:structure"
+    ],
+    "release": [
+      "node scripts/foundation-release/check-release-assets.mjs --release-version pantheon-base-v0.17.1",
+      "gh release view pantheon-base-v0.17.1 --json assets"
+    ]
+  },
+  "linkage": {
+    "taskId": "2026-10-22-v0171-release-closeout",
+    "taskManifest": ".harness/tasks/2026-10-22-v0171-release-closeout/manifest.json",
+    "assessment": "docs/harness/tasks/2026-10-22-v0171-release-closeout.task.md",
+    "openspecChange": "none",
+    "superpowersPlan": "none",
+    "evidenceDir": ".harness/evidence/2026-10-22-v0171-release-closeout/",
+    "summaryFile": ".harness/evidence/2026-10-22-v0171-release-closeout/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-22-v0171-release-closeout/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/contracts/TENANT_CONTRACT_V1.md",
+      "docs/reviews/PANTHEON_BASE_DELIVERY_REMEDIATION_2026-10-22.md",
+      "docs/reviews/PANTHEON_BASE_ISSUES_AND_REMEDIATION_2026-10-21.md"
+    ]
+  }
+}

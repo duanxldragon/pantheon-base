@@ -45,6 +45,9 @@ var (
 	ErrMembershipExists = errors.New("user is already a member of this tenant")
 	// ErrMembershipNotFound is returned when removing a non-existent tenant membership.
 	ErrMembershipNotFound = errors.New("tenant membership not found")
+	// ErrLastOwner is returned when a removal would leave the tenant without an
+	// active owner (contract §2.2: every non-archived tenant keeps at least one).
+	ErrLastOwner = errors.New("tenant membership last owner")
 )
 
 const (
@@ -160,8 +163,20 @@ func (s *Service) CreateTenant(dto CreateTenantDTO) (*Tenant, error) {
 		AdminPassword: dto.AdminPassword,
 		AdminNickname: dto.AdminNickname,
 	}); err != nil {
-		// The tenant row exists but is not usable. Surface both facts so the
-		// operator can repair rather than silently keep a broken tenant.
+		// Compensate instead of leaving a stranded row. Provisioning runs in one
+		// transaction, so a failure leaves no roles, policies or memberships
+		// behind — but the tenant row would keep its `code` (a UNIQUE column) and
+		// have no owner, which violates contract §2.2 and can only be repaired by
+		// hand. Removing the row keeps the code reusable, so the operator's retry
+		// is simply "create again".
+		if delErr := s.db.Unscoped().Delete(&Tenant{}, tenant.ID).Error; delErr != nil {
+			logging.Error("tenant provision failed and the tenant row could not be removed",
+				zap.Uint64("tenantId", tenant.ID),
+				zap.String("code", tenant.Code),
+				zap.Error(err),
+				zap.Error(delErr))
+			return nil, fmt.Errorf("provision tenant %d (%s): %w (row rollback failed: %v)", tenant.ID, tenant.Code, err, delErr)
+		}
 		return nil, fmt.Errorf("provision tenant %d (%s): %w", tenant.ID, tenant.Code, err)
 	}
 
@@ -352,6 +367,13 @@ func (s *Service) UpdateTenant(id uint64, dto UpdateTenantDTO) error {
 	}
 	previousStatus := row.Status
 
+	// Contract §2.1 declares archived terminal: an archived tenant cannot come
+	// back. Validating before the first write keeps a rejected transition from
+	// leaving the name/plan half-updated.
+	if dto.Status != nil && !tenantStatusTransitionAllowed(previousStatus, *dto.Status) {
+		return common.NewConflict("tenant.status.terminal")
+	}
+
 	// Update fields individually to satisfy SonarCloud taint analysis
 	// This avoids map/struct updates that trigger false positive SQL injection warnings
 	hasUpdates := false
@@ -409,6 +431,28 @@ func statusChangeRequiresSessionRevocation(previous, next string) bool {
 	return next != tenant.TenantStatusActive
 }
 
+// tenantStatusTransitionAllowed enforces contract §2.1:
+// active <-> suspended, active|suspended -> archived, and archived is terminal.
+// An empty next value is a no-op write, which every state allows; an unknown
+// previous value (a legacy row) is left to the enum validation in the DTO.
+func tenantStatusTransitionAllowed(previous, next string) bool {
+	next = strings.TrimSpace(next)
+	previous = strings.TrimSpace(previous)
+	if next == "" || next == previous {
+		return true
+	}
+	switch previous {
+	case tenant.TenantStatusActive:
+		return next == tenant.TenantStatusSuspended || next == tenant.TenantStatusArchived
+	case tenant.TenantStatusSuspended:
+		return next == tenant.TenantStatusActive || next == tenant.TenantStatusArchived
+	case tenant.TenantStatusArchived:
+		return false
+	default:
+		return true
+	}
+}
+
 // revokeTenantMemberSessions force-expires the live sessions of every active
 // member through the production primitive tenant.RevokeUserSessionsInTenant.
 // Best-effort by design: a redis/database hiccup is logged with both ids so
@@ -440,9 +484,25 @@ func (s *Service) revokeTenantMemberSessions(tenantID uint64) {
 //
 // Releasing the code is part of the operation, not a side effect: see
 // deletedTenantCodePrefix for why a hidden row must not keep its code.
+//
+// An archived tenant is deletable even while it still has active members.
+// Contract §2.2 only requires an owner on every *non-archived* tenant, and
+// §2.1 makes archived terminal, so the remaining memberships are disabled in
+// the same transaction instead of blocking the delete. Without this the two
+// rules deadlock: archiving is the documented way to retire a tenant, yet
+// `RemoveMember` refuses to drop the last owner, so a provisioned tenant could
+// never be deleted at all.
 func (s *Service) DeleteTenant(id uint64) error {
 	if id == platformGlobalTenantID {
 		return ErrTenantNotFound
+	}
+
+	var row Tenant
+	if err := s.db.Select("id", "code", "status").Where(condIDEquals, id).Take(&row).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return ErrTenantNotFound
+		}
+		return fmt.Errorf("load tenant for delete: %w", err)
 	}
 
 	// Check if tenant has active members
@@ -453,21 +513,21 @@ func (s *Service) DeleteTenant(id uint64) error {
 		return fmt.Errorf("check tenant members: %w", err)
 	}
 
-	if memberCount > 0 {
+	if memberCount > 0 && row.Status != tenant.TenantStatusArchived {
 		return ErrTenantHasActiveUsers
 	}
 
-	// Mark tenant as deleted, releasing its code first. Both writes share one
-	// transaction: a code archived without the status change (or the reverse)
-	// would leave the table in a state neither the console nor the repair
-	// routine expects.
+	// Mark tenant as deleted, releasing its code first. Every write shares one
+	// transaction: a code archived without the status change (or the reverse),
+	// or memberships disabled for a tenant that stayed live, would leave the
+	// table in a state neither the console nor the repair routine expects.
 	return s.db.Transaction(func(tx *gorm.DB) error {
-		var row Tenant
-		if err := tx.Select("id", "code").Where(condIDEquals, id).Take(&row).Error; err != nil {
-			if errors.Is(err, gorm.ErrRecordNotFound) {
-				return ErrTenantNotFound
+		if memberCount > 0 {
+			if err := tx.Model(&Membership{}).
+				Where("tenant_id = ? AND status = ?", row.ID, tenant.MembershipActive).
+				Update("status", tenant.MembershipDisabled).Error; err != nil {
+				return fmt.Errorf("disable tenant memberships: %w", err)
 			}
-			return fmt.Errorf("load tenant for delete: %w", err)
 		}
 
 		archivedCode, err := s.allocateDeletedTenantCode(tx, row.ID)
@@ -756,8 +816,17 @@ func (s *Service) AddMember(tenantID, userID uint64, role string) error {
 	return nil
 }
 
-// RemoveMember removes a user from a tenant
+// RemoveMember removes a user from a tenant.
+//
+// Contract §2.2 requires every non-archived tenant to keep at least one owner.
+// The add path already refuses to demote an owner, so removal is the only way
+// to empty the role; a tenant with no owner can no longer be administered from
+// its own console and can only be repaired by re-provisioning.
 func (s *Service) RemoveMember(tenantID, userID uint64) error {
+	if err := s.ensureNotLastOwner(tenantID, userID); err != nil {
+		return err
+	}
+
 	result := s.db.Where(membershipScope(tenantID, userID)).
 		Delete(&Membership{})
 
@@ -778,6 +847,35 @@ func (s *Service) RemoveMember(tenantID, userID uint64) error {
 			zap.Uint64("tenantId", tenantID), zap.Uint64("userId", userID), zap.Error(err))
 	}
 
+	return nil
+}
+
+// ensureNotLastOwner refuses a removal that would leave the tenant without an
+// active owner. Removing a non-owner, or one of several owners, is unaffected;
+// a missing row falls through to the delete path so it still answers
+// ErrMembershipNotFound once.
+func (s *Service) ensureNotLastOwner(tenantID, userID uint64) error {
+	var member Membership
+	if err := s.db.Model(&Membership{}).
+		Where(membershipScope(tenantID, userID)).
+		Limit(1).First(&member).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil
+		}
+		return fmt.Errorf("check membership before removal: %w", err)
+	}
+	if member.Role != tenant.MembershipRoleOwner || member.Status != tenant.MembershipActive {
+		return nil
+	}
+	var owners int64
+	if err := s.db.Model(&Membership{}).
+		Where("tenant_id = ? AND role = ? AND status = ?", tenantID, tenant.MembershipRoleOwner, tenant.MembershipActive).
+		Count(&owners).Error; err != nil {
+		return fmt.Errorf("count tenant owners: %w", err)
+	}
+	if owners <= 1 {
+		return ErrLastOwner
+	}
 	return nil
 }
 

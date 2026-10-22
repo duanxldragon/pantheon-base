@@ -243,6 +243,25 @@ async function deleteMember(platform, tenantId, userId, operationToken) {
   }
 }
 
+async function archiveTenant(platform, tenantId, operationToken) {
+  const res = await fetch(`${base}/system/tenant/${tenantId}`, {
+    method: 'PUT',
+    headers: {
+      Authorization: `Bearer ${platform.accessToken}`,
+      Cookie: platform.cookie,
+      'X-Requested-With': 'XMLHttpRequest',
+      'X-CSRF-Token': platform.csrfToken,
+      'X-Operation-Token': operationToken,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ status: 'archived' }),
+  });
+  const body = await res.json().catch(() => ({}));
+  if (![200, 404].includes(res.status)) {
+    throw new Error(`archive tenant ${tenantId}: HTTP ${res.status} ${body.message ?? ''}`.trim());
+  }
+}
+
 async function deleteTenant(platform, tenantId, operationToken) {
   const res = await fetch(`${base}/system/tenant/${tenantId}`, {
     method: 'DELETE',
@@ -303,12 +322,16 @@ async function cleanup() {
     } catch (error) {
       console.warn(`t${tenant.id}: dict cleanup skipped (${error.message})`);
     }
-    // DELETE /system/tenant is refused while any active membership remains
-    // (membership is the login gate, contract §2.2), so purge memberships first.
+    // §2.2 refuses to remove the last owner, so a tenant cannot reach "no active
+    // members" by purging memberships alone. §2.1 makes archived the retirement
+    // path, and deleting an archived tenant disables the memberships it still
+    // has. Purge first anyway, so the fixture does not depend on the archived
+    // path for tenants it can clean up directly.
     const operationToken = await getOperationToken(platform);
     for (const member of await listMembers(platform, tenant.id)) {
       await deleteMember(platform, tenant.id, member.user_id, operationToken);
     }
+    await archiveTenant(platform, tenant.id, operationToken);
     await deleteTenant(platform, tenant.id, operationToken);
     console.log(`t${tenant.id}: removed (${tenant.code})`);
   }

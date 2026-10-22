@@ -10,14 +10,14 @@ Pantheon Platform 是一个面向企业后台的模块化单体底座，沉淀�
 
 | 项 | 值 |
 | --- | --- |
-| 当前 foundation release | [`pantheon-base-v0.16.1`](https://github.com/duanxldragon/pantheon-base/releases/tag/pantheon-base-v0.16.1)（含四件可消费产物） |
+| 当前 foundation release | [`pantheon-base-v0.17.1`](https://github.com/duanxldragon/pantheon-base/releases/tag/pantheon-base-v0.17.1)（含四件可消费产物） |
 | Shell/Harness 基线版本 | `1.4.0`（见 [VERSION](./VERSION) / [SHELL_VERSION.json](./SHELL_VERSION.json)） |
 | 部署文档 | [docs/DEPLOYMENT_GUIDE.md](./docs/DEPLOYMENT_GUIDE.md)（MySQL 8、Redis 7、迁移 + runtime seed、健康检查、遥测、备份恢复与 schema-aware 回滚） |
-| 变更记录 | [CHANGELOG.md](./CHANGELOG.md) / [RELEASE_NOTES_v0.16.1.md](./RELEASE_NOTES_v0.16.1.md) |
+| 变更记录 | [CHANGELOG.md](./CHANGELOG.md) / [RELEASE_NOTES_v0.17.1.md](./RELEASE_NOTES_v0.17.1.md) |
 | **任务状态** | [.harness/STATUS.md](./.harness/STATUS.md) — 当前任务状态总览 |
 | **归档记录** | [.harness/ARCHIVE.md](./.harness/ARCHIVE.md) — 已完成任务归档索引 |
 
-交付状态说明：v0.16.1 为 patch 发布，修复主干两条偶发失败的根因并补回发布产物通道，未改动任何消费侧接口。本次新增 `Foundation Release Cut` workflow，由它发布 v0.16.1 的不可变 tag 与含四件可消费产物的 GitHub Release；发布后由 `Foundation Release Verify` 断言产物齐备。v0.14.0/v0.15.0/v0.16.0 均未携带产物、不可被消费，v0.16.1 是 v0.13.0 之后第一个可被 `pantheon-ops` 消费的 release。
+交付状态说明：v0.17.1 是交付收口 patch 发布，tag `pantheon-base-v0.17.1`，四件可消费产物齐备（tgz / tgz.sha256 / repo.tar / repo.tar.sha256）并由 `Foundation Release Verify` 断言。它闭合了 2026-10-22 独立交付验收的三项阻塞（主干 Release Gate 红、整改仅存于未提交工作区、消费侧文档与实现矛盾）与两项租户生命周期缺口（归档租户无法删除、初始化失败残留租户行），同时修正字典页治理栏与其它系统列表的样式不一致。无消费侧接口变更、无新增迁移。上一版 v0.17.0 的产物仍含两份已失效的开发凭证明文，v0.17.1 从脱敏后的主干重建。
 
 ## 项目定位
 

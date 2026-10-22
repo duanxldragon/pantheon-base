@@ -7,7 +7,7 @@ linked_contracts:
   - docs/contracts/PLATFORM_CONTRACT.md
   - docs/contracts/SYSTEM_CONFIG_CONTRACT.md
   - docs/contracts/TENANT_CONTRACT_V1.md
-updated_at: 2026-10-21
+updated_at: 2026-10-22
 ---
 
 # 租户资源 scope 矩阵模板与全局唯一键登记
@@ -19,8 +19,10 @@ English version: [TENANT_RESOURCE_SCOPE_MATRIX.en.md](./TENANT_RESOURCE_SCOPE_MA
 为后续 [租户合同设计](../../.harness/archive/2026-09/tasks/2026-09-10-tenant-contract-design/task.md)
 提供资源分类模板和唯一键登记入口。
 
-> 当前运行态是单租户。本文是治理模板，不是多租户实现承诺；
-> 生成器的 `tenant` 数据范围选项已下线。
+> 运行态是 **compat（默认）与 multi 双模**：compat 下所有行落在 `tenant_id = 0`，multi 下按合同
+> §6 启用租户维度。本文是给已交付的双模模型做资源分类与唯一键登记的治理模板，不是“未来才做多租户”的
+> 承诺；`multi` 是 `compat` 的超集（合同 §6）。生成器的 `tenant` 数据范围选项仍下线。
+> 分类义务与放行面以 [租户合同 V1](../contracts/TENANT_CONTRACT_V1.md) §2.3.1 为准。
 
 ---
 

@@ -6,6 +6,70 @@ Pantheon Base 方法追踪记录。方法论本体位于 `pantheon-harness`。
 
 ---
 
+## [pantheon-base-v0.17.1] — 2026-10-22 (delivery closeout and tenant lifecycle)
+
+> An independent delivery audit of `main 92b94474` returned **FAIL on delivery completeness** —
+> no P0, no functional regression, but three blocking items: `Release Gate` was red on `main`, the
+> remediation lived only in an uncommitted worktree, and the consumer-facing docs contradicted both
+> the code and the published release. This patch closes all three, plus two tenant-lifecycle gaps
+> the audit found independently (an archived tenant could never be deleted, and a failed
+> provisioning stranded its row) and one UI consistency defect on the dictionary page.
+> Evidence: `.harness/evidence/2026-10-22-v0171-release-closeout/`.
+
+### Fixed
+
+- Tenant member removal now refuses to delete the last active owner (contract §2.2), so a tenant
+  can no longer be left without anyone able to administer it; removing a plain member or one of
+  several owners is unchanged.
+- An archived tenant can no longer be written back to active (contract §2.1 declares archived
+  terminal), and a rejected transition no longer applies the other fields of the same request.
+- Deleting an **archived** tenant now succeeds even while it still has active members: the
+  memberships are disabled in the same transaction as the code release and the status change.
+  Before this, §2.1 (archived is the retirement path) and §2.2 (the last owner cannot be removed)
+  deadlocked, so a provisioned tenant could never be deleted through the API. A live tenant with
+  members is still refused with `tenant.has_active_members`.
+- `CreateTenant` now removes the tenant row when provisioning fails. Provisioning already ran in
+  one transaction, but the row it was provisioning survived — holding a UNIQUE `code` and no
+  owner, repairable only by hand. With the compensation the operator's retry is a plain re-create.
+- Reading or updating a user that belongs to another tenant answers `404 user.not_found` instead
+  of `500 user.detail.error` / `500 user.update.error`, matching contract §5 (a foreign id and a
+  missing id are indistinguishable). The write path resolves the row before mutating anything.
+- A reserved role-key conflict (`role.key.reserved`) now reports envelope code `400` instead of
+  `500`, through `common.CodeForError`.
+- The dictionary page's governance bar no longer renders a description line under each metric.
+  Every other system list (`/system/user`, `/system/post`, …) shows only label + value there and
+  keeps the explanation in the governance rail, so the dictionary page was the odd one out and
+  three lines of prose pushed the table down. The three now-unused i18n keys were removed from all
+  five locales.
+- The settings page's governance bar lays its four metrics on one row instead of wrapping to a
+  2×2 block. The default metric grid starts at 120px, which only fits three across, so the fourth
+  dropped to a second row and the bar doubled in height (152px → 82px). The page now gives the
+  metrics column more width and a 96px floor, so it stays on one row down to a 960px viewport and
+  falls back to 2×2 only at the existing ≤920px mobile breakpoint.
+- The migration chain can be rolled back again. `000020_tenant_phase1_core_tables.down.sql` dropped
+  indexes and columns unconditionally, but `000024.down` had already removed several of them, so
+  `migrate down` aborted part-way with `Error 1091: Can't DROP 'tenant_id'; check that column/key
+  exists` and left the schema version dirty. Every destructive step is now guarded on
+  `information_schema`, so the rollback completes and the chain can be re-applied.
+  `TestMigrationChainRollsBackAndReapplies` migrates a throwaway database up → down → up and asserts
+  it returns to the same clean version; the test fails against the previous file.
+
+### Changed
+
+- The eight SonarCloud findings that blocked `Release Gate` on `92b94474` are resolved without
+  suppressions: two duplicate SQL literals in `tenant_provision.go` became named constants, the
+  platform-grant repair was split into collect/delete helpers, `useLayoutMenu` capability filtering
+  was split into pure helpers, three component prop types are `Readonly`, and `isTenantScopedSession`
+  uses optional chaining.
+- `docs/api/TENANT_API.md` now documents the mounted `/api/v1/system/tenant*` surface (platform-only),
+  the envelope codes it actually returns, and points the "my tenants" flow at
+  `/api/v1/auth/tenants/switchable`.
+- `docs/designs/TENANT_RESOURCE_SCOPE_MATRIX.md` (zh/en) no longer claims the runtime is single-tenant;
+  the matrix is marked as the governance template for the delivered compat/multi model.
+- `docs/DEPLOYMENT_GUIDE.md` gained a tenant-mode section (`compat` default, `multi` opt-in, one-way
+  switch, platform subject requirement) and the rollback rehearsal record.
+- README (zh/en) names v0.17.1 as the current foundation release and links its release notes.
+
 ## [pantheon-base-v0.17.0] — 2026-10-21 (tenant isolation remediation)
 
 > A post-acceptance audit found two tenant→platform permission escapes and a permanently red

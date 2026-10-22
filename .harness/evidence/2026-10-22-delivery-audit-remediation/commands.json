@@ -1,0 +1,89 @@
+{
+  "taskId": "2026-10-22-delivery-audit-remediation",
+  "repo": "pantheon-base",
+  "executedAt": "2026-10-22T17:12:00+08:00",
+  "agent": {
+    "tool": "other",
+    "adapter": "software-workshop-agent"
+  },
+  "commands": [
+    {
+      "command": "cd backend && go build ./... && go vet ./... && gofmt -l .",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "Exit 0, no diagnostics, gofmt output empty."
+    },
+    {
+      "command": "cd backend && export PANTHEON_TEST_DSN=<real mysql> PANTHEON_TEST_REDIS_ADDR=127.0.0.1:6379 PANTHEON_TEST_REDIS_PASSWORD=<redacted> PANTHEON_TEST_DSN_REQUIRED=true PANTHEON_TEST_REDIS_REQUIRED=true && go test -count=1 -p 1 ./...",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "Exit 0. 46 packages ok, zero FAIL, zero SKIP. The four IAM packages that carry the remediation carry the weight: iam/tenant 49.7s, iam/user 32.1s, iam/role 29.1s, iam/permission 17.8s. Both required flags were set so a missing dependency would be fatal, not a silent skip."
+    },
+    {
+      "command": "cd backend && go test -count=1 -run 'TestDeleteTenantArchivedWithMembersSucceeds|TestCreateTenantRollsBackWhenProvisioningFails' -v ./modules/system/iam/tenant/",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "TestDeleteTenantArchivedWithMembersSucceeds PASS (0.66s) and TestCreateTenantRollsBackWhenProvisioningFails PASS (0.87s), both against real MySQL. These are the B1 and B2 regressions."
+    },
+    {
+      "command": "cd frontend && npx tsc --noEmit && npx eslint src --max-warnings 0",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "tsc exit 0 with no diagnostics; eslint exit 0 with zero warnings under --max-warnings 0. Covers the SonarCloud-driven TypeScript changes and the dictionary page edit."
+    },
+    {
+      "command": "cd frontend && npx vitest run",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "30 test files / 214 tests passed, including the menu-tree regression tests that cover the useLayoutMenu extraction."
+    },
+    {
+      "command": "cd frontend && npm run prebuild && npx vite build",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "prebuild 13 steps green (menu contract, i18n hardcode, i18n generated scope, datetime presentation, shell visual contract, ui contract, search toolbar, important budget 0/0, system page admission, smoke web base, smoke coverage contract, import path case). vite build exit 0, 1411 modules, built in 1.94s. The two must not run concurrently: prebuild clears node_modules/.vite."
+    },
+    {
+      "command": "node inspect-dict-bar.mjs (Playwright, 1440x1000)",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "Side-by-side render of /system/dict, /system/user, /system/post. .governance-summary-bar__metric-desc count is 0 on all three; /system/dict rendered 3 before the fix. This is the C1 acceptance check."
+    },
+    {
+      "command": "npm run check:docs-frontmatter && npm run check:structure && npm run check:task-packet && npm run check:generated",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Frontmatter 343 docs / 250 with frontmatter; structure strict 0 findings / 2498 files; task packet passes both 2026-10-22 packets; generated 0 findings / 11 artifacts."
+    },
+    {
+      "command": "node scripts/harness/check-duplication.mjs",
+      "cwd": ".",
+      "status": "not-run",
+      "details": "Not executed in this session. The Sonar duplication position was unchanged by the remediation (the extracted constants reduce literal repetition rather than introduce it), and the authoritative duplication measurement is the SonarCloud run in CI. Recorded as a gap rather than claimed."
+    }
+  ],
+  "runtimeSensitive": [
+    "Backend suite needs MySQL 8.0.36 and Redis 7; both *_REQUIRED flags were true so absence fails instead of skipping.",
+    "go test -race is not runnable on this host (MinGW gcc.exe link failure); race coverage is CI-only."
+  ],
+  "runtimeGap": [
+    "SonarCloud's unresolved-issue count can only be produced by CI. Local verification shows the code shape changed, not that the gate is green."
+  ],
+  "knownGaps": [
+    "check:duplication was not run this session.",
+    "TestBatchRevokeSessions_IsTenantScoped flakes under many-package parallelism (shared Redis key space).",
+    "Concurrent CreateTenant for distinct codes is not serialized.",
+    "Browser verification is read-only."
+  ],
+  "linkage": {
+    "assessment": "docs/harness/tasks/2026-10-22-delivery-audit-remediation.task.md",
+    "evidenceDir": ".harness/evidence/2026-10-22-delivery-audit-remediation/",
+    "summaryFile": ".harness/evidence/2026-10-22-delivery-audit-remediation/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-22-delivery-audit-remediation/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/contracts/TENANT_CONTRACT_V1.md",
+      "docs/reviews/PANTHEON_BASE_DELIVERY_REMEDIATION_2026-10-22.md"
+    ]
+  }
+}
