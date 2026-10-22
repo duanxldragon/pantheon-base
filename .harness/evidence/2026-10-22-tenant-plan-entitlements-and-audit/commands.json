@@ -1,7 +1,7 @@
 {
   "taskId": "2026-10-22-tenant-plan-entitlements-and-audit",
   "repo": "pantheon-base",
-  "executedAt": "2026-10-22T13:36:00+08:00",
+  "executedAt": "2026-10-22T14:30:00+08:00",
   "agent": {
     "tool": "other",
     "adapter": "software-workshop-agent"
@@ -18,6 +18,12 @@
       "cwd": "backend",
       "status": "passed",
       "details": "All four touched backend packages passed: login 128.940s, menu 4.217s, tenant 55.603s, role 28.191s. These packages carry the new attribution, menu-filter, provisioning-repair, and role-assignment regression tests."
+    },
+    {
+      "command": "cd backend && set -a; . ../.env.test; set +a; export PANTHEON_TEST_DSN=\"$PANTHEON_DSN&sql_mode=%27ONLY_FULL_GROUP_BY%27\"; export PANTHEON_TEST_DSN_REQUIRED=true; go test -count=1 ./modules/system/iam/menu/",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "Reproduces the hosted MySQL 8 default sql_mode. The first hosted Unit Tests leg failed with Error 3065 on loadAllowedNavigationMenuIDs (SELECT DISTINCT id ORDER BY sort). The caller only builds a set and the navigation tree is ordered from the sorted menu list, so the ORDER BY was removed; the full menu package passes with ONLY_FULL_GROUP_BY enforced."
     },
     {
       "command": "cd frontend && node ./node_modules/vitest/vitest.mjs run",
@@ -81,7 +87,7 @@
     }
   ],
   "notVerified": [
-    "Hosted CI for this change has not run yet; the local -race result is not a substitute for the parallel hosted legs.",
+    "The first hosted CI run exposed a MySQL 8 ONLY_FULL_GROUP_BY failure in the new tenant navigation test; the fix was reproduced and verified locally under that sql_mode. The hosted rerun is the remaining signal for the parallel legs.",
     "The plan gate is UX-only. API-level plan enforcement was not implemented or verified because it is outside the requested scope and would change the authorization model.",
     "No production database was modified. The startup repair path was exercised through provisioning tests, not by running the server against production data."
   ]

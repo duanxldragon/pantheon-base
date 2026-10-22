@@ -97,6 +97,7 @@
 |---|---|
 | `cd backend && PATH="/d/msys64/mingw64/bin:/d/nodejs:$PATH" CGO_ENABLED=1 CC='D:\msys64\mingw64\bin\gcc.exe' go test -race -p 1 -count=1 ./...`（`.env.test` 注入 MySQL/Redis，`PANTHEON_TEST_DSN` 指向真实库） | exit 0；46 个包 ok；无 FAIL、无 data race |
 | `cd frontend && node ./node_modules/vitest/vitest.mjs run` | 30 文件 / 214 用例通过（含本轮新增 6 个套餐单测、2 个菜单回归、1 个 widget 门禁用例、3 个会话 store 用例、2 个标签可达性用例） |
+| `cd backend && go test -count=1 ./modules/system/iam/menu/`（DSN 追加 `sql_mode=ONLY_FULL_GROUP_BY`） | 复现 hosted MySQL 8 默认严格模式；整包通过 |
 | `cd frontend && node ./node_modules/typescript/bin/tsc -b` | exit 0 |
 | `cd frontend && node ./node_modules/eslint/bin/eslint.js .` | exit 0 |
 | `cd frontend && npm run build` | prebuild 13 步（Arco patch + 12 项 contract）+ Vite build 通过 |
@@ -137,6 +138,9 @@ Chromium headless（Playwright 1440×900）。脚本 `acceptance.mjs`、`tenant-
   `cc1.exe` 会静默失败。上述命令显式指定 PATH 与 `CC`，不是默认 shell 可直接复现的。
 - 全量 `-race` 并行运行曾出现 Redis 状态竞争与 generator 环境变量相关的假失败；本轮采用 `-p 1`
   串行运行，结果为 0 FAIL。CI 的并行 `-race` leg 仍以 hosted 结果为准。
+- hosted 首轮 Unit Tests 暴露了新增租户导航用例触发的 MySQL 8 `ONLY_FULL_GROUP_BY` 兼容问题：
+  `DISTINCT system_menu.id ... ORDER BY system_menu.sort` 返回 Error 3065。该排序只用于填充随后被
+  转成集合的 ID 列表，已移除；本地以相同 `sql_mode` 复跑 menu 整包通过，hosted 复跑结论为准。
 - 浏览器验收使用 Playwright（Node）直接驱动；本会话的 browser-use MCP 快照工具被策略拦截，
   因此交互证据来自 Playwright 脚本与截图，不是 MCP 记录。四套餐验收与标签探针均在登录边界
   重置、标签可达性修复之后重跑，已无“改动晚于浏览器验收”的 gap。

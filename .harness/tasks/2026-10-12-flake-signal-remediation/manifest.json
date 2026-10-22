@@ -3,7 +3,7 @@
   "title": "Remove two recurring main-branch flakes: the data-scope cache identity leak and the sidebar collapse measurement race",
   "goal": "Two flake mechanisms repeatedly turned main-branch gate signal red or needed a rerun. (1) The data scope middleware keys its process-local table-existence and user-dept caches by the *sql.DB pointer address. Per-test databases are dropped in t.Cleanup, so the Go runtime recycles the address and a brand-new test database inherits the previous one's cached 'system_role_data_scope exists' verdict; MigrateDataScopePolicy then skips its CREATE TABLE and the next INSERT fails with Error 1146. (2) platform-shell-critical.spec.ts:60 read the sidebar boundingBox immediately after clicking the collapse toggle, sampling a mid-transition width (248 vs 248 on the first attempt, 215.5625 vs 108.265625 on the retry) of Arco's 200ms Sider width transition. Fix both races at the root instead of relaxing assertions: key caches by logical database identity, and settle layout/animation before measuring.",
   "primaryLayer": "platform",
-  "status": "in-progress",
+  "status": "completed",
   "priority": "P1",
   "type": "fix",
   "estimatedComplexity": "medium",

@@ -35,6 +35,7 @@
 - Frontend regression tests added: plan registry semantics (6), menu group pruning and entitlement filtering (2), dashboard widget feature gating (1), tenant session store dedupe/reset/scope (3), opened-tab accessibility filtering (2).
 - Full suite: backend `-race -p 1` on real MySQL/Redis exit 0 (46 packages); frontend 30 files / 214 tests, tsc, ESLint, 13 contracts, Vite build all pass.
 - The four-plan Playwright acceptance and the tab probe were rerun after the final login-boundary reset and tab-accessibility changes; no evidence predates the code under review.
+- A hosted-only MySQL 8 failure surfaced in the new tenant navigation test: `loadAllowedNavigationMenuIDs` used `DISTINCT id ... ORDER BY sort`, which MySQL rejects under `ONLY_FULL_GROUP_BY` (error 3065). The order was never consumed (the caller builds a set and the tree preserves menu-list order), so it was removed; the full menu package passes locally with that `sql_mode` enforced.
 - Risk considered and rejected: sharing the tenant session store changes `usePlatformScope` from local state to a global store. The store deduplicates in-flight requests and resets on logout and now at the login boundary (`Login.tsx:248`), so a re-login cannot inherit the previous subject's plan or viewpoint; no consumer writes plan data. The platform-scope classification is unchanged (`tenantId === 0 || resolvedBy platform-fallback/header`).
 
 ## 5. Residual findings
