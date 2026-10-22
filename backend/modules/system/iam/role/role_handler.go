@@ -48,7 +48,10 @@ func roleErrorResponse(c *gin.Context, err error) {
 		common.Fail(c, common.CodeNotFound, errRoleNotFound)
 		return
 	}
-	common.FailWithError(c, common.CodeError, err, errRequestFailed)
+	// A rejected role key is the caller's input to fix, not a server fault:
+	// CodeForError maps ErrConflict/ErrBadRequest to the parameter-invalid code so
+	// the console can surface the message instead of a generic 500.
+	common.FailWithError(c, common.CodeForError(err), err, errRequestFailed)
 }
 
 // GetRoleList 获取角色列表。

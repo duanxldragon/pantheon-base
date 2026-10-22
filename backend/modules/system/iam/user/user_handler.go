@@ -150,7 +150,9 @@ func (h *UserHandler) GetUserDetail(c *gin.Context) {
 
 	detail, err := h.svc(c).GetUserDetail(userID)
 	if err != nil {
-		common.Fail(c, common.CodeError, "user.detail.error")
+		// CodeForError keeps a missing/foreign user at 404 while every other
+		// cause stays a server fault (contract §5: do not distinguish the two).
+		common.FailWithError(c, common.CodeForError(err), err, "user.detail.error")
 		return
 	}
 	common.Success(c, detail)
@@ -190,7 +192,7 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 
 	user, err := h.svc(c).UpdateUser(userID, &req)
 	if err != nil {
-		common.Fail(c, common.CodeError, "user.update.error")
+		common.FailWithError(c, common.CodeForError(err), err, "user.update.error")
 		return
 	}
 	common.Success(c, user)

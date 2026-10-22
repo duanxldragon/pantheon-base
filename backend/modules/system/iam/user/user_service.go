@@ -1,6 +1,7 @@
 package user
 
 import (
+	"errors"
 	"strings"
 	"time"
 
@@ -315,15 +316,32 @@ func (s *UserService) ListUsers(query *UserListQuery, dataScope *common.DataScop
 }
 
 // GetUserDetail 获取用户详情。
+// loadTenantUser resolves one user inside the service's tenant scope.
+//
+// A user owned by another tenant is indistinguishable from a missing one by
+// design (contract §5): both answer the same not-found sentinel, so a guessed
+// id cannot be used to probe another tenant's population.
+func (s *UserService) loadTenantUser(userID uint64) (*SystemUser, error) {
+	var user SystemUser
+	if err := s.scoped(s.db).First(&user, userID).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, common.NewNotFound("user.not_found")
+		}
+		return nil, err
+	}
+	return &user, nil
+}
+
 func (s *UserService) GetUserDetail(userID uint64) (*UserDetailResp, error) {
 	if s.db == nil {
 		return nil, common.ErrDatabaseNotInitialized
 	}
 
-	var user SystemUser
-	if err := s.scoped(s.db).First(&user, userID).Error; err != nil {
+	loaded, err := s.loadTenantUser(userID)
+	if err != nil {
 		return nil, err
 	}
+	user := *loaded
 
 	roleIDsMap, roleKeysMap, roleNamesMap, err := s.loadUserRoles([]uint64{user.ID})
 	if err != nil {
@@ -443,10 +461,11 @@ func (s *UserService) UpdateUser(userID uint64, req *UserUpdateReq) (*UserListRe
 		return nil, common.ErrDatabaseNotInitialized
 	}
 
-	var user SystemUser
-	if err := s.scoped(s.db).First(&user, userID).Error; err != nil {
+	loaded, err := s.loadTenantUser(userID)
+	if err != nil {
 		return nil, err
 	}
+	user := *loaded
 	if err := s.validateUserUpdate(&user, req); err != nil {
 		return nil, err
 	}
@@ -501,10 +520,11 @@ func shouldRevokeUpdatedUserAccess(previousStatus, requestedStatus int) bool {
 }
 
 func (s *UserService) loadUpdatedUserResponse(userID uint64) (*UserListResp, error) {
-	var user SystemUser
-	if err := s.scoped(s.db).First(&user, userID).Error; err != nil {
+	loaded, err := s.loadTenantUser(userID)
+	if err != nil {
 		return nil, err
 	}
+	user := *loaded
 	roleIDMap, roleKeysMap, roleNamesMap, err := s.loadUserRoles([]uint64{user.ID})
 	if err != nil {
 		return nil, err

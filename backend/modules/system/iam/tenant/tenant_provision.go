@@ -28,6 +28,16 @@ const (
 	TenantRoleMemberKey = tenantctx.TenantRoleMemberKey
 )
 
+const (
+	// sqlSelectMenuIdentity is the menu projection both the provisioning and the
+	// repair paths classify on (module + path). One literal keeps the two
+	// queries from drifting apart when a column is added.
+	sqlSelectMenuIdentity = "id, module, path"
+	// condTenantScopedRow restricts a repair statement to tenant-owned rows. The
+	// platform namespace (tenant_id = 0) is never touched by the repair.
+	condTenantScopedRow = "tenant_id <> ?"
+)
+
 // tenantRoleDefinition describes one provisioned tenant role.
 type tenantRoleDefinition struct {
 	Key     string
@@ -262,7 +272,7 @@ func provisionTenantRoleMenus(tx *gorm.DB, tenantID uint64, roleIDs map[string]u
 	}
 	var menus []menuRow
 	if err := tx.Table("system_menu").
-		Select("id, module, path").
+		Select(sqlSelectMenuIdentity).
 		Where("is_visible = ? AND type <> ?", 1, "F").
 		Order("sort asc, id asc").
 		Scan(&menus).Error; err != nil {
@@ -507,7 +517,7 @@ func readPlatformAdminBindings(tx *gorm.DB, platformRoleID uint64) ([]string, []
 	}
 	var menus []menuRow
 	if err := tx.Table("system_menu").
-		Select("id, module, path").
+		Select(sqlSelectMenuIdentity).
 		Where("id IN ?", menuIDs).
 		Scan(&menus).Error; err != nil {
 		return nil, nil, fmt.Errorf("read platform admin menu rows: %w", err)
@@ -556,14 +566,33 @@ func repairTenantPlatformGrants(tx *gorm.DB, tenantID uint64) error {
 		return nil
 	}
 
+	platformMenuIDs, err := collectPlatformOnlyMenuIDs(tx)
+	if err != nil {
+		return err
+	}
+	if err := deleteTenantMenuGrants(tx, tenantID, platformMenuIDs); err != nil {
+		return err
+	}
+
+	platformKeys, err := collectTenantPlatformPermissionKeys(tx)
+	if err != nil {
+		return err
+	}
+	return deleteTenantPermissionGrants(tx, tenantID, platformKeys)
+}
+
+// collectPlatformOnlyMenuIDs resolves every menu row that belongs to a
+// platform-only surface, including the button rows that hang under such a page
+// (they carry no path of their own, so they are matched by parent).
+func collectPlatformOnlyMenuIDs(tx *gorm.DB) ([]uint64, error) {
 	type menuRow struct {
 		ID     uint64 `gorm:"column:id"`
 		Module string `gorm:"column:module"`
 		Path   string `gorm:"column:path"`
 	}
 	var menus []menuRow
-	if err := tx.Table("system_menu").Select("id, module, path").Scan(&menus).Error; err != nil {
-		return fmt.Errorf("repair tenant platform grants: list menus: %w", err)
+	if err := tx.Table("system_menu").Select(sqlSelectMenuIdentity).Scan(&menus).Error; err != nil {
+		return nil, fmt.Errorf("repair tenant platform grants: list menus: %w", err)
 	}
 	platformMenuIDs := make([]uint64, 0)
 	for _, menu := range menus {
@@ -571,54 +600,70 @@ func repairTenantPlatformGrants(tx *gorm.DB, tenantID uint64) error {
 			platformMenuIDs = append(platformMenuIDs, menu.ID)
 		}
 	}
-	// Button rows under a platform-only page belong to that page's surface even
-	// though they carry no path of their own.
-	if len(platformMenuIDs) > 0 {
-		var childIDs []uint64
-		if err := tx.Table("system_menu").
-			Select("id").
-			Where("parent_id IN ?", platformMenuIDs).
-			Pluck("id", &childIDs).Error; err != nil {
-			return fmt.Errorf("repair tenant platform grants: list platform button rows: %w", err)
-		}
-		platformMenuIDs = append(platformMenuIDs, childIDs...)
+	if len(platformMenuIDs) == 0 {
+		return platformMenuIDs, nil
 	}
-
-	if len(platformMenuIDs) > 0 {
-		menuGrants := tx.Table("system_role_menu").
-			Where("tenant_id <> ?", tenantctx.PlatformGlobalTenantID).
-			Where("menu_id IN ?", platformMenuIDs)
-		if tenantID != 0 {
-			menuGrants = menuGrants.Where("tenant_id = ?", tenantID)
-		}
-		if err := menuGrants.Delete(nil).Error; err != nil {
-			return fmt.Errorf("repair tenant platform grants: delete menu grants: %w", err)
-		}
+	var childIDs []uint64
+	if err := tx.Table("system_menu").
+		Select("id").
+		Where("parent_id IN ?", platformMenuIDs).
+		Pluck("id", &childIDs).Error; err != nil {
+		return nil, fmt.Errorf("repair tenant platform grants: list platform button rows: %w", err)
 	}
+	return append(platformMenuIDs, childIDs...), nil
+}
 
+// deleteTenantMenuGrants removes the menu grants that point at a platform-only
+// surface, inside one tenant namespace or every tenant namespace (tenantID 0).
+func deleteTenantMenuGrants(tx *gorm.DB, tenantID uint64, menuIDs []uint64) error {
+	if len(menuIDs) == 0 {
+		return nil
+	}
+	menuGrants := tx.Table("system_role_menu").
+		Where(condTenantScopedRow, tenantctx.PlatformGlobalTenantID).
+		Where("menu_id IN ?", menuIDs)
+	if tenantID != 0 {
+		menuGrants = menuGrants.Where("tenant_id = ?", tenantID)
+	}
+	if err := menuGrants.Delete(nil).Error; err != nil {
+		return fmt.Errorf("repair tenant platform grants: delete menu grants: %w", err)
+	}
+	return nil
+}
+
+// collectTenantPlatformPermissionKeys lists the permission keys stored under a
+// tenant namespace that only a platform-capable subject may hold.
+func collectTenantPlatformPermissionKeys(tx *gorm.DB) ([]string, error) {
 	var tenantKeys []string
 	if err := tx.Table("system_role_permission").
 		Distinct("permission_key").
-		Where("tenant_id <> ?", tenantctx.PlatformGlobalTenantID).
+		Where(condTenantScopedRow, tenantctx.PlatformGlobalTenantID).
 		Pluck("permission_key", &tenantKeys).Error; err != nil {
-		return fmt.Errorf("repair tenant platform grants: list permission keys: %w", err)
+		return nil, fmt.Errorf("repair tenant platform grants: list permission keys: %w", err)
 	}
-	platformKeys := make([]string, 0)
+	platformKeys := make([]string, 0, len(tenantKeys))
 	for _, key := range tenantKeys {
 		if tenantctx.IsPlatformOnlyPermissionKey(key) {
 			platformKeys = append(platformKeys, key)
 		}
 	}
-	if len(platformKeys) > 0 {
-		permissionGrants := tx.Table("system_role_permission").
-			Where("tenant_id <> ?", tenantctx.PlatformGlobalTenantID).
-			Where("permission_key IN ?", platformKeys)
-		if tenantID != 0 {
-			permissionGrants = permissionGrants.Where("tenant_id = ?", tenantID)
-		}
-		if err := permissionGrants.Delete(nil).Error; err != nil {
-			return fmt.Errorf("repair tenant platform grants: delete permission grants: %w", err)
-		}
+	return platformKeys, nil
+}
+
+// deleteTenantPermissionGrants removes the platform-only permission grants from
+// one tenant namespace or every tenant namespace (tenantID 0).
+func deleteTenantPermissionGrants(tx *gorm.DB, tenantID uint64, keys []string) error {
+	if len(keys) == 0 {
+		return nil
+	}
+	permissionGrants := tx.Table("system_role_permission").
+		Where(condTenantScopedRow, tenantctx.PlatformGlobalTenantID).
+		Where("permission_key IN ?", keys)
+	if tenantID != 0 {
+		permissionGrants = permissionGrants.Where("tenant_id = ?", tenantID)
+	}
+	if err := permissionGrants.Delete(nil).Error; err != nil {
+		return fmt.Errorf("repair tenant platform grants: delete permission grants: %w", err)
 	}
 	return nil
 }
