@@ -1,0 +1,204 @@
+{
+  "results": [
+    {
+      "route": "/dashboard",
+      "url": "http://127.0.0.1:5173/dashboard",
+      "title": "Pantheon Base",
+      "headings": [],
+      "tableRows": 6,
+      "textLength": 1299,
+      "snippet": "P | Pantheon Base | 工作台 | 访问控制 | 组织架构 | 安全审计 | 低代码平台 | 平台配置 | 首页 | 工作台 | 搜索菜单、页面、功能… | Ctrl K | 平台全局 | 0 | A | admin | 工作台 | 平台状态 | 工作台 | 用户数 | 启用用户: 2 | 2 | 已纳入平台身份体系的账号总量 | 菜单数 | 平台概览 | 22 | 当前可见导航规模与信息架构密度 | 活跃会话 | 安全态势 | 1 | 当前仍有效的登录会话数",
+      "newConsoleErrors": 0,
+      "screenshot": "screens/_dashboard.png"
+    },
+    {
+      "route": "/system/tenant",
+      "url": "http://127.0.0.1:5173/system/tenant",
+      "title": "Pantheon Base",
+      "headings": [],
+      "tableRows": 8,
+      "textLength": 912,
+      "snippet": "P | Pantheon Base | 工作台 | 访问控制 | 用户管理 | 角色管理 | 权限管理 | 租户管理 | 菜单管理 | 组织架构 | 安全审计 | 低代码平台 | 平台配置 | 首页 | 访问控制 | 租户管理 | 搜索菜单、页面、功能… | Ctrl K | 平台全局 | 0 | A | admin | 工作台 | 租户管理 | 平台管理 / 租户治理 | 管理平台租户与成员 | 租户总数 | 8 | 启用中 | 3 | 已停用 | 0 | 已归档 | 5 | 租户概览 | 按",
+      "newConsoleErrors": 0,
+      "screenshot": "screens/_system_tenant.png"
+    },
+    {
+      "route": "/system/user",
+      "url": "http://127.0.0.1:5173/system/user",
+      "title": "Pantheon Base",
+      "headings": [],
+      "tableRows": 2,
+      "textLength": 467,
+      "snippet": "P | Pantheon Base | 工作台 | 访问控制 | 用户管理 | 角色管理 | 权限管理 | 租户管理 | 菜单管理 | 组织架构 | 安全审计 | 低代码平台 | 平台配置 | 首页 | 访问控制 | 用户管理 | 搜索菜单、页面、功能… | Ctrl K | 平台全局 | 0 | A | admin | 工作台 | 租户管理 | 用户管理 | 系统域 / IAM 用户治理 | 围绕账号、角色与组织归属完成统一用户治理 | 用户管理 | 2 | 启用 | 2 | ",
+      "newConsoleErrors": 0,
+      "screenshot": "screens/_system_user.png"
+    },
+    {
+      "route": "/system/role",
+      "url": "http://127.0.0.1:5173/system/role",
+      "title": "Pantheon Base",
+      "headings": [],
+      "tableRows": 2,
+      "textLength": 402,
+      "snippet": "P | Pantheon Base | 工作台 | 访问控制 | 用户管理 | 角色管理 | 权限管理 | 租户管理 | 菜单管理 | 组织架构 | 安全审计 | 低代码平台 | 平台配置 | 首页 | 访问控制 | 角色管理 | 搜索菜单、页面、功能… | Ctrl K | 平台全局 | 0 | A | admin | 工作台 | 租户管理 | 用户管理 | 角色管理 | 系统域 / IAM 角色治理 | 围绕导航、页面与动作三层完成角色授权治理 | 总数 | 2 | 启用",
+      "newConsoleErrors": 0,
+      "screenshot": "screens/_system_role.png"
+    },
+    {
+      "route": "/system/permission",
+      "url": "http://127.0.0.1:5173/system/permission",
+      "title": "Pantheon Base",
+      "headings": [],
+      "tableRows": 10,
+      "textLength": 977,
+      "snippet": "P | Pantheon Base | 工作台 | 访问控制 | 用户管理 | 角色管理 | 权限管理 | 租户管理 | 菜单管理 | 组织架构 | 安全审计 | 低代码平台 | 平台配置 | 首页 | 访问控制 | 权限管理 | 搜索菜单、页面、功能… | Ctrl K | 平台全局 | 0 | A | admin | 工作台 | 租户管理 | 用户管理 | 角色管理 | 权限管理 | 系统域 / IAM 权限工作台 | 把角色授权盘面与接口访问策略收口到同一条权限",
+      "newConsoleErrors": 0,
+      "screenshot": "screens/_system_permission.png"
+    },
+    {
+      "route": "/system/menu",
+      "url": "http://127.0.0.1:5173/system/menu",
+      "title": "Pantheon Base",
+      "headings": [],
+      "tableRows": 6,
+      "textLength": 733,
+      "snippet": "P | Pantheon Base | 工作台 | 访问控制 | 用户管理 | 角色管理 | 权限管理 | 租户管理 | 菜单管理 | 组织架构 | 安全审计 | 低代码平台 | 平台配置 | 首页 | 访问控制 | 菜单管理 | 搜索菜单、页面、功能… | Ctrl K | 平台全局 | 0 | A | admin | 工作台 | 租户管理 | 用户管理 | 角色管理 | 权限管理 | 菜单管理 | 系统域 / IAM 菜单治理 | 统一维护导航结构、路由元数据与可见性",
+      "newConsoleErrors": 0,
+      "screenshot": "screens/_system_menu.png"
+    },
+    {
+      "route": "/system/dept",
+      "url": "http://127.0.0.1:5173/system/dept",
+      "title": "Pantheon Base",
+      "headings": [],
+      "tableRows": 2,
+      "textLength": 450,
+      "snippet": "P | Pantheon Base | 工作台 | 访问控制 | 组织架构 | 部门管理 | 岗位管理 | 安全审计 | 低代码平台 | 平台配置 | 首页 | 组织架构 | 部门管理 | 搜索菜单、页面、功能… | Ctrl K | 平台全局 | 0 | A | admin | 工作台 | 租户管理 | 用户管理 | 角色管理 | 权限管理 | 菜单管理 | 部门管理 | 系统域 / 组织治理 | 围绕负责人补齐与组织问题推进部门治理 | 部门总数 | 2 | 缺负责人部门",
+      "newConsoleErrors": 0,
+      "screenshot": "screens/_system_dept.png"
+    },
+    {
+      "route": "/system/post",
+      "url": "http://127.0.0.1:5173/system/post",
+      "title": "Pantheon Base",
+      "headings": [],
+      "tableRows": 1,
+      "textLength": 410,
+      "snippet": "P | Pantheon Base | 工作台 | 访问控制 | 组织架构 | 部门管理 | 岗位管理 | 安全审计 | 低代码平台 | 平台配置 | 首页 | 组织架构 | 岗位管理 | 搜索菜单、页面、功能… | Ctrl K | 平台全局 | 0 | A | admin | 工作台 | 租户管理 | 用户管理 | 角色管理 | 权限管理 | 菜单管理 | 部门管理 | 岗位管理 | 系统域 / 组织治理 | 把岗位状态、在用约束与整改动作收口到同一治理工作台 | 总",
+      "newConsoleErrors": 0,
+      "screenshot": "screens/_system_post.png"
+    },
+    {
+      "route": "/system/dict",
+      "url": "http://127.0.0.1:5173/system/dict",
+      "title": "Pantheon Base",
+      "headings": [],
+      "tableRows": 2,
+      "textLength": 523,
+      "snippet": "P | Pantheon Base | 工作台 | 访问控制 | 组织架构 | 安全审计 | 低代码平台 | 平台配置 | 字典管理 | 系统设置 | 国际化管理 | 首页 | 平台配置 | 字典管理 | 搜索菜单、页面、功能… | Ctrl K | 平台全局 | 0 | A | admin | 工作台 | 用户管理 | 角色管理 | 权限管理 | 菜单管理 | 部门管理 | 岗位管理 | 字典管理 | 系统域 / 配置治理 | 在统一工作台里治理字典类型、字典项与运行时",
+      "newConsoleErrors": 0,
+      "screenshot": "screens/_system_dict.png"
+    },
+    {
+      "route": "/system/setting",
+      "url": "http://127.0.0.1:5173/system/setting",
+      "title": "Pantheon Base",
+      "headings": [],
+      "tableRows": 0,
+      "textLength": 757,
+      "snippet": "P | Pantheon Base | 工作台 | 访问控制 | 组织架构 | 安全审计 | 低代码平台 | 平台配置 | 字典管理 | 系统设置 | 国际化管理 | 首页 | 平台配置 | 系统设置 | 搜索菜单、页面、功能… | Ctrl K | 平台全局 | 0 | A | admin | 工作台 | 角色管理 | 权限管理 | 菜单管理 | 部门管理 | 岗位管理 | 字典管理 | 系统设置 | 系统域 / 配置治理 | 在统一模板里管理平台参数、默认偏好与运行风",
+      "newConsoleErrors": 0,
+      "screenshot": "screens/_system_setting.png"
+    },
+    {
+      "route": "/system/i18n",
+      "url": "http://127.0.0.1:5173/system/i18n",
+      "title": "Pantheon Base",
+      "headings": [],
+      "tableRows": 10,
+      "textLength": 1049,
+      "snippet": "P | Pantheon Base | 工作台 | 访问控制 | 组织架构 | 安全审计 | 低代码平台 | 平台配置 | 字典管理 | 系统设置 | 国际化管理 | 首页 | 平台配置 | 国际化管理 | 搜索菜单、页面、功能… | Ctrl K | 平台全局 | 0 | A | admin | 工作台 | 权限管理 | 菜单管理 | 部门管理 | 岗位管理 | 字典管理 | 系统设置 | 国际化管理 | 系统域 / 配置治理国际化 | 统一治理翻译记录、唯一词条与国际",
+      "newConsoleErrors": 0,
+      "screenshot": "screens/_system_i18n.png"
+    },
+    {
+      "route": "/system/session",
+      "url": "http://127.0.0.1:5173/system/session",
+      "title": "Pantheon Base",
+      "headings": [],
+      "tableRows": 10,
+      "textLength": 1547,
+      "snippet": "P | Pantheon Base | 工作台 | 访问控制 | 组织架构 | 安全审计 | 登录日志 | 会话管理 | 操作日志 | 安全事件 | 低代码平台 | 平台配置 | 首页 | 安全审计 | 会话管理 | 搜索菜单、页面、功能… | Ctrl K | 平台全局 | 0 | A | admin | 工作台 | 菜单管理 | 部门管理 | 岗位管理 | 字典管理 | 系统设置 | 国际化管理 | 会话管理 | 系统域 / 安全审计会话 | 在统一治理页中查看在线会话、",
+      "newConsoleErrors": 0,
+      "screenshot": "screens/_system_session.png"
+    },
+    {
+      "route": "/system/login-log",
+      "url": "http://127.0.0.1:5173/system/login-log",
+      "title": "Pantheon Base",
+      "headings": [],
+      "tableRows": 10,
+      "textLength": 1150,
+      "snippet": "P | Pantheon Base | 工作台 | 访问控制 | 组织架构 | 安全审计 | 登录日志 | 会话管理 | 操作日志 | 安全事件 | 低代码平台 | 平台配置 | 首页 | 安全审计 | 登录日志 | 搜索菜单、页面、功能… | Ctrl K | 平台全局 | 0 | A | admin | 工作台 | 部门管理 | 岗位管理 | 字典管理 | 系统设置 | 国际化管理 | 会话管理 | 登录日志 | 系统域 / 安全审计登录 | 统一追踪管理员登录结果、来源",
+      "newConsoleErrors": 0,
+      "screenshot": "screens/_system_login-log.png"
+    },
+    {
+      "route": "/system/security-event",
+      "url": "http://127.0.0.1:5173/system/security-event",
+      "title": "Pantheon Base",
+      "headings": [],
+      "tableRows": 10,
+      "textLength": 1511,
+      "snippet": "P | Pantheon Base | 工作台 | 访问控制 | 组织架构 | 安全审计 | 登录日志 | 会话管理 | 操作日志 | 安全事件 | 低代码平台 | 平台配置 | 首页 | 安全审计 | 安全事件 | 搜索菜单、页面、功能… | Ctrl K | 平台全局 | 0 | A | admin | 工作台 | 岗位管理 | 字典管理 | 系统设置 | 国际化管理 | 会话管理 | 登录日志 | 安全事件 | 系统域 / 认证风险事件 | 围绕风险事件确认、来源锁定与",
+      "newConsoleErrors": 0,
+      "screenshot": "screens/_system_security-event.png"
+    },
+    {
+      "route": "/system/operation-log",
+      "url": "http://127.0.0.1:5173/system/operation-log",
+      "title": "Pantheon Base",
+      "headings": [],
+      "tableRows": 10,
+      "textLength": 1179,
+      "snippet": "P | Pantheon Base | 工作台 | 访问控制 | 组织架构 | 安全审计 | 登录日志 | 会话管理 | 操作日志 | 安全事件 | 低代码平台 | 平台配置 | 首页 | 安全审计 | 操作日志 | 搜索菜单、页面、功能… | Ctrl K | 平台全局 | 0 | A | admin | 工作台 | 字典管理 | 系统设置 | 国际化管理 | 会话管理 | 登录日志 | 安全事件 | 操作日志 | 系统域 / 统一审计 | 围绕关键操作、失败分类与来源域完",
+      "newConsoleErrors": 0,
+      "screenshot": "screens/_system_operation-log.png"
+    },
+    {
+      "route": "/system/modules",
+      "url": "http://127.0.0.1:5173/system/modules",
+      "title": "Pantheon Base",
+      "headings": [],
+      "tableRows": 8,
+      "textLength": 973,
+      "snippet": "P | Pantheon Base | 工作台 | 访问控制 | 组织架构 | 安全审计 | 低代码平台 | 模块管理 | 模块生成器 | 平台配置 | 首页 | 低代码平台 | 模块管理 | 搜索菜单、页面、功能… | Ctrl K | 平台全局 | 0 | A | admin | 工作台 | 系统设置 | 国际化管理 | 会话管理 | 登录日志 | 安全事件 | 操作日志 | 模块管理 | 系统域 / 低代码 | 模块注册表 | 模块总数 | 8 | 已接入 | 8 | 待激活 | 0 | ",
+      "newConsoleErrors": 0,
+      "screenshot": "screens/_system_modules.png"
+    },
+    {
+      "route": "/system/generator",
+      "url": "http://127.0.0.1:5173/system/generator",
+      "title": "Pantheon Base",
+      "headings": [],
+      "tableRows": 0,
+      "textLength": 1190,
+      "snippet": "P | Pantheon Base | 工作台 | 访问控制 | 组织架构 | 安全审计 | 低代码平台 | 模块管理 | 模块生成器 | 平台配置 | 首页 | 低代码平台 | 模块生成器 | 搜索菜单、页面、功能… | Ctrl K | 平台全局 | 0 | A | admin | 工作台 | 国际化管理 | 会话管理 | 登录日志 | 安全事件 | 操作日志 | 模块管理 | 模块生成器 | 系统域 / 低代码 | 在受控治理约束内生成业务模块脚手架 | 步骤 | 1/",
+      "newConsoleErrors": 0,
+      "screenshot": "screens/_system_generator.png"
+    },
+    {
+      "route": "/auth/security",
+      "url": "http://127.0.0.1:5173/auth/security",
+      "title": "Pantheon Base",
+      "headings": [],
+      "tableRows": 11,
+      "textLength": 2328,
+      "snippet": "P | Pantheon Base | 工作台 | 访问控制 | 组织架构 | 安全审计 | 低代码平台 | 平台配置 | 首页 | 安全中心 | 搜索菜单、页面、功能… | Ctrl K | 平台全局 | 0 | A | admin | 工作台 | 会话管理 | 登录日志 | 安全事件 | 操作日志 | 模块管理 | 模块生成器 | 安全中心 | 系统域 / 认证安全 | 统一处理当前账号的密码、设备与登录风险 | 活跃会话数 | 1 | 当前列表用于查看设备活跃状",
+      "newConsoleErrors": 0,
+      "screenshot": "screens/_auth_security.png"
+    }
+  ],
+  "consoleErrors": [],
+  "failedRequests": []
+}

@@ -6,7 +6,7 @@ status: Active
 linked_contracts:
   - docs/contracts/TENANT_CONTRACT_V1.md
   - docs/contracts/PLATFORM_CONTRACT.md
-updated_at: 2026-10-21
+updated_at: 2026-10-22
 ---
 
 # Pantheon Base 阶段性验收测试与验证记录（2026-10-21）
@@ -188,3 +188,15 @@ $ node scripts/frontmatter-check.mjs
 Frontmatter check passed. Checked 335 docs, 242 with frontmatter.   # exit 0
 ```
 本次同步修正：`RELEASE_NOTES_v0.17.0.md`（双根因叙述+验收整改节+验证边界）、`CHANGELOG.md`（同）、`docs/TENANT_SCOPE_FREEZE_DECISION_2026-10-15.md`（状态→已批准+指向）、`docs/designs/TENANT_RESOURCE_SCOPE_MATRIX.md`（menu tenant_id 占位列澄清、平台能力门、字典改 tenant-replicated、updated_at 2026-10-21）。
+
+## 6. 2026-10-22 浏览器级验收与 skip 审计（追加）
+
+§4.3 的两条前端层 gap 已在本机全栈补齐：
+
+- **环境**：原生 MySQL 8（3306）+ Redis 7（6379，均为轮换后口令）、`go run ./cmd/server`（8080）、Vite dev server（5173）、Playwright Chromium 1440×900。
+- **路由巡检**：18 条（Dashboard、租户/用户/角色/权限/菜单、部门/岗位/字典/设置、i18n、会话/登录日志/安全事件/操作日志、模块/生成器、安全中心）全部渲染实际内容，`0` console error、`0` 个 `/api/` 响应 ≥ 400。
+- **交互**：登录、租户搜索、租户成员抽屉、用户详情、角色编辑（导航 + 按钮授权树）、角色成员、i18n 搜索、会话筛选、当前会话详情均正常；未提交写操作。
+- **skip 审计**：开启 `PANTHEON_TEST_DSN_REQUIRED=true` 与 `PANTHEON_TEST_REDIS_REQUIRED=true` 后运行 `go test ./... -count=1`（真实 MySQL + Redis），exit 0 且 `--- SKIP` 计数为 0；required + 无 DSN 的探针按预期 `FAIL`，未设置 required 时按预期 `SKIP`。
+- **仍为 gap**：浏览器写路径、跨租户 HTTP 攻击矩阵、生产备份恢复演练。前者由 Go 集成测试/CI Tenant Smoke 覆盖，后两者保持原登记。
+
+证据：[`.harness/evidence/2026-10-22-release-and-residual-closeout/`](../../.harness/evidence/2026-10-22-release-and-residual-closeout/summary.md)。

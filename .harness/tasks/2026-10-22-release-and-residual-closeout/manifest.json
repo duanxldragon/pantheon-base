@@ -1,0 +1,87 @@
+{
+  "taskId": "2026-10-22-release-and-residual-closeout",
+  "title": "Publish pantheon-base-v0.17.0 and close the acceptance residuals",
+  "goal": "Publish the already-gated v0.17.0 release, then close the four residuals the final acceptance report left open: rotate the leaked development credentials (D2), prove main branch protection (F2), remove Tenant Smoke's advisory status once main is consistently green (B10), and replace silent MySQL test skips with a CI-enforced required flag (G2). Finish with a browser-level pass over the full local stack so the remaining UI acceptance gap is either evidenced or explicitly restated.",
+  "primaryLayer": "platform",
+  "status": "completed",
+  "priority": "P1",
+  "type": "release-closeout",
+  "estimatedComplexity": "medium",
+  "findings": [
+    "The v0.17.0 release was gated and tagged at 728feb2b; publish only needed the canonical local script because the workflow token cannot create releases. The four assets and Foundation Release Verify run 39698850076 confirm the published state.",
+    "D2 required rotation, not just redaction: the leaked values were live development credentials. MySQL root and Redis passwords were rotated locally, old authentication was verified rejected, and the tracked evidence was redacted. The published v0.17.0 repo.tar was built before the redaction commit and still embeds the now-invalid values, so that artifact residual is recorded rather than silently ignored or rewritten without authorization.",
+    "F2 is satisfied by ruleset 17011510, not the classic protection API. The ruleset is active on the default branch with no bypass actors and now includes SonarCloud Code Analysis alongside Quality Gates, Security Gates, Unit Tests and CI Summary.",
+    "B10 could only flip after Tenant Smoke stopped being flaky. The last five main smoke-core runs are green, so continue-on-error was removed; because smoke-core is push-only this blocks mainline health, not a PR merge.",
+    "G2 was the same skip-masking class as the Redis helper: testmysql skipped when the DSN was missing, so a renamed variable in a required gate would still read green. The fix mirrors testredis with PANTHEON_TEST_DSN_REQUIRED, tests for the fail/skip decision, and the flag set in every Go test job that provisions MySQL.",
+    "The browser acceptance gap from 2026-10-21 required a full local stack. Native MySQL and Redis were available after rotation; the backend served migrations and health, Vite served the console, and Playwright covered 18 routes plus eight read interactions with zero console errors and zero failed API calls.",
+    "Local race detection is unavailable because the only gcc on the host is Cygwin, which Go refuses. The race matrix stays with the hosted go-race job; the full non-race suite ran instead with both required flags on and recorded zero skips."
+  ],
+  "scope": {
+    "in": [
+      ".harness/tasks/2026-10-22-release-and-residual-closeout/",
+      "docs/harness/tasks/2026-10-22-release-and-residual-closeout.task.md",
+      ".harness/evidence/2026-10-22-release-and-residual-closeout/ including artifacts/",
+      "backend/pkg/testmysql/mysql.go and mysql_test.go (G2)",
+      ".github/workflows/ci.yml, quality.yml (required DSN flag) and smoke-core.yml (B10)",
+      "docs/operations/RUNBOOK.md MySQL-backed tests section",
+      "docs/reviews 2026-10-21 issue ledger, test report and final review closure addenda",
+      ".harness/archive/2026-09/evidence/2026-09-23-governance-residual-closeout/ redaction"
+    ],
+    "out": [
+      "Rewriting git history or replacing the published v0.17.0 assets; both require explicit maintainer authorization",
+      "Changing Sonar rules, Quality Gate thresholds or required-check policy beyond adding SonarCloud to the existing ruleset",
+      "Product behavior changes outside the test helper; no API, permission, migration or frontend source change",
+      "Committing local .env files, scratch logs, or browser run data outside the evidence directory"
+    ]
+  },
+  "acceptanceCriteria": [
+    "pantheon-base-v0.17.0 is an immutable annotated tag at 728feb2b with four published assets whose local SHA-256 digests match the release digests; Foundation Release Verify succeeds.",
+    "main is protected by an active ruleset with no bypass actors and the five required checks including SonarCloud Code Analysis.",
+    "Tenant Smoke no longer carries continue-on-error and the five preceding main smoke-core runs are green.",
+    "With PANTHEON_TEST_DSN_REQUIRED=true and no DSN, a MySQL-backed test fails loudly; without the flag it still skips; every MySQL provisioning Go test job sets the flag.",
+    "The full backend suite passes with real MySQL and Redis and both required flags on, with zero skips and zero failures.",
+    "Eighteen routes and eight read interactions render without console errors or failed API responses on the local full stack, with screenshots retained as evidence.",
+    "check-task-packet, check-evidence --strict, check-docs-frontmatter and actionlint pass for the touched files."
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "ci-workflow",
+    "ownerLayer": "consumer-repository"
+  },
+  "verificationPlan": {
+    "commands": [
+      "gh release view pantheon-base-v0.17.0 --json tagName,targetCommitish,isDraft,isPrerelease,publishedAt,assets",
+      "gh run list --workflow foundation-release-verify.yml --limit 5",
+      "gh api repos/duanxldragon/pantheon-base/rulesets/17011510",
+      "gh run list --workflow smoke-core.yml --branch main --limit 6",
+      "PANTHEON_TEST_DSN= PANTHEON_DSN= PANTHEON_TEST_DSN_REQUIRED=true go test ./pkg/database -run TestRunMigrationsAlignsRuntimeSchemaWithCurrentContracts -count=1",
+      "go build ./... && go test ./pkg/testmysql -count=1 -v",
+      "PANTHEON_TEST_DSN_REQUIRED=true PANTHEON_TEST_REDIS_REQUIRED=true go test ./... -count=1",
+      "node .tmp/browser-acceptance/sweep.mjs && node .tmp/browser-acceptance/interact.mjs",
+      "node scripts/frontmatter-check.mjs && node scripts/harness/check-task-packet.mjs --root . && node scripts/harness/check-evidence.mjs --root . --strict",
+      "actionlint -shellcheck='' .github/workflows/ci.yml .github/workflows/quality.yml .github/workflows/smoke-core.yml"
+    ],
+    "runtimeEvidence": [
+      "Release tag, target commit, four asset sizes and SHA-256 digests",
+      "Foundation Release Verify conclusion on release: published",
+      "Active ruleset id, enforcement and required status checks",
+      "Fail-loud and skip test transcripts",
+      "Full suite exit code plus zero SKIP and zero FAIL counts",
+      "Browser route/interaction JSON and screenshots"
+    ]
+  },
+  "runtimeSensitive": true,
+  "linkage": {
+    "assessment": "docs/harness/tasks/2026-10-22-release-and-residual-closeout.task.md",
+    "evidenceDir": ".harness/evidence/2026-10-22-release-and-residual-closeout/",
+    "summaryFile": ".harness/evidence/2026-10-22-release-and-residual-closeout/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-22-release-and-residual-closeout/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/reviews/PANTHEON_BASE_FINAL_ACCEPTANCE_REVIEW_2026-10-21.md",
+      "docs/reviews/PANTHEON_BASE_ISSUES_AND_REMEDIATION_2026-10-21.md",
+      "docs/operations/RUNBOOK.md"
+    ]
+  }
+}

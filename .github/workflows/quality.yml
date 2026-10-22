@@ -357,6 +357,9 @@ jobs:
           --health-retries=12
     env:
       PANTHEON_TEST_DSN: "root:root@tcp(127.0.0.1:3306)/pantheon_base?charset=utf8mb4&parseTime=True&loc=UTC"
+      # Fail instead of skipping the MySQL-backed tests when the DSN above is
+      # renamed or dropped — a silent skip in this required gate would read as green.
+      PANTHEON_TEST_DSN_REQUIRED: "true"
       # This job only runs `go test` (no server), so it needs the test variable
       # name that pkg/testredis reads. PANTHEON_REDIS_ADDR alone used to make
       # every Redis-backed test in this required gate skip silently — see

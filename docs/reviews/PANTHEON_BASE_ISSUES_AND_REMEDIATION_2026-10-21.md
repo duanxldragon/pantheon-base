@@ -8,7 +8,7 @@ linked_contracts:
   - docs/contracts/PLATFORM_CONTRACT.md
   - docs/contracts/SYSTEM_IAM_CONTRACT.md
   - docs/contracts/SYSTEM_AUTH_CONTRACT.md
-updated_at: 2026-10-21
+updated_at: 2026-10-22
 ---
 
 # Pantheon Base 企业级验收问题清单与整改记录（2026-10-21）
@@ -64,7 +64,7 @@ updated_at: 2026-10-21
 - **B7（P2）** `ProvisionTenant` 事务边界不完整 + 并发/重跑理论可产生重复根部门与唯一键报错 — 部分实现保护（幂等步骤），延期需并发初始化专项。
 - **B8（P2）** `security.password_min_length` 在 user 模块读取未钉平台行。
 - **B9（P2）** 新角色默认无 Casbin 策略但控制台暴露角色管理+危险删除（空权限角色语义，非绕过）。
-- **B10（P2）** 治理：scope 门禁与 CI 阻塞位缺失（`smoke-tenant` 仍 advisory；建议 FIX-11 经 CI 复验绿后转 blocking）。
+- **B10（P2）** 治理：scope 门禁与 CI 阻塞位缺失（`smoke-tenant` 仍 advisory；建议 FIX-11 经 CI 复验绿后转 blocking）。**已关闭（2026-10-22）**：main 连续 5 次 `smoke-core` 全绿后移除 `continue-on-error`，job 改名 `Tenant Smoke (multi-mode)`；其为 push-only mainline 阻塞信号，不是 PR required check。
 - **B11（P3）** 其他散项（无租户上下文内部调用点清单等）。
 
 ### 架构/数据库（Task C）
@@ -73,7 +73,7 @@ updated_at: 2026-10-21
 
 ### 安全（Task D）
 
-- **D2（P2，维护者动作）** `.harness/archive` 含真实开发/测试凭证入库且仓库公开（与 SECURITY.md 冲突）。需凭证轮换；历史重写属共享状态变更，不在本地整改范围。**冻结前必须完成轮换**——列入阻塞移交项。
+- **D2（P2，维护者动作）** `.harness/archive` 含真实开发/测试凭证入库且仓库公开（与 SECURITY.md 冲突）。需凭证轮换；历史重写属共享状态变更，不在本地整改范围。**冻结前必须完成轮换**——列入阻塞移交项。**已关闭（2026-10-22）**：MySQL/Redis 口令已轮换（旧口令被拒、新口令可用），跟踪文件清零并完成脱敏；v0.17.0 release 的 `repo.tar` 因构建于脱敏提交之前仍含已失效旧值，作为显式残留登记（建议 v0.17.1 或经授权替换资产）。
 - **D3（P3）** 非生产初始管理员口令默认 `123456`；**D4（P3）** 租户指标标签把 ID 当码点转换；**D5（P3）** 两处 LIKE 通配符未转义（仅 LIKE 语义，无注入面）；**D6（P3）** `/metrics` 非生产无鉴权。
 - **govulncheck（P3/维护）**：1 个被调用漏洞 GO-2026-6809（crypto/x509 @go1.26.9，1.26.10 修复，经 mfa 路径）——升级工具链即可。
 - 其余核心攻击面（CORS/Cookie、CSRF 双提交、Token 存储、fail-closed 撤销、SSRF 防护、脱敏）经复核工程质量高，多处有对抗测试。
@@ -84,10 +84,10 @@ updated_at: 2026-10-21
 
 ### 工程化/治理（Task F）
 
-- **F2（高）** main 无分支保护（`gh api branches/main/protection` → 404），红门禁不阻合并 — 维护者 GitHub 设置动作，需授权。
+- **F2（高）** main 无分支保护（`gh api branches/main/protection` → 404），红门禁不阻合并 — 维护者 GitHub 设置动作，需授权。**已关闭（2026-10-22）**：ruleset `17011510` active，覆盖 default branch，无 bypass actor；required checks 含 `Quality Gates`/`Security Gates`/`Unit Tests`/`CI Summary`/`SonarCloud Code Analysis`。
 - **F3（中）** 12 个 workflow 无 sonar-scanner 步骤，分析外部触发；`release-gate.yml:174` 按 SHA 精确匹配可能误挡 — 维护者流程决策。
 - **F4（中）** `check-security-patterns.mjs` 无任何引用（死门禁，手动跑必红 295 errors，无 baseline）。记录为发现；不静默删除/屏蔽。
-- **F5（高）** 发布未闭环：v0.17.0 tag 不存在；PR #395 已于 2026-10-21 合入 `main`（`762d94a5`，仅 Sonar 红，见 §5 追加记录），Docs Governance 的 PR-body 仪式字段与聚合红灯已随 #396/#397 收口。剩余缺口只在 tag/release 发布与 Sonar 处置。
+- **F5（高）** 发布未闭环：v0.17.0 tag 不存在；PR #395 已于 2026-10-21 合入 `main`（`762d94a5`，仅 Sonar 红，见 §5 追加记录），Docs Governance 的 PR-body 仪式字段与聚合红灯已随 #396/#397 收口。剩余缺口只在 tag/release 发布与 Sonar 处置。**已关闭（2026-10-22）**：tag `pantheon-base-v0.17.0` → `728feb2b`，release 四个资产已发布，`Foundation Release Verify` run `39698850076` success。
 - **F6（低）** 陈旧分支残留（10 个本地/远端分支内容全部已 squash 并入 main，经 `git cherry` 交叉验证，无未交付修复）；**F7（低）** 历史中 node_modules blob 致仓库膨胀（真实凭证抽查 AKIA/ghp_/RSA 无命中，仅压缩 JS 误影）。
 - **F8（高）** RELEASE_NOTES/CHANGELOG 宣称"Tenant Smoke 红因已修复"— **失实**（当时 membership 触发条件未修）。**已修复（文档）**：两处加入 FIX-1…FIX-11 验收整改小节与验证边界声明；"两个独立根因均已关闭"的叙述同样证据不足（同 commit 上该 job 先红后绿，属 flaky），改为"两条真实触发条件，其中 membership 一条由 FIX-11 消除，job 稳定性与最终转绿仍需 CI 复验"。
 - **F9（中）** `TENANT_SCOPE_FREEZE_DECISION_2026-10-15` 头部"待批准"与文内 §6.1 维护者裁决矛盾 — **已修复（文档）**：状态改为已批准并指向本清单。
@@ -190,3 +190,15 @@ updated_at: 2026-10-21
   #402 与本次记录的推送再次遇到 `git push` 连续四次连接超时/重置、`git fetch` 失败，而 `api.github.com` 正常，
   因此仍以 Git Data API 重放（本地 tree 与远端 parent tree 相等才写 ref），本地 `main` 无法 ff，收口提交以一个「tree 等于远端 `17af0d85`」的本地同步提交为祖先。
   ⇒ 后续推送必须逐次复测通道并在失败时回退到 API 重放，不能假设 git 一定可用。
+
+## 6. 2026-10-22 发布与遗留项收口（追加）
+
+证据目录：[`.harness/evidence/2026-10-22-release-and-residual-closeout/`](../../.harness/evidence/2026-10-22-release-and-residual-closeout/summary.md)。
+
+- **F5 发布闭环**：annotated tag `pantheon-base-v0.17.0` → `728feb2b66e0ed5f915cafc785c287fc2b3eca2a`；GitHub release 于 `2026-10-22T00:17:53Z` 发布，含 `foundation-release-pantheon-base-v0.17.0.tgz`、`.tgz.sha256`、`repo.tar`、`repo.tar.sha256` 四个资产；本地复算 SHA-256 与 release digest 一致；`Foundation Release Verify` run `39698850076` success。发布后未替换资产。
+- **F2 分支保护**：ruleset `17011510`（`solo dev merge rules`）active，覆盖 default branch，`bypass_actors=[]`；required checks 为 `Quality Gates`、`Security Gates`、`Unit Tests`、`CI Summary`、`SonarCloud Code Analysis`。经典 `branches/main/protection` API 仍为 404，但实际保护由 ruleset 提供。
+- **B10 Tenant Smoke**：`smoke-core.yml` 的 `smoke-tenant` 移除 `continue-on-error` 并去掉 advisory 命名；main 最近 5 次运行全绿。该 workflow 为 push-only，故阻塞的是 mainline 运行状态，不是 PR required check。
+- **G2 skip 掩盖防护**：`testmysql` 新增 `PANTHEON_TEST_DSN_REQUIRED`（required 时无 DSN 失败，否则 skip），`mysql_test.go` 锁定 fail/skip 决策；`ci.yml` 两个 Go 测试 job 与 `quality.yml` `backend-tests` 设置该标志。实测 required + 无 DSN 为 `FAIL`，未设置时为 `SKIP`；在真实 MySQL + Redis 且两个 required 标志开启下 `go test ./...` 全绿、0 `--- SKIP`。
+- **D2 凭据轮换**：MySQL/Redis 旧口令已拒绝、新口令可用；HEAD 跟踪文件旧凭据 `git grep` 命中 0。发布工件 `repo.tar` 因构建自脱敏前提交 `728feb2b` 仍含两份已失效旧凭据（tgz 内嵌同名文件），历史 git 对象同样保留；未在未授权下替换资产或重写历史。建议以 v0.17.1 或维护者授权的资产替换清除。
+- **浏览器级终验**：本机全栈（后端 + MySQL + Redis + Vite + Chromium）完成 18 条路由巡检与 8 组交互（租户搜索/成员抽屉、用户详情、角色授权树、角色成员、i18n 搜索、会话筛选、当前会话详情），0 console error、0 个 `/api/` 响应 ≥400；截图与原始结果在证据目录 `artifacts/`、`browser-sweep.json`、`browser-interactions.json`。写操作未在浏览器提交，`AddMember` 幂等与停用/移除成员撤销会话由真实 DB 测试与 CI Tenant Smoke 覆盖。
+- **仍未关闭**：迁移前生产备份恢复演练（G2 runbook 的 G2 gate，与 D2 编号无关）、G3 生产量级 sizing、B7 并发初始化专项、跨租户 HTTP 攻击矩阵、v0.17.0 工件中的失效旧凭据清理。

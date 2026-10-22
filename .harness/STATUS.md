@@ -1,7 +1,7 @@
 # Pantheon Base - Harness 任务状态
 
-**最后更新**: 2026-10-21
-**当前版本**: v0.17.0（发布中）；v0.16.1 为上一个可消费版本
+**最后更新**: 2026-10-22
+**当前版本**: v0.17.0（已发布）；v0.16.1 为上一个可消费版本
 
 ## 发布收口（2026-10-21，v0.17.0）
 
@@ -16,11 +16,15 @@ v0.16.1 之后合入的 13 个提交（租户隔离整改 #386、#391–#394，�
 `CI`（含 `go test -race` 两条腿）、`Backend Tests`、`Unit Tests`、`Full Smoke Suite`、`Core Smoke Tests`、
 `Security Gates`、`CodeQL`、`Lint Workflows` 全绿；Sonar 分支分析五项条件全 OK、**open issues = 0**、open Dependabot alerts = 0；
 **`Release Gate` success**（`Dependabot Alerts` job 首次与告警清零竞态失败，同 commit、同规则复跑转绿）。
-维护者定案的两条验收条件——Quality Gate 全过、Open issues 清零——已由 hosted 实测满足。`pantheon-base-v0.17.0` tag/release
-仍未发布，原因是发布属维护者动作（F5），不是门禁未过。任务包 `2026-10-21-acceptance-remediation` 已置 `completed`，
-残余动作逐项登记在 `docs/reviews/PANTHEON_BASE_ISSUES_AND_REMEDIATION_2026-10-21.md` §5。
+维护者定案的两条验收条件——Quality Gate 全过、Open issues 清零——已由 hosted 实测满足。任务包 `2026-10-21-acceptance-remediation`
+已置 `completed`，残余动作逐项登记在 `docs/reviews/PANTHEON_BASE_ISSUES_AND_REMEDIATION_2026-10-21.md` §5。
 
-## 租户交付硬化（2026-10-20，已完成，待 CI 确认冒烟）
+**发布已落地（2026-10-22）**：annotated tag `pantheon-base-v0.17.0`（tag object `d1a167c5`）指向 `728feb2b`，
+GitHub Release 于 `2026-10-22T00:17:53Z` 发布，四件产物齐备（tgz 19,903,712 B / `.tgz.sha256` 111 B /
+`repo.tar` 34,058,240 B / `repo.tar.sha256` 75 B；tgz SHA-256 `4f2478…922f`），
+`Foundation Release Verify` 在 `release: published` 上通过（run 39698850076）。F5 关闭。
+
+## 租户交付硬化（2026-10-20，已完成，冒烟已确认）
 
 2026-10-20 的交付审计发现并关闭了三个阻断项，任务包 `2026-10-20-tenant-delivery-hardening`：
 
@@ -34,12 +38,32 @@ v0.16.1 之后合入的 13 个提交（租户隔离整改 #386、#391–#394，�
 验证：后端全量 `go test ./...`（真实 MySQL）绿；新增 10 条双租户/角色用例；前端 `tsc -b` 绿；
 证据见 `.harness/evidence/2026-10-20-tenant-delivery-hardening/`。
 
-**仍未关闭**：`Tenant Smoke (multi-mode advisory)` 的浏览器断言只能由 CI 确认；存量租户若已创建保留角色键，
-需要运营按 runbook 清理；v0.17.0 发布包尚未创建。
+**已关闭（2026-10-22）**：`Tenant Smoke (multi-mode)` 已去掉 `continue-on-error`，改为 push-only 的主干健康硬门禁，
+最近五次 main 运行全绿（39598957879 / 39584482520 / 39582453605 / 39580935995 / 39572335644）；v0.17.0 发布包已创建并过 Verify。
+存量租户若已创建保留角色键，仍需运营按 runbook 清理（未发现存量命中）。
+
+## 遗留项收口（2026-10-22）
+
+任务包 `2026-10-22-release-and-residual-closeout`，证据在 `.harness/evidence/2026-10-22-release-and-residual-closeout/`。
+
+- **F5 tag/release**：已发布（见上节），Verify run 39698850076 success。
+- **F2 分支保护**：GitHub ruleset `17011510`（`solo dev merge rules`）active，目标 `~DEFAULT_BRANCH`、无 bypass actors，
+  必需检查为 Quality Gates / Security Gates / Unit Tests / CI Summary / SonarCloud Code Analysis。经典 branches API 仍返回 404（规则集模式）。
+- **B10 Tenant Smoke 转硬门禁**：`smoke-core.yml` 移除 advisory，保留 push 触发（避免与 PR 级冒烟重复）。
+- **G2 静默跳过审计**：`pkg/testmysql` 对齐 `testredis` 的 required 语义，新增 `PANTHEON_TEST_DSN_REQUIRED`；
+  CI（`ci.yml` / `quality.yml`）设为 `true`，未配置 DSN 时 fail-loud 而非 skip。全量真库复跑 0 FAIL / 0 SKIP。
+- **D2 凭证轮换**：本地 MySQL/Redis 凭证已轮换并验证旧凭证被拒；HEAD 跟踪文件对旧凭证 0 命中。
+  **残留**：v0.17.0 的 `repo.tar`（及 tgz 内嵌副本）构建自脱敏前提交 `728feb2b`，仍含已失效的历史凭证字面量；
+  因其已失效且发布产物不可变，记录为显式残留，处置（v0.17.1 或经授权替换产物）待维护者决定。
+- **浏览器验收**：18 条系统路由，0 控制台错误、0 个 ≥400 响应，8 项只读交互渲染正常（无写入提交）；
+  证据 `artifacts/01-dashboard.png` … `08-session-detail-drawer.png`。
 
 ## 当前最终验收状态
 
-**判定：v0.16.1 已发布（2026-10-20）。** tag `pantheon-base-v0.16.1` → `c83f8e4c`，GitHub Release 带齐四件可消费产物（`foundation-release-pantheon-base-v0.16.1.tgz` 18,500,303 B / `.tgz.sha256` 111 B / `repo.tar` 31,477,760 B / `repo.tar.sha256` 75 B），`Foundation Release Verify` 在 `release: published` 上通过（run 39352195137）。这是自 v0.13.0 以来第一个真正可被消费的发布，`pantheon-ops` 的锁终于可以前进（属消费仓单独变更）。
+**判定：v0.17.0 已发布（2026-10-22）**，tag `pantheon-base-v0.17.0` → `728feb2b`，四件产物齐备并通过 Verify（run 39698850076）。
+验收整改的 P0/P1 已全部闭合，残余只有 D2 的发布产物凭证残留（已失效、显式登记）与延期 P2/P3 清单。
+
+历史记录：**v0.16.1 已发布（2026-10-20）。** tag `pantheon-base-v0.16.1` → `c83f8e4c`，GitHub Release 带齐四件可消费产物（`foundation-release-pantheon-base-v0.16.1.tgz` 18,500,303 B / `.tgz.sha256` 111 B / `repo.tar` 31,477,760 B / `repo.tar.sha256` 75 B），`Foundation Release Verify` 在 `release: published` 上通过（run 39352195137）。这是自 v0.13.0 以来第一个真正可被消费的发布，`pantheon-ops` 的锁终于可以前进（属消费仓单独变更）。
 
 发布方式需要如实记录：**tag 与 Release 由维护者凭据产出，不是 CI 产出**。仓库 `default_workflow_permissions=read`，三次 hosted 正式切（39350509094 / 39351236715 / 39351991489）分别撞在 App `workflows` 权限、Git database API 403、release 创建 403 上；工作流已收敛为"只读校验 tag + 构建/校验产物"的可重复路径，全自动发布需配置带 `contents:write` 的 PAT secret（维护者授权项）。详见 `.harness/evidence/2026-10-12-v0161-release-cut/`。
 
@@ -51,6 +75,7 @@ v0.16.1 之后合入的 13 个提交（租户隔离整改 #386、#391–#394，�
 |------|------|
 | ✅ 已完成 | 全部历史任务 + 2026-10-07 整改任务包 + v0.15.0/v0.16.0 发布收口 |
 | ✅ 已完成 | v0.16.1 发布收口（`2026-10-12-v0161-release-cut`，四件产物已发布并过 Verify；全自动发布待 PAT secret） |
+| ✅ 已完成 | v0.17.0 发布收口（`2026-10-22-release-and-residual-closeout`，F5/F2/B10/G2/D2 + 浏览器验收） |
 | ✅ 已完成 | 租户权限隔离整改（`2026-10-19-tenant-permission-isolation-remediation`，W0–W6 全部完成 + F14 收口后关闭，**零残留**） |
 | ⏸️ 暂停 | 无 |
 
