@@ -101,7 +101,13 @@ func (s *RoleService) validateRoleCreate(req *RoleCreateReq) error {
 	if err := s.ensureMenuIDsExist(req.MenuIDs); err != nil {
 		return err
 	}
-	return s.ensurePermissionKeysExist(req.PermissionKeys)
+	if err := s.ensureMenuIDsAssignable(s.tenantOwnerID(), req.MenuIDs); err != nil {
+		return err
+	}
+	if err := s.ensurePermissionKeysExist(req.PermissionKeys); err != nil {
+		return err
+	}
+	return ensurePermissionKeysAssignable(s.tenantOwnerID(), req.PermissionKeys)
 }
 
 func (s *RoleService) validateRoleUpdate(role *SystemRole, req *RoleUpdateReq) error {
@@ -121,7 +127,13 @@ func (s *RoleService) validateRoleUpdate(role *SystemRole, req *RoleUpdateReq) e
 	if err := s.ensureMenuIDsExist(req.MenuIDs); err != nil {
 		return err
 	}
-	return s.ensurePermissionKeysExist(req.PermissionKeys)
+	if err := s.ensureMenuIDsAssignable(role.TenantID, req.MenuIDs); err != nil {
+		return err
+	}
+	if err := s.ensurePermissionKeysExist(req.PermissionKeys); err != nil {
+		return err
+	}
+	return ensurePermissionKeysAssignable(role.TenantID, req.PermissionKeys)
 }
 
 // ensureRoleKeyAllowed enforces the bidirectional role-key namespace mutex
@@ -234,6 +246,51 @@ func (s *RoleService) ensurePermissionKeysExist(permissionKeys []string) error {
 	}
 	for _, key := range normalized {
 		if _, ok := exists[key]; !ok {
+			return common.NewBadRequest("role.permission.invalid")
+		}
+	}
+	return nil
+}
+
+// ensureMenuIDsAssignable rejects platform-only pages on a tenant-owned role.
+// The manage-scoped tree already hides them, but the API is the authority: a
+// direct request must not recreate the broken menu entry the tree filter removes.
+func (s *RoleService) ensureMenuIDsAssignable(ownerTenantID uint64, menuIDs []uint64) error {
+	if ownerTenantID == tenant.PlatformGlobalTenantID {
+		return nil
+	}
+	normalized := normalizeUint64IDs(menuIDs)
+	if len(normalized) == 0 {
+		return nil
+	}
+	type menuRow struct {
+		ID     uint64 `gorm:"column:id"`
+		Module string `gorm:"column:module"`
+		Path   string `gorm:"column:path"`
+	}
+	var rows []menuRow
+	if err := s.db.Table("system_menu").
+		Select("id, module, path").
+		Where("id IN ?", normalized).
+		Scan(&rows).Error; err != nil {
+		return err
+	}
+	for _, row := range rows {
+		if tenant.IsPlatformOnlyMenu(row.Module, row.Path) {
+			return common.NewBadRequest("role.menu.invalid")
+		}
+	}
+	return nil
+}
+
+// ensurePermissionKeysAssignable rejects platform-only permission keys on a
+// tenant-owned role, for the same reason as ensureMenuIDsAssignable.
+func ensurePermissionKeysAssignable(ownerTenantID uint64, permissionKeys []string) error {
+	if ownerTenantID == tenant.PlatformGlobalTenantID {
+		return nil
+	}
+	for _, key := range normalizePermissionKeys(permissionKeys) {
+		if tenant.IsPlatformOnlyPermissionKey(key) {
 			return common.NewBadRequest("role.permission.invalid")
 		}
 	}

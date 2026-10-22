@@ -174,6 +174,11 @@ func (h *AuthHandler) LoginHandler(c *gin.Context) {
 	sourceKey := buildLoginSourceKey(ip)
 	currentUser, err := service.LoginWithSource(&req, sourceKey)
 	if err != nil {
+		// A failed attempt against a known subject is audited in the subject's
+		// tenant even though no claim was issued yet.
+		if tenantID, ok := tenantIDFromError(err); ok {
+			service = service.withLoginAuditTenant(tenantID)
+		}
 		messageKey := common.ResolveErrorMessageKey(err, "auth.login.error")
 		service.RecordLoginLog(common.GetRequestID(c), strings.TrimSpace(req.Username), ip, clientInfo.Browser, clientInfo.OS, 0, messageKey)
 		common.Fail(c, common.CodeUnauthorized, messageKey)
@@ -182,12 +187,16 @@ func (h *AuthHandler) LoginHandler(c *gin.Context) {
 
 	tenantClaim, tenantErr := service.resolveLoginTenantClaim(currentUser, req.TenantId)
 	if tenantErr != nil {
-		failLoginTenantClaim(c, service, currentUser, req.TenantId, tenantErr, ip, clientInfo)
+		failLoginTenantClaim(c, service.withLoginAuditTenant(service.loginAuditTenantID(currentUser)), currentUser, req.TenantId, tenantErr, ip, clientInfo)
 		return
 	}
 
+	// A successful login is audited in the tenant the session was issued for,
+	// which is the same claim stamped into the session row.
+	auditService := service.withLoginAuditTenant(tenantClaim)
+
 	if service.getAuthRuntimePolicy().MFAEnabled {
-		startMFAChallenge(c, service, currentUser, tenantClaim, ip, clientInfo)
+		startMFAChallenge(c, auditService, currentUser, tenantClaim, ip, clientInfo)
 		return
 	}
 
@@ -205,7 +214,7 @@ func (h *AuthHandler) LoginHandler(c *gin.Context) {
 		if tenant.IsTenantGateError(err) {
 			messageKey = common.ErrMessage(err)
 		}
-		service.RecordLoginLog(common.GetRequestID(c), currentUser.Username, ip, clientInfo.Browser, clientInfo.OS, 0, messageKey)
+		auditService.RecordLoginLog(common.GetRequestID(c), currentUser.Username, ip, clientInfo.Browser, clientInfo.OS, 0, messageKey)
 		common.Fail(c, common.CodeForbidden, messageKey)
 		return
 	}
@@ -213,12 +222,12 @@ func (h *AuthHandler) LoginHandler(c *gin.Context) {
 	userInfo, err := service.GetCurrentUserInfo(currentUser.ID)
 	if err != nil {
 		messageKey := common.ResolveErrorMessageKey(err, "auth.current_user.error")
-		service.RecordLoginLog(common.GetRequestID(c), currentUser.Username, ip, clientInfo.Browser, clientInfo.OS, 0, messageKey)
+		auditService.RecordLoginLog(common.GetRequestID(c), currentUser.Username, ip, clientInfo.Browser, clientInfo.OS, 0, messageKey)
 		common.Fail(c, common.CodeError, messageKey)
 		return
 	}
 
-	service.RecordLoginLog(common.GetRequestID(c), currentUser.Username, ip, clientInfo.Browser, clientInfo.OS, 1, "auth.loginSuccess")
+	auditService.RecordLoginLog(common.GetRequestID(c), currentUser.Username, ip, clientInfo.Browser, clientInfo.OS, 1, "auth.loginSuccess")
 	if !writeLoginSuccessResponse(c, tokenPair, userInfo) {
 		return
 	}
@@ -241,6 +250,10 @@ func (h *AuthHandler) VerifyMFAHandler(c *gin.Context) {
 	userAgent := c.GetHeader(headerUserAgent)
 	clientInfo := session.ParseClientInfo(userAgent)
 	resp, err := service.VerifyMFAChallengeWithContext(c.Request.Context(), &req, ip, userAgent)
+	// Verification pins req.TenantId to the challenge's tenant once the
+	// challenge is loaded, so failures before a session exists are still
+	// audited in the tenant the challenge belongs to.
+	auditService := service.withLoginAuditTenant(req.TenantId)
 	if err != nil {
 		// Tenant gates (explicit choice rejected at MFA-final session issuance)
 		// surface their contract §5 keys; everything else keeps MFA messages.
@@ -248,7 +261,7 @@ func (h *AuthHandler) VerifyMFAHandler(c *gin.Context) {
 		if tenant.IsTenantGateError(err) {
 			messageKey = common.ErrMessage(err)
 		}
-		service.RecordLoginLog(common.GetRequestID(c), "", ip, clientInfo.Browser, clientInfo.OS, 0, messageKey)
+		auditService.RecordLoginLog(common.GetRequestID(c), "", ip, clientInfo.Browser, clientInfo.OS, 0, messageKey)
 		common.Fail(c, common.CodeForbidden, messageKey)
 		return
 	}
@@ -257,7 +270,7 @@ func (h *AuthHandler) VerifyMFAHandler(c *gin.Context) {
 	if resp.User != nil {
 		username = resp.User.Username
 	}
-	service.RecordLoginLog(common.GetRequestID(c), username, ip, clientInfo.Browser, clientInfo.OS, 1, "auth.loginSuccess")
+	auditService.RecordLoginLog(common.GetRequestID(c), username, ip, clientInfo.Browser, clientInfo.OS, 1, "auth.loginSuccess")
 
 	if !writeMFASuccessResponse(c, resp) {
 		return

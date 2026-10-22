@@ -36,6 +36,11 @@ import {
   type TenantUpdatePayload,
 } from './api';
 import { getSecurityOverview } from '../../../auth/security/api';
+import {
+  normalizeTenantPlan,
+  type TenantPlan,
+} from '../../../../core/entitlements/plans';
+import TenantPlanMatrix from './TenantPlanMatrix';
 import { isRequestError } from '../../../../api/request';
 import {
   AppModal,
@@ -156,6 +161,7 @@ const TenantList: React.FC = () => {
   const [formVisible, setFormVisible] = useState(false);
   const [editing, setEditing] = useState<TenantRow | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [planDraft, setPlanDraft] = useState<TenantPlan>('free');
   const [form] = Form.useForm<TenantFormValues>();
   // The tenant administrator's password is validated against the deployment's
   // configurable policy rather than a number copied into this file, so the form
@@ -275,6 +281,7 @@ const TenantList: React.FC = () => {
     setEditing(null);
     form.resetFields();
     form.setFieldsValue({ plan: 'free' });
+    setPlanDraft('free');
     setFormVisible(true);
   }, [form]);
 
@@ -291,6 +298,7 @@ const TenantList: React.FC = () => {
         status: row.status === 'deleted' ? undefined : row.status,
         metadata: row.metadata ?? '',
       });
+      setPlanDraft(normalizeTenantPlan(row.plan));
       setFormVisible(true);
     },
     [form],
@@ -640,7 +648,7 @@ const TenantList: React.FC = () => {
       <AppModal
         title={editing ? t('system.tenant.edit') : t('system.tenant.create')}
         visible={formVisible}
-        size="md"
+        size="lg"
         onCancel={() => setFormVisible(false)}
         footer={
           <FormModalFooter
@@ -685,7 +693,9 @@ const TenantList: React.FC = () => {
               </Col>
               <Col span={12}>
                 <FormItem field="plan" label={t('system.tenant.plan')}>
-                  <Select>
+                  <Select
+                    onChange={(value) => setPlanDraft(normalizeTenantPlan(value as string))}
+                  >
                     <Select.Option value="free">{t('system.tenant.plan.free')}</Select.Option>
                     <Select.Option value="basic">{t('system.tenant.plan.basic')}</Select.Option>
                     <Select.Option value="professional">
@@ -781,6 +791,7 @@ const TenantList: React.FC = () => {
                 </FormItem>
               </Col>
             </Row>
+            <TenantPlanMatrix plan={planDraft} />
           </FormSection>
         </Form>
       </AppModal>

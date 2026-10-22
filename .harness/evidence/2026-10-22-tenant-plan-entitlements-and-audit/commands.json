@@ -1,0 +1,77 @@
+{
+  "taskId": "2026-10-22-tenant-plan-entitlements-and-audit",
+  "repo": "pantheon-base",
+  "executedAt": "2026-10-22T11:56:00+08:00",
+  "agent": {
+    "tool": "other",
+    "adapter": "software-workshop-agent"
+  },
+  "commands": [
+    {
+      "command": "cd backend && set -a; . ../.env.test; set +a; export PANTHEON_TEST_DSN=\"$PANTHEON_DSN\"; PATH=\"/d/msys64/mingw64/bin:/d/nodejs:$PATH\" CGO_ENABLED=1 CC='D:\\msys64\\mingw64\\bin\\gcc.exe' go test -race -p 1 -count=1 ./...",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "Exit 0. 46 packages ok; no FAIL and no data race reported. Runs against the real MySQL and Redis configured in the gitignored .env.test; credential values are not printed. -p 1 was used because a previous fully parallel run produced two false failures (Redis state race in TestSessionAdminOps_CompatPinsToPlatformTenant and a generator environment-variable failure) that did not reproduce when the packages ran alone."
+    },
+    {
+      "command": "cd backend && set -a; . ../.env.test; set +a; export PANTHEON_TEST_DSN=\"$PANTHEON_DSN\"; go test -count=1 ./modules/auth/login/ ./modules/system/iam/menu/ ./modules/system/iam/tenant/ ./modules/system/iam/role/",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "All four touched backend packages passed: login 128.940s, menu 4.217s, tenant 55.603s, role 28.191s. These packages carry the new attribution, menu-filter, provisioning-repair, and role-assignment regression tests."
+    },
+    {
+      "command": "cd frontend && node ./node_modules/vitest/vitest.mjs run",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "29 test files / 212 tests passed. Includes 6 entitlement registry tests, 2 menu-tree regression tests, the dashboard widget feature-gating case, and 3 tenant session store tests (in-flight dedupe, reset-before-next-login, tenant-scope classification). Re-run after Login.tsx began resetting the tenant session at the login boundary."
+    },
+    {
+      "command": "cd frontend && node ./node_modules/typescript/bin/tsc -b",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "Exit 0, no diagnostics."
+    },
+    {
+      "command": "cd frontend && node ./node_modules/eslint/bin/eslint.js .",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "Exit 0, no findings."
+    },
+    {
+      "command": "cd frontend && PATH=\"/d/nodejs:$PATH\" npm run build",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "Prebuild 13 steps passed (Arco React 19 patch plus 12 contract checks: menu, i18n hardcode, generated i18n scope, datetime presentation, shell visual, UI contract, search toolbar, !important budget, system-page admission, smoke web-base, smoke coverage, import-path case), followed by tsc -b and vite build. Re-run after the Login.tsx session reset; Vite built in 912ms. The PATH prefix is required on this host because the recursive prebuild calls npm through cmd.exe; the same 13 steps were also executed directly with node and passed."
+    },
+    {
+      "command": "cd frontend && node ./scripts/audit-i18n-locales.mjs",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "zh-CN/en-US/ja-JP/ko-KR/fr-FR all report keys=2929, missing=0, extra=0, empty=0. sameAsEn counts are 6/0/188/188/191 and are translation-quality observations, not missing keys."
+    },
+    {
+      "command": "node scripts/frontmatter-check.mjs",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Frontmatter check passed for 340 docs (247 with frontmatter)."
+    },
+    {
+      "command": "node scripts/harness/check-task-packet.mjs --root .",
+      "cwd": ".",
+      "status": "passed",
+      "details": "The new 2026-10-22-tenant-plan-entitlements-and-audit packet passes. The only warning initially was the not-yet-created review file; review.md, summary.md, and commands.json now exist in the linked evidence directory."
+    },
+    {
+      "command": "cd %TEMP%/pantheon-accept && node acceptance.mjs",
+      "cwd": "%TEMP%/pantheon-accept",
+      "status": "passed",
+      "details": "Playwright (Chromium headless, 1440x900) against the local multi-mode deployment at 127.0.0.1:5173. Created four real tenants through the tenant API (free 300, basic 301, professional 302, enterprise 303), logged in as each owner, and recorded menu labels, direct-URL 403 behavior, login-log rows, low-code surfaces, datasource lock state, and the platform tenant-create matrix. Raw output: acceptance-result.json; screenshots in artifacts/. The acceptance scripts are archived alongside the result."
+    }
+  ],
+  "notVerified": [
+    "Hosted CI for this change has not run yet; the local -race result is not a substitute for the parallel hosted legs.",
+    "The four-plan Playwright acceptance was recorded before the final Login.tsx tenant-session reset. That late change is covered by unit tests, tsc, ESLint and a production build, but the browser run was not repeated.",
+    "The plan gate is UX-only. API-level plan enforcement was not implemented or verified because it is outside the requested scope and would change the authorization model.",
+    "No production database was modified. The startup repair path was exercised through provisioning tests, not by running the server against production data."
+  ]
+}

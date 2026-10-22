@@ -26,6 +26,7 @@ import {
   showAppModalConfirm,
 } from '../../../../components';
 import { usePermission } from '../../../../hooks/usePermission';
+import { usePlanEntitlements } from '../../../../core/entitlements/usePlanEntitlements';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { auditPendingActivations, getModuleStatus } from '../../dynamicmodule/api';
@@ -715,6 +716,7 @@ const ModuleWizard: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { hasPerm, isAdmin } = usePermission();
+  const { hasFeature } = usePlanEntitlements();
   const [currentStep, setCurrentStep] = useState(0);
   const [form] = Form.useForm<Partial<ModuleSchema>>();
   const [fields, setFields] = useState<ModuleField[]>([]);
@@ -755,7 +757,12 @@ const ModuleWizard: React.FC = () => {
     Record<string, TranslationOverride>
   >({});
   const [datasourceForm] = Form.useForm<UpsertGeneratorDatasourcePayload>();
-  const canManageDatasources = hasAccess(isAdmin, hasPerm('system:generator:datasource:manage'));
+  const datasourcePlanEntitled = hasFeature('lowcode.generator.datasource');
+  const canManageDatasources =
+    datasourcePlanEntitled && hasAccess(isAdmin, hasPerm('system:generator:datasource:manage'));
+  const visibleDatasources = datasourcePlanEntitled
+    ? datasources
+    : datasources.filter((item) => item.isCurrent);
   const actionLabel = (action: Exclude<PageActionKey, 'detail'>, locale: 'zh-CN' | 'en-US') =>
     t(`generator.pageActions.${action}`, { lng: locale });
 
@@ -1448,6 +1455,13 @@ const ModuleWizard: React.FC = () => {
                               <IconPlus /> {t('generator.datasource.manage')}
                             </Button>
                           </PermissionAction>
+                          {!datasourcePlanEntitled ? (
+                            <Tag color="orange">
+                              {t('generator.datasource.planLocked', {
+                                plan: t('system.tenant.plan.enterprise'),
+                              })}
+                            </Tag>
+                          ) : null}
                         </Space>
                       </Space>
                       <Select
@@ -1455,7 +1469,7 @@ const ModuleWizard: React.FC = () => {
                         onChange={(value) => setSelectedDatasourceId(String(value))}
                         placeholder={t('generator.datasource.selectorPlaceholder')}
                       >
-                        {datasources.map((item) => (
+                        {visibleDatasources.map((item) => (
                           <Select.Option key={item.id} value={item.id}>
                             {item.name} · {item.databaseName}
                             {item.isCurrent ? ` · ${t('generator.datasource.currentTag')}` : ''}

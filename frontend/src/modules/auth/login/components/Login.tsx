@@ -34,6 +34,7 @@ import { verifyMFA } from '../../mfa/api';
 import { findFirstNavigableMenuPath } from '../../../system/iam/menu/api';
 import { useAuthStore } from '../../../../store/useAuthStore';
 import { useMenuStore } from '../../../../store/useMenuStore';
+import { useTenantSessionStore } from '../../../../store/useTenantSessionStore';
 import ThemeSwitcher from '../../../../core/theme/ThemeSwitcher';
 import { clearShellSessionState, LOGIN_NOTICE_STORAGE_KEY } from '../../../../core/shellState';
 import { clearTenantViewpoint } from '../../../../core/tenant/viewpoint';
@@ -242,6 +243,9 @@ export function LoginPageComponent() {
     }
     clearShellSessionState();
     resetMenuTree();
+    // The tenant context is session state: a re-login in the same tab must not
+    // inherit the previous subject's plan or viewpoint.
+    useTenantSessionStore.getState().resetTenantSession();
     // A viewpoint never crosses a login boundary: the new session decides its
     // own scope (tenant admins resolve their claim at login; platform
     // subjects opt back in explicitly). sessionStorage is per-tab but a

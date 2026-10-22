@@ -1620,6 +1620,26 @@ const jaJPFallback = {
   'system.tenant.plan.basic': 'ベーシック',
   'system.tenant.plan.professional': 'プロフェッショナル',
   'system.tenant.plan.enterprise': 'エンタープライズ',
+  'system.tenant.planFeature.title': 'プラン機能比較',
+  'system.tenant.planFeature.description':
+    'プランはテナントコンソールで利用できる機能入口を決めます。実際の操作権限はロール認可で制御されます。',
+  'system.tenant.planFeature.feature': '機能',
+  'system.tenant.planFeature.current': '現在のプラン',
+  'system.tenant.planFeature.currentPlan': '現在: {{plan}}',
+  'system.tenant.planFeature.included': '含まれる',
+  'system.tenant.planFeature.notIncluded': '含まれない',
+  'system.tenant.planFeature.lowcode.dynamicModule': '動的モジュール管理',
+  'system.tenant.planFeature.lowcode.dynamicModuleDesc':
+    '実行時にモジュールを登録・検査・解除します',
+  'system.tenant.planFeature.lowcode.generator': 'コードジェネレーター',
+  'system.tenant.planFeature.lowcode.generatorDesc':
+    'データベーステーブルからバックエンド/フロントエンドのモジュール、メニュー、権限を生成します',
+  'system.tenant.planFeature.lowcode.generatorDatasource': '外部データソースのインポート',
+  'system.tenant.planFeature.lowcode.generatorDatasourceDesc':
+    '外部データベースに接続し、そのテーブル構造からモジュールを生成します',
+  'system.tenant.planFeature.upgradeTitle': '現在のプランにはこの機能が含まれていません',
+  'system.tenant.planFeature.upgradeDescription':
+    '「{{feature}}」には{{plan}}以上のプランが必要です。テナントプランの変更はプラットフォーム管理者にご連絡ください。',
   'system.tenant.status.active': '有効',
   'system.tenant.status.suspended': '停止中',
   'system.tenant.status.deleted': '削除済み',
@@ -1749,6 +1769,7 @@ const jaJPFallback = {
   'i18n.audit.locateAction': '一覧で位置を特定',
   'i18n.audit.staleDays': '{{count}} 日未解消',
   'i18n.audit.stalePlaceholdersEmpty': '{{days}} 日以上未解消のプレースホルダーはありません。',
+  'generator.datasource.planLocked': '外部データソースには{{plan}}プランが必要です',
   'generator.moduleManager.title': 'モジュールレジストリ',
   'generator.moduleManager.header.eyebrow': 'システム領域 / ローコード',
   'generator.moduleManager.header.title': 'モジュールレジストリ',

@@ -1554,6 +1554,26 @@ const koKRFallback = {
   'system.tenant.plan.basic': '베이직',
   'system.tenant.plan.professional': '프로페셔널',
   'system.tenant.plan.enterprise': '엔터프라이즈',
+  'system.tenant.planFeature.title': '요금제 기능 비교',
+  'system.tenant.planFeature.description':
+    '요금제는 테넌트 콘솔에서 사용할 수 있는 기능 진입점을 결정합니다. 실제 작업 권한은 역할 권한 부여로 제어됩니다.',
+  'system.tenant.planFeature.feature': '기능',
+  'system.tenant.planFeature.current': '현재 요금제',
+  'system.tenant.planFeature.currentPlan': '현재: {{plan}}',
+  'system.tenant.planFeature.included': '포함',
+  'system.tenant.planFeature.notIncluded': '미포함',
+  'system.tenant.planFeature.lowcode.dynamicModule': '동적 모듈 관리',
+  'system.tenant.planFeature.lowcode.dynamicModuleDesc':
+    '런타임에 모듈을 등록, 검사, 해제합니다',
+  'system.tenant.planFeature.lowcode.generator': '코드 생성기',
+  'system.tenant.planFeature.lowcode.generatorDesc':
+    '데이터베이스 테이블에서 백엔드/프론트엔드 모듈, 메뉴, 권한을 생성합니다',
+  'system.tenant.planFeature.lowcode.generatorDatasource': '외부 데이터 소스 가져오기',
+  'system.tenant.planFeature.lowcode.generatorDatasourceDesc':
+    '외부 데이터베이스에 연결하고 테이블 구조에서 모듈을 생성합니다',
+  'system.tenant.planFeature.upgradeTitle': '현재 요금제에 이 기능이 포함되어 있지 않습니다',
+  'system.tenant.planFeature.upgradeDescription':
+    '"{{feature}}" 기능은 {{plan}} 이상 요금제가 필요합니다. 테넌트 요금제 변경은 플랫폼 관리자에게 문의하세요.',
   'system.tenant.status.active': '활성',
   'system.tenant.status.suspended': '중지',
   'system.tenant.status.deleted': '삭제됨',
@@ -1685,6 +1705,7 @@ const koKRFallback = {
   'i18n.audit.locateAction': '목록에서 위치 찾기',
   'i18n.audit.staleDays': '{{count}}일 미해결',
   'i18n.audit.stalePlaceholdersEmpty': '{{days}}일 이상 미해결된 플레이스홀더가 없습니다.',
+  'generator.datasource.planLocked': '외부 데이터 소스는 {{plan}} 요금제가 필요합니다',
   'generator.moduleManager.title': '모듈 레지스트리',
   'generator.moduleManager.header.eyebrow': '시스템 도메인 / 로우코드',
   'generator.moduleManager.header.title': '모듈 레지스트리',

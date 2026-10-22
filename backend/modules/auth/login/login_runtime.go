@@ -217,7 +217,10 @@ func (s *Runtime) RecordSecurityEvent(event security.SystemAuthSecurityEvent) {
 	if event.Severity == "" {
 		event.Severity = "medium"
 	}
-	if s.tenantCtx != nil && s.tenantCtx.IsMulti() {
+	// Subject attribution wins: a failed attempt against a tenant-owned account
+	// belongs to that tenant even when the request named another one. The
+	// request context is only a fallback for events without a known subject.
+	if event.TenantID == tenant.PlatformGlobalTenantID && s.tenantCtx != nil && s.tenantCtx.IsMulti() {
 		event.TenantID = s.tenantCtx.TenantID
 	}
 	if err := s.db.Create(&event).Error; err != nil {
@@ -638,7 +641,7 @@ func (s *Runtime) GetUserPerms(userID uint64) ([]string, error) {
 		if err == nil && cached != "" {
 			var perms []string
 			if json.Unmarshal([]byte(cached), &perms) == nil {
-				return perms, nil
+				return s.dropStalePlatformOnlyPerms(userID, cacheKey, perms), nil
 			}
 		}
 	}
@@ -659,6 +662,9 @@ func (s *Runtime) GetUserPerms(userID uint64) ([]string, error) {
 		Pluck("system_role_permission.permission_key", &permissionKeys).Error
 
 	perms := mergePermissionKeys(permissionKeys)
+	if tenantID != tenant.PlatformGlobalTenantID {
+		perms = tenant.FilterPlatformOnlyPermissionKeys(perms)
+	}
 
 	// Cache for 5 minutes
 	if database.RDB != nil && len(perms) > 0 && err == nil {
@@ -668,6 +674,34 @@ func (s *Runtime) GetUserPerms(userID uint64) ([]string, error) {
 	}
 
 	return perms, err
+}
+
+// dropStalePlatformOnlyPerms keeps a permission cache entry from outliving the
+// tenant platform-grant repair. Only entries that actually contain a
+// platform-only key pay the ownership lookup, so the common cache hit stays a
+// single Redis read, and platform users keep their platform-only keys.
+func (s *Runtime) dropStalePlatformOnlyPerms(userID uint64, cacheKey string, perms []string) []string {
+	hasPlatformOnly := false
+	for _, key := range perms {
+		if tenant.IsPlatformOnlyPermissionKey(key) {
+			hasPlatformOnly = true
+			break
+		}
+	}
+	if !hasPlatformOnly {
+		return perms
+	}
+	tenantID, err := s.userOwningTenantID(userID)
+	if err != nil || tenantID == tenant.PlatformGlobalTenantID {
+		return perms
+	}
+	filtered := tenant.FilterPlatformOnlyPermissionKeys(perms)
+	if database.RDB != nil && len(filtered) > 0 {
+		if data, marshalErr := json.Marshal(filtered); marshalErr == nil {
+			database.RDB.Set(context.Background(), cacheKey, data, 5*time.Minute)
+		}
+	}
+	return filtered
 }
 
 func (s *Runtime) GetCurrentUserInfo(userID uint64) (*UserInfoResp, error) {

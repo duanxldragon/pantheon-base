@@ -86,14 +86,14 @@ func (s *LoginService) AuthenticateWithSource(req *LoginReq, sourceKey string) (
 		return nil, err
 	}
 	if err := s.ensureUserAvailable(currentUser, sourceKey, policy, now); err != nil {
-		return nil, err
+		return nil, attributeTenant(err, s.loginAuditTenantID(currentUser))
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(currentUser.Password), []byte(req.Password)); err != nil {
-		return nil, s.handlePasswordMismatch(currentUser, sourceKey, policy, now)
+		return nil, attributeTenant(s.handlePasswordMismatch(currentUser, sourceKey, policy, now), s.loginAuditTenantID(currentUser))
 	}
 	if err := s.clearFailedLoginState(currentUser.ID); err != nil {
-		return nil, err
+		return nil, attributeTenant(err, s.loginAuditTenantID(currentUser))
 	}
 	return currentUser, nil
 }
@@ -631,6 +631,7 @@ func (s *LoginService) emitSecurityEvent(currentUser *authuser.User, eventType, 
 		username = currentUser.Username
 	}
 	s.recorder.RecordSecurityEvent(security.SystemAuthSecurityEvent{
+		TenantID:   s.loginAuditTenantID(currentUser),
 		UserID:     userID,
 		Username:   username,
 		EventType:  eventType,

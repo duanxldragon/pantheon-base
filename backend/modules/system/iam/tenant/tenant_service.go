@@ -499,7 +499,10 @@ func (s *Service) Bootstrap() error {
 	if err := s.EnsureTenantRolePolicies(); err != nil {
 		return err
 	}
-	return s.EnsureTenantRootDepts()
+	if err := s.EnsureTenantRootDepts(); err != nil {
+		return err
+	}
+	return s.RepairTenantPlatformGrants()
 }
 
 // EnsureTenantRootDepts guarantees every active tenant owns a root department,

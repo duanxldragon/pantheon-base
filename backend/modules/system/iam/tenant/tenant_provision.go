@@ -128,6 +128,11 @@ func (s *Service) ProvisionTenant(in ProvisionInput) (*ProvisionResult, error) {
 		if err := provisionTenantRoleBindings(tx, in.TenantID, roleIDs); err != nil {
 			return err
 		}
+		// Re-provisioning is the repair entry point: clear grants that a pre-fix
+		// copy left behind before returning.
+		if err := repairTenantPlatformGrants(tx, in.TenantID); err != nil {
+			return err
+		}
 
 		rootDeptID, err := provisionTenantRootDept(tx, in.TenantID)
 		if err != nil {
@@ -217,10 +222,9 @@ func provisionTenantRoles(tx *gorm.DB, tenantID uint64) (map[string]uint64, erro
 	return roleIDs, nil
 }
 
-// tenantPlatformMenuModule is the module key of the platform tenancy menus
-// (`/system/tenant`). It mirrors modules/system's moduleTenant constant, which
-// cannot be imported here without a package cycle.
-const tenantPlatformMenuModule = "system.tenant"
+// tenantPlatformMenuModule names the platform-only menu module for fixtures.
+// Production classification goes through pkg/tenant.IsPlatformOnlyMenu.
+const tenantPlatformMenuModule = tenantctx.PlatformOnlyMenuModuleTenant
 
 // condRoleIDEquals is the predicate both role-binding tables are read and
 // written by, so the placeholder style stays identical across the four queries.
@@ -251,18 +255,25 @@ func provisionTenantRoleMenus(tx *gorm.DB, tenantID uint64, roleIDs map[string]u
 	if adminRoleID == 0 {
 		return errors.New("tenant provision: tenant_admin role missing")
 	}
-	var menuIDs []uint64
+	type menuRow struct {
+		ID     uint64 `gorm:"column:id"`
+		Module string `gorm:"column:module"`
+		Path   string `gorm:"column:path"`
+	}
+	var menus []menuRow
 	if err := tx.Table("system_menu").
-		Select("id").
+		Select("id, module, path").
 		Where("is_visible = ? AND type <> ?", 1, "F").
-		Where("module IS NULL OR module <> ?", tenantPlatformMenuModule).
 		Order("sort asc, id asc").
-		Pluck("id", &menuIDs).Error; err != nil {
+		Scan(&menus).Error; err != nil {
 		return fmt.Errorf("list tenant navigation menus: %w", err)
 	}
-	for _, menuID := range menuIDs {
-		if err := rbacbind.EnsureRoleMenu(tx, tenantID, adminRoleID, menuID); err != nil {
-			return fmt.Errorf("grant tenant admin menu %d: %w", menuID, err)
+	for _, menu := range menus {
+		if tenantctx.IsPlatformOnlyMenu(menu.Module, menu.Path) {
+			continue
+		}
+		if err := rbacbind.EnsureRoleMenu(tx, tenantID, adminRoleID, menu.ID); err != nil {
+			return fmt.Errorf("grant tenant admin menu %d: %w", menu.ID, err)
 		}
 	}
 	return nil
@@ -462,7 +473,11 @@ func platformAdminRoleID(tx *gorm.DB) (uint64, error) {
 }
 
 // readPlatformAdminBindings reads the platform admin role's permission keys and
-// menu ids, the two surfaces a tenant role is derived from.
+// menu ids, the two surfaces a tenant role is derived from. Platform-only
+// bindings are dropped: the console capability gate refuses those routes for
+// every tenant subject, so copying them would only produce menu entries whose
+// pages answer 403 tenant.platformOnly (and stale permission keys that make the
+// frontend expose actions the server rejects).
 func readPlatformAdminBindings(tx *gorm.DB, platformRoleID uint64) ([]string, []uint64, error) {
 	var permissionKeys []string
 	if err := tx.Table("system_role_permission").
@@ -472,6 +487,8 @@ func readPlatformAdminBindings(tx *gorm.DB, platformRoleID uint64) ([]string, []
 		Pluck("permission_key", &permissionKeys).Error; err != nil {
 		return nil, nil, fmt.Errorf("read platform admin permissions: %w", err)
 	}
+	permissionKeys = tenantctx.FilterPlatformOnlyPermissionKeys(permissionKeys)
+
 	var menuIDs []uint64
 	if err := tx.Table("system_role_menu").
 		Select("menu_id").
@@ -480,7 +497,130 @@ func readPlatformAdminBindings(tx *gorm.DB, platformRoleID uint64) ([]string, []
 		Pluck("menu_id", &menuIDs).Error; err != nil {
 		return nil, nil, fmt.Errorf("read platform admin menus: %w", err)
 	}
-	return permissionKeys, menuIDs, nil
+	if len(menuIDs) == 0 {
+		return permissionKeys, nil, nil
+	}
+	type menuRow struct {
+		ID     uint64 `gorm:"column:id"`
+		Module string `gorm:"column:module"`
+		Path   string `gorm:"column:path"`
+	}
+	var menus []menuRow
+	if err := tx.Table("system_menu").
+		Select("id, module, path").
+		Where("id IN ?", menuIDs).
+		Scan(&menus).Error; err != nil {
+		return nil, nil, fmt.Errorf("read platform admin menu rows: %w", err)
+	}
+	allowed := make(map[uint64]struct{}, len(menus))
+	for _, menu := range menus {
+		if tenantctx.IsPlatformOnlyMenu(menu.Module, menu.Path) {
+			continue
+		}
+		allowed[menu.ID] = struct{}{}
+	}
+	filtered := make([]uint64, 0, len(menuIDs))
+	for _, menuID := range menuIDs {
+		if _, ok := allowed[menuID]; ok {
+			filtered = append(filtered, menuID)
+		}
+	}
+	return permissionKeys, filtered, nil
+}
+
+// RepairTenantPlatformGrants removes platform-only menu and permission grants
+// from every tenant-owned role.
+//
+// The grant copy used to mirror the platform administrator verbatim, so tenants
+// provisioned before this fix carry `system.tenant` / `system:i18n` / menu-write
+// bindings. Re-provisioning only adds missing rows, so without this repair the
+// old rows would outlive the fix and keep rendering menus whose routes answer
+// 403 tenant.platformOnly. Runs at startup, is idempotent and never touches the
+// platform namespace (tenant_id = 0).
+func (s *Service) RepairTenantPlatformGrants() error {
+	if s.db == nil {
+		return common.ErrDatabaseNotInitialized
+	}
+	return repairTenantPlatformGrants(s.db, 0)
+}
+
+// repairTenantPlatformGrants removes the platform-only grants inside one
+// tenant's namespace, or every tenant namespace when tenantID is 0.
+func repairTenantPlatformGrants(tx *gorm.DB, tenantID uint64) error {
+	if tx == nil || tx.Migrator() == nil {
+		return nil
+	}
+	if !tx.Migrator().HasTable("system_menu") ||
+		!tx.Migrator().HasTable("system_role_menu") ||
+		!tx.Migrator().HasTable("system_role_permission") {
+		return nil
+	}
+
+	type menuRow struct {
+		ID     uint64 `gorm:"column:id"`
+		Module string `gorm:"column:module"`
+		Path   string `gorm:"column:path"`
+	}
+	var menus []menuRow
+	if err := tx.Table("system_menu").Select("id, module, path").Scan(&menus).Error; err != nil {
+		return fmt.Errorf("repair tenant platform grants: list menus: %w", err)
+	}
+	platformMenuIDs := make([]uint64, 0)
+	for _, menu := range menus {
+		if tenantctx.IsPlatformOnlyMenu(menu.Module, menu.Path) {
+			platformMenuIDs = append(platformMenuIDs, menu.ID)
+		}
+	}
+	// Button rows under a platform-only page belong to that page's surface even
+	// though they carry no path of their own.
+	if len(platformMenuIDs) > 0 {
+		var childIDs []uint64
+		if err := tx.Table("system_menu").
+			Select("id").
+			Where("parent_id IN ?", platformMenuIDs).
+			Pluck("id", &childIDs).Error; err != nil {
+			return fmt.Errorf("repair tenant platform grants: list platform button rows: %w", err)
+		}
+		platformMenuIDs = append(platformMenuIDs, childIDs...)
+	}
+
+	if len(platformMenuIDs) > 0 {
+		menuGrants := tx.Table("system_role_menu").
+			Where("tenant_id <> ?", tenantctx.PlatformGlobalTenantID).
+			Where("menu_id IN ?", platformMenuIDs)
+		if tenantID != 0 {
+			menuGrants = menuGrants.Where("tenant_id = ?", tenantID)
+		}
+		if err := menuGrants.Delete(nil).Error; err != nil {
+			return fmt.Errorf("repair tenant platform grants: delete menu grants: %w", err)
+		}
+	}
+
+	var tenantKeys []string
+	if err := tx.Table("system_role_permission").
+		Distinct("permission_key").
+		Where("tenant_id <> ?", tenantctx.PlatformGlobalTenantID).
+		Pluck("permission_key", &tenantKeys).Error; err != nil {
+		return fmt.Errorf("repair tenant platform grants: list permission keys: %w", err)
+	}
+	platformKeys := make([]string, 0)
+	for _, key := range tenantKeys {
+		if tenantctx.IsPlatformOnlyPermissionKey(key) {
+			platformKeys = append(platformKeys, key)
+		}
+	}
+	if len(platformKeys) > 0 {
+		permissionGrants := tx.Table("system_role_permission").
+			Where("tenant_id <> ?", tenantctx.PlatformGlobalTenantID).
+			Where("permission_key IN ?", platformKeys)
+		if tenantID != 0 {
+			permissionGrants = permissionGrants.Where("tenant_id = ?", tenantID)
+		}
+		if err := permissionGrants.Delete(nil).Error; err != nil {
+			return fmt.Errorf("repair tenant platform grants: delete permission grants: %w", err)
+		}
+	}
+	return nil
 }
 
 // grantTenantRolePermissions copies the missing permission keys onto one tenant

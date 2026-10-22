@@ -647,6 +647,24 @@ const zhCNFallback = {
   'system.tenant.plan.basic': '基础版',
   'system.tenant.plan.professional': '专业版',
   'system.tenant.plan.enterprise': '旗舰版',
+  'system.tenant.planFeature.title': '套餐功能对照',
+  'system.tenant.planFeature.description':
+    '套餐决定租户控制台中可用的功能入口；具体操作仍由角色授权控制。',
+  'system.tenant.planFeature.feature': '功能',
+  'system.tenant.planFeature.current': '当前套餐',
+  'system.tenant.planFeature.currentPlan': '当前：{{plan}}',
+  'system.tenant.planFeature.included': '包含',
+  'system.tenant.planFeature.notIncluded': '不包含',
+  'system.tenant.planFeature.lowcode.dynamicModule': '动态模块管理',
+  'system.tenant.planFeature.lowcode.dynamicModuleDesc': '运行时注册、检查与卸载动态模块',
+  'system.tenant.planFeature.lowcode.generator': '代码生成器',
+  'system.tenant.planFeature.lowcode.generatorDesc': '基于数据库表生成前后端模块、菜单与权限',
+  'system.tenant.planFeature.lowcode.generatorDatasource': '外部数据源导入',
+  'system.tenant.planFeature.lowcode.generatorDatasourceDesc':
+    '接入外部数据库并从其表结构生成模块',
+  'system.tenant.planFeature.upgradeTitle': '当前套餐不包含此功能',
+  'system.tenant.planFeature.upgradeDescription':
+    '「{{feature}}」需要{{plan}}及以上套餐，请联系平台管理员调整租户套餐。',
   'system.tenant.status.active': '启用中',
   'system.tenant.status.suspended': '已停用',
   'system.tenant.status.deleted': '已删除',
@@ -1080,6 +1098,7 @@ const zhCNFallback = {
   'generator.datasource.currentTag': '当前平台库',
   'generator.datasource.manage': '管理数据源',
   'generator.datasource.manageTitle': '受管数据源',
+  'generator.datasource.planLocked': '外部数据源需{{plan}}套餐',
   'generator.datasource.readonlyHint':
     '生成器只读取表结构元数据，不执行业务 SQL，也不会改写外部库。',
   'generator.datasource.empty': '暂无外部数据源，请先新增。',

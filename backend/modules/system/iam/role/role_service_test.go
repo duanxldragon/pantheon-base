@@ -20,7 +20,7 @@ func setupRoleTestDB(t *testing.T) *gorm.DB {
 
 	// 迁移模型
 	_ = db.AutoMigrate(&SystemRole{}, &SystemRolePermission{}, &SystemRoleMenu{}, &roleDataScopePolicy{}, &database.CasbinRule{})
-	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_menu (id INTEGER PRIMARY KEY, page_perm TEXT, perms TEXT, type TEXT)")
+	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_menu (id INTEGER PRIMARY KEY, page_perm TEXT, perms TEXT, type TEXT, module TEXT, path TEXT)")
 	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_user_role (tenant_id INTEGER NOT NULL DEFAULT 0, user_id INTEGER, role_id INTEGER)")
 	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_user (id INTEGER PRIMARY KEY, username TEXT, nickname TEXT, dept_id INTEGER, post_id INTEGER, status INTEGER, created_at DATETIME, updated_at DATETIME, deleted_at DATETIME)")
 	// system_dept 按真实结构建表并预置部门 10/20/30：自定义数据范围会校验部门归属

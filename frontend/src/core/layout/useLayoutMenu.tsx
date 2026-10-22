@@ -15,6 +15,7 @@ type NavigateToPath = (path: string) => void;
 
 interface MenuRenderOptions {
   handleMenuNavigation: NavigateToPath;
+  isPathEntitled: (path: string) => boolean;
   t: TranslateLabel;
 }
 
@@ -79,8 +80,11 @@ export function findMenuNodeByPath(nodes: MenuNode[], path: string): MenuNode | 
   return undefined;
 }
 
-function findMenuNavigationPath(item: MenuNode): string | undefined {
-  if (item.path && findRouteByPath(item.path)) {
+function findMenuNavigationPath(
+  item: MenuNode,
+  isPathEntitled: (path: string) => boolean,
+): string | undefined {
+  if (item.path && findRouteByPath(item.path) && isPathEntitled(item.path)) {
     return item.path;
   }
   return item.children?.length ? findFirstNavigableMenuPath(item.children) || undefined : undefined;
@@ -105,7 +109,7 @@ function renderMenuItems(nodes: MenuNode[], options: MenuRenderOptions, level = 
     ].join(' ');
 
     if (item.children && item.children.length > 0) {
-      const navigationPath = findMenuNavigationPath(item);
+      const navigationPath = findMenuNavigationPath(item, options.isPathEntitled);
       const handleGroupNavigation = () => {
         if (navigationPath) {
           options.handleMenuNavigation(navigationPath);
@@ -158,37 +162,76 @@ function renderMenuItems(nodes: MenuNode[], options: MenuRenderOptions, level = 
 interface CapabilityFilter {
   orgEnabled: boolean;
   tenantEnabled: boolean;
+  /** True when the session is pinned to a tenant (multi mode, tenant id > 0). */
+  tenantScoped: boolean;
 }
 
-function filterMenuTreeByCapabilities(nodes: MenuNode[], caps: CapabilityFilter): MenuNode[] {
-  return nodes
-    .filter((item) => {
-      if (!caps.orgEnabled && item.module === 'system.org') {
-        return false;
+// Mirrors backend pkg/tenant/platform_scope.go: these surfaces are gated by
+// PlatformCapabilityMiddleware, so a tenant session that opens them gets
+// 403 tenant.platformOnly. The backend already filters them out of the tree;
+// repeating the rule here keeps a stale/gateway-cached tree from rendering a
+// dead menu entry.
+const PLATFORM_ONLY_MENU_MODULES = new Set(['system.tenant']);
+const PLATFORM_ONLY_MENU_PATHS = new Set(['/system/tenant', '/system/menu', '/system/i18n']);
+
+function isPlatformOnlyMenu(item: MenuNode): boolean {
+  return (
+    PLATFORM_ONLY_MENU_MODULES.has(item.module) || PLATFORM_ONLY_MENU_PATHS.has(item.path)
+  );
+}
+
+function filterMenuTreeByCapabilities(
+  nodes: MenuNode[],
+  caps: CapabilityFilter,
+  isPathEntitled: (path: string) => boolean,
+): MenuNode[] {
+  const filtered: MenuNode[] = [];
+  for (const item of nodes) {
+    if (!caps.orgEnabled && item.module === 'system.org') {
+      continue;
+    }
+    // 单租户（compat）下没有租户维度可管，租户管理菜单从访问控制移除。
+    // 多租户（multi）下保留。与 org.enabled / system.org 同一套能力过滤机制。
+    if (!caps.tenantEnabled && item.module === 'system.tenant') {
+      continue;
+    }
+    if (caps.tenantScoped && isPlatformOnlyMenu(item)) {
+      continue;
+    }
+    const children = item.children?.length
+      ? filterMenuTreeByCapabilities(item.children, caps, isPathEntitled)
+      : [];
+    const entitled = !item.path || isPathEntitled(item.path);
+    if (item.children?.length) {
+      // A group whose every child was filtered away would render as an empty
+      // expandable row; drop it unless the group itself navigates somewhere the
+      // plan still includes. Resolve the navigation target against the filtered
+      // children, otherwise a hidden child keeps its parent group alive.
+      if (
+        children.length === 0 &&
+        (!entitled || !findMenuNavigationPath({ ...item, children }, isPathEntitled))
+      ) {
+        continue;
       }
-      // 单租户（compat）下没有租户维度可管，租户管理菜单从访问控制移除。
-      // 多租户（multi）下保留。与 org.enabled / system.org 同一套能力过滤机制。
-      if (!caps.tenantEnabled && item.module === 'system.tenant') {
-        return false;
-      }
-      return true;
-    })
-    .map((item) => ({
-      ...item,
-      children: item.children?.length
-        ? filterMenuTreeByCapabilities(item.children, caps)
-        : [],
-    }));
+    } else if (!entitled) {
+      continue;
+    }
+    filtered.push({ ...item, children });
+  }
+  return filtered;
 }
 
 export interface UseLayoutMenuOptions {
   menuTree: MenuNode[];
   orgEnabled: boolean;
   tenantEnabled: boolean;
+  tenantScoped: boolean;
   currentPath: string;
   activeMenuPath: string;
   routeActiveMenu?: string;
   currentRouteTitleKey?: string;
+  /** Plan/feature filter resolved from the module route registry. */
+  isPathEntitled: (path: string) => boolean;
   t: TranslateLabel;
   handleMenuNavigation: NavigateToPath;
 }
@@ -208,17 +251,24 @@ export function useLayoutMenu(options: UseLayoutMenuOptions): UseLayoutMenuResul
     menuTree,
     orgEnabled,
     tenantEnabled,
+    tenantScoped,
     activeMenuPath,
     currentPath,
     routeActiveMenu,
     currentRouteTitleKey,
+    isPathEntitled,
     t,
     handleMenuNavigation,
   } = options;
 
   const visibleMenuTree = useMemo(
-    () => filterMenuTreeByCapabilities(menuTree, { orgEnabled, tenantEnabled }),
-    [menuTree, orgEnabled, tenantEnabled],
+    () =>
+      filterMenuTreeByCapabilities(
+        menuTree,
+        { orgEnabled, tenantEnabled, tenantScoped },
+        isPathEntitled,
+      ),
+    [menuTree, orgEnabled, tenantEnabled, tenantScoped, isPathEntitled],
   );
 
   const currentMenuTitleKey = useMemo(
@@ -291,9 +341,10 @@ export function useLayoutMenu(options: UseLayoutMenuOptions): UseLayoutMenuResul
     () =>
       renderMenuItems(visibleMenuTree, {
         handleMenuNavigation,
+        isPathEntitled,
         t,
       }),
-    [handleMenuNavigation, t, visibleMenuTree],
+    [handleMenuNavigation, isPathEntitled, t, visibleMenuTree],
   );
 
   return {

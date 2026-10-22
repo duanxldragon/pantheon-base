@@ -1685,6 +1685,28 @@ const frFRFallback = {
   'system.tenant.plan.basic': 'Basique',
   'system.tenant.plan.professional': 'Professionnel',
   'system.tenant.plan.enterprise': 'Entreprise',
+  'system.tenant.planFeature.title': 'Comparatif des fonctionnalités par formule',
+  'system.tenant.planFeature.description':
+    'La formule détermine les entrées de fonctionnalités exposées dans la console du locataire ; les permissions de rôle continuent de régir les actions autorisées.',
+  'system.tenant.planFeature.feature': 'Fonctionnalité',
+  'system.tenant.planFeature.current': 'Formule actuelle',
+  'system.tenant.planFeature.currentPlan': 'Actuelle : {{plan}}',
+  'system.tenant.planFeature.included': 'Incluse',
+  'system.tenant.planFeature.notIncluded': 'Non incluse',
+  'system.tenant.planFeature.lowcode.dynamicModule': 'Gestion des modules dynamiques',
+  'system.tenant.planFeature.lowcode.dynamicModuleDesc':
+    'Enregistrer, inspecter et désenregistrer des modules à l’exécution',
+  'system.tenant.planFeature.lowcode.generator': 'Générateur de code',
+  'system.tenant.planFeature.lowcode.generatorDesc':
+    'Générer les modules backend/frontend, les menus et les permissions à partir des tables de la base',
+  'system.tenant.planFeature.lowcode.generatorDatasource':
+    'Import de source de données externe',
+  'system.tenant.planFeature.lowcode.generatorDatasourceDesc':
+    'Connecter une base externe et générer des modules depuis ses tables',
+  'system.tenant.planFeature.upgradeTitle':
+    'Cette fonctionnalité n’est pas incluse dans votre formule',
+  'system.tenant.planFeature.upgradeDescription':
+    '« {{feature}} » nécessite la formule {{plan}} ou supérieure. Contactez l’administrateur de la plateforme pour modifier la formule du locataire.',
   'system.tenant.status.active': 'Actif',
   'system.tenant.status.suspended': 'Suspendu',
   'system.tenant.status.deleted': 'Supprimé',
@@ -1820,6 +1842,7 @@ const frFRFallback = {
   'i18n.audit.staleDays': '{{count}} jours non résolus',
   'i18n.audit.stalePlaceholdersEmpty':
     'Aucun placeholder non résolu depuis plus de {{days}} jours.',
+  'generator.datasource.planLocked': 'Les sources externes nécessitent la formule {{plan}}',
   'generator.moduleManager.title': 'Registre des modules',
   'generator.moduleManager.header.eyebrow': 'Domaine système / Low-Code',
   'generator.moduleManager.header.title': 'Registre des modules',
