@@ -1,0 +1,15 @@
+{
+  "before": [
+    "工作台"
+  ],
+  "afterTenant": [
+    "工作台"
+  ],
+  "afterGenerator": [
+    "工作台"
+  ],
+  "tenantShows403": true,
+  "tenantTabLeaked": false,
+  "generatorTabLeaked": false,
+  "upgradeShown": true
+}

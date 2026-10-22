@@ -697,6 +697,26 @@ const enUSFallback = {
   'system.tenant.plan.basic': 'Basic',
   'system.tenant.plan.professional': 'Professional',
   'system.tenant.plan.enterprise': 'Enterprise',
+  'system.tenant.planFeature.title': 'Plan feature comparison',
+  'system.tenant.planFeature.description':
+    'The plan decides which feature entries the tenant console exposes; role permissions still govern what each user may do.',
+  'system.tenant.planFeature.feature': 'Feature',
+  'system.tenant.planFeature.current': 'Current plan',
+  'system.tenant.planFeature.currentPlan': 'Current: {{plan}}',
+  'system.tenant.planFeature.included': 'Included',
+  'system.tenant.planFeature.notIncluded': 'Not included',
+  'system.tenant.planFeature.lowcode.dynamicModule': 'Dynamic module management',
+  'system.tenant.planFeature.lowcode.dynamicModuleDesc':
+    'Register, inspect, and unregister modules at runtime',
+  'system.tenant.planFeature.lowcode.generator': 'Code generator',
+  'system.tenant.planFeature.lowcode.generatorDesc':
+    'Generate backend/frontend modules, menus, and permissions from database tables',
+  'system.tenant.planFeature.lowcode.generatorDatasource': 'External datasource import',
+  'system.tenant.planFeature.lowcode.generatorDatasourceDesc':
+    'Connect an external database and generate modules from its tables',
+  'system.tenant.planFeature.upgradeTitle': 'This feature is not included in your plan',
+  'system.tenant.planFeature.upgradeDescription':
+    '“{{feature}}” requires the {{plan}} plan or higher. Contact your platform administrator to change the tenant plan.',
   'system.tenant.status.active': 'Active',
   'system.tenant.status.suspended': 'Suspended',
   'system.tenant.status.deleted': 'Deleted',
@@ -1160,6 +1180,7 @@ const enUSFallback = {
   'generator.datasource.currentTag': 'Current Platform DB',
   'generator.datasource.manage': 'Manage Datasources',
   'generator.datasource.manageTitle': 'Managed Datasources',
+  'generator.datasource.planLocked': 'External datasources require the {{plan}} plan',
   'generator.datasource.readonlyHint':
     'The generator reads metadata only. It does not execute business SQL or modify external databases.',
   'generator.datasource.empty': 'No external datasource yet. Add one first.',

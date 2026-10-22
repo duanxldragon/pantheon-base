@@ -46,14 +46,15 @@ CREATE TABLE IF NOT EXISTS system_role_menu (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`
 
 // seedMenu inserts one system_menu row and returns its id.
-func seedMenu(t *testing.T, db *gorm.DB, menuType, module string, visible int) uint64 {
+func seedMenu(t *testing.T, db *gorm.DB, menuType, module, path string, visible int) uint64 {
 	t.Helper()
 	row := struct {
 		Type      string
 		Module    *string
+		Path      string
 		IsVisible int
 		Sort      int
-	}{Type: menuType, IsVisible: visible, Sort: 1}
+	}{Type: menuType, Path: path, IsVisible: visible, Sort: 1}
 	if module != "" {
 		row.Module = &module
 	}
@@ -88,10 +89,12 @@ func TestProvisionTenant_SeedsTenantAdminMenus(t *testing.T) {
 
 	seedRepairTenant(t, db, 611, "menu-provision", tenantctx.TenantStatusActive)
 
-	visible := seedMenu(t, db, "C", "system.iam", 1)
-	hidden := seedMenu(t, db, "C", "system.iam", 0)
-	button := seedMenu(t, db, "F", "system.iam", 1)
-	platformOnly := seedMenu(t, db, "C", tenantPlatformMenuModule, 1)
+	visible := seedMenu(t, db, "C", "system.iam", "/system/user", 1)
+	hidden := seedMenu(t, db, "C", "system.iam", "/system/user-hidden", 0)
+	button := seedMenu(t, db, "F", "system.iam", "", 1)
+	platformOnly := seedMenu(t, db, "C", tenantPlatformMenuModule, "/system/tenant", 1)
+	menuAuthoring := seedMenu(t, db, "C", "system.iam", "/system/menu", 1)
+	i18n := seedMenu(t, db, "C", "system.iam", "/system/i18n", 1)
 
 	result, err := service.ProvisionTenant(ProvisionInput{TenantID: 611})
 	require.NoError(t, err)
@@ -104,6 +107,8 @@ func TestProvisionTenant_SeedsTenantAdminMenus(t *testing.T) {
 	require.False(t, granted[hidden], "hidden menus must not be granted")
 	require.False(t, granted[button], "button-type rows are permissions, not navigation")
 	require.False(t, granted[platformOnly], "platform tenancy menus belong to the platform console")
+	require.False(t, granted[menuAuthoring], "menu authoring is platform-capability gated")
+	require.False(t, granted[i18n], "i18n management is platform-capability gated")
 
 	memberID := result.RoleIDs[TenantRoleMemberKey]
 	require.NotZero(t, memberID)
@@ -119,7 +124,7 @@ func TestProvisionTenant_SeedsTenantAdminMenusIdempotently(t *testing.T) {
 	service := NewService(db)
 
 	seedRepairTenant(t, db, 612, "menu-idempotent", tenantctx.TenantStatusActive)
-	visible := seedMenu(t, db, "C", "system.iam", 1)
+	visible := seedMenu(t, db, "C", "system.iam", "/system/user", 1)
 
 	first, err := service.ProvisionTenant(ProvisionInput{TenantID: 612})
 	require.NoError(t, err)
@@ -164,10 +169,30 @@ func TestProvisionTenant_CopiesPlatformAdminPermissionKeys(t *testing.T) {
 		"system:login-log:export",
 		"system:security-event:list",
 		"system:session:list",
+		"system:menu:list",
 	}
-	for _, key := range platformKeys {
+	// Platform-only keys sit on the platform admin role but every tenant route
+	// rejects them with tenant.platformOnly, so they must not be copied.
+	platformOnlyKeys := []string{
+		"system:tenant:list",
+		"system:tenant:create",
+		"system:i18n:list",
+		"system:menu:create",
+	}
+	for _, key := range append(append([]string{}, platformKeys...), platformOnlyKeys...) {
 		require.NoError(t, db.Exec(
 			"INSERT INTO system_role_permission (tenant_id, role_id, permission_key) VALUES (0, 1, ?)", key,
+		).Error)
+	}
+
+	// The platform administrator's menu grants are copied through a second path
+	// (readPlatformAdminBindings), so pin that path too.
+	normalMenu := seedMenu(t, db, "C", "system.iam", "/system/login-log", 1)
+	platformTenantMenu := seedMenu(t, db, "C", tenantPlatformMenuModule, "/system/tenant", 1)
+	platformMenuAuthoring := seedMenu(t, db, "C", "system.iam", "/system/menu", 1)
+	for _, menuID := range []uint64{normalMenu, platformTenantMenu, platformMenuAuthoring} {
+		require.NoError(t, db.Exec(
+			"INSERT INTO system_role_menu (tenant_id, role_id, menu_id) VALUES (0, 1, ?)", menuID,
 		).Error)
 	}
 
@@ -179,7 +204,12 @@ func TestProvisionTenant_CopiesPlatformAdminPermissionKeys(t *testing.T) {
 	require.NotZero(t, adminID)
 
 	require.ElementsMatch(t, platformKeys, tenantPermissionKeys(t, db, 613, adminID),
-		"the tenant administrator must hold every platform administrator key")
+		"the tenant administrator must hold every assignable platform administrator key")
+
+	granted := grantedMenuIDs(t, db, 613, adminID)
+	require.True(t, granted[normalMenu], "assignable platform menus must be copied")
+	require.False(t, granted[platformTenantMenu], "platform-only menus must not be copied")
+	require.False(t, granted[platformMenuAuthoring], "platform-only menus must not be copied")
 
 	// The member role stays read-only: list/detail/view/tree/export only.
 	memberID := result.RoleIDs[TenantRoleMemberKey]
@@ -190,6 +220,7 @@ func TestProvisionTenant_CopiesPlatformAdminPermissionKeys(t *testing.T) {
 		"system:login-log:export",
 		"system:security-event:list",
 		"system:session:list",
+		"system:menu:list",
 	}, tenantPermissionKeys(t, db, 613, memberID))
 }
 
@@ -203,4 +234,70 @@ func tenantPermissionKeys(t *testing.T, db *gorm.DB, tenantID, roleID uint64) []
 		Order("permission_key asc").
 		Pluck("permission_key", &keys).Error)
 	return keys
+}
+
+// RepairTenantPlatformGrants is the upgrade path for tenants provisioned before
+// the binding copy was filtered: it must clear their platform-only grants while
+// leaving the platform namespace and the assignable grants untouched.
+func TestRepairTenantPlatformGrants(t *testing.T) {
+	db := setupTestDB(t)
+	require.NoError(t, db.Exec(tenantRoleMenuTestDDL).Error)
+	service := NewService(db)
+
+	seedRepairTenant(t, db, 614, "repair-platform-grants", tenantctx.TenantStatusActive)
+	require.NoError(t, db.Exec(
+		"INSERT INTO system_role (id, tenant_id, role_key, role_name, status) VALUES (1, 0, 'admin', 'admin', 1), (50, 614, 'tenant_admin', 'tenant_admin', 1)",
+	).Error)
+
+	normalMenu := seedMenu(t, db, "C", "system.iam", "/system/user", 1)
+	platformTenantMenu := seedMenu(t, db, "C", tenantPlatformMenuModule, "/system/tenant", 1)
+	platformMenuAuthoring := seedMenu(t, db, "C", "system.iam", "/system/menu", 1)
+	platformButton := seedMenu(t, db, "F", "system.iam", "", 1)
+	require.NoError(t, db.Exec("UPDATE system_menu SET parent_id = ? WHERE id = ?", platformTenantMenu, platformButton).Error)
+
+	for _, menuID := range []uint64{normalMenu, platformTenantMenu, platformMenuAuthoring, platformButton} {
+		require.NoError(t, db.Exec(
+			"INSERT INTO system_role_menu (tenant_id, role_id, menu_id) VALUES (614, 50, ?)", menuID,
+		).Error)
+		require.NoError(t, db.Exec(
+			"INSERT INTO system_role_menu (tenant_id, role_id, menu_id) VALUES (0, 1, ?)", menuID,
+		).Error)
+	}
+	tenantKeys := []string{
+		"system:user:list",
+		"system:login-log:list",
+		"system:menu:list",
+		"system:tenant:list",
+		"system:i18n:list",
+		"system:menu:create",
+	}
+	for _, key := range tenantKeys {
+		require.NoError(t, db.Exec(
+			"INSERT INTO system_role_permission (tenant_id, role_id, permission_key) VALUES (614, 50, ?)", key,
+		).Error)
+	}
+	for _, key := range []string{"system:tenant:list", "system:menu:create"} {
+		require.NoError(t, db.Exec(
+			"INSERT INTO system_role_permission (tenant_id, role_id, permission_key) VALUES (0, 1, ?)", key,
+		).Error)
+	}
+
+	require.NoError(t, service.RepairTenantPlatformGrants())
+
+	require.Equal(t, map[uint64]bool{normalMenu: true}, grantedMenuIDs(t, db, 614, 50),
+		"tenant roles keep assignable menus only")
+	require.ElementsMatch(t, []string{
+		"system:login-log:list",
+		"system:menu:list",
+		"system:user:list",
+	}, tenantPermissionKeys(t, db, 614, 50), "tenant roles keep assignable permission keys only")
+
+	require.Equal(t, map[uint64]bool{
+		normalMenu:            true,
+		platformTenantMenu:    true,
+		platformMenuAuthoring: true,
+		platformButton:        true,
+	}, grantedMenuIDs(t, db, 0, 1), "the platform namespace is never repaired away")
+	require.ElementsMatch(t, []string{"system:menu:create", "system:tenant:list"},
+		tenantPermissionKeys(t, db, 0, 1))
 }

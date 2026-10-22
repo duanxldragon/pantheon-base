@@ -4,6 +4,7 @@ import (
 	"strconv"
 
 	"github.com/duanxldragon/pantheon-base/backend/pkg/common"
+	"github.com/duanxldragon/pantheon-base/backend/pkg/tenant"
 
 	"github.com/gin-gonic/gin"
 )
@@ -39,7 +40,7 @@ func (h *MenuHandler) GetMenuTree(c *gin.Context) {
 			return
 		}
 	}
-	tree, err := h.service.GetMenuTree(&query, roleKeys)
+	tree, err := h.service.GetMenuTree(&query, roleKeys, tenant.FromGin(c))
 	if err != nil {
 		common.Fail(c, common.CodeError, "menu.fetch.error")
 		return

@@ -3,6 +3,7 @@ package role
 import (
 	"testing"
 
+	"github.com/duanxldragon/pantheon-base/backend/pkg/common"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/tenant"
 
 	"gorm.io/gorm"
@@ -14,6 +15,56 @@ func tenantRoleService(db *gorm.DB, tenantID uint64) *RoleService {
 		Mode:       tenant.ModeMulti,
 		ResolvedBy: tenant.ResolvedBySubject,
 	})
+}
+
+// A tenant role must not be granted a platform-only page or permission key.
+// The manage tree hides them, but a direct API request would recreate the menu
+// entry whose route answers 403 tenant.platformOnly.
+func TestTenantRoleRejectsPlatformOnlyGrants(t *testing.T) {
+	db := setupRoleTestDB(t)
+	if err := db.Exec("INSERT INTO system_menu (id, page_perm, perms, type, module, path) VALUES (3, 'system:tenant:list', '', 'C', 'system.tenant', '/system/tenant')").Error; err != nil {
+		t.Fatalf("seed tenant menu: %v", err)
+	}
+	if err := db.Exec("INSERT INTO system_menu (id, page_perm, perms, type, module, path) VALUES (4, '', 'system:menu:create', 'F', 'system.iam', '')").Error; err != nil {
+		t.Fatalf("seed menu write permission: %v", err)
+	}
+	if err := db.Exec("INSERT INTO system_menu (id, page_perm, perms, type, module, path) VALUES (5, 'system:menu:list', '', 'C', 'system.iam', '/system/user')").Error; err != nil {
+		t.Fatalf("seed assignable menu: %v", err)
+	}
+	s := tenantRoleService(db, 282)
+
+	if _, err := s.CreateRole(&RoleCreateReq{
+		RoleName: "Tenant Console", RoleKey: "tenant_console", Status: 1, MenuIDs: []uint64{3},
+	}); err == nil || common.ErrMessage(err) != "role.menu.invalid" {
+		t.Fatalf("platform-only menu must be rejected, got %v", err)
+	}
+	if _, err := s.CreateRole(&RoleCreateReq{
+		RoleName: "Tenant Console", RoleKey: "tenant_console", Status: 1,
+		PermissionKeys: []string{"system:tenant:list"},
+	}); err == nil || common.ErrMessage(err) != "role.permission.invalid" {
+		t.Fatalf("platform-only permission must be rejected, got %v", err)
+	}
+
+	created, err := s.CreateRole(&RoleCreateReq{
+		RoleName: "Tenant Navigator", RoleKey: "tenant_nav", Status: 1,
+		MenuIDs: []uint64{5}, PermissionKeys: []string{"system:menu:list"},
+	})
+	if err != nil {
+		t.Fatalf("assignable grants must stay allowed: %v", err)
+	}
+
+	if _, err := s.UpdateRole(created.ID, &RoleUpdateReq{
+		RoleName: "Tenant Navigator", RoleKey: "tenant_nav", Status: 1,
+		MenuIDs: []uint64{3}, PermissionKeys: []string{"system:menu:list"},
+	}); err == nil || common.ErrMessage(err) != "role.menu.invalid" {
+		t.Fatalf("update must reject a platform-only menu, got %v", err)
+	}
+	if _, err := s.UpdateRole(created.ID, &RoleUpdateReq{
+		RoleName: "Tenant Navigator", RoleKey: "tenant_nav", Status: 1,
+		MenuIDs: []uint64{5}, PermissionKeys: []string{"system:menu:create"},
+	}); err == nil || common.ErrMessage(err) != "role.permission.invalid" {
+		t.Fatalf("update must reject a platform-only permission, got %v", err)
+	}
 }
 
 func countRoleMenus(t *testing.T, db *gorm.DB, tenantID, roleID uint64) int64 {

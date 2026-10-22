@@ -52,10 +52,12 @@ import {
 } from '../../modules/auth/security/api';
 import { ensureAuthUserInfo } from '../auth/bootstrap';
 import { useMenuStore } from '../../store/useMenuStore';
+import { useTenantSessionStore, isTenantScopedSession } from '../../store/useTenantSessionStore';
 import { useAuthStore } from '../../store/useAuthStore';
 import { usePermission } from '../../hooks/usePermission';
 import { useRefreshPolling, useRefreshSubscription } from '../refresh/refreshBus';
 import { findRouteByPath, systemRouteTitleMap } from '../router/modules';
+import { usePlanEntitlements } from '../entitlements/usePlanEntitlements';
 import { formatDateTime } from '../format/dateTime';
 import { renderMenuIcon } from '../menu/icon';
 import { useTheme } from '../../hooks';
@@ -102,6 +104,7 @@ import {
   mergeOpenedTabsIntoState,
   orderOpenedTabs,
   readOpenedTabs,
+  selectAccessibleTabs,
   type OpenedPageTab,
   type TabActionKey,
 } from './layoutTabs';
@@ -1006,6 +1009,11 @@ const BaseLayout: React.FC = () => {
   const { t, i18n } = useTranslation();
   const publicSettings = usePublicSettings();
   const { menuTree, fetchMenuTree, resetMenuTree, loading } = useMenuStore();
+  const {
+    context: tenantSession,
+    fetchTenantSession,
+    resetTenantSession,
+  } = useTenantSessionStore();
   const { token, userInfo, clearAuth, setUserInfo } = useAuthStore();
   const { isAdmin, hasPerm } = usePermission();
   const lastActivityAtRef = useRef(readShellLastActivityAt() || 0);
@@ -1027,6 +1035,15 @@ const BaseLayout: React.FC = () => {
   );
   const currentRouteTitleKey = resolveRouteTitleKey(matchedRoute, location.pathname);
   const activeMenuPath = pickText(matchedRoute?.activeMenu, location.pathname);
+  const { isPathEntitled } = usePlanEntitlements();
+  const isPathAccessible = (path: string) => {
+    if (!isPathEntitled(path)) {
+      return false;
+    }
+    const permission = findRouteByPath(path)?.pagePermission;
+    return !permission || hasPerm(permission);
+  };
+  const accessibleTabs = selectAccessibleTabs(openedTabs, isPathAccessible);
   const {
     visibleMenuTree,
     currentMenuTitleKey,
@@ -1038,10 +1055,12 @@ const BaseLayout: React.FC = () => {
     menuTree,
     orgEnabled: publicSettings.orgEnabled,
     tenantEnabled: publicSettings.tenantMode === 'multi',
+    tenantScoped: isTenantScopedSession(tenantSession),
     currentPath: location.pathname,
     activeMenuPath,
     routeActiveMenu: matchedRoute?.activeMenu,
     currentRouteTitleKey,
+    isPathEntitled,
     t,
     handleMenuNavigation,
   });
@@ -1110,6 +1129,7 @@ const BaseLayout: React.FC = () => {
       clearOperationToken();
       setOpenedTabs([]);
       resetMenuTree();
+      resetTenantSession();
       // Route warm data is module state and this logout only navigates, so the
       // cache would outlive the session it was read for: drop it before the
       // shell tears down. Keyed by path alone, an entry left here is what the
@@ -1124,7 +1144,7 @@ const BaseLayout: React.FC = () => {
         idleLogoutInFlightRef.current = false;
       }, 800);
     },
-    [clearAuth, navigate, resetMenuTree],
+    [clearAuth, navigate, resetMenuTree, resetTenantSession],
   );
 
   const recordActivity = useCallback(
@@ -1160,12 +1180,13 @@ const BaseLayout: React.FC = () => {
     bootstrappedRef.current = true;
 
     runSilently(fetchMenuTree());
+    runSilently(fetchTenantSession());
     if (!useAuthStore.getState().userInfo) {
       runSilently(ensureAuthUserInfo());
     }
     const initialActivityAt = readShellLastActivityAt();
     syncShellActivity(initialActivityAt && initialActivityAt > 0 ? initialActivityAt : Date.now());
-  }, [fetchMenuTree, syncShellActivity]);
+  }, [fetchMenuTree, fetchTenantSession, syncShellActivity]);
 
   useRefreshSubscription(
     [
@@ -1238,7 +1259,12 @@ const BaseLayout: React.FC = () => {
     return () => globalThis.removeEventListener('keydown', handleKeyDown);
   }, [locked]);
 
+  const locationAccessible = isPathAccessible(location.pathname);
+
   useEffect(() => {
+    if (!locationAccessible) {
+      return;
+    }
     const nextTab = buildOpenedPageTab(location.pathname, currentPageTitle, {
       titleKey: currentTabTitleKey,
     });
@@ -1250,7 +1276,7 @@ const BaseLayout: React.FC = () => {
       );
     }, 0);
     return () => globalThis.clearTimeout(timer);
-  }, [currentPageTitle, currentTabTitleKey, location.pathname, t]);
+  }, [currentPageTitle, currentTabTitleKey, location.pathname, locationAccessible, t]);
 
   useEffect(() => {
     if (!token || sessionIdleMs <= 0) {
@@ -1377,7 +1403,7 @@ const BaseLayout: React.FC = () => {
       handleGoSecurity,
     });
 
-    openedTabs.forEach((item) => {
+    accessibleTabs.forEach((item) => {
       const title = item.titleKey ? t(item.titleKey) : item.fallbackTitle;
       items.push({
         key: `tab-${item.path}`,
@@ -1395,8 +1421,8 @@ const BaseLayout: React.FC = () => {
     canAccessDashboard,
     handleGoProfile,
     handleGoSecurity,
+    accessibleTabs,
     navigate,
-    openedTabs,
     t,
     visibleMenuTree,
   ]);
@@ -1500,7 +1526,7 @@ const BaseLayout: React.FC = () => {
     <LayoutOpenedTabs
       enabled={publicSettings.enableTabBar}
       layoutMode={layoutMode}
-      tabs={openedTabs}
+      tabs={accessibleTabs}
       currentPath={location.pathname}
       onNavigate={navigate}
       onMoveTab={moveTab}

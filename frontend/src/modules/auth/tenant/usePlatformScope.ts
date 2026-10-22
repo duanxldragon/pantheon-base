@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { getCurrentTenant } from './api';
+import { useEffect } from 'react';
+import { useTenantSessionStore } from '../../../store/useTenantSessionStore';
 
 /**
  * Whether the current session is operating in the platform/global scope.
@@ -21,37 +21,34 @@ import { getCurrentTenant } from './api';
 export type PlatformScope = 'unknown' | 'platform' | 'tenant';
 
 export function usePlatformScope(enabled: boolean): PlatformScope {
-  const [scope, setScope] = useState<PlatformScope>('unknown');
+  const context = useTenantSessionStore((state) => state.context);
+  const loaded = useTenantSessionStore((state) => state.loaded);
+  const loadError = useTenantSessionStore((state) => state.loadError);
+  const fetchTenantSession = useTenantSessionStore((state) => state.fetchTenantSession);
 
   useEffect(() => {
     if (!enabled) {
       return;
     }
-    let cancelled = false;
-    getCurrentTenant()
-      .then((current) => {
-        if (cancelled) {
-          return;
-        }
-        const platform =
-          current?.tenantId === 0 ||
-          current?.resolvedBy === 'platform-fallback' ||
-          current?.resolvedBy === 'header';
-        setScope(platform ? 'platform' : 'tenant');
-      })
-      .catch(() => {
-        // No tenant context means this subject is not platform-capable; the
-        // downstream calls would be refused anyway, so stay hidden.
-        if (!cancelled) {
-          setScope('tenant');
-        }
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [enabled]);
+    void fetchTenantSession();
+  }, [enabled, fetchTenantSession]);
 
   // Compat mode has no tenant scope at all: derive it at render time instead of
-  // writing state from the effect (which would cascade a render).
-  return enabled ? scope : 'tenant';
+  // writing state from an effect (which would cascade a render).
+  if (!enabled) {
+    return 'tenant';
+  }
+  if (!loaded) {
+    return 'unknown';
+  }
+  if (loadError || !context) {
+    // No tenant context means this subject is not platform-capable; the
+    // downstream calls would be refused anyway, so stay hidden.
+    return 'tenant';
+  }
+  const platform =
+    context.tenantId === 0 ||
+    context.resolvedBy === 'platform-fallback' ||
+    context.resolvedBy === 'header';
+  return platform ? 'platform' : 'tenant';
 }

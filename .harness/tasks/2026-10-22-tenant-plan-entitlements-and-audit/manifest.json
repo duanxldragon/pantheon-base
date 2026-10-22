@@ -1,0 +1,154 @@
+{
+  "taskId": "2026-10-22-tenant-plan-entitlements-and-audit",
+  "taskDoc": "docs/harness/tasks/2026-10-22-tenant-plan-entitlements-and-audit.task.md",
+  "title": "Close the three maintainer-reported tenant defects: platform-only menus, empty tenant login audit, and plan differentiation owned by the frontend",
+  "goal": "A manual acceptance pass found three user-visible defects: (1) a tenant administrator still sees platform-only console menus (tenant/menu/i18n management) and lands on a 403 page; (2) the tenant login-log page is empty because audit rows are written at platform scope; (3) every tenant plan exposes the same console surfaces because plan has no presentation-layer definition. This packet fixes all three at their real boundaries: one shared platform-surface classification consumed by menu reads, provisioning, role assignment, and permission caching; tenant attribution for login/security audit; and a frontend-owned plan registry that modules annotate, the shell filters, and the tenant form renders as a matrix. Backend role permissions remain the authorization boundary; the plan gate is UX-only and no plan-specific data is seeded.",
+  "primaryLayer": "platform",
+  "status": "completed",
+  "priority": "P1",
+  "type": "acceptance-remediation",
+  "estimatedComplexity": "medium",
+  "findings": [
+    "A1 (P1): tenant sessions receive platform-only menu rows. Provisioning copied the platform administrator's menu and permission bindings verbatim into each tenant namespace, so tenant_admin owned system.tenant, system:menu, and system:i18n grants; the navigation tree returned them unfiltered, and each page's route group answered 403 tenant.platformOnly. Reproduced via a tenant-admin login: sidebar showed the platform surfaces; direct navigation rendered the 403 page. Fixed by classifying the platform surfaces once in pkg/tenant, filtering tenant-scoped menu reads, dropping those bindings during provisioning, and rejecting them on tenant-owned role writes.",
+    "A2 (P2): existing tenants provisioned before the fix would keep the stale grants because re-provisioning only adds missing rows, and GetUserPerms could serve a cached permission list containing platform-only keys for up to five minutes. Fixed with an idempotent startup repair scoped to tenant_id <> 0, a user-ownership check before reusing a cached list, and a filtered write-back.",
+    "B1 (P1): tenant login logs and security events were written at platform scope (tenant_id 0) while tenant administrators read with WithTenantScope(tenant), so the audit page showed no rows. The login flow never used the resolved tenant claim for audit attribution; MFA verification also lost the challenge tenant on pre-session failures. Fixed by stamping successful rows with the issued tenant claim, failed attempts with the known subject's owning tenant, pinning the MFA request to the challenge tenant, and only falling back to the request context for events without a subject. Compat mode remains platform-global (0).",
+    "C1 (P1): plan tiers existed only as a tenants.plan string with no presentation-layer meaning, so free/basic/professional/enterprise rendered identical consoles. Deriving differences from backend seed data or hard-coded checks was explicitly rejected by the maintainer. Fixed with a frontend PLAN_FEATURES registry (feature key -> minimum plan), route/widget feature annotations owned by each module, shell filtering for menu/tabs/routes/widgets, an upgrade page for direct URLs, and a read-only plan matrix in the tenant create/edit dialog. The backend still treats plan as data (the pre-existing plan-to-quota mapping is untouched) and seeds no plan-specific console features. Backend role permissions remain the authorization boundary; the plan gate is UX-only.",
+    "C2 (P2): the code generator's external-datasource picker exposed every tenant's datasource rows and the manage button regardless of plan. Fixed by filtering the picker to the current datasource when the plan is below enterprise, disabling management, and labeling the locked state; the backend datasource permission stays required for enterprise tenants.",
+    "D1 (P3, fixed): after a tenant administrator opened a forbidden URL directly, the opened-tabs bar kept that tab for the session although the page itself rendered 403 and no tenant data loaded. Fixed by deriving both the tab bar and the command palette from selectAccessibleTabs, which applies the same plan-entitlement plus route-pagePermission predicate used for rendering; a browser probe on a free tenant now leaves only 工作台 after direct visits to /system/tenant (403) and /system/generator (upgrade page)."
+  ],
+  "scope": {
+    "in": [
+      "Shared platform-only surface classification in backend/pkg/tenant/platform_scope.go",
+      "Tenant-scoped filtering of navigation and management menu trees",
+      "Provisioning and startup repair that remove platform-only menu/permission grants from tenant namespaces",
+      "Tenant-owned role assignment guards for platform-only menus and permission keys",
+      "Login/MFA/security-event tenant attribution with compat pinning to tenant 0",
+      "Stale platform-only permission keys in the per-user cache",
+      "Frontend plan registry, session entitlements hook, route guard, menu/widget filtering",
+      "Derived opened-tab and command-palette filtering by plan entitlement and route permission",
+      "Module feature annotations for dynamic modules, generator, and external datasource management",
+      "Tenant create/edit plan feature matrix and five-locale i18n",
+      "Unit/regression tests plus real four-plan browser acceptance and evidence"
+    ],
+    "out": [
+      "Casbin model, domain subject format, and backend authorization semantics",
+      "Plan-specific backend seed data, migrations, or hard-coded feature switches",
+      "Billing, metering, subscription lifecycle, or tenant-editable plans",
+      "Tenant-custom menus and permissions (frozen by the 2026-10-15 decision)",
+      "Production data mutation or release publication actions",
+      "CI required-check or gate-threshold changes"
+    ]
+  },
+  "acceptanceCriteria": [
+    "A tenant-scoped session never receives system.tenant, /system/menu, or /system/i18n in its navigation or management tree, and a direct URL renders the permission-denied page without loading tenant data.",
+    "The platform administrator still sees tenant, menu, and i18n management menus and can create tenants with a visible plan matrix.",
+    "A tenant login writes exactly one success row in the tenant's own login-log view, and failed/MFA attempts are attributed to the subject or challenge tenant; compat deployments keep rows at tenant 0.",
+    "Free hides the low-code group and both low-code routes show the upgrade page; basic exposes module management but not the generator; professional exposes the generator with a locked datasource picker; enterprise unlocks datasource management.",
+    "No plan-specific feature difference is implemented by backend seed data or hard-coded tenant initialization.",
+    "Backend -race suite (real MySQL + Redis), frontend unit tests, type-check, lint, contracts, build, and i18n parity pass; evidence records the exact commands, results, environment limits, and residual gaps."
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "permission-policy",
+    "portableFailureClass": "menu-surface-leaks-platform-capability",
+    "ownerLayer": "consumer-repository",
+    "coverageDimensions": [
+      "behaviour",
+      "architecture-fitness",
+      "runtime-quality"
+    ]
+  },
+  "expectedFiles": {
+    "create": [
+      "backend/pkg/tenant/platform_scope.go",
+      "backend/modules/auth/login/login_tenant_audit.go",
+      "backend/modules/auth/login/login_log_tenant_attribution_test.go",
+      "frontend/src/core/entitlements/plans.ts",
+      "frontend/src/core/entitlements/usePlanEntitlements.ts",
+      "frontend/src/core/entitlements/PlanFeatureGuard.tsx",
+      "frontend/src/core/layout/layoutTabs.ts",
+      "frontend/src/store/useTenantSessionStore.ts",
+      "frontend/src/modules/system/iam/tenant/TenantPlanMatrix.tsx",
+      "frontend/src/modules/system/iam/tenant/TenantPlanMatrix.css",
+      "frontend/tests/unit/core/entitlements/plans.test.ts",
+      "frontend/tests/unit/core/layout/useLayoutMenu.test.tsx",
+      "frontend/tests/unit/core/layout/layoutTabs.test.ts",
+      "frontend/tests/unit/store/useTenantSessionStore.test.ts",
+      "docs/reviews/PANTHEON_BASE_TENANT_PLAN_AND_AUDIT_FIXES_2026-10-22.md",
+      ".harness/tasks/2026-10-22-tenant-plan-entitlements-and-audit/manifest.json",
+      ".harness/evidence/2026-10-22-tenant-plan-entitlements-and-audit/summary.md",
+      ".harness/evidence/2026-10-22-tenant-plan-entitlements-and-audit/review.md",
+      ".harness/evidence/2026-10-22-tenant-plan-entitlements-and-audit/commands.json"
+    ],
+    "modify": [
+      "backend/modules/system/iam/menu/menu_service.go",
+      "backend/modules/system/iam/menu/menu_handler.go",
+      "backend/modules/system/iam/tenant/tenant_provision.go",
+      "backend/modules/system/iam/tenant/tenant_service.go",
+      "backend/modules/system/iam/role/role_helper.go",
+      "backend/modules/auth/login/login_handler.go",
+      "backend/modules/auth/login/login_runtime.go",
+      "backend/modules/auth/login/login_service.go",
+      "backend/modules/auth/mfa/mfa_service.go",
+      "frontend/src/App.tsx",
+      "frontend/src/core/layout/AppLayout.tsx",
+      "frontend/src/core/layout/useLayoutMenu.tsx",
+      "frontend/src/core/router/types.ts",
+      "frontend/src/modules/auth/login/components/Login.tsx",
+      "frontend/src/modules/auth/tenant/usePlatformScope.ts",
+      "frontend/src/modules/lowcode/dynamicmodule/index.ts",
+      "frontend/src/modules/lowcode/generator/index.ts",
+      "frontend/src/modules/lowcode/generator/pages/ModuleWizard.tsx",
+      "frontend/src/modules/platform/Dashboard.tsx",
+      "frontend/src/modules/platform/widgets.tsx",
+      "frontend/src/modules/system/iam/tenant/TenantList.tsx",
+      "frontend/src/i18n/resources/zh-CN.ts",
+      "frontend/src/i18n/resources/en-US.ts",
+      "frontend/src/i18n/resources/ja-JP.ts",
+      "frontend/src/i18n/resources/ko-KR.ts",
+      "frontend/src/i18n/resources/fr-FR.ts",
+      "docs/README.md",
+      ".harness/STATUS.md"
+    ],
+    "doNotTouch": [
+      "backend/internal/middleware platform capability rules",
+      "Casbin model and domain subjects",
+      "numbered migration chain",
+      "CI required checks and gate thresholds",
+      "published release assets"
+    ]
+  },
+  "implementationNotes": [
+    "Platform-only classification is centralized in pkg/tenant/platform_scope.go and consumed by menu reads, provisioning, role assignment, and permission caching.",
+    "Provisioning strips platform-only bindings on both first run and re-provisioning; Bootstrap runs an idempotent repair for pre-fix tenants and never touches tenant_id 0.",
+    "Plan entitlements live only in frontend/src/core/entitlements/plans.ts. Modules declare feature keys; the shell filters menus, routes, and dashboard widgets; the backend receives no plan-derived configuration.",
+    "Login audit attribution uses the issued tenant claim on success and the subject's owning tenant on failure; compat keeps tenant 0 so rows remain readable by compat administrators.",
+    "The shared tenant session store is reset both on logout and at the Login.tsx login boundary, so re-login in the same tab cannot inherit the previous subject's plan or tenant viewpoint.",
+    "Unknown plan values normalize to free; unknown feature keys fail open; platform scope and compat bypass the plan gate.",
+    "Opened tabs and command-palette entries are derived through selectAccessibleTabs so a plan-locked or permission-forbidden path never persists as a tab, including tabs recorded before the tenant session resolved."
+  ],
+  "verificationPlan": {
+    "commands": [
+      "cd backend && PATH=\"/d/msys64/mingw64/bin:/d/nodejs:$PATH\" CGO_ENABLED=1 CC='D:\\msys64\\mingw64\\bin\\gcc.exe' go test -race -p 1 -count=1 ./...",
+      "cd backend && go test -count=1 ./modules/auth/login/ ./modules/system/iam/menu/ ./modules/system/iam/tenant/ ./modules/system/iam/role/",
+      "cd frontend && node ./node_modules/vitest/vitest.mjs run",
+      "cd frontend && node ./node_modules/typescript/bin/tsc -b",
+      "cd frontend && node ./node_modules/eslint/bin/eslint.js .",
+      "cd frontend && npm run build",
+      "node scripts/frontmatter-check.mjs",
+      "node scripts/harness/check-task-packet.mjs --root ."
+    ],
+    "browserAcceptance": "Create one tenant per plan against the local multi-tenant deployment, log in as each tenant admin, and verify: no platform-only sidebar entries, direct tenant URL returns 403, login log shows own rows, low-code surfaces follow the plan, and the platform tenant-create dialog renders the plan matrix. Screenshots and a JSON result are archived in the evidence directory."
+  },
+  "linkage": {
+    "evidenceDir": ".harness/evidence/2026-10-22-tenant-plan-entitlements-and-audit/",
+    "reviewFile": ".harness/evidence/2026-10-22-tenant-plan-entitlements-and-audit/review.md",
+    "summaryFile": ".harness/evidence/2026-10-22-tenant-plan-entitlements-and-audit/summary.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/reviews/PANTHEON_BASE_FINAL_ACCEPTANCE_REVIEW_2026-10-21.md",
+      "docs/reviews/PANTHEON_BASE_TENANT_PLAN_AND_AUDIT_FIXES_2026-10-22.md"
+    ]
+  }
+}

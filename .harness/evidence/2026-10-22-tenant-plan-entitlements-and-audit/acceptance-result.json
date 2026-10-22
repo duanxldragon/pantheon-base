@@ -1,0 +1,244 @@
+{
+  "plans": {
+    "free": {
+      "username": "acc-free-794649-admin",
+      "tenantId": 300,
+      "menuLabels": [
+        "工作台",
+        "访问控制",
+        "用户管理",
+        "角色管理",
+        "权限管理",
+        "组织架构",
+        "部门管理",
+        "岗位管理",
+        "安全审计",
+        "登录日志",
+        "会话管理",
+        "操作日志",
+        "安全事件",
+        "平台配置",
+        "字典管理",
+        "系统设置"
+      ],
+      "issue1": {
+        "platformOnlyMenuVisible": [],
+        "tenantPageUrl": "http://127.0.0.1:5173/system/tenant",
+        "tenantPageShowsTenantConsole": false,
+        "tenantPageSnippet": "P\nPantheon Base\n工作台\n访问控制\n组织架构\n安全审计\n平台配置\n首页\n租户管理\n搜索菜单、页面、功能…\nCtrl K\nA\nAcceptance free admin\ntenant_admin\n工作台\n403\n你没有访问当前页面的权限\n返回首页\nPantheon Platform · Enterprise Admin Foundation"
+      },
+      "issue3": {
+        "moduleManagerMenu": false,
+        "generatorMenu": false,
+        "lowcodeGroupMenu": false,
+        "modulesPage": {
+          "upgradeShown": true,
+          "url": "http://127.0.0.1:5173/system/modules"
+        },
+        "generatorPage": {
+          "upgradeShown": true,
+          "url": "http://127.0.0.1:5173/system/generator"
+        }
+      },
+      "issue2": {
+        "showsOwnLogin": true,
+        "tableRows": 8,
+        "snippet": "P\nPantheon Base\n工作台\n访问控制\n组织架构\n安全审计\n登录日志\n会话管理\n操作日志\n安全事件\n平台配置\n首页\n安全审计\n登录日志\n搜索菜单、页面、功能…\nCtrl K\nA\nAcceptance free admin\ntenant_admin\n工作台\n登录日志\n系统域 / 安全审计登录\n统一追踪管理员登录结果、来源与异常信号\n最近登录\n7\n成功\n7\n失败\n0\n审计摘要\n登录状态\n时间范围\n清理日志\n导出\n已选 0 条\n清空选择\n删除所选\n保留期清理和所选删除都要求独立权限与二次验证。\n\t\n用户名\n\t\n登录 IP\n\t\n地理位置\n\t\n浏览器\n\t\n登录状态\n\t\n提示信息\n\t\n登录时间\n\n\n\t\nacc-free-794649-admin\n\t\n127.0.0.1\n\t\n内网 IP\n\t\nChrome · Windows\n\t\n成功\n\t\n登录成功\n\t\n2026-10-22 13:25:08\n\n"
+      }
+    },
+    "basic": {
+      "username": "acc-basic-794649-admin",
+      "tenantId": 301,
+      "menuLabels": [
+        "工作台",
+        "访问控制",
+        "用户管理",
+        "角色管理",
+        "权限管理",
+        "组织架构",
+        "部门管理",
+        "岗位管理",
+        "安全审计",
+        "登录日志",
+        "会话管理",
+        "操作日志",
+        "安全事件",
+        "低代码平台",
+        "模块管理",
+        "平台配置",
+        "字典管理",
+        "系统设置"
+      ],
+      "issue1": {
+        "platformOnlyMenuVisible": [],
+        "tenantPageUrl": "http://127.0.0.1:5173/system/tenant",
+        "tenantPageShowsTenantConsole": false,
+        "tenantPageSnippet": "P\nPantheon Base\n工作台\n访问控制\n组织架构\n安全审计\n低代码平台\n平台配置\n首页\n租户管理\n搜索菜单、页面、功能…\nCtrl K\nA\nAcceptance basic admin\ntenant_admin\n工作台\n403\n你没有访问当前页面的权限\n返回首页\nPantheon Platform · Enterprise Admin Foundation"
+      },
+      "issue3": {
+        "moduleManagerMenu": true,
+        "generatorMenu": false,
+        "lowcodeGroupMenu": true,
+        "modulesPage": {
+          "upgradeShown": false,
+          "url": "http://127.0.0.1:5173/system/modules"
+        },
+        "generatorPage": {
+          "upgradeShown": true,
+          "url": "http://127.0.0.1:5173/system/generator"
+        }
+      },
+      "issue2": {
+        "showsOwnLogin": true,
+        "tableRows": 7,
+        "snippet": "P\nPantheon Base\n工作台\n访问控制\n组织架构\n安全审计\n登录日志\n会话管理\n操作日志\n安全事件\n低代码平台\n平台配置\n首页\n安全审计\n登录日志\n搜索菜单、页面、功能…\nCtrl K\nA\nAcceptance basic admin\ntenant_admin\n工作台\n登录日志\n系统域 / 安全审计登录\n统一追踪管理员登录结果、来源与异常信号\n最近登录\n6\n成功\n6\n失败\n0\n审计摘要\n登录状态\n时间范围\n清理日志\n导出\n已选 0 条\n清空选择\n删除所选\n保留期清理和所选删除都要求独立权限与二次验证。\n\t\n用户名\n\t\n登录 IP\n\t\n地理位置\n\t\n浏览器\n\t\n登录状态\n\t\n提示信息\n\t\n登录时间\n\n\n\t\nacc-basic-794649-admin\n\t\n127.0.0.1\n\t\n内网 IP\n\t\nChrome · Windows\n\t\n成功\n\t\n登录成功\n\t\n2026-10-22 13"
+      }
+    },
+    "professional": {
+      "username": "acc-pro-794649-admin",
+      "tenantId": 302,
+      "menuLabels": [
+        "工作台",
+        "访问控制",
+        "用户管理",
+        "角色管理",
+        "权限管理",
+        "组织架构",
+        "部门管理",
+        "岗位管理",
+        "安全审计",
+        "登录日志",
+        "会话管理",
+        "操作日志",
+        "安全事件",
+        "低代码平台",
+        "模块管理",
+        "模块生成器",
+        "平台配置",
+        "字典管理",
+        "系统设置"
+      ],
+      "issue1": {
+        "platformOnlyMenuVisible": [],
+        "tenantPageUrl": "http://127.0.0.1:5173/system/tenant",
+        "tenantPageShowsTenantConsole": false,
+        "tenantPageSnippet": "P\nPantheon Base\n工作台\n访问控制\n组织架构\n安全审计\n低代码平台\n平台配置\n首页\n租户管理\n搜索菜单、页面、功能…\nCtrl K\nA\nAcceptance professional admin\ntenant_admin\n工作台\n403\n你没有访问当前页面的权限\n返回首页\nPantheon Platform · Enterprise Admin Foundation"
+      },
+      "issue3": {
+        "moduleManagerMenu": true,
+        "generatorMenu": true,
+        "lowcodeGroupMenu": true,
+        "modulesPage": {
+          "upgradeShown": false,
+          "url": "http://127.0.0.1:5173/system/modules"
+        },
+        "generatorPage": {
+          "upgradeShown": false,
+          "planLockedTag": true,
+          "manageButtonVisible": 1,
+          "manageButtonDisabled": true
+        }
+      },
+      "issue2": {
+        "showsOwnLogin": true,
+        "tableRows": 9,
+        "snippet": "P\nPantheon Base\n工作台\n访问控制\n组织架构\n安全审计\n登录日志\n会话管理\n操作日志\n安全事件\n低代码平台\n平台配置\n首页\n安全审计\n登录日志\n搜索菜单、页面、功能…\nCtrl K\nA\nAcceptance professional admin\ntenant_admin\n工作台\n登录日志\n系统域 / 安全审计登录\n统一追踪管理员登录结果、来源与异常信号\n最近登录\n8\n成功\n8\n失败\n0\n审计摘要\n登录状态\n时间范围\n清理日志\n导出\n已选 0 条\n清空选择\n删除所选\n保留期清理和所选删除都要求独立权限与二次验证。\n\t\n用户名\n\t\n登录 IP\n\t\n地理位置\n\t\n浏览器\n\t\n登录状态\n\t\n提示信息\n\t\n登录时间\n\n\n\t\nacc-pro-794649-admin\n\t\n127.0.0.1\n\t\n内网 IP\n\t\nChrome · Windows\n\t\n成功\n\t\n登录成功\n\t\n2026-10-"
+      }
+    },
+    "enterprise": {
+      "username": "acc-ent-794649-admin",
+      "tenantId": 303,
+      "menuLabels": [
+        "工作台",
+        "访问控制",
+        "用户管理",
+        "角色管理",
+        "权限管理",
+        "组织架构",
+        "部门管理",
+        "岗位管理",
+        "安全审计",
+        "登录日志",
+        "会话管理",
+        "操作日志",
+        "安全事件",
+        "低代码平台",
+        "模块管理",
+        "模块生成器",
+        "平台配置",
+        "字典管理",
+        "系统设置"
+      ],
+      "issue1": {
+        "platformOnlyMenuVisible": [],
+        "tenantPageUrl": "http://127.0.0.1:5173/system/tenant",
+        "tenantPageShowsTenantConsole": false,
+        "tenantPageSnippet": "P\nPantheon Base\n工作台\n访问控制\n组织架构\n安全审计\n低代码平台\n平台配置\n首页\n租户管理\n搜索菜单、页面、功能…\nCtrl K\nA\nAcceptance enterprise admin\ntenant_admin\n工作台\n403\n你没有访问当前页面的权限\n返回首页\nPantheon Platform · Enterprise Admin Foundation"
+      },
+      "issue3": {
+        "moduleManagerMenu": true,
+        "generatorMenu": true,
+        "lowcodeGroupMenu": true,
+        "generatorPage": {
+          "upgradeShown": false,
+          "planLockedTag": false,
+          "manageButtonVisible": 1,
+          "manageButtonDisabled": false
+        }
+      },
+      "issue2": {
+        "showsOwnLogin": true,
+        "tableRows": 7,
+        "snippet": "P\nPantheon Base\n工作台\n访问控制\n组织架构\n安全审计\n登录日志\n会话管理\n操作日志\n安全事件\n低代码平台\n平台配置\n首页\n安全审计\n登录日志\n搜索菜单、页面、功能…\nCtrl K\nA\nAcceptance enterprise admin\ntenant_admin\n工作台\n登录日志\n系统域 / 安全审计登录\n统一追踪管理员登录结果、来源与异常信号\n最近登录\n6\n成功\n6\n失败\n0\n审计摘要\n登录状态\n时间范围\n清理日志\n导出\n已选 0 条\n清空选择\n删除所选\n保留期清理和所选删除都要求独立权限与二次验证。\n\t\n用户名\n\t\n登录 IP\n\t\n地理位置\n\t\n浏览器\n\t\n登录状态\n\t\n提示信息\n\t\n登录时间\n\n\n\t\nacc-ent-794649-admin\n\t\n127.0.0.1\n\t\n内网 IP\n\t\nChrome · Windows\n\t\n成功\n\t\n登录成功\n\t\n2026-10-22"
+      }
+    }
+  },
+  "platform": {
+    "menuLabels": [
+      "工作台",
+      "访问控制",
+      "用户管理",
+      "角色管理",
+      "权限管理",
+      "租户管理",
+      "菜单管理",
+      "组织架构",
+      "部门管理",
+      "岗位管理",
+      "安全审计",
+      "登录日志",
+      "会话管理",
+      "操作日志",
+      "安全事件",
+      "低代码平台",
+      "模块管理",
+      "模块生成器",
+      "平台配置",
+      "字典管理",
+      "系统设置",
+      "国际化管理"
+    ],
+    "platformOnlyMenuVisible": [
+      "租户管理",
+      "菜单管理",
+      "国际化管理"
+    ],
+    "createButtonVisible": 1,
+    "matrix": {
+      "titleVisible": true,
+      "featureRows": [
+        "动态模块管理",
+        "代码生成器",
+        "外部数据源导入"
+      ],
+      "planColumns": [
+        "免费版",
+        "基础版",
+        "专业版",
+        "旗舰版"
+      ],
+      "currentPlanTag": true
+    }
+  },
+  "generatedAt": "2026-10-22T05:25:05.452Z"
+}
