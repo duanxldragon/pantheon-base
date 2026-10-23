@@ -12,12 +12,12 @@ The project is not intended to be just a login shell plus CRUD scaffolding. Its 
 
 | Item | Value |
 | --- | --- |
-| Current foundation release | [`pantheon-base-v0.17.2`](https://github.com/duanxldragon/pantheon-base/releases/tag/pantheon-base-v0.17.2) (with the four consumable assets) |
+| Current foundation release | [`pantheon-base-v0.17.3`](https://github.com/duanxldragon/pantheon-base/releases/tag/pantheon-base-v0.17.3) (with the four consumable assets) |
 | Shell/Harness baseline | `1.4.0` (see [VERSION](./VERSION) / [SHELL_VERSION.json](./SHELL_VERSION.json)) |
 | Deployment guide | [docs/DEPLOYMENT_GUIDE.md](./docs/DEPLOYMENT_GUIDE.md) (MySQL 8, Redis 7, migrations + runtime seed, health checks, telemetry, backup/restore, and schema-aware rollback) |
-| Changelog | [CHANGELOG.md](./CHANGELOG.md) / [RELEASE_NOTES_v0.17.2.md](./RELEASE_NOTES_v0.17.2.md) |
+| Changelog | [CHANGELOG.md](./CHANGELOG.md) / [RELEASE_NOTES_v0.17.3.md](./RELEASE_NOTES_v0.17.3.md) |
 
-Delivery status: v0.17.2 is the residual-closeout patch. Its tag `pantheon-base-v0.17.2` carries all four consumable assets (tgz / tgz.sha256 / repo.tar / repo.tar.sha256), asserted by `Foundation Release Verify`. It closes the five items v0.17.1 left open, two of which turned out to be real defects once exercised: creating two tenants concurrently deadlocked in the settings copy (`Error 1213`), and a deleted tenant could be revived by a status update because the state machine answered "allowed" for the tombstone. The other three are closed by removing the condition rather than re-labelling it: the Redis test flake by giving each package its own logical database, the race-detector gap by locating a working toolchain, and the unrecallable v0.17.0 credential by a release-time scan that refuses to publish a bundle carrying one. Contract §2.1 gains the V1.3 tombstone clarification. No schema change (still 29), no route or permission code removed or renamed.
+Delivery status: v0.17.3 is the post-publication review patch. Its tag `pantheon-base-v0.17.3` carries all four consumable assets (tgz / tgz.sha256 / repo.tar / repo.tar.sha256), asserted by `Foundation Release Verify`. It puts the five findings from the v0.17.2 review into the next consumable asset: the release credential preflight now scans both `bundle/` and `repo.tar` and fails closed when the snapshot is missing (v0.17.2 scanned only the bundle, while the v0.17.0 residue shipped only in repo.tar; the published asset was scanned afterwards and is clean), the three evidence statements that did not match the code are corrected with an erratum, and the narrow-viewport tenant-picker smoke waits for the Arco popup to align with its trigger before measuring overflow. No runtime behaviour change; schema stays at 29 and no route, permission code, menu or error envelope changed.
 
 ## Positioning
 

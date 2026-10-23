@@ -1,0 +1,139 @@
+{
+  "taskId": "2026-10-23-v0173-release-closeout",
+  "taskDoc": "docs/harness/tasks/2026-10-23-v0173-release-closeout.task.md",
+  "title": "Publish v0.17.3: the widened release credential gate, corrected evidence, and the stabilized tenant-picker smoke",
+  "goal": "Publish the post-publication review fixes as v0.17.3 so the next consumable asset carries the corrected release gate. The credential preflight now scans both published shapes (bundle/ and repo.tar) and fails closed when repo.tar is missing, which closes the gap that let the v0.17.2 gate report clean without opening the snapshot that carried the v0.17.0 residue. The release also carries the corrected v0.17.2 evidence (erratum instead of a silent rewrite), the tenant-picker smoke that waits for the Arco popup to align before measuring overflow, and the removed duplicate doc comment. No runtime behaviour changes: schema stays at 29, no route, permission code, menu seed or error envelope changes.",
+  "primaryLayer": "platform",
+  "status": "in-progress",
+  "priority": "P2",
+  "type": "release-closeout",
+  "estimatedComplexity": "small",
+  "findings": [
+    "R-1 (P1, fixed in 933ffddd): the release credential preflight added for the v0.17.0 leak scanned only the staged bundle/ tree. The leaked evidence file lived in the tracked tree and therefore only in repo.tar, so the gate reported 'clean, 768 files' without opening the asset that carried the residue.",
+    "R-2 (P2, fixed in b13fbf33): three statements in the v0.17.2 evidence did not match the code — the deadlock fix described as a 1213 retry, the scanner described as 18 cases with PEM/JWT detection, and the publication gate described as release-wide. Corrected with an erratum that keeps the original claims on record.",
+    "R-3 (P3, fixed in b13fbf33): .harness/STATUS.md still said the release was in progress after the tag existed. Corrected with the verified tag commit.",
+    "R-4 (P2, fixed in 933ffddd): the narrow-viewport tenant picker smoke measured document overflow during Arco's first-frame popup positioning and saw 87px in CI. Fixed by waiting for popup/trigger alignment before measuring; the overflow assertion and its bound are unchanged.",
+    "R-5 (P3, fixed in 933ffddd): a duplicated GetTenantByID doc-comment line was removed. Comment-only."
+  ],
+  "scope": {
+    "in": [
+      "Release credential preflight scans bundle/ and repo.tar, fails closed on a missing repo.tar, and keeps the report masked",
+      "Regression tests for repo.tar residue, clean repo.tar and missing repo.tar",
+      "Tenant-picker smoke waits for Arco popup/trigger alignment before asserting document overflow",
+      "Erratum and corrected facts for the v0.17.2 evidence packet; FR-015 records the gate coverage gap",
+      "Version material: VERSION 0.17.3, CHANGELOG, RELEASE_NOTES_v0.17.3.md, README(zh/en), STATUS",
+      "Publish pantheon-base-v0.17.3 with the four foundation-release assets"
+    ],
+    "out": [
+      "Any production runtime logic change; the only backend diff in the range is a comment line",
+      "Database schema or migrations (stays at 29)",
+      "Routes, permission codes, menu seeds, error envelopes and tenant lifecycle semantics",
+      "Rewriting or replacing the published v0.17.0, v0.17.1 or v0.17.2 tags and assets",
+      "Relaxing gate thresholds, skipping tests or using suppressions"
+    ]
+  },
+  "acceptanceCriteria": [
+    "The scanner test suite covers the .harness/archive residue path inside repo.tar, a clean repo.tar and a missing repo.tar that fails closed; all cases pass.",
+    "The publish path calls the widened preflight before any tag is created, and the report never reprints the secret.",
+    "The tenant-picker smoke waits for popup/trigger alignment before measuring overflow; its bound stays at 1px.",
+    "Governance checkers pass: docs frontmatter, task packet, structure, generated modules, failure registry.",
+    "The release notes describe only what changed since v0.17.2 and state that there is no runtime or schema change.",
+    "Release Gate Summary is successful on the merge commit before the release is cut.",
+    "pantheon-base-v0.17.3 is an annotated tag carrying tgz / tgz.sha256 / repo.tar / repo.tar.sha256; checksums and Foundation Release Verify are green.",
+    "The published release is not a draft or prerelease, and gh release view reports exactly the four assets."
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "permission-policy",
+    "portableFailureClass": "static-sensor-gap / evidence-drift / measurement-race",
+    "ownerLayer": "consumer-repository",
+    "ratchetDecision": "gate-updated",
+    "coverageDimensions": [
+      "runtime-quality",
+      "maintainability",
+      "architecture-fitness"
+    ]
+  },
+  "expectedFiles": {
+    "create": [
+      "RELEASE_NOTES_v0.17.3.md",
+      "docs/harness/tasks/2026-10-23-v0173-release-closeout.task.md",
+      ".harness/tasks/2026-10-23-v0173-release-closeout/manifest.json",
+      ".harness/evidence/2026-10-23-v0173-release-closeout/summary.md",
+      ".harness/evidence/2026-10-23-v0173-release-closeout/review.md",
+      ".harness/evidence/2026-10-23-v0173-release-closeout/commands.json"
+    ],
+    "modify": [
+      "VERSION",
+      "CHANGELOG.md",
+      "README.md",
+      "README.en.md",
+      ".harness/STATUS.md"
+    ],
+    "doNotTouch": [
+      "backend/pkg/database/migrations/**",
+      ".github/workflows/**",
+      "the published v0.17.0, v0.17.1 and v0.17.2 tags and assets"
+    ]
+  },
+  "implementationNotes": [
+    "cut-foundation-release.mjs does not read RELEASE_NOTES_*.md automatically; --release-notes, --upgrade-notes and --consumer-impact must be passed explicitly or the release metadata records 'No ... provided.'",
+    "The repo.tar scan copies the archive into its extraction directory and runs tar with a relative name, because Git-for-Windows GNU tar treats an absolute C:/ path as a remote host.",
+    "The release gate is a hard precondition: publish-foundation-release.mjs refuses to continue unless the latest Release Gate Summary check-run on the target commit succeeded.",
+    "The tenant-picker wait asserts the popup settles at the trigger's left edge; a popup that remains outside the viewport still fails the unchanged overflow assertion.",
+    "The published v0.17.2 assets are immutable. Their post-publication scan found them clean, so the defect was in the gate's coverage, not in the shipped artifact."
+  ],
+  "verificationPlan": {
+    "releaseTooling": [
+      "node --test tests/scripts/foundation-release/check-release-secrets.test.mjs",
+      "npm run -s test:foundation-release",
+      "node scripts/foundation-release/check-release-secrets.mjs --path tests/scripts/foundation-release",
+      "node scripts/foundation-release/check-release-secrets.mjs --release-version pantheon-base-v0.17.3"
+    ],
+    "governance": [
+      "npm run -s check:docs-frontmatter",
+      "npm run -s check:task-packet",
+      "npm run -s check:structure",
+      "npm run -s check:generated",
+      "node scripts/harness/check-failure-registry.mjs"
+    ],
+    "frontend": [
+      "npx tsc --noEmit",
+      "npx eslint tests/smoke-core/auth-tenant-picker.spec.ts --max-warnings 0",
+      "npx playwright test tests/smoke-core/auth-tenant-picker.spec.ts"
+    ],
+    "release": [
+      "node scripts/foundation-release/check-release-assets.mjs --release-version pantheon-base-v0.17.3",
+      "gh release view pantheon-base-v0.17.3 --json assets,tagName,isDraft,isPrerelease"
+    ]
+  },
+  "linkage": {
+    "taskId": "2026-10-23-v0173-release-closeout",
+    "taskManifest": ".harness/tasks/2026-10-23-v0173-release-closeout/manifest.json",
+    "assessment": "docs/harness/tasks/2026-10-23-v0173-release-closeout.task.md",
+    "openspecChange": "none",
+    "superpowersPlan": "none",
+    "evidenceDir": ".harness/evidence/2026-10-23-v0173-release-closeout/",
+    "summaryFile": ".harness/evidence/2026-10-23-v0173-release-closeout/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-23-v0173-release-closeout/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/VERSION_MANAGEMENT_GUIDE.md",
+      ".harness/evidence/2026-10-23-residual-closeout/review.md"
+    ]
+  },
+  "release": {
+    "version": "0.17.3",
+    "tag": "pantheon-base-v0.17.3",
+    "releaseLine": "release/0.17",
+    "previousRelease": "pantheon-base-v0.17.2",
+    "assets": [
+      "foundation-release-pantheon-base-v0.17.3.tgz",
+      "foundation-release-pantheon-base-v0.17.3.tgz.sha256",
+      "repo.tar",
+      "repo.tar.sha256"
+    ],
+    "state": "planned"
+  }
+}

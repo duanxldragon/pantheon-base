@@ -1,7 +1,25 @@
 # Pantheon Base - Harness 任务状态
 
 **最后更新**: 2026-10-23
-**当前版本**: v0.17.2（已于 2026-10-23T03:54Z 发布，tag `e6aeced9`）；v0.17.1（`1f68d56b`）为上一个可消费版本
+**当前版本**: v0.17.3 发布准备中（版本材料已就绪，待 PR 合并与 Release Gate）；最新已发布版本仍为 v0.17.2（2026-10-23T03:54Z，tag `e6aeced9`）
+
+## v0.17.3 发布准备（2026-10-23）
+
+v0.17.2 发布后复核的 R-1…R-5 已随 PR #414 合入主干（`933ffddd`）。本发布把修正后的门禁与证据
+装进下一份可消费资产，任务包 `2026-10-23-v0173-release-closeout`，证据在
+`.harness/evidence/2026-10-23-v0173-release-closeout/`。
+
+- **发布凭据门禁（R-1）**：`check-release-secrets.mjs` 现在同时扫描 `bundle/` 与 `repo.tar`，
+  快照缺失即失败关闭；新增 `.harness/archive/.../commands.json` 残留、干净快照、缺失快照三条回归用例。
+  规则集与脱敏方式不变。
+- **证据勘误（R-2/R-3/R-5）**：v0.17.2 证据中三处与代码不符的表述以勘误修正并保留原始声明；
+  `STATUS` 记录已发布 tag；删除 `GetTenantByID` 重复注释行。
+- **烟测稳定化（R-4）**：窄视口租户选择器等待 Arco 弹层与触发器对齐后再测量溢出，断言与边界不变。
+- **FR-015**：失败登记表记录发布门禁覆盖缺口及其 sensor。
+- **范围**：无运行时行为变更（后端仅一行注释差异）、无 schema 变更（仍为 29）、
+  无路由/权限码/菜单/错误信封变化；`sharedPaths` 仍为 52。
+- **发布门禁**：合并提交上的 `Release Gate Summary` 必须 success；打标前跑扩展后的凭据预检；
+  发布后由 `Foundation Release Verify` 与 `check-release-assets` 断言四件资产。
 
 ## 残余项收口（2026-10-23，v0.17.2）
 
