@@ -1,6 +1,7 @@
 ## 变更摘要
 
 - 改动层级：platform（测试夹具 + 治理配置 + 证据文件）
+- 改动模块：`tests/scripts/foundation-release/check-release-secrets.test.mjs`（夹具行标注移位）、`.gitleaksignore`（两条历史提交指纹）、`.harness/evidence/2026-10-23-residual-closeout/`（证据与实际发布事实对齐）
 - 目标问题：main 的 push 事件 Secret Scan 走全历史扫描，命中 #410 squash 提交 `43aec46e` 中扫描器测试夹具的合成值（`generic-api-key`）。分支 CI 未报是因为 PR 区间扫描只命中已被 `.gitleaksignore` 覆盖的历史提交；squash 把整个文件当作新增重新引入，而 `gitleaks:allow` 注释在秘密行的上一行——gitleaks v8 只认秘密**同一行**的标注
 - 预期影响：夹具行标注移到同一行（附原因），`.gitleaksignore` 钉住 `0fcc38d0` 与 `43aec46e` 两个历史提交指纹；不弱化任何规则。顺带把证据包中的 PR 正文与实际发布版对齐
 
