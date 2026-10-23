@@ -97,13 +97,14 @@ platform
 ### Create
 
 - `backend/modules/system/iam/role/role_replace_concurrency_test.go`
+- `backend/pkg/testmysql/locking.go`
 - `docs/harness/tasks/2026-10-23-iam-race-closeout.task.md`
 - `.harness/tasks/2026-10-23-iam-race-closeout/manifest.json`
 - `.harness/evidence/2026-10-23-iam-race-closeout/{summary.md,review.md,commands.json}`
 
 ### Modify
 
-- `backend/modules/system/iam/tenant/{tenant_provision.go,tenant_concurrency_test.go}`
+- `backend/modules/system/iam/tenant/{tenant_provision.go,tenant_provision_dicts_test.go,tenant_concurrency_test.go}`
 - `backend/modules/system/iam/role/{role_helper.go,role_backfill_test.go}`
 - `backend/modules/system/iam/user/{user_helper.go,user_concurrency_test.go}`
 - `RELEASE_NOTES_v0.17.3.md`

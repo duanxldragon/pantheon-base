@@ -59,6 +59,7 @@
   "expectedFiles": {
     "create": [
       "backend/modules/system/iam/role/role_replace_concurrency_test.go",
+      "backend/pkg/testmysql/locking.go",
       "docs/harness/tasks/2026-10-23-iam-race-closeout.task.md",
       ".harness/tasks/2026-10-23-iam-race-closeout/manifest.json",
       ".harness/evidence/2026-10-23-iam-race-closeout/summary.md",

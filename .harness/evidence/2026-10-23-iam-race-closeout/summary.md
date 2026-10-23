@@ -61,7 +61,8 @@ flight, a second transaction's `FOR UPDATE NOWAIT` probe must fail with MySQL 35
 acquired). That is the mechanism the fix adds; a schedule-based race test would have passed against
 the pre-fix code because MySQL's own row locks change the timing. Both tests fail against the
 pre-fix helpers (`An error is expected but got nil` at the probe) and then assert that the queued
-second writer's set is the stored one.
+second writer's set is the stored one. The probe and the serialised-writer choreography live in
+`pkg/testmysql` and are shared with the tenant copy test, so the three regressions cannot drift apart.
 
 ### R3 (P2) — historical tenant_id = 0 permission rows
 
@@ -87,7 +88,8 @@ The local Windows host cannot start ThreadSanitizer (`go test -race` aborts duri
 `failed to allocate 0x... error code: 87`, with and without `-p 1`), and no Docker daemon or WSL
 distro is available to run a Linux container. The authoritative race evidence is the CI
 `quality.yml` `backend-tests` job, which runs `go test -race ./...` against MySQL 8 and Redis on
-Linux. Its run id on this pull request is recorded in `commands.json`.
+Linux. Run 39969299263 (`headSha` 973f5be2) passed the Backend Tests job on the final head; the
+run and job ids are recorded in `commands.json`.
 
 ### R5 (P3) — v0.17.3 notes correction
 

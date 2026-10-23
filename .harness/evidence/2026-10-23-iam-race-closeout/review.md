@@ -7,6 +7,7 @@
 - `backend/modules/system/iam/user/user_helper.go`
 - The four regressions in `tenant_concurrency_test.go`, `role_replace_concurrency_test.go`,
   `user_concurrency_test.go`, `role_backfill_test.go`
+- The shared lock probe and serialised-writer helper in `backend/pkg/testmysql/locking.go`
 - `RELEASE_NOTES_v0.17.3.md` and the GitHub v0.17.3 release body
 
 ## Correctness
@@ -51,13 +52,16 @@ shape is added or renamed.
   leaves no copied rows, which proves the helpers write through the caller's transaction. The
   16-contender stress run against the pre-fix shape never overlapped the copy windows, so the
   schedule-based test is a convergence check, not the proof.
+- The three lock regressions share `testmysql.AssertRowLocked` and
+  `testmysql.AssertSerialisedWriters`, so the NOWAIT semantics and the queued-writer choreography are
+  defined once; the refactor also keeps Sonar's new-code duplication at 0.0%.
 - Tests use real MySQL (per-test isolated database), no mocks.
 
 ## Residuals and limits
 
 - ThreadSanitizer cannot start on this Windows host (error 87); no Docker daemon or WSL distro is
   available. The race gate is CI `quality.yml` `backend-tests` (`go test -race ./...`, MySQL 8 +
-  Redis); the run id is recorded in `commands.json`.
+  Redis); run 39969299263 on head 973f5be2 passed the Backend Tests job, recorded in `commands.json`.
 - The published v0.17.3 tag and its assets still contain the stale sentence; only the mutable
   release body and the repository file carry the correction.
 

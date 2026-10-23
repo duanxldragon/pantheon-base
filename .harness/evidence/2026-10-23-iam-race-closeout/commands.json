@@ -1,7 +1,7 @@
 {
   "taskId": "2026-10-23-iam-race-closeout",
   "repo": "pantheon-base",
-  "executedAt": "2026-10-23T22:02:22+08:00",
+  "executedAt": "2026-10-23T22:29:54+08:00",
   "agent": {
     "tool": "other",
     "adapter": "qoder-agent"
@@ -17,7 +17,7 @@
       "command": "cd backend && set -a; . ../.env.test; set +a; PANTHEON_NODE_BIN=<node> PANTHEON_TEST_DSN_REQUIRED=true PANTHEON_TEST_REDIS_REQUIRED=true go test ./... -count=1",
       "cwd": "backend",
       "status": "passed",
-      "details": "Exit 0. 46 packages ok, 0 FAIL, 0 SKIP out of 52 listed (6 have no test files). Required flags were set, so a missing MySQL or Redis would have failed instead of skipped. Durations: iam/tenant 101.8s, iam/user 69.3s, iam/role 55.3s, system/i18n 199.6s, lowcode/dynamicmodule 26.6s. PANTHEON_NODE_BIN and PANTHEON_WORKSPACE_ROOT were pinned: without them exec.LookPath(\"node\") fails inside the test process and the dynamicmodule tests report module.generate.server_export_failed before any test logic runs (first run reproduced exactly that; re-run with the two variables was green)."
+      "details": "Exit 0 on the final head (after the pkg/testmysql refactor). 46 packages ok, 0 FAIL, 0 SKIP out of 52 listed (6 have no test files). Required flags were set, so a missing MySQL or Redis would have failed instead of skipped. Durations: iam/tenant 102.9s, iam/user 70.6s, iam/role 54.3s, system/i18n 208.4s, lowcode/dynamicmodule 23.5s. PANTHEON_NODE_BIN and PANTHEON_WORKSPACE_ROOT were pinned: without them exec.LookPath(\"node\") fails inside the test process and the dynamicmodule tests report module.generate.server_export_failed before any test logic runs (an earlier run reproduced exactly that; re-runs with the two variables were green)."
     },
     {
       "command": "cd backend && go test ./modules/system/iam/tenant/ -count=1 -run 'TestConcurrentProvisioningOfTheSameTenantIsConvergent|TestCopyPlatformDefaultsRunOnTheLockedTenantRow|TestProvisionTenantWiresDictCopy|TestCopyPlatformDictsToTenantIdempotent' -v",
@@ -36,6 +36,24 @@
       "cwd": "backend",
       "status": "passed",
       "details": "PASS 0.919s on real MySQL. The user row is held for the whole delete-then-insert; the queued writer's set is the stored one."
+    },
+    {
+      "command": "cd backend && gofmt -l ./pkg/testmysql ./modules/system/iam/role ./modules/system/iam/user ./modules/system/iam/tenant && go build ./... && go vet ./pkg/testmysql/... ./modules/system/iam/role/... ./modules/system/iam/user/... ./modules/system/iam/tenant/...",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "After moving the NOWAIT probe into pkg/testmysql and replacing the duplicated \"id = ?\" literals with condIDEquals: gofmt listed no files, build and vet were clean."
+    },
+    {
+      "command": "cd backend && PANTHEON_TEST_DSN_REQUIRED=1 PANTHEON_TEST_REDIS_REQUIRED=1 go test ./pkg/testmysql/... ./modules/system/iam/role/... ./modules/system/iam/user/... ./modules/system/iam/tenant/... -count=1",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "ok pkg/testmysql 0.034s; iam/role 34.743s; iam/user 46.427s; iam/tenant 67.895s. Real MySQL and Redis, required flags set."
+    },
+    {
+      "command": "curl -s 'https://sonarcloud.io/api/qualitygates/project_status?projectKey=duanxldragon_pantheon-base&pullRequest=420' and /api/issues/search?pullRequest=420&resolved=false&sinceLeakPeriod=true",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Quality Gate status OK: new duplicated lines density 0.0% (threshold 3%), all ratings 1, security hotspots 100% reviewed. New-code open issues: 0."
     },
     {
       "command": "revert tenant_provision.go to the pre-fix provisioning shape, then run TestConcurrentProvisioningOfTheSameTenantIsConvergent",
@@ -78,9 +96,11 @@
     "workflow": "quality.yml",
     "job": "backend-tests",
     "command": "go test -race ./...",
-    "status": "pending",
-    "runId": null,
-    "details": "Filled in after the pull request runs the Linux race gate."
+    "status": "passed",
+    "runId": 39969299263,
+    "jobId": 120468069895,
+    "headSha": "973f5be29f6db21cca6a3a9938e84114020c3fed",
+    "details": "Code Quality Gates run 39969299263, Backend Tests job 120468069895 concluded SUCCESS on the final pull request head. The job runs on ubuntu-latest with MySQL 8.0 and Redis 7 services, PANTHEON_TEST_DSN_REQUIRED/ PANTHEON_TEST_REDIS_REQUIRED set to true, and executes `go test -race ./...` in backend/ (quality.yml lines 327-383). This is the authoritative race signal for R4."
   },
   "knownGaps": [
     "The race detector cannot start on this Windows host (TSan shadow-memory allocation, error code 87); no Docker daemon or WSL distro is available. The authoritative race signal is the CI quality.yml backend-tests job on Linux, whose run id is recorded under ciRace.",
