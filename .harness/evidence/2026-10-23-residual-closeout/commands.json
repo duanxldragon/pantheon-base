@@ -72,6 +72,30 @@
       "cwd": ".",
       "status": "passed",
       "details": "All four governance checks pass with the new task packet, evidence directory and contract revisions in place."
+    },
+    {
+      "command": "node scripts/foundation-release/cut-foundation-release.mjs --release-version pantheon-base-v0.17.2 --release-line release/0.17 --base-commit e6aeced9a8c03029c74f1a891e79cff0a75dc3b5",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Exit 0. Built releases/pantheon-base-v0.17.2 (manifest, release notes, upgrade notes, consumer impact) and the four dist assets from main e6aeced9. An earlier cut from 43aec46e was discarded when #411 and #412 landed."
+    },
+    {
+      "command": "node scripts/foundation-release/check-release-secrets.mjs --release-version pantheon-base-v0.17.2",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Exit 0: release secret scan clean (768 file(s) scanned). This is the gate added for P3-1 running on its own release."
+    },
+    {
+      "command": "node scripts/foundation-release/publish-foundation-release.mjs --release-version pantheon-base-v0.17.2 --release-line release/0.17 --base-commit e6aeced9a8c03029c74f1a891e79cff0a75dc3b5",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Created annotated tag pantheon-base-v0.17.2 pointing at e6aeced9, pushed it, and published the non-draft, non-prerelease GitHub release with the four assets. A --dry-run pass confirmed the gate checks first (an earlier dry-run on 43aec46e correctly failed on the then-failing Security Gates)."
+    },
+    {
+      "command": "gh release view pantheon-base-v0.17.2",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Assets: foundation-release-pantheon-base-v0.17.2.tgz, .tgz.sha256, repo.tar, repo.tar.sha256. Foundation Release Verify workflow: completed/success on the tag."
     }
   ]
 }
