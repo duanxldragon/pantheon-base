@@ -130,7 +130,7 @@ v0.17.1 冻结时这 5 项被显式登记为不阻塞交付。v0.17.2 逐项关�
 |---|---|---|
 | 1 | **P2-4 测试隔离度**：`TestBatchRevokeSessions_IsTenantScoped` 多包并行时偶发失败，根因是 Redis 键空间共享 | **已关闭**。`testredis.OpenDB` + 预留索引注册表，每包独立逻辑库（authtoken=2 / login=3 / middleware=4 / session=5），默认库 1 不变。4 包并行 3 轮全绿 |
 | 2 | **P2-9 并发 provisioning**：不同 `code` 的并发 `CreateTenant` 未串行化，资源竞争未验证 | **已关闭，且实测为缺陷**。设置/字典复制用 `INSERT ... SELECT` 读同一张表，两个租户并发创建触发 `Error 1213 Deadlock found when trying to get lock`，调用方看到 500。改为「非锁定读 + 插入」；另修同 code 竞态下 loser 收到 `Error 1062` 原始驱动错误的 500。8 轮并发全绿 |
-| 3 | **P3-1 v0.17.0 凭据残留**：历史产物不可变，凭据已失效 | **条件已消除**。产物本身仍不可回收（这一点无法改变），但新增 `check-release-secrets.mjs` 作为发布硬前置：DSN / URL / `-p<值>` 三种形态命中即拒绝打标。对真实 v0.17.1 产物 766 文件扫描干净，对 v0.17.0 的两种残留形态均能捕获 |
+| 3 | **P3-1 v0.17.0 凭据残留**：历史产物不可变，凭据已失效 | **条件已消除**。产物本身仍不可回收（这一点无法改变），但新增 `check-release-secrets.mjs` 作为发布硬前置：DSN / URL / `-p<值>` 三种形态命中即拒绝打标。v0.17.2 发布时该门禁只扫描了 `bundle/`；事后复核发现 v0.17.0 残留实际位于 `repo.tar`，已补扫并确认 v0.17.2 的 `repo.tar` 干净。门禁现同时扫描 `bundle/` 与 `repo.tar`，缺失 `repo.tar` 时失败关闭；对 v0.17.0 的两种残留形态均有回归用例 |
 | 4 | **P3-2 合同第四态**：`deleted` 未进合同，补合同需走 L2 评审 | **已关闭**。合同 V1.3 澄清 §2.1（墓碑语义、不可寻址、不可作为输入、删除标记是 `status` 而非预留的 `deleted_at`），按既有 contract-change 流程记录触发与范围，不自行宣告 G4 通过。补写过程中实测发现并修复了「墓碑可被复活」缺陷 |
 | 5 | **race 检测的本地缺口**：`go test -race` 因 MinGW 链接器失败，race 覆盖仅来自 CI | **已关闭**。真实原因是 `PATH` 上的 Cygwin `gcc`；`CC=/d/msys64/mingw64/bin/gcc.exe` 下 race 构建与运行正常。`pkg/tenant`、`pkg/testredis`、`internal/middleware`、`modules/auth/session` 与租户生命周期/并发用例 race 全绿 |
 

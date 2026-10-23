@@ -274,9 +274,8 @@ func (s *Service) configuredPasswordMinLength() int {
 	return value
 }
 
-// GetTenantByID retrieves a tenant by its ID. The reserved platform/global
+// GetTenantByID retrieves a tenant by id. The reserved platform/global
 // placeholder (id 0) is not a tenant (contract §2.3) and reports as missing.
-// GetTenantByID retrieves a tenant by id.
 //
 // A deleted tenant answers ErrTenantNotFound. `deleted` is a tombstone rather
 // than a lifecycle state (contract §2.1, V1.3): the row keeps a synthetic code
