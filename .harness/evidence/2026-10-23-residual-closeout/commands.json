@@ -1,0 +1,77 @@
+{
+  "taskId": "2026-10-23-residual-closeout",
+  "repo": "pantheon-base",
+  "executedAt": "2026-10-23T09:10:00+08:00",
+  "agent": {
+    "tool": "other",
+    "adapter": "software-workshop-agent"
+  },
+  "commands": [
+    {
+      "command": "cd backend && go build ./... && go vet ./... && gofmt -l .",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "Exit 0. BUILD_VET_OK then GOFMT_DONE with no files listed: the tree builds, vets clean and is gofmt-formatted across the whole module."
+    },
+    {
+      "command": "cd backend && export PANTHEON_TEST_DSN=<real mysql> PANTHEON_TEST_REDIS_ADDR=127.0.0.1:6379 PANTHEON_TEST_REDIS_PASSWORD=<redacted> PANTHEON_TEST_DSN_REQUIRED=true PANTHEON_TEST_REDIS_REQUIRED=true && go test -count=1 -p 1 ./...",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "Exit 0. 48 packages ok, no FAIL and no SKIP lines. Notable durations: modules/auth/login 94.8s, modules/system/i18n 164.6s, modules/system/iam/tenant 46.7s (includes the new concurrent-provisioning and tombstone suites), pkg/database 49.0s, pkg/testredis 2.1s."
+    },
+    {
+      "command": "cd backend && export PANTHEON_TEST_DSN=<real mysql> PANTHEON_TEST_DSN_REQUIRED=true && go test -count=8 -run TestConcurrentProvisioning ./modules/system/iam/tenant/",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "Exit 0 across 8 repeats. The suite reproduced Error 1213 (Deadlock) before the fix; after the bounded retry in copyPlatformSettingsToTenant / copyPlatformDictsToTenant it passes repeatedly."
+    },
+    {
+      "command": "cd backend && export PANTHEON_TEST_DSN=<real mysql> PANTHEON_TEST_DSN_REQUIRED=true && go test -count=1 -run 'TestDeletedTenant' -v ./modules/system/iam/tenant/",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "Three tombstone tests pass after the fix: TestDeletedTenantCannotBeRevivedByUpdate, TestDeletedTenantRefusesNewMembers, TestDeletedTenantCannotBeReprovisioned. Before the fix the first one failed with the update succeeding, which is how the revival defect was demonstrated."
+    },
+    {
+      "command": "cd backend && CC=/d/msys64/mingw64/bin/gcc.exe CGO_ENABLED=1 go test -race -count=1 ./pkg/tenant/ ./pkg/testredis/ ./internal/middleware/ ./modules/auth/session/",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "Exit 0 with the MinGW toolchain forced via CC (the v0.17.1 failure was PATH resolving gcc.exe to a Cygwin binary that cannot link race binaries). No data races reported."
+    },
+    {
+      "command": "cd backend && CC=/d/msys64/mingw64/bin/gcc.exe CGO_ENABLED=1 go test -race -count=1 -run 'TestConcurrentProvisioning|TestDeletedTenant|TestTenantStatusTransitionAllowed|TestDeleteTenantArchived' ./modules/system/iam/tenant/",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "Exit 0. Race detector clean on the concurrency and tombstone suites."
+    },
+    {
+      "command": "cd backend && export PANTHEON_TEST_DSN=<real mysql> PANTHEON_TEST_REDIS_ADDR=127.0.0.1:6379 PANTHEON_TEST_REDIS_PASSWORD=<redacted> PANTHEON_TEST_DSN_REQUIRED=true PANTHEON_TEST_REDIS_REQUIRED=true && for i in 1 2 3; do go test -count=1 ./pkg/authtoken/ ./modules/auth/login/ ./modules/auth/session/ ./internal/middleware/; done",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "Three consecutive rounds, all four packages ok each round. This is the parallel-run scenario behind the P2-4 flake; the packages now pin distinct Redis logical databases via PANTHEON_TEST_REDIS_DB."
+    },
+    {
+      "command": "node --test tests/scripts/foundation-release/check-release-secrets.test.mjs",
+      "cwd": ".",
+      "status": "passed",
+      "details": "18/18 passing. Covers DSN/command-line/URL/PEM/JWT detection, placeholder filtering, prose false-positive tuning, and bundle-resolution behaviour. Fixtures use a synthetic value in the same shape as the v0.17.0 leak, not the real literal."
+    },
+    {
+      "command": "node scripts/foundation-release/check-release-secrets.mjs --path tests/scripts/foundation-release && node scripts/foundation-release/check-release-secrets.mjs --release-version pantheon-base-v0.17.1",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Both exit 0: the scanner does not flag its own test fixtures, and the existing v0.17.1 bundle scans clean under the narrowed rules."
+    },
+    {
+      "command": "npm run -s test:foundation-release",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Exit 0. Existing foundation-release script suite plus the new secret-scan suite all green."
+    },
+    {
+      "command": "npm run -s check:docs-frontmatter && npm run -s check:task-packet && npm run -s check:structure && npm run -s check:generated",
+      "cwd": ".",
+      "status": "passed",
+      "details": "All four governance checks pass with the new task packet, evidence directory and contract revisions in place."
+    }
+  ]
+}
