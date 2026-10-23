@@ -1,0 +1,147 @@
+{
+  "taskId": "2026-10-24-v0175-release-closeout",
+  "taskDoc": "docs/harness/tasks/2026-10-24-v0175-release-closeout.task.md",
+  "title": "Publish v0.17.5: same-tenant provisioning serialisation, parent-row replace locks, historical permission-row repair, CI race evidence",
+  "goal": "Publish the IAM concurrency fixes merged in PR #420 (45aa7389) as v0.17.5 so the next consumable asset carries them. Same-tenant ProvisionTenant locks the tenants row and converges role, administrator, root-department, binding and membership writes, with the platform-default settings and dictionary copies running in a second locked transaction on the caller's handle. replaceRolePermissions and replaceUserRoles lock the parent role/user row before delete-then-insert. The bootstrap backfill deletes stale duplicates and re-stamps historical tenant_id = 0 permission rows onto the owning role's tenant. The race gate is evidenced by the CI Linux go test -race ./... job, and the stale v0.17.3 notes sentence is corrected forward in the repository file and mutable release body. No schema change (stays at 29), no route, permission code, menu seed or error-envelope shape change.",
+  "primaryLayer": "platform",
+  "dependencyLayers": [
+    "system/iam"
+  ],
+  "status": "in-progress",
+  "priority": "P1",
+  "type": "release-closeout",
+  "estimatedComplexity": "small",
+  "findings": [
+    "R1 (P2, fixed in 45aa7389): ProvisionTenant created roles, the administrator, the root department, bindings and membership as read-then-insert steps. Concurrent calls for one tenant both missed the role row and the loser failed the transaction on uk_system_role_tenant_key / uk_system_user_tenant_username. The post-commit platform-default copies were outside the lock; system_dict_item has no unique key, so a lost race there duplicated every item.",
+    "R2 (P2, fixed in 45aa7389): replaceRolePermissions and replaceUserRoles deleted every row and re-inserted without holding a parent row. Two replacers that both delete before either inserts leave a merged set; the index gap can also deadlock.",
+    "R3 (P2, fixed in 45aa7389): permission rows written by a pre-v0.17.4 backfill still carry tenant_id = 0 and are invisible to every tenant-scoped read, so the tenant role silently loses those permissions.",
+    "R4 (P2, closed by evidence): the local Windows host cannot start ThreadSanitizer (shadow-memory allocation, error 87). The race gate is the CI quality.yml Backend Tests job on Linux with MySQL 8 and Redis; run 39970863908 on head 973f5be2 passed.",
+    "R5 (P3, fixed in 45aa7389): the published v0.17.3 notes said system_role_data_scope pre-checked before writing. A dated correction block is appended to the repository file and the mutable GitHub release body; the tag and assets stay immutable."
+  ],
+  "scope": {
+    "in": [
+      "Tenant row lock at the start of provisioning, convergent role/administrator writes with locking read-back, and conflict-tolerant bindings/membership",
+      "Platform-default settings and dictionary copies moved into a second tenant-locked transaction on the caller's handle",
+      "Parent-row locks in replaceRolePermissions and replaceUserRoles",
+      "Historical tenant_id = 0 permission-row repair in the bootstrap backfill",
+      "Real-MySQL regressions for provisioning convergence, both replace locks, the copy lock and the backfill repair",
+      "CI race gate evidence and the v0.17.3 notes correction",
+      "Version material: VERSION 0.17.5, CHANGELOG, RELEASE_NOTES_v0.17.5.md, README(zh/en), STATUS",
+      "Publish pantheon-base-v0.17.5 with the four foundation-release assets"
+    ],
+    "out": [
+      "Any further production runtime logic change; the fixes were merged in PR #420",
+      "Database schema or migrations (stays at 29)",
+      "Routes, permission codes, menu seeds and error-envelope shapes",
+      "Rewriting the published v0.17.0 through v0.17.4 tags and assets",
+      "Relaxing gate thresholds, skipping tests or using suppressions"
+    ]
+  },
+  "acceptanceCriteria": [
+    "Four concurrent ProvisionTenant calls for one tenant all succeed and converge on one role per key, one administrator, one binding, one owner membership and one root department, with identical role ids and one copy of each platform default.",
+    "While a replace runs, a second transaction cannot acquire the parent row (NOWAIT probe returns 3572); the queued writer completes only after the first commits and its set is the stored set.",
+    "The bootstrap backfill re-stamps a stale tenant_id = 0 grant, deletes a stale duplicate instead of violating uk_role_permission_tenant, leaves platform and soft-deleted-role grants untouched, and is idempotent.",
+    "The new tests fail against the pre-fix code and pass with the fix.",
+    "gofmt/build/vet clean; full go test ./... against real MySQL and Redis passes with no skips.",
+    "SonarCloud Quality Gate is green with zero open new-code issues.",
+    "The CI backend-tests job runs go test -race ./... on the change and succeeds.",
+    "Governance checkers (docs frontmatter, task packet template and instances, structure, generated, failure registry) pass.",
+    "Release Gate Summary is successful on the merge commit before the release is cut.",
+    "pantheon-base-v0.17.5 is an annotated tag carrying tgz / tgz.sha256 / repo.tar / repo.tar.sha256; checksums and Foundation Release Verify are green.",
+    "The published release is not a draft or prerelease, and gh release view reports exactly the four assets."
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "permission-policy",
+    "portableFailureClass": "unique-key-race / non-idempotent-repair / lost-update",
+    "ownerLayer": "consumer-repository",
+    "ratchetDecision": "sensor-added",
+    "coverageDimensions": [
+      "behaviour",
+      "runtime-quality",
+      "architecture-fitness"
+    ]
+  },
+  "expectedFiles": {
+    "create": [
+      "RELEASE_NOTES_v0.17.5.md",
+      "docs/harness/tasks/2026-10-24-v0175-release-closeout.task.md",
+      ".harness/tasks/2026-10-24-v0175-release-closeout/manifest.json",
+      ".harness/evidence/2026-10-24-v0175-release-closeout/summary.md",
+      ".harness/evidence/2026-10-24-v0175-release-closeout/review.md",
+      ".harness/evidence/2026-10-24-v0175-release-closeout/commands.json"
+    ],
+    "modify": [
+      "VERSION",
+      "CHANGELOG.md",
+      "README.md",
+      "README.en.md",
+      ".harness/STATUS.md"
+    ],
+    "doNotTouch": [
+      "backend/** production code",
+      "backend/pkg/database/migrations/**",
+      ".github/workflows/**",
+      "the published v0.17.0, v0.17.1, v0.17.2, v0.17.3 and v0.17.4 tags and assets"
+    ]
+  },
+  "implementationNotes": [
+    "The five fixes merged in PR #420 (45aa7389) on top of the v0.17.4 tag; this packet only publishes them and adds version material.",
+    "cut-foundation-release.mjs does not read RELEASE_NOTES_*.md automatically; --release-notes, --upgrade-notes and --consumer-impact must be passed explicitly.",
+    "The release gate is a hard precondition: publish-foundation-release.mjs refuses to continue unless the latest Release Gate Summary check-run on the target commit succeeded.",
+    "The local TSan runtime cannot start on this Windows host (shadow-memory allocation error 87); race coverage is evidenced by CI on Linux (run 39970863908, head 973f5be2).",
+    "The published v0.17.3 tag and assets are immutable; the correction lives in the repository file and the mutable release body."
+  ],
+  "verificationPlan": {
+    "backend": [
+      "go build ./...",
+      "go vet ./...",
+      "gofmt -l .",
+      "PANTHEON_TEST_DSN_REQUIRED=true PANTHEON_TEST_REDIS_REQUIRED=true go test -count=1 ./...",
+      "go test -count=1 -run <new regressions> ./modules/system/iam/..."
+    ],
+    "governance": [
+      "npm run -s check:docs-frontmatter",
+      "npm run -s check:task-packet",
+      "npm run -s check:structure",
+      "npm run -s check:generated",
+      "node scripts/harness/check-failure-registry.mjs",
+      "node scripts/harness/check-evidence.mjs --strict",
+      "node scripts/harness/check-review.mjs --strict"
+    ],
+    "release": [
+      "node scripts/foundation-release/check-release-secrets.mjs --release-version pantheon-base-v0.17.5",
+      "node scripts/foundation-release/check-release-assets.mjs --release-version pantheon-base-v0.17.5 --repo duanxldragon/pantheon-base",
+      "gh release view pantheon-base-v0.17.5 --repo duanxldragon/pantheon-base --json assets,tagName,isDraft,isPrerelease"
+    ]
+  },
+  "linkage": {
+    "taskId": "2026-10-24-v0175-release-closeout",
+    "taskManifest": ".harness/tasks/2026-10-24-v0175-release-closeout/manifest.json",
+    "assessment": "docs/harness/tasks/2026-10-24-v0175-release-closeout.task.md",
+    "openspecChange": "none",
+    "superpowersPlan": "none",
+    "evidenceDir": ".harness/evidence/2026-10-24-v0175-release-closeout/",
+    "summaryFile": ".harness/evidence/2026-10-24-v0175-release-closeout/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-24-v0175-release-closeout/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/VERSION_MANAGEMENT_GUIDE.md",
+      ".harness/evidence/2026-10-23-iam-race-closeout/review.md"
+    ]
+  },
+  "release": {
+    "version": "0.17.5",
+    "tag": "pantheon-base-v0.17.5",
+    "releaseLine": "release/0.17",
+    "previousRelease": "pantheon-base-v0.17.4",
+    "assets": [
+      "foundation-release-pantheon-base-v0.17.5.tgz",
+      "foundation-release-pantheon-base-v0.17.5.tgz.sha256",
+      "repo.tar",
+      "repo.tar.sha256"
+    ],
+    "state": "prepared"
+  }
+}

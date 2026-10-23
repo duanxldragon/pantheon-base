@@ -1,0 +1,71 @@
+{
+  "taskId": "2026-10-24-v0175-release-closeout",
+  "repo": "pantheon-base",
+  "executedAt": "2026-10-24T10:30:00+08:00",
+  "agent": {
+    "tool": "other",
+    "adapter": "qoder-agent"
+  },
+  "commands": [
+    {
+      "command": "git diff --stat pantheon-base-v0.17.4..HEAD && git diff --name-only pantheon-base-v0.17.4..HEAD | grep -E 'migrations|\\.github/workflows'",
+      "cwd": ".",
+      "status": "passed",
+      "details": "21 files changed, 1533 insertions, 119 deletions. Backend changes are 9 files / 689 insertions confined to system/iam/tenant, system/iam/role, system/iam/user and pkg/testmysql/locking.go. The migration/workflow filter returned nothing, so no schema or workflow change ships in 0.17.5."
+    },
+    {
+      "command": "cd backend && go build ./... && go vet ./... && gofmt -l .",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "BUILD_OK, VET_OK, GOFMT_DONE with no files listed."
+    },
+    {
+      "command": "cd backend && set -a; . ../.env.test; set +a; PANTHEON_NODE_BIN=<node.exe> PANTHEON_WORKSPACE_ROOT=<repo> PANTHEON_TEST_DSN_REQUIRED=true PANTHEON_TEST_REDIS_REQUIRED=true go test -timeout 600s -count=1 ./...",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "Exit 0. 46 packages ok, 0 FAIL, 0 SKIP, 6 packages have no test files. Both required flags were set, so a missing MySQL or Redis would have failed instead of skipping. The first attempt failed before this one because the shell was already inside backend and the `cd backend` short-circuit skipped `set -a`, so the sourced DSNs were not exported; the corrected run above is the recorded result."
+    },
+    {
+      "command": "cd backend && go test -count=1 -v -run 'TestConcurrentProvisioningOfTheSameTenantIsConvergent|TestCopyPlatformDefaultsRunOnTheLockedTenantRow|TestConcurrentProvisioningKeepsTenantResourcesIsolated' ./modules/system/iam/tenant",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "PASS in 2.926s on real MySQL. Convergence, the tenant-row NOWAIT copy probe and cross-tenant isolation all pass."
+    },
+    {
+      "command": "cd backend && go test -count=1 -v -run 'TestConcurrentReplaceRolePermissionsSerialisesOnTheRoleRow|TestBackfillRolePermissionsRepairsPlatformNamespaceGrants|TestBackfillRolePermissionsStampsTenantAndDeduplicates' ./modules/system/iam/role",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "PASS in 2.201s on real MySQL. The role replace lock, the platform-namespace grant repair and the re-stamp/dedupe backfill all pass."
+    },
+    {
+      "command": "cd backend && go test -count=1 -v -run 'TestConcurrentReplaceUserRolesSerialisesOnTheUserRow|TestConcurrentCreateUserMapsLoserToConflict' ./modules/system/iam/user",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "PASS in 1.758s on real MySQL. The user replace lock and the duplicate-key loser mapping both pass."
+    },
+    {
+      "command": "node scripts/frontmatter-check.mjs && node scripts/check-task-packet-template.mjs && node scripts/harness/check-task-packet.mjs --root . && node scripts/harness/check-structure-contract.mjs --root . --strict && node scripts/harness/check-generated.mjs --root . --strict && node scripts/harness/check-failure-registry.mjs --root . --strict",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Frontmatter: 349 docs checked, 256 with frontmatter. Task-packet template linked. Task packets: 54 files, 0 errors, 40 pre-existing warnings about historical packets. Structure: 0 findings across 2557 tracked files. Generated: 0 findings across 11 artifacts. Failure registry: 0 errors, 0 warnings."
+    }
+  ],
+  "knownGaps": [
+    "ThreadSanitizer cannot start on this Windows host (shadow-memory allocation, error code 87). The race gate is CI quality.yml backend-tests (go test -race ./...) on Linux; runs 39969299263 and 39970863908 passed on head 973f5be2, and the release PR runs it again.",
+    "Platform-default copy serialisation depends on the tenants row lock because system_dict_item has no unique key; the dependency is exercised by the NOWAIT regression but is not defence in depth.",
+    "Concurrent same-tenant ProvisionTenant role creation is serialised by the tenant row lock rather than a per-role upsert.",
+    "Published v0.17.0 through v0.17.4 tags and assets are immutable; the v0.17.3 notes correction exists only in the repository file and the mutable release body.",
+    "Publication facts (tag object, asset checksums, Release Gate and Foundation Release Verify runs) are appended after the tag is cut."
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-24-v0175-release-closeout/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-24-v0175-release-closeout/",
+    "summaryFile": ".harness/evidence/2026-10-24-v0175-release-closeout/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-24-v0175-release-closeout/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/VERSION_MANAGEMENT_GUIDE.md",
+      ".harness/evidence/2026-10-23-iam-race-closeout/review.md"
+    ]
+  }
+}
