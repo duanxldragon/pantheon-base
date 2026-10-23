@@ -10,14 +10,14 @@ Pantheon Platform 是一个面向企业后台的模块化单体底座，沉淀�
 
 | 项 | 值 |
 | --- | --- |
-| 当前 foundation release | [`pantheon-base-v0.17.4`](https://github.com/duanxldragon/pantheon-base/releases/tag/pantheon-base-v0.17.4)（含四件可消费产物） |
+| 当前 foundation release | [`pantheon-base-v0.17.5`](https://github.com/duanxldragon/pantheon-base/releases/tag/pantheon-base-v0.17.5)（含四件可消费产物） |
 | Shell/Harness 基线版本 | `1.4.0`（见 [VERSION](./VERSION) / [SHELL_VERSION.json](./SHELL_VERSION.json)） |
 | 部署文档 | [docs/DEPLOYMENT_GUIDE.md](./docs/DEPLOYMENT_GUIDE.md)（MySQL 8、Redis 7、迁移 + runtime seed、健康检查、遥测、备份恢复与 schema-aware 回滚） |
-| 变更记录 | [CHANGELOG.md](./CHANGELOG.md) / [RELEASE_NOTES_v0.17.4.md](./RELEASE_NOTES_v0.17.4.md) |
+| 变更记录 | [CHANGELOG.md](./CHANGELOG.md) / [RELEASE_NOTES_v0.17.5.md](./RELEASE_NOTES_v0.17.5.md) |
 | **任务状态** | [.harness/STATUS.md](./.harness/STATUS.md) — 当前任务状态总览 |
 | **归档记录** | [.harness/ARCHIVE.md](./.harness/ARCHIVE.md) — 已完成任务归档索引 |
 
-交付状态说明：v0.17.4 是 IAM 残余收口 patch，tag `pantheon-base-v0.17.4`，四件可消费产物齐备（tgz / tgz.sha256 / repo.tar / repo.tar.sha256）并由 `Foundation Release Verify` 断言。它关闭 v0.17.3 遗留的 IAM 残余：用户 CSV 导入的四类查找（同名用户、角色 key、部门路径、岗位编码）改为按调用方租户过滤，导入建号从请求上下文写入 `tenant_id` 并同事务写入成员关系——此前租户 A 的导入会更新租户 B 的同名用户，新建用户则落进平台命名空间且无法登录；`CreateUser` / `CreateRole` / `UpdateRole` 的重复键竞态输家由 500 改为既有 409；租户角色的权限与菜单授权改为批量 `ON CONFLICT DO NOTHING` 幂等写入；bootstrap 回填 join `system_role` 取租户归属、排除软删除角色并按自然键去重。schema 仍为 29，无路由、权限码、菜单 seed 或错误信封变化。
+交付状态说明：v0.17.5 是 IAM 并发收口 patch，tag `pantheon-base-v0.17.5`，四件可消费产物齐备（tgz / tgz.sha256 / repo.tar / repo.tar.sha256）并由 `Foundation Release Verify` 断言。它关闭 v0.17.4 之后登记的 5 项残留：同租户并发 provisioning 先锁 `tenants` 行再收敛写入角色、管理员、根部门与绑定，平台默认配置/字典拷贝在同一租户锁的第二个事务内执行；`replaceRolePermissions` / `replaceUserRoles` 先锁父行再删除重插，避免两个写入者交错成并集；bootstrap 回填把旧版写成的 `tenant_id = 0` 权限行先去重再回填到角色所属租户；race 门禁由 CI Linux 的 `go test -race ./...` 提供权威证据；已发布 v0.17.3 notes 的过期表述在仓库文件与可变 release body 中以带日期的勘误更正。schema 仍为 29，无路由、权限码、菜单 seed 或错误信封变化。
 
 ## 项目定位
 

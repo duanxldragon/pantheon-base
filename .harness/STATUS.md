@@ -1,7 +1,31 @@
 # Pantheon Base - Harness 任务状态
 
-**最后更新**: 2026-10-23
-**当前版本**: v0.17.4 已发布（2026-10-23T12:38Z，tag `pantheon-base-v0.17.4` → `ac813f6f`）
+**最后更新**: 2026-10-24
+**当前版本**: v0.17.5 发布准备中（版本材料 PR 合入后按 `Release Gate Summary` 切 tag）
+
+## v0.17.5 发布（2026-10-24）
+
+v0.17.4 发布后登记了 5 项 IAM 残留，修复随 PR #420 合入主干（`45aa7389`），任务包
+`2026-10-23-iam-race-closeout`，证据在 `.harness/evidence/2026-10-23-iam-race-closeout/`；
+发布材料任务包 `2026-10-24-v0175-release-closeout`。
+
+- **同租户 provisioning 串行化（P2）**：`ProvisionTenant` 先 `SELECT ... FOR UPDATE` 锁
+  `tenants` 行，角色与管理员用 `ON DUPLICATE KEY UPDATE` 写入并以 locking read 读回；根部门、
+  绑定与成员关系在同一租户锁下收敛。平台默认配置/字典拷贝改到同一租户锁的第二个事务执行，
+  `system_dict_item` 无唯一键也不会重复。
+- **replace 式授权串行化（P2）**：`replaceRolePermissions` / `replaceUserRoles` 先锁
+  `system_role` / `system_user` 父行再删除重插；后写者的完整集合胜出，不再合并或死锁。
+- **历史权限行修复（P2）**：bootstrap 回填先删除会撞 `uk_role_permission_tenant` 的旧副本，
+  再把剩余 `tenant_id = 0` 行回填到角色所属租户；平台行与软删角色行不动，重复执行幂等。
+- **race 门禁证据（P2）**：本机 Windows TSan 仍无法启动（error 87）；CI run `39970863908`
+  的 Backend Tests 在最终提交上通过 `go test -race ./...`（Linux、MySQL 8、Redis）。
+- **v0.17.3 说明勘误（P3）**：仓库文件与可变 GitHub release body 追加带日期的更正块；已发布
+  tag 与资产保持不可变。
+- **范围**：无 schema 变更（仍为 29）、无路由/权限码/菜单 seed/错误信封变化；竞争下的锁等待
+  超时沿用既有事务错误，不新增响应形状。
+- **验证**：全量真库套件 46 包 ok / 0 FAIL / 0 SKIP；新增用例在修复前分别以唯一键重复、
+  NOWAIT 探针未报错、`elements differ` 失败；SonarCloud Quality Gate OK（New Code
+  Duplication 0.0%，0 open issues）。
 
 ## v0.17.4 发布（2026-10-23）
 

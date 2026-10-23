@@ -6,6 +6,47 @@ Pantheon Base 方法追踪记录。方法论本体位于 `pantheon-harness`。
 
 ---
 
+## [pantheon-base-v0.17.5] — 2026-10-24 (IAM concurrency closeout)
+
+> v0.17.4 left five IAM residuals. Two were write-path races: same-tenant `ProvisionTenant`
+> created roles with a read-then-insert, and `replaceRolePermissions` / `replaceUserRoles`
+> delete-then-insert without a parent-row lock. One was a repair gap: permission rows a pre-v0.17.4
+> backfill stamped `tenant_id = 0` were never rewritten. The other two were evidence and record
+> items: the race gate had no authoritative Linux run, and the published v0.17.3 notes kept a stale
+> sentence. All five are closed here. Schema stays at 29; no route, permission code, menu seed or
+> error-envelope shape changes.
+
+### Fixed
+
+- **Same-tenant provisioning serialises on the tenant row (P2).** `ProvisionTenant` now locks the
+  `tenants` row for the whole transaction, upserts the role and administrator with
+  `ON DUPLICATE KEY UPDATE` and reads them back with a locking read. The root department, bindings
+  and membership converge for the same reason. Concurrent calls queue instead of failing the loser
+  on `uk_system_role_tenant_key` / `uk_system_user_tenant_username`.
+- **Platform-default copies run inside the lock (P2).** Settings, dict types and dict items are
+  read-then-insert too. They now run in a second short transaction that re-takes the tenant lock
+  and receives its handle. `system_dict_item` has no unique key, so without the lock a lost race
+  would silently duplicate every item.
+- **Replace-style grants lock the parent row (P2).** `replaceRolePermissions` and
+  `replaceUserRoles` take `SELECT ... FOR UPDATE` on the role/user row before deleting, so two
+  replacers cannot interleave into a merged set or deadlock on the index gap.
+- **Historical `tenant_id = 0` permission rows are repaired (P2).** The bootstrap backfill deletes
+  stale duplicates (which would violate `uk_role_permission_tenant` if updated) and then re-stamps
+  the remaining stale rows with the owning role's tenant. Platform grants and soft-deleted-role
+  grants are untouched.
+- **v0.17.3 notes corrected forward (P3).** A dated correction block is appended to
+  `RELEASE_NOTES_v0.17.3.md` and the mutable GitHub release body. The published tag and its assets
+  stay immutable.
+
+### Added
+
+- Real-MySQL regressions for same-tenant provisioning convergence, the copy lock (NOWAIT probe
+  3572 plus rollback), both replace locks (queued writer blocked, last set survives) and the
+  backfill repair (re-stamp, dedupe, platform/deleted-role isolation, idempotency).
+- Shared `testmysql.AssertRowLocked` / `testmysql.AssertSerialisedWriters` helpers.
+- CI race evidence: the Linux `go test -race ./...` job passed on the change and is recorded in the
+  release evidence; the local Windows TSan limitation stays explicit.
+
 ## [pantheon-base-v0.17.4] — 2026-10-23 (IAM residual closeout)
 
 > v0.17.3's known-residual registered one item: the `system_role_data_scope` /
