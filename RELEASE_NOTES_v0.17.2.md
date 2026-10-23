@@ -149,3 +149,14 @@ tag, and the cross-tenant smoke jobs.
   makes that fixable per path; only the tenant path is fixed here.
 - The `deleted_at` column on `tenants` remains reserved and unwritten. Contract V1.3 records that
   explicitly instead of leaving two possible answers to "is this tenant deleted?".
+
+## Post-publication correction (2026-10-23)
+
+The credential gate shipped in v0.17.2 scanned the staged `bundle/` tree only. The v0.17.0 residue
+lived in `repo.tar`, the full-commit snapshot, which the gate did not inspect. The published
+v0.17.2 `repo.tar` was scanned afterwards and is clean, so no credential shipped in this release —
+but the claim above that the gate "closes the gap" was stronger than the implementation.
+
+A follow-up change makes the gate scan both published shapes, fail closed when `repo.tar` is
+missing, and pin the `.harness/archive` case with a regression test. The published notes are kept
+as-is; this section is the correction of record.

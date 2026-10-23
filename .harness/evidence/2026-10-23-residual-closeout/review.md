@@ -63,3 +63,22 @@ change.
   behaviour change is covered by the real-MySQL tombstone tests instead.
 - SonarCloud: the new code adds one package, one test file and one script; the local `go vet` / `gofmt` /
   `eslint` runs are clean, but the quality gate verdict is CI's.
+
+## Post-publication review addendum (2026-10-23)
+
+A reviewer pass over the published v0.17.2 work compared the shipped code and artifacts against this
+packet. Five findings, all fixed in the follow-up change; none of them changes the published release,
+whose assets are immutable.
+
+| ID | Severity | Finding | Disposition | Evidence |
+|---|---|---|---|---|
+| R-1 | P1 | The release credential gate scanned only the staged `bundle/` tree. The v0.17.0 residue lived in a tracked evidence file, which is present only in `repo.tar`; the gate reported "clean, 768 files" on v0.17.2 without opening the snapshot asset that would have carried a repeat. | The gate now scans both published shapes, fails closed when `repo.tar` is missing, and pins the `.harness/archive` path with a regression test. | 12/12 scanner cases; real v0.17.2 scan clean at 3079 files (bundle 768 + repo.tar 2311); FR-015 recorded. |
+| R-2 | P2 | Three statements in the evidence did not match the code: the deadlock fix was described as a bounded 1213 retry (it is a non-locking read then insert); the scanner was credited with 18 cases and PEM/JWT rules (it has 10 cases and three rules); the publication gate was described as release-wide when it was bundle-only. | Corrected in place in `summary.md` and `commands.json`, with an erratum that preserves the original claims; `RELEASE_NOTES_v0.17.2.md` and the remediation register carry the gate-coverage correction. | Re-read against `tenant_provision.go`, `check-release-secrets.mjs` and the test file; JSON re-validated. |
+| R-3 | P3 | `.harness/STATUS.md` still said "发布中" after the tag and release existed. | It now states the release time and the tag commit, verified with `git rev-list -n 1 pantheon-base-v0.17.2` = `e6aeced9a8c03029c74f1a891e79cff0a75dc3b5`. | Tag/commit lookup. |
+| R-4 | P2 | The narrow-viewport smoke test measured `documentElement.scrollWidth` while Arco's select popup was still in its first-frame center position. CI trace from run 39899047581 showed the 282px popup at `left: 195px` (right edge 477px) and at `left: 54px` about 100–130 ms later; the test sampled the first frame and saw 87px overflow. | The test waits for the popup's left edge to match its trigger before measuring. The overflow assertion and its bound are unchanged, so a popup that stays outside the viewport still fails. | Spec 3/3 locally; the narrow test passed 10 consecutive repeats during diagnosis; full spec green after the change. |
+| R-5 | P3 | `GetTenantByID` carried a duplicated doc-comment line. | Removed; comment-only change. | `gofmt -l` empty, `go build` and `go vet` on the package pass. |
+
+Residual risk after the fix: the credential rules remain deliberately narrow (MySQL DSN, URL credentials,
+`-p<value>`), so a credential in another shape still passes; and `repo.tar` extraction depends on a working
+system `tar`, which fails closed rather than reporting clean. The published `repo.tar` at `e6aeced9` keeps
+the original evidence text and the bundle-only gate; only a new release carries the widened gate.

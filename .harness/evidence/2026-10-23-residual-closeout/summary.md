@@ -24,8 +24,9 @@ Writing the missing test (`TestConcurrentProvisioningKeepsTenantResourcesIsolate
 the platform settings with `NOT EXISTS` subqueries in the same instant lock `system_setting` in opposite
 orders under the default isolation level. Fixes:
 
-- `copyPlatformSettingsToTenant` / `copyPlatformDictsToTenant` retry the whole INSERT…SELECT on error 1213
-  (bounded, re-checked after each retry — the NOT EXISTS predicates make a retry idempotent);
+- `copyPlatformSettingsToTenant` / `copyPlatformDictsToTenant` no longer use `INSERT ... SELECT` over the
+  source table. They read the platform rows with a plain non-locking `SELECT`, filter out keys the tenant
+  already owns, and `Create` the remainder — removing the shared next-key locks that collided;
 - `CreateTenant` translates a duplicate-key error from the UNIQUE `code` column into `ErrTenantCodeExists`
   (new helper `pkg/database/duplicate_key.go`) so two concurrent creates with the same code yield a clean
   409-shaped error instead of a raw 500.
@@ -40,13 +41,17 @@ concurrency and tombstone suites passes; race coverage is no longer CI-only.
 
 ### P3-1 v0.17.0 credential residue — closed by a gate that refuses a repeat
 
-New `scripts/foundation-release/check-release-secrets.mjs` scans a release bundle for the credential shapes
-the v0.17.0 incident actually had (MySQL DSN password, `-p<secret>` command lines, URL credentials, PEM
-blocks, JWTs), with placeholder and prose filtering tuned on the real tree so it runs clean on
+New `scripts/foundation-release/check-release-secrets.mjs` scans a release for the credential shapes the
+v0.17.0 incident actually had (MySQL DSN password, `-p<secret>` command lines, URL credentials — three
+rules, no PEM or JWT rule), with placeholder filtering tuned on the real tree so it runs clean on
 `pantheon-base-v0.17.1` and still catches the leaked literal when planted in a fixture
-(`tests/scripts/foundation-release/check-release-secrets.test.mjs`, 18 cases). The publish script now runs it
-on the freshly built bundle and aborts before anything is archived. The historical bundle itself remains
-immutable — the credential is dead and the archive stays as-is; this gate is what makes it unrepeatable.
+(`tests/scripts/foundation-release/check-release-secrets.test.mjs`, 10 cases at publication; 12 after the
+repo.tar coverage added below). The publish script runs it after the bundle is built and aborts before the
+tag is created. At publication the gate scanned only the staged `bundle/` tree — not `repo.tar`, which is
+where the v0.17.0 evidence file actually lived; the published v0.17.2 `repo.tar` was verified clean
+separately after the fact, and the gate now scans both shapes (post-publication correction, see erratum).
+The historical bundle itself remains immutable — the credential is dead and the archive stays as-is; this
+gate is what makes it unrepeatable.
 
 ### P3-2 contract fourth state — closed as a V1.3 clarification, and it found a bug
 
@@ -77,8 +82,9 @@ pins the fingerprints of both historical commits (0fcc38d0, 43aec46e) in
 - `go test -race` on `pkg/tenant`, `pkg/testredis`, `internal/middleware`, `modules/auth/session`, and the
   concurrency/tombstone suites — green with the MinGW toolchain.
 - Redis consumer packages in parallel ×3 rounds — green (the original flake scenario).
-- `node --test tests/scripts/foundation-release/check-release-secrets.test.mjs` — 18/18; scanner self-scan of
-  the test directory is clean (no real credentials in fixtures).
+- `node --test tests/scripts/foundation-release/check-release-secrets.test.mjs` — 10/10 at publication
+  (12/12 after the post-publication repo.tar coverage); scanner self-scan of the test directory is clean
+  (no real credentials in fixtures).
 - `npm run -s test:foundation-release` — green (existing suite + new scanner suite).
 - Governance scripts (`check:docs-frontmatter`, `check:task-packet`, `check:structure`, `check:generated`) — pass.
 
@@ -96,4 +102,23 @@ and opens the v0.17.2 block. No schema change (still 29 migrations), no route or
 - `Release Gate` green on `main e6aeced9`; `Foundation Release Verify` success on the tag.
 - Tag `pantheon-base-v0.17.2` -> `e6aeced9`; GitHub release published with the four assets
   (tgz, tgz.sha256, repo.tar, repo.tar.sha256), non-draft, non-prerelease.
-- The release-time credential precheck scanned its own release: clean, 768 files.
+- The release-time credential precheck scanned its own release: clean, 768 files (bundle only).
+
+## Erratum (2026-10-23, post-publication review)
+
+A later review compared this summary against the code and found three statements that did not match what
+shipped. They are corrected in place above; recorded here so the original claims are not silently lost:
+
+1. **Deadlock fix mechanism.** The copy helpers did not add a retry of `INSERT ... SELECT` on error 1213.
+   They were changed to a plain non-locking `SELECT` plus `Create`, which removes the locks instead of
+   retrying them. The tests pass, but the described mechanism was wrong.
+2. **Scanner rule set and test count.** The scanner has three rules (MySQL DSN, URL credentials,
+   `-p<value>` shell flag); there is no PEM or JWT rule. The suite had 10 tests at publication, not 18.
+3. **Gate coverage.** `assertBundleIsFreeOfCredentials` scanned only the staged `bundle/` directory, not
+   `repo.tar` — the exact asset that carried the v0.17.0 evidence file. The published v0.17.2 `repo.tar`
+   was scanned afterwards and was clean, so no credential shipped in v0.17.2, but the gate as shipped would
+   not have caught a repeat. The publish gate now scans both the bundle and `repo.tar`, fails closed when
+   `repo.tar` is missing, and has regression tests for a credential planted in `.harness/archive`.
+
+The published `repo.tar` at `e6aeced9` still contains this summary as originally written; a published asset
+cannot be edited. This file is the corrected record used going forward.

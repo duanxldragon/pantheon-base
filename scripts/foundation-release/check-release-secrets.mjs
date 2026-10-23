@@ -1,4 +1,6 @@
+import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
@@ -13,13 +15,15 @@ import { fileURLToPath } from 'node:url';
 // Secret scanning already runs on every commit (`.github/workflows/security.yml`
 // -> gitleaks), and it did not catch this one: gitleaks has no rule for a bare
 // password embedded in a shell command or a DSN, only for recognizable token
-// prefixes. Scanning the git tree also says nothing about what the *bundle*
-// contains, and the bundle is what consumers materialize.
+// prefixes. Scanning the git tree also says nothing about what the release
+// assets contain.
 //
 // This check closes that gap at the only point where it is still cheap: before
-// the tag is created. It is deliberately narrow - a handful of high-signal
-// credential shapes rather than an entropy heuristic - because a false positive
-// blocks a release and teaches the maintainer to bypass the gate.
+// the tag is created. Both published shapes are scanned - the staged `bundle/`
+// tree and `repo.tar`, which is a `git archive` of the whole commit and is the
+// asset that carried the v0.17.0 residue. It is deliberately narrow - a handful
+// of high-signal credential shapes rather than an entropy heuristic - because a
+// false positive blocks a release and teaches the maintainer to bypass the gate.
 
 const SCAN_SKIP_DIRECTORIES = new Set([
   '.git',
@@ -49,6 +53,24 @@ const PLACEHOLDER_PATTERN =
   /^(?:<[^>]*>|\$\{[^}]*\}|\$\([^)]*\)|\{\{[^}]*\}\}|redacted|changeme|change-me|placeholder|example|dummy|sample|your[-_]?[a-z]*|x{4,}|\*{3,}|\.{3,}|-+|null|none|empty)$/i;
 
 const PLACEHOLDER_SUBSTRINGS = ['changeme', 'change-me', 'placeholder', 'your-password', 'your_password'];
+
+// Values such as `.env.example`'s `change_this_strong_password_123!` and
+// `k8s/secret.yaml.example`'s `CHANGE_ME_PASSWORD` are instructions, not
+// credentials. Splitting the value into alphanumeric words catches them without
+// matching a random hexadecimal or base64 secret, whose words are not English
+// template words.
+const PLACEHOLDER_WORDS = new Set([
+  'changeme',
+  'change',
+  'placeholder',
+  'password',
+  'passwd',
+  'example',
+  'dummy',
+  'sample',
+  'redacted',
+  'your',
+]);
 
 export const CREDENTIAL_RULES = [
   {
@@ -96,6 +118,10 @@ function isPlaceholder(value) {
     return true;
   }
   if (new Set(trimmed).size === 1) {
+    return true;
+  }
+  const words = trimmed.toLowerCase().split(/[^a-z0-9]+/u).filter(Boolean);
+  if (words.some((word) => PLACEHOLDER_WORDS.has(word))) {
     return true;
   }
   // A value built only from lowercase letters, underscores and dashes is a
@@ -215,13 +241,26 @@ export function scanDirectoryForCredentials(root) {
   return { ok: findings.length === 0, scanned: files.length, findings };
 }
 
+export function resolveDistRoot(root, releaseVersion) {
+  return path.join(path.resolve(root), 'dist', 'foundation-releases', releaseVersion);
+}
+
 /**
  * The bundle staging tree the release pipeline tars up. It exists on disk
  * between createReleaseBundle() and createArchive(), which is where the publish
  * flow calls this.
  */
 export function resolveBundleRoot(root, releaseVersion) {
-  return path.join(path.resolve(root), 'dist', 'foundation-releases', releaseVersion, 'bundle');
+  return path.join(resolveDistRoot(root, releaseVersion), 'bundle');
+}
+
+/**
+ * The full-commit snapshot published as `repo.tar`. v0.17.0's credential lived
+ * here (a tracked `.harness/archive` evidence file), not in the bundle's shared
+ * paths, so a bundle-only scan does not see it.
+ */
+export function resolveRepoSnapshotPath(root, releaseVersion) {
+  return path.join(resolveDistRoot(root, releaseVersion), 'repo.tar');
 }
 
 export function formatCredentialFindings(findings) {
@@ -231,18 +270,100 @@ export function formatCredentialFindings(findings) {
 }
 
 /**
- * Hard precondition for publishing: a bundle that carries a credential must not
- * be tagged, because the tag cannot be taken back.
+ * Scan a tar archive by extracting it to a temporary directory. `repo.tar` is
+ * produced by `git archive` from the release commit, so its contents are
+ * trusted; the extraction exists only to reuse the directory walker.
  */
-export function assertBundleIsFreeOfCredentials({ root, releaseVersion }) {
-  const bundleRoot = resolveBundleRoot(root, releaseVersion);
-  const result = scanDirectoryForCredentials(bundleRoot);
-  if (result.error) {
-    throw new Error(`release secret scan could not run: ${result.error}`);
+export function scanTarForCredentials(tarPath, { label = 'repo.tar' } = {}) {
+  const resolvedTarPath = path.resolve(tarPath);
+  if (!fs.existsSync(resolvedTarPath)) {
+    return {
+      ok: false,
+      scanned: 0,
+      findings: [],
+      error: `archive does not exist: ${resolvedTarPath}`,
+    };
+  }
+
+  const extractionRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'pantheon-release-tar-'));
+  try {
+    // Git-for-Windows ships GNU tar, which reads `C:\...` as a remote host when
+    // the path is passed to -f. Working from inside the extraction directory
+    // with a copy avoids absolute paths entirely.
+    const archiveCopyName = 'release-scan.tar';
+    fs.copyFileSync(resolvedTarPath, path.join(extractionRoot, archiveCopyName));
+    const extraction = spawnSync('tar', ['-xf', archiveCopyName], {
+      cwd: extractionRoot,
+      encoding: 'utf8',
+    });
+    if (extraction.status !== 0) {
+      return {
+        ok: false,
+        scanned: 0,
+        findings: [],
+        error: `could not extract ${resolvedTarPath}: ${(extraction.stderr || '').trim()}`,
+      };
+    }
+
+    const result = scanDirectoryForCredentials(extractionRoot);
+    return {
+      ...result,
+      findings: result.findings.map((finding) => ({
+        ...finding,
+        file: `${label}/${finding.file}`,
+      })),
+    };
+  } finally {
+    fs.rmSync(extractionRoot, { recursive: true, force: true });
+  }
+}
+
+/**
+ * Scan every published shape for the release: the staged bundle and the
+ * repo.tar snapshot.
+ */
+export function scanReleaseForCredentials({ root, releaseVersion }) {
+  const targets = [
+    [
+      'bundle',
+      () => {
+        const result = scanDirectoryForCredentials(resolveBundleRoot(root, releaseVersion));
+        return {
+          ...result,
+          findings: result.findings.map((finding) => ({ ...finding, file: `bundle/${finding.file}` })),
+        };
+      },
+    ],
+    ['repo.tar', () => scanTarForCredentials(resolveRepoSnapshotPath(root, releaseVersion))],
+  ];
+
+  const findings = [];
+  const errors = [];
+  let scanned = 0;
+  for (const [label, scan] of targets) {
+    const result = scan();
+    scanned += result.scanned;
+    findings.push(...result.findings);
+    if (result.error) {
+      errors.push(`${label}: ${result.error}`);
+    }
+  }
+
+  return { ok: errors.length === 0 && findings.length === 0, scanned, findings, errors };
+}
+
+/**
+ * Hard precondition for publishing: a release that carries a credential must
+ * not be tagged, because the tag cannot be taken back.
+ */
+export function assertReleaseIsFreeOfCredentials({ root, releaseVersion }) {
+  const result = scanReleaseForCredentials({ root, releaseVersion });
+  if (result.errors.length > 0) {
+    throw new Error(`release secret scan could not run: ${result.errors.join('; ')}`);
   }
   if (!result.ok) {
     throw new Error(
-      `release bundle ${releaseVersion} contains ${result.findings.length} credential-shaped string(s); ` +
+      `release ${releaseVersion} contains ${result.findings.length} credential-shaped string(s); ` +
         'a published asset cannot be recalled, so the release is refused:\n' +
         formatCredentialFindings(result.findings),
     );
@@ -276,8 +397,9 @@ const USAGE = `Usage:
   node scripts/foundation-release/check-release-secrets.mjs --path <directory>
   node scripts/foundation-release/check-release-secrets.mjs --release-version <version> [--root <repo>]
 
-Scans a directory (or a release bundle's staging tree) for credential shapes
-that must never reach a published asset. Exits 1 on any finding.
+Scans a directory, or both published shapes of a release (the staged bundle and
+repo.tar), for credential shapes that must never reach an asset. Exits 1 on any
+finding.
 `;
 
 export function runCheckCli(argv = process.argv.slice(2)) {
@@ -287,15 +409,18 @@ export function runCheckCli(argv = process.argv.slice(2)) {
     return 0;
   }
 
-  const target = options.target ?? (options.releaseVersion ? resolveBundleRoot(options.root, options.releaseVersion) : null);
-  if (!target) {
+  if (!options.target && !options.releaseVersion) {
     process.stderr.write(`${USAGE}\nEither --path or --release-version is required.\n`);
     return 2;
   }
 
-  const result = scanDirectoryForCredentials(target);
-  if (result.error) {
-    process.stderr.write(`release secret scan could not run: ${result.error}\n`);
+  const result = options.target
+    ? scanDirectoryForCredentials(options.target)
+    : scanReleaseForCredentials({ root: options.root, releaseVersion: options.releaseVersion });
+
+  const errors = result.errors ?? (result.error ? [result.error] : []);
+  if (errors.length > 0) {
+    process.stderr.write(`release secret scan could not run: ${errors.join('; ')}\n`);
     return 2;
   }
   if (!result.ok) {

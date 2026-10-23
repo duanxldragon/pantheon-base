@@ -148,5 +148,17 @@
       "docs/contracts/TENANT_CONTRACT_V1.md",
       "docs/reviews/PANTHEON_BASE_DELIVERY_REMEDIATION_2026-10-22.md"
     ]
+  },
+  "postPublicationReview": {
+    "reviewedAt": "2026-10-23",
+    "evidence": ".harness/evidence/2026-10-23-residual-closeout/review.md#post-publication-review-addendum-2026-10-23",
+    "findings": [
+      "R-1 (P1): the release credential preflight scanned only bundle/, not repo.tar, so the asset that carried the v0.17.0 residue was never opened. Fixed by scanning both shapes, failing closed on a missing repo.tar, and adding regression tests; FR-015 records it.",
+      "R-2 (P2): three evidence statements did not match the code (read-then-insert described as a 1213 retry; three scanner rules and 10 cases described as 18 with PEM/JWT; bundle-only gate described as release-wide). Corrected with an erratum.",
+      "R-3 (P3): .harness/STATUS.md still said the release was in progress after the tag existed. Corrected with the verified tag commit.",
+      "R-4 (P2): the narrow-viewport tenant picker smoke test sampled documentElement overflow during Arco's first-frame popup positioning. Fixed by waiting for popup/trigger alignment before measuring.",
+      "R-5 (P3): duplicated GetTenantByID doc-comment line removed."
+    ],
+    "disposition": "All five fixed in the follow-up branch fix/post-publication-review-gate; the published v0.17.0, v0.17.1 and v0.17.2 assets are unchanged and the widened gate applies to the next release."
   }
 }

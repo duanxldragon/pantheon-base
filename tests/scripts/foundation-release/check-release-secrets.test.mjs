@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -14,8 +15,10 @@ const {
   CREDENTIAL_RULES,
   scanTextForCredentials,
   scanDirectoryForCredentials,
-  assertBundleIsFreeOfCredentials,
+  scanTarForCredentials,
+  assertReleaseIsFreeOfCredentials,
   resolveBundleRoot,
+  resolveRepoSnapshotPath,
   runCheckCli,
 } = await import(moduleUrl);
 
@@ -43,6 +46,15 @@ function writeFile(root, relativePath, content) {
   const absolutePath = path.join(root, relativePath);
   fs.mkdirSync(path.dirname(absolutePath), { recursive: true });
   fs.writeFileSync(absolutePath, content, 'utf8');
+}
+
+function createTar(sourceRoot, tarPath) {
+  fs.mkdirSync(path.dirname(tarPath), { recursive: true });
+  const result = spawnSync('tar', ['-cf', path.relative(sourceRoot, tarPath), '.'], {
+    cwd: sourceRoot,
+    encoding: 'utf8',
+  });
+  assert.equal(result.status, 0, `tar failed: ${result.stderr}`);
 }
 
 test('the rule set stays small enough to stay honest', () => {
@@ -101,6 +113,9 @@ test('ignores the placeholders and examples a release legitimately ships', () =>
     'export PANTHEON_DSN="root:${DB_PASSWORD}@tcp(127.0.0.1:3306)/pantheon_base"',
     'mysql -h127.0.0.1 -uroot -p3306',
     'mysql -uroot -p pantheon_base',
+    // The two placeholders the real repo.tar snapshot ships.
+    'PANTHEON_DSN=root:change_this_strong_password_123!@tcp(mysql:3306)/pantheon_base?charset=utf8mb4',
+    'PANTHEON_DSN: "pantheon_user:CHANGE_ME_PASSWORD@tcp(mysql-host.example.com:3306)/pantheon"',
   ];
 
   for (const line of allowed) {
@@ -130,20 +145,67 @@ test('refuses a bundle that carries a credential and passes a clean one', () => 
     const releaseVersion = 'pantheon-base-v0.17.2';
     const bundleRoot = resolveBundleRoot(root, releaseVersion);
     writeFile(bundleRoot, 'shared-backend/.env.example', 'PANTHEON_DSN=root:changeme-in-production-please@tcp(mysql:3306)/db\n');
+    const repoSources = path.join(root, 'repo-sources');
+    writeFile(repoSources, '.env.example', 'PANTHEON_DSN=root:change_this_strong_password_123!@tcp(mysql:3306)/db\n');
+    createTar(repoSources, resolveRepoSnapshotPath(root, releaseVersion));
 
-    const clean = assertBundleIsFreeOfCredentials({ root, releaseVersion });
+    const clean = assertReleaseIsFreeOfCredentials({ root, releaseVersion });
     assert.equal(clean.ok, true);
 
     writeFile(bundleRoot, 'shared-backend/.harness/archive/commands.json', LEAKED_COMMAND);
 
     assert.throws(
-      () => assertBundleIsFreeOfCredentials({ root, releaseVersion }),
+      () => assertReleaseIsFreeOfCredentials({ root, releaseVersion }),
       (error) => {
         assert.match(error.message, /cannot be recalled/);
-        assert.match(error.message, /\.harness\/archive\/commands\.json/);
+        assert.match(error.message, /bundle\/shared-backend\/\.harness\/archive\/commands\.json/);
         assert.ok(!error.message.includes(LEAKED_SECRET), 'the refusal must not reprint the secret');
         return true;
       },
+    );
+  });
+});
+
+test('refuses a release whose repo.tar carries the v0.17.0 residue', () => {
+  // The bundle only contains manifest.sharedPaths; the evidence file that
+  // actually leaked lived in the full-commit snapshot published as repo.tar.
+  // A gate that scans only the bundle would pass this release.
+  withTempDir((root) => {
+    const releaseVersion = 'pantheon-base-v0.17.2';
+    const bundleRoot = resolveBundleRoot(root, releaseVersion);
+    writeFile(bundleRoot, 'shared-backend/main.go', 'package main\n');
+
+    const repoSources = path.join(root, 'repo-sources');
+    writeFile(repoSources, '.harness/archive/2026-09/evidence/commands.json', `{"command":"${LEAKED_COMMAND}"}\n`);
+    createTar(repoSources, resolveRepoSnapshotPath(root, releaseVersion));
+
+    const tarResult = scanTarForCredentials(resolveRepoSnapshotPath(root, releaseVersion));
+    assert.equal(tarResult.ok, false, 'the tar scan must see the tracked evidence file');
+    assert.equal(tarResult.findings.length, 1);
+    assert.equal(tarResult.findings[0].file, 'repo.tar/.harness/archive/2026-09/evidence/commands.json');
+
+    assert.throws(
+      () => assertReleaseIsFreeOfCredentials({ root, releaseVersion }),
+      (error) => {
+        assert.match(error.message, /cannot be recalled/);
+        assert.match(error.message, /repo\.tar\/\.harness\/archive\/2026-09\/evidence\/commands\.json/);
+        assert.ok(!error.message.includes(LEAKED_SECRET), 'the refusal must not reprint the secret');
+        return true;
+      },
+    );
+  });
+});
+
+test('fails closed when repo.tar is missing', () => {
+  // Publishing always creates repo.tar first. If it is absent, the scan cannot
+  // prove the release clean, so it must refuse rather than report success.
+  withTempDir((root) => {
+    const releaseVersion = 'pantheon-base-v0.17.2';
+    writeFile(resolveBundleRoot(root, releaseVersion), 'shared-backend/main.go', 'package main\n');
+
+    assert.throws(
+      () => assertReleaseIsFreeOfCredentials({ root, releaseVersion }),
+      /release secret scan could not run: repo\.tar: archive does not exist/,
     );
   });
 });

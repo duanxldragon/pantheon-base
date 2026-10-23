@@ -6,6 +6,33 @@ Pantheon Base 方法追踪记录。方法论本体位于 `pantheon-harness`。
 
 ---
 
+## [Unreleased] — 2026-10-23 (post-publication review)
+
+> A reviewer pass compared the published v0.17.2 code and assets against its evidence packet and
+> found five items. The release assets are immutable; this change widens the gate for the next
+> release and corrects the record. Details:
+> `.harness/evidence/2026-10-23-residual-closeout/review.md` (addendum).
+
+### Fixed
+
+- The release credential preflight now scans both published shapes — the staged `bundle/` tree and
+  `repo.tar` — and fails closed when `repo.tar` is missing. v0.17.2's gate scanned only the bundle;
+  the v0.17.0 residue lived in the tracked tree, which ships only in `repo.tar`. The published
+  v0.17.2 assets were scanned afterwards and are clean.
+- Evidence statements that did not match the code are corrected with an erratum: the deadlock fix
+  is a non-locking read then insert (not a 1213 retry), the scanner has three rules and had 10
+  cases at publication (not 18, no PEM/JWT), and the publication gate was bundle-only.
+- The narrow-viewport tenant picker smoke test waits for the Arco popup to align with its trigger
+  before measuring document overflow, instead of sampling the popup's first-frame center position.
+- `.harness/STATUS.md` records v0.17.2 as published at tag `e6aeced9` instead of "发布中".
+- A duplicated doc-comment line on `GetTenantByID` is removed.
+
+### Added
+
+- Failure registry FR-015 records the release-gate coverage gap and its sensor.
+
+---
+
 ## [pantheon-base-v0.17.2] — 2026-10-23 (residual closeout)
 
 > v0.17.1 left five items explicitly open. Closing them turned two "unverified" claims into
