@@ -43,6 +43,8 @@ No blocking finding in the release content. Residual risks carried forward:
 
 ## Verdict
 
-Release content is consistent with its notes and evidence. Publication results (tag object,
-checksums, `check-release-assets`, `Foundation Release Verify`) are appended to `commands.json`
-and `summary.md` after the release is cut.
+Release content is consistent with its notes and evidence. The release was cut and published from
+`ac813f6f` on 2026-10-23: annotated tag `pantheon-base-v0.17.4` (object `b1e8fc4b`), four assets
+with verified checksums, `check-release-assets` consistent, and `Foundation Release Verify`
+(run `39954843594`) succeeded. Details and the command trail are in `summary.md` and
+`commands.json`.

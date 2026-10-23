@@ -1,7 +1,7 @@
 # Pantheon Base - Harness 任务状态
 
 **最后更新**: 2026-10-23
-**当前版本**: v0.17.3 已发布（2026-10-23T07:46Z，tag `pantheon-base-v0.17.3` → `1b74dccb`）；v0.17.4 发布材料已合入，打标发布中
+**当前版本**: v0.17.4 已发布（2026-10-23T12:38Z，tag `pantheon-base-v0.17.4` → `ac813f6f`）
 
 ## v0.17.4 发布（2026-10-23）
 
@@ -28,6 +28,14 @@ v0.17.3 的 known-residual 只登记了「`system_role_data_scope` / `system_rol
   运行通过，coverprofile 命中重复键分支。
 - **环境限制**：本机 TSan 影子内存分配失败（error 87），`-race` 本地未运行，由 CI Linux
   的 race 门禁承担。
+- **发布门禁**：合并提交 `ac813f6f` 上的 `Release Gate Summary` success（run `39951900733`）。
+- **发布事实（2026-10-23T12:38Z）**：annotated tag `pantheon-base-v0.17.4`（对象 `b1e8fc4b`）指向
+  `ac813f6f`；GitHub Release 非 draft / 非 prerelease，四件资产齐全。
+  - 打标前凭据预检：`clean (3108 files scanned)`，`bundle/` 与 `repo.tar` 都已打开。
+  - `foundation-release-pantheon-base-v0.17.4.tgz` sha256 `339a9a89252b…f9975ce53d`
+  - `repo.tar` sha256 `bcc0250a8c1c…7843476f`
+  - `check-release-assets`：本地 bundle 与远端四件资产一致；`Foundation Release Verify`
+    （run `39954843594`）success。
 
 ## v0.17.3 发布（2026-10-23）
 

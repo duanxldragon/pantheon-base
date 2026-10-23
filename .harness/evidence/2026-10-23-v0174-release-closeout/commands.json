@@ -60,6 +60,60 @@
       "cwd": ".",
       "status": "passed",
       "details": "Frontmatter: 347 docs checked. Task-packet template linked. Task packets (including 2026-10-23-v0174-release-closeout): all PASS. Structure: 0 findings across 2543 tracked files. Generated: 0 findings across 11 artifacts. Failure registry: 0 errors, 0 warnings."
+    },
+    {
+      "command": "gh pr view 418 --repo duanxldragon/pantheon-base --json state,mergeCommit,mergedAt",
+      "cwd": ".",
+      "status": "passed",
+      "details": "MERGED as ac813f6f74de41ebb773a749d7cb2f591fa1050a at 2026-10-23T12:14:53Z, after 52 checks passed and 3 skipped, with SonarCloud OK and 0 open issues on the pull request."
+    },
+    {
+      "command": "gh run view 39951900733 --repo duanxldragon/pantheon-base",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Release Gate on main at ac813f6f: Open PRs, CodeQL Alerts, Dependabot Alerts, Candidate Checks, SonarCloud Gate and Release Gate Summary all completed/success."
+    },
+    {
+      "command": "node scripts/foundation-release/cut-foundation-release.mjs --release-version pantheon-base-v0.17.4 --release-line release/0.17 --base-commit ac813f6f74de41ebb773a749d7cb2f591fa1050a --release-notes \"$(cat RELEASE_NOTES_v0.17.4.md)\" --upgrade-notes \"$(cat <tmp>)\" --consumer-impact \"$(cat <tmp>)\"",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Created releases/pantheon-base-v0.17.4/ and dist/foundation-releases/pantheon-base-v0.17.4/ with manifest, notes, upgrade notes, consumer impact, verification summary, the bundle and repo.tar. Manifest createdAt 2026-10-23T12:37:46.601Z, baseCommit ac813f6f, 52 sharedPaths."
+    },
+    {
+      "command": "node scripts/foundation-release/check-release-secrets.mjs --release-version pantheon-base-v0.17.4",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Release secret scan: clean (3108 file(s) scanned). Both bundle/ and repo.tar were opened before the tag existed."
+    },
+    {
+      "command": "node scripts/foundation-release/publish-foundation-release.mjs --release-version pantheon-base-v0.17.4 --release-line release/0.17 --base-commit ac813f6f74de41ebb773a749d7cb2f591fa1050a --repo duanxldragon/pantheon-base",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Exit 0 over the default git transport: the annotated tag pantheon-base-v0.17.4 was created and pushed, then the GitHub release was created and all four assets uploaded."
+    },
+    {
+      "command": "git cat-file -p pantheon-base-v0.17.4 | head -5 && git ls-remote --tags origin pantheon-base-v0.17.4",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Annotated tag object b1e8fc4ba84b6868e6f3ea4b7cb47e0bbc428cdc points at ac813f6f; the remote ref resolves to the same object."
+    },
+    {
+      "command": "node scripts/foundation-release/check-release-assets.mjs --release-version pantheon-base-v0.17.4 --repo duanxldragon/pantheon-base",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Local bundle ok; the GitHub release carries all four required assets. tgz sha256 339a9a89252b62515e279659a12179a6e8c6b94e9d08906ac12b01f9975ce53d; repo.tar sha256 bcc0250a8c1c13349291021d8aebf1f3ab8e9bf18ef90ab78912cab27843476f."
+    },
+    {
+      "command": "gh release view pantheon-base-v0.17.4 --repo duanxldragon/pantheon-base --json tagName,isDraft,isPrerelease,targetCommitish,assets",
+      "cwd": ".",
+      "status": "passed",
+      "details": "isDraft false, isPrerelease false, targetCommitish ac813f6f74de41ebb773a749d7cb2f591fa1050a, exactly four assets: tgz (23245938 bytes), tgz.sha256, repo.tar (38174720 bytes), repo.tar.sha256."
+    },
+    {
+      "command": "gh run view 39954843594 --repo duanxldragon/pantheon-base",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Foundation Release Verify on tag pantheon-base-v0.17.4 succeeded: Verify Release Assets and Foundation Release Verify Summary both completed/success at ac813f6f."
     }
   ],
   "knownGaps": [
