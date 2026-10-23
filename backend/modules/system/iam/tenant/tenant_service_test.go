@@ -148,6 +148,16 @@ var tenantTestDDL = []string{
 //     MySQL's AUTO_INCREMENT semantics for an explicit 0 differ from SQLite's.
 //     Only MySQL exercises the real idiom.
 //
+// mustLoadTenantRow reads a tenant row straight from storage, tombstone
+// included. GetTenantByID deliberately reports a deleted tenant as not found,
+// so a test that inspects the post-delete row has to go around the service.
+func mustLoadTenantRow(t *testing.T, db *gorm.DB, id uint64) Tenant {
+	t.Helper()
+	var row Tenant
+	require.NoError(t, db.Unscoped().Where(condIDEquals, id).Take(&row).Error)
+	return row
+}
+
 // It skips when no test DSN is configured, so the suite degrades to a no-op
 // instead of failing on a machine without MySQL.
 func setupTestDB(t *testing.T) *gorm.DB {
@@ -459,9 +469,9 @@ func TestDeleteTenant_Success(t *testing.T) {
 	err = service.DeleteTenant(tenant.ID)
 	require.NoError(t, err)
 
-	// Verify status changed to deleted
-	deleted, err := service.GetTenantByID(tenant.ID)
-	require.NoError(t, err)
+	// Verify status changed to deleted. A deleted tenant is no longer
+	// addressable through the service, so the row is read directly.
+	deleted := mustLoadTenantRow(t, db, tenant.ID)
 	assert.Equal(t, "deleted", deleted.Status)
 }
 
