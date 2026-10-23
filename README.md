@@ -10,14 +10,14 @@ Pantheon Platform 是一个面向企业后台的模块化单体底座，沉淀�
 
 | 项 | 值 |
 | --- | --- |
-| 当前 foundation release | [`pantheon-base-v0.17.2`](https://github.com/duanxldragon/pantheon-base/releases/tag/pantheon-base-v0.17.2)（含四件可消费产物） |
+| 当前 foundation release | [`pantheon-base-v0.17.3`](https://github.com/duanxldragon/pantheon-base/releases/tag/pantheon-base-v0.17.3)（含四件可消费产物） |
 | Shell/Harness 基线版本 | `1.4.0`（见 [VERSION](./VERSION) / [SHELL_VERSION.json](./SHELL_VERSION.json)） |
 | 部署文档 | [docs/DEPLOYMENT_GUIDE.md](./docs/DEPLOYMENT_GUIDE.md)（MySQL 8、Redis 7、迁移 + runtime seed、健康检查、遥测、备份恢复与 schema-aware 回滚） |
-| 变更记录 | [CHANGELOG.md](./CHANGELOG.md) / [RELEASE_NOTES_v0.17.2.md](./RELEASE_NOTES_v0.17.2.md) |
+| 变更记录 | [CHANGELOG.md](./CHANGELOG.md) / [RELEASE_NOTES_v0.17.3.md](./RELEASE_NOTES_v0.17.3.md) |
 | **任务状态** | [.harness/STATUS.md](./.harness/STATUS.md) — 当前任务状态总览 |
 | **归档记录** | [.harness/ARCHIVE.md](./.harness/ARCHIVE.md) — 已完成任务归档索引 |
 
-交付状态说明：v0.17.2 是残余项收口 patch 发布，tag `pantheon-base-v0.17.2`，四件可消费产物齐备（tgz / tgz.sha256 / repo.tar / repo.tar.sha256）并由 `Foundation Release Verify` 断言。它关闭了 v0.17.1 显式登记的 5 项残余，其中两项经实测暴露为真实缺陷：并发创建两个租户会在设置复制处死锁（`Error 1213`），已删除租户可被状态更新复活（状态机 `default` 分支对墓碑返回"允许"）。其余三项按"消除条件"而非"重新标注"处理：Redis 测试隔离度改为每包独立逻辑库、race 检测在本机可用（原失败是 PATH 上的 Cygwin gcc）、发布产物增加凭据预检（v0.17.0 曾交付一份开发口令且不可回收）。合同 §2.1 补入 V1.3 澄清（墓碑语义）。无 schema 变更（仍为 29），无接口移除或重命名。
+交付状态说明：v0.17.3 是发布后复核 patch，tag `pantheon-base-v0.17.3`，四件可消费产物齐备（tgz / tgz.sha256 / repo.tar / repo.tar.sha256）并由 `Foundation Release Verify` 断言。它把 v0.17.2 发布后发现的 R-1…R-5 落进下一次可消费资产：发布凭据预检现在同时扫描 `bundle/` 与 `repo.tar`，快照缺失即失败关闭（v0.17.2 的预检只扫 bundle，而 v0.17.0 的残留只随 repo.tar 分发；已发布资产补扫干净）；v0.17.2 证据中三处与代码不符的表述以勘误修正；窄视口租户选择器烟测改为等待 Arco 弹层与触发器对齐后再测量溢出。无运行时行为变更，schema 仍为 29，无路由、权限码、菜单或错误信封变化。
 
 ## 项目定位
 

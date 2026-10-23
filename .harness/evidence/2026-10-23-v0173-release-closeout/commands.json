@@ -1,0 +1,72 @@
+{
+  "taskId": "2026-10-23-v0173-release-closeout",
+  "repo": "pantheon-base",
+  "executedAt": "2026-10-23T15:10:00+08:00",
+  "agent": {
+    "tool": "other",
+    "adapter": "software-workshop-agent"
+  },
+  "commands": [
+    {
+      "command": "git diff --stat pantheon-base-v0.17.2..HEAD",
+      "cwd": ".",
+      "status": "passed",
+      "details": "15 files changed. The only backend file is tenant_service.go with 3 lines changed (one duplicated doc-comment line removed). The rest are release scripts, the tenant-picker smoke, evidence, and version material. Confirms the release contains no runtime behaviour change."
+    },
+    {
+      "command": "node --test tests/scripts/foundation-release/check-release-secrets.test.mjs",
+      "cwd": ".",
+      "status": "passed",
+      "details": "12/12. Includes the repo.tar residue under .harness/archive/.../commands.json, a clean repo.tar, and a missing repo.tar that fails closed; the report masks the secret."
+    },
+    {
+      "command": "node --test tests/scripts/foundation-release/*.test.mjs",
+      "cwd": ".",
+      "status": "passed",
+      "details": "57/57 tests, 0 failed, 0 skipped. Covers bundle construction, repo.tar snapshot, manifest metadata, asset checks, publish-candidate validation, release-gate check-run validation, and the credential scanner."
+    },
+    {
+      "command": "node scripts/foundation-release/check-release-secrets.mjs --path tests/scripts/foundation-release",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Exit 0: clean (6 file(s) scanned). The scanner does not flag its own fixtures."
+    },
+    {
+      "command": "node scripts/frontmatter-check.mjs && node scripts/harness/check-task-packet.mjs --root . && node scripts/harness/check-structure-contract.mjs --root . --strict && node scripts/harness/check-generated.mjs --root . --strict && node scripts/harness/check-failure-registry.mjs",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Frontmatter: 345 docs checked, 252 with frontmatter. Task packets: 50 files, 0 errors (the new packet passes; its review-file warning is resolved by this evidence directory). Structure: 0 findings across 2526 tracked files. Generated: 0 findings across 11 artifacts. Failure registry: 0 errors."
+    },
+    {
+      "command": "cd backend && go build ./... && go vet ./... && gofmt -l .",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Exit 0, no gofmt output. The module builds, vets clean and is formatted. No runtime code changed between v0.17.2 and this release, so the full real-database suite from the v0.17.2 packet was not repeated."
+    },
+    {
+      "command": "node node_modules/typescript/bin/tsc --noEmit && node node_modules/eslint/bin/eslint.js tests/smoke-core/auth-tenant-picker.spec.ts --max-warnings 0",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "Type-check and lint clean (LINT_TSC_OK)."
+    },
+    {
+      "command": "node scripts/run-smoke-suite.mjs --host 127.0.0.1 --port 5173 --cleanup-fixtures all --config playwright.config.ts -- tests/smoke-core/auth-tenant-picker.spec.ts --workers=1",
+      "cwd": "frontend",
+      "status": "failed",
+      "details": "The wrapper could not start its own Vite server because a local dev server already held 127.0.0.1:5173. Not a test failure. Re-run against the existing server below; the spec mocks its own API routes, so no fixtures or database were needed."
+    },
+    {
+      "command": "PANTHEON_EXTERNAL_WEB_SERVER=1 node node_modules/@playwright/test/cli.js test tests/smoke-core/auth-tenant-picker.spec.ts --config playwright.config.ts --workers=1",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "3/3 passed in 10.7s, including the narrow-viewport case that waits for popup/trigger alignment before measuring overflow."
+    }
+  ],
+  "pending": [
+    "PR required checks and Release Gate Summary on the merge commit (decided by CI)",
+    "cut-foundation-release.mjs for pantheon-base-v0.17.3 with explicit notes flags",
+    "check-release-secrets.mjs --release-version pantheon-base-v0.17.3",
+    "publish-foundation-release.mjs and the four asset checks",
+    "check-release-assets.mjs and Foundation Release Verify"
+  ]
+}

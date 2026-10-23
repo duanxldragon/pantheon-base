@@ -6,12 +6,12 @@ Pantheon Base 方法追踪记录。方法论本体位于 `pantheon-harness`。
 
 ---
 
-## [Unreleased] — 2026-10-23 (post-publication review)
+## [pantheon-base-v0.17.3] — 2026-10-23 (post-publication review)
 
 > A reviewer pass compared the published v0.17.2 code and assets against its evidence packet and
-> found five items. The release assets are immutable; this change widens the gate for the next
-> release and corrects the record. Details:
-> `.harness/evidence/2026-10-23-residual-closeout/review.md` (addendum).
+> found five items. The release assets are immutable; this release widens the gate and corrects the
+> record. Details: `.harness/evidence/2026-10-23-residual-closeout/review.md` (addendum) and
+> `.harness/evidence/2026-10-23-v0173-release-closeout/`. No runtime behaviour changes.
 
 ### Fixed
 
