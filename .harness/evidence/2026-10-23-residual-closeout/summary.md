@@ -88,3 +88,12 @@ pins the fingerprints of both historical commits (0fcc38d0, 43aec46e) in
 point at the new tag/notes and restate delivery status; remediation report §5 is rewritten from "known
 residuals" to "closed in v0.17.2, with the evidence"; `.harness/STATUS.md` moves v0.17.1's block to history
 and opens the v0.17.2 block. No schema change (still 29 migrations), no route or permission code removed.
+
+## Published facts (2026-10-23)
+
+- PR #411 (gitleaks inline-allow) merged as `45a40c05`; PR #412 (SonarCloud go:S1192,
+  `condTenantIDMatches`) merged as `e6aeced9`.
+- `Release Gate` green on `main e6aeced9`; `Foundation Release Verify` success on the tag.
+- Tag `pantheon-base-v0.17.2` -> `e6aeced9`; GitHub release published with the four assets
+  (tgz, tgz.sha256, repo.tar, repo.tar.sha256), non-draft, non-prerelease.
+- The release-time credential precheck scanned its own release: clean, 768 files.
