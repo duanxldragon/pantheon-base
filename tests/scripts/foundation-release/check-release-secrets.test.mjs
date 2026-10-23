@@ -24,6 +24,7 @@ const {
 // here is synthetic on purpose — copying the real one into a test fixture would
 // be the same leak in a new place. What is asserted is the shape, which is what
 // the rules match.
+// gitleaks:allow — synthetic fixture, the value is a made-up counter, not a credential.
 const LEAKED_SECRET = '0123456789abcdef0123456789abcdef0123456789abcdef';
 const LEAKED_COMMAND = `mysql -uroot -p${LEAKED_SECRET} pantheon_base`;
 const LEAKED_DSN = `root:${LEAKED_SECRET}@tcp(127.0.0.1:3306)/pantheon_base?charset=utf8mb4`;
