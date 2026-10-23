@@ -13,6 +13,7 @@ import (
 	"github.com/duanxldragon/pantheon-base/backend/pkg/tenant"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 const (
@@ -389,14 +390,16 @@ func (s *RoleService) allocateDeletedRoleKey(tx *gorm.DB, roleID uint64) (string
 
 func (s *RoleService) backfillRolePermissions() error {
 	type rolePermissionSeed struct {
+		TenantID      uint64 `gorm:"column:tenant_id"`
 		RoleID        uint64 `gorm:"column:role_id"`
 		PermissionKey string `gorm:"column:permission_key"`
 	}
 
 	var seeds []rolePermissionSeed
 	if err := s.db.Table("system_role_menu").
-		Select("system_role_menu.role_id AS role_id, COALESCE(NULLIF(system_menu.page_perm, ''), NULLIF(system_menu.perms, '')) AS permission_key").
+		Select("system_role.tenant_id AS tenant_id, system_role_menu.role_id AS role_id, COALESCE(NULLIF(system_menu.page_perm, ''), NULLIF(system_menu.perms, '')) AS permission_key").
 		Joins("JOIN system_menu ON system_menu.id = system_role_menu.menu_id").
+		Joins("JOIN system_role ON system_role.id = system_role_menu.role_id AND system_role.deleted_at IS NULL").
 		Where("(system_menu.page_perm <> '' OR system_menu.perms <> '')").
 		Scan(&seeds).Error; err != nil {
 		return err
@@ -406,21 +409,34 @@ func (s *RoleService) backfillRolePermissions() error {
 		return nil
 	}
 
-	return s.db.Transaction(func(tx *gorm.DB) error {
-		for _, seed := range seeds {
-			if strings.TrimSpace(seed.PermissionKey) == "" {
-				continue
-			}
-			if err := tx.Where("role_id = ? AND permission_key = ?", seed.RoleID, seed.PermissionKey).
-				FirstOrCreate(&SystemRolePermission{
-					RoleID:        seed.RoleID,
-					PermissionKey: strings.TrimSpace(seed.PermissionKey),
-				}).Error; err != nil {
-				return err
-			}
+	// Several menus can expose the same permission key, so one role can produce
+	// the same natural key more than once. The unique index would absorb the
+	// duplicates, but deduplicating keeps the batch honest on its own.
+	seen := make(map[SystemRolePermission]struct{}, len(seeds))
+	permissions := make([]SystemRolePermission, 0, len(seeds))
+	for _, seed := range seeds {
+		permissionKey := strings.TrimSpace(seed.PermissionKey)
+		if permissionKey == "" {
+			continue
 		}
+		grant := SystemRolePermission{
+			TenantID:      seed.TenantID,
+			RoleID:        seed.RoleID,
+			PermissionKey: permissionKey,
+		}
+		if _, ok := seen[grant]; ok {
+			continue
+		}
+		seen[grant] = struct{}{}
+		permissions = append(permissions, grant)
+	}
+	if len(permissions) == 0 {
 		return nil
-	})
+	}
+
+	return s.db.Table("system_role_permission").
+		Clauses(clause.OnConflict{DoNothing: true}).
+		CreateInBatches(permissions, 100).Error
 }
 
 func reloadRolePolicies() error {

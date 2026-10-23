@@ -13,6 +13,7 @@ import (
 	tenantctx "github.com/duanxldragon/pantheon-base/backend/pkg/tenant"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 // Tenant-local role keys. They live in the tenant's own namespace
@@ -675,6 +676,11 @@ func deleteTenantPermissionGrants(tx *gorm.DB, tenantID uint64, keys []string) e
 // grantTenantRolePermissions copies the missing permission keys onto one tenant
 // role. readOnlyOnly keeps a read-only role on the GET-only subset, so the
 // console never advertises an action the server would refuse.
+//
+// The read above is only a fast path. The unique key
+// (tenant_id, role_id, permission_key) is the authority: two concurrent repair
+// runs that both miss the same key must converge on one row, not fail the loser
+// with a duplicate-entry 500.
 func grantTenantRolePermissions(
 	tx *gorm.DB,
 	tenantID, roleID uint64,
@@ -693,6 +699,12 @@ func grantTenantRolePermissions(
 	for _, key := range currentKeys {
 		existing[key] = struct{}{}
 	}
+	type permissionGrant struct {
+		TenantID      uint64
+		RoleID        uint64
+		PermissionKey string
+	}
+	grants := make([]permissionGrant, 0, len(permissionKeys))
 	for _, key := range permissionKeys {
 		if readOnlyOnly && !isReadOnlyPermissionKey(key) {
 			continue
@@ -700,20 +712,23 @@ func grantTenantRolePermissions(
 		if _, taken := existing[key]; taken {
 			continue
 		}
-		row := struct {
-			TenantID      uint64
-			RoleID        uint64
-			PermissionKey string
-		}{TenantID: tenantID, RoleID: roleID, PermissionKey: key}
-		if err := tx.Table("system_role_permission").Create(&row).Error; err != nil {
-			return fmt.Errorf("grant %s permission %s: %w", roleKey, key, err)
-		}
+		grants = append(grants, permissionGrant{TenantID: tenantID, RoleID: roleID, PermissionKey: key})
+	}
+	if len(grants) == 0 {
+		return nil
+	}
+	if err := tx.Table("system_role_permission").
+		Clauses(clause.OnConflict{DoNothing: true}).
+		CreateInBatches(grants, 100).Error; err != nil {
+		return fmt.Errorf("grant permissions to %s: %w", roleKey, err)
 	}
 	return nil
 }
 
 // grantTenantRoleMenus copies the missing menu grants onto one tenant role, so
-// the tenant console renders the same navigation as the platform one.
+// the tenant console renders the same navigation as the platform one. The
+// composite primary key is the arbiter, for the same concurrency reason as
+// grantTenantRolePermissions.
 func grantTenantRoleMenus(tx *gorm.DB, tenantID, roleID uint64, roleKey string, menuIDs []uint64) error {
 	existing := make(map[uint64]struct{})
 	var currentMenus []uint64
@@ -726,18 +741,25 @@ func grantTenantRoleMenus(tx *gorm.DB, tenantID, roleID uint64, roleKey string, 
 	for _, id := range currentMenus {
 		existing[id] = struct{}{}
 	}
+	type menuGrant struct {
+		RoleID   uint64
+		MenuID   uint64
+		TenantID uint64
+	}
+	grants := make([]menuGrant, 0, len(menuIDs))
 	for _, id := range menuIDs {
 		if _, taken := existing[id]; taken {
 			continue
 		}
-		row := struct {
-			RoleID   uint64
-			MenuID   uint64
-			TenantID uint64
-		}{RoleID: roleID, MenuID: id, TenantID: tenantID}
-		if err := tx.Table("system_role_menu").Create(&row).Error; err != nil {
-			return fmt.Errorf("grant %s menu %d: %w", roleKey, id, err)
-		}
+		grants = append(grants, menuGrant{RoleID: roleID, MenuID: id, TenantID: tenantID})
+	}
+	if len(grants) == 0 {
+		return nil
+	}
+	if err := tx.Table("system_role_menu").
+		Clauses(clause.OnConflict{DoNothing: true}).
+		CreateInBatches(grants, 100).Error; err != nil {
+		return fmt.Errorf("grant menus to %s: %w", roleKey, err)
 	}
 	return nil
 }
