@@ -30,8 +30,8 @@ func TestProvisionTenantWiresDictCopy(t *testing.T) {
 		provisionBody = provisionBody[:end]
 	}
 
-	settingsAt := strings.Index(provisionBody, "s.copyPlatformSettingsToTenant(in.TenantID)")
-	dictsAt := strings.Index(provisionBody, "s.copyPlatformDictsToTenant(in.TenantID)")
+	settingsAt := strings.Index(provisionBody, "s.copyPlatformSettingsToTenant(tx, in.TenantID)")
+	dictsAt := strings.Index(provisionBody, "s.copyPlatformDictsToTenant(tx, in.TenantID)")
 	if settingsAt < 0 {
 		t.Fatal("provisioning baseline changed: settings copy call not found")
 	}
@@ -39,7 +39,7 @@ func TestProvisionTenantWiresDictCopy(t *testing.T) {
 		t.Fatal("ProvisionTenant must call copyPlatformDictsToTenant (FIX-4 wiring)")
 	}
 	if dictsAt < settingsAt {
-		t.Fatal("dict copy must run after the settings copy (same post-commit block)")
+		t.Fatal("dict copy must run after the settings copy (same copy transaction)")
 	}
 }
 
@@ -85,7 +85,7 @@ func TestCopyPlatformDictsToTenantIdempotent(t *testing.T) {
 	}
 
 	svc := NewService(db)
-	types, items, err := svc.copyPlatformDictsToTenant(630)
+	types, items, err := svc.copyPlatformDictsToTenant(db, 630)
 	if err != nil {
 		t.Fatalf("copy platform dicts: %v", err)
 	}
@@ -111,7 +111,7 @@ func TestCopyPlatformDictsToTenantIdempotent(t *testing.T) {
 
 	// Second run: nothing new, no unique-key clash against the rows just
 	// inserted (and none against soft-deleted dst rows either).
-	if _, _, err := svc.copyPlatformDictsToTenant(630); err != nil {
+	if _, _, err := svc.copyPlatformDictsToTenant(db, 630); err != nil {
 		t.Fatalf("re-run must stay idempotent: %v", err)
 	}
 	var typeCount, itemCount int64
@@ -126,7 +126,7 @@ func TestCopyPlatformDictsToTenantIdempotent(t *testing.T) {
 	}
 
 	// tenantID == 0 must never copy (platform population is the source).
-	if types, items, err := svc.copyPlatformDictsToTenant(0); err != nil || types != 0 || items != 0 {
+	if types, items, err := svc.copyPlatformDictsToTenant(db, 0); err != nil || types != 0 || items != 0 {
 		t.Fatalf("copy to tenant 0 must be a no-op, got (%d, %d, %v)", types, items, err)
 	}
 }

@@ -1,0 +1,132 @@
+{
+  "taskId": "2026-10-23-iam-race-closeout",
+  "taskDoc": "docs/harness/tasks/2026-10-23-iam-race-closeout.task.md",
+  "title": "Close the post-v0.17.4 IAM concurrency residuals: same-tenant provisioning, replace-style grants, historical tenant-id rows, race evidence and the v0.17.3 notes correction",
+  "goal": "Turn the five residuals registered by v0.17.4 into checked code. Same-tenant provisioning now locks the tenant row and writes roles, administrator, bindings and memberships convergently, so concurrent repair calls queue instead of colliding. replaceRolePermissions and replaceUserRoles lock the parent role/user row before delete-then-insert, so the surviving set is the last writer's instead of a merge. The bootstrap backfill now rewrites historical system_role_permission rows that a pre-v0.17.4 backfill stamped tenant_id = 0, deleting duplicates against the tenant namespace first. The race gate is evidenced by CI because the local Windows host cannot start TSan. The stale v0.17.3 sentence about system_role_data_scope is corrected with a dated block in both the repository file and the GitHub release body, keeping the original text. No schema, route, permission code, menu seed or error envelope changes.",
+  "primaryLayer": "platform",
+  "status": "completed",
+  "priority": "P2",
+  "type": "residual-closeout",
+  "estimatedComplexity": "medium",
+  "findings": [
+    "R1 (P2, tenant_provision.go:201-238, 317-364, 368-411, 786-827): provisioning was a chain of read-then-insert steps. Concurrent calls for one tenant both missed the role row and the loser failed the whole transaction on uk_system_role_tenant_key; the same window existed for the administrator (uk_system_user_tenant_username), the root department (no unique key at all) and the bindings. The post-commit copies of the platform settings and dictionaries were the same shape outside the lock, and system_dict_item has no unique key, so a lost race there duplicated every item.",
+    "R2 (P2, role_helper.go:328-349, user_helper.go:78-100): replaceRolePermissions and replaceUserRoles deleted every row and re-inserted the requested set without holding anything. Two concurrent replacers interleave into a merged set (the later DELETE cannot see the earlier uncommitted INSERT) or deadlock on the index gap.",
+    "R3 (P2, role_helper.go:410-440): the v0.17.4 backfill stamped roles' tenant, but rows written by the pre-v0.17.4 backfill still carry tenant_id = 0 and are invisible to every tenant-scoped read, so the tenant role silently loses those permissions.",
+    "R4 (P2, local host): CGO_ENABLED=1 go test -race cannot start TSan on this Windows session (shadow-memory allocation, error code 87). The race gate has to be evidenced by the CI backend-tests job (Linux, MySQL 8 + Redis).",
+    "R5 (P3, RELEASE_NOTES_v0.17.3.md:114): the published residual says system_role_data_scope pre-checks before writing. upsertRoleDataScopePolicyPreservingCustomDepts has always used clause.OnConflict, so only the system_role_permission half was accurate."
+  ],
+  "scope": {
+    "in": [
+      "Tenant row lock at the start of the provisioning transaction",
+      "Convergent role and administrator writes with ON CONFLICT DO NOTHING plus a locking read-back",
+      "Conflict-tolerant administrator binding and owner membership writes",
+      "Parent-row locks in replaceRolePermissions and replaceUserRoles",
+      "Historical tenant_id = 0 permission-row repair in the bootstrap backfill",
+      "Real-MySQL regression tests for same-tenant provisioning, both parent-row locks and the backfill repair",
+      "CI race gate evidence and the v0.17.3 notes correction"
+    ],
+    "out": [
+      "Database schema or migrations (stays at 29)",
+      "Routes, permission codes, menu seeds and error envelopes",
+      "GitHub workflow definitions and gate thresholds",
+      "The published tags and release assets"
+    ]
+  },
+  "acceptanceCriteria": [
+    "Four concurrent ProvisionTenant calls for one tenant all succeed and converge on one role per key, one administrator, one binding, one owner membership and one root department, with identical role ids.",
+    "While replaceRolePermissions runs, a second transaction cannot acquire the role row (NOWAIT probe returns 3572); a queued second replacer completes only after the first commits and its set is the stored set.",
+    "The same holds for replaceUserRoles on the user row.",
+    "The bootstrap backfill re-stamps a stale tenant_id = 0 grant, deletes a stale duplicate instead of violating uk_role_permission_tenant, leaves platform grants and soft-deleted-role grants untouched, and is idempotent.",
+    "The new tests fail against the pre-fix code and pass against the fix.",
+    "gofmt/build/vet clean; full go test ./... against real MySQL and Redis passes with no skips.",
+    "The CI backend-tests job runs go test -race ./... on the new tests and succeeds.",
+    "The v0.17.3 notes file and GitHub release body carry the dated correction while the tag and assets stay unchanged.",
+    "Governance checkers (docs frontmatter, task packet template and instances, structure, generated, failure registry) pass."
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "permission-policy",
+    "portableFailureClass": "unique-key-race / non-idempotent-repair / lost-update",
+    "ownerLayer": "consumer-repository",
+    "ratchetDecision": "test-added",
+    "coverageDimensions": [
+      "behaviour",
+      "runtime-quality",
+      "architecture-fitness"
+    ]
+  },
+  "expectedFiles": {
+    "create": [
+      "backend/modules/system/iam/role/role_replace_concurrency_test.go",
+      "docs/harness/tasks/2026-10-23-iam-race-closeout.task.md",
+      ".harness/tasks/2026-10-23-iam-race-closeout/manifest.json",
+      ".harness/evidence/2026-10-23-iam-race-closeout/summary.md",
+      ".harness/evidence/2026-10-23-iam-race-closeout/review.md",
+      ".harness/evidence/2026-10-23-iam-race-closeout/commands.json"
+    ],
+    "modify": [
+      "backend/modules/system/iam/tenant/tenant_provision.go",
+      "backend/modules/system/iam/tenant/tenant_provision_dicts_test.go",
+      "backend/modules/system/iam/tenant/tenant_concurrency_test.go",
+      "backend/modules/system/iam/role/role_helper.go",
+      "backend/modules/system/iam/role/role_backfill_test.go",
+      "backend/modules/system/iam/user/user_helper.go",
+      "backend/modules/system/iam/user/user_concurrency_test.go",
+      "RELEASE_NOTES_v0.17.3.md"
+    ],
+    "doNotTouch": [
+      "backend/pkg/database/migrations/**",
+      ".github/workflows/**",
+      "the published tags and release assets"
+    ]
+  },
+  "implementationNotes": [
+    "Same-tenant provisioning is serialised on the tenants row (SELECT ... FOR UPDATE), which closes the read-then-insert window for every step in the transaction instead of adding a unique key per table (the root department has none).",
+    "Under REPEATABLE READ a plain read-back after a wait-on-conflict upsert can still see the transaction's older snapshot; the read-back is therefore a locking (current) read.",
+    "replaceRolePermissions/replaceUserRoles lock only the parent row, so unrelated roles and users keep writing in parallel.",
+    "The historical-row repair deletes stale duplicates first, then updates the remaining stale rows, because a bare UPDATE would collide with uk_role_permission_tenant when the tenant already owns the key.",
+    "The repair runs before the seed query and before its empty-seed early return.",
+    "The local Windows host cannot start TSan; the race gate is the CI quality.yml backend-tests job on Linux with MySQL 8 and Redis."
+  ],
+  "verificationPlan": {
+    "go": [
+      "gofmt -l backend/modules/system/iam/tenant backend/modules/system/iam/role backend/modules/system/iam/user",
+      "go build ./...",
+      "go vet ./...",
+      "PANTHEON_TEST_DSN_REQUIRED=true PANTHEON_TEST_REDIS_REQUIRED=true go test ./... (MySQL/Redis from .env.test)"
+    ],
+    "targeted": [
+      "go test ./modules/system/iam/tenant -run TestConcurrentProvisioningOfTheSameTenantIsConvergent",
+      "go test ./modules/system/iam/role -run TestConcurrentReplaceRolePermissionsSerialisesOnTheRoleRow",
+      "go test ./modules/system/iam/user -run TestConcurrentReplaceUserRolesSerialisesOnTheUserRow",
+      "go test ./modules/system/iam/role -run 'TestBackfillRolePermissions'"
+    ],
+    "ci": [
+      "quality.yml backend-tests: go test -race ./... against MySQL 8 and Redis"
+    ],
+    "governance": [
+      "node scripts/frontmatter-check.mjs",
+      "node scripts/check-task-packet-template.mjs",
+      "node scripts/harness/check-task-packet.mjs --root .",
+      "node scripts/harness/check-structure-contract.mjs --root . --strict",
+      "node scripts/harness/check-generated.mjs --root . --strict",
+      "node scripts/harness/check-failure-registry.mjs --root . --strict"
+    ]
+  },
+  "linkage": {
+    "taskId": "2026-10-23-iam-race-closeout",
+    "taskManifest": ".harness/tasks/2026-10-23-iam-race-closeout/manifest.json",
+    "assessment": "docs/harness/tasks/2026-10-23-iam-race-closeout.task.md",
+    "openspecChange": "none",
+    "superpowersPlan": "none",
+    "evidenceDir": ".harness/evidence/2026-10-23-iam-race-closeout/",
+    "summaryFile": ".harness/evidence/2026-10-23-iam-race-closeout/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-23-iam-race-closeout/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "RELEASE_NOTES_v0.17.4.md",
+      ".harness/evidence/2026-10-23-iam-residual-closeout/commands.json"
+    ]
+  }
+}

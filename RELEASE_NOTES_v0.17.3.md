@@ -114,5 +114,14 @@ on the pull request, and `Foundation Release Verify` on the tag.
 - `system_role_data_scope` and `system_role_permission` writes still pre-check instead of relying on
   the unique index, so a lost race there can return the same 500 the tenant code used to.
   `IsDuplicateKey` makes that fixable per path; only the tenant path was fixed in v0.17.2.
+
+  > **Correction (2026-10-23).** Only the `system_role_permission` half of the sentence above was
+  > accurate. `system_role_data_scope` is written with a `clause.OnConflict` upsert
+  > (`upsertRoleDataScopePolicyPreservingCustomDepts` in
+  > `backend/modules/system/iam/role/role_service.go`), so it never pre-checked and could not lose
+  > that race. The `system_role_permission` half was true when v0.17.3 was published; v0.17.4 made
+  > the grant writes idempotent and mapped the failed-race response to the existing 409. The original
+  > text is kept so the published record stays auditable; the `pantheon-base-v0.17.3` tag and its
+  > assets still contain it unchanged.
 - `tenants.deleted_at` remains a reserved, unwritten column; contract V1.3 records `status` as the
   deletion marker.
