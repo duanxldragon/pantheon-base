@@ -318,15 +318,37 @@ func roleOwningTenantIDTx(tx *gorm.DB, roleID uint64) (uint64, error) {
 	var tenantID uint64
 	if err := tx.Table("system_role").
 		Select("tenant_id").
-		Where("id = ?", roleID).
+		Where(condIDEquals, roleID).
 		Scan(&tenantID).Error; err != nil {
 		return 0, err
 	}
 	return tenantID, nil
 }
 
+// lockRoleOwningTenantIDTx is roleOwningTenantIDTx with a row lock on the role.
+//
+// replaceRolePermissions deletes the role's grants and re-inserts the requested
+// set. Two concurrent replacers that both read "no grants", both delete, and
+// both insert produce either a merged set (the second delete missed the first
+// insert) or a deadlock on the index gap. Holding the role row makes them queue:
+// the loser waits, then replaces the winner's rows, so the surviving set is
+// exactly the last caller's.
+func lockRoleOwningTenantIDTx(tx *gorm.DB, roleID uint64) (uint64, error) {
+	var role struct {
+		TenantID uint64 `gorm:"column:tenant_id"`
+	}
+	if err := tx.Table("system_role").
+		Select("tenant_id").
+		Clauses(clause.Locking{Strength: "UPDATE"}).
+		Where(condIDEquals, roleID).
+		Scan(&role).Error; err != nil {
+		return 0, err
+	}
+	return role.TenantID, nil
+}
+
 func (s *RoleService) replaceRolePermissions(tx *gorm.DB, roleID uint64, permissionKeys []string) error {
-	tenantID, err := roleOwningTenantIDTx(tx, roleID)
+	tenantID, err := lockRoleOwningTenantIDTx(tx, roleID)
 	if err != nil {
 		return err
 	}
@@ -388,7 +410,51 @@ func (s *RoleService) allocateDeletedRoleKey(tx *gorm.DB, roleID uint64) (string
 	return "", common.NewConflict("role.delete.error.archive_key_conflict")
 }
 
+// repairStaleTenantPermissionRows rewrites grants that a pre-fix backfill wrote
+// into the platform namespace (tenant_id = 0) for a tenant-owned role.
+//
+// Those rows are invisible to every tenant-scoped read, so the tenant role
+// silently loses the permission while a stray grant sits under tenant 0. The
+// role may also already own the same key under its real tenant — the unique key
+// (tenant_id, role_id, permission_key) allows both — so the duplicate is
+// deleted first and only the remaining rows are re-stamped. Soft-deleted roles
+// are skipped, matching the seed query: their grants are not in use and
+// rewriting them would resurrect data the operator deleted.
+func (s *RoleService) repairStaleTenantPermissionRows() error {
+	if err := s.db.Exec(`
+		DELETE stale
+		FROM system_role_permission AS stale
+		JOIN system_role AS r
+		  ON r.id = stale.role_id
+		 AND r.deleted_at IS NULL
+		 AND r.tenant_id <> 0
+		JOIN system_role_permission AS owned
+		  ON owned.role_id = stale.role_id
+		 AND owned.permission_key = stale.permission_key
+		 AND owned.tenant_id = r.tenant_id
+		WHERE stale.tenant_id = 0`).Error; err != nil {
+		return fmt.Errorf("repair stale tenant permission rows: delete duplicates: %w", err)
+	}
+	if err := s.db.Exec(`
+		UPDATE system_role_permission AS stale
+		JOIN system_role AS r
+		  ON r.id = stale.role_id
+		 AND r.deleted_at IS NULL
+		 AND r.tenant_id <> 0
+		SET stale.tenant_id = r.tenant_id
+		WHERE stale.tenant_id = 0`).Error; err != nil {
+		return fmt.Errorf("repair stale tenant permission rows: stamp tenant: %w", err)
+	}
+	return nil
+}
+
 func (s *RoleService) backfillRolePermissions() error {
+	// Repair runs before the seed query and before its empty-seed early return:
+	// a database whose stale rows are the only thing to fix must still be fixed.
+	if err := s.repairStaleTenantPermissionRows(); err != nil {
+		return err
+	}
+
 	type rolePermissionSeed struct {
 		TenantID      uint64 `gorm:"column:tenant_id"`
 		RoleID        uint64 `gorm:"column:role_id"`

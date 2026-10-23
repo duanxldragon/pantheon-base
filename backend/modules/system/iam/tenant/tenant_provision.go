@@ -130,6 +130,14 @@ func (s *Service) ProvisionTenant(in ProvisionInput) (*ProvisionResult, error) {
 	result := &ProvisionResult{RoleIDs: make(map[string]uint64)}
 
 	err := s.db.Transaction(func(tx *gorm.DB) error {
+		// Provisioning is a chain of read-then-insert steps (roles, root dept,
+		// administrator, bindings). Locking the tenant row makes two concurrent
+		// callers for the same tenant queue instead of racing: the second one
+		// reads what the first committed instead of inserting duplicates.
+		if err := lockTenantRow(tx, in.TenantID); err != nil {
+			return err
+		}
+
 		roleIDs, err := provisionTenantRoles(tx, in.TenantID)
 		if err != nil {
 			return err
@@ -180,40 +188,70 @@ func (s *Service) ProvisionTenant(in ProvisionInput) (*ProvisionResult, error) {
 	// failure is repaired by re-running provisioning.
 	result.PolicyCount = grantTenantRolePolicies(in.TenantID)
 
-	settings, err := s.copyPlatformSettingsToTenant(in.TenantID)
+	// The copies are read-then-insert as well: the tenant-side existence check
+	// decides what to insert, `system_setting` and `system_dict_type` would turn
+	// a lost race into a duplicate-key 500, and `system_dict_item` has no unique
+	// key at all, so a lost race would silently double the items. Taking the
+	// same tenant row lock in a second short transaction extends the
+	// serialisation above to the copy step without making provisioning and the
+	// copies one long transaction.
+	var (
+		settings  int64
+		dictTypes int64
+		dictItems int64
+	)
+	err = s.db.Transaction(func(tx *gorm.DB) error {
+		if err := lockTenantRow(tx, in.TenantID); err != nil {
+			return err
+		}
+		var err error
+		if settings, err = s.copyPlatformSettingsToTenant(tx, in.TenantID); err != nil {
+			return err
+		}
+		dictTypes, dictItems, err = s.copyPlatformDictsToTenant(tx, in.TenantID)
+		return err
+	})
 	if err != nil {
 		return nil, err
 	}
 	result.SettingsCopied = settings
-
-	dictTypes, dictItems, err := s.copyPlatformDictsToTenant(in.TenantID)
-	if err != nil {
-		return nil, err
-	}
 	result.DictTypesCopied = dictTypes
 	result.DictItemsCopied = dictItems
 
 	return result, nil
 }
 
+// lockTenantRow takes the tenant's row lock for the provisioning transaction.
+// Its only job is to serialise same-tenant provisioning; see the call site.
+func lockTenantRow(tx *gorm.DB, tenantID uint64) error {
+	var existing struct{ ID uint64 }
+	if err := tx.Model(&Tenant{}).
+		Select("id").
+		Clauses(clause.Locking{Strength: "UPDATE"}).
+		Where(condIDEquals, tenantID).
+		Take(&existing).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return ErrTenantNotFound
+		}
+		return fmt.Errorf("lock tenant row: %w", err)
+	}
+	return nil
+}
+
 // provisionTenantRoles ensures the tenant owns its role set and returns the
 // role_key -> role_id map.
+//
+// The unique key (tenant_id, role_key) is the arbiter, not a read-then-insert.
+// Two callers provisioning the same tenant at once both used to miss the row
+// and both insert; the loser then failed the whole provisioning transaction
+// with a duplicate-entry error. OnConflict DoNothing makes the insert
+// convergent, and the read-back is a locking read (SELECT ... FOR UPDATE) so it
+// observes the winner's row: under REPEATABLE READ a plain SELECT keeps the
+// transaction's older snapshot and would still come back empty after the
+// loser's insert was suppressed.
 func provisionTenantRoles(tx *gorm.DB, tenantID uint64) (map[string]uint64, error) {
 	roleIDs := make(map[string]uint64, len(tenantRoleDefinitions))
 	for _, def := range tenantRoleDefinitions {
-		var existing struct{ ID uint64 }
-		err := tx.Table("system_role").
-			Select("id").
-			Where(condTenantIDMatches+" AND role_key = ?", tenantID, def.Key).
-			Limit(1).
-			Scan(&existing).Error
-		if err != nil {
-			return nil, fmt.Errorf("look up tenant role %s: %w", def.Key, err)
-		}
-		if existing.ID != 0 {
-			roleIDs[def.Key] = existing.ID
-			continue
-		}
 		row := struct {
 			TenantID uint64
 			RoleName string
@@ -221,18 +259,24 @@ func provisionTenantRoles(tx *gorm.DB, tenantID uint64) (map[string]uint64, erro
 			Sort     int
 			Status   int
 		}{TenantID: tenantID, RoleName: def.Name, RoleKey: def.Key, Sort: def.Sort, Status: 1}
-		if err := tx.Table("system_role").Create(&row).Error; err != nil {
+		if err := tx.Table("system_role").
+			Clauses(clause.OnConflict{DoNothing: true}).
+			Create(&row).Error; err != nil {
 			return nil, fmt.Errorf("create tenant role %s: %w", def.Key, err)
 		}
-		var created struct{ ID uint64 }
+		var stored struct{ ID uint64 }
 		if err := tx.Table("system_role").
 			Select("id").
+			Clauses(clause.Locking{Strength: "UPDATE"}).
 			Where(condTenantIDMatches+" AND role_key = ?", tenantID, def.Key).
 			Limit(1).
-			Scan(&created).Error; err != nil {
+			Scan(&stored).Error; err != nil {
 			return nil, fmt.Errorf("read back tenant role %s: %w", def.Key, err)
 		}
-		roleIDs[def.Key] = created.ID
+		if stored.ID == 0 {
+			return nil, fmt.Errorf("read back tenant role %s: row missing after upsert", def.Key)
+		}
+		roleIDs[def.Key] = stored.ID
 	}
 	return roleIDs, nil
 }
@@ -368,18 +412,6 @@ func provisionTenantRootDept(tx *gorm.DB, tenantID uint64) (uint64, error) {
 func provisionTenantAdminUser(tx *gorm.DB, in ProvisionInput) (uint64, error) {
 	username := strings.TrimSpace(in.AdminUsername)
 
-	var existing struct{ ID uint64 }
-	if err := tx.Table("system_user").
-		Select("id").
-		Where(condTenantIDMatches+" AND username = ?", in.TenantID, username).
-		Limit(1).
-		Scan(&existing).Error; err != nil {
-		return 0, fmt.Errorf("look up tenant admin: %w", err)
-	}
-	if existing.ID != 0 {
-		return existing.ID, nil
-	}
-
 	hash, err := bcrypt.GenerateFromPassword([]byte(in.AdminPassword), security.GetBcryptCost())
 	if err != nil {
 		return 0, fmt.Errorf("hash tenant admin password: %w", err)
@@ -395,17 +427,26 @@ func provisionTenantAdminUser(tx *gorm.DB, in ProvisionInput) (uint64, error) {
 		Nickname string
 		Status   int
 	}{TenantID: in.TenantID, Username: username, Password: string(hash), Nickname: nickname, Status: 1}
-	if err := tx.Table("system_user").Create(&row).Error; err != nil {
+	// Same convergent shape as provisionTenantRoles: the unique key
+	// (tenant_id, username) decides, so re-provisioning (and any caller that
+	// slipped past the tenant row lock) reuses the row instead of failing.
+	if err := tx.Table("system_user").
+		Clauses(clause.OnConflict{DoNothing: true}).
+		Create(&row).Error; err != nil {
 		return 0, fmt.Errorf("create tenant admin: %w", err)
 	}
 
 	var created struct{ ID uint64 }
 	if err := tx.Table("system_user").
 		Select("id").
+		Clauses(clause.Locking{Strength: "UPDATE"}).
 		Where(condTenantIDMatches+" AND username = ?", in.TenantID, username).
 		Limit(1).
 		Scan(&created).Error; err != nil {
 		return 0, fmt.Errorf("read back tenant admin: %w", err)
+	}
+	if created.ID == 0 {
+		return 0, errors.New("read back tenant admin: row missing after upsert")
 	}
 	return created.ID, nil
 }
@@ -801,7 +842,9 @@ func provisionTenantAdminBinding(tx *gorm.DB, tenantID, userID uint64, roleIDs m
 			UserID   uint64
 			RoleID   uint64
 		}{TenantID: tenantID, UserID: userID, RoleID: adminRoleID}
-		if err := tx.Table("system_user_role").Create(&row).Error; err != nil {
+		if err := tx.Table("system_user_role").
+			Clauses(clause.OnConflict{DoNothing: true}).
+			Create(&row).Error; err != nil {
 			return fmt.Errorf("bind tenant admin role: %w", err)
 		}
 	}
@@ -819,7 +862,9 @@ func provisionTenantAdminBinding(tx *gorm.DB, tenantID, userID uint64, roleIDs m
 			Role     string
 			Status   string
 		}{TenantID: tenantID, UserID: userID, Role: "owner", Status: "active"}
-		if err := tx.Table("tenant_memberships").Create(&row).Error; err != nil {
+		if err := tx.Table("tenant_memberships").
+			Clauses(clause.OnConflict{DoNothing: true}).
+			Create(&row).Error; err != nil {
 			return fmt.Errorf("create tenant owner membership: %w", err)
 		}
 	}
@@ -912,13 +957,13 @@ type platformSettingRow struct {
 //
 // and the operator sees a 500 on tenant creation. A plain SELECT is a
 // non-locking consistent read, so two concurrent copies no longer contend.
-func (s *Service) copyPlatformSettingsToTenant(tenantID uint64) (int64, error) {
+func (s *Service) copyPlatformSettingsToTenant(db *gorm.DB, tenantID uint64) (int64, error) {
 	if tenantID == 0 {
 		return 0, nil
 	}
 
 	var source []platformSettingRow
-	if err := s.db.Table("system_setting").
+	if err := db.Table("system_setting").
 		Select("setting_key, setting_value, group_key, module, label_key, description, "+
 			"value_type, sort, is_public, is_encrypted, remark, is_readonly").
 		Where(condTenantIDMatches, platformGlobalTenantID).
@@ -930,7 +975,7 @@ func (s *Service) copyPlatformSettingsToTenant(tenantID uint64) (int64, error) {
 		return 0, nil
 	}
 
-	owned, err := s.tenantSettingKeys(tenantID)
+	owned, err := s.tenantSettingKeys(db, tenantID)
 	if err != nil {
 		return 0, err
 	}
@@ -949,7 +994,7 @@ func (s *Service) copyPlatformSettingsToTenant(tenantID uint64) (int64, error) {
 	if len(copies) == 0 {
 		return 0, nil
 	}
-	if err := s.db.Table("system_setting").Create(&copies).Error; err != nil {
+	if err := db.Table("system_setting").Create(&copies).Error; err != nil {
 		return 0, fmt.Errorf("copy platform settings to tenant: %w", err)
 	}
 	return int64(len(copies)), nil
@@ -958,9 +1003,9 @@ func (s *Service) copyPlatformSettingsToTenant(tenantID uint64) (int64, error) {
 // tenantSettingKeys lists the setting keys a tenant already owns. Re-provisioning
 // is a repair entry point, so the copy has to skip them instead of failing on
 // the (tenant_id, setting_key) unique key.
-func (s *Service) tenantSettingKeys(tenantID uint64) (map[string]struct{}, error) {
+func (s *Service) tenantSettingKeys(db *gorm.DB, tenantID uint64) (map[string]struct{}, error) {
 	var keys []string
-	if err := s.db.Table("system_setting").
+	if err := db.Table("system_setting").
 		Select("setting_key").
 		Where(condTenantIDMatches, tenantID).
 		Pluck("setting_key", &keys).Error; err != nil {
@@ -1016,24 +1061,24 @@ type platformDictItemRow struct {
 //   - every NOT-NULL-without-default column is listed explicitly
 //     (dict_name / item_label_key / item_value), matching the MySQL 1364 rule
 //     documented on the settings copy.
-func (s *Service) copyPlatformDictsToTenant(tenantID uint64) (int64, int64, error) {
+func (s *Service) copyPlatformDictsToTenant(db *gorm.DB, tenantID uint64) (int64, int64, error) {
 	if tenantID == 0 {
 		return 0, 0, nil
 	}
-	typesCopied, err := s.copyPlatformDictTypes(tenantID)
+	typesCopied, err := s.copyPlatformDictTypes(db, tenantID)
 	if err != nil {
 		return 0, 0, err
 	}
-	itemsCopied, err := s.copyPlatformDictItems(tenantID)
+	itemsCopied, err := s.copyPlatformDictItems(db, tenantID)
 	if err != nil {
 		return typesCopied, 0, err
 	}
 	return typesCopied, itemsCopied, nil
 }
 
-func (s *Service) copyPlatformDictTypes(tenantID uint64) (int64, error) {
+func (s *Service) copyPlatformDictTypes(db *gorm.DB, tenantID uint64) (int64, error) {
 	var source []platformDictTypeRow
-	if err := s.db.Table("system_dict_type").
+	if err := db.Table("system_dict_type").
 		Select("dict_code, dict_name, module, status, remark").
 		Where(condTenantIDMatches, platformGlobalTenantID).
 		Where("deleted_at IS NULL").
@@ -1045,7 +1090,7 @@ func (s *Service) copyPlatformDictTypes(tenantID uint64) (int64, error) {
 	}
 
 	var ownedCodes []string
-	if err := s.db.Table("system_dict_type").
+	if err := db.Table("system_dict_type").
 		Select("dict_code").
 		Where(condTenantIDMatches, tenantID).
 		Pluck("dict_code", &ownedCodes).Error; err != nil {
@@ -1070,15 +1115,15 @@ func (s *Service) copyPlatformDictTypes(tenantID uint64) (int64, error) {
 	if len(copies) == 0 {
 		return 0, nil
 	}
-	if err := s.db.Table("system_dict_type").Create(&copies).Error; err != nil {
+	if err := db.Table("system_dict_type").Create(&copies).Error; err != nil {
 		return 0, fmt.Errorf("copy platform dict types to tenant: %w", err)
 	}
 	return int64(len(copies)), nil
 }
 
-func (s *Service) copyPlatformDictItems(tenantID uint64) (int64, error) {
+func (s *Service) copyPlatformDictItems(db *gorm.DB, tenantID uint64) (int64, error) {
 	var source []platformDictItemRow
-	if err := s.db.Table("system_dict_item").
+	if err := db.Table("system_dict_item").
 		Select("dict_code, item_label_key, item_value, item_color, sort, status, remark").
 		Where(condTenantIDMatches, platformGlobalTenantID).
 		Where("deleted_at IS NULL").
@@ -1096,7 +1141,7 @@ func (s *Service) copyPlatformDictItems(tenantID uint64) (int64, error) {
 		DictCode  string `gorm:"column:dict_code"`
 		ItemValue string `gorm:"column:item_value"`
 	}
-	if err := s.db.Table("system_dict_item").
+	if err := db.Table("system_dict_item").
 		Select("dict_code, item_value").
 		Where(condTenantIDMatches, tenantID).
 		Scan(&ownedPairs).Error; err != nil {
@@ -1121,7 +1166,7 @@ func (s *Service) copyPlatformDictItems(tenantID uint64) (int64, error) {
 	if len(copies) == 0 {
 		return 0, nil
 	}
-	if err := s.db.Table("system_dict_item").Create(&copies).Error; err != nil {
+	if err := db.Table("system_dict_item").Create(&copies).Error; err != nil {
 		return 0, fmt.Errorf("copy platform dict items to tenant: %w", err)
 	}
 	return int64(len(copies)), nil

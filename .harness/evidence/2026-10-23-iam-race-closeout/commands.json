@@ -1,0 +1,120 @@
+{
+  "taskId": "2026-10-23-iam-race-closeout",
+  "repo": "pantheon-base",
+  "executedAt": "2026-10-23T22:29:54+08:00",
+  "agent": {
+    "tool": "other",
+    "adapter": "qoder-agent"
+  },
+  "commands": [
+    {
+      "command": "cd backend && gofmt -l . && go build ./... && go vet ./...",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "gofmt listed no files; go build ./... printed BUILD_OK; go vet ./... printed VET_OK."
+    },
+    {
+      "command": "cd backend && set -a; . ../.env.test; set +a; PANTHEON_NODE_BIN=<node> PANTHEON_TEST_DSN_REQUIRED=true PANTHEON_TEST_REDIS_REQUIRED=true go test ./... -count=1",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "Exit 0 on the final head (after the pkg/testmysql refactor). 46 packages ok, 0 FAIL, 0 SKIP out of 52 listed (6 have no test files). Required flags were set, so a missing MySQL or Redis would have failed instead of skipped. Durations: iam/tenant 102.9s, iam/user 70.6s, iam/role 54.3s, system/i18n 208.4s, lowcode/dynamicmodule 23.5s. PANTHEON_NODE_BIN and PANTHEON_WORKSPACE_ROOT were pinned: without them exec.LookPath(\"node\") fails inside the test process and the dynamicmodule tests report module.generate.server_export_failed before any test logic runs (an earlier run reproduced exactly that; re-runs with the two variables were green)."
+    },
+    {
+      "command": "cd backend && go test ./modules/system/iam/tenant/ -count=1 -run 'TestConcurrentProvisioningOfTheSameTenantIsConvergent|TestCopyPlatformDefaultsRunOnTheLockedTenantRow|TestProvisionTenantWiresDictCopy|TestCopyPlatformDictsToTenantIdempotent' -v",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "PASS 2.275s on real MySQL. Convergent: 1.18s; copy-lock probe: 0.82s (second connection gets MySQL 3572, rollback leaves no copied rows); wiring pin: 0.00s; idempotency: 0.23s."
+    },
+    {
+      "command": "cd backend && go test ./modules/system/iam/role/ -count=1 -run 'TestConcurrentReplaceRolePermissionsSerialisesOnTheRoleRow|TestBackfillRolePermissionsRepairsPlatformNamespaceGrants' -v",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "PASS 1.585s on real MySQL. Backfill repair 0.67s; replace serialisation 0.87s."
+    },
+    {
+      "command": "cd backend && go test ./modules/system/iam/user/ -count=1 -run 'TestConcurrentReplaceUserRolesSerialisesOnTheUserRow' -v",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "PASS 0.919s on real MySQL. The user row is held for the whole delete-then-insert; the queued writer's set is the stored one."
+    },
+    {
+      "command": "cd backend && gofmt -l ./pkg/testmysql ./modules/system/iam/role ./modules/system/iam/user ./modules/system/iam/tenant && go build ./... && go vet ./pkg/testmysql/... ./modules/system/iam/role/... ./modules/system/iam/user/... ./modules/system/iam/tenant/...",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "After moving the NOWAIT probe into pkg/testmysql and replacing the duplicated \"id = ?\" literals with condIDEquals: gofmt listed no files, build and vet were clean."
+    },
+    {
+      "command": "cd backend && PANTHEON_TEST_DSN_REQUIRED=1 PANTHEON_TEST_REDIS_REQUIRED=1 go test ./pkg/testmysql/... ./modules/system/iam/role/... ./modules/system/iam/user/... ./modules/system/iam/tenant/... -count=1",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "ok pkg/testmysql 0.034s; iam/role 34.743s; iam/user 46.427s; iam/tenant 67.895s. Real MySQL and Redis, required flags set."
+    },
+    {
+      "command": "curl -s 'https://sonarcloud.io/api/qualitygates/project_status?projectKey=duanxldragon_pantheon-base&pullRequest=420' and /api/issues/search?pullRequest=420&resolved=false&sinceLeakPeriod=true",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Quality Gate status OK: new duplicated lines density 0.0% (threshold 3%), all ratings 1, security hotspots 100% reviewed. New-code open issues: 0."
+    },
+    {
+      "command": "revert tenant_provision.go to the pre-fix provisioning shape, then run TestConcurrentProvisioningOfTheSameTenantIsConvergent",
+      "cwd": "backend/modules/system/iam/tenant",
+      "status": "passed",
+      "details": "The test fails against the pre-fix code with `Duplicate entry '1-owner' for key 'system_user.uk_system_user_tenant_username'`, proving it exercises the race instead of passing vacuously."
+    },
+    {
+      "command": "revert role_helper.go / user_helper.go to the pre-fix helpers, then run the two replace tests",
+      "cwd": "backend/modules/system/iam",
+      "status": "passed",
+      "details": "Both fail at the NOWAIT probe with `An error is expected but got nil`: without the parent-row lock the second transaction can take the row while the first replace is mid-flight."
+    },
+    {
+      "command": "remove repairStaleTenantPermissionRows, then run TestBackfillRolePermissionsRepairsPlatformNamespaceGrants",
+      "cwd": "backend/modules/system/iam/role",
+      "status": "passed",
+      "details": "Fails with `elements differ`: the stale tenant_id = 0 grant stays in the platform namespace and the tenant-scoped read cannot see it."
+    },
+    {
+      "command": "run the copies outside the lock (pre-fix shape) with 16 contenders and 200 platform settings/items",
+      "cwd": "backend/modules/system/iam/tenant",
+      "status": "passed",
+      "details": "Three consecutive runs did not overlap the copy windows, so the extended convergence test is documented as a convergence check, not as proof of the copy fix. The deterministic proof is TestCopyPlatformDefaultsRunOnTheLockedTenantRow (3572 probe plus rollback), and TestProvisionTenantWiresDictCopy pins that ProvisionTenant passes its transaction handle to both copies."
+    },
+    {
+      "command": "cd backend && CGO_ENABLED=1 go test -race -count=1 ./modules/system/iam/user/... ./modules/system/iam/role/... ./modules/system/iam/tenant/...",
+      "cwd": "backend",
+      "status": "not-run",
+      "details": "No test body ran. ThreadSanitizer aborts during runtime init with `failed to allocate ... error code: 87`, with and without -p 1. No Docker daemon or WSL distro is available on this host. This is an environment limitation, not a race report; authoritative race evidence is the CI quality.yml backend-tests job (Linux, MySQL 8 + Redis, go test -race ./...), whose run id is recorded under ciRace below."
+    },
+    {
+      "command": "npm run -s check:docs-frontmatter && npm run -s check:task-packet && npm run -s check:structure && npm run -s check:generated && node scripts/harness/check-failure-registry.mjs",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Frontmatter: 348 docs, 255 with frontmatter, passed. Task packet: 53 files, 0 errors, 39 pre-existing warnings. Structure: 0 findings across 2549 files. Generated: 0 findings across 11 artifacts. Failure registry: 1 file, 0 errors, 0 warnings."
+    }
+  ],
+  "ciRace": {
+    "workflow": "quality.yml",
+    "job": "backend-tests",
+    "command": "go test -race ./...",
+    "status": "passed",
+    "runId": 39969299263,
+    "jobId": 120468069895,
+    "headSha": "973f5be29f6db21cca6a3a9938e84114020c3fed",
+    "details": "Code Quality Gates run 39969299263, Backend Tests job 120468069895 concluded SUCCESS on the final pull request head. The job runs on ubuntu-latest with MySQL 8.0 and Redis 7 services, PANTHEON_TEST_DSN_REQUIRED/ PANTHEON_TEST_REDIS_REQUIRED set to true, and executes `go test -race ./...` in backend/ (quality.yml lines 327-383). This is the authoritative race signal for R4."
+  },
+  "knownGaps": [
+    "The race detector cannot start on this Windows host (TSan shadow-memory allocation, error code 87); no Docker daemon or WSL distro is available. The authoritative race signal is the CI quality.yml backend-tests job on Linux, whose run id is recorded under ciRace.",
+    "The extended same-tenant convergence test covers the platform-default copies but did not reproduce the pre-fix copy window even at 16 contenders and 200 seed rows. The copy fix is proven by TestCopyPlatformDefaultsRunOnTheLockedTenantRow (NOWAIT probe 3572 plus rollback) and by the wiring pin that the copies receive the provisioning transaction handle.",
+    "The published v0.17.3 tag and its four assets are immutable and still carry the stale system_role_data_scope sentence; only the repository file and the mutable GitHub release body carry the dated correction."
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-23-iam-race-closeout/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-23-iam-race-closeout/",
+    "summaryFile": ".harness/evidence/2026-10-23-iam-race-closeout/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-23-iam-race-closeout/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "RELEASE_NOTES_v0.17.4.md"
+    ]
+  }
+}

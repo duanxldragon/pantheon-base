@@ -76,7 +76,7 @@ func normalizeUserSort(query *UserListQuery) (string, bool) {
 // itself instead of being threaded through every caller — a binding can never
 // be written into a tenant the user does not belong to.
 func replaceUserRoles(tx *gorm.DB, userID uint64, roleIDs []uint64) error {
-	tenantID, err := userOwningTenantIDTx(tx, userID)
+	tenantID, err := lockUserOwningTenantIDTx(tx, userID)
 	if err != nil {
 		return err
 	}
@@ -99,18 +99,27 @@ func replaceUserRoles(tx *gorm.DB, userID uint64, roleIDs []uint64) error {
 	return tx.Table("system_user_role").CreateInBatches(roles, 100).Error
 }
 
-// userOwningTenantIDTx resolves the tenant that owns a user row, on an existing
-// transaction/query handle. A missing user resolves to 0, which keeps the
-// pre-tenant behaviour (all historical rows are tenant_id = 0).
-func userOwningTenantIDTx(tx *gorm.DB, userID uint64) (uint64, error) {
-	var tenantID uint64
+// lockUserOwningTenantIDTx resolves the tenant that owns a user row and locks
+// the row for the rest of the transaction. A missing user resolves to 0, which
+// keeps the pre-tenant behaviour (all historical rows are tenant_id = 0).
+//
+// replaceUserRoles deletes the user's bindings and re-inserts the requested set.
+// Two concurrent replacers that both delete and then insert interleave into a
+// merged set (a second delete cannot see the first uncommitted insert) or
+// deadlock on the index gap. Holding the user row serialises them, so the final
+// bindings are exactly the last caller's.
+func lockUserOwningTenantIDTx(tx *gorm.DB, userID uint64) (uint64, error) {
+	var user struct {
+		TenantID uint64 `gorm:"column:tenant_id"`
+	}
 	if err := tx.Table("system_user").
 		Select("tenant_id").
+		Clauses(clause.Locking{Strength: "UPDATE"}).
 		Where(condIDEquals, userID).
-		Scan(&tenantID).Error; err != nil {
+		Scan(&user).Error; err != nil {
 		return 0, err
 	}
-	return tenantID, nil
+	return user.TenantID, nil
 }
 
 func normalizeUint64IDs(ids []uint64) []uint64 {

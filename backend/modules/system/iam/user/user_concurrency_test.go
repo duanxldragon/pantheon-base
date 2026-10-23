@@ -7,8 +7,10 @@ import (
 	"testing"
 
 	"github.com/duanxldragon/pantheon-base/backend/pkg/common"
+	"github.com/duanxldragon/pantheon-base/backend/pkg/testmysql"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"gorm.io/gorm"
 )
 
 // TestConcurrentCreateUserMapsLoserToConflict covers the race the username
@@ -61,4 +63,38 @@ func TestConcurrentCreateUserMapsLoserToConflict(t *testing.T) {
 	var rows int64
 	require.NoError(t, db.Model(&SystemUser{}).Where("username = ?", "race-user").Count(&rows).Error)
 	assert.EqualValues(t, 1, rows, "the unique index must leave exactly one user row")
+}
+
+// TestConcurrentReplaceUserRolesSerialisesOnTheUserRow covers the
+// delete-then-insert residual deterministically.
+//
+// replaceUserRoles deletes every binding for a user and re-inserts the requested
+// set. Two replacers that interleave (both delete, then both insert) leave a
+// merged set or deadlock on the index gap; MySQL's own row locks make that
+// interleaving impossible to force through the function. The test therefore
+// asserts the mechanism: while one replace is in flight, the user row is
+// locked, and a second transaction cannot acquire it.
+func TestConcurrentReplaceUserRolesSerialisesOnTheUserRow(t *testing.T) {
+	db := setupUserTestDB(t)
+	sqlDB, err := db.DB()
+	require.NoError(t, err)
+	sqlDB.SetMaxOpenConns(4)
+
+	require.NoError(t, db.Exec(
+		"INSERT INTO system_user (tenant_id, username, password, nickname, status) VALUES (0, 'replace-user', 'x', 'Replace', 1)",
+	).Error)
+	var user SystemUser
+	require.NoError(t, db.Where("username = ?", "replace-user").Take(&user).Error)
+
+	testmysql.AssertSerialisedWriters(t, db, "system_user", user.ID,
+		func(tx *gorm.DB) error { return replaceUserRoles(tx, user.ID, []uint64{1}) },
+		func(tx *gorm.DB) error { return replaceUserRoles(tx, user.ID, []uint64{2}) },
+	)
+
+	var stored []uint64
+	require.NoError(t, db.Table("system_user_role").
+		Where("user_id = ?", user.ID).
+		Order("role_id asc").
+		Pluck("role_id", &stored).Error)
+	assert.Equal(t, []uint64{2}, stored, "the last writer's complete set must survive")
 }
