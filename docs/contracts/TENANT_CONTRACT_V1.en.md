@@ -45,16 +45,29 @@ tenants
   id            bigint PK          -- snowflake ID from the platform ID generator
   code          varchar(64)  UK    -- globally unique, immutable after creation
   name          varchar(128)
-  status        varchar(16)        -- active | suspended | archived
+  status        varchar(16)        -- active | suspended | archived | deleted (tombstone, see invariants)
   plan          varchar(32)        -- reserved: plan marker (not consumed in V1)
-  created_at / updated_at / deleted_at
+  created_at / updated_at
+  deleted_at                       -- reserved column, not written by the current implementation
 ```
 
 Invariants:
 - `code` is immutable after creation; matches `^[a-z][a-z0-9-]{1,62}$`
 - Status transitions: `active ↔ suspended`, and `active|suspended → archived`; `archived` is terminal
 - `archived` tenants must not log in, must not receive new tokens, must not produce new business writes
-- Deletion (`deleted_at`) is allowed only for `archived` tenants and is an ops action, never exposed on business APIs
+- Deletion is allowed only for `archived` tenants and is an ops action, never exposed on business APIs
+- `deleted` is a **tombstone**, not a lifecycle state (V1.3 clarification): it is written only by the
+  delete action, only after `archived`, in the same transaction that releases `code`. It has no
+  outgoing transition, **must not be accepted as create or update input**, and never appears in the
+  default list (only under an explicit status filter). Addressing a deleted tenant by id or by `code`
+  behaves as "not found" (consistent with §5, where missing and foreign are indistinguishable), so a
+  deleted tenant cannot be reactivated, cannot gain members and cannot be re-provisioned.
+- Deleting an `archived` tenant disables its remaining memberships in the same transaction: §2.2's
+  owner requirement constrains **non-archived** tenants only, so after archiving the memberships no
+  longer block deletion (V1.3 clarification).
+- The delete marker is `status = 'deleted'`, **not** `deleted_at`: that column exists in the schema but
+  the current implementation neither writes nor filters on it. Two markers would let "is this deleted?"
+  have two answers that can disagree.
 
 ### 2.2 TenantMembership
 
