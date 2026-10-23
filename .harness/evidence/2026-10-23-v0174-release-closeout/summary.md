@@ -58,5 +58,16 @@ Decided by CI, not locally: the PR required checks, `Release Gate Summary` on th
 
 ## Publication state
 
-Pending. The release materials are in this packet; the cut, credential scan, publication and asset
-verification results are appended to `commands.json` after the tag exists.
+Published on 2026-10-23T12:38Z. PR #418 merged as `ac813f6f74de41ebb773a749d7cb2f591fa1050a`;
+`Release Gate Summary` succeeded on that commit (run `39951900733`). The annotated tag
+`pantheon-base-v0.17.4` (object `b1e8fc4ba84b6868e6f3ea4b7cb47e0bbc428cdc`) points at the merge
+commit. The GitHub release is neither a draft nor a prerelease and carries exactly four assets:
+
+- `foundation-release-pantheon-base-v0.17.4.tgz` — sha256 `339a9a89252b62515e279659a12179a6e8c6b94e9d08906ac12b01f9975ce53d`
+- `foundation-release-pantheon-base-v0.17.4.tgz.sha256`
+- `repo.tar` — sha256 `bcc0250a8c1c13349291021d8aebf1f3ab8e9bf18ef90ab78912cab27843476f`
+- `repo.tar.sha256`
+
+The pre-tag scan reported `clean (3108 file(s) scanned)` with both `bundle/` and `repo.tar` opened.
+`check-release-assets` confirmed the local bundle and the four remote assets, and
+`Foundation Release Verify` (run `39954843594`) succeeded. Full command trail in `commands.json`.
