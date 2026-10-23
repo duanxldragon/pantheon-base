@@ -68,6 +68,11 @@ race 检测在本机的缺口（v0.17.1 残余 5）根因是 PATH 将 `gcc.exe` 
 race 启用的测试二进制无法链接。以 `CC=/d/msys64/mingw64/bin/gcc.exe` 定向后 `go test -race`
 在本机可执行且全绿——race 覆盖不再仅来自 CI。
 
+CI Secret Scan 曾对扫描器测试夹具的合成值（同 v0.17.0 泄漏形态的十六进制计数器）报
+`generic-api-key`——门禁起作用正是本任务的目的。处置不削弱规则：现行行加 `gitleaks:allow`
+并注明原因，`.gitleaksignore` 钉住首次引入该文件的历史提交指纹；本地复扫
+`325e5dfc..HEAD` 为 0 命中。
+
 ## 审核留痕
 
 - Copilot review：requested
