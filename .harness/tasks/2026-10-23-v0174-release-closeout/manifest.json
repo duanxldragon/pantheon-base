@@ -1,0 +1,142 @@
+{
+  "taskId": "2026-10-23-v0174-release-closeout",
+  "taskDoc": "docs/harness/tasks/2026-10-23-v0174-release-closeout.task.md",
+  "title": "Publish v0.17.4: tenant-scoped user import, duplicate-key conflicts, and idempotent role grants",
+  "goal": "Publish the IAM residual fixes merged in PR #417 (a9fffac8) as v0.17.4 so the next consumable asset carries them. User CSV import lookups are tenant-scoped and created users are stamped with the request tenant plus an active membership in the same transaction; CreateUser, CreateRole and UpdateRole map duplicate-key losers to the existing 409; tenant role permission and menu grants use batch ON CONFLICT DO NOTHING; and the bootstrap backfill joins system_role for tenant ownership, excludes soft-deleted roles and deduplicates by natural key. No schema change (stays at 29), no route, permission code, menu seed or error-envelope shape change. The only response change is that the race loser sees 409 instead of 500.",
+  "primaryLayer": "platform",
+  "dependencyLayers": [
+    "system/iam"
+  ],
+  "status": "in-progress",
+  "priority": "P1",
+  "type": "release-closeout",
+  "estimatedComplexity": "small",
+  "findings": [
+    "F-1 (P1, fixed in a9fffac8): loadUserImportLookups built four maps (same-name user, role key, department path, post code) over the whole database, and the create path wrote no tenant_id and no membership. A tenant-A import could update tenant B's same-named user; created users landed in the platform namespace, invisible to the importer and unable to log in.",
+    "F-2 (P2, fixed in a9fffac8): CreateUser, CreateRole and UpdateRole pre-check the natural key but the check is not atomic. The loser of a concurrent create or rename hit the UNIQUE index and surfaced MySQL 1062 as a 500 with the driver message.",
+    "F-3 (P2, fixed in a9fffac8): grantTenantRolePermissions and grantTenantRoleMenus inserted one row at a time after a read, so two concurrent repair runs that both missed a key failed the second writer.",
+    "F-4 (P2, fixed in a9fffac8): backfillRolePermissions selected system_role_menu without joining the owning role, so tenant-role permission rows were stamped tenant_id = 0, and a permission key exposed by several menus was seeded once per menu.",
+    "F-5 (P3, documentation): the v0.17.3 notes still described system_role_data_scope as read-then-write. The published notes are immutable; the correction is recorded forward in v0.17.4."
+  ],
+  "scope": {
+    "in": [
+      "Tenant-scoped user import lookups; imported users stamped from the request context with an active membership in the same transaction",
+      "Duplicate-key losers in CreateUser, CreateRole and UpdateRole mapped to the existing 409 conflicts",
+      "Idempotent batch permission and menu grants with clause.OnConflict{DoNothing:true}",
+      "Bootstrap backfill joins system_role for tenant ownership, excludes soft-deleted roles and deduplicates by natural key",
+      "Real-MySQL regressions for all four paths",
+      "Version material: VERSION 0.17.4, CHANGELOG, RELEASE_NOTES_v0.17.4.md, README(zh/en), STATUS",
+      "Publish pantheon-base-v0.17.4 with the four foundation-release assets"
+    ],
+    "out": [
+      "Any further production runtime logic change; the fixes were merged in PR #417",
+      "Database schema or migrations (stays at 29)",
+      "Routes, permission codes, menu seeds and error-envelope shapes",
+      "Rewriting the published v0.17.0 through v0.17.3 tags and assets",
+      "Relaxing gate thresholds, skipping tests or using suppressions"
+    ]
+  },
+  "acceptanceCriteria": [
+    "User import resolves username, role key, department path and post code inside the caller's tenant, and created users carry the request tenant plus an active membership.",
+    "A duplicate-key loser in CreateUser, CreateRole or UpdateRole returns the existing 409 conflict, and exactly one row survives on the contested key.",
+    "Permission and menu grants converge under a repeat run; a manually deleted grant is restored without duplicating the rest.",
+    "Backfill stamps the owning role's tenant, produces nothing for soft-deleted roles, inserts one row per natural key and is a no-op on a repeat run.",
+    "Full backend suite passes against real MySQL/Redis with both required flags set; go build, go vet and gofmt are clean.",
+    "Governance checkers pass: docs frontmatter, task packet, structure, generated modules, failure registry.",
+    "Release Gate Summary is successful on the merge commit before the release is cut.",
+    "pantheon-base-v0.17.4 is an annotated tag carrying tgz / tgz.sha256 / repo.tar / repo.tar.sha256; checksums and Foundation Release Verify are green.",
+    "The published release is not a draft or prerelease, and gh release view reports exactly the four assets."
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "permission-policy",
+    "portableFailureClass": "tenant-scope-escape / unique-key-race / non-idempotent-repair",
+    "ownerLayer": "consumer-repository",
+    "ratchetDecision": "test-added",
+    "coverageDimensions": [
+      "behaviour",
+      "runtime-quality",
+      "architecture-fitness"
+    ]
+  },
+  "expectedFiles": {
+    "create": [
+      "RELEASE_NOTES_v0.17.4.md",
+      "docs/harness/tasks/2026-10-23-v0174-release-closeout.task.md",
+      ".harness/tasks/2026-10-23-v0174-release-closeout/manifest.json",
+      ".harness/evidence/2026-10-23-v0174-release-closeout/summary.md",
+      ".harness/evidence/2026-10-23-v0174-release-closeout/review.md",
+      ".harness/evidence/2026-10-23-v0174-release-closeout/commands.json"
+    ],
+    "modify": [
+      "VERSION",
+      "CHANGELOG.md",
+      "README.md",
+      "README.en.md",
+      ".harness/STATUS.md"
+    ],
+    "doNotTouch": [
+      "backend/** production code",
+      "backend/pkg/database/migrations/**",
+      ".github/workflows/**",
+      "the published v0.17.0, v0.17.1, v0.17.2 and v0.17.3 tags and assets"
+    ]
+  },
+  "implementationNotes": [
+    "The four fixes merged in PR #417 (a9fffac8) on top of the v0.17.3 tag; this packet only publishes them and adds version material.",
+    "cut-foundation-release.mjs does not read RELEASE_NOTES_*.md automatically; --release-notes, --upgrade-notes and --consumer-impact must be passed explicitly.",
+    "The release gate is a hard precondition: publish-foundation-release.mjs refuses to continue unless the latest Release Gate Summary check-run on the target commit succeeded.",
+    "The local TSan runtime cannot start on this Windows host (shadow-memory allocation error 87); race coverage is left to CI on Linux.",
+    "The published v0.17.3 notes are immutable; the stale system_role_data_scope sentence is corrected forward in v0.17.4."
+  ],
+  "verificationPlan": {
+    "backend": [
+      "go build ./...",
+      "go vet ./...",
+      "gofmt -l .",
+      "PANTHEON_TEST_DSN_REQUIRED=true PANTHEON_TEST_REDIS_REQUIRED=true go test -count=1 ./...",
+      "go test -coverprofile ... -run <new tests> ./modules/system/iam/user ./modules/system/iam/role ./modules/system/iam/tenant"
+    ],
+    "governance": [
+      "npm run -s check:docs-frontmatter",
+      "npm run -s check:task-packet",
+      "npm run -s check:structure",
+      "npm run -s check:generated",
+      "node scripts/harness/check-failure-registry.mjs"
+    ],
+    "release": [
+      "node scripts/foundation-release/check-release-secrets.mjs --release-version pantheon-base-v0.17.4",
+      "node scripts/foundation-release/check-release-assets.mjs --release-version pantheon-base-v0.17.4 --repo duanxldragon/pantheon-base",
+      "gh release view pantheon-base-v0.17.4 --repo duanxldragon/pantheon-base --json assets,tagName,isDraft,isPrerelease"
+    ]
+  },
+  "linkage": {
+    "taskId": "2026-10-23-v0174-release-closeout",
+    "taskManifest": ".harness/tasks/2026-10-23-v0174-release-closeout/manifest.json",
+    "assessment": "docs/harness/tasks/2026-10-23-v0174-release-closeout.task.md",
+    "openspecChange": "none",
+    "superpowersPlan": "none",
+    "evidenceDir": ".harness/evidence/2026-10-23-v0174-release-closeout/",
+    "summaryFile": ".harness/evidence/2026-10-23-v0174-release-closeout/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-23-v0174-release-closeout/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/VERSION_MANAGEMENT_GUIDE.md",
+      ".harness/evidence/2026-10-23-iam-residual-closeout/review.md"
+    ]
+  },
+  "release": {
+    "version": "0.17.4",
+    "tag": "pantheon-base-v0.17.4",
+    "releaseLine": "release/0.17",
+    "previousRelease": "pantheon-base-v0.17.3",
+    "assets": [
+      "foundation-release-pantheon-base-v0.17.4.tgz",
+      "foundation-release-pantheon-base-v0.17.4.tgz.sha256",
+      "repo.tar",
+      "repo.tar.sha256"
+    ],
+    "state": "prepared"
+  }
+}

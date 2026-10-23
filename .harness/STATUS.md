@@ -1,7 +1,33 @@
 # Pantheon Base - Harness 任务状态
 
 **最后更新**: 2026-10-23
-**当前版本**: v0.17.3 已发布（2026-10-23T07:46Z，tag `pantheon-base-v0.17.3` → `1b74dccb`）
+**当前版本**: v0.17.3 已发布（2026-10-23T07:46Z，tag `pantheon-base-v0.17.3` → `1b74dccb`）；v0.17.4 发布材料已合入，打标发布中
+
+## v0.17.4 发布（2026-10-23）
+
+v0.17.3 的 known-residual 只登记了「`system_role_data_scope` / `system_role_permission`
+写入仍先查后插」。按实际代码复核后范围更大，且有一项从未登记。修复随 PR #417 合入主干
+（`a9fffac8`），任务包 `2026-10-23-iam-residual-closeout`，证据在
+`.harness/evidence/2026-10-23-iam-residual-closeout/`；发布材料任务包
+`2026-10-23-v0174-release-closeout`。
+
+- **用户 CSV 导入跨租户读写（P1）**：同名用户、角色 key、部门路径、岗位编码四类查找
+  全部按调用方租户过滤；导入建号从请求上下文写入 `tenant_id`，并在同一事务写入 active
+  membership。修复前租户 A 的导入会更新租户 B 的同名用户，新建用户落进平台命名空间、
+  导入者不可见且无法登录。
+- **重复键竞态（P2）**：`CreateUser` / `CreateRole` / `UpdateRole` 的事务错误经
+  `database.IsDuplicateKey` 整形为既有 409（`user.create.error.username_exists` /
+  `role.key.exists`），不再把 MySQL 1062 当 500 抛出。
+- **授权写入幂等（P2）**：`grantTenantRolePermissions` / `grantTenantRoleMenus` 改为批量
+  `CreateInBatches` + `clause.OnConflict{DoNothing:true}`；读仅作快速路径，复合唯一键仲裁。
+- **bootstrap 回填归属与去重（P2）**：`backfillRolePermissions` join `system_role` 取
+  `tenant_id`、显式排除软删除角色、按 `(tenant_id, role_id, permission_key)` 去重后批量写入。
+  修复前租户角色的权限行全部写成 `tenant_id = 0`，同一 key 被多个菜单暴露时重复 seed。
+- **范围**：无 schema 变更（仍为 29）、无路由/权限码/菜单 seed/错误信封变化；唯一响应变化
+  是竞态输家由 500 变为既有 409。全量真库套件 46 包 ok / 0 FAIL / 0 SKIP；新增用例单独
+  运行通过，coverprofile 命中重复键分支。
+- **环境限制**：本机 TSan 影子内存分配失败（error 87），`-race` 本地未运行，由 CI Linux
+  的 race 门禁承担。
 
 ## v0.17.3 发布（2026-10-23）
 
