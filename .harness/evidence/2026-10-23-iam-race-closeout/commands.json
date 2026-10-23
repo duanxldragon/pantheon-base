@@ -81,5 +81,20 @@
     "status": "pending",
     "runId": null,
     "details": "Filled in after the pull request runs the Linux race gate."
+  },
+  "knownGaps": [
+    "The race detector cannot start on this Windows host (TSan shadow-memory allocation, error code 87); no Docker daemon or WSL distro is available. The authoritative race signal is the CI quality.yml backend-tests job on Linux, whose run id is recorded under ciRace.",
+    "The extended same-tenant convergence test covers the platform-default copies but did not reproduce the pre-fix copy window even at 16 contenders and 200 seed rows. The copy fix is proven by TestCopyPlatformDefaultsRunOnTheLockedTenantRow (NOWAIT probe 3572 plus rollback) and by the wiring pin that the copies receive the provisioning transaction handle.",
+    "The published v0.17.3 tag and its four assets are immutable and still carry the stale system_role_data_scope sentence; only the repository file and the mutable GitHub release body carry the dated correction."
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-23-iam-race-closeout/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-23-iam-race-closeout/",
+    "summaryFile": ".harness/evidence/2026-10-23-iam-race-closeout/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-23-iam-race-closeout/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "RELEASE_NOTES_v0.17.4.md"
+    ]
   }
 }

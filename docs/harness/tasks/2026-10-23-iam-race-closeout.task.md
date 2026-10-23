@@ -64,7 +64,7 @@ platform
 - Quality Profile: `permission-policy`
 - Portable Failure Class: `unique-key-race` / `non-idempotent-repair` / `lost-update`
 - Owner Layer: `consumer-repository`
-- Ratchet Decision: `test-added`
+- Ratchet Decision: `sensor-added`
 - Coverage Dimensions:
   - behaviour
   - runtime-quality

@@ -65,3 +65,29 @@ shape is added or renamed.
 
 Approve. The five registered residuals are fixed at the layer that owns the invariant; four have
 regressions that fail before and pass after, and the fifth is closed as a dated correction.
+
+## Machine Readable
+
+```json
+{
+  "taskId": "2026-10-23-iam-race-closeout",
+  "verdict": "approved",
+  "structuralReview": {
+    "affectedSubgraph": [
+      "system/iam/tenant",
+      "system/iam/role",
+      "system/iam/user"
+    ],
+    "checks": ["cycle", "hub", "sensitive-flow"],
+    "findings": [],
+    "notes": "One parent row is locked per operation (tenants, system_role or system_user) and no path takes two parent locks, so no lock-order cycle is introduced. The affected subgraph is the provisioning entry point and the two replace-style grant helpers; no new hub or call-depth edge is added."
+  },
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-23-iam-race-closeout/manifest.json",
+    "evidence": ".harness/evidence/2026-10-23-iam-race-closeout/commands.json",
+    "reviewFile": ".harness/evidence/2026-10-23-iam-race-closeout/review.md",
+    "changeRef": "none",
+    "planRefs": ["RELEASE_NOTES_v0.17.4.md"]
+  }
+}
+```

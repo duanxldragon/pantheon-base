@@ -49,7 +49,7 @@
     "qualityProfile": "permission-policy",
     "portableFailureClass": "unique-key-race / non-idempotent-repair / lost-update",
     "ownerLayer": "consumer-repository",
-    "ratchetDecision": "test-added",
+    "ratchetDecision": "sensor-added",
     "coverageDimensions": [
       "behaviour",
       "runtime-quality",
