@@ -60,13 +60,61 @@
       "cwd": "frontend",
       "status": "passed",
       "details": "3/3 passed in 10.7s, including the narrow-viewport case that waits for popup/trigger alignment before measuring overflow."
+    },
+    {
+      "command": "gh pr view 415 --repo duanxldragon/pantheon-base --json state,mergeCommit,mergedAt",
+      "cwd": ".",
+      "status": "passed",
+      "details": "PR #415 merged as 1b74dccb8824884bacef574096cc246dfa39b2f6 at 2026-10-23T07:11:01Z after the required checks. Release Gate run 39916136593 first failed because Fast Checks was cancelled by a GitHub Actions cache restore error (Egress is over the account limit); CI run 39916136582 was rerun to success, then the failed Release Gate jobs were rerun and Release Gate Summary succeeded."
+    },
+    {
+      "command": "node scripts/foundation-release/cut-foundation-release.mjs --release-version pantheon-base-v0.17.3 --release-line release/0.17 --base-commit 1b74dccb8824884bacef574096cc246dfa39b2f6 --release-notes \"$(cat RELEASE_NOTES_v0.17.3.md)\" --upgrade-notes \"$(cat /c/Users/xiaolong/AppData/Local/Temp/v0173-upgrade.md)\" --consumer-impact \"$(cat /c/Users/xiaolong/AppData/Local/Temp/v0173-consumer.md)\"",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Created releases/pantheon-base-v0.17.3/ and dist/foundation-releases/pantheon-base-v0.17.3/ with manifest, notes, upgrade notes, consumer impact, verification summary, the bundle and repo.tar. Manifest createdAt 2026-10-23T07:42:43.106Z, baseCommit 1b74dccb."
+    },
+    {
+      "command": "node scripts/foundation-release/check-release-secrets.mjs --release-version pantheon-base-v0.17.3",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Release secret scan: clean (3087 file(s) scanned). The widened preflight opened both bundle/ and repo.tar before the tag existed."
+    },
+    {
+      "command": "node scripts/foundation-release/publish-foundation-release.mjs --release-version pantheon-base-v0.17.3 --release-line release/0.17 --base-commit 1b74dccb8824884bacef574096cc246dfa39b2f6 --repo duanxldragon/pantheon-base --remote github-api",
+      "cwd": ".",
+      "status": "failed",
+      "details": "First attempt: git push of tag pantheon-base-v0.17.3 failed after 21s because github.com:443 was unreachable from this host (api.github.com works). The script had already created the local annotated tag at 1b74dccb; no GitHub release was created."
+    },
+    {
+      "command": "gh api --method POST repos/duanxldragon/pantheon-base/git/tags ... && gh api --method POST repos/duanxldragon/pantheon-base/git/refs ...",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Because the git transport to github.com was blocked, the annotated tag was created server-side through the GitHub API: tag object e0b0ee075f6ac9dda0a2f8f439bb675a670e3260 (tagger duanxldragon, message 'Foundation release pantheon-base-v0.17.3') and refs/tags/pantheon-base-v0.17.3. The local tag was then rebuilt to the identical object SHA so local and remote match."
+    },
+    {
+      "command": "node scripts/foundation-release/publish-foundation-release.mjs --release-version pantheon-base-v0.17.3 --release-line release/0.17 --base-commit 1b74dccb8824884bacef574096cc246dfa39b2f6 --repo duanxldragon/pantheon-base --remote github-api",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Second attempt found the local tag at the target commit, skipped tag creation/push, created the GitHub release and uploaded all four assets."
+    },
+    {
+      "command": "node scripts/foundation-release/check-release-assets.mjs --release-version pantheon-base-v0.17.3 --repo duanxldragon/pantheon-base",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Local bundle ok; the GitHub release carries all four required assets. tgz sha256 1c55c8509d287d7f2e2dae4efe3722b48984c361c423b203ab5f3fe3d8266342; repo.tar sha256 af3f5dfed18240b6fd5428bcc5bdf30b2209d4e43f3ef73b4c907c90a32e77f9."
+    },
+    {
+      "command": "gh release view pantheon-base-v0.17.3 --repo duanxldragon/pantheon-base --json tagName,isDraft,isPrerelease,targetCommitish,assets",
+      "cwd": ".",
+      "status": "passed",
+      "details": "isDraft false, isPrerelease false, targetCommitish 1b74dccb8824884bacef574096cc246dfa39b2f6, exactly four assets: tgz (23212879 bytes), tgz.sha256, repo.tar (38051840 bytes), repo.tar.sha256."
+    },
+    {
+      "command": "gh run view 39920022781 --repo duanxldragon/pantheon-base",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Foundation Release Verify succeeded: Verify Release Assets and Foundation Release Verify Summary both completed/success on 1b74dccb."
     }
   ],
-  "pending": [
-    "PR required checks and Release Gate Summary on the merge commit (decided by CI)",
-    "cut-foundation-release.mjs for pantheon-base-v0.17.3 with explicit notes flags",
-    "check-release-secrets.mjs --release-version pantheon-base-v0.17.3",
-    "publish-foundation-release.mjs and the four asset checks",
-    "check-release-assets.mjs and Foundation Release Verify"
-  ]
+  "pending": []
 }

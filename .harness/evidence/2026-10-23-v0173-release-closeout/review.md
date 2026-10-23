@@ -44,6 +44,7 @@ No blocking finding in the release content. The review records these residual ri
 
 ## Verdict
 
-Release content is consistent with its notes and evidence. Ready to merge and cut
-`pantheon-base-v0.17.3`, conditional on the PR required checks and `Release Gate Summary` on the
-merge commit succeeding. Publication facts are appended after the tag exists.
+Release content is consistent with its notes and evidence. The release was cut and published from
+`1b74dccb` on 2026-10-23: annotated tag `pantheon-base-v0.17.3`, four assets with verified
+checksums, and `Foundation Release Verify` (run `39920022781`) succeeded. Details and the command
+trail are in `summary.md` and `commands.json`.
