@@ -37,6 +37,9 @@ const (
 	// condTenantScopedRow restricts a repair statement to tenant-owned rows. The
 	// platform namespace (tenant_id = 0) is never touched by the repair.
 	condTenantScopedRow = "tenant_id <> ?"
+	// condTenantIDMatches is the tenant_id equality predicate shared by the
+	// provisioning queries and their retry paths.
+	condTenantIDMatches = "tenant_id = ?"
 )
 
 // tenantRoleDefinition describes one provisioned tenant role.
@@ -200,7 +203,7 @@ func provisionTenantRoles(tx *gorm.DB, tenantID uint64) (map[string]uint64, erro
 		var existing struct{ ID uint64 }
 		err := tx.Table("system_role").
 			Select("id").
-			Where("tenant_id = ? AND role_key = ?", tenantID, def.Key).
+			Where(condTenantIDMatches+" AND role_key = ?", tenantID, def.Key).
 			Limit(1).
 			Scan(&existing).Error
 		if err != nil {
@@ -223,7 +226,7 @@ func provisionTenantRoles(tx *gorm.DB, tenantID uint64) (map[string]uint64, erro
 		var created struct{ ID uint64 }
 		if err := tx.Table("system_role").
 			Select("id").
-			Where("tenant_id = ? AND role_key = ?", tenantID, def.Key).
+			Where(condTenantIDMatches+" AND role_key = ?", tenantID, def.Key).
 			Limit(1).
 			Scan(&created).Error; err != nil {
 			return nil, fmt.Errorf("read back tenant role %s: %w", def.Key, err)
@@ -318,7 +321,7 @@ func provisionTenantRootDept(tx *gorm.DB, tenantID uint64) (uint64, error) {
 	var existing struct{ ID uint64 }
 	if err := tx.Table("system_dept").
 		Select("id").
-		Where("tenant_id = ? AND is_root = ?", tenantID, common.StatusFlagYes).
+		Where(condTenantIDMatches+" AND is_root = ?", tenantID, common.StatusFlagYes).
 		Order("id asc").
 		Limit(1).
 		Scan(&existing).Error; err != nil {
@@ -350,7 +353,7 @@ func provisionTenantRootDept(tx *gorm.DB, tenantID uint64) (uint64, error) {
 	var created struct{ ID uint64 }
 	if err := tx.Table("system_dept").
 		Select("id").
-		Where("tenant_id = ? AND is_root = ?", tenantID, common.StatusFlagYes).
+		Where(condTenantIDMatches+" AND is_root = ?", tenantID, common.StatusFlagYes).
 		Order("id asc").
 		Limit(1).
 		Scan(&created).Error; err != nil {
@@ -367,7 +370,7 @@ func provisionTenantAdminUser(tx *gorm.DB, in ProvisionInput) (uint64, error) {
 	var existing struct{ ID uint64 }
 	if err := tx.Table("system_user").
 		Select("id").
-		Where("tenant_id = ? AND username = ?", in.TenantID, username).
+		Where(condTenantIDMatches+" AND username = ?", in.TenantID, username).
 		Limit(1).
 		Scan(&existing).Error; err != nil {
 		return 0, fmt.Errorf("look up tenant admin: %w", err)
@@ -398,7 +401,7 @@ func provisionTenantAdminUser(tx *gorm.DB, in ProvisionInput) (uint64, error) {
 	var created struct{ ID uint64 }
 	if err := tx.Table("system_user").
 		Select("id").
-		Where("tenant_id = ? AND username = ?", in.TenantID, username).
+		Where(condTenantIDMatches+" AND username = ?", in.TenantID, username).
 		Limit(1).
 		Scan(&created).Error; err != nil {
 		return 0, fmt.Errorf("read back tenant admin: %w", err)
@@ -624,7 +627,7 @@ func deleteTenantMenuGrants(tx *gorm.DB, tenantID uint64, menuIDs []uint64) erro
 		Where(condTenantScopedRow, tenantctx.PlatformGlobalTenantID).
 		Where("menu_id IN ?", menuIDs)
 	if tenantID != 0 {
-		menuGrants = menuGrants.Where("tenant_id = ?", tenantID)
+		menuGrants = menuGrants.Where(condTenantIDMatches, tenantID)
 	}
 	if err := menuGrants.Delete(nil).Error; err != nil {
 		return fmt.Errorf("repair tenant platform grants: delete menu grants: %w", err)
@@ -661,7 +664,7 @@ func deleteTenantPermissionGrants(tx *gorm.DB, tenantID uint64, keys []string) e
 		Where(condTenantScopedRow, tenantctx.PlatformGlobalTenantID).
 		Where("permission_key IN ?", keys)
 	if tenantID != 0 {
-		permissionGrants = permissionGrants.Where("tenant_id = ?", tenantID)
+		permissionGrants = permissionGrants.Where(condTenantIDMatches, tenantID)
 	}
 	if err := permissionGrants.Delete(nil).Error; err != nil {
 		return fmt.Errorf("repair tenant platform grants: delete permission grants: %w", err)
@@ -766,7 +769,7 @@ func provisionTenantAdminBinding(tx *gorm.DB, tenantID, userID uint64, roleIDs m
 
 	var bound int64
 	if err := tx.Table("system_user_role").
-		Where("tenant_id = ? AND user_id = ? AND role_id = ?", tenantID, userID, adminRoleID).
+		Where(condTenantIDMatches+" AND user_id = ? AND role_id = ?", tenantID, userID, adminRoleID).
 		Count(&bound).Error; err != nil {
 		return fmt.Errorf("check tenant admin role binding: %w", err)
 	}
@@ -783,7 +786,7 @@ func provisionTenantAdminBinding(tx *gorm.DB, tenantID, userID uint64, roleIDs m
 
 	var member int64
 	if err := tx.Table("tenant_memberships").
-		Where("tenant_id = ? AND user_id = ?", tenantID, userID).
+		Where(condTenantIDMatches+" AND user_id = ?", tenantID, userID).
 		Count(&member).Error; err != nil {
 		return fmt.Errorf("check tenant owner membership: %w", err)
 	}
@@ -896,7 +899,7 @@ func (s *Service) copyPlatformSettingsToTenant(tenantID uint64) (int64, error) {
 	if err := s.db.Table("system_setting").
 		Select("setting_key, setting_value, group_key, module, label_key, description, "+
 			"value_type, sort, is_public, is_encrypted, remark, is_readonly").
-		Where("tenant_id = ?", platformGlobalTenantID).
+		Where(condTenantIDMatches, platformGlobalTenantID).
 		Where("setting_key NOT IN ?", platformScopedSettingKeys).
 		Scan(&source).Error; err != nil {
 		return 0, fmt.Errorf("read platform settings: %w", err)
@@ -937,7 +940,7 @@ func (s *Service) tenantSettingKeys(tenantID uint64) (map[string]struct{}, error
 	var keys []string
 	if err := s.db.Table("system_setting").
 		Select("setting_key").
-		Where("tenant_id = ?", tenantID).
+		Where(condTenantIDMatches, tenantID).
 		Pluck("setting_key", &keys).Error; err != nil {
 		return nil, fmt.Errorf("read tenant setting keys: %w", err)
 	}
@@ -1010,7 +1013,7 @@ func (s *Service) copyPlatformDictTypes(tenantID uint64) (int64, error) {
 	var source []platformDictTypeRow
 	if err := s.db.Table("system_dict_type").
 		Select("dict_code, dict_name, module, status, remark").
-		Where("tenant_id = ?", platformGlobalTenantID).
+		Where(condTenantIDMatches, platformGlobalTenantID).
 		Where("deleted_at IS NULL").
 		Scan(&source).Error; err != nil {
 		return 0, fmt.Errorf("read platform dict types: %w", err)
@@ -1022,7 +1025,7 @@ func (s *Service) copyPlatformDictTypes(tenantID uint64) (int64, error) {
 	var ownedCodes []string
 	if err := s.db.Table("system_dict_type").
 		Select("dict_code").
-		Where("tenant_id = ?", tenantID).
+		Where(condTenantIDMatches, tenantID).
 		Pluck("dict_code", &ownedCodes).Error; err != nil {
 		return 0, fmt.Errorf("read tenant dict types: %w", err)
 	}
@@ -1055,7 +1058,7 @@ func (s *Service) copyPlatformDictItems(tenantID uint64) (int64, error) {
 	var source []platformDictItemRow
 	if err := s.db.Table("system_dict_item").
 		Select("dict_code, item_label_key, item_value, item_color, sort, status, remark").
-		Where("tenant_id = ?", platformGlobalTenantID).
+		Where(condTenantIDMatches, platformGlobalTenantID).
 		Where("deleted_at IS NULL").
 		Scan(&source).Error; err != nil {
 		return 0, fmt.Errorf("read platform dict items: %w", err)
@@ -1073,7 +1076,7 @@ func (s *Service) copyPlatformDictItems(tenantID uint64) (int64, error) {
 	}
 	if err := s.db.Table("system_dict_item").
 		Select("dict_code, item_value").
-		Where("tenant_id = ?", tenantID).
+		Where(condTenantIDMatches, tenantID).
 		Scan(&ownedPairs).Error; err != nil {
 		return 0, fmt.Errorf("read tenant dict items: %w", err)
 	}
