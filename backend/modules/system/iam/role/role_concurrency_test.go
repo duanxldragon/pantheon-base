@@ -9,6 +9,7 @@ import (
 	"github.com/duanxldragon/pantheon-base/backend/pkg/common"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"gorm.io/gorm"
 )
 
 // TestConcurrentCreateRoleMapsLoserToConflict covers the race the role-key
@@ -40,21 +41,7 @@ func TestConcurrentCreateRoleMapsLoserToConflict(t *testing.T) {
 	close(start)
 	wg.Wait()
 
-	succeeded := 0
-	for i, err := range errs {
-		if err == nil {
-			succeeded++
-			continue
-		}
-		require.Truef(t, errors.Is(err, common.ErrConflict),
-			"contender %d must fail as a conflict, got %v", i, err)
-		assert.Equal(t, "role.key.exists", common.ErrMessage(err))
-	}
-	assert.Equal(t, 1, succeeded, "exactly one contender may create the role")
-
-	var rows int64
-	require.NoError(t, db.Model(&SystemRole{}).Where("role_key = ?", "race-role").Count(&rows).Error)
-	assert.EqualValues(t, 1, rows, "the unique index must leave exactly one role row")
+	requireSingleRoleKeyWinner(t, db, errs, "race-role")
 }
 
 // TestConcurrentRenameRoleMapsLoserToConflict exercises the same contract on
@@ -90,6 +77,14 @@ func TestConcurrentRenameRoleMapsLoserToConflict(t *testing.T) {
 	close(start)
 	wg.Wait()
 
+	requireSingleRoleKeyWinner(t, db, errs, "renamed-role")
+}
+
+// requireSingleRoleKeyWinner pins the shared contract of both races: one
+// writer wins, every loser is a 409 with the pre-check's message, and the
+// unique index leaves exactly one row on the contested key.
+func requireSingleRoleKeyWinner(t *testing.T, db *gorm.DB, errs []error, roleKey string) {
+	t.Helper()
 	succeeded := 0
 	for i, err := range errs {
 		if err == nil {
@@ -100,9 +95,9 @@ func TestConcurrentRenameRoleMapsLoserToConflict(t *testing.T) {
 			"contender %d must fail as a conflict, got %v", i, err)
 		assert.Equal(t, "role.key.exists", common.ErrMessage(err))
 	}
-	assert.Equal(t, 1, succeeded, "exactly one rename may take the key")
+	assert.Equal(t, 1, succeeded, "exactly one contender may take role key %q", roleKey)
 
 	var rows int64
-	require.NoError(t, db.Model(&SystemRole{}).Where("role_key = ?", "renamed-role").Count(&rows).Error)
-	assert.EqualValues(t, 1, rows, "the unique index must leave exactly one role with the new key")
+	require.NoError(t, db.Model(&SystemRole{}).Where("role_key = ?", roleKey).Count(&rows).Error)
+	assert.EqualValues(t, 1, rows, "the unique index must leave exactly one role with key %q", roleKey)
 }
