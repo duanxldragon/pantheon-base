@@ -121,18 +121,20 @@ updated_at: 2026-10-22
 | P3-4 | 已发布迁移的 down 文件在工作区被修改 | **改判并已修复（见 P2-10）**。初判为「未评审的改动」，实测该改动修的是一条真实断链：原文件会让回滚中途失败。现由 `TestMigrationChainRollsBackAndReapplies` 覆盖 |
 | P3-5 | 开发态默认管理员口令为 `123456` | **保留**。仅 `APP_ENV=development` 生效；生产启动校验拒绝默认口令 |
 
-## 5. 已知残余（不阻塞 v0.17.1 冻结）
+## 5. 已知残余（v0.17.1 时登记，v0.17.2 已全部关闭）
 
-1. **P2-4 测试隔离度**：`TestBatchRevokeSessions_IsTenantScoped` 在多包并行时偶发失败，
-   根因是 Redis 键空间在同一次测试运行内共享。修复方向是给该用例独立 Redis DB 索引，
-   属测试基建改造，不属本轮范围。
-2. **P2-9 并发 provisioning**：不同 `code` 的并发 `CreateTenant` 未串行化。
-   单事务 + UNIQUE 约束保证不会产生重复租户，但两个租户同时 provision 时的资源竞争未验证。
-3. **P3-1 v0.17.0 凭据残留**：历史产物不可变，凭据已失效，登记为不可回收残余。
-4. **P3-2 合同第四态**：`deleted` 未进合同，补合同需走 L2 评审。
-5. **race 检测的本地缺口**：`go test -race ./pkg/tenant/` 在本机因 MinGW 链接器
-   （`gcc.exe failed: exit status 1`）无法执行，race 覆盖仅来自 CI。此项为环境限制，
-   不作为通过证据。
+v0.17.1 冻结时这 5 项被显式登记为不阻塞交付。v0.17.2 逐项关闭，其中两项在实测时暴露为
+**真实缺陷**（不是"未验证"，而是"验证即失败"），因此本轮不是重新标注，而是修复。
+
+| # | 登记时的表述 | v0.17.2 的处置 |
+|---|---|---|
+| 1 | **P2-4 测试隔离度**：`TestBatchRevokeSessions_IsTenantScoped` 多包并行时偶发失败，根因是 Redis 键空间共享 | **已关闭**。`testredis.OpenDB` + 预留索引注册表，每包独立逻辑库（authtoken=2 / login=3 / middleware=4 / session=5），默认库 1 不变。4 包并行 3 轮全绿 |
+| 2 | **P2-9 并发 provisioning**：不同 `code` 的并发 `CreateTenant` 未串行化，资源竞争未验证 | **已关闭，且实测为缺陷**。设置/字典复制用 `INSERT ... SELECT` 读同一张表，两个租户并发创建触发 `Error 1213 Deadlock found when trying to get lock`，调用方看到 500。改为「非锁定读 + 插入」；另修同 code 竞态下 loser 收到 `Error 1062` 原始驱动错误的 500。8 轮并发全绿 |
+| 3 | **P3-1 v0.17.0 凭据残留**：历史产物不可变，凭据已失效 | **条件已消除**。产物本身仍不可回收（这一点无法改变），但新增 `check-release-secrets.mjs` 作为发布硬前置：DSN / URL / `-p<值>` 三种形态命中即拒绝打标。对真实 v0.17.1 产物 766 文件扫描干净，对 v0.17.0 的两种残留形态均能捕获 |
+| 4 | **P3-2 合同第四态**：`deleted` 未进合同，补合同需走 L2 评审 | **已关闭**。合同 V1.3 澄清 §2.1（墓碑语义、不可寻址、不可作为输入、删除标记是 `status` 而非预留的 `deleted_at`），按既有 contract-change 流程记录触发与范围，不自行宣告 G4 通过。补写过程中实测发现并修复了「墓碑可被复活」缺陷 |
+| 5 | **race 检测的本地缺口**：`go test -race` 因 MinGW 链接器失败，race 覆盖仅来自 CI | **已关闭**。真实原因是 `PATH` 上的 Cygwin `gcc`；`CC=/d/msys64/mingw64/bin/gcc.exe` 下 race 构建与运行正常。`pkg/tenant`、`pkg/testredis`、`internal/middleware`、`modules/auth/session` 与租户生命周期/并发用例 race 全绿 |
+
+证据：`.harness/evidence/2026-10-23-residual-closeout/`；发布说明 `RELEASE_NOTES_v0.17.2.md`。
 
 ## 6. v0.17.1 的验证边界声明
 

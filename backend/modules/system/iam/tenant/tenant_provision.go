@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/duanxldragon/pantheon-base/backend/pkg/common"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/common/security"
@@ -836,7 +837,32 @@ var platformScopedSettingKeys = []string{
 	"platform.app_mode",
 }
 
-// copyPlatformSettingsToTenant gives the tenant its own copy of the platform
+// platformSettingRow is the column set a platform setting is copied through.
+// One struct serves both halves of the copy, so a column cannot be read but not
+// written (or the reverse) without the compiler noticing.
+//
+// setting_value and remark are nullable in the schema and stay pointers: the
+// copy must reproduce a NULL as NULL rather than turn it into an empty string,
+// which would be indistinguishable from a deliberately blanked setting.
+type platformSettingRow struct {
+	TenantID     uint64    `gorm:"column:tenant_id"`
+	SettingKey   string    `gorm:"column:setting_key"`
+	SettingValue *string   `gorm:"column:setting_value"`
+	GroupKey     string    `gorm:"column:group_key"`
+	Module       string    `gorm:"column:module"`
+	LabelKey     string    `gorm:"column:label_key"`
+	Description  string    `gorm:"column:description"`
+	ValueType    string    `gorm:"column:value_type"`
+	Sort         int       `gorm:"column:sort"`
+	IsPublic     int64     `gorm:"column:is_public"`
+	IsEncrypted  int64     `gorm:"column:is_encrypted"`
+	Remark       *string   `gorm:"column:remark"`
+	IsReadonly   int64     `gorm:"column:is_readonly"`
+	CreatedAt    time.Time `gorm:"column:created_at"`
+	UpdatedAt    time.Time `gorm:"column:updated_at"`
+}
+
+// copyPlatformSettingsToTenant seeds a new tenant with the deployment-wide
 // settings so a tenant-scoped read returns real values instead of an empty set
 // (contract §3.3: settings are tenant-scoped). Existing tenant rows win — the
 // copy only fills keys the tenant does not have yet.
@@ -850,47 +876,118 @@ var platformScopedSettingKeys = []string{
 // MySQL 1364 ("Field 'group_key' doesn't have a default value"). Copying the
 // full descriptive column set also keeps the tenant's settings renderable —
 // a row with only a key and a value would lose its group, module and type.
+//
+// The copy is a read followed by an insert, not `INSERT ... SELECT` over the
+// same table. MySQL takes shared next-key locks on the rows an INSERT ... SELECT
+// reads, and when source and target are the same table those locks collide with
+// the insert-intention locks of a concurrent copy: two tenants created at the
+// same moment deadlock with
+//
+//	Error 1213 (40001): Deadlock found when trying to get lock
+//
+// and the operator sees a 500 on tenant creation. A plain SELECT is a
+// non-locking consistent read, so two concurrent copies no longer contend.
 func (s *Service) copyPlatformSettingsToTenant(tenantID uint64) (int64, error) {
 	if tenantID == 0 {
 		return 0, nil
 	}
-	res := s.db.Exec(`
-		INSERT INTO system_setting (
-			tenant_id, setting_key, setting_value, group_key, module, label_key,
-			description, value_type, sort, is_public, is_encrypted, remark,
-			is_readonly, created_at, updated_at
-		)
-		SELECT ?, src.setting_key, src.setting_value, src.group_key, src.module, src.label_key,
-		       src.description, src.value_type, src.sort, src.is_public, src.is_encrypted, src.remark,
-		       src.is_readonly, NOW(), NOW()
-		FROM system_setting src
-		WHERE src.tenant_id = 0
-		  AND src.setting_key NOT IN ?
-		  AND NOT EXISTS (
-		    SELECT 1 FROM system_setting dst
-		    WHERE dst.tenant_id = ? AND dst.setting_key = src.setting_key
-		  )
-	`, tenantID, platformScopedSettingKeys, tenantID)
-	if res.Error != nil {
-		return 0, fmt.Errorf("copy platform settings to tenant: %w", res.Error)
+
+	var source []platformSettingRow
+	if err := s.db.Table("system_setting").
+		Select("setting_key, setting_value, group_key, module, label_key, description, "+
+			"value_type, sort, is_public, is_encrypted, remark, is_readonly").
+		Where("tenant_id = ?", platformGlobalTenantID).
+		Where("setting_key NOT IN ?", platformScopedSettingKeys).
+		Scan(&source).Error; err != nil {
+		return 0, fmt.Errorf("read platform settings: %w", err)
 	}
-	return res.RowsAffected, nil
+	if len(source) == 0 {
+		return 0, nil
+	}
+
+	owned, err := s.tenantSettingKeys(tenantID)
+	if err != nil {
+		return 0, err
+	}
+
+	now := time.Now()
+	copies := make([]platformSettingRow, 0, len(source))
+	for _, row := range source {
+		if _, taken := owned[row.SettingKey]; taken {
+			continue
+		}
+		row.TenantID = tenantID
+		row.CreatedAt = now
+		row.UpdatedAt = now
+		copies = append(copies, row)
+	}
+	if len(copies) == 0 {
+		return 0, nil
+	}
+	if err := s.db.Table("system_setting").Create(&copies).Error; err != nil {
+		return 0, fmt.Errorf("copy platform settings to tenant: %w", err)
+	}
+	return int64(len(copies)), nil
+}
+
+// tenantSettingKeys lists the setting keys a tenant already owns. Re-provisioning
+// is a repair entry point, so the copy has to skip them instead of failing on
+// the (tenant_id, setting_key) unique key.
+func (s *Service) tenantSettingKeys(tenantID uint64) (map[string]struct{}, error) {
+	var keys []string
+	if err := s.db.Table("system_setting").
+		Select("setting_key").
+		Where("tenant_id = ?", tenantID).
+		Pluck("setting_key", &keys).Error; err != nil {
+		return nil, fmt.Errorf("read tenant setting keys: %w", err)
+	}
+	owned := make(map[string]struct{}, len(keys))
+	for _, key := range keys {
+		owned[key] = struct{}{}
+	}
+	return owned, nil
+}
+
+// platformDictTypeRow and platformDictItemRow are the copied column sets for the
+// two dictionary tables, for the same reason platformSettingRow exists.
+type platformDictTypeRow struct {
+	TenantID  uint64    `gorm:"column:tenant_id"`
+	DictCode  string    `gorm:"column:dict_code"`
+	DictName  string    `gorm:"column:dict_name"`
+	Module    string    `gorm:"column:module"`
+	Status    int       `gorm:"column:status"`
+	Remark    *string   `gorm:"column:remark"`
+	CreatedAt time.Time `gorm:"column:created_at"`
+	UpdatedAt time.Time `gorm:"column:updated_at"`
+}
+
+type platformDictItemRow struct {
+	TenantID     uint64    `gorm:"column:tenant_id"`
+	DictCode     string    `gorm:"column:dict_code"`
+	ItemLabelKey string    `gorm:"column:item_label_key"`
+	ItemValue    string    `gorm:"column:item_value"`
+	ItemColor    *string   `gorm:"column:item_color"`
+	Sort         int       `gorm:"column:sort"`
+	Status       int       `gorm:"column:status"`
+	Remark       *string   `gorm:"column:remark"`
+	CreatedAt    time.Time `gorm:"column:created_at"`
+	UpdatedAt    time.Time `gorm:"column:updated_at"`
 }
 
 // copyPlatformDictsToTenant seeds the tenant with the platform's default
 // dictionaries (system_dict_type + system_dict_item) so tenant-scoped pages
 // resolve their labels out of the box instead of showing empty select options.
 //
-// Same idempotent INSERT…SELECT + NOT EXISTS shape as
-// copyPlatformSettingsToTenant:
+// Same idempotency rules as copyPlatformSettingsToTenant, and the same
+// read-then-insert shape for the same deadlock reason:
 //   - existing tenant-owned keys win — a tenant's private dict (or its own
 //     customization of a copied one) is never overwritten, which is also how
 //     tenant-private key conflicts are excluded;
-//   - the dst existence check deliberately does NOT filter deleted_at: soft
-//     deleted rows still occupy the (tenant_id, dict_code[, item_value]) unique
-//     keys, so re-inserting them would fail as a duplicate — skipping them
-//     keeps the statement retry-safe;
-//   - deleted platform rows are not copied (src.deleted_at IS NULL);
+//   - the tenant-side existence check deliberately does NOT filter deleted_at:
+//     soft deleted rows still occupy the (tenant_id, dict_code[, item_value])
+//     unique keys, so re-inserting them would fail as a duplicate — skipping
+//     them keeps the copy retry-safe;
+//   - deleted platform rows are not copied (deleted_at IS NULL);
 //   - every NOT-NULL-without-default column is listed explicitly
 //     (dict_name / item_label_key / item_value), matching the MySQL 1364 rule
 //     documented on the settings copy.
@@ -898,40 +995,109 @@ func (s *Service) copyPlatformDictsToTenant(tenantID uint64) (int64, int64, erro
 	if tenantID == 0 {
 		return 0, 0, nil
 	}
-	types := s.db.Exec(`
-		INSERT INTO system_dict_type (
-			tenant_id, dict_code, dict_name, module, status, remark, created_at, updated_at
-		)
-		SELECT ?, src.dict_code, src.dict_name, src.module, src.status, src.remark, NOW(), NOW()
-		FROM system_dict_type src
-		WHERE src.tenant_id = 0
-		  AND src.deleted_at IS NULL
-		  AND NOT EXISTS (
-		    SELECT 1 FROM system_dict_type dst
-		    WHERE dst.tenant_id = ? AND dst.dict_code = src.dict_code
-		  )
-	`, tenantID, tenantID)
-	if types.Error != nil {
-		return 0, 0, fmt.Errorf("copy platform dict types to tenant: %w", types.Error)
+	typesCopied, err := s.copyPlatformDictTypes(tenantID)
+	if err != nil {
+		return 0, 0, err
+	}
+	itemsCopied, err := s.copyPlatformDictItems(tenantID)
+	if err != nil {
+		return typesCopied, 0, err
+	}
+	return typesCopied, itemsCopied, nil
+}
+
+func (s *Service) copyPlatformDictTypes(tenantID uint64) (int64, error) {
+	var source []platformDictTypeRow
+	if err := s.db.Table("system_dict_type").
+		Select("dict_code, dict_name, module, status, remark").
+		Where("tenant_id = ?", platformGlobalTenantID).
+		Where("deleted_at IS NULL").
+		Scan(&source).Error; err != nil {
+		return 0, fmt.Errorf("read platform dict types: %w", err)
+	}
+	if len(source) == 0 {
+		return 0, nil
 	}
 
-	items := s.db.Exec(`
-		INSERT INTO system_dict_item (
-			tenant_id, dict_code, item_label_key, item_value, item_color,
-			sort, status, remark, created_at, updated_at
-		)
-		SELECT ?, src.dict_code, src.item_label_key, src.item_value, src.item_color,
-		       src.sort, src.status, src.remark, NOW(), NOW()
-		FROM system_dict_item src
-		WHERE src.tenant_id = 0
-		  AND src.deleted_at IS NULL
-		  AND NOT EXISTS (
-		    SELECT 1 FROM system_dict_item dst
-		    WHERE dst.tenant_id = ? AND dst.dict_code = src.dict_code AND dst.item_value = src.item_value
-		  )
-	`, tenantID, tenantID)
-	if items.Error != nil {
-		return types.RowsAffected, 0, fmt.Errorf("copy platform dict items to tenant: %w", items.Error)
+	var ownedCodes []string
+	if err := s.db.Table("system_dict_type").
+		Select("dict_code").
+		Where("tenant_id = ?", tenantID).
+		Pluck("dict_code", &ownedCodes).Error; err != nil {
+		return 0, fmt.Errorf("read tenant dict types: %w", err)
 	}
-	return types.RowsAffected, items.RowsAffected, nil
+	owned := make(map[string]struct{}, len(ownedCodes))
+	for _, code := range ownedCodes {
+		owned[code] = struct{}{}
+	}
+
+	now := time.Now()
+	copies := make([]platformDictTypeRow, 0, len(source))
+	for _, row := range source {
+		if _, taken := owned[row.DictCode]; taken {
+			continue
+		}
+		row.TenantID = tenantID
+		row.CreatedAt = now
+		row.UpdatedAt = now
+		copies = append(copies, row)
+	}
+	if len(copies) == 0 {
+		return 0, nil
+	}
+	if err := s.db.Table("system_dict_type").Create(&copies).Error; err != nil {
+		return 0, fmt.Errorf("copy platform dict types to tenant: %w", err)
+	}
+	return int64(len(copies)), nil
+}
+
+func (s *Service) copyPlatformDictItems(tenantID uint64) (int64, error) {
+	var source []platformDictItemRow
+	if err := s.db.Table("system_dict_item").
+		Select("dict_code, item_label_key, item_value, item_color, sort, status, remark").
+		Where("tenant_id = ?", platformGlobalTenantID).
+		Where("deleted_at IS NULL").
+		Scan(&source).Error; err != nil {
+		return 0, fmt.Errorf("read platform dict items: %w", err)
+	}
+	if len(source) == 0 {
+		return 0, nil
+	}
+
+	// The tenant-side key is (dict_code, item_value); the separator is a byte a
+	// dictionary value cannot contain, so the pair cannot alias another pair.
+	const pairSeparator = "\x00"
+	var ownedPairs []struct {
+		DictCode  string `gorm:"column:dict_code"`
+		ItemValue string `gorm:"column:item_value"`
+	}
+	if err := s.db.Table("system_dict_item").
+		Select("dict_code, item_value").
+		Where("tenant_id = ?", tenantID).
+		Scan(&ownedPairs).Error; err != nil {
+		return 0, fmt.Errorf("read tenant dict items: %w", err)
+	}
+	owned := make(map[string]struct{}, len(ownedPairs))
+	for _, pair := range ownedPairs {
+		owned[pair.DictCode+pairSeparator+pair.ItemValue] = struct{}{}
+	}
+
+	now := time.Now()
+	copies := make([]platformDictItemRow, 0, len(source))
+	for _, row := range source {
+		if _, taken := owned[row.DictCode+pairSeparator+row.ItemValue]; taken {
+			continue
+		}
+		row.TenantID = tenantID
+		row.CreatedAt = now
+		row.UpdatedAt = now
+		copies = append(copies, row)
+	}
+	if len(copies) == 0 {
+		return 0, nil
+	}
+	if err := s.db.Table("system_dict_item").Create(&copies).Error; err != nil {
+		return 0, fmt.Errorf("copy platform dict items to tenant: %w", err)
+	}
+	return int64(len(copies)), nil
 }

@@ -82,7 +82,7 @@ func boolPtr(value bool) *bool {
 
 func setupTestRedis(t *testing.T) *redis.Client {
 	t.Helper()
-	rdb := testredis.Open(t)
+	rdb := testredis.OpenDB(t, testredis.DBLogin)
 	previousRDB := database.RDB
 	database.RDB = rdb
 	t.Cleanup(func() {

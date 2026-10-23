@@ -42,9 +42,8 @@ func TestDeleteTenant_ReleasesCodeForReuse(t *testing.T) {
 	assert.Equal(t, "acme", second.Code)
 
 	// The deleted row survives under an archived code, so history stays
-	// addressable by id.
-	deleted, err := service.GetTenantByID(first.ID)
-	require.NoError(t, err)
+	// addressable by id at the storage layer.
+	deleted := mustLoadTenantRow(t, db, first.ID)
 	assert.Equal(t, tenantStatusDeleted, deleted.Status)
 	assert.Equal(t, fmt.Sprintf("%s%d", deletedTenantCodePrefix, first.ID), deleted.Code)
 }
@@ -137,8 +136,7 @@ func TestReleaseDeletedTenantCodes_RepairsLegacyRows(t *testing.T) {
 
 	require.NoError(t, service.ReleaseDeletedTenantCodes())
 
-	repaired, err := service.GetTenantByID(created.ID)
-	require.NoError(t, err)
+	repaired := mustLoadTenantRow(t, db, created.ID)
 	assert.Equal(t, fmt.Sprintf("%s%d", deletedTenantCodePrefix, created.ID), repaired.Code)
 
 	// ... and the code is usable again.
@@ -157,12 +155,10 @@ func TestReleaseDeletedTenantCodes_IsIdempotent(t *testing.T) {
 	require.NoError(t, service.DeleteTenant(created.ID))
 
 	require.NoError(t, service.ReleaseDeletedTenantCodes())
-	afterFirst, err := service.GetTenantByID(created.ID)
-	require.NoError(t, err)
+	afterFirst := mustLoadTenantRow(t, db, created.ID)
 
 	require.NoError(t, service.ReleaseDeletedTenantCodes())
-	afterSecond, err := service.GetTenantByID(created.ID)
-	require.NoError(t, err)
+	afterSecond := mustLoadTenantRow(t, db, created.ID)
 
 	assert.Equal(t, afterFirst.Code, afterSecond.Code)
 	assert.Equal(t, fmt.Sprintf("%s%d", deletedTenantCodePrefix, created.ID), afterSecond.Code)
@@ -203,8 +199,7 @@ func TestBootstrap_RunsTheRepair(t *testing.T) {
 
 	require.NoError(t, service.Bootstrap())
 
-	repaired, err := service.GetTenantByID(created.ID)
-	require.NoError(t, err)
+	repaired := mustLoadTenantRow(t, db, created.ID)
 	assert.Equal(t, fmt.Sprintf("%s%d", deletedTenantCodePrefix, created.ID), repaired.Code)
 }
 

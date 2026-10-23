@@ -123,22 +123,12 @@ func (s *Service) CreateTenant(dto CreateTenantDTO) (*Tenant, error) {
 	// soft-deleted row still owns its code at the storage layer even though it
 	// is invisible in the default console view. Reporting the two situations
 	// with the same error is what made a hidden row look like a server fault.
-	var blocker Tenant
-	err := s.db.Model(&Tenant{}).
-		Select("id", "code", "status").
-		Where("code = ?", dto.Code).
-		Limit(1).
-		Take(&blocker).Error
-	switch {
-	case err == nil:
-		if blocker.Status == tenantStatusDeleted {
-			return nil, ErrTenantCodeReserved
-		}
-		return nil, ErrTenantCodeExists
-	case errors.Is(err, gorm.ErrRecordNotFound):
-		// Free to use.
-	default:
-		return nil, fmt.Errorf("check tenant code uniqueness: %w", err)
+	blocker, err := s.findTenantCodeBlocker(dto.Code)
+	if err != nil {
+		return nil, err
+	}
+	if blocker != nil {
+		return nil, codeConflictError(blocker)
 	}
 
 	tenant := &Tenant{
@@ -154,7 +144,18 @@ func (s *Service) CreateTenant(dto CreateTenantDTO) (*Tenant, error) {
 	}
 
 	if err := s.db.Create(tenant).Error; err != nil {
-		return nil, fmt.Errorf("create tenant: %w", err)
+		// The pre-check above cannot be atomic: two callers carrying the same
+		// code both pass it, and one of them loses at the UNIQUE index. Answer
+		// the loser with the same error the pre-check would have produced,
+		// instead of a 500 carrying the driver's message.
+		if !database.IsDuplicateKey(err) {
+			return nil, fmt.Errorf("create tenant: %w", err)
+		}
+		blocker, lookupErr := s.findTenantCodeBlocker(dto.Code)
+		if lookupErr != nil {
+			return nil, lookupErr
+		}
+		return nil, codeConflictError(blocker)
 	}
 
 	if _, err := s.ProvisionTenant(ProvisionInput{
@@ -181,6 +182,42 @@ func (s *Service) CreateTenant(dto CreateTenantDTO) (*Tenant, error) {
 	}
 
 	return tenant, nil
+}
+
+// findTenantCodeBlocker returns the row that holds `code`, or nil when the code
+// is free.
+//
+// It spans every status on purpose: `code` is UNIQUE at the storage layer, so a
+// soft-deleted row still owns its value even though the console hides it. It is
+// also the single lookup behind both the pre-check and the post-insert race
+// path, so the two cannot drift into reporting different things.
+func (s *Service) findTenantCodeBlocker(code string) (*Tenant, error) {
+	var blocker Tenant
+	err := s.db.Model(&Tenant{}).
+		Select("id", "code", "status").
+		Where("code = ?", code).
+		Limit(1).
+		Take(&blocker).Error
+	switch {
+	case err == nil:
+		return &blocker, nil
+	case errors.Is(err, gorm.ErrRecordNotFound):
+		return nil, nil
+	default:
+		return nil, fmt.Errorf("check tenant code uniqueness: %w", err)
+	}
+}
+
+// codeConflictError is the single mapping from "some row holds this code" to
+// the error the caller sees. A nil blocker means the row disappeared between
+// the failed insert and the read - a concurrent delete released the code - and
+// the conflict is still the honest answer, because this caller's insert did
+// fail and retrying will succeed.
+func codeConflictError(blocker *Tenant) error {
+	if blocker != nil && blocker.Status == tenantStatusDeleted {
+		return ErrTenantCodeReserved
+	}
+	return ErrTenantCodeExists
 }
 
 // tenantAdminPasswordMinLengthDefault mirrors the seeded default of
@@ -239,6 +276,14 @@ func (s *Service) configuredPasswordMinLength() int {
 
 // GetTenantByID retrieves a tenant by its ID. The reserved platform/global
 // placeholder (id 0) is not a tenant (contract §2.3) and reports as missing.
+// GetTenantByID retrieves a tenant by id.
+//
+// A deleted tenant answers ErrTenantNotFound. `deleted` is a tombstone rather
+// than a lifecycle state (contract §2.1, V1.3): the row keeps a synthetic code
+// (`__deleted_tenant_<id>`) that no operator can type, so a caller that could
+// still address it would be able to revive a tenant nobody can look up by code,
+// or add members to it. Deleted rows stay reachable through the explicit
+// status-filtered list, which is the operator's audit view.
 func (s *Service) GetTenantByID(id uint64) (*Tenant, error) {
 	if id == platformGlobalTenantID {
 		return nil, ErrTenantNotFound
@@ -250,6 +295,9 @@ func (s *Service) GetTenantByID(id uint64) (*Tenant, error) {
 			return nil, ErrTenantNotFound
 		}
 		return nil, fmt.Errorf("get tenant by id: %w", err)
+	}
+	if tenant.Status == tenantStatusDeleted {
+		return nil, ErrTenantNotFound
 	}
 	return &tenant, nil
 }
@@ -447,6 +495,11 @@ func tenantStatusTransitionAllowed(previous, next string) bool {
 	case tenant.TenantStatusSuspended:
 		return next == tenant.TenantStatusActive || next == tenant.TenantStatusArchived
 	case tenant.TenantStatusArchived:
+		return false
+	case tenantStatusDeleted:
+		// A tombstone has no outgoing transition. Without this case the
+		// `default` branch below would answer true for it, which is how a
+		// deleted tenant could be brought back by a status update.
 		return false
 	default:
 		return true

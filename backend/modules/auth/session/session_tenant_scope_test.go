@@ -38,7 +38,7 @@ func newTenantScopeHarness(t *testing.T) (*Service, *redis.Client) {
 	if err := db.Exec("CREATE TABLE IF NOT EXISTS system_user (id BIGINT UNSIGNED PRIMARY KEY, username VARCHAR(64), nickname VARCHAR(64))").Error; err != nil {
 		t.Fatalf("create system_user fixture: %v", err)
 	}
-	rdb := testredis.Open(t)
+	rdb := testredis.OpenDB(t, testredis.DBSession)
 	oldRDB := database.RDB
 	database.RDB = rdb
 	t.Cleanup(func() { database.RDB = oldRDB })

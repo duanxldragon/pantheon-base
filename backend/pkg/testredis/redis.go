@@ -39,6 +39,29 @@ const requiredEnvVar = "PANTHEON_TEST_REDIS_REQUIRED"
 // concurrent `go test ./...` run: another package's cleanup flushes the DB.
 const dbEnvVar = "PANTHEON_TEST_REDIS_DB"
 
+// Logical database assignment for packages that assert a key survives across
+// calls (for example a revocation test that seeds a token, calls the service
+// and then checks the token is gone).
+//
+// `go test ./...` runs packages in parallel and every Open flushes its database
+// on cleanup, so two packages on the same index wipe each other mid-assertion.
+// The default index cannot be fixed for them by an environment variable either:
+// the variable is per test process, so it cannot differ between packages inside
+// one run. Each such package therefore claims a reserved index here, and
+// OpenDB is how it does so. The registry is the whole point - adding a new
+// reserved index means adding a constant, so two packages cannot silently pick
+// the same number.
+//
+// DB 1 stays the shared default. Indexes 2-5 are reserved and must not be used
+// by an Open caller.
+const (
+	DBDefault    = 1
+	DBAuthToken  = 2
+	DBLogin      = 3
+	DBMiddleware = 4
+	DBSession    = 5
+)
+
 func isTruthy(value string) bool {
 	switch strings.ToLower(strings.TrimSpace(value)) {
 	case "1", "true", "yes", "on":
@@ -69,12 +92,54 @@ type reporter interface {
 }
 
 // Open creates a Redis client for integration tests.
+//
+// It uses the shared default database (or PANTHEON_TEST_REDIS_DB when set), so
+// it is only safe for tests that finish reading before another package could
+// flush. A test that asserts a key survives a call must use OpenDB instead.
 func Open(t *testing.T) *redis.Client {
 	return open(t)
 }
 
+// OpenDB creates a Redis client in an explicit logical database, for a package
+// that asserts keys survive across calls. Pass one of the reserved DB*
+// constants so two packages cannot collide.
+//
+// PANTHEON_TEST_REDIS_DB is deliberately ignored: an explicit index is a
+// stronger statement than an environment default, and honouring the variable
+// here would let a single run put every reserved package back on one database.
+func OpenDB(t *testing.T, dbIndex int) *redis.Client {
+	t.Helper()
+	return openAt(t, dbIndex)
+}
+
 func open(t reporter) *redis.Client {
 	t.Helper()
+	return openAt(t, resolveDBIndex(t))
+}
+
+// resolveDBIndex reads the per-process override, falling back to the shared
+// default. The range check is a failure, not a skip: a typo'd index would
+// otherwise land tests on whatever database the number happened to name.
+func resolveDBIndex(t reporter) int {
+	t.Helper()
+
+	raw := strings.TrimSpace(os.Getenv(dbEnvVar))
+	if raw == "" {
+		return DBDefault
+	}
+	parsed, err := strconv.Atoi(raw)
+	if err != nil || parsed < 0 || parsed > 15 {
+		t.Fatalf("%s must be an integer 0-15, got %q", dbEnvVar, raw)
+	}
+	return parsed
+}
+
+func openAt(t reporter, dbIndex int) *redis.Client {
+	t.Helper()
+
+	if dbIndex < 0 || dbIndex > 15 {
+		t.Fatalf("redis database index must be 0-15, got %d", dbIndex)
+	}
 
 	addr, addrVar := firstEnv(addressEnvVars)
 	if addr == "" {
@@ -93,21 +158,6 @@ func open(t reporter) *redis.Client {
 	}
 
 	password, _ := firstEnv(passwordEnvVars)
-
-	// DB 1 is the shared default, but `go test ./...` runs packages in
-	// parallel and every Open flushes its database on cleanup, so a test that
-	// asserts a key survives a call can be wiped by another package mid-run.
-	// A test that needs isolation can pick its own database (0-15) through
-	// PANTHEON_TEST_REDIS_DB; the env var is per test process, so parallel
-	// packages cannot race on it.
-	dbIndex := 1
-	if raw := strings.TrimSpace(os.Getenv(dbEnvVar)); raw != "" {
-		parsed, err := strconv.Atoi(raw)
-		if err != nil || parsed < 0 || parsed > 15 {
-			t.Fatalf("%s must be an integer 0-15, got %q", dbEnvVar, raw)
-		}
-		dbIndex = parsed
-	}
 
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     addr,

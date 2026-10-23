@@ -100,7 +100,7 @@ func TestLifecycleService_DeleteUserSessions(t *testing.T) {
 
 func TestLifecycleService_RevokeUserTokens(t *testing.T) {
 	service := setupLifecycleTestDB(t)
-	rdb := testredis.Open(t)
+	rdb := testredis.OpenDB(t, testredis.DBSession)
 	oldRDB := database.RDB
 	database.RDB = rdb
 	t.Cleanup(func() { database.RDB = oldRDB })

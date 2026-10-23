@@ -12,12 +12,12 @@ The project is not intended to be just a login shell plus CRUD scaffolding. Its 
 
 | Item | Value |
 | --- | --- |
-| Current foundation release | [`pantheon-base-v0.17.1`](https://github.com/duanxldragon/pantheon-base/releases/tag/pantheon-base-v0.17.1) (with the four consumable assets) |
+| Current foundation release | [`pantheon-base-v0.17.2`](https://github.com/duanxldragon/pantheon-base/releases/tag/pantheon-base-v0.17.2) (with the four consumable assets) |
 | Shell/Harness baseline | `1.4.0` (see [VERSION](./VERSION) / [SHELL_VERSION.json](./SHELL_VERSION.json)) |
 | Deployment guide | [docs/DEPLOYMENT_GUIDE.md](./docs/DEPLOYMENT_GUIDE.md) (MySQL 8, Redis 7, migrations + runtime seed, health checks, telemetry, backup/restore, and schema-aware rollback) |
-| Changelog | [CHANGELOG.md](./CHANGELOG.md) / [RELEASE_NOTES_v0.17.1.md](./RELEASE_NOTES_v0.17.1.md) |
+| Changelog | [CHANGELOG.md](./CHANGELOG.md) / [RELEASE_NOTES_v0.17.2.md](./RELEASE_NOTES_v0.17.2.md) |
 
-Delivery status: v0.17.1 is the delivery-closeout patch. Its tag `pantheon-base-v0.17.1` carries all four consumable assets (tgz / tgz.sha256 / repo.tar / repo.tar.sha256), asserted by `Foundation Release Verify`. It closes the three blocking items from the 2026-10-22 independent delivery audit (a red `Release Gate` on main, a remediation that lived only in an uncommitted worktree, and consumer docs that contradicted the code and the published release), two tenant-lifecycle gaps the same audit found (an archived tenant could never be deleted, and a failed provisioning stranded its row), and one UI inconsistency on the dictionary page. No consumer-facing interface change and no new migration. The v0.17.0 assets still contain two already-invalidated dev credentials in plaintext; v0.17.1 is built from the sanitized tree.
+Delivery status: v0.17.2 is the residual-closeout patch. Its tag `pantheon-base-v0.17.2` carries all four consumable assets (tgz / tgz.sha256 / repo.tar / repo.tar.sha256), asserted by `Foundation Release Verify`. It closes the five items v0.17.1 left open, two of which turned out to be real defects once exercised: creating two tenants concurrently deadlocked in the settings copy (`Error 1213`), and a deleted tenant could be revived by a status update because the state machine answered "allowed" for the tombstone. The other three are closed by removing the condition rather than re-labelling it: the Redis test flake by giving each package its own logical database, the race-detector gap by locating a working toolchain, and the unrecallable v0.17.0 credential by a release-time scan that refuses to publish a bundle carrying one. Contract §2.1 gains the V1.3 tombstone clarification. No schema change (still 29), no route or permission code removed or renamed.
 
 ## Positioning
 

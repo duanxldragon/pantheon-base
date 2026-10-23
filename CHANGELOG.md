@@ -6,6 +6,80 @@ Pantheon Base 方法追踪记录。方法论本体位于 `pantheon-harness`。
 
 ---
 
+## [pantheon-base-v0.17.2] — 2026-10-23 (residual closeout)
+
+> v0.17.1 left five items explicitly open. Closing them turned two "unverified" claims into
+> reproducible defects, both in the tenant lifecycle: concurrent creation of two tenants
+> **deadlocked** inside the settings copy (`Error 1213`), and a deleted tenant could be
+> **revived** by a status update because the state machine's `default` branch answered "allowed"
+> for the tombstone. Both are fixed, with tests that fail on the previous behaviour. The other
+> three are closed by removing the condition rather than by re-labelling it: the Redis test
+> flake by giving each package its own logical database, the race-detector gap by finding a
+> working toolchain, and the unrecallable v0.17.0 credential by a release-time scan that refuses
+> to publish a bundle carrying one. Contract §2.1 gains the V1.3 clarification the tombstone
+> needed. Evidence: `.harness/evidence/2026-10-23-residual-closeout/`.
+
+### Fixed
+
+- Concurrent tenant creation no longer deadlocks. `copyPlatformSettingsToTenant` and
+  `copyPlatformDictsToTenant` used `INSERT ... SELECT` against the same table they read, which
+  takes shared next-key locks on the platform rows and collides with a concurrent copy's
+  insert-intention locks: two tenants created at the same moment produced
+  `Error 1213 (40001): Deadlock found when trying to get lock` and the operator saw a 500. The
+  copy is now a non-locking `SELECT` followed by an insert. Reproduced first, then fixed:
+  `TestConcurrentProvisioningKeepsTenantResourcesIsolated` failed with the deadlock on the old
+  code and passes 8 consecutive rounds on the new one.
+- Losing the race for a tenant `code` now answers the same conflict the pre-check would have
+  returned, instead of `500 create tenant: Error 1062 (23000): Duplicate entry ... for key
+  'tenants.uk_tenant_code'`. The pre-check cannot be atomic, so the UNIQUE index is the real
+  arbiter; `pkg/database.IsDuplicateKey` recognises it and `CreateTenant` re-reads the blocking
+  row to distinguish "taken" from "taken by a deleted row".
+- A deleted tenant can no longer be revived, gain members, or be re-provisioned. `deleted` is a
+  tombstone, not a lifecycle state, but `tenantStatusTransitionAllowed` fell through to
+  `default: return true` for it and `GetTenantByID` did not filter it — so
+  `PUT {"status":"active"}` brought the tenant back with its synthetic `__deleted_tenant_<id>`
+  code, which no operator can type. `GetTenantByID` now reports a tombstone as not found
+  (contract §5: missing and foreign are indistinguishable) and the state machine answers "no"
+  for it. Deleted rows stay reachable through the explicit status-filtered list.
+- `TestBatchRevokeSessions_IsTenantScoped` no longer fails when packages run in parallel.
+  `go test ./...` runs packages concurrently and every `testredis.Open` flushes its database on
+  cleanup, so a sibling package wiped the session keys mid-assertion. Each package that asserts
+  a key survives now claims its own logical database through `testredis.OpenDB` and a registry
+  of reserved indexes; the shared default stays for everything else.
+
+### Added
+
+- `scripts/foundation-release/check-release-secrets.mjs`, a hard precondition in the publish
+  flow: a bundle carrying a credential in a DSN or on a command line is refused before the tag
+  exists. v0.17.0 shipped a development password that way and it could not be recalled. The
+  rules are deliberately narrow (three shapes, not an entropy heuristic) because a gate that
+  reports test fixtures and i18n copy gets bypassed — the first, broader rule set reported 42
+  false positives on the real v0.17.1 bundle.
+- Contract `TENANT_CONTRACT_V1` V1.3: §2.1 now states that `deleted` is a tombstone rather than
+  a lifecycle state, that it is never accepted as input and never addressable, that the delete
+  marker is `status` and not the reserved `deleted_at` column, and that deleting an archived
+  tenant disables its memberships in the same transaction (§2.2's owner rule constrains
+  non-archived tenants only).
+
+### Changed
+
+- `GET /api/v1/system/tenant/:id` (and the member, update and provision endpoints behind it)
+  answer `404 tenant.not_found` for a deleted tenant. Previously they answered `200` and allowed
+  writes against the tombstone. Operators still see deleted tenants in the list under an
+  explicit `status=deleted` filter.
+- `go test -race` now runs locally: the failure was the Cygwin `gcc` on `PATH`, not a missing
+  toolchain. `CC=/d/msys64/mingw64/bin/gcc.exe` builds and runs the race detector, so the
+  earlier "race coverage comes from CI only" note no longer applies.
+
+### Compatibility
+
+- No schema change: the database stays at version 29. No route, permission code, menu seed or
+  error envelope shape is removed or renamed.
+- `pantheon-ops` can advance its foundation lock from v0.17.0 or v0.17.1 to v0.17.2;
+  `sharedPaths` stays at 52 entries.
+
+---
+
 ## [pantheon-base-v0.17.1] — 2026-10-22 (delivery closeout and tenant lifecycle)
 
 > An independent delivery audit of `main 92b94474` returned **FAIL on delivery completeness** —

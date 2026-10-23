@@ -1,7 +1,42 @@
 # Pantheon Base - Harness 任务状态
 
-**最后更新**: 2026-10-22
-**当前版本**: v0.17.1（已发布，`1f68d56b`）；v0.17.0 为上一个可消费版本
+**最后更新**: 2026-10-23
+**当前版本**: v0.17.2（发布中）；v0.17.1（`1f68d56b`）为上一个可消费版本
+
+## 残余项收口（2026-10-23，v0.17.2）
+
+v0.17.1 显式登记了 5 项残余。本轮逐项关闭，其中两项**实测即失败**，因此是修缺陷而不是改标注。
+任务包 `2026-10-23-residual-closeout`，证据在 `.harness/evidence/2026-10-23-residual-closeout/`。
+
+- **并发 provisioning 死锁（原 P2-9，"未验证"）**：`copyPlatformSettingsToTenant` /
+  `copyPlatformDictsToTenant` 用 `INSERT ... SELECT` 读同一张表，MySQL 对读到的行加共享 next-key 锁，
+  与并发复制方的插入意向锁互斥 → 两个租户同时创建报 `Error 1213 (40001): Deadlock found`，调用方看到 500。
+  改为「非锁定读 + 插入」。`TestConcurrentProvisioningKeepsTenantResourcesIsolated` 在旧代码上以该错误失败，
+  新代码连续 8 轮通过；断言的是归属与互斥（角色/成员/根部门/管理员/复制设置各归其租户），不是错误码。
+- **同 code 竞态的 500**：预检非原子，UNIQUE 索引才是仲裁者，loser 原先拿到
+  `500 create tenant: Error 1062 ... Duplicate entry`。新增 `pkg/database.IsDuplicateKey`，
+  `CreateTenant` 回读占用行，返回与预检一致的 `tenant.code.exists` / `tenant.code.reserved`。
+- **墓碑可被复活（补写合同 V1.3 时发现）**：`tenantStatusTransitionAllowed` 对未知当前状态走
+  `default: return true`，`GetTenantByID` 又不过滤墓碑，于是 `PUT {"status":"active"}` 能把已删除租户
+  复活，且带着删除时写入的 `__deleted_tenant_<id>` 合成编码（不满足合同 `code` 正则）、成员仍是停用。
+  同一路径还允许给墓碑加成员、对墓碑重新初始化。现 `GetTenantByID` 视墓碑为不存在（§5 缺失与他租户不可区分），
+  状态机对 `deleted` 无出边。3 条新用例在修复前全部失败、修复后通过。
+- **Redis 测试隔离度（原 P2-4）**：`testredis.OpenDB` + 预留索引注册表，authtoken=2 / login=3 /
+  middleware=4 / session=5，默认库 1 不变。4 包并行 3 轮全绿（此前偶发失败）。
+- **race 检测（原环境限制）**：真实原因是 `PATH` 上的 Cygwin `gcc`，不是缺工具链。
+  `CC=/d/msys64/mingw64/bin/gcc.exe` 下 `-race` 可用：`pkg/tenant`、`pkg/testredis`、
+  `internal/middleware`、`modules/auth/session` 与租户生命周期/并发用例全绿。
+- **发布产物凭据预检（原 P3-1）**：`check-release-secrets.mjs` 作为发布硬前置，在打标之前拒绝携带凭据的
+  bundle（MySQL DSN / URL / `-p<值>` 三种形态，报告脱敏）。规则刻意收窄：更宽的规则集在真实 v0.17.1
+  产物上误报 42 处（测试夹具、Go 结构体字面量、i18n 文案），会被绕过；现对 766 文件干净，
+  且对 v0.17.0 的两种残留形态均能捕获。产物本身仍不可回收——凭据已轮换。
+- **合同 V1.3**：§2.1 补入墓碑语义、不可寻址、不可作为输入、删除标记是 `status` 而非预留的 `deleted_at`、
+  删除归档租户时成员同事务停用（§2.2 的 owner 要求只约束非归档租户）。按既有 contract-change 流程记录
+  触发与范围，不自行宣告 G4 通过。
+- **验证**：后端 build/vet/gofmt 干净，真库全量 `go test ./...` 0 失败 0 跳过；`test:foundation-release`
+  55/55（含扫描器 10 条断言）；无 schema 变更（仍为 29），无接口移除或重命名。
+- **行为变更（需知会消费方）**：已删除租户在 `GET`/`PUT`/成员/初始化接口上一律 `404 tenant.not_found`；
+  列表在显式 `status=deleted` 过滤下仍可见。
 
 ## 交付收口与租户生命周期修复（2026-10-22，v0.17.1）
 

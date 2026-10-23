@@ -1,0 +1,152 @@
+{
+  "taskId": "2026-10-23-residual-closeout",
+  "taskDoc": "docs/harness/tasks/2026-10-23-residual-closeout.task.md",
+  "title": "Close the five residuals v0.17.1 left open and publish v0.17.2",
+  "goal": "v0.17.1 recorded five residuals as explicitly non-blocking. Closing them turned two 'unverified' claims into reproducible defects in the tenant lifecycle: concurrent creation of two tenants deadlocked inside the settings copy (MySQL 1213) and reached the caller as a 500, and a deleted tenant could be revived by a status update because the state machine's default branch answered 'allowed' for the tombstone. Both are fixed with tests that fail on the previous behaviour. The other three are closed by removing the condition rather than re-labelling it: the Redis test flake by giving each package its own logical database, the race-detector gap by locating a working toolchain (Cygwin gcc on PATH, not a missing compiler), and the unrecallable v0.17.0 credential by a release-time scan that refuses to publish a bundle carrying one. Contract §2.1 gains the V1.3 tombstone clarification, recorded through the contract-change process without declaring G4 passed.",
+  "primaryLayer": "platform",
+  "status": "completed",
+  "priority": "P2",
+  "type": "residual-closeout",
+  "estimatedComplexity": "medium",
+  "findings": [
+    "R1 (P2, was P2-9 'concurrent provisioning unverified'): copyPlatformSettingsToTenant and copyPlatformDictsToTenant used INSERT ... SELECT against the table they read. MySQL takes shared next-key locks on the rows such a statement reads, and when source and target are the same table those locks collide with a concurrent copy's insert-intention locks, so two tenants created at the same moment failed with 'Error 1213 (40001): Deadlock found when trying to get lock' and the operator saw a 500.",
+    "R2 (P2, found while fixing R1): losing the race for a tenant code answered 500 'create tenant: Error 1062 (23000): Duplicate entry ... for key tenants.uk_tenant_code'. The pre-check cannot be atomic, so the UNIQUE index is the real arbiter and the loser must get the same conflict the pre-check returns, not a driver message.",
+    "R3 (P2, found while writing contract V1.3): a deleted tenant could be revived. tenantStatusTransitionAllowed fell through to 'default: return true' for the unknown previous status and GetTenantByID did not filter the tombstone, so PUT {\"status\":\"active\"} brought the tenant back with its synthetic __deleted_tenant_<id> code (which violates the contract code regex) and its memberships still disabled. The same path allowed adding members to a tombstone and re-provisioning it.",
+    "R4 (P2, was P2-4): TestBatchRevokeSessions_IsTenantScoped failed intermittently when packages ran in parallel, because go test runs packages concurrently and every testredis.Open flushes its database on cleanup, wiping a sibling package's keys mid-assertion.",
+    "R5 (P3, was P3-1): v0.17.0 shipped a development MySQL password inside an archived evidence file. The asset is immutable and the credential was rotated, so the artifact cannot be recalled; the only available remedy is preventing a recurrence.",
+    "R6 (P3, was P3-2): the contract listed three tenant states and never acknowledged the 'deleted' tombstone the implementation writes, so 'is this tenant deleted?' had no normative answer.",
+    "R7 (P3, was the race-detector environment limit): go test -race failed locally with 'gcc.exe failed: exit status 1' and was recorded as an environment limitation. The cause was the Cygwin gcc on PATH, not a missing toolchain."
+  ],
+  "scope": {
+    "in": [
+      "Provisioning copy: non-locking SELECT + insert instead of INSERT ... SELECT over the same table",
+      "CreateTenant: map the UNIQUE-index violation to the same conflict the pre-check returns",
+      "Tombstone: GetTenantByID reports a deleted tenant as not found; the state machine has no edge out of deleted",
+      "testredis.OpenDB with a registry of reserved logical databases, one per package that asserts key survival",
+      "Release preflight: refuse to tag a bundle carrying a credential in a DSN, a URL or a -p<value> flag",
+      "Contract V1.3 clarification for the tombstone (zh + en), with trigger and scope recorded in §9",
+      "Version material: VERSION 0.17.2, CHANGELOG, RELEASE_NOTES_v0.17.2.md, README(zh/en), STATUS",
+      "Publish v0.17.2 with the four foundation-release assets"
+    ],
+    "out": [
+      "The same duplicate-key shaping on system_role_data_scope and system_role_permission writes (IsDuplicateKey is the seam; only the tenant path is fixed here)",
+      "Writing tenants.deleted_at (contract V1.3 states it is a reserved column, and two markers would let 'is this deleted?' disagree with itself)",
+      "Replacing or rewriting the published v0.17.0 / v0.17.1 assets",
+      "Casbin model, permission semantics, workflow gate thresholds"
+    ]
+  },
+  "acceptanceCriteria": [
+    "Four tenants created concurrently all succeed with fully disjoint provisioning output (roles, memberships, root department, administrator, copied settings), asserted by ownership rather than by error code.",
+    "The concurrency test fails with MySQL 1213 on the previous implementation and passes 8 consecutive rounds on the new one.",
+    "A caller that loses the race for a code receives tenant.code.exists or tenant.code.reserved, never a raw Error 1062, and exactly one tenant row exists.",
+    "A deleted tenant answers tenant.not_found on GetTenantByID, UpdateTenant, AddMember and ProvisionTenant; the tombstone row is unchanged after a rejected update.",
+    "Redis-backed packages run in parallel without interfering: 3 rounds of authtoken + login + session + middleware all green.",
+    "go test -race runs locally and is clean on pkg/tenant, pkg/testredis, internal/middleware, modules/auth/session and the tenant lifecycle/concurrency tests.",
+    "The release preflight reports the real v0.17.1 bundle clean and refuses both shapes of the v0.17.0 residue, without reprinting the secret.",
+    "Contract V1.3 records the tombstone semantics in §2.1 and its trigger/scope in §9, without declaring G4 passed.",
+    "go build/vet/gofmt clean, go test ./... against real MySQL + Redis with 0 failures and 0 skips; governance checkers pass; no schema change (stays at 29).",
+    "v0.17.2 is tagged and published with tgz / tgz.sha256 / repo.tar / repo.tar.sha256, checksums verified, Foundation Release Verify green."
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "permission-policy",
+    "portableFailureClass": "concurrent-write-deadlock / terminal-state-not-enforced / test-isolation-leak / unrecallable-release-artifact",
+    "ownerLayer": "consumer-repository",
+    "ratchetDecision": "checker-tightened",
+    "coverageDimensions": [
+      "behaviour",
+      "maintainability",
+      "architecture-fitness"
+    ]
+  },
+  "expectedFiles": {
+    "create": [
+      "RELEASE_NOTES_v0.17.2.md",
+      "docs/harness/tasks/2026-10-23-residual-closeout.task.md",
+      ".harness/tasks/2026-10-23-residual-closeout/manifest.json",
+      ".harness/evidence/2026-10-23-residual-closeout/summary.md",
+      ".harness/evidence/2026-10-23-residual-closeout/review.md",
+      ".harness/evidence/2026-10-23-residual-closeout/commands.json",
+      "backend/pkg/database/duplicate_key.go",
+      "backend/modules/system/iam/tenant/tenant_concurrency_test.go",
+      "scripts/foundation-release/check-release-secrets.mjs",
+      "tests/scripts/foundation-release/check-release-secrets.test.mjs"
+    ],
+    "modify": [
+      "backend/modules/system/iam/tenant/tenant_service.go",
+      "backend/modules/system/iam/tenant/tenant_provision.go",
+      "backend/modules/system/iam/tenant/tenant_service_test.go",
+      "backend/modules/system/iam/tenant/tenant_code_lifecycle_test.go",
+      "backend/modules/system/iam/tenant/tenant_lifecycle_guard_test.go",
+      "backend/pkg/testredis/redis.go",
+      "backend/pkg/testredis/redis_test.go",
+      "backend/pkg/authtoken/token_test.go",
+      "backend/modules/auth/login/login_runtime_test.go",
+      "backend/modules/auth/session/session_lifecycle_service_test.go",
+      "backend/modules/auth/session/session_revocation_closure_test.go",
+      "backend/modules/auth/session/session_tenant_scope_test.go",
+      "backend/internal/middleware/secure_action_middleware_test.go",
+      "docs/contracts/TENANT_CONTRACT_V1.md",
+      "docs/contracts/TENANT_CONTRACT_V1.en.md",
+      "docs/reviews/PANTHEON_BASE_DELIVERY_REMEDIATION_2026-10-22.md",
+      "scripts/foundation-release/publish-foundation-release.mjs",
+      "VERSION",
+      "CHANGELOG.md",
+      "README.md",
+      "README.en.md",
+      ".harness/STATUS.md"
+    ],
+    "doNotTouch": [
+      "backend/pkg/database/migrations/**",
+      ".github/workflows/**",
+      "the published v0.17.0 and v0.17.1 tags and assets"
+    ]
+  },
+  "implementationNotes": [
+    "The deadlock is a self-referencing INSERT ... SELECT. The fix is read-then-insert, not a deadlock retry loop: a retry would absorb the lock-order problem and hide the next regression of the same class.",
+    "Every idempotency rule of the copy is preserved: existing tenant keys win, soft-deleted platform rows are skipped, and the tenant-side existence check deliberately ignores deleted_at because a soft-deleted row still occupies the unique key. setting_value and remark stay nullable pointers so a NULL does not become an empty string.",
+    "The tombstone rule lives in GetTenantByID because UpdateTenant, AddMember, ProvisionTenant and both handlers go through it, so one rule covers every write path; contract §5 makes a tombstone and a missing id indistinguishable to the caller. The list endpoint is untouched, so operators still see deleted tenants under an explicit status filter.",
+    "Duplicate-key shaping re-reads the blocking row so 'taken by a live tenant' and 'taken by a deleted row' stay distinguishable; the pre-check is kept because it is the fast path for the normal case.",
+    "The credential rules are three shapes, not an entropy heuristic. The broader first attempt reported 42 findings on the real v0.17.1 bundle, all false positives, and a gate that noisy gets bypassed. The report masks the secret, because echoing it into CI logs would move the leak rather than close it."
+  ],
+  "verificationPlan": {
+    "backend": [
+      "go build ./...",
+      "go vet ./...",
+      "gofmt -l .",
+      "PANTHEON_TEST_DSN=<real mysql> PANTHEON_TEST_DSN_REQUIRED=true PANTHEON_TEST_REDIS_REQUIRED=true go test -count=1 -p 1 ./...",
+      "go test -count=8 -run TestConcurrentProvisioning ./modules/system/iam/tenant/",
+      "for i in 1 2 3; do go test -count=1 ./pkg/authtoken/ ./modules/auth/login/ ./modules/auth/session/ ./internal/middleware/; done",
+      "CC=/d/msys64/mingw64/bin/gcc.exe CGO_ENABLED=1 go test -race ./pkg/tenant/ ./pkg/testredis/ ./internal/middleware/ ./modules/auth/session/ ./modules/system/iam/tenant/"
+    ],
+    "releaseTooling": [
+      "npm run test:foundation-release",
+      "node scripts/foundation-release/check-release-secrets.mjs --release-version pantheon-base-v0.17.2"
+    ],
+    "governance": [
+      "npm run check:docs-frontmatter",
+      "npm run check:task-packet",
+      "npm run check:structure"
+    ],
+    "release": [
+      "node scripts/foundation-release/check-release-assets.mjs --release-version pantheon-base-v0.17.2",
+      "gh release view pantheon-base-v0.17.2 --json assets"
+    ]
+  },
+  "linkage": {
+    "taskId": "2026-10-23-residual-closeout",
+    "taskManifest": ".harness/tasks/2026-10-23-residual-closeout/manifest.json",
+    "assessment": "docs/harness/tasks/2026-10-23-residual-closeout.task.md",
+    "openspecChange": "none",
+    "superpowersPlan": "none",
+    "evidenceDir": ".harness/evidence/2026-10-23-residual-closeout/",
+    "summaryFile": ".harness/evidence/2026-10-23-residual-closeout/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-23-residual-closeout/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/contracts/TENANT_CONTRACT_V1.md",
+      "docs/reviews/PANTHEON_BASE_DELIVERY_REMEDIATION_2026-10-22.md"
+    ]
+  }
+}

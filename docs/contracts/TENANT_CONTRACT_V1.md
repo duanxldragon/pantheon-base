@@ -13,7 +13,7 @@ linked_contracts:
   - docs/contracts/SYSTEM_IAM_CONTRACT.md
   - docs/contracts/SYSTEM_ORG_CONTRACT.md
   - docs/contracts/SYSTEM_CONFIG_CONTRACT.md
-updated_at: 2026-10-13
+updated_at: 2026-10-23
 ---
 
 # 租户合同 V1（共享 schema MVP）
@@ -60,16 +60,25 @@ tenants
   id            bigint PK          -- 雪花 ID，由 ID 生成器分配
   code          varchar(64)  UK    -- 租户编码，全局唯一，创建后不可变
   name          varchar(128)       -- 显示名
-  status        varchar(16)        -- active | suspended | archived
+  status        varchar(16)        -- active | suspended | archived | deleted（墓碑，见不变量）
   plan          varchar(32)        -- 预留：套餐标记（V1 不消费）
-  created_at / updated_at / deleted_at
+  created_at / updated_at
+  deleted_at                       -- 预留列，当前实现不写入（见不变量）
 ```
 
 不变量：
 - `code` 创建后不可变；匹配 `^[a-z][a-z0-9-]{1,62}$`
 - `status` 流转仅允许：`active ↔ suspended`，`active|suspended → archived`；`archived` 终态不可逆
 - `archived` 租户禁止登录、禁止发放新 token、禁止产生新业务写入
-- 删除（`deleted_at`）仅允许对 `archived` 租户执行，且为运维动作，不暴露给业务 API
+- 删除仅允许对 `archived` 租户执行，且为运维动作，不暴露给业务 API
+- `deleted` 是**墓碑（tombstone）**，不是生命周期状态（V1.3 澄清）：只由删除动作在 `archived`
+  之后写入，与释放 `code` 在同一事务内完成；它没有出边，**不得作为创建或更新的输入**，也不出现在
+  默认列表里（仅显式状态过滤可见）。按 id 或 `code` 寻址已删除租户一律视为不存在（与 §5
+  「缺失与他租户不可区分」一致），因此已删除租户无法被重新激活、无法新增成员、也无法重新初始化。
+- 删除 `archived` 租户时，其剩余成员关系在同一事务内被置为停用：§2.2 的 owner 要求只约束
+  **非归档**租户，归档后成员关系不再构成删除的阻碍（V1.3 澄清）。
+- 删除标记是 `status = 'deleted'`，**不是** `deleted_at`：该列在表结构中预留，当前实现不写入，
+  查询也不以它过滤。两套标记并存会让「是否已删除」出现两个可能不一致的答案。
 
 ### 2.2 TenantMembership
 
@@ -232,6 +241,26 @@ tenant_memberships
 |------|------|------|------|
 | V1.1 | 2026-10-13 | §3.1 新增第 3 条「平台作用域兜底」（原第 3 条顺延为第 4 条，语义不变）；新增 §3.4「平台作用域声明」；§3.2 补注拒绝规则的适用范围；§6 补注「multi 是 compat 的超集」 | 澄清（Clarification） |
 | V1.2 | 2026-10-19 | 新增 §2.3.1「读写义务」：读必须带租户谓词、写必须由上下文赋值且冲突键含租户、按裸键的归属校验同样算读；给出唯一两个放行面与 fail-closed 默认 | 澄清（Clarification） |
+| V1.3 | 2026-10-23 | §2.1 补入第四态：`deleted` 是墓碑而非生命周期状态、不可作为输入、按 id/code 寻址视为不存在；明确删除标记是 `status` 而非预留的 `deleted_at`；明确删除归档租户时其成员关系同事务停用（§2.2 的 owner 要求只约束非归档租户） | 澄清（Clarification） |
+
+**V1.3 的触发与范围**
+
+- 触发：2026-10-22 的交付验收把「`deleted` 未进合同」登记为 P3 残余；补写时实测发现该缺口背后
+  有一个真实缺陷：`tenantStatusTransitionAllowed` 对未知的当前状态走 `default: return true`，
+  而 `UpdateTenant` 读取租户行时不过滤墓碑，于是一个 `PUT {"status":"active"}` 就能把已删除的租户
+  **复活**——它会带着删除时写入的合成 code（`__deleted_tenant_<id>`，违反本节的 `code` 正则）
+  回到活跃列表，成员关系却仍是停用状态。同一条路径还允许给墓碑新增成员、对墓碑重新初始化。
+- 缺口定位：§2.1 只列了三个状态与「删除仅允许对 archived 执行」，没有说清删除在存储层留下什么、
+  留下之后是否还能被寻址。实现选择了 `status = 'deleted'` 的墓碑语义，合同没有承认它，于是
+  「墓碑不是生命周期状态」这条约束既没被写下来、也没被状态机执行。
+- 澄清范围：只在 §2.1 增加状态取值说明与三条不变量，**不新增概念、不改任何既有条款的语义**。
+  §2.2 的 owner 要求原文不动（V1.3 只是明确它约束的是非归档租户，这正是原文「every non-archived
+  tenant」的字面含义）；§3（上下文）、§4（Casbin domain）、§5（错误码）、§6（模式）、§7（归属边界）
+  均未改动。删除仍只允许对 `archived` 执行，仍是运维动作。
+- 配套实现与回归测试：`tenantStatusTransitionAllowed` 增加 `deleted` 分支、`GetTenantByID` 把墓碑
+  视为不存在；`backend/modules/system/iam/tenant/tenant_lifecycle_guard_test.go`
+  （`TestDeletedTenantCannotBeRevivedByUpdate`、`TestDeletedTenantRefusesNewMembers`、
+  `TestDeletedTenantCannotBeReprovisioned`）。
 
 **V1.2 的触发与范围**
 
