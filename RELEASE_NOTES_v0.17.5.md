@@ -138,5 +138,5 @@ Decided by CI, not locally: the required checks on the pull request (including t
   (error 87). The race gate is CI Linux; the limitation is recorded, not worked around.
 - **Copy serialisation** depends on the `tenants` row lock because `system_dict_item` has no unique
   key. Any future code that copies platform defaults must take the same lock.
-- **The published v0.17.0–v0.17.3 tags and assets are immutable.** The v0.17.3 sentence is corrected
+- **The published v0.17.0–v0.17.4 tags and assets are immutable.** The v0.17.3 sentence is corrected
   in the repository file and the mutable release body, not in the tag contents.
