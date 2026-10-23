@@ -61,6 +61,15 @@ tenant**. Fixed (default branch now rejects; `GetTenantByID` hides the tombstone
 (`TestDeletedTenantCannotBeRevivedByUpdate`, `TestDeletedTenantRefusesNewMembers`,
 `TestDeletedTenantCannotBeReprovisioned`).
 
+## Post-merge correction (PR #411)
+
+The first squash commit on main (43aec46e) carried the fixture's gitleaks
+marker on the line above the secret, but gitleaks v8 honours the marker only
+on the secret's own line, so main's full-history push scan flagged it and
+blocked the Release Gate. PR #411 moves the marker onto the const line and
+pins the fingerprints of both historical commits (0fcc38d0, 43aec46e) in
+.gitleaksignore; verified locally with a full-history detect: 0 findings.
+
 ## Verification
 
 - `go build ./... && go vet ./... && gofmt -l .` — clean.
