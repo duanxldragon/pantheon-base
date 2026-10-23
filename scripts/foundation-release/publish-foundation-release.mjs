@@ -6,6 +6,7 @@ import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
 import { createReleaseBundle } from './build-release-bundle.mjs';
+import { assertBundleIsFreeOfCredentials } from './check-release-secrets.mjs';
 import { buildReleaseHelp, parseReleaseArgs, validateReleaseIdentity } from './release-cli.mjs';
 
 const PLACEHOLDER_RELEASE_TEXTS = new Set([
@@ -342,6 +343,10 @@ export function publishFoundationRelease(options) {
   ensureCleanWorktree(root);
   const releaseGate = ensureSuccessfulReleaseGate(root, repoFullName, targetCommit);
   createReleaseBundle({ root, releaseVersion: options.releaseVersion });
+  // A published asset cannot be recalled: v0.17.0 shipped a development
+  // password inside an archived evidence file and the only available remedy
+  // was rotating it. Refuse to tag a bundle that carries one.
+  assertBundleIsFreeOfCredentials({ root, releaseVersion: options.releaseVersion });
   const assetPaths = ensureReleaseAssetFiles(releasePaths, options.releaseVersion);
   const tagName = options.releaseVersion;
   const releaseTitle = buildGitHubReleaseTitle(options.releaseVersion);
