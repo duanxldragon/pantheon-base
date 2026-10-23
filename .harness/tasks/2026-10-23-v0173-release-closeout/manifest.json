@@ -4,7 +4,7 @@
   "title": "Publish v0.17.3: the widened release credential gate, corrected evidence, and the stabilized tenant-picker smoke",
   "goal": "Publish the post-publication review fixes as v0.17.3 so the next consumable asset carries the corrected release gate. The credential preflight now scans both published shapes (bundle/ and repo.tar) and fails closed when repo.tar is missing, which closes the gap that let the v0.17.2 gate report clean without opening the snapshot that carried the v0.17.0 residue. The release also carries the corrected v0.17.2 evidence (erratum instead of a silent rewrite), the tenant-picker smoke that waits for the Arco popup to align before measuring overflow, and the removed duplicate doc comment. No runtime behaviour changes: schema stays at 29, no route, permission code, menu seed or error envelope changes.",
   "primaryLayer": "platform",
-  "status": "in-progress",
+  "status": "completed",
   "priority": "P2",
   "type": "release-closeout",
   "estimatedComplexity": "small",
@@ -134,6 +134,19 @@
       "repo.tar",
       "repo.tar.sha256"
     ],
-    "state": "planned"
+    "state": "published",
+    "publishedAt": "2026-10-23T07:46Z",
+    "tagObject": "e0b0ee075f6ac9dda0a2f8f439bb675a670e3260",
+    "targetCommit": "1b74dccb8824884bacef574096cc246dfa39b2f6",
+    "assetChecksums": {
+      "foundation-release-pantheon-base-v0.17.3.tgz": "1c55c8509d287d7f2e2dae4efe3722b48984c361c423b203ab5f3fe3d8266342",
+      "repo.tar": "af3f5dfed18240b6fd5428bcc5bdf30b2209d4e43f3ef73b4c907c90a32e77f9"
+    },
+    "verification": {
+      "releaseSecretScan": "clean (3087 files scanned)",
+      "releaseAssets": "check-release-assets: local and remote assets consistent",
+      "foundationReleaseVerifyRun": "39920022781",
+      "foundationReleaseVerify": "success"
+    }
   }
 }

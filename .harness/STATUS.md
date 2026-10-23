@@ -1,11 +1,12 @@
 # Pantheon Base - Harness 任务状态
 
 **最后更新**: 2026-10-23
-**当前版本**: v0.17.3 发布准备中（版本材料已就绪，待 PR 合并与 Release Gate）；最新已发布版本仍为 v0.17.2（2026-10-23T03:54Z，tag `e6aeced9`）
+**当前版本**: v0.17.3 已发布（2026-10-23T07:46Z，tag `pantheon-base-v0.17.3` → `1b74dccb`）
 
-## v0.17.3 发布准备（2026-10-23）
+## v0.17.3 发布（2026-10-23）
 
-v0.17.2 发布后复核的 R-1…R-5 已随 PR #414 合入主干（`933ffddd`）。本发布把修正后的门禁与证据
+v0.17.2 发布后复核的 R-1…R-5 已随 PR #414 合入主干（`933ffddd`），发布材料随 PR #415 合入
+（`1b74dccb`）。本发布把修正后的门禁与证据
 装进下一份可消费资产，任务包 `2026-10-23-v0173-release-closeout`，证据在
 `.harness/evidence/2026-10-23-v0173-release-closeout/`。
 
@@ -20,6 +21,13 @@ v0.17.2 发布后复核的 R-1…R-5 已随 PR #414 合入主干（`933ffddd`）
   无路由/权限码/菜单/错误信封变化；`sharedPaths` 仍为 52。
 - **发布门禁**：合并提交上的 `Release Gate Summary` 必须 success；打标前跑扩展后的凭据预检；
   发布后由 `Foundation Release Verify` 与 `check-release-assets` 断言四件资产。
+- **发布事实（2026-10-23T07:46Z）**：annotated tag `pantheon-base-v0.17.3`（对象 `e0b0ee07`）指向
+  `1b74dccb`；GitHub Release 非 draft / 非 prerelease，四件资产齐全。
+  - 打标前凭据预检：`clean (3087 files scanned)`，`bundle/` 与 `repo.tar` 都已打开。
+  - `foundation-release-pantheon-base-v0.17.3.tgz` sha256 `1c55c8509d28…d8266342`
+  - `repo.tar` sha256 `af3f5dfed182…a32e77f9`
+  - `check-release-assets`：本地 bundle 与远端四件资产一致；`Foundation Release Verify`
+    （run `39920022781`）success。
 
 ## 残余项收口（2026-10-23，v0.17.2）
 
