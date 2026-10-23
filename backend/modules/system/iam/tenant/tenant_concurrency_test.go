@@ -5,10 +5,9 @@ import (
 	"sync"
 	"testing"
 
-	mysqlDriver "github.com/go-sql-driver/mysql"
+	"github.com/duanxldragon/pantheon-base/backend/pkg/testmysql"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"gorm.io/gorm/clause"
 )
 
 // TestConcurrentProvisioningKeepsTenantResourcesIsolated turns the last open
@@ -365,19 +364,7 @@ func TestCopyPlatformDefaultsRunOnTheLockedTenantRow(t *testing.T) {
 	require.Equal(t, int64(1), dictTypes)
 	require.Equal(t, int64(1), dictItems)
 
-	probe := db.Begin()
-	require.NoError(t, probe.Error)
-	defer func() { _ = probe.Rollback() }()
-	var locked struct{ ID uint64 }
-	err = probe.Table("tenants").
-		Select("id").
-		Clauses(clause.Locking{Strength: "UPDATE", Options: "NOWAIT"}).
-		Where(condIDEquals, tenantRow.ID).
-		Take(&locked).Error
-	var mysqlErr *mysqlDriver.MySQLError
-	require.ErrorAs(t, err, &mysqlErr, "the copy transaction must hold the tenant row lock")
-	assert.EqualValues(t, 3572, mysqlErr.Number)
-	require.NoError(t, probe.Rollback().Error)
+	testmysql.AssertRowLocked(t, db, "tenants", tenantRow.ID)
 
 	require.NoError(t, tx.Rollback().Error)
 

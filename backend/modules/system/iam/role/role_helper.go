@@ -318,7 +318,7 @@ func roleOwningTenantIDTx(tx *gorm.DB, roleID uint64) (uint64, error) {
 	var tenantID uint64
 	if err := tx.Table("system_role").
 		Select("tenant_id").
-		Where("id = ?", roleID).
+		Where(condIDEquals, roleID).
 		Scan(&tenantID).Error; err != nil {
 		return 0, err
 	}
@@ -340,7 +340,7 @@ func lockRoleOwningTenantIDTx(tx *gorm.DB, roleID uint64) (uint64, error) {
 	if err := tx.Table("system_role").
 		Select("tenant_id").
 		Clauses(clause.Locking{Strength: "UPDATE"}).
-		Where("id = ?", roleID).
+		Where(condIDEquals, roleID).
 		Scan(&role).Error; err != nil {
 		return 0, err
 	}
