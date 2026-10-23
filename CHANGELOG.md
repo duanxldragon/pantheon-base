@@ -6,6 +6,42 @@ Pantheon Base 方法追踪记录。方法论本体位于 `pantheon-harness`。
 
 ---
 
+## [pantheon-base-v0.17.4] — 2026-10-23 (IAM residual closeout)
+
+> v0.17.3's known-residual registered one item: the `system_role_data_scope` /
+> `system_role_permission` writes still read-then-insert. Re-checking the code against that claim
+> widened the list and found one item that had never been registered: user CSV import read and
+> wrote across tenants. This release closes all of them with real-MySQL regressions. The only
+> response change is that the loser of a duplicate-key race now receives the existing 409 instead
+> of a 500 carrying the driver's message. Schema stays at 29; no route, permission code, menu
+> seed or error-envelope shape changes.
+
+### Fixed
+
+- **User CSV import is tenant-scoped (P1).** All four lookups — same-name user, role key,
+  department path, post code — filtered by tenant, so an import can no longer update a same-named
+  user owned by another tenant or resolve a shared role key to another tenant's role id. Imported
+  users are stamped with the tenant from the request context (never from the CSV) and receive an
+  active membership in the same transaction; previously they landed in the platform namespace,
+  invisible to the importer and unable to log in.
+- **Duplicate-key races answer 409, not 500.** `CreateUser`, `CreateRole` and `UpdateRole`
+  pre-check their natural key, but the pre-check cannot be atomic. The loser now maps the UNIQUE
+  index violation through `database.IsDuplicateKey` to the conflict the pre-check would have
+  produced (`user.create.error.username_exists`, `role.key.exists`).
+- **Role grants are idempotent.** `grantTenantRolePermissions` and `grantTenantRoleMenus` insert in
+  batches with `ON CONFLICT DO NOTHING`, so two concurrent repair runs converge on the natural key
+  instead of failing the second writer with a duplicate-entry error.
+- **Backfill keeps tenant ownership and deduplicates.** `backfillRolePermissions` now joins
+  `system_role` for `tenant_id` and excludes soft-deleted roles; tenant-role permission rows were
+  previously written with `tenant_id = 0`. Seeds are deduplicated by
+  `(tenant_id, role_id, permission_key)` before the batch, so a permission key exposed by several
+  menus is inserted once.
+
+### Added
+
+- Real-MySQL regressions for cross-tenant import isolation, concurrent create and rename
+  conflicts, grant idempotency, and backfill tenant ownership plus deduplication.
+
 ## [pantheon-base-v0.17.3] — 2026-10-23 (post-publication review)
 
 > A reviewer pass compared the published v0.17.2 code and assets against its evidence packet and

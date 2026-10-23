@@ -12,12 +12,12 @@ The project is not intended to be just a login shell plus CRUD scaffolding. Its 
 
 | Item | Value |
 | --- | --- |
-| Current foundation release | [`pantheon-base-v0.17.3`](https://github.com/duanxldragon/pantheon-base/releases/tag/pantheon-base-v0.17.3) (with the four consumable assets) |
+| Current foundation release | [`pantheon-base-v0.17.4`](https://github.com/duanxldragon/pantheon-base/releases/tag/pantheon-base-v0.17.4) (with the four consumable assets) |
 | Shell/Harness baseline | `1.4.0` (see [VERSION](./VERSION) / [SHELL_VERSION.json](./SHELL_VERSION.json)) |
 | Deployment guide | [docs/DEPLOYMENT_GUIDE.md](./docs/DEPLOYMENT_GUIDE.md) (MySQL 8, Redis 7, migrations + runtime seed, health checks, telemetry, backup/restore, and schema-aware rollback) |
-| Changelog | [CHANGELOG.md](./CHANGELOG.md) / [RELEASE_NOTES_v0.17.3.md](./RELEASE_NOTES_v0.17.3.md) |
+| Changelog | [CHANGELOG.md](./CHANGELOG.md) / [RELEASE_NOTES_v0.17.4.md](./RELEASE_NOTES_v0.17.4.md) |
 
-Delivery status: v0.17.3 is the post-publication review patch. Its tag `pantheon-base-v0.17.3` carries all four consumable assets (tgz / tgz.sha256 / repo.tar / repo.tar.sha256), asserted by `Foundation Release Verify`. It puts the five findings from the v0.17.2 review into the next consumable asset: the release credential preflight now scans both `bundle/` and `repo.tar` and fails closed when the snapshot is missing (v0.17.2 scanned only the bundle, while the v0.17.0 residue shipped only in repo.tar; the published asset was scanned afterwards and is clean), the three evidence statements that did not match the code are corrected with an erratum, and the narrow-viewport tenant-picker smoke waits for the Arco popup to align with its trigger before measuring overflow. No runtime behaviour change; schema stays at 29 and no route, permission code, menu or error envelope changed.
+Delivery status: v0.17.4 is the IAM residual closeout patch. Its tag `pantheon-base-v0.17.4` carries all four consumable assets (tgz / tgz.sha256 / repo.tar / repo.tar.sha256), asserted by `Foundation Release Verify`. It closes the IAM residuals left by v0.17.3: the four user-CSV import lookups (same-name user, role key, department path, post code) are filtered by the caller's tenant, and imported users are stamped with `tenant_id` from the request context with an active membership written in the same transaction — previously a tenant-A import could update tenant B's same-named user, and created users landed in the platform namespace and could not log in. The loser of a `CreateUser` / `CreateRole` / `UpdateRole` duplicate-key race now receives the existing 409 instead of a 500, tenant role permission and menu grants use idempotent batch `ON CONFLICT DO NOTHING` writes, and the bootstrap backfill joins `system_role` for tenant ownership, excludes soft-deleted roles and deduplicates by natural key. Schema stays at 29; no route, permission code, menu seed or error envelope changed.
 
 ## Positioning
 

@@ -1,0 +1,82 @@
+{
+  "taskId": "2026-10-23-v0174-release-closeout",
+  "repo": "pantheon-base",
+  "executedAt": "2026-10-23T20:05:00+08:00",
+  "agent": {
+    "tool": "other",
+    "adapter": "qoder-agent"
+  },
+  "commands": [
+    {
+      "command": "git diff --stat pantheon-base-v0.17.3..HEAD",
+      "cwd": ".",
+      "status": "passed",
+      "details": "21 files changed, 1184 insertions, 53 deletions. Production files are confined to system/iam: user_export.go, user_helper.go, user_service.go, role_helper.go, role_service.go, tenant_provision.go. The rest are the new real-MySQL tests, the IAM residual packet and evidence, and STATUS/evidence updates from #416. No migration, route, workflow or frontend file changed between v0.17.3 and this release."
+    },
+    {
+      "command": "cd backend && go build ./... && go vet ./... && gofmt -l .",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "Exit 0. BUILD_OK, VET_OK, GOFMT_DONE with no files listed."
+    },
+    {
+      "command": "cd backend && set -a; . ../.env.test; set +a; PANTHEON_NODE_BIN=<node.exe> PANTHEON_TEST_DSN_REQUIRED=true PANTHEON_TEST_REDIS_REQUIRED=true go test -timeout 600s -count=1 ./...",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "Exit 0. 46 packages ok, 0 FAIL, 0 SKIP, 6 packages have no test files. Both required flags were set, so a missing MySQL or Redis would have failed instead of skipping. PANTHEON_NODE_BIN was pinned because exec.LookPath(\"node\") fails inside the test process in this shell."
+    },
+    {
+      "command": "cd backend && go test -count=1 -run TestImportUsersStaysInsideTheRequestTenant -v ./modules/system/iam/user",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "PASS in 2.45s on real MySQL. Two tenants share a username, department path, post code and role key; the tenant-A import creates A's user with A's ids and an active membership, leaves B's row untouched, and a second import updates only A's row."
+    },
+    {
+      "command": "cd backend && go test -count=1 -run TestBackfillRolePermissionsStampsTenantAndDeduplicates -v ./modules/system/iam/role",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "PASS in 1.98s on real MySQL. One row per natural key with the owning role's tenant stamped, nothing for the soft-deleted role, and a repeat backfill inserts nothing."
+    },
+    {
+      "command": "cd backend && go test -count=1 -run TestProvisionTenant_PermissionGrantsAreIdempotent -v ./modules/system/iam/tenant",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "PASS in 1.92s on real MySQL. The first provisioning writes the grants, a re-provision neither duplicates nor fails, and a manually deleted grant is restored by the next run."
+    },
+    {
+      "command": "cd backend && go test -count=1 -coverprofile=<tmp> -run TestConcurrentCreateUserMapsLoserToConflict ./modules/system/iam/user",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "ok 4.98s, coverage 6.6%. The coverprofile records user_service.go:441.35,443.4 with count 1, so the duplicate-key branch body executed: the loser of a four-way concurrent create returns the conflict instead of a driver 1062."
+    },
+    {
+      "command": "cd backend && go test -count=1 -coverprofile=<tmp> -run 'TestConcurrent(Create|Rename)RoleMapsLoserToConflict' ./modules/system/iam/role",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "ok 3.36s, coverage 14.6%. The coverprofile records role_service.go:376.35,378.4 and role_service.go:423.35,425.4 with count 1, covering both the create and the rename duplicate-key branches."
+    },
+    {
+      "command": "node scripts/frontmatter-check.mjs && node scripts/check-task-packet-template.mjs && node scripts/harness/check-task-packet.mjs --root . && node scripts/harness/check-structure-contract.mjs --root . --strict && node scripts/harness/check-generated.mjs --root . --strict && node scripts/harness/check-failure-registry.mjs --root . --strict",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Frontmatter: 347 docs checked. Task-packet template linked. Task packets (including 2026-10-23-v0174-release-closeout): all PASS. Structure: 0 findings across 2543 tracked files. Generated: 0 findings across 11 artifacts. Failure registry: 0 errors, 0 warnings."
+    }
+  ],
+  "knownGaps": [
+    "The race detector cannot start on this Windows host (TSan shadow-memory allocation, error code 87). Concurrency is covered by the real-MySQL contender tests; the race gate is left to CI on Linux.",
+    "Concurrent same-tenant ProvisionTenant calls can still collide while creating roles (read-then-insert) before reaching the idempotent grant code. Normal provisioning is serialized per tenant creation and repair runs are sequential.",
+    "replaceRolePermissions and replaceUserRoles still delete-then-insert; they do not pre-check and their inputs are deduplicated, so a conflict requires a concurrent writer on the same role/user, which is not a supported workflow.",
+    "The published v0.17.3 notes are immutable; the stale system_role_data_scope sentence is corrected forward in v0.17.4."
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-23-v0174-release-closeout/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-23-v0174-release-closeout/",
+    "summaryFile": ".harness/evidence/2026-10-23-v0174-release-closeout/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-23-v0174-release-closeout/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/VERSION_MANAGEMENT_GUIDE.md",
+      ".harness/evidence/2026-10-23-iam-residual-closeout/review.md"
+    ]
+  }
+}
