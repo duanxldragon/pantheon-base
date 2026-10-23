@@ -1,0 +1,129 @@
+{
+  "taskId": "2026-10-23-iam-residual-closeout",
+  "taskDoc": "docs/harness/tasks/2026-10-23-iam-residual-closeout.task.md",
+  "title": "Close the post-v0.17.3 IAM residuals: tenant-scoped user import, idempotent grants, and duplicate-key conflict shaping",
+  "goal": "Turn the v0.17.3 known-residual plus the unregistered import defects into checked code. User CSV import now resolves existing users, role keys, department paths and post codes inside the caller's tenant, stamps the new user with the request tenant and writes an active membership in the same transaction. Role and user create/rename paths map a lost UNIQUE-key race to the same 409 the pre-check returns. Provisioning and bootstrap permission/menu grants write through the unique index with ON CONFLICT DO NOTHING; the bootstrap backfill now joins system_role for tenant_id, skips soft-deleted roles and deduplicates repeated permission keys. No schema, route, permission code or seed changes.",
+  "primaryLayer": "platform",
+  "status": "completed",
+  "priority": "P1",
+  "type": "residual-closeout",
+  "estimatedComplexity": "medium",
+  "findings": [
+    "R1 (P1, user_export.go:161-174, user_export.go:372-404, user_helper.go:479-530): user CSV import was not tenant-scoped. loadUsersByUsername mapped every tenant's users, so a CSV row naming a user owned by another tenant updated that row; loadRoleIDsByKey/loadPostIDsByCode/BuildDeptPathMaps resolved shared keys to whichever row was scanned last. The create path also omitted tenant_id and the membership write, so an imported user landed in the platform namespace and could not log in.",
+    "R2 (P2, user_service.go:441, role_service.go:376, role_service.go:423): CreateUser/CreateRole/UpdateRole pre-checked key uniqueness and then inserted. Two concurrent callers both pass the check and the UNIQUE index rejects the loser, which surfaced the driver's Error 1062 as a 500 instead of the pre-check's 409.",
+    "R3 (P2, tenant_provision.go:684, tenant_provision.go:732): grantTenantRolePermissions and grantTenantRoleMenus read the existing keys then inserted one row at a time. Two repair runs that both miss a key make the loser fail on the composite key. Both now batch insert with clause.OnConflict{DoNothing:true}.",
+    "R4 (P2, role_helper.go:391-441): backfillRolePermissions selected role menus without joining system_role, so every backfilled permission row was stamped tenant_id = 0; it also used FirstOrCreate per menu and could seed the same (role, key) more than once. The select now joins system_role (excluding soft-deleted roles), deduplicates by natural key, and inserts with ON CONFLICT DO NOTHING.",
+    "R5 (P3, RELEASE_NOTES_v0.17.3.md:114): the published residual claims system_role_data_scope still pre-checks. upsertRoleDataScopePolicy already used clause.OnConflict; after this packet system_role_permission no longer pre-checks either. The published notes stay immutable and the correction is recorded here for the next release."
+  ],
+  "scope": {
+    "in": [
+      "Tenant-scoped user import lookups and tenant/membership writes for imported users",
+      "Duplicate-key conflict shaping on user, role create and role rename",
+      "Idempotent permission and menu grants in tenant provisioning",
+      "Tenant-stamped, deduplicated, conflict-tolerant role permission backfill",
+      "Real-MySQL regression tests for import isolation, create/rename races, grant idempotency and backfill ownership"
+    ],
+    "out": [
+      "Database schema or migrations (stays at 29)",
+      "Routes, permission codes, menu seeds and error envelopes",
+      "The published v0.17.3 tag and assets",
+      "Rewriting RELEASE_NOTES_v0.17.3.md in place"
+    ]
+  },
+  "acceptanceCriteria": [
+    "A tenant A import whose username/dept path/post code/role key also exist in tenant B creates tenant A's own user, binds tenant A's role/dept/post ids, writes an active membership and leaves tenant B's row untouched; a second import updates tenant A's row only.",
+    "Concurrent CreateUser, CreateRole and rename-to-one-key callers leave exactly one row and every loser receives a 409 conflict, never a driver 1062.",
+    "Re-provisioning a tenant neither duplicates permission grants nor fails, and restores a deleted grant.",
+    "Bootstrap backfill stamps the role's tenant, skips soft-deleted roles, keeps one row per natural key and is idempotent.",
+    "The duplicate-key branches are covered by the race tests (coverprofile hit count > 0).",
+    "gofmt/build/vet clean; full go test ./... against real MySQL and Redis passes, with any environment limitation recorded explicitly.",
+    "Governance checkers (docs frontmatter, task packet, structure, generated) pass."
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "permission-policy",
+    "portableFailureClass": "tenant-scope-escape / unique-key-race / non-idempotent-repair",
+    "ownerLayer": "consumer-repository",
+    "ratchetDecision": "test-added",
+    "coverageDimensions": [
+      "behaviour",
+      "runtime-quality",
+      "architecture-fitness"
+    ]
+  },
+  "expectedFiles": {
+    "create": [
+      "backend/modules/system/iam/user/user_import_tenant_test.go",
+      "backend/modules/system/iam/user/user_concurrency_test.go",
+      "backend/modules/system/iam/role/role_concurrency_test.go",
+      "backend/modules/system/iam/role/role_backfill_test.go",
+      "backend/modules/system/iam/tenant/tenant_provision_permissions_test.go",
+      "docs/harness/tasks/2026-10-23-iam-residual-closeout.task.md",
+      ".harness/tasks/2026-10-23-iam-residual-closeout/manifest.json",
+      ".harness/evidence/2026-10-23-iam-residual-closeout/summary.md",
+      ".harness/evidence/2026-10-23-iam-residual-closeout/review.md",
+      ".harness/evidence/2026-10-23-iam-residual-closeout/commands.json"
+    ],
+    "modify": [
+      "backend/modules/system/iam/user/user_export.go",
+      "backend/modules/system/iam/user/user_helper.go",
+      "backend/modules/system/iam/user/user_service.go",
+      "backend/modules/system/iam/role/role_helper.go",
+      "backend/modules/system/iam/role/role_service.go",
+      "backend/modules/system/iam/tenant/tenant_provision.go"
+    ],
+    "doNotTouch": [
+      "backend/pkg/database/migrations/**",
+      ".github/workflows/**",
+      "the published v0.17.3 tag and assets"
+    ]
+  },
+  "implementationNotes": [
+    "Tenant write ownership comes from the request context only; the CSV never carries tenant_id.",
+    "The unique index is the arbiter under concurrency; the pre-check stays as a fast path and the loser is shaped through database.IsDuplicateKey.",
+    "GORM's MySQL dialector renders OnConflict{DoNothing:true} as ON DUPLICATE KEY UPDATE <column>=<column> when a schema is known; both grant tables have composite unique keys.",
+    "backfillRolePermissions joins system_role explicitly because GORM does not apply the soft-delete scope to a raw JOIN.",
+    "The published v0.17.3 release notes are not rewritten; the stale residual statement is corrected in this packet for the next release notes."
+  ],
+  "verificationPlan": {
+    "go": [
+      "gofmt -l backend/modules/system/iam/user backend/modules/system/iam/role backend/modules/system/iam/tenant",
+      "go build ./...",
+      "go vet ./...",
+      "PANTHEON_TEST_DSN_REQUIRED=true go test ./... (MySQL/Redis from .env.test)",
+      "CGO_ENABLED=1 go test -race -p 1 ./...",
+      "go test -coverprofile=<file> -run TestConcurrentCreateUserMapsLoserToConflict ./modules/system/iam/user",
+      "go test -coverprofile=<file> -run TestConcurrentCreateRoleMapsLoserToConflict ./modules/system/iam/role"
+    ],
+    "targeted": [
+      "go test ./modules/system/iam/user -run TestImportUsersStaysInsideTheRequestTenant",
+      "go test ./modules/system/iam/user -run TestConcurrentCreateUserMapsLoserToConflict",
+      "go test ./modules/system/iam/role -run TestBackfillRolePermissionsStampsTenantAndDeduplicates",
+      "go test ./modules/system/iam/role -run 'TestConcurrent(Create|Rename)RoleMapsLoserToConflict'",
+      "go test ./modules/system/iam/tenant -run TestProvisionTenant_PermissionGrantsAreIdempotent"
+    ],
+    "governance": [
+      "npm run -s check:docs-frontmatter",
+      "npm run -s check:task-packet",
+      "npm run -s check:structure",
+      "npm run -s check:generated",
+      "node scripts/harness/check-failure-registry.mjs"
+    ]
+  },
+  "linkage": {
+    "taskId": "2026-10-23-iam-residual-closeout",
+    "taskManifest": ".harness/tasks/2026-10-23-iam-residual-closeout/manifest.json",
+    "assessment": "docs/harness/tasks/2026-10-23-iam-residual-closeout.task.md",
+    "openspecChange": "none",
+    "superpowersPlan": "none",
+    "evidenceDir": ".harness/evidence/2026-10-23-iam-residual-closeout/",
+    "summaryFile": ".harness/evidence/2026-10-23-iam-residual-closeout/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-23-iam-residual-closeout/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "RELEASE_NOTES_v0.17.3.md",
+      ".harness/evidence/2026-10-23-residual-closeout/review.md"
+    ]
+  }
+}

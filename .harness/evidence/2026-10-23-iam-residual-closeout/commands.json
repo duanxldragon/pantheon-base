@@ -1,0 +1,82 @@
+{
+  "taskId": "2026-10-23-iam-residual-closeout",
+  "repo": "pantheon-base",
+  "executedAt": "2026-10-23T18:38:00+08:00",
+  "agent": {
+    "tool": "other",
+    "adapter": "qoder-agent"
+  },
+  "commands": [
+    {
+      "command": "cd backend && go build ./... && go vet ./... && gofmt -l .",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "Exit 0. BUILD_OK, VET_OK, GOFMT_DONE with no files listed: the whole module builds, vets clean and is gofmt-formatted."
+    },
+    {
+      "command": "cd backend && set -a; . ../.env.test; set +a; PANTHEON_NODE_BIN=<node.exe> PANTHEON_TEST_DSN_REQUIRED=true PANTHEON_TEST_REDIS_REQUIRED=true go test -timeout 600s -count=1 ./...",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "Exit 0. 46 packages ok, 0 FAIL and 0 SKIP across 52 listed packages (6 have no test files). Both required flags were set, so a missing DSN or Redis would have failed instead of skipping. Notable durations: modules/auth/login 195.9s, modules/system/i18n 236.0s, modules/system/iam/role 83.9s, modules/system/iam/tenant 128.6s, modules/system/iam/user 101.3s, pkg/database 130.9s, modules/lowcode/dynamicmodule 34.8s. PANTHEON_NODE_BIN was pinned because exec.LookPath(\"node\") failed inside the test process in this shell, which had made the dynamicmodule/scaffold tests report module.generate.server_export_failed before any test logic ran."
+    },
+    {
+      "command": "cd backend && go test -count=1 -run TestImportUsersStaysInsideTheRequestTenant -v ./modules/system/iam/user",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "PASS 0.72s on real MySQL. Two tenants share a username, department path, post code and role key; the tenant-A import creates tenant A's user with tenant-A department/post/role ids and an active membership, leaves tenant B's row untouched, and a second import updates only tenant A's row."
+    },
+    {
+      "command": "cd backend && go test -count=1 -run TestBackfillRolePermissionsStampsTenantAndDeduplicates -v ./modules/system/iam/role",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "PASS 0.57s on real MySQL. A platform role and a tenant-700 role produce one row per natural key with the role's tenant stamped, the soft-deleted role produces none, and a second backfill inserts nothing."
+    },
+    {
+      "command": "cd backend && go test -count=1 -run TestProvisionTenant_PermissionGrantsAreIdempotent -v ./modules/system/iam/tenant",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "PASS 0.63s on real MySQL. First provisioning writes four grants for tenant 615, re-provisioning neither duplicates nor fails, and a manually deleted grant is restored by the next run."
+    },
+    {
+      "command": "cd backend && go test -count=1 -coverprofile=<tmp> -run TestConcurrentCreateUserMapsLoserToConflict ./modules/system/iam/user",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "ok 0.63s, coverage 6.6%. The coverprofile records user_service.go:441.35,443.4 with count 1, so the duplicate-key branch body executed: the loser of a four-way concurrent create returns the conflict instead of a driver 1062."
+    },
+    {
+      "command": "cd backend && go test -count=1 -coverprofile=<tmp> -run 'TestConcurrent(Create|Rename)RoleMapsLoserToConflict' ./modules/system/iam/role",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "ok 1.08s, coverage 14.6%. The coverprofile records role_service.go:376.35,378.4 and role_service.go:423.35,425.4 with count 1, covering both the create and the rename duplicate-key branches."
+    },
+    {
+      "command": "cd backend && CGO_ENABLED=1 go test -race -count=1 ./modules/system/iam/user/... ./modules/system/iam/role/... ./modules/system/iam/tenant/...",
+      "cwd": "backend",
+      "status": "not-run",
+      "details": "No test body ran. ThreadSanitizer aborted during runtime init with `failed to allocate 0x000006140000 (...) error code: 87` for every package. The same failure occurs with -p 1 and with CC pinned to D:/msys64/mingw64/bin/gcc.exe, so it is a host limitation of this Windows session, not a race report or a compile error. CI (.github/workflows/ci.yml:167 and quality.yml:383) runs go test -race on Linux."
+    },
+    {
+      "command": "node scripts/frontmatter-check.mjs && node scripts/check-task-packet-template.mjs && node scripts/harness/check-task-packet.mjs --root . && node scripts/harness/check-structure-contract.mjs --root . --strict && node scripts/harness/check-generated.mjs --root . --strict && node scripts/harness/check-failure-registry.mjs --root . --strict",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Frontmatter: 346 docs checked, 253 with frontmatter. Task-packet template linked. Task packets (including 2026-10-23-iam-residual-closeout): all PASS. Structure: 0 findings across 2533 tracked files. Generated: 0 findings across 11 artifacts. Failure registry: 1 file, 0 errors, 0 warnings."
+    }
+  ],
+  "knownGaps": [
+    "The race detector cannot start on this Windows host (TSan shadow-memory allocation, error code 87). Concurrency is covered by the real-MySQL contender tests above; the race gate is left to CI on Linux.",
+    "Concurrent same-tenant ProvisionTenant calls can still collide while creating roles (read-then-insert) before reaching the now-idempotent grant code. Normal provisioning is serialized per tenant creation and repair runs are sequential.",
+    "replaceRolePermissions and replaceUserRoles still delete-then-insert; they do not pre-check and their inputs are deduplicated, so a conflict requires a concurrent writer on the same role/user, which is not a supported workflow.",
+    "The published v0.17.3 release notes are immutable; the stale residual sentence is corrected forward in this packet for the next release notes."
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-23-iam-residual-closeout/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-23-iam-residual-closeout/",
+    "summaryFile": ".harness/evidence/2026-10-23-iam-residual-closeout/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-23-iam-residual-closeout/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "RELEASE_NOTES_v0.17.3.md",
+      ".harness/evidence/2026-10-23-residual-closeout/review.md"
+    ]
+  }
+}

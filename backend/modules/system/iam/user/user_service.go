@@ -435,6 +435,12 @@ func (s *UserService) CreateUser(req *UserCreateReq) (*UserListResp, error) {
 		return ensureTenantMembership(tx, user.TenantID, user.ID)
 	})
 	if err != nil {
+		// Username uniqueness is pre-checked, but the check cannot be atomic;
+		// the loser of a concurrent create hits the UNIQUE index. Return the
+		// same conflict the pre-check reports rather than a 500.
+		if database.IsDuplicateKey(err) {
+			return nil, common.NewConflict("user.create.error.username_exists")
+		}
 		return nil, err
 	}
 

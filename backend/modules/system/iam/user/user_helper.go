@@ -474,13 +474,15 @@ func (s *UserService) loadPostCodes(users []SystemUser) (map[uint64]string, erro
 	return result, nil
 }
 
+// loadPostIDsByCode resolves post codes inside the caller's tenant: the code is
+// unique per tenant, so an unscoped map would hand back another tenant's id.
 func (s *UserService) loadPostIDsByCode() (map[string]uint64, error) {
 	type row struct {
 		ID       uint64 `gorm:"column:id"`
 		PostCode string `gorm:"column:post_code"`
 	}
 	var rows []row
-	if err := s.db.Table("system_post").Select("id, post_code").Find(&rows).Error; err != nil {
+	if err := s.scoped(s.db.Table("system_post")).Select("id, post_code").Find(&rows).Error; err != nil {
 		return nil, err
 	}
 	result := make(map[string]uint64, len(rows))
@@ -490,6 +492,9 @@ func (s *UserService) loadPostIDsByCode() (map[string]uint64, error) {
 	return result, nil
 }
 
+// loadRoleIDsByKey resolves role keys inside the caller's tenant. Role keys are
+// unique per tenant (contract §4); an unscoped map keeps whichever tenant
+// scanned last and would assign that tenant's role id to this tenant's user.
 func (s *UserService) loadRoleIDsByKey() (map[string]uint64, error) {
 	type row struct {
 		ID      uint64 `gorm:"column:id"`
@@ -497,7 +502,7 @@ func (s *UserService) loadRoleIDsByKey() (map[string]uint64, error) {
 		Status  int    `gorm:"column:status"`
 	}
 	var rows []row
-	if err := s.db.Table("system_role").Select("id, role_key, status").Where("deleted_at IS NULL").Find(&rows).Error; err != nil {
+	if err := s.scoped(s.db.Table("system_role")).Select("id, role_key, status").Where("deleted_at IS NULL").Find(&rows).Error; err != nil {
 		return nil, err
 	}
 	result := make(map[string]uint64, len(rows))
@@ -509,9 +514,12 @@ func (s *UserService) loadRoleIDsByKey() (map[string]uint64, error) {
 	return result, nil
 }
 
+// loadUsersByUsername resolves import rows against this tenant's users only.
+// The username is unique per tenant, so an unscoped map let a tenant's CSV
+// update a same-named user owned by another tenant.
 func (s *UserService) loadUsersByUsername() (map[string]*SystemUser, error) {
 	var rows []SystemUser
-	if err := s.db.Find(&rows).Error; err != nil {
+	if err := s.scoped(s.db).Find(&rows).Error; err != nil {
 		return nil, err
 	}
 	result := make(map[string]*SystemUser, len(rows))

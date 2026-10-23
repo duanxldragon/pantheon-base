@@ -369,6 +369,13 @@ func (s *RoleService) CreateRole(req *RoleCreateReq) (*RoleListResp, error) {
 		}
 		return nil
 	}); err != nil {
+		// The key pre-check cannot be atomic: two callers carrying the same key
+		// both pass it and the loser only finds out at the UNIQUE index. Answer
+		// the loser with the conflict the pre-check would have produced instead
+		// of a 500 carrying the driver message.
+		if database.IsDuplicateKey(err) {
+			return nil, common.NewConflict("role.key.exists")
+		}
 		return nil, err
 	}
 
@@ -411,6 +418,11 @@ func (s *RoleService) UpdateRole(roleID uint64, req *RoleUpdateReq) (*RoleListRe
 	if err := s.db.Transaction(func(tx *gorm.DB) error {
 		return s.updateRoleInTransaction(tx, &role, oldRoleKey, menuIDs, permissionKeys, dataScope)
 	}); err != nil {
+		// A rename that loses the per-tenant key race is the same conflict the
+		// pre-check reports; do not surface the driver's duplicate-entry error.
+		if database.IsDuplicateKey(err) {
+			return nil, common.NewConflict("role.key.exists")
+		}
 		return nil, err
 	}
 
