@@ -1,7 +1,7 @@
 # Pantheon Base - Harness 任务状态
 
 **最后更新**: 2026-10-24
-**当前版本**: v0.17.5 发布进行中（发布材料已合入；reduced-motion 修复合并、`Release Gate Summary` 转绿后切 tag）
+**当前版本**: v0.17.5 已发布（tag `pantheon-base-v0.17.5`，目标提交 `ed636967`，四件资产与 `Foundation Release Verify` 已核验）
 
 ## v0.17.5 发布（2026-10-24）
 
@@ -30,8 +30,13 @@ v0.17.4 发布后登记了 5 项 IAM 残留，修复随 PR #420 合入主干（`
 - **验证**：全量真库套件 46 包 ok / 0 FAIL / 0 SKIP；新增用例在修复前分别以唯一键重复、
   NOWAIT 探针未报错、`elements differ` 失败；前端 Prettier、UI/Shell 视觉契约、`vite build`
   通过，Chromium 实测 reduce 下 `transition-duration` 为 `0s`、默认 `0.18s`；SonarCloud
-  Quality Gate OK（New Code Duplication 0.0%），既有 `css:S9440` 两处在代码层修复，待 main
-  重新分析后清零。
+  Quality Gate OK（New Code Duplication 0.0%）；修复合并后 SonarCloud 对 `main@ed636967`
+  的分析未解决 issue 为 0，`css:S9440` 两处已关闭。
+- **发布事实**：PR #422 合并为 `ed636967`，`Release Gate` run `40046885713` 成功；annotated tag
+  `pantheon-base-v0.17.5`（tag object `42495b25`）指向 `ed636967`，GitHub release 于
+  2026-10-24T01:13:53Z 发布，四件资产齐备（tgz `33b6e78a…`、repo.tar `788bd97f…`）；release
+  secret scan 扫描 3126 个文件为 clean，`check-release-assets` 一致，`Foundation Release
+  Verify` run `40048834275` 成功。
 
 ## v0.17.4 发布（2026-10-23）
 

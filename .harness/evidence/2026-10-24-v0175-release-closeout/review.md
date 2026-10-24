@@ -1,8 +1,8 @@
 # Review — 2026-10-24 v0.17.5 release closeout
 
-Reviewed against `main` at `d36c63e9` (the squash merge of the release-material PR #421), with
-`pantheon-base-v0.17.4` as the previous release tag. The release target moves to the merge of the
-reduced-motion fix, because Release Gate was red on `d36c63e9`.
+Reviewed against `main` at `ed636967` (the squash merge of the reduced-motion PR #422), with
+`pantheon-base-v0.17.4` as the previous release tag. Release materials merged earlier as `d36c63e9`
+(PR #421); the release target is `ed636967` because Release Gate was red on `d36c63e9`.
 
 ## Scope audit
 
@@ -44,19 +44,22 @@ No blocking finding in the release content. Residual risks carried forward:
   rather than a per-role upsert. Provisioning is serialised per tenant creation by design.
 - **R4 (P3, immutable)**: published v0.17.0–v0.17.4 tags and assets are not rewritten. The v0.17.3
   notes correction exists in the repository file and the mutable release body only.
-- **R5 (P3, fixed)**: the two `css:S9440` findings blocked Release Gate on `d36c63e9`. They are
-  fixed with media-query guards in two CSS files; the SonarCloud rule and project configuration are
-  unchanged, and resolution depends on the next analysis of `main`.
+- **R5 (P3, fixed)**: the two `css:S9440` findings blocked Release Gate on `d36c63e9`. They were
+  fixed with media-query guards in two CSS files (PR #422, merged as `ed636967`); the SonarCloud rule
+  and project configuration are unchanged. SonarCloud's analysis of `main@ed636967` reports 0
+  unresolved issues and a green quality gate.
 
 ## Verdict
 
 Approve. The release content is exactly what #420 merged plus the reduced-motion guard required to
 clear the release gate; the version material matches it, local verification is green, and no schema,
-workflow or backend contract change is introduced by this packet. The gate sequence is recorded: the
-release-material merge `d36c63e9` failed once on a `proxy.golang.org` download flake (rerun passed)
-and once on the two pre-existing Sonar issues, which the reduced-motion PR fixes. Publication gates
-(`Release Gate Summary` on the final merge commit, four assets, `Foundation Release Verify`) are
-decided by CI after the tag is cut and are recorded in `commands.json`.
+workflow or backend contract change is introduced by this packet.
+
+Release Gate passed on `ed636967` (run `40046885713`); SonarCloud reports 0 unresolved issues on
+main at that commit. The release was cut and published from `ed636967` on 2026-10-24: annotated tag
+`pantheon-base-v0.17.5` (object `42495b25`), four assets with verified checksums,
+`check-release-assets` consistent, and `Foundation Release Verify` (run `40048834275`) succeeded.
+Details and the command trail are in `summary.md` and `commands.json`.
 
 ## Machine Readable
 

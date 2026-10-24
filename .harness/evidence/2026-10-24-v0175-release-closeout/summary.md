@@ -92,8 +92,15 @@ reduced-motion fix, not `d36c63e9`.
 
 ## Publication state
 
-Prepared, not yet published. Previous release is `pantheon-base-v0.17.4` (commit `ac813f6f`, tag
-object `b1e8fc4b`). Release materials merged as `d36c63e9` (PR #421); the release target becomes the
-merge commit of the reduced-motion fix because Release Gate was red on `d36c63e9`. Publication facts
-(tag object, asset checksums, Release Gate and Foundation Release Verify runs) are appended to this
-file and `commands.json` in the facts commit after the tag is cut.
+Published on 2026-10-24T01:13:53Z. Previous release is `pantheon-base-v0.17.4` (commit
+`ac813f6f`, tag object `b1e8fc4b`). Release materials merged as `d36c63e9` (PR #421); the
+reduced-motion fix merged as `ed636967` (PR #422), and that commit is the release target:
+
+- Tag `pantheon-base-v0.17.5`, annotated tag object `42495b25`, target commit `ed636967`.
+- Four assets published: `foundation-release-pantheon-base-v0.17.5.tgz`
+  (`33b6e78a…`), its `.sha256`, `repo.tar` (`788bd97f…`), its `.sha256`.
+- `Release Gate` run `40046885713` success on `ed636967`; SonarCloud analysed `main@ed636967`
+  with 0 unresolved issues and a green quality gate.
+- Release secret scan clean across 3126 files; `check-release-assets` reports local and remote
+  assets consistent.
+- `Foundation Release Verify` run `40048834275` on the tag: success.

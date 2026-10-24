@@ -7,7 +7,7 @@
   "dependencyLayers": [
     "system/iam"
   ],
-  "status": "in-progress",
+  "status": "completed",
   "priority": "P1",
   "type": "release-closeout",
   "estimatedComplexity": "small",
@@ -158,6 +158,22 @@
       "repo.tar",
       "repo.tar.sha256"
     ],
-    "state": "prepared"
+    "state": "published",
+    "publishedAt": "2026-10-24T01:13:53Z",
+    "tagObject": "42495b253063885278cde62f884e57deb957e8cd",
+    "targetCommit": "ed636967d28cd028b1c97c8df052f8f84df76af7",
+    "assetChecksums": {
+      "foundation-release-pantheon-base-v0.17.5.tgz": "33b6e78a78f029f3c562793b450db6cf15d6a9418daf2c87aabe2f43a456541e",
+      "repo.tar": "788bd97fa6b144f5791830ea94d12f680b00b40a35f75507be6d3388f152938d"
+    },
+    "verification": {
+      "sonarMainAnalysis": "ed636967, 0 unresolved issues, quality gate OK",
+      "releaseGate": "40046885713 success",
+      "sonarCloudGate": "pass (0 unresolved issues on main)",
+      "releaseSecretScan": "clean (3126 files scanned)",
+      "releaseAssets": "check-release-assets: local and remote assets consistent",
+      "foundationReleaseVerifyRun": "40048834275",
+      "foundationReleaseVerify": "success"
+    }
   }
 }

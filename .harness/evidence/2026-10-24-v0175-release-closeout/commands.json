@@ -72,15 +72,56 @@
       "cwd": ".",
       "status": "passed",
       "details": "Release Gate failed on d36c63e9 twice. First: `PR Smoke Modules` failed downloading google.golang.org/grpc@v1.83.2 from proxy.golang.org with `stream error ... INTERNAL_ERROR`; rerunning the failed job in run 40042446272 passed on attempt 2, so this was a network flake. Second, after the rerun: `SonarCloud Gate` reported `Release blocked: 2 unresolved SonarCloud issue(s)` while the quality gate itself was OK. Status refers to the inspection commands, not to the gate outcome."
+    },
+    {
+      "command": "node scripts/create-pr.mjs --title \"fix(frontend): respect prefers-reduced-motion in org chart and top menu\" --body-file .harness/evidence/2026-10-24-v0175-release-closeout/pr-body-reduced-motion.md",
+      "cwd": ".",
+      "status": "passed",
+      "details": "PR #422 created after `check-pr-governance` accepted the body. Branch `fix/reduced-motion-2026-10-24`, base `d36c63e9`, head `4dbeec60`."
+    },
+    {
+      "command": "gh pr checks 422; gh pr merge 422 --squash --delete-branch",
+      "cwd": ".",
+      "status": "passed",
+      "details": "All reported checks completed with no failure: Quality Gates, Security Gates, Backend Tests (go test -race on Linux), Unit Tests, Coverage Gate, CI Summary, CodeQL, CodeQL Security, SonarCloud Code Analysis, Frontend Contract, Frontend Unit Tests, Duplication Gate, PR Smoke Modules, Smoke Sanity, Secret Scan and the boundary/governance jobs; Draft PR Handler and PR Smoke Core (Optional) skipped. SonarCloud reported 0 unresolved issues for pullRequest=422 with quality gate OK. Squash-merged as `ed636967`; remote branch deleted."
+    },
+    {
+      "command": "curl -s \"https://sonarcloud.io/api/issues/search?componentKeys=duanxldragon_pantheon-base&branch=main&resolved=false&ps=50\" and .../qualitygates/project_status?branch=main",
+      "cwd": ".",
+      "status": "passed",
+      "details": "After the merge, SonarCloud analysed main at `ed636967` (analysis 2026-10-24T00:49:54Z): unresolved issues total 0 and project status OK. Both `css:S9440` issues are gone; no rule or suppression change was made."
+    },
+    {
+      "command": "gh run view 40046885713 (Release Gate on ed636967)",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Conclusion success. Jobs: CodeQL Alerts, Dependabot Alerts, Open PRs, Candidate Checks, SonarCloud Gate and Release Gate Summary all success."
+    },
+    {
+      "command": "node scripts/foundation-release/cut-foundation-release.mjs --release-version pantheon-base-v0.17.5 --release-line release/0.17 --base-commit ed636967d28cd028b1c97c8df052f8f84df76af7 --release-notes \"$(cat RELEASE_NOTES_v0.17.5.md)\" --upgrade-notes \"$(cat <temp>/v0175-upgrade-notes.md)\" --consumer-impact \"$(cat <temp>/v0175-consumer-impact.md)\"",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Wrote dist/foundation-releases/pantheon-base-v0.17.5 with the manifest, notes, 23,293,403-byte tgz and 38,338,560-byte repo.tar. The first invocation passed file paths instead of note text and the generated notes contained the literal path; it was re-run with the file contents as above and the recorded files are 162 / 31 / 27 lines."
+    },
+    {
+      "command": "node scripts/foundation-release/check-release-secrets.mjs --release-version pantheon-base-v0.17.5 && node scripts/foundation-release/publish-foundation-release.mjs --release-version pantheon-base-v0.17.5 --release-line release/0.17 --base-commit ed636967d28cd028b1c97c8df052f8f84df76af7 --repo duanxldragon/pantheon-base && node scripts/foundation-release/check-release-assets.mjs --release-version pantheon-base-v0.17.5 --repo duanxldragon/pantheon-base",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Secret scan clean across 3126 files. Publish created annotated tag `pantheon-base-v0.17.5` (tag object 42495b25) on `ed636967` and the GitHub release with four assets. check-release-assets: local bundle and remote release carry all four required assets; tgz sha256 33b6e78a…, repo.tar sha256 788bd97f…."
+    },
+    {
+      "command": "gh api repos/duanxldragon/pantheon-base/releases/tags/pantheon-base-v0.17.5 --jq '{created_at,published_at,tag_name,target_commitish,html_url}'; gh run watch 40048834275 --interval 20 --exit-status",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Release published at 2026-10-24T01:13:53Z against `ed636967`. `Foundation Release Verify` run 40048834275: Verify Release Assets and Foundation Release Verify Summary both success."
     }
   ],
   "knownGaps": [
-    "ThreadSanitizer cannot start on this Windows host (shadow-memory allocation, error code 87). The race gate is CI quality.yml backend-tests (go test -race ./...) on Linux; runs 39969299263 and 39970863908 passed on head 973f5be2, and the release PR runs it again.",
+    "ThreadSanitizer cannot start on this Windows host (shadow-memory allocation, error code 87). The race gate is CI quality.yml backend-tests (go test -race ./...) on Linux; earlier runs 39969299263 and 39970863908 passed on head 973f5be2, PR #422's Backend Tests passed in run 40045623883, and the release target ed636967 passed Backend Tests in run 40046885667.",
     "Platform-default copy serialisation depends on the tenants row lock because system_dict_item has no unique key; the dependency is exercised by the NOWAIT regression but is not defence in depth.",
     "Concurrent same-tenant ProvisionTenant role creation is serialised by the tenant row lock rather than a per-role upsert.",
     "Published v0.17.0 through v0.17.4 tags and assets are immutable; the v0.17.3 notes correction exists only in the repository file and the mutable release body.",
-    "SonarCloud reported two unresolved css:S9440 issues on main when Release Gate ran on d36c63e9 (frontend/src/assets/list-page.css:1541 and frontend/src/core/layout/index.css:785, both created 2026-05-11). The fixing PR moves the transitions under @media (prefers-reduced-motion: no-preference) without changing the rule or project configuration; resolution depends on SonarCloud analysing the new main commit, which is decided by CI.",
-    "Publication facts (tag object, asset checksums, Release Gate and Foundation Release Verify runs) are appended after the tag is cut."
+    "SonarCloud reported two unresolved css:S9440 issues on main when Release Gate ran on d36c63e9 (frontend/src/assets/list-page.css:1541 and frontend/src/core/layout/index.css:785, both created 2026-05-11). The fixing PR #422 moved the transitions under @media (prefers-reduced-motion: no-preference) without changing the rule or project configuration; main at ed636967 now reports 0 unresolved issues."
   ],
   "linkage": {
     "taskManifest": ".harness/tasks/2026-10-24-v0175-release-closeout/manifest.json",
