@@ -37,6 +37,11 @@ Pantheon Base 方法追踪记录。方法论本体位于 `pantheon-harness`。
 - **v0.17.3 notes corrected forward (P3).** A dated correction block is appended to
   `RELEASE_NOTES_v0.17.3.md` and the mutable GitHub release body. The published tag and its assets
   stay immutable.
+- **Reduced-motion preference respected (P3).** The org-chart card and top-menu item transitions in
+  `frontend/src/assets/list-page.css` and `frontend/src/core/layout/index.css` are declared inside
+  `@media (prefers-reduced-motion: no-preference)`. Default rendering is unchanged; users who ask
+  for reduced motion no longer get the 0.18s transitions. This clears the two unresolved SonarCloud
+  `css:S9440` issues that were blocking the release gate.
 
 ### Added
 

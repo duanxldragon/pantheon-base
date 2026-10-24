@@ -48,6 +48,30 @@
       "cwd": ".",
       "status": "passed",
       "details": "Frontmatter: 349 docs checked, 256 with frontmatter. Task-packet template linked. Task packets: 54 files, 0 errors, 40 pre-existing warnings about historical packets. Structure: 0 findings across 2557 tracked files. Generated: 0 findings across 11 artifacts. Failure registry: 0 errors, 0 warnings."
+    },
+    {
+      "command": "cd frontend && node node_modules/prettier/bin/prettier.cjs --check src/assets/list-page.css src/core/layout/index.css",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "\"All matched files use Prettier code style!\". `npx prettier` cannot run on this host (`'\"node\"' is not recognized`), so the binary is invoked through the Node executable directly."
+    },
+    {
+      "command": "cd frontend && node ./scripts/check-ui-contract.mjs && node ./scripts/check-shell-visual-contract.mjs && node node_modules/vite/bin/vite.js build",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "\"UI contract check: 0 finding(s) across 263 file(s)\", \"Shell visual contract passed.\", and the vite production build finished with \"✓ built in 692ms\"."
+    },
+    {
+      "command": "node <temp>/v0175-motion-check.mjs (Playwright Chromium, loads dist CSS over file://, reads computed transition-duration under each reducedMotion context)",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "no-preference: card \"0.18s, 0.18s, 0.18s\" (border-color, box-shadow, transform), menu \"0.18s, 0.18s, 0.18s, 0.18s\" (border-color, background, color, box-shadow). reduce: card \"0s\" and menu \"0s\". A first attempt used page.setContent with file:// stylesheet links; the sheets did not load from about:blank and every duration read 0s, so it was discarded and the file-based navigation above is the recorded result."
+    },
+    {
+      "command": "gh run view 40042446506 --log-failed (Release Gate on d36c63e9) and gh run view 40042446272 (Code Quality Gates on the same commit)",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Release Gate failed on d36c63e9 twice. First: `PR Smoke Modules` failed downloading google.golang.org/grpc@v1.83.2 from proxy.golang.org with `stream error ... INTERNAL_ERROR`; rerunning the failed job in run 40042446272 passed on attempt 2, so this was a network flake. Second, after the rerun: `SonarCloud Gate` reported `Release blocked: 2 unresolved SonarCloud issue(s)` while the quality gate itself was OK. Status refers to the inspection commands, not to the gate outcome."
     }
   ],
   "knownGaps": [
@@ -55,6 +79,7 @@
     "Platform-default copy serialisation depends on the tenants row lock because system_dict_item has no unique key; the dependency is exercised by the NOWAIT regression but is not defence in depth.",
     "Concurrent same-tenant ProvisionTenant role creation is serialised by the tenant row lock rather than a per-role upsert.",
     "Published v0.17.0 through v0.17.4 tags and assets are immutable; the v0.17.3 notes correction exists only in the repository file and the mutable release body.",
+    "SonarCloud reported two unresolved css:S9440 issues on main when Release Gate ran on d36c63e9 (frontend/src/assets/list-page.css:1541 and frontend/src/core/layout/index.css:785, both created 2026-05-11). The fixing PR moves the transitions under @media (prefers-reduced-motion: no-preference) without changing the rule or project configuration; resolution depends on SonarCloud analysing the new main commit, which is decided by CI.",
     "Publication facts (tag object, asset checksums, Release Gate and Foundation Release Verify runs) are appended after the tag is cut."
   ],
   "linkage": {

@@ -1,7 +1,7 @@
 # Pantheon Base - Harness 任务状态
 
 **最后更新**: 2026-10-24
-**当前版本**: v0.17.5 发布准备中（版本材料 PR 合入后按 `Release Gate Summary` 切 tag）
+**当前版本**: v0.17.5 发布进行中（发布材料已合入；reduced-motion 修复合并、`Release Gate Summary` 转绿后切 tag）
 
 ## v0.17.5 发布（2026-10-24）
 
@@ -21,11 +21,17 @@ v0.17.4 发布后登记了 5 项 IAM 残留，修复随 PR #420 合入主干（`
   的 Backend Tests 在最终提交上通过 `go test -race ./...`（Linux、MySQL 8、Redis）。
 - **v0.17.3 说明勘误（P3）**：仓库文件与可变 GitHub release body 追加带日期的更正块；已发布
   tag 与资产保持不可变。
-- **范围**：无 schema 变更（仍为 29）、无路由/权限码/菜单 seed/错误信封变化；竞争下的锁等待
-  超时沿用既有事务错误，不新增响应形状。
+- **reduced-motion 门禁阻塞（P3）**：发布材料合并后 `Release Gate Summary` 被 SonarCloud
+  `css:S9440` 的两个既有未解决 issue 拦下。组织架构卡片与顶部菜单的 `transition` 移入
+  `@media (prefers-reduced-motion: no-preference)`，默认视觉不变、偏好减少动效的用户不再触发
+  过渡；规则与 Sonar 配置未改，issue 在代码层清零。
+- **范围**：无 schema 变更（仍为 29）、无路由/权限码/菜单 seed/错误信封变化；前端只增加媒体
+  查询守卫。竞争下的锁等待超时沿用既有事务错误，不新增响应形状。
 - **验证**：全量真库套件 46 包 ok / 0 FAIL / 0 SKIP；新增用例在修复前分别以唯一键重复、
-  NOWAIT 探针未报错、`elements differ` 失败；SonarCloud Quality Gate OK（New Code
-  Duplication 0.0%，0 open issues）。
+  NOWAIT 探针未报错、`elements differ` 失败；前端 Prettier、UI/Shell 视觉契约、`vite build`
+  通过，Chromium 实测 reduce 下 `transition-duration` 为 `0s`、默认 `0.18s`；SonarCloud
+  Quality Gate OK（New Code Duplication 0.0%），既有 `css:S9440` 两处在代码层修复，待 main
+  重新分析后清零。
 
 ## v0.17.4 发布（2026-10-23）
 

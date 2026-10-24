@@ -1538,10 +1538,15 @@ body
   border-radius: var(--radius-md);
   background: var(--panel-bg-solid);
   padding: var(--space-md-plus);
-  transition:
-    border-color 0.18s ease,
-    box-shadow 0.18s ease,
-    transform 0.18s ease;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .org-chart__dept-card {
+    transition:
+      border-color 0.18s ease,
+      box-shadow 0.18s ease,
+      transform 0.18s ease;
+  }
 }
 
 .org-chart__dept-card:hover,

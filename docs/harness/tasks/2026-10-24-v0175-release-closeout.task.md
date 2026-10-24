@@ -37,17 +37,23 @@ v0.17.4 发布后登记了 5 项 IAM 残留。修复已随 PR #420 合入主干�
 5. **race 证据与 v0.17.3 说明（P2/P3）**：本机 Windows TSan 无法启动（error 87），race 门禁
    改由 CI Linux 的 `go test -race ./...` 提供权威证据；已发布 v0.17.3 notes 中关于
    `system_role_data_scope` 的过期表述在仓库文件与可变 release body 中以前向勘误更正。
+6. **reduced-motion 门禁阻塞（P3）**：发布材料合并后 `Release Gate Summary` 被 SonarCloud
+   `css:S9440` 的 2 个既有未解决 issue 拦下（`list-page.css` 组织架构卡片、`layout/index.css`
+   顶部菜单的 `transition` 未受 `prefers-reduced-motion` 保护）。按「规则不动、在代码层修复」
+   处理：两处 `transition` 移入 `@media (prefers-reduced-motion: no-preference)`，默认视觉与
+   时长不变，偏好减少动效的用户不再触发过渡。
 
-本发布无 schema 变更（仍为 29），无路由、权限码、菜单 seed 或错误信封变化。竞争下的锁等待
-超时沿用既有事务错误，不新增响应形状。
+本发布无 schema 变更（仍为 29），无路由、权限码、菜单 seed 或错误信封变化；前端只增加媒体
+查询守卫，不改变默认渲染。竞争下的锁等待超时沿用既有事务错误，不新增响应形状。
 
 ## Primary Layer
 
 platform
 
 代码改动集中在 `system/iam/tenant`（provisioning 与默认拷贝）、`system/iam/role`
-（replace 父行锁与历史行修复）、`system/iam/user`（replace 父行锁）；本包只发布已合入的
-修复并补齐版本材料。
+（replace 父行锁与历史行修复）、`system/iam/user`（replace 父行锁）；本包发布已合入的这些
+修复、补齐版本材料，并在前端补两处 reduced-motion 媒体查询守卫以清零 SonarCloud 未解决
+issue、解除发布门禁阻塞。
 
 ## Workspace Context
 
@@ -66,6 +72,7 @@ platform
 - `system/iam/role`：`role_helper.go`（父行锁、历史权限行修复）。
 - `system/iam/user`：`user_helper.go`（父行锁）。
 - `backend/pkg/testmysql/locking.go`：共享 NOWAIT 探针与串行化写入测试脚手架。
+- `frontend`：`src/assets/list-page.css`、`src/core/layout/index.css`（reduce-motion 守卫）。
 - 文档层：`CHANGELOG.md`、`RELEASE_NOTES_v0.17.5.md`、`README(.en).md`、
   `.harness/STATUS.md`、`VERSION`。
 
@@ -96,14 +103,17 @@ platform
 ### In
 
 - 发布 PR #420 已合入的五项 IAM 收口与对应真实 MySQL 回归。
+- `frontend/src/assets/list-page.css`、`frontend/src/core/layout/index.css` 的
+  `@media (prefers-reduced-motion: no-preference)` 守卫（清零 `css:S9440`）。
 - 版本材料：`VERSION` → 0.17.5、`CHANGELOG.md`、`RELEASE_NOTES_v0.17.5.md`、
   `README.md`、`README.en.md`、`.harness/STATUS.md`。
 - 按 `docs/VERSION_MANAGEMENT_GUIDE.md` §6 发布 `pantheon-base-v0.17.5` 四件资产。
 
 ### Out
 
-- 任何新的生产运行时逻辑；本包不再修改 `backend/**`。
+- 任何新的后端生产运行时逻辑；本包不再修改 `backend/**`。
 - 数据库 schema、迁移（保持 29）、路由、权限码、菜单 seed、错误信封。
+- 修改 SonarCloud 规则或项目配置；`css:S9440` 在代码层修复。
 - 追溯修改已发布的 v0.17.0 / v0.17.1 / v0.17.2 / v0.17.3 / v0.17.4 tag 与资产。
 - 放宽任何门禁阈值、跳过测试或以 suppression 换取绿灯。
 
@@ -123,6 +133,8 @@ platform
 - `README.md`
 - `README.en.md`
 - `.harness/STATUS.md`
+- `frontend/src/assets/list-page.css`
+- `frontend/src/core/layout/index.css`
 
 ### Do Not Touch
 
@@ -141,6 +153,9 @@ platform
 - 本机 TSan 无法启动；race 证据取 CI Linux run `39970863908` 的 Backend Tests（head
   `973f5be2` 与最终合并提交同代码树）。
 - 已发布 v0.17.3 notes 不回写；勘误只追加到仓库文件与可变 release body。
+- 发布材料合并后 Release Gate 因两个既有 `css:S9440` 失败。按维护者口径在代码层修复：`transition`
+  移入 `@media (prefers-reduced-motion: no-preference)`，不修改 SonarCloud 规则、不加 suppression；
+  Sonar 重新分析后须为 0 个未解决 issue，门禁才允许打标。
 
 ## Verification Plan
 
@@ -148,6 +163,10 @@ platform
 - `cd backend && set -a; . ../.env.test; set +a; PANTHEON_TEST_DSN_REQUIRED=true PANTHEON_TEST_REDIS_REQUIRED=true go test -count=1 ./...`（真实 MySQL/Redis）
 - `cd backend && go test -count=1 -run 'TestConcurrentProvisioningOfTheSameTenantIsConvergent|TestCopyPlatformDefaultsRunOnTheLockedTenantRow|TestConcurrentReplaceRolePermissionsSerialisesOnTheRoleRow|TestConcurrentReplaceUserRolesSerialisesOnTheUserRow|TestBackfillRolePermissionsRepairsPlatformNamespaceGrants' ./modules/system/iam/...`
 - `npm run -s check:docs-frontmatter && npm run -s check:task-packet && npm run -s check:structure && npm run -s check:generated`
+- `cd frontend && node node_modules/prettier/bin/prettier.cjs --check src/assets/list-page.css src/core/layout/index.css`
+- `cd frontend && node ./scripts/check-ui-contract.mjs && node ./scripts/check-shell-visual-contract.mjs && node node_modules/vite/bin/vite.js build`
+- 真实 Chromium：`reducedMotion: reduce` 下两个选择器的 `transition-duration` 为 `0s`，
+  `no-preference` 下为 `0.18s`。
 - `node scripts/harness/check-failure-registry.mjs`
 - `node scripts/harness/check-evidence.mjs --strict .harness/evidence/2026-10-24-v0175-release-closeout/commands.json`
 - `node scripts/harness/check-review.mjs --strict .harness/evidence/2026-10-24-v0175-release-closeout/review.md`
@@ -173,6 +192,8 @@ platform
 - 全量真库套件与五项回归的通过输出。
 - `go build`、`go vet`、`gofmt` 结果。
 - 治理检查（frontmatter / task packet / structure / generated / failure registry）结果。
+- 前端 Prettier、UI 契约、Shell 视觉契约、`vite build` 与 Chromium reduced-motion 实测结果。
+- SonarCloud 重新分析后 0 个未解决 issue（Quality Gate OK）。
 - `Release Gate Summary` 在合并提交上的结论。
 - 凭据预检结果（文件数、0 命中，脱敏）。
 - 四件资产的 SHA-256、`check-release-assets` 输出与 `Foundation Release Verify` run。

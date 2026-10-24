@@ -17,7 +17,7 @@ Pantheon Platform 是一个面向企业后台的模块化单体底座，沉淀�
 | **任务状态** | [.harness/STATUS.md](./.harness/STATUS.md) — 当前任务状态总览 |
 | **归档记录** | [.harness/ARCHIVE.md](./.harness/ARCHIVE.md) — 已完成任务归档索引 |
 
-交付状态说明：v0.17.5 是 IAM 并发收口 patch，tag `pantheon-base-v0.17.5`，四件可消费产物齐备（tgz / tgz.sha256 / repo.tar / repo.tar.sha256）并由 `Foundation Release Verify` 断言。它关闭 v0.17.4 之后登记的 5 项残留：同租户并发 provisioning 先锁 `tenants` 行再收敛写入角色、管理员、根部门与绑定，平台默认配置/字典拷贝在同一租户锁的第二个事务内执行；`replaceRolePermissions` / `replaceUserRoles` 先锁父行再删除重插，避免两个写入者交错成并集；bootstrap 回填把旧版写成的 `tenant_id = 0` 权限行先去重再回填到角色所属租户；race 门禁由 CI Linux 的 `go test -race ./...` 提供权威证据；已发布 v0.17.3 notes 的过期表述在仓库文件与可变 release body 中以带日期的勘误更正。schema 仍为 29，无路由、权限码、菜单 seed 或错误信封变化。
+交付状态说明：v0.17.5 是 IAM 并发收口 patch，tag `pantheon-base-v0.17.5`，四件可消费产物齐备（tgz / tgz.sha256 / repo.tar / repo.tar.sha256）并由 `Foundation Release Verify` 断言。它关闭 v0.17.4 之后登记的 5 项残留：同租户并发 provisioning 先锁 `tenants` 行再收敛写入角色、管理员、根部门与绑定，平台默认配置/字典拷贝在同一租户锁的第二个事务内执行；`replaceRolePermissions` / `replaceUserRoles` 先锁父行再删除重插，避免两个写入者交错成并集；bootstrap 回填把旧版写成的 `tenant_id = 0` 权限行先去重再回填到角色所属租户；race 门禁由 CI Linux 的 `go test -race ./...` 提供权威证据；已发布 v0.17.3 notes 的过期表述在仓库文件与可变 release body 中以带日期的勘误更正；组织架构卡片与顶部菜单的过渡改为在 `prefers-reduced-motion: no-preference` 下声明，默认视觉不变、偏好减少动效的用户不再触发过渡（SonarCloud `css:S9440` 清零）。schema 仍为 29，无路由、权限码、菜单 seed 或错误信封变化。
 
 ## 项目定位
 
