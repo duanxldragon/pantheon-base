@@ -87,6 +87,11 @@
 
 ## 审核留痕
 
+- Copilot review：requested
+- CodeQL 结果：待 CI
+- GitHub checks 结果：待 CI
+- Auto-merge：enabled by PR Automation
+- Duplication Gate 结果：待 CI
 - Review 结论：approved（`.harness/evidence/2026-10-24-single-tenant-scope-closeout/review.md`）
 - 是否高风险改动：yes（命中 `system/config`、`system/iam` 与共享 `pkg/*`，按 repo-pr-gate 需两名
   非作者 review，其中一名为领域/安全/架构负责人）
