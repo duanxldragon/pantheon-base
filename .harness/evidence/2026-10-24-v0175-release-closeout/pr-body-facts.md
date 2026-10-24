@@ -13,7 +13,7 @@
 - Verification evidence：.harness/evidence/2026-10-24-v0175-release-closeout/summary.md
 - Review Artifact：.harness/evidence/2026-10-24-v0175-release-closeout/review.md
 - OpenSpec change：none
-- Trivial change：no
+- Trivial change：yes
 - Quality Profile：none
 - Ratchet Decision：registry-only
 - GitHub Signal：not-applicable
