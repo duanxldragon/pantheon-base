@@ -44,7 +44,7 @@ func TestDeptCompatScopePinsGlobalPopulation(t *testing.T) {
 		}
 	}
 
-	if err := compat.DeleteDept(foreign.ID); err == nil || !(errors.Is(err, common.ErrNotFound) || errors.Is(err, gorm.ErrRecordNotFound)) {
+	if err := compat.DeleteDept(foreign.ID); err == nil || (!errors.Is(err, common.ErrNotFound) && !errors.Is(err, gorm.ErrRecordNotFound)) {
 		t.Fatalf("compat delete of a tenant row must resolve to not-found, got %v", err)
 	}
 

@@ -22,6 +22,12 @@
       "details": "gofmt printed no files; go build printed BUILD_OK; go vet printed VET_OK."
     },
     {
+      "command": "cd backend && gofmt -l modules/system/org/dept/dept_compat_scope_test.go && go test ./modules/system/org/dept -count=1 -run 'TestDeptCompatScopePinsGlobalPopulation|TestDeptImportCompatStaysInGlobalTree'",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "CI follow-up for golangci-lint QF1001 (De Morgan) on dept_compat_scope_test.go:47. Rewrote the not-found assertion as err == nil || (!errors.Is(err, common.ErrNotFound) && !errors.Is(err, gorm.ErrRecordNotFound)); gofmt clean; both compat dept tests still pass (0.35s)."
+    },
+    {
       "command": "cd backend && set -a; . ../.env.test; set +a; go test ./pkg/impexp/... ./modules/system/config/dict/... ./modules/system/org/dept/... ./modules/system/org/post/... ./modules/system/iam/user/... ./modules/system/iam/permission/... ./modules/system/iam/role/...",
       "cwd": "backend",
       "status": "passed",
