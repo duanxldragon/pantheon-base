@@ -21,9 +21,10 @@ func NewUserHandler(s *UserService) *UserHandler {
 }
 
 // svc returns the request-scoped service view bound to the resolved tenant
-// context (contract §3.3). A compat/nil context returns the shared service, so
-// single-tenant behaviour is unchanged. Admin operations must use this instead
-// of h.service directly, otherwise they read and write platform-global rows.
+// context (contract §3.3). A nil context returns the shared service; compat
+// binds the platform-global scope (tenant_id=0). Admin operations must use this
+// instead of h.service directly, otherwise they read and write platform-global
+// rows.
 func (h *UserHandler) svc(c *gin.Context) *UserService {
 	return h.service.WithTenantContext(tenant.FromGin(c))
 }

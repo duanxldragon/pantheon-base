@@ -1,0 +1,120 @@
+{
+  "taskId": "2026-10-24-single-tenant-scope-closeout",
+  "repo": "pantheon-base",
+  "executedAt": "2026-10-24T13:10:00+08:00",
+  "agent": {
+    "tool": "other",
+    "adapter": "qoder-agent"
+  },
+  "knownGaps": [
+    "Multi-tenant-mode browser acceptance was not re-run in this packet; only the compat (single-tenant) scope was exercised. The existing multi-tenant Go regressions still pass.",
+    "The Go server cannot resolve node from Git Bash on Windows; PANTHEON_NODE_BIN and PANTHEON_WORKSPACE_ROOT must be set for the generator to work on this host.",
+    "Seven multi-tenant-only browser specs are not applicable under compat (401 at tenant admin login / missing tenant switcher).",
+    "business-generated-basic skips when generated modules are 0; the full-run skipped/not-run counts come from that orchestration precondition.",
+    "The local dev database carried one orphan dept row; it was repaired with a bounded UPDATE and the code now tolerates the shape, but other environments may still carry similar residue.",
+    "The full browser runner exits 0 even when Playwright reports failures; the parsed suite summary is the authoritative result."
+  ],
+  "commands": [
+    {
+      "command": "cd backend && gofmt -l modules/system/config/dict modules/system/iam modules/system/org pkg/impexp && go build ./... && go vet ./...",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "gofmt printed no files; go build printed BUILD_OK; go vet printed VET_OK."
+    },
+    {
+      "command": "cd backend && gofmt -l modules/system/org/dept/dept_compat_scope_test.go && go test ./modules/system/org/dept -count=1 -run 'TestDeptCompatScopePinsGlobalPopulation|TestDeptImportCompatStaysInGlobalTree'",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "CI follow-up for golangci-lint QF1001 (De Morgan) on dept_compat_scope_test.go:47. Rewrote the not-found assertion as err == nil || (!errors.Is(err, common.ErrNotFound) && !errors.Is(err, gorm.ErrRecordNotFound)); gofmt clean; both compat dept tests still pass (0.35s)."
+    },
+    {
+      "command": "cd backend && set -a; . ../.env.test; set +a; go test ./pkg/impexp/... ./modules/system/config/dict/... ./modules/system/org/dept/... ./modules/system/org/post/... ./modules/system/iam/user/... ./modules/system/iam/permission/... ./modules/system/iam/role/...",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "Exit 0 on real MySQL (isolated per-test databases via testmysql). Packages: pkg/impexp ok, system/config/dict ok 5.6s, system/org/dept ok, system/org/post ok, system/iam/user ok 37.6s, system/iam/permission ok 18.3s, system/iam/role ok 29.7s; 0 FAIL, 0 SKIP. pkg/impexp, dept and post were reported (cached) against the current source tree."
+    },
+    {
+      "command": "cd frontend && node node_modules/playwright/cli.js test tests/smoke/system/api --config=playwright.api.config.ts --workers=1 --reporter=line",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "11 passed (4.3s) against the final backend build: batch delete, import templates, dept/post/permission/dict/user import-export, role export and batch status, login/operation log export and cleanup, sample fixtures."
+    },
+    {
+      "command": "cd frontend && node scripts/run-smoke-suite.mjs --host 127.0.0.1 --port 5173 --cleanup-fixtures all --config playwright.config.ts -- tests/smoke/system/system-config.spec.ts tests/smoke/system/system-org.spec.ts --workers=1",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "26 passed (1.6m). Covers dict page CRUD/refresh/permission, settings, dept create/root edit/blocked delete and post edit/blocked delete. Fixture and generated-module cleanup completed."
+    },
+    {
+      "command": "cd frontend && node scripts/run-smoke-suite.mjs --host 127.0.0.1 --port 5173 --cleanup-fixtures all --config playwright.config.ts -- tests/smoke/system/system-iam.spec.ts tests/smoke/system/role-authorization.spec.ts tests/smoke/system/system-audit.spec.ts tests/smoke/system/system-i18n.spec.ts tests/smoke/system/system-platform.spec.ts tests/smoke/system/system-routes.spec.ts tests/smoke/system/system-form-state-matrix.spec.ts --workers=1",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "63 passed, 0 failed (single worker). Covers IAM, role authorization, audit/login-log/session governance, i18n, platform pages, routes and form-state matrix in compat mode."
+    },
+    {
+      "command": "cd frontend && node scripts/run-smoke-suite.mjs --host 127.0.0.1 --port 5173 --cleanup-fixtures all --config playwright.config.ts -- tests/smoke/business/generated --workers=1",
+      "cwd": "frontend",
+      "status": "failed",
+      "details": "First run: 5 failed with HTTP 200 + envelope code 500 module.generate.server_export_failed. Root cause: the backend process was started without PANTHEON_NODE_BIN and Go's exec.LookPath(\"node\") fails on this Windows host because the Git Bash PATH (/d/nodejs) is not resolvable. This is an environment gap, not a tenant-scope regression; the manual exporter run with the same schema exited 0. Rerun after restarting the backend with PANTHEON_NODE_BIN=D:\\nodejs\\node.exe and PANTHEON_WORKSPACE_ROOT=<repo>: the 3 self-generating specs passed (governance-real 8.7s, auto-recycle-real 6.2s, governance-host-real 5.1s); master-detail and many-to-many need their --setup scripts (recorded below)."
+    },
+    {
+      "command": "cd frontend && node scripts/run-smoke-suite.mjs --host 127.0.0.1 --port 5174 --cleanup-fixtures all --setup scripts/master-detail-qa-setup.mjs --config playwright.master-detail.config.ts -- tests/smoke/business/generated/module-master-detail-real.spec.ts",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "1 passed (8.5s). The setup script registers the fixture modules; the detail page rendered the related-data panel and child create/edit submit worked."
+    },
+    {
+      "command": "cd frontend && node scripts/run-smoke-suite.mjs --host 127.0.0.1 --port 5174 --cleanup-fixtures all --setup scripts/many-to-many-qa-setup.mjs --config playwright.many-to-many.config.ts -- tests/smoke/business/generated/module-many-to-many-real.spec.ts",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "1 passed (8.9s). Related-data panel, bind and unbind flows worked against the fixture modules."
+    },
+    {
+      "command": "Full single-tenant browser run (all specs) before the node-config and --setup reruns",
+      "cwd": "frontend",
+      "status": "failed",
+      "details": "Parsed summary: 339 passed, 12 failed, 3 skipped, 8 did not run (25.4m). The 12 failures are environment-only: 5 generated-module specs (module.generate.server_export_failed, see above) and 7 multi-tenant-only specs (tenant-hostile-browser-matrix-phase2 x4, tenant-hostile-browser-matrix, tenant-protected-resources, tenant-viewpoint-switcher) that return 401 at loginAsTenantAdmin or expect the multi-tenant switcher in compat mode. The 3 skips and 8 not-run are the business-generated-basic chain when generated modules are 0. The runner exits 0 even when Playwright fails, so the parsed summary is the authoritative result."
+    },
+    {
+      "command": "SELECT orphan dept rows: system_dept d LEFT JOIN system_dept p ON p.id = d.parent_id WHERE d.tenant_id = 0 AND d.parent_id <> 0 AND (p.id IS NULL OR p.tenant_id <> 0)",
+      "cwd": "repo",
+      "status": "passed",
+      "details": "Returned one row: id=235, dept_name=烟测研发中心, parent_id=221 (a tenant-303 root). This was the row that made the scoped path map fail before the tolerance fix. Credentials were injected from the local helper without echoing."
+    },
+    {
+      "command": "Bounded repair of the dev orphan row: UPDATE system_dept d JOIN system_dept p ON p.id = d.parent_id JOIN system_dept r ON r.tenant_id = d.tenant_id AND r.is_root = 1 SET d.parent_id = r.id, d.ancestors = CAST(r.id AS CHAR), d.is_root = 0 WHERE d.tenant_id = 0 AND d.parent_id <> 0 AND p.tenant_id <> d.tenant_id",
+      "cwd": "repo",
+      "status": "passed",
+      "details": "1 row updated; the orphan query then returned 0 rows. Dev-data hygiene only: no schema change, no row deleted, no production database touched."
+    },
+    {
+      "command": "cd backend && go run /d/tmp/lookpath.go (same env as the server launcher)",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "lookpath=\"\" err=exec: \"node\": executable file not found in %PATH%; cwd=<repo>/backend. Confirms the generator failure is the Windows/Git Bash node resolution gap, not a code defect in the export path."
+    },
+    {
+      "command": "node scripts/frontmatter-check.mjs && node scripts/check-task-packet-template.mjs && node scripts/harness/check-task-packet.mjs --root . && node scripts/harness/check-structure-contract.mjs --root . --strict && node scripts/harness/check-generated.mjs --root . --strict && node scripts/harness/check-failure-registry.mjs --root . --strict && node scripts/harness/check-evidence.mjs --strict .harness/evidence/2026-10-24-single-tenant-scope-closeout/commands.json && node scripts/harness/check-review.mjs --strict .harness/evidence/2026-10-24-single-tenant-scope-closeout/review.md",
+      "cwd": "repo",
+      "status": "passed",
+      "details": "Frontmatter: 350 docs checked, 257 with frontmatter, passed. Task-packet template OK. Task packet check: the new packet PASS. Structure contract (strict): 0 findings across 2566 tracked files. Generated artifacts (strict): 0 findings across 11 artifacts. Failure registry: 0 errors, 0 warnings. Evidence (strict): 0 errors. Review (strict): 0 errors."
+    },
+    {
+      "command": "git checkout -- .harness/evidence/2026-09-10-tenant-verification-and-gray/artifacts/browser/tenant-picker-desktop.png .harness/evidence/2026-09-10-tenant-verification-and-gray/artifacts/browser/tenant-picker-mobile.png frontend/src/modules/generated/system.ts",
+      "cwd": "repo",
+      "status": "passed",
+      "details": "Restored files that the browser suites regenerate (two tenant-picker screenshots and the generated system registry header) to HEAD so the change set contains only intentional code and packet content."
+    }
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-24-single-tenant-scope-closeout/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-24-single-tenant-scope-closeout/",
+    "summaryFile": ".harness/evidence/2026-10-24-single-tenant-scope-closeout/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-24-single-tenant-scope-closeout/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/contracts/TENANT_CONTRACT_V1.md",
+      ".harness/evidence/2026-10-23-iam-race-closeout/review.md"
+    ]
+  }
+}

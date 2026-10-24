@@ -229,8 +229,8 @@ func TestUpdateDataScopePolicyRejectsForeignDeptIDs(t *testing.T) {
 	}
 }
 
-// TestWithTenantContextKeepsCompatBaseline 固定回退语义：没有租户上下文（compat
-// 或平台调用）时服务行为不变，tenant_id 落在平台全局 0。
+// TestWithTenantContextKeepsCompatBaseline 固定回退语义：没有租户上下文（平台内部调用）
+// 时服务行为不变；compat 上下文把作用域钉在平台全局 0，写入同样落在 tenant_id=0。
 func TestWithTenantContextKeepsCompatBaseline(t *testing.T) {
 	db := setupDataScopeTenantDB(t)
 	base := NewPermissionService(db)
@@ -238,11 +238,15 @@ func TestWithTenantContextKeepsCompatBaseline(t *testing.T) {
 	if base.WithTenantContext(nil) != base {
 		t.Fatalf("a nil context must return the receiver unchanged")
 	}
-	if base.WithTenantContext(&tenant.Context{TenantID: dsScopeTenantA, Mode: tenant.ModeCompat}) != base {
-		t.Fatalf("a compat context must return the receiver unchanged")
+	compat := base.WithTenantContext(&tenant.Context{TenantID: tenant.PlatformGlobalTenantID, Mode: tenant.ModeCompat})
+	if compat == base {
+		t.Fatalf("a compat context must produce a bound view")
+	}
+	if compat.tenantOwnerID() != tenant.PlatformGlobalTenantID {
+		t.Fatalf("compat writes must stay on the platform scope, got tenant %d", compat.tenantOwnerID())
 	}
 
-	if _, err := base.UpdateDataScopePolicy(dsScopePlatform, &PermissionDataScopePolicyUpdateReq{
+	if _, err := compat.UpdateDataScopePolicy(dsScopePlatform, &PermissionDataScopePolicyUpdateReq{
 		Mode: common.DataScopeModeDept,
 	}); err != nil {
 		t.Fatalf("platform update: %v", err)

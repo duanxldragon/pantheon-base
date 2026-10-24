@@ -37,7 +37,7 @@ func (s *UserService) ExportUsers(ctx context.Context, query *UserListQuery, dat
 	if err != nil {
 		return nil, err
 	}
-	deptPathByID, _, err := impexp.BuildDeptPathMaps(s.db)
+	deptPathByID, _, err := impexp.BuildDeptPathMaps(s.scoped(s.db))
 	if err != nil {
 		return nil, err
 	}

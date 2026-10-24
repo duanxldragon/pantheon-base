@@ -19,6 +19,7 @@ func setupDeptTestDB(t *testing.T) *gorm.DB {
 
 type deptFixturePost struct {
 	ID        uint64         `gorm:"primaryKey;autoIncrement"`
+	TenantID  uint64         `gorm:"column:tenant_id;not null;default:0"`
 	DeptID    uint64         `gorm:"column:dept_id"`
 	PostCode  string         `gorm:"column:post_code;size:64"`
 	PostName  string         `gorm:"column:post_name;size:128"`
@@ -33,6 +34,7 @@ func (deptFixturePost) TableName() string {
 
 type deptFixtureUser struct {
 	ID        uint64         `gorm:"primaryKey;autoIncrement"`
+	TenantID  uint64         `gorm:"column:tenant_id;not null;default:0"`
 	Username  string         `gorm:"column:username;size:64"`
 	Password  string         `gorm:"column:password;size:255"`
 	Nickname  string         `gorm:"column:nickname;size:64"`
