@@ -762,11 +762,18 @@
   color: var(--text-secondary);
   font-weight: 500;
   line-height: 42px;
-  transition:
-    border-color 0.18s ease,
-    background 0.18s ease,
-    color 0.18s ease,
-    box-shadow 0.18s ease;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .app-shell .app-shell__top-menu .arco-menu-item,
+  .app-shell .app-shell__top-menu .arco-menu-pop-header,
+  .app-shell .app-shell__top-menu .arco-menu-inline-header {
+    transition:
+      border-color 0.18s ease,
+      background 0.18s ease,
+      color 0.18s ease,
+      box-shadow 0.18s ease;
+  }
 }
 
 .app-shell__top-menu .arco-menu-item::before,
@@ -782,10 +789,17 @@
   background: transparent;
   opacity: 0;
   transform: scaleY(0.55);
-  transition:
-    opacity 0.18s ease,
-    transform 0.18s ease,
-    background 0.18s ease;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .app-shell__top-menu .arco-menu-item::before,
+  .app-shell__top-menu .arco-menu-pop-header::before,
+  .app-shell__top-menu .arco-menu-inline-header::before {
+    transition:
+      opacity 0.18s ease,
+      transform 0.18s ease,
+      background 0.18s ease;
+  }
 }
 
 .app-shell__top-menu .app-shell__menu-entry {

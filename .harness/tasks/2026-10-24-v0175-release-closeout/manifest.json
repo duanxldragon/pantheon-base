@@ -16,7 +16,8 @@
     "R2 (P2, fixed in 45aa7389): replaceRolePermissions and replaceUserRoles deleted every row and re-inserted without holding a parent row. Two replacers that both delete before either inserts leave a merged set; the index gap can also deadlock.",
     "R3 (P2, fixed in 45aa7389): permission rows written by a pre-v0.17.4 backfill still carry tenant_id = 0 and are invisible to every tenant-scoped read, so the tenant role silently loses those permissions.",
     "R4 (P2, closed by evidence): the local Windows host cannot start ThreadSanitizer (shadow-memory allocation, error 87). The race gate is the CI quality.yml Backend Tests job on Linux with MySQL 8 and Redis; run 39970863908 on head 973f5be2 passed.",
-    "R5 (P3, fixed in 45aa7389): the published v0.17.3 notes said system_role_data_scope pre-checked before writing. A dated correction block is appended to the repository file and the mutable GitHub release body; the tag and assets stay immutable."
+    "R5 (P3, fixed in 45aa7389): the published v0.17.3 notes said system_role_data_scope pre-checked before writing. A dated correction block is appended to the repository file and the mutable GitHub release body; the tag and assets stay immutable.",
+    "R6 (P3, fixed in the reduced-motion commit): Release Gate after the release-material merge failed because SonarCloud css:S9440 had two unresolved issues on main. The org-chart card transition in frontend/src/assets/list-page.css and the top-menu item transitions in frontend/src/core/layout/index.css were unconditional. Both are now declared inside @media (prefers-reduced-motion: no-preference); default rendering is unchanged and reduced-motion users get no transition. The SonarCloud rule and project configuration are untouched."
   ],
   "scope": {
     "in": [
@@ -26,13 +27,15 @@
       "Historical tenant_id = 0 permission-row repair in the bootstrap backfill",
       "Real-MySQL regressions for provisioning convergence, both replace locks, the copy lock and the backfill repair",
       "CI race gate evidence and the v0.17.3 notes correction",
+      "Reduced-motion media guards in frontend/src/assets/list-page.css and frontend/src/core/layout/index.css to clear the two unresolved css:S9440 issues blocking Release Gate",
       "Version material: VERSION 0.17.5, CHANGELOG, RELEASE_NOTES_v0.17.5.md, README(zh/en), STATUS",
       "Publish pantheon-base-v0.17.5 with the four foundation-release assets"
     ],
     "out": [
-      "Any further production runtime logic change; the fixes were merged in PR #420",
+      "Any further backend production runtime logic change; the IAM fixes were merged in PR #420",
       "Database schema or migrations (stays at 29)",
       "Routes, permission codes, menu seeds and error-envelope shapes",
+      "SonarCloud rule or project configuration changes; css:S9440 is fixed in code",
       "Rewriting the published v0.17.0 through v0.17.4 tags and assets",
       "Relaxing gate thresholds, skipping tests or using suppressions"
     ]
@@ -44,6 +47,8 @@
     "The new tests fail against the pre-fix code and pass with the fix.",
     "gofmt/build/vet clean; full go test ./... against real MySQL and Redis passes with no skips.",
     "SonarCloud Quality Gate is green with zero open new-code issues.",
+    "SonarCloud reports zero unresolved issues on main, including the two css:S9440 findings, without changing the rule or adding a suppression.",
+    "The frontend still builds and its UI/Shell visual contracts pass, and Chromium measures 0s transition duration under prefers-reduced-motion: reduce and 0.18s under no-preference for both selectors.",
     "The CI backend-tests job runs go test -race ./... on the change and succeeds.",
     "Governance checkers (docs frontmatter, task packet template and instances, structure, generated, failure registry) pass.",
     "Release Gate Summary is successful on the merge commit before the release is cut.",
@@ -77,12 +82,15 @@
       "CHANGELOG.md",
       "README.md",
       "README.en.md",
-      ".harness/STATUS.md"
+      ".harness/STATUS.md",
+      "frontend/src/assets/list-page.css",
+      "frontend/src/core/layout/index.css"
     ],
     "doNotTouch": [
       "backend/** production code",
       "backend/pkg/database/migrations/**",
       ".github/workflows/**",
+      "sonar-project.properties and the SonarCloud rule configuration",
       "the published v0.17.0, v0.17.1, v0.17.2, v0.17.3 and v0.17.4 tags and assets"
     ]
   },
@@ -91,7 +99,9 @@
     "cut-foundation-release.mjs does not read RELEASE_NOTES_*.md automatically; --release-notes, --upgrade-notes and --consumer-impact must be passed explicitly.",
     "The release gate is a hard precondition: publish-foundation-release.mjs refuses to continue unless the latest Release Gate Summary check-run on the target commit succeeded.",
     "The local TSan runtime cannot start on this Windows host (shadow-memory allocation error 87); race coverage is evidenced by CI on Linux (run 39970863908, head 973f5be2).",
-    "The published v0.17.3 tag and assets are immutable; the correction lives in the repository file and the mutable release body."
+    "The published v0.17.3 tag and assets are immutable; the correction lives in the repository file and the mutable release body.",
+    "Release Gate on d36c63e9 failed twice: first on a proxy.golang.org download flake in PR Smoke Modules (rerun passed), then on two unresolved css:S9440 issues. The CSS guard is a code-level fix; the SonarCloud rule and project configuration are unchanged.",
+    "The release target commit is the merge of the reduced-motion fix, not d36c63e9, because the gate must be green on the commit that is tagged."
   ],
   "verificationPlan": {
     "backend": [
@@ -100,6 +110,12 @@
       "gofmt -l .",
       "PANTHEON_TEST_DSN_REQUIRED=true PANTHEON_TEST_REDIS_REQUIRED=true go test -count=1 ./...",
       "go test -count=1 -run <new regressions> ./modules/system/iam/..."
+    ],
+    "frontend": [
+      "node node_modules/prettier/bin/prettier.cjs --check src/assets/list-page.css src/core/layout/index.css",
+      "node ./scripts/check-ui-contract.mjs && node ./scripts/check-shell-visual-contract.mjs",
+      "node node_modules/vite/bin/vite.js build",
+      "Chromium: transition-duration is 0s under prefers-reduced-motion: reduce and 0.18s under no-preference"
     ],
     "governance": [
       "npm run -s check:docs-frontmatter",

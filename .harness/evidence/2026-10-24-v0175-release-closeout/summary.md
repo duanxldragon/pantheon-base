@@ -10,8 +10,8 @@ that carries them into a consumable asset, so v0.17.5 publishes them unchanged.
 
 ## What ships
 
-Nothing under `backend/` changes again in this packet. The release carries what #420 already
-merged, plus version material:
+No backend production file changes again in this packet. The release carries what #420 already
+merged, the reduced-motion guard needed to clear Release Gate, plus version material:
 
 - **Provisioning serialisation** (`tenant_provision.go`): the provisioning transaction takes the
   `tenants` row first, roles and the administrator converge through locking read-back, bindings and
@@ -27,6 +27,11 @@ merged, plus version material:
   ThreadSanitizer (error 87).
 - **v0.17.3 correction**: a dated correction block in `RELEASE_NOTES_v0.17.3.md` and the mutable
   GitHub release body. The tag and assets stay immutable.
+- **Reduced-motion guard** (`frontend/src/assets/list-page.css`, `frontend/src/core/layout/index.css`):
+  the org-chart card and top-menu item transitions are declared inside
+  `@media (prefers-reduced-motion: no-preference)`. Default rendering is unchanged; reduced-motion
+  users get no transition. This closes the two unresolved SonarCloud `css:S9440` issues that
+  blocked Release Gate at `d36c63e9`. The SonarCloud rule and project configuration are untouched.
 - **Version material**: `VERSION` 0.17.5, `CHANGELOG.md`, `RELEASE_NOTES_v0.17.5.md`,
   `README.md`, `README.en.md`, `.harness/STATUS.md`, task packet and manifest.
 
@@ -40,13 +45,39 @@ merged, plus version material:
   repair PASS in 2.201s; user replace lock and duplicate-key loser mapping PASS in 1.758s.
 - Governance: frontmatter 349 docs (256 with frontmatter), task packets 54 files / 0 errors,
   structure 0 findings across 2557 tracked files, generated 0 findings across 11 artifacts,
-  failure registry 0 errors, `check-evidence --strict` and `check-review --strict` clean.
-- Scope: `git diff --stat pantheon-base-v0.17.4..HEAD` reports 21 files and 1533 insertions;
-  backend changes are 9 files under `system/iam` and `pkg/testmysql`, with no migration and no
-  workflow file (`git diff --name-only` filtered for `migrations` and `.github/workflows` is empty).
+  failure registry 0 errors, `check-evidence --strict` clean, and `check-review --strict` scoped to
+  this task's `review.md` clean. A repo-wide `check-review --strict` reports one pre-existing
+  failure outside this packet: `2026-10-23-v0174-release-closeout/review.md` has no Machine
+  Readable block (committed in `b3071847`, unchanged by this release).
+- Scope: `git diff --stat pantheon-base-v0.17.4..HEAD` reports 21 files and 1533 insertions before
+  the reduced-motion fix; the release-material PR added 12 files, and the reduced-motion PR touches
+  two CSS files. Backend changes are 9 files under `system/iam` and `pkg/testmysql`, with no
+  migration and no workflow file (`git diff --name-only` filtered for `migrations` and
+  `.github/workflows` is empty).
+- Frontend: Prettier clean on both edited files, `check-ui-contract` 0 findings across 263 files,
+  `check-shell-visual-contract` passed, `vite build` succeeded. A headless Chromium check of the
+  built CSS measured `transition-duration: 0.18s, 0.18s, 0.18s` (card) and `0.18s` × 4 (menu)
+  under `prefers-reduced-motion: no-preference`, and `0s` for both under `reduce`.
 
 Decided by CI, not locally: the release PR required checks, SonarCloud, `Release Gate Summary` on
 the merge commit, and `Foundation Release Verify` on the tag.
+
+## Release-gate history
+
+The release-material PR #421 merged as `d36c63e9`. `Release Gate Summary` failed twice on that
+commit:
+
+1. **Network flake, not a code failure.** `PR Smoke Modules` failed while downloading
+   `google.golang.org/grpc@v1.83.2` from `proxy.golang.org` (`stream error: ... INTERNAL_ERROR`).
+   Rerunning the failed job in the Code Quality Gates workflow passed.
+2. **Two unresolved SonarCloud issues.** `css:S9440` flagged the org-chart card transition
+   (`frontend/src/assets/list-page.css:1541`) and the top-menu item transitions
+   (`frontend/src/core/layout/index.css:785`). Both were logged on 2026-05-11 and are unrelated to
+   the IAM work. Per the maintainer's standing rule the rule is not changed and no suppression was
+   added; the transitions were moved under `@media (prefers-reduced-motion: no-preference)`.
+
+Because the gate must be green on the commit that is tagged, the release target is the merge of the
+reduced-motion fix, not `d36c63e9`.
 
 ## Gaps and limits
 
@@ -61,7 +92,8 @@ the merge commit, and `Foundation Release Verify` on the tag.
 
 ## Publication state
 
-Prepared, not yet published. Target commit is `45aa7389` (the squash merge of PR #420); previous
-release is `pantheon-base-v0.17.4` (commit `ac813f6f`, tag object `b1e8fc4b`). Publication facts
-(tag object, asset checksums, Release Gate run, Foundation Release Verify run) are appended to this
+Prepared, not yet published. Previous release is `pantheon-base-v0.17.4` (commit `ac813f6f`, tag
+object `b1e8fc4b`). Release materials merged as `d36c63e9` (PR #421); the release target becomes the
+merge commit of the reduced-motion fix because Release Gate was red on `d36c63e9`. Publication facts
+(tag object, asset checksums, Release Gate and Foundation Release Verify runs) are appended to this
 file and `commands.json` in the facts commit after the tag is cut.

@@ -26,6 +26,7 @@ or error-envelope shape is added, removed or renamed.
 | Replace-style grants | `replaceRolePermissions` / `replaceUserRoles` deleted and re-inserted without holding the parent | the `system_role` / `system_user` row is locked first, so the surviving set is the last writer's |
 | Historical permission rows | rows a pre-v0.17.4 backfill stamped `tenant_id = 0` stayed in the platform namespace and were invisible to the tenant | the bootstrap backfill deletes stale duplicates, then re-stamps the remaining rows with the owning role's tenant |
 | Race gate | local Windows host cannot start TSan; no authoritative run on the change | CI `quality.yml` Backend Tests runs `go test -race ./...` on Linux with MySQL 8 + Redis; the run on this change passed |
+| Reduced motion | `.org-chart__dept-card` and the top-menu item transitions ran for everyone, so SonarCloud `css:S9440` stayed open on `main` and parked the release gate at two unresolved issues | both transitions are declared inside `@media (prefers-reduced-motion: no-preference)`; reduced-motion users get no transition, default users keep the 0.18s motion |
 | v0.17.3 notes | repository file and release body said `system_role_data_scope` pre-checked before writing | a dated correction block is appended in both places; the published tag and assets stay immutable |
 
 ## Fixed
@@ -75,6 +76,16 @@ code 87). The authoritative race signal is the CI `quality.yml` Backend Tests jo
 MySQL 8 and Redis, which runs `go test -race ./...`. Its run on this change passed; the run and job
 ids are recorded in the release evidence.
 
+### Reduced-motion preference is respected
+
+The release gate on the merged release material failed on two unresolved SonarCloud `css:S9440`
+issues that predate this packet: `.org-chart__dept-card` and the top-menu item transitions were
+declared unconditionally, so a user who asks the OS to reduce motion still got the 0.18s
+transitions. Both declarations now live inside `@media (prefers-reduced-motion: no-preference)`.
+Default users keep the existing motion; reduced-motion users get no transition. A headless Chromium
+check against the built CSS measures `0.18s` under `no-preference` and `0s` under `reduce` for both
+selectors.
+
 ### v0.17.3 notes corrected forward
 
 The published v0.17.3 notes claimed `system_role_data_scope` and `system_role_permission` still
@@ -102,6 +113,9 @@ its four assets are immutable and still carry the original sentence.
 
 - Version material: `VERSION`, `CHANGELOG.md`, `RELEASE_NOTES_v0.17.5.md`, `README.md`,
   `README.en.md` and `.harness/STATUS.md` move to v0.17.5.
+- Frontend: the org-chart card and top-menu item transitions in `frontend/src/assets/list-page.css`
+  and `frontend/src/core/layout/index.css` are guarded by
+  `@media (prefers-reduced-motion: no-preference)`. Default rendering and timing are unchanged.
 
 ## Compatibility
 
@@ -124,6 +138,10 @@ Measured locally against real MySQL/Redis (`.env.test`, with `PANTHEON_TEST_DSN_
 - Each new regression fails against the pre-fix shape (unique-key duplicate, nil at the NOWAIT
   probe, or `elements differ` for the backfill).
 - `go build ./...`, `go vet ./...`, `gofmt -l .` clean.
+- Frontend: Prettier clean on both edited files, `check-ui-contract` 0 findings across 263 files,
+  `check-shell-visual-contract` passed, and `vite build` succeeded. A headless Chromium check of the
+  built CSS reports `transition-duration: 0.18s` under `prefers-reduced-motion: no-preference` and
+  `0s` under `reduce` for both selectors.
 - SonarCloud Quality Gate: OK, new-code duplication 0.0% (threshold 3%), zero open new-code issues.
 - Governance: docs frontmatter, task packet template and instances, structure, generated modules,
   and failure registry all pass.
