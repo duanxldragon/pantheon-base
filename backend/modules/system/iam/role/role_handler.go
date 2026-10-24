@@ -27,8 +27,8 @@ func NewRoleHandler(s *RoleService) *RoleHandler {
 }
 
 // svc returns the request-scoped service view bound to the resolved tenant
-// context (contract §3.3/§4). A compat/nil context returns the shared service,
-// so single-tenant behaviour is unchanged. Admin operations must use this
+// context (contract §3.3/§4). A nil context returns the shared service; compat
+// binds the platform-global scope (tenant_id=0). Admin operations must use this
 // instead of h.service directly, otherwise they read and write platform-global
 // roles.
 func (h *RoleHandler) svc(c *gin.Context) *RoleService {

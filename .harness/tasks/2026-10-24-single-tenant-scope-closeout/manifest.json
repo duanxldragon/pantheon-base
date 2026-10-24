@@ -1,0 +1,153 @@
+{
+  "taskId": "2026-10-24-single-tenant-scope-closeout",
+  "taskDoc": "docs/harness/tasks/2026-10-24-single-tenant-scope-closeout.task.md",
+  "title": "Close the single-tenant (compat) tenant-scope bypass that blocked dict and dept deletion, scope import/export path maps, and record the full-system single-tenant smoke result",
+  "goal": "Under compat mode the resolved tenant context (tenant_id = 0) was discarded by six services because WithTenantContext treated compat like nil. The platform view then read every tenant's rows, so dict and dept deletes could not target the caller's row and historical tenant residue leaked into single-tenant screens. Compat now binds the platform-global scope in dict, dept, post, user, role and permission services. Dict item reorder is fully tenant-scoped. Dept/post import/export build their path maps inside the request scope, look up imported parents in the same scope and stamp the request tenant on new rows; user/dept/post exports use the scoped path map. The shared path-map builder treats a parent outside the loaded set as a path boundary so one historical orphan row cannot block a tenant's import/export. Regression tests cover compat pinning, reorder isolation, dept import staying in the global tree, post import tenant stamping and orphan tolerance. The packet also records the full single-tenant browser smoke result and separates environment-only failures (multi-tenant-mode specs are not applicable under compat; the generator needs PANTHEON_NODE_BIN on this Windows host) from product defects. No schema, migration, route, permission-code, menu-seed or error-envelope change.",
+  "primaryLayer": "platform",
+  "status": "completed",
+  "priority": "P1",
+  "type": "bugfix",
+  "estimatedComplexity": "medium",
+  "findings": [
+    "F1 (P1, dict_service.go:58, dept_service.go:31, post_service.go, user_service.go, role_service.go, permission_service.go): WithTenantContext returned the shared service for nil OR compat. Compat context is non-nil ({TenantID: 0, Mode: ModeCompat}), so the platform-global scope was dropped and every read/write ran unfiltered. On a database that still holds tenant rows, the platform dict/dept view mixed other tenants' rows into the single-tenant screen, so deleting a dict or dept either missed the visible row or was blocked by foreign children. Reproduced on the local MySQL instance (tenant 282/303 residue).",
+    "F2 (P1, dict_service.go:973-1035): ReorderDictItem read the item, selected the neighbor and updated both sort values without any tenant scope. A caller could read and rewrite another tenant's item ordering by ID. Fixed by applying tenantScope() to the initial read, the post-transaction read and both updates.",
+    "F3 (P1, dept_import.go:58/298/503, post_service.go:298/463/503, dept_export.go:44, dept_governance.go:84, user_export.go:40): department/post import and export built the dept path map from an unscoped query, resolved imported parents by (parent_id, dept_name) without a scope, and inserted new rows without an explicit tenant_id. Cross-tenant duplicate paths could resolve to another tenant's parent; under compat the import failed with dept.not_found after the path map was scoped. Fixed by scoping the path-map query and parent/ancestor lookups and writing tenantOwnerID() on new rows.",
+    "F4 (P2, backend/pkg/impexp/import_helpers.go:134): after scoping, a pre-existing dev row (system_dept id=235, tenant_id=0, parent_id pointing at a tenant-303 root) was outside the loaded set and made BuildDeptPathMaps fail the whole tree, surfacing as dept.import.error. The builder now returns an empty path for a missing parent (path boundary) so the row stays importable/exportable. The dev orphan row itself was repaired with a bounded UPDATE to the tenant's root dept; no schema change and no data deletion.",
+    "F5 (P3, environment): generated-module browser specs failed with module.generate.server_export_failed because the Go server could not resolve node. The local Git Bash PATH is not resolvable by Go's exec.LookPath on Windows; starting the server with PANTHEON_NODE_BIN=D:\\nodejs\\node.exe and PANTHEON_WORKSPACE_ROOT=<repo> makes 3/5 generated specs pass. The remaining two (master-detail, many-to-many) require their --setup scripts, which register the fixture modules; with the documented setup command both pass. No product code change was needed.",
+    "F6 (P3, environment): seven tenant-mode browser specs (tenant-hostile-browser-matrix-phase2 x4, tenant-hostile-browser-matrix, tenant-protected-resources, tenant-viewpoint-switcher) assert multi-tenant UI and return 401 at loginAsTenantAdmin or expect the tenant switcher; they are not applicable in a single-tenant compat deployment."
+  ],
+  "scope": {
+    "in": [
+      "Bind the compat context to tenant_id = 0 in dict, dept, post, user, role and permission services",
+      "Tenant-scope dict item reorder reads, neighbor lookup and swaps",
+      "Scope dept/post import/export path maps, parent/ancestor lookups and user/dept/post exports",
+      "Stamp the request tenant on dept and post import rows",
+      "Treat a missing parent as a path boundary in BuildDeptPathMaps",
+      "Real-MySQL regressions for compat pinning, reorder isolation, dept import tree, post import tenant stamping and orphan tolerance",
+      "Full single-tenant browser smoke result with environment-only failures called out"
+    ],
+    "out": [
+      "Database schema or migrations (stays at 29)",
+      "Routes, permission codes, menu seeds and error envelopes",
+      "Frontend source or visual changes",
+      "Multi-tenant-mode acceptance re-run",
+      "Gate thresholds, SonarCloud rules or test skips"
+    ]
+  },
+  "acceptanceCriteria": [
+    "Under compat, dict and dept lists contain only tenant_id = 0 rows; records created in compat are stamped tenant_id = 0 and can be deleted.",
+    "A multi-tenant view cannot see or mutate compat/global rows, and compat cannot see or mutate tenant rows (404/empty, no existence leak).",
+    "Two tenants may own the same dict_code; uniqueness stays tenant-local.",
+    "ReorderDictItem cannot read or rewrite another tenant's item, and compat cannot reorder a tenant item.",
+    "Dept import under compat creates the dept in the tenant-0 tree with parent_id pointing at the tenant-0 root, even when a tenant root has the same dept name.",
+    "Post import stamps the request tenant and resolves the parent dept inside that tenant.",
+    "BuildDeptPathMaps tolerates an orphan parent as a path boundary without dropping the healthy paths.",
+    "Targeted go tests pass on real MySQL; gofmt/build/vet are clean.",
+    "Single-tenant browser suites pass; generated-module suites pass with PANTHEON_NODE_BIN/PANTHEON_WORKSPACE_ROOT and the documented --setup commands.",
+    "No secret appears in the evidence or PR artifacts."
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "permission-policy",
+    "portableFailureClass": "scope-bypass / cross-tenant-read-write / dirty-reference-data",
+    "ownerLayer": "consumer-repository",
+    "ratchetDecision": "sensor-added",
+    "coverageDimensions": [
+      "behaviour",
+      "runtime-quality",
+      "architecture-fitness"
+    ]
+  },
+  "expectedFiles": {
+    "create": [
+      "backend/modules/system/org/dept/dept_compat_scope_test.go",
+      "docs/harness/tasks/2026-10-24-single-tenant-scope-closeout.task.md",
+      ".harness/tasks/2026-10-24-single-tenant-scope-closeout/manifest.json",
+      ".harness/evidence/2026-10-24-single-tenant-scope-closeout/summary.md",
+      ".harness/evidence/2026-10-24-single-tenant-scope-closeout/review.md",
+      ".harness/evidence/2026-10-24-single-tenant-scope-closeout/commands.json",
+      ".harness/evidence/2026-10-24-single-tenant-scope-closeout/pr-body.md"
+    ],
+    "modify": [
+      "backend/modules/system/config/dict/dict_service.go",
+      "backend/modules/system/config/dict/dict_handler.go",
+      "backend/modules/system/config/dict/dict_tenant_canary_test.go",
+      "backend/modules/system/org/dept/dept_service.go",
+      "backend/modules/system/org/dept/dept_handler.go",
+      "backend/modules/system/org/dept/dept_import.go",
+      "backend/modules/system/org/dept/dept_export.go",
+      "backend/modules/system/org/dept/dept_governance.go",
+      "backend/modules/system/org/dept/dept_service_test.go",
+      "backend/modules/system/org/post/post_service.go",
+      "backend/modules/system/org/post/post_handler.go",
+      "backend/modules/system/org/post/post_import_regression_test.go",
+      "backend/modules/system/iam/user/user_service.go",
+      "backend/modules/system/iam/user/user_handler.go",
+      "backend/modules/system/iam/user/user_export.go",
+      "backend/modules/system/iam/role/role_service.go",
+      "backend/modules/system/iam/role/role_handler.go",
+      "backend/modules/system/iam/permission/permission_service.go",
+      "backend/modules/system/iam/permission/permission_data_scope_tenant_test.go",
+      "backend/pkg/impexp/import_helpers.go",
+      "backend/pkg/impexp/import_helpers_test.go"
+    ],
+    "doNotTouch": [
+      "backend/pkg/database/migrations/**",
+      ".github/workflows/**",
+      "the published tags and release assets",
+      ".env.test and any credential file"
+    ]
+  },
+  "implementationNotes": [
+    "A compat context is non-nil; only a nil context means a platform-internal caller that intentionally wants the unfiltered service. Binding compat is what pins single-tenant screens to tenant_id = 0.",
+    "Scoping only the service entry point is not enough for imports: the parent lookup, ancestor lookup and path map must share the same scope, otherwise the import mixes an unfiltered parent with a filtered child set.",
+    "New import rows write tenantOwnerID() explicitly instead of relying on the column default, so they are visible to the tenant that created them.",
+    "A parent outside the loaded set is a path boundary, not a fatal error; the row belongs to the caller's tenant and must remain importable/exportable.",
+    "Dict reorder needs the scope on the initial read, the re-read inside the transaction, the neighbor query and both updates; scoping only the first read still leaves an IDOR window.",
+    "The local dev orphan row was repaired with a bounded UPDATE back to the tenant's root dept; this is dev-data hygiene, not a production migration."
+  ],
+  "verificationPlan": {
+    "go": [
+      "gofmt -l backend/modules/system/config/dict backend/modules/system/iam backend/modules/system/org backend/pkg/impexp",
+      "go build ./...",
+      "go vet ./...",
+      "PANTHEON_TEST_DSN_REQUIRED=true PANTHEON_TEST_REDIS_REQUIRED=true go test ./pkg/impexp/... ./modules/system/config/dict/... ./modules/system/org/dept/... ./modules/system/org/post/... ./modules/system/iam/user/... ./modules/system/iam/permission/... ./modules/system/iam/role/... (MySQL/Redis from .env.test)"
+    ],
+    "api": [
+      "node node_modules/playwright/cli.js test tests/smoke/system/api --config=playwright.api.config.ts --workers=1"
+    ],
+    "browser": [
+      "node scripts/run-smoke-suite.mjs ... -- tests/smoke/system/system-config.spec.ts tests/smoke/system/system-org.spec.ts --workers=1",
+      "node scripts/run-smoke-suite.mjs ... -- tests/smoke/system/{system-iam,role-authorization,system-audit,system-i18n,system-platform,system-routes,system-form-state-matrix}.spec.ts --workers=1",
+      "node scripts/run-smoke-suite.mjs ... -- tests/smoke/business/generated/module-governance-real.spec.ts tests/smoke/business/generated/module-auto-recycle-real.spec.ts tests/smoke/business/generated/module-governance-host-real.spec.ts --workers=1",
+      "npm run test:smoke:business:master-detail",
+      "npm run test:smoke:business:many-to-many"
+    ],
+    "governance": [
+      "node scripts/frontmatter-check.mjs",
+      "node scripts/check-task-packet-template.mjs",
+      "node scripts/harness/check-task-packet.mjs --root .",
+      "node scripts/harness/check-structure-contract.mjs --root . --strict",
+      "node scripts/harness/check-generated.mjs --root . --strict",
+      "node scripts/harness/check-failure-registry.mjs --root . --strict",
+      "node scripts/harness/check-evidence.mjs --strict .harness/evidence/2026-10-24-single-tenant-scope-closeout/commands.json",
+      "node scripts/harness/check-review.mjs --strict .harness/evidence/2026-10-24-single-tenant-scope-closeout/review.md"
+    ]
+  },
+  "linkage": {
+    "taskId": "2026-10-24-single-tenant-scope-closeout",
+    "taskManifest": ".harness/tasks/2026-10-24-single-tenant-scope-closeout/manifest.json",
+    "assessment": "docs/harness/tasks/2026-10-24-single-tenant-scope-closeout.task.md",
+    "openspecChange": "none",
+    "superpowersPlan": "none",
+    "evidenceDir": ".harness/evidence/2026-10-24-single-tenant-scope-closeout/",
+    "summaryFile": ".harness/evidence/2026-10-24-single-tenant-scope-closeout/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-24-single-tenant-scope-closeout/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/contracts/TENANT_CONTRACT_V1.md",
+      ".harness/evidence/2026-10-23-iam-race-closeout/review.md"
+    ]
+  }
+}

@@ -30,8 +30,8 @@ type UserService struct {
 	db                      *gorm.DB
 	sessionLifecycleFactory SessionLifecycleFactory
 	// tenantCtx is the per-request tenant context (contract §3.3). Set from the
-	// Gin context by the handler layer via WithTenantContext; nil/compat keeps
-	// the historical global behaviour byte-for-byte (flag-off baseline).
+	// Gin context by the handler layer via WithTenantContext; nil stays
+	// unfiltered for platform-internal paths, compat binds tenant_id=0.
 	tenantCtx *tenant.Context
 }
 
@@ -42,10 +42,9 @@ func WithSessionLifecycle(factory SessionLifecycleFactory) UserServiceOption {
 }
 
 // WithTenantContext returns a shallow view of the service bound to a request
-// tenant context. A nil or compat context returns the receiver unchanged, so
-// single-tenant deployments keep the pre-existing code path.
+// tenant context. Only a nil context returns the receiver unchanged.
 func (s *UserService) WithTenantContext(ctx *tenant.Context) *UserService {
-	if ctx == nil || !ctx.IsMulti() {
+	if ctx == nil {
 		return s
 	}
 	bound := *s
@@ -55,7 +54,7 @@ func (s *UserService) WithTenantContext(ctx *tenant.Context) *UserService {
 
 // tenantScope applies the tenant read filter: in multi mode every query is
 // pinned to the request tenant, so a tenant administrator only ever sees its
-// own users. Compat/global behaviour is unchanged.
+// own users. Compat binds the platform-global population (tenant_id=0).
 func (s *UserService) tenantScope() func(db *gorm.DB) *gorm.DB {
 	return tenant.WithTenantScope(s.tenantCtx)
 }

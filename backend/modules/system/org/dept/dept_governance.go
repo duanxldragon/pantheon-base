@@ -81,7 +81,7 @@ func (s *DeptService) loadGovernanceSnapshot() (*governanceSnapshot, error) {
 	if err != nil {
 		return nil, err
 	}
-	pathByID, _, err := impexp.BuildDeptPathMaps(s.db)
+	pathByID, _, err := impexp.BuildDeptPathMaps(s.scoped(s.db))
 	if err != nil {
 		return nil, err
 	}

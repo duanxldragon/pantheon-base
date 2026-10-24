@@ -21,15 +21,15 @@ const (
 type DeptService struct {
 	db *gorm.DB
 	// tenantCtx is the per-request tenant context (contract §3.3). Set from the
-	// Gin context by the handler layer via WithTenantContext; nil/compat keeps
-	// the historical global behaviour (flag-off baseline).
+	// Gin context by the handler layer via WithTenantContext; nil stays
+	// unfiltered for platform-internal paths, compat binds tenant_id=0.
 	tenantCtx *tenant.Context
 }
 
 // WithTenantContext returns a shallow view of the service bound to a request
-// tenant context. A nil or compat context returns the receiver unchanged.
+// tenant context. Only a nil context returns the receiver unchanged.
 func (s *DeptService) WithTenantContext(ctx *tenant.Context) *DeptService {
-	if ctx == nil || !ctx.IsMulti() {
+	if ctx == nil {
 		return s
 	}
 	bound := *s
@@ -39,7 +39,7 @@ func (s *DeptService) WithTenantContext(ctx *tenant.Context) *DeptService {
 
 // scoped applies the tenant read filter: in multi mode every department query
 // is pinned to the request tenant, so a tenant administrator only ever sees
-// (and can only mutate) its own department tree.
+// (and can only mutate) its own department tree. Compat binds tenant_id=0.
 func (s *DeptService) scoped(db *gorm.DB) *gorm.DB {
 	return db.Scopes(tenant.WithTenantScope(s.tenantCtx))
 }

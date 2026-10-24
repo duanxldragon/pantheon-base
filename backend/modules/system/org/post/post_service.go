@@ -19,15 +19,15 @@ const condIDIn = "id IN ?"
 type PostService struct {
 	db *gorm.DB
 	// tenantCtx is the per-request tenant context (contract §3.3). Set from the
-	// Gin context by the handler layer via WithTenantContext; nil/compat keeps
-	// the historical global behaviour (flag-off baseline).
+	// Gin context by the handler layer via WithTenantContext; nil stays
+	// unfiltered for platform-internal paths, compat binds tenant_id=0.
 	tenantCtx *tenant.Context
 }
 
 // WithTenantContext returns a shallow view of the service bound to a request
-// tenant context. A nil or compat context returns the receiver unchanged.
+// tenant context. Only a nil context returns the receiver unchanged.
 func (s *PostService) WithTenantContext(ctx *tenant.Context) *PostService {
-	if ctx == nil || !ctx.IsMulti() {
+	if ctx == nil {
 		return s
 	}
 	bound := *s
@@ -37,7 +37,7 @@ func (s *PostService) WithTenantContext(ctx *tenant.Context) *PostService {
 
 // scoped applies the tenant read filter: in multi mode every post query is
 // pinned to the request tenant, so a tenant administrator only ever sees (and
-// can only mutate) its own posts.
+// can only mutate) its own posts. Compat binds tenant_id=0.
 func (s *PostService) scoped(db *gorm.DB) *gorm.DB {
 	return db.Scopes(tenant.WithTenantScope(s.tenantCtx))
 }
@@ -295,7 +295,7 @@ func (s *PostService) ExportPosts(query *PostListQuery) (*impexp.CSVFile, error)
 	if err != nil {
 		return nil, err
 	}
-	deptPathByID, _, err := impexp.BuildDeptPathMaps(s.db)
+	deptPathByID, _, err := impexp.BuildDeptPathMaps(s.scoped(s.db))
 	if err != nil {
 		return nil, err
 	}
@@ -441,6 +441,7 @@ func applyImportRows(
 	tx *gorm.DB,
 	rows []postImportRow,
 	existingByCode map[string]SystemPost,
+	tenantID uint64,
 	result *impexp.ImportResult,
 ) error {
 	for _, row := range rows {
@@ -459,6 +460,7 @@ func applyImportRows(
 		}
 
 		post := SystemPost{
+			TenantID: tenantID,
 			DeptID:   row.DeptID,
 			PostCode: row.PostCode,
 			PostName: row.PostName,
@@ -498,7 +500,7 @@ func (s *PostService) ImportPosts(records [][]string) (*impexp.ImportResult, err
 
 	rows := make([]postImportRow, 0, len(records)-1)
 	seenCodes := make(map[string]int, len(records)-1)
-	_, deptPathToID, err := impexp.BuildDeptPathMaps(s.db)
+	_, deptPathToID, err := impexp.BuildDeptPathMaps(s.scoped(s.db))
 	if err != nil {
 		return nil, err
 	}
@@ -532,7 +534,7 @@ func (s *PostService) ImportPosts(records [][]string) (*impexp.ImportResult, err
 	}
 
 	if err := s.db.Transaction(func(tx *gorm.DB) error {
-		return applyImportRows(tx, rows, existingByCode, result)
+		return applyImportRows(tx, rows, existingByCode, s.tenantOwnerID(), result)
 	}); err != nil {
 		return nil, err
 	}

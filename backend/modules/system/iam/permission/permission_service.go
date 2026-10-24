@@ -54,18 +54,18 @@ const (
 type PermissionService struct {
 	db *gorm.DB
 	// tenantCtx is the per-request tenant context (contract §2.3/§3.3). Set from
-	// the Gin context by the handler layer via WithTenantContext; nil/compat
-	// keeps the historical global behaviour (flag-off baseline). Without it the
-	// data-scope console reads and writes every tenant's policy rows, which is
-	// how a tenant administrator could list and overwrite another tenant's
-	// role data scope (acceptance F7/F8/F9).
+	// the Gin context by the handler layer via WithTenantContext; nil keeps the
+	// historical global behaviour for platform-internal callers, compat binds
+	// the platform-global scope. Without it the data-scope console reads and
+	// writes every tenant's policy rows, which is how a tenant administrator
+	// could list and overwrite another tenant's role data scope (F7/F8/F9).
 	tenantCtx *tenant.Context
 }
 
 // WithTenantContext returns a shallow view of the service bound to a request
-// tenant context. A nil or compat context returns the receiver unchanged.
+// tenant context. Only a nil context returns the receiver unchanged.
 func (s *PermissionService) WithTenantContext(ctx *tenant.Context) *PermissionService {
-	if ctx == nil || !ctx.IsMulti() {
+	if ctx == nil {
 		return s
 	}
 	bound := *s

@@ -17,15 +17,15 @@ import (
 type RoleService struct {
 	db *gorm.DB
 	// tenantCtx is the per-request tenant context (contract §3.3/§4). Set from
-	// the Gin context by the handler layer via WithTenantContext; nil/compat
-	// keeps the historical global behaviour (flag-off baseline).
+	// the Gin context by the handler layer via WithTenantContext; nil stays
+	// unfiltered for platform-internal paths, compat binds tenant_id=0.
 	tenantCtx *tenant.Context
 }
 
 // WithTenantContext returns a shallow view of the service bound to a request
-// tenant context. A nil or compat context returns the receiver unchanged.
+// tenant context. Only a nil context returns the receiver unchanged.
 func (s *RoleService) WithTenantContext(ctx *tenant.Context) *RoleService {
-	if ctx == nil || !ctx.IsMulti() {
+	if ctx == nil {
 		return s
 	}
 	bound := *s
