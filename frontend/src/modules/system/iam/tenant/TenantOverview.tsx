@@ -1,21 +1,15 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Button, Card, Grid, Select, Space, Tag, Typography } from '@arco-design/web-react';
-import type { ColumnProps, TableProps } from '@arco-design/web-react/es/Table/interface';
+import type { ColumnProps } from '@arco-design/web-react/es/Table/interface';
 import { IconEdit, IconUserGroup } from '@arco-design/web-react/icon';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { formatDateTime } from '../../../../core/format/dateTime';
 import { usePublicSettings } from '../../../../core/setting/publicSettings';
 import { usePermission } from '../../../../hooks/usePermission';
 import {
-  AppTable,
-  buildStandardPagination,
   GovernanceSummaryBar,
   ListHeaderActions,
   PageContainer,
-  PageEmpty,
-  PageLoading,
-  PageRequestError,
   PermissionAction,
   SearchToolbar,
   SystemRowActions,
@@ -30,9 +24,17 @@ import {
   type OverviewTenantRow,
   type TenantOverviewQuery,
 } from './api';
-import QuotaRatio from './QuotaRatio';
-import { formatQuotaLimit } from './quota';
 import TenantPlanEditor from './TenantPlanEditor';
+import {
+  planTone,
+  renderDateTime,
+  renderPlanTag,
+  renderQuota,
+  renderStatusTag,
+  tenantStatusTone,
+} from './tenantListCells';
+import { TenantListBody, TenantListTable } from './TenantListParts';
+import { formatQuotaLimit } from './quota';
 import './TenantOverview.css';
 
 const Row = Grid.Row;
@@ -47,25 +49,6 @@ interface OverviewQueryState {
 }
 
 const emptyQuery: OverviewQueryState = { keyword: '', page: 1, pageSize: 10 };
-
-const statusTone: Record<string, string> = {
-  active: 'green',
-  suspended: 'orange',
-  archived: 'gray',
-  deleted: 'red',
-};
-
-/**
- * A plan code carried by tenants that resolves to no definition is not the free
- * tier: it is unmanaged data. Reporting it as free would hide the fact that the
- * ceiling shown next to it is only a fallback, so it gets its own tone.
- */
-const planTone: Record<string, string> = {
-  free: 'gray',
-  basic: 'blue',
-  professional: 'arcoblue',
-  enterprise: 'orange',
-};
 
 const TenantOverview: React.FC = () => {
   const { t } = useTranslation();
@@ -123,12 +106,8 @@ const TenantOverview: React.FC = () => {
 
   const reset = useCallback(() => setQuery(emptyQuery), []);
 
-  const handleTableChange = useCallback((pagination: { current?: number; pageSize?: number }) => {
-    setQuery((prev) => ({
-      ...prev,
-      page: pagination.current ?? 1,
-      pageSize: pagination.pageSize ?? prev.pageSize,
-    }));
+  const handleTableChange = useCallback((page: number, pageSize: number) => {
+    setQuery((prev) => ({ ...prev, page, pageSize }));
   }, []);
 
   const openTenantMembers = useCallback(
@@ -164,55 +143,37 @@ const TenantOverview: React.FC = () => {
         title: t('system.tenant.status'),
         dataIndex: 'status',
         width: TABLE_COLUMN_WIDTH.status,
-        render: (value: string) => (
-          <Tag color={statusTone[value] ?? 'gray'}>
-            {t(`system.tenant.status.${value}`, { defaultValue: value })}
-          </Tag>
-        ),
+        render: renderStatusTag(t, tenantStatusTone, 'system.tenant.status'),
       },
       {
         title: t('system.tenant.plan'),
         dataIndex: 'plan',
         width: TABLE_COLUMN_WIDTH.sm,
-        render: (value: string, row) => (
-          <Tag color={planTone[value] ?? 'gray'}>
-            {row.planName || value || t('system.tenant.overview.plan.unmanaged')}
-          </Tag>
-        ),
+        render: renderPlanTag(t),
       },
       {
         title: t('system.tenant.overview.column.members'),
         dataIndex: 'members',
         width: TABLE_COLUMN_WIDTH.md,
-        render: (value: number, row) => (
-          <QuotaRatio usage={value} limit={row.maxUsers} unlimitedText={unlimitedText} />
-        ),
+        render: renderQuota<OverviewTenantRow>(unlimitedText, (row) => row.maxUsers),
       },
       {
         title: t('system.tenant.overview.column.roles'),
         dataIndex: 'roles',
         width: TABLE_COLUMN_WIDTH.sm,
-        render: (value: number, row) => (
-          <QuotaRatio usage={value} limit={row.maxRoles} unlimitedText={unlimitedText} />
-        ),
+        render: renderQuota<OverviewTenantRow>(unlimitedText, (row) => row.maxRoles),
       },
       {
         title: t('system.tenant.overview.column.depts'),
         dataIndex: 'depts',
         width: TABLE_COLUMN_WIDTH.sm,
-        render: (value: number, row) => (
-          <QuotaRatio usage={value} limit={row.maxDepts} unlimitedText={unlimitedText} />
-        ),
+        render: renderQuota<OverviewTenantRow>(unlimitedText, (row) => row.maxDepts),
       },
       {
         title: t('system.tenant.createdAt'),
         dataIndex: 'createdAt',
         width: TABLE_COLUMN_WIDTH.datetime,
-        render: (value) => (
-          <Typography.Text className="system-list__datetime-text">
-            {formatDateTime(value as string, { withSeconds: true })}
-          </Typography.Text>
-        ),
+        render: renderDateTime(),
       },
       {
         title: t('common.actions'),
@@ -235,57 +196,6 @@ const TenantOverview: React.FC = () => {
     ],
     [openTenantMembers, t, unlimitedText],
   );
-
-  const tableData = state.items;
-
-  const tableContent =
-    tableData.length === 0 && !loading ? (
-      <PageEmpty description={t('system.tenant.overview.empty')} />
-    ) : (
-      <AppTable<OverviewTenantRow>
-        className="system-list__table"
-        rowKey="tenantId"
-        data={tableData}
-        columns={columns}
-        loading={loading}
-        scroll={{ x: 'max-content' }}
-        onChange={handleTableChange as TableProps<OverviewTenantRow>['onChange']}
-        emptyText={t('system.tenant.overview.empty')}
-        pagination={buildStandardPagination(t, {
-          current: state.page,
-          pageSize: state.size,
-          total: state.total,
-          onChange: (page, pageSize) => {
-            handleTableChange({ current: page, pageSize });
-          },
-        })}
-      />
-    );
-
-  let bodyContent: React.ReactNode;
-  if (!tenantModeEnabled) {
-    bodyContent = (
-      <Space direction="vertical" size={16}>
-        <PageEmpty description={t('system.tenant.compat.desc')} />
-        <Button type="primary" onClick={() => navigate('/system/setting/platform')}>
-          {t('system.tenant.compat.action')}
-        </Button>
-      </Space>
-    );
-  } else if (loading && tableData.length === 0) {
-    bodyContent = <PageLoading />;
-  } else if (error && tableData.length === 0) {
-    bodyContent = (
-      <PageRequestError
-        error={error}
-        onRetry={() => {
-          void loadData(query);
-        }}
-      />
-    );
-  } else {
-    bodyContent = tableContent;
-  }
 
   return (
     <PageContainer>
@@ -343,7 +253,29 @@ const TenantOverview: React.FC = () => {
               </Typography.Text>
             }
           />
-          {bodyContent}
+          <TenantListBody
+            tenantModeEnabled={tenantModeEnabled}
+            loading={loading}
+            rowCount={state.items.length}
+            error={error}
+            onRetry={() => {
+              void loadData(query);
+            }}
+            onOpenPlatformSettings={() => navigate('/system/setting/platform')}
+            table={
+              <TenantListTable<OverviewTenantRow>
+                rows={state.items}
+                columns={columns}
+                rowKey="tenantId"
+                loading={loading}
+                page={state.page}
+                pageSize={state.size}
+                total={state.total}
+                emptyText={t('system.tenant.overview.empty')}
+                onPageChange={handleTableChange}
+              />
+            }
+          />
         </Card>
       </Space>
 

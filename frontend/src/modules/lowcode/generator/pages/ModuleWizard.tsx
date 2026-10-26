@@ -712,6 +712,15 @@ function isOneClickRegistrationEnabled(
   );
 }
 
+/**
+ * The table prefix a scope owns. A system module may only bind `system_*`
+ * tables and a business module only `biz_*`, so the picker, the hint and the
+ * scope change handler all read the same rule.
+ */
+function tablePrefixForScope(scope: ModuleScope): string {
+  return scope === 'system' ? 'system_' : 'biz_';
+}
+
 const ModuleWizard: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -768,8 +777,8 @@ const ModuleWizard: React.FC = () => {
 
   const selectedDatasource = datasources.find((item) => item.id === selectedDatasourceId);
   const watchedScope = Form.useWatch('scope', form) as ModuleScope | undefined;
-  const activeScope: ModuleScope = watchedScope === 'system' ? 'system' : 'business';
-  const managedTablePrefix = activeScope === 'system' ? 'system_' : 'biz_';
+  const activeScope: ModuleScope = watchedScope ?? 'business';
+  const managedTablePrefix = tablePrefixForScope(activeScope);
   const visibleTableOptions = tableOptions.filter((item) =>
     item.tableName.startsWith(managedTablePrefix),
   );
@@ -1556,8 +1565,7 @@ const ModuleWizard: React.FC = () => {
               >
                 <Select
                   onChange={(value) => {
-                    const nextScope = value as ModuleScope;
-                    const nextPrefix = nextScope === 'system' ? 'system_' : 'biz_';
+                    const nextPrefix = tablePrefixForScope(value as ModuleScope);
                     const currentTable = String(
                       form.getFieldValue('metadata.sourceTable' as keyof ModuleSchema) || '',
                     ).trim();

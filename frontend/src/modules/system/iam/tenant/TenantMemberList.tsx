@@ -1,19 +1,13 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Button, Card, Select, Space, Tag, Typography } from '@arco-design/web-react';
-import type { ColumnProps, TableProps } from '@arco-design/web-react/es/Table/interface';
+import type { ColumnProps } from '@arco-design/web-react/es/Table/interface';
 import { IconClose, IconUserGroup } from '@arco-design/web-react/icon';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { formatDateTime } from '../../../../core/format/dateTime';
 import { usePublicSettings } from '../../../../core/setting/publicSettings';
 import {
-  AppTable,
-  buildStandardPagination,
   GovernanceSummaryBar,
   PageContainer,
-  PageEmpty,
-  PageLoading,
-  PageRequestError,
   SearchToolbar,
   TABLE_COLUMN_WIDTH,
 } from '../../../../components';
@@ -24,15 +18,15 @@ import {
   type MemberUsageQuery,
   type TenantMemberUsageRow,
 } from './api';
-import QuotaRatio from './QuotaRatio';
+import {
+  renderDateTime,
+  renderPlanTag,
+  renderQuota,
+  renderStatusTag,
+  tenantStatusTone,
+} from './tenantListCells';
+import { TenantListBody, TenantListTable } from './TenantListParts';
 import './TenantMemberList.css';
-
-const statusTone: Record<string, string> = {
-  active: 'green',
-  suspended: 'orange',
-  archived: 'gray',
-  deleted: 'red',
-};
 
 const memberStatusTone: Record<string, string> = {
   active: 'green',
@@ -43,18 +37,6 @@ const roleTone: Record<string, string> = {
   owner: 'orange',
   admin: 'arcoblue',
   member: 'gray',
-};
-
-/**
- * The plan code is reported as the tenant carries it. An empty value is not the
- * free tier, it is unmanaged data, so it gets its own label rather than a
- * guessed one.
- */
-const planTone: Record<string, string> = {
-  free: 'gray',
-  basic: 'blue',
-  professional: 'arcoblue',
-  enterprise: 'orange',
 };
 
 interface MemberQueryState {
@@ -144,12 +126,8 @@ const TenantMemberList: React.FC = () => {
     ? scopeTenant.tenantName || scopeTenant.tenantCode
     : String(query.tenantId ?? '');
 
-  const handleTableChange = useCallback((pagination: { current?: number; pageSize?: number }) => {
-    setQuery((prev) => ({
-      ...prev,
-      page: pagination.current ?? 1,
-      pageSize: pagination.pageSize ?? prev.pageSize,
-    }));
+  const handleTableChange = useCallback((page: number, pageSize: number) => {
+    setQuery((prev) => ({ ...prev, page, pageSize }));
   }, []);
 
   const columns = useMemo<ColumnProps<TenantMemberUsageRow>[]>(
@@ -171,29 +149,19 @@ const TenantMemberList: React.FC = () => {
         title: t('system.tenant.member.column.tenantStatus'),
         dataIndex: 'tenantStatus',
         width: TABLE_COLUMN_WIDTH.status,
-        render: (value: string) => (
-          <Tag color={statusTone[value] ?? 'gray'}>
-            {t(`system.tenant.status.${value}`, { defaultValue: value })}
-          </Tag>
-        ),
+        render: renderStatusTag(t, tenantStatusTone, 'system.tenant.status'),
       },
       {
         title: t('system.tenant.member.column.plan'),
         dataIndex: 'plan',
         width: TABLE_COLUMN_WIDTH.sm,
-        render: (value: string, row) => (
-          <Tag color={planTone[value] ?? 'gray'}>
-            {row.planName || value || t('system.tenant.overview.plan.unmanaged')}
-          </Tag>
-        ),
+        render: renderPlanTag(t),
       },
       {
         title: t('system.tenant.member.column.usage'),
         dataIndex: 'tenantUsage',
         width: TABLE_COLUMN_WIDTH.md,
-        render: (value: number, row) => (
-          <QuotaRatio usage={value} limit={row.maxUsers} unlimitedText={unlimitedText} />
-        ),
+        render: renderQuota<TenantMemberUsageRow>(unlimitedText, (row) => row.maxUsers),
       },
       {
         title: t('system.tenant.member.column.account'),
@@ -210,86 +178,23 @@ const TenantMemberList: React.FC = () => {
         title: t('system.tenant.member.column.role'),
         dataIndex: 'memberRole',
         width: TABLE_COLUMN_WIDTH.sm,
-        render: (value: string) => (
-          <Tag color={roleTone[value] ?? 'gray'}>
-            {t(`system.tenant.role.${value}`, { defaultValue: value })}
-          </Tag>
-        ),
+        render: renderStatusTag(t, roleTone, 'system.tenant.role'),
       },
       {
         title: t('system.tenant.member.column.status'),
         dataIndex: 'memberStatus',
         width: TABLE_COLUMN_WIDTH.status,
-        render: (value: string) => (
-          <Tag color={memberStatusTone[value] ?? 'gray'}>
-            {t(`system.tenant.member.status.${value}`, { defaultValue: value })}
-          </Tag>
-        ),
+        render: renderStatusTag(t, memberStatusTone, 'system.tenant.member.status'),
       },
       {
         title: t('system.tenant.member.column.joinedAt'),
         dataIndex: 'joinedAt',
         width: TABLE_COLUMN_WIDTH.datetime,
-        render: (value) => (
-          <Typography.Text className="system-list__datetime-text">
-            {formatDateTime(value as string, { withSeconds: true })}
-          </Typography.Text>
-        ),
+        render: renderDateTime(),
       },
     ],
     [t, unlimitedText],
   );
-
-  const tableData = state.items;
-
-  const tableContent =
-    tableData.length === 0 && !loading ? (
-      <PageEmpty description={t('system.tenant.member.empty')} />
-    ) : (
-      <AppTable<TenantMemberUsageRow>
-        className="system-list__table"
-        rowKey={memberRowKey}
-        data={tableData}
-        columns={columns}
-        loading={loading}
-        scroll={{ x: 'max-content' }}
-        onChange={handleTableChange as TableProps<TenantMemberUsageRow>['onChange']}
-        emptyText={t('system.tenant.member.empty')}
-        pagination={buildStandardPagination(t, {
-          current: state.page,
-          pageSize: state.pageSize,
-          total: state.total,
-          onChange: (page, pageSize) => {
-            handleTableChange({ current: page, pageSize });
-          },
-        })}
-      />
-    );
-
-  let bodyContent: React.ReactNode;
-  if (!tenantModeEnabled) {
-    bodyContent = (
-      <Space direction="vertical" size={16}>
-        <PageEmpty description={t('system.tenant.compat.desc')} />
-        <Button type="primary" onClick={() => navigate('/system/setting/platform')}>
-          {t('system.tenant.compat.action')}
-        </Button>
-      </Space>
-    );
-  } else if (loading && tableData.length === 0) {
-    bodyContent = <PageLoading />;
-  } else if (error && tableData.length === 0) {
-    bodyContent = (
-      <PageRequestError
-        error={error}
-        onRetry={() => {
-          void loadData(query);
-        }}
-      />
-    );
-  } else {
-    bodyContent = tableContent;
-  }
 
   return (
     <PageContainer>
@@ -353,7 +258,29 @@ const TenantMemberList: React.FC = () => {
               </Button>
             </div>
           ) : null}
-          {bodyContent}
+          <TenantListBody
+            tenantModeEnabled={tenantModeEnabled}
+            loading={loading}
+            rowCount={state.items.length}
+            error={error}
+            onRetry={() => {
+              void loadData(query);
+            }}
+            onOpenPlatformSettings={() => navigate('/system/setting/platform')}
+            table={
+              <TenantListTable<TenantMemberUsageRow>
+                rows={state.items}
+                columns={columns}
+                rowKey={memberRowKey}
+                loading={loading}
+                page={state.page}
+                pageSize={state.pageSize}
+                total={state.total}
+                emptyText={t('system.tenant.member.empty')}
+                onPageChange={handleTableChange}
+              />
+            }
+          />
         </Card>
       </Space>
     </PageContainer>
