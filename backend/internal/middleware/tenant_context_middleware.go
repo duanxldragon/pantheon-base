@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"errors"
+	"net/http"
 	"strconv"
 	"strings"
 
@@ -78,13 +79,27 @@ func tenantContextMiddleware(modeLoader *tenant.ModeLoader, membershipDB *gorm.D
 			platformCapable = subjectHasPlatformCapability(c)
 		}
 
+		// Login-scoped routes (self-service endpoints and the tenant switcher)
+		// carry no role policy by design (PERMISSION_MODEL §10.3, contract
+		// §2.2): every authenticated subject may call them. A claim-less
+		// platform subject therefore has no global policy to prove platform
+		// capability with, yet it still needs a resolved context — otherwise
+		// /auth/me answers `tenant.context.missing` and the console is
+		// unusable for platform operators holding narrow roles. This only
+		// relaxes the implicit fallback; the explicit header override keeps
+		// requiring a real platform grant.
+		fallbackCapable := platformCapable
+		if platformScoped && subjectTenant == "" && !fallbackCapable && isLoginScopedRoute(c) {
+			fallbackCapable = true
+		}
+
 		resolved, err := tenant.Resolve(tenant.ResolveInput{
 			Mode:            mode,
 			SubjectTenantID: subjectTenant,
 			HeaderTenantID:  headerTenant,
 			HeaderAllowed:   platformCapable,
 			PlatformScoped:  platformScoped,
-			PlatformCapable: platformCapable && isPlatformPopulationSubject(c, membershipDB),
+			PlatformCapable: fallbackCapable && isPlatformPopulationSubject(c, membershipDB),
 		})
 		if err != nil {
 			if errors.Is(err, tenant.ErrTenantContextMissing) {
@@ -110,6 +125,25 @@ func tenantContextMiddleware(modeLoader *tenant.ModeLoader, membershipDB *gorm.D
 
 		tenant.SetGin(c, resolved)
 		c.Next()
+	}
+}
+
+// isLoginScopedRoute reports whether a route is authorized by the login state
+// alone rather than by a role policy: the Casbin self-service allowlist plus
+// the tenant switcher, whose authority is the membership row (contract §2.2).
+// Such routes cannot express "platform capability" as a policy, so the tenant
+// fallback must not demand one from a claim-less platform subject.
+func isLoginScopedRoute(c *gin.Context) bool {
+	if isSelfServiceRoute(c) {
+		return true
+	}
+	switch c.FullPath() {
+	case "/api/v1/auth/tenants/switchable", "/api/v1/auth/tenants/current":
+		return c.Request.Method == http.MethodGet
+	case "/api/v1/auth/tenants/switch":
+		return c.Request.Method == http.MethodPost
+	default:
+		return false
 	}
 }
 

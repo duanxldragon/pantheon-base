@@ -80,6 +80,11 @@ func TestRunMigrationsAlignsRuntimeSchemaWithCurrentContracts(t *testing.T) {
 		"system_module_registration": {
 			"scope", "source", "owner", "bounded_context", "summary", "source_table", "auto_recycle", "table_name", "installed_at", "uninstalled_at", "last_verified_at", "last_error", "last_verification_result",
 		},
+		// 000030: plan definitions leave the compiled-in switch statement, so the
+		// table and its natural key have to exist before the console can edit one.
+		"tenant_plans": {
+			"code", "name", "max_users", "max_roles", "max_depts", "max_api_keys", "max_storage_mb", "status", "sort",
+		},
 	}
 
 	for table, columns := range expectedColumns {
@@ -99,6 +104,8 @@ func TestRunMigrationsAlignsRuntimeSchemaWithCurrentContracts(t *testing.T) {
 	assertMigrationIndexExists(t, db, "system_user", "uk_system_user_tenant_oidc_subject")
 	assertMigrationIndexExists(t, db, "system_user", "idx_system_user_auth_type")
 	assertMigrationIndexDoesNotExist(t, db, "system_user", "idx_system_user_oidc_subject")
+	assertMigrationIndexExists(t, db, "tenant_plans", "uk_tenant_plan_code")
+	assertTenantPlanSeedRows(t, db)
 	assertLegacyColumnDoesNotBlockRuntimeWrites(t, db, "system_user_session", "expires_at")
 	assertLegacyColumnDoesNotBlockRuntimeWrites(t, db, "system_i18n", "locale_key")
 
@@ -555,6 +562,24 @@ WHERE table_schema = DATABASE()
 	}
 	if count < 1 {
 		t.Fatalf("expected index %s.%s to exist after migrations", table, index)
+	}
+}
+
+// assertTenantPlanSeedRows proves that migration 000030 did more than create the
+// table: the four built-in plans must be present, because a database with an
+// empty plan table makes every quota read fall back to the compiled-in defaults
+// and the console has nothing to edit.
+func assertTenantPlanSeedRows(t *testing.T, db *gorm.DB) {
+	t.Helper()
+
+	var count int64
+	if err := db.Table("tenant_plans").
+		Where("code IN ?", []string{"free", "basic", "professional", "enterprise"}).
+		Count(&count).Error; err != nil {
+		t.Fatalf("count seeded tenant plans: %v", err)
+	}
+	if count != 4 {
+		t.Fatalf("expected migration 000030 to seed the four built-in plans, got %d", count)
 	}
 }
 

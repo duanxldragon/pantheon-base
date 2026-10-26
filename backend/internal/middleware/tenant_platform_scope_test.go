@@ -103,6 +103,82 @@ func TestPlatformScopeTenantContextMiddleware_ResolutionMatrix(t *testing.T) {
 // no membership at all, so it can never shadow a tenant membership. A
 // membership-bearing subject still reaches the global scope, but only through
 // the explicit header override.
+// A claim-less platform subject that holds only narrow (non-platform) roles
+// must still be able to bootstrap: self-service routes and the tenant switcher
+// are authorized by the login state alone (PERMISSION_MODEL §10.3, contract
+// §2.2), so no global Casbin policy exists for them. They resolve the
+// platform-global context instead of answering tenant.context.missing, while
+// data routes keep denying the same subject and the explicit header override
+// keeps requiring a real platform grant.
+func TestPlatformScopeTenantContextMiddleware_LoginScopedRoutesResolveForPlatformSubject(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	db := setupTenantMembershipTestDB(t)
+	const tenantLessUserID uint64 = 8
+
+	tests := []struct {
+		name         string
+		path         string
+		headerTenant string
+		wantCode     int
+		wantTenantID uint64
+	}{
+		{
+			name:     "self-service route resolves the platform scope",
+			path:     "/api/v1/auth/me",
+			wantCode: common.CodeSuccess, wantTenantID: tenant.PlatformGlobalTenantID,
+		},
+		{
+			name:     "tenant switcher current context resolves the platform scope",
+			path:     "/api/v1/auth/tenants/current",
+			wantCode: common.CodeSuccess, wantTenantID: tenant.PlatformGlobalTenantID,
+		},
+		{
+			name:     "tenant switcher list resolves the platform scope",
+			path:     "/api/v1/auth/tenants/switchable",
+			wantCode: common.CodeSuccess, wantTenantID: tenant.PlatformGlobalTenantID,
+		},
+		{
+			name:     "data route still requires a platform policy",
+			path:     "/api/v1/system/i18n/list",
+			wantCode: common.CodeError,
+		},
+		{
+			name: "header override still requires a platform grant",
+			path: "/api/v1/auth/me", headerTenant: "0",
+			wantCode: common.CodeForbidden,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			recorder := runTenantScopeRequest(t, tenantScopeRequest{
+				platformScoped: true, mode: tenant.ModeMulti, headerTenant: tt.headerTenant,
+				membershipDB: db, userID: tenantLessUserID, path: tt.path,
+			})
+			assertTenantSmokeResponse(t, recorder, http.StatusOK, tt.wantCode, tt.wantTenantID, tenant.ModeMulti)
+		})
+	}
+}
+
+// Relaxing the fallback for login-scoped routes must not relax its
+// membership condition: a subject that already belongs to a tenant cannot
+// reach the platform-global scope implicitly, not even on /auth/me.
+func TestPlatformScopeTenantContextMiddleware_MembershipBlocksLoginScopedFallback(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	db := setupTenantMembershipTestDB(t)
+	if err := db.Create(&tenant.Membership{
+		TenantID: 5, UserID: 7, Role: tenant.MembershipRoleMember, Status: tenant.MembershipActive,
+	}).Error; err != nil {
+		t.Fatalf("seed membership: %v", err)
+	}
+
+	recorder := runTenantScopeRequest(t, tenantScopeRequest{
+		platformScoped: true, mode: tenant.ModeMulti,
+		membershipDB: db, userID: 7, path: "/api/v1/auth/me",
+	})
+	assertTenantSmokeResponse(t, recorder, http.StatusOK, common.CodeError, 0, "")
+}
+
 func TestPlatformScopeTenantContextMiddleware_MembershipBlocksImplicitFallback(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	db := setupTenantMembershipTestDB(t)
@@ -194,6 +270,7 @@ type tenantScopeRequest struct {
 	roles          []string
 	membershipDB   *gorm.DB
 	userID         uint64
+	path           string
 }
 
 func runTenantScopeRequest(t *testing.T, spec tenantScopeRequest) *httptest.ResponseRecorder {
@@ -216,7 +293,11 @@ func runTenantScopeRequest(t *testing.T, spec tenantScopeRequest) *httptest.Resp
 	} else {
 		engine.Use(TenantContextMiddleware(loader, spec.membershipDB))
 	}
-	engine.GET("/protected", func(c *gin.Context) {
+	path := spec.path
+	if path == "" {
+		path = "/protected"
+	}
+	engine.GET(path, func(c *gin.Context) {
 		ctx := tenant.FromGin(c)
 		if ctx == nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"code": common.CodeError})
@@ -227,7 +308,7 @@ func runTenantScopeRequest(t *testing.T, spec tenantScopeRequest) *httptest.Resp
 		}})
 	})
 
-	req := httptest.NewRequest(http.MethodGet, "/protected", nil)
+	req := httptest.NewRequest(http.MethodGet, path, nil)
 	if spec.headerTenant != "" {
 		req.Header.Set(tenant.HeaderTenantID, spec.headerTenant)
 	}

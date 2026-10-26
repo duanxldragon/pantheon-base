@@ -1,6 +1,6 @@
 # Tenant Management API Documentation
 
-Version: 1.1 (2026-10-22: paths aligned with the mounted surface)  
+Version: 1.2 (2026-10-25: adds the platform tenant-ops console endpoints §10–§14)  
 Base URL: `/api/v1`
 
 ## Overview
@@ -181,7 +181,10 @@ Marks a tenant as deleted (soft delete).
 - `400 Bad Request`: Tenant has active members
 - `404 Not Found`: Tenant not found
 
-**Note**: A tenant can only be deleted if it has no active members. Remove all members first.
+**Note**: An active tenant cannot be deleted while it still has active members. Remove the
+members first, or — because the last owner can never be removed — set the tenant to
+`archived` first and then delete it. Deleting an archived tenant disables its remaining
+memberships in the same transaction.
 
 ---
 
@@ -295,6 +298,149 @@ the mounted equivalent of the legacy `GET /tenants/my`; the legacy group is not 
   }
 ]
 ```
+
+---
+
+## Tenant-ops console (platform-global rollups)
+
+The pages behind **租户运营** read from a sibling group, `/system/tenant-ops/*`, on purpose:
+`GET /system/tenant/:id` already owns that group's wildcard child, so a static
+`/system/tenant/overview` would be a routing-shape risk. Contract: `TENANT_CONTRACT_V1` §2.5.
+
+These endpoints span tenants by design, so they sit behind the same
+`PlatformCapabilityMiddleware` group and are platform-only. Quotas reported here are a **measurement,
+not a write gate** (§2.4.1): exceeding a plan limit never causes a write to be rejected.
+
+### 10. Tenant Overview
+
+**GET** `/system/tenant-ops/overview`
+
+**Authorization**: Platform capability (`system:tenant:overview`)
+
+**Query**: `keyword`, `status` (`active|suspended|archived|deleted`), `plan`, `page`, `size`
+(default 20; the 100 ceiling is enforced by request binding, so a larger value returns
+`param.invalid` rather than a truncated page).
+
+**Response** (200 OK):
+```json
+{
+  "summary": { "total": 3, "active": 2, "suspended": 1, "archived": 0, "deleted": 1 },
+  "totals": { "members": 3, "roles": 2, "depts": 1 },
+  "plans": [
+    { "plan": "free", "name": "Free", "known": true, "tenantCount": 1,
+      "quota": { "max_users": 5, "max_roles": 3, "max_depts": 5, "max_api_keys": 2, "max_storage_mb": 100 } }
+  ],
+  "items": [
+    { "tenantId": 101, "code": "acme", "name": "ACME", "status": "active", "plan": "free",
+      "planName": "Free", "members": 2, "roles": 2, "depts": 0,
+      "maxUsers": 5, "maxRoles": 3, "maxDepts": 5,
+      "createdAt": "2026-10-25T09:00:00Z", "updatedAt": "2026-10-25T09:00:00Z" }
+  ],
+  "total": 3,
+  "page": 1,
+  "size": 20
+}
+```
+
+Notes:
+- `summary` is a facet set: it applies every filter except `status`, and `total` there is
+  `active + suspended + archived` (the `deleted` tombstone is reported separately, per §2.1).
+- A `-1` in any `max_*` means **no ceiling**; it is not a very large number and must not be rendered as
+  a ratio.
+- An unknown or empty `plan` reports `known: false` with an empty `planName` and the fallback quota. It
+  is shown as itself — never silently relabelled `free`.
+- Occupancy counts active memberships only, respects soft delete for roles and departments, and excludes
+  platform rows (`tenant_id = 0`).
+
+### 11. Members Across Tenants
+
+**GET** `/system/tenant-ops/member`
+
+**Authorization**: Platform capability (`system:tenant:member-list`)
+
+**Query**: `tenantId`, `status` (`active|disabled`), `role` (`owner|admin|member`), `keyword`, `page`,
+`pageSize` (default 20, max 100). Default status filter is `active`.
+
+**Response** (200 OK):
+```json
+{
+  "items": [
+    { "tenantId": 101, "tenantCode": "acme", "tenantName": "ACME", "tenantStatus": "active",
+      "plan": "free", "planName": "Free", "maxUsers": 5, "tenantUsage": 2,
+      "userId": 201, "username": "ada", "nickname": "Ada", "memberRole": "owner",
+      "memberStatus": "active", "joinedAt": "2026-10-25T09:00:00Z" }
+  ],
+  "total": 3,
+  "page": 1,
+  "pageSize": 20
+}
+```
+
+`tenantUsage` is the whole tenant's active-member count, so a row shows its own person and the ceiling
+they share.
+
+### 12. List Plans
+
+**GET** `/system/tenant-ops/plan/list`
+
+**Authorization**: Platform capability (`system:tenant:plan:list`)
+
+**Response** (200 OK):
+```json
+{
+  "items": [
+    { "id": 1, "code": "free", "name": "Free", "maxUsers": 5, "maxRoles": 3, "maxDepts": 5,
+      "maxApiKeys": 2, "maxStorageMb": 100, "status": "active", "sort": 10,
+      "createdAt": "2026-10-25T09:00:00Z", "updatedAt": "2026-10-25T09:00:00Z", "tenantCount": 1 }
+  ]
+}
+```
+
+Disabled plans are included; `tenantCount` is the number of non-deleted tenants carrying the code, which
+is exactly the number that decides whether the plan can be retired.
+
+### 13. Create Plan
+
+**POST** `/system/tenant-ops/plan`
+
+**Authorization**: Platform capability (`system:tenant:plan:create`). Audited (`plan_create`).
+
+**Request Body** — all five ceilings are required on create:
+```json
+{
+  "code": "starter",
+  "name": "Starter",
+  "status": "active",
+  "sort": 15,
+  "maxUsers": 10,
+  "maxRoles": 5,
+  "maxDepts": 10,
+  "maxApiKeys": 5,
+  "maxStorageMb": 500
+}
+```
+
+**Errors**: `tenant.plan.code_invalid` (empty or outside `^[a-z][a-z0-9_-]{1,31}$`),
+`tenant.plan.quota_required` (a ceiling is missing), `tenant.plan.quota_invalid` (`0` or any value below
+`-1`), `tenant.plan.code_taken` (the natural key is used). All report as caller errors, not server faults.
+
+`-1` is accepted and means unlimited. `0` is deliberately rejected: consumers must tell "no ceiling"
+apart from "ceiling reached".
+
+### 14. Update Plan
+
+**PUT** `/system/tenant-ops/plan/:code`
+
+**Authorization**: Platform capability (`system:tenant:plan:update`). Audited (`plan_update`).
+
+Partial update: an omitted field keeps its stored value, but if any ceiling is supplied all five must be
+(they are one editing unit — a half-set of limits is not reportable).
+
+**Errors**: `tenant.plan.name_required`, `tenant.plan.quota_required`, `tenant.plan.quota_invalid`,
+`tenant.plan.not_found` (unknown code), and `tenant.plan.in_use` — setting `status = "disabled"` is
+refused while non-deleted tenants still carry the code.
+
+Plan deletion is not modelled — retirement is `status = "disabled"`.
 
 ---
 

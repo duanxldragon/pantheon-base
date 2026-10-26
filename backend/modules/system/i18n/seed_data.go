@@ -52,6 +52,12 @@ func (s *I18nService) SeedI18nModuleI18n(db *gorm.DB) error {
 		{Module: moduleAudit, Locale: "en-US", Group: "menu", Key: keyMenuOperationLog, Value: "Operation Logs"},
 		{Module: moduleTenant, Locale: "zh-CN", Group: "menu", Key: "system.menu.tenant", Value: "租户管理"},
 		{Module: moduleTenant, Locale: "en-US", Group: "menu", Key: "system.menu.tenant", Value: "Tenants"},
+		{Module: moduleTenant, Locale: "zh-CN", Group: "menu", Key: "system.menu.tenantOps", Value: "租户运营"},
+		{Module: moduleTenant, Locale: "en-US", Group: "menu", Key: "system.menu.tenantOps", Value: "Tenant Operations"},
+		{Module: moduleTenant, Locale: "zh-CN", Group: "menu", Key: "system.menu.tenantOverview", Value: "租户总览"},
+		{Module: moduleTenant, Locale: "en-US", Group: "menu", Key: "system.menu.tenantOverview", Value: "Tenant Overview"},
+		{Module: moduleTenant, Locale: "zh-CN", Group: "menu", Key: "system.menu.tenantMember", Value: "成员与配额"},
+		{Module: moduleTenant, Locale: "en-US", Group: "menu", Key: "system.menu.tenantMember", Value: "Members & Quotas"},
 
 		// 租户权限翻译
 
@@ -152,6 +158,12 @@ func (s *I18nService) SeedI18nModuleI18n(db *gorm.DB) error {
 		{Module: moduleTenant, Locale: "en-US", Group: "permission", Key: "system.permission.tenant.member_add", Value: "Tenant Member Add"},
 		{Module: moduleTenant, Locale: "zh-CN", Group: "permission", Key: "system.permission.tenant.member_remove", Value: "租户成员移除"},
 		{Module: moduleTenant, Locale: "en-US", Group: "permission", Key: "system.permission.tenant.member_remove", Value: "Tenant Member Remove"},
+		{Module: moduleTenant, Locale: "zh-CN", Group: "permission", Key: "system.permission.tenant.plan_list", Value: "套餐定义查看"},
+		{Module: moduleTenant, Locale: "en-US", Group: "permission", Key: "system.permission.tenant.plan_list", Value: "Plan Definition View"},
+		{Module: moduleTenant, Locale: "zh-CN", Group: "permission", Key: "system.permission.tenant.plan_create", Value: "套餐定义新增"},
+		{Module: moduleTenant, Locale: "en-US", Group: "permission", Key: "system.permission.tenant.plan_create", Value: "Plan Definition Create"},
+		{Module: moduleTenant, Locale: "zh-CN", Group: "permission", Key: "system.permission.tenant.plan_update", Value: "套餐定义编辑"},
+		{Module: moduleTenant, Locale: "en-US", Group: "permission", Key: "system.permission.tenant.plan_update", Value: "Plan Definition Update"},
 		{Module: moduleConfig, Locale: "zh-CN", Group: "permission", Key: "system.permission.setting.export", Value: "系统设置审计导出"},
 		{Module: moduleConfig, Locale: "en-US", Group: "permission", Key: "system.permission.setting.export", Value: "Setting Audit Export"},
 		{Module: moduleConfig, Locale: "zh-CN", Group: "permission", Key: "system.permission.module.register", Value: "模块生成注册"},

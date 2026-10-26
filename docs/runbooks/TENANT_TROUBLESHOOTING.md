@@ -40,28 +40,34 @@ id (its `name` is preserved).
 
 **Symptom**: `DELETE /api/v1/system/tenant/:id` is refused because the tenant still has active members
 
-**Cause**: Tenant still has active members. Membership is the login gate, so the API deliberately
-refuses while any active membership remains (contract §2.2).
+**Cause**: The tenant is not archived and still has active memberships. Membership is the login
+gate, so the API deliberately refuses while any active membership remains (contract §2.2).
+
+**Why "remove the members first" does not work**: the last owner can never be removed
+(`tenant.member.last_owner`), so a provisioned tenant has no member-free state on its own.
+The supported path is archive-then-delete: an archived tenant is terminal (§2.1) and may be
+deleted even while members remain; the delete transaction disables those memberships.
 
 **Solution**:
 ```bash
-# List tenant members
-curl -X GET http://localhost:8080/api/v1/system/tenant/1/members \
-  -H "Authorization: Bearer <token>"
+# Console: Tenants -> Edit -> Status = Archived -> Save, then Delete.
+#
+# API equivalent. Both writes use the session cookies and the CSRF token; the
+# DELETE is also a secure action and needs X-Operation-Token from
+# POST /api/v1/auth/operation-verify:
+curl -X PUT http://localhost:8080/api/v1/system/tenant/1 \
+  -H "Content-Type: application/json" \
+  -H "Cookie: <session cookies>" -H "X-CSRF-Token: <csrf>" \
+  -d '{"status":"archived"}'
 
-# Remove all members first
-curl -X DELETE http://localhost:8080/api/v1/system/tenant/1/members/100 \
-  -H "Authorization: Bearer <token>"
-
-# Then delete tenant (soft delete: sets status=deleted)
 curl -X DELETE http://localhost:8080/api/v1/system/tenant/1 \
-  -H "Authorization: Bearer <token>"
+  -H "Cookie: <session cookies>" -H "X-CSRF-Token: <csrf>" -H "X-Operation-Token: <op-token>"
 ```
 
 > The refusal is reported in the response envelope as `code: 400` with message
 > `tenant.has_active_members` (HTTP 200 — this API puts the outcome in the body). Teardown
-> scripts must therefore purge memberships first; the message key, not the HTTP class, is the
-> reliable signal.
+> scripts should archive the tenant (or purge memberships directly) before calling delete; the
+> message key, not the HTTP class, is the reliable signal.
 >
 > Deleting a tenant also **archives its `code`** to `__deleted_tenant_<id>` in the same
 > transaction, so the code is free for reuse afterwards. That is why a deleted tenant no longer

@@ -1,0 +1,14 @@
+core exit=0
+system exit=0
+platform-contracts exit=0
+platform-surfaces exit=0
+platform-full exit=0
+api exit=0
+business-generated exit=0
+business-database-import exit=0
+business-master-detail exit=0
+business-many-to-many exit=0
+business-auto-recycle exit=0
+MODE=compat OVERALL_FAIL=0
+multi-platform-audit-final exit=0 (20 passed)
+compat-platform-audit-final exit=0 (20 passed)

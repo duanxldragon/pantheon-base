@@ -67,6 +67,38 @@ func IsTenantScopedRoleKey(roleKey string) bool {
 	return false
 }
 
+// ReadOnlyExportRoute binds a `:export` permission key to the route that
+// implements it. Export endpoints are POST requests while a read-only role's
+// Casbin surface is the GET wildcard, so the key alone would render an export
+// action the middleware refuses (contract §4: the policy, not the key, is the
+// authority). Provisioning and the startup repair grant exactly these routes to
+// a role that holds the matching key; the workbench uses the same table to
+// report a genuine missing policy instead of guessing from the key name.
+type ReadOnlyExportRoute struct {
+	PermissionKey string
+	Path          string
+}
+
+// ReadOnlyExportRoutes is the single binding table for export actions. Add a
+// route here when an export endpoint is introduced, so the workbench, tenant
+// provisioning and the repair stay in sync.
+var ReadOnlyExportRoutes = []ReadOnlyExportRoute{
+	{PermissionKey: "system:user:export", Path: "/api/v1/system/user/export"},
+	{PermissionKey: "system:role:export", Path: "/api/v1/system/role/export"},
+	{PermissionKey: "system:permission:export", Path: "/api/v1/system/permission/export"},
+	{PermissionKey: "system:dept:export", Path: "/api/v1/system/dept/export"},
+	{PermissionKey: "system:dept:export", Path: "/api/v1/system/dept/governance/export"},
+	{PermissionKey: "system:post:export", Path: "/api/v1/system/post/export"},
+	{PermissionKey: "system:dict:export", Path: "/api/v1/system/dict/type/export"},
+	{PermissionKey: "system:dict:export", Path: "/api/v1/system/dict/item/export"},
+	{PermissionKey: "system:setting:export", Path: "/api/v1/system/setting/audit/export"},
+	{PermissionKey: "system:operation-log:export", Path: "/api/v1/system/operation-log/export"},
+	{PermissionKey: "system:login-log:export", Path: "/api/v1/system/login-log/export"},
+	{PermissionKey: "system:session:export", Path: "/api/v1/system/session/export"},
+	{PermissionKey: "system:security-event:export", Path: "/api/v1/system/security-event/export"},
+	{PermissionKey: "system:i18n:export", Path: "/api/v1/system/i18n/export"},
+}
+
 // Tenant master status values (contract §2.1).
 const (
 	TenantStatusActive    = "active"

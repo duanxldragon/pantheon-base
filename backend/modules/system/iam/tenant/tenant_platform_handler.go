@@ -79,9 +79,19 @@ func (h *PlatformHandler) failServiceError(c *gin.Context, err error, fallback s
 		common.FailWithError(c, common.CodeParamInvalid, err, fallback)
 	case errors.Is(err, ErrTenantHasActiveUsers):
 		// A state conflict, not a fault: DELETE /tenant is refused while an
-		// active membership remains (contract §2.2), so the caller must purge
-		// memberships first and retry.
+		// active membership remains (contract §2.2) and the tenant is not
+		// archived. The remedy is the archive-then-delete path, not member
+		// removal — the last owner cannot be removed, so pointing the operator
+		// at that path would be a dead end.
 		common.FailWithError(c, common.CodeParamInvalid, err, "tenant.has_active_members")
+	case errors.Is(err, ErrPlanNotFound):
+		common.FailWithError(c, common.CodeNotFound, err, "tenant.plan.not_found")
+	case errors.Is(err, ErrPlanCodeExists):
+		common.FailWithError(c, common.CodeParamInvalid, err, "tenant.plan.code_taken")
+	case errors.Is(err, ErrPlanInUse):
+		// Retiring a plan tenants still sit on would strand them on a limit
+		// nobody chose, so the remedy the console can offer is "reassign first".
+		common.FailWithError(c, common.CodeParamInvalid, err, "tenant.plan.in_use")
 	default:
 		common.FailWithError(c, common.CodeError, err, fallback)
 	}

@@ -13,7 +13,7 @@ linked_contracts:
   - docs/contracts/SYSTEM_IAM_CONTRACT.md
   - docs/contracts/SYSTEM_ORG_CONTRACT.md
   - docs/contracts/SYSTEM_CONFIG_CONTRACT.md
-updated_at: 2026-10-23
+updated_at: 2026-10-26
 ---
 
 # 租户合同 V1（共享 schema MVP）
@@ -41,11 +41,14 @@ English version: [TENANT_CONTRACT_V1.en.md](./TENANT_CONTRACT_V1.en.md)
 - 资源租户归属：业务/系统资源通过 `tenant_id` 归属租户，配 resource scope 矩阵约束
 - Casbin domain 维度的权限隔离（policy 带 tenant domain）
 - Compat 模式：单租户兼容开关，保证现有单租户部署零迁移继续运行
+- 套餐定义与配额阈值的**存储与读展示**（V1.4 新增，§2.4）与平台侧租户运营的**跨租户聚合读路径**（§2.5）
 
 ### Out
 
 - 独立 schema / 独立 database 隔离模型（V1 仅共享 schema + `tenant_id`）
-- 租户计费、套餐、配额（归商业域，另行立项）
+- 租户计费与套餐的商业化售卖（下单、升降级、账期，归商业域，另行立项）。
+  注意边界：套餐**定义**与配额**阈值**自 V1.4 起已落库并可由平台控制台编辑（§2.4），
+  但配额只是度量与展示维度——**后端不因超出配额而拒绝任何写入**。
 - 跨租户数据共享/联邦查询
 - 租户级自定义域名、独立部署形态
 
@@ -61,7 +64,7 @@ tenants
   code          varchar(64)  UK    -- 租户编码，全局唯一，创建后不可变
   name          varchar(128)       -- 显示名
   status        varchar(16)        -- active | suspended | archived | deleted（墓碑，见不变量）
-  plan          varchar(32)        -- 预留：套餐标记（V1 不消费）
+  plan          varchar(32)        -- 套餐标记：解析为 §2.4 的配额阈值（只用于度量展示）
   created_at / updated_at
   deleted_at                       -- 预留列，当前实现不写入（见不变量）
 ```
@@ -96,7 +99,28 @@ tenant_memberships
 不变量：
 - 一个 user 可属于多个 tenant；同一 `(tenant_id, user_id)` 唯一
 - 每个非 archived 租户至少一个 `owner`；转移 owner 是显式 API 动作
-- membership 删除 = `status=disabled`（软禁用），不物理删除，保证审计链完整
+- membership 的**下架方式按路径区分**（V1.5 澄清，逐条对齐实现；原条款「一律软禁用、不物理删除」
+  与实现不符）：
+
+  | 路径 | 实际行为 | 代码 |
+  |---|---|---|
+  | 删除租户 | 软禁用：同一事务内把该租户剩余 `active` 成员关系置 `status = disabled`，与 `status = 'deleted'`、释放 `code` 一起提交（§2.1） | `tenant_service.go:608-615` |
+  | 删除用户 | 软禁用：`status = disabled`；租户作用域只动本租户的行，平台作用域清理该用户全部成员关系（§2.3.1 第 2 条） | `user/user_membership.go:78-88`，回归 `user_membership_test.go:152-200` |
+  | 显式移除成员 | **物理删除**（当前实现的唯一例外）：先 `ensureNotLastOwner`，按 `(tenant_id, user_id)` 删除（不限 `status`，模型无 `deleted_at` 列，`tenant_model.go:25-33`），`RowsAffected == 0` → `ErrMembershipNotFound`，随后尽力撤销该成员会话 | `tenant_service.go:914-940` |
+  | 重新加入 / 重新创建用户 | **复活旧行**：命中 `(tenant_id, user_id)` 已有行则更新为请求角色 + `active`，不插第二行 | `tenant_service.go:869-888`、`user_membership.go:45-51` |
+
+  默认方向是软禁用，物理删除是需要收敛的例外，理由保留在下一条。
+- 保留行的意义：成员关系是「此人曾属于该租户」的审计记录，且登录门禁已把非 `active` 视为拒绝
+  （`pkg/tenant.GateSessionIssuance`），所以禁用足以阻断访问。物理删除路径的审计事实则由
+  全局操作日志承担（`operation_log_middleware.go:224-276` 记录全部非 GET 请求；平台侧成员增删另加
+  `SetAuditMetadata(..., BusinessGrant/BusinessDelete)`，`tenant_platform_handler.go:201-239`；
+  租户侧 `/tenants/:id/members/:user_id` 的 handler 不设标题、只依赖默认标题，属可改进项而非契约要求）。
+- **把「移除成员」也改成软禁用是契约变更，不是澄清**，本轮未做（写侧行为不动）。落地前置条件已登记：
+  ①要定义重复移除的错误语义——现状靠 `RowsAffected == 0` 区分「没有这行」，改成 `UPDATE ... status = disabled`
+  后 MySQL 对无变化的行同样返回 `RowsAffected = 0`，存在性判断不能再复用这个信号；
+  ②复活语义要覆盖所有插入路径（`AddMember`、`user` 侧建用户/导入、租户 provisioning），否则会撞上
+  `UK(tenant_id, user_id)`；③成员列表、跨租户成员视图（§2.5）与「至少一个 owner」的统计口径要显式
+  声明是否把 `disabled` 行计入。
 - 租户内角色（owner/admin/member）与全局 IAM 角色（`iam roles`）**命名空间分离**，不做隐式映射
 
 ### 2.3 资源租户归属（tenant_id 传播）
@@ -136,6 +160,114 @@ tenant_memberships
 > `ON CONFLICT(role_key)` 时引用「§2.3.1 第 2 条」；驳回一个不带租户的 `Count()` 归属校验时引用「§2.3.1 第 3 条」。
 > 本条款的回归测试：`backend/internal/middleware/data_scope_tenant_test.go`、
 > `backend/modules/system/iam/permission/permission_data_scope_tenant_test.go`。
+
+### 2.4 套餐定义与配额语义（V1.4 新增，2026-10-25）
+
+```
+tenant_plans
+  id              bigint unsigned PK AUTO_INCREMENT
+  code            varchar(32)  UK  -- 套餐编码，^[a-z][a-z0-9_-]{1,31}$，规范化为小写后比较
+  name            varchar(64)      -- 显示名，缺省取 code
+  max_users       int              -- 成员上限
+  max_roles       int              -- 角色上限
+  max_depts       int              -- 部门上限
+  max_api_keys    int              -- API Key 上限
+  max_storage_mb  int              -- 存储上限（MB）
+  status          varchar(16)      -- active | disabled
+  sort            int              -- 控制台排序
+  created_at / updated_at
+  UK(code)
+```
+
+DDL 与种子：编号迁移 `000030_tenant_plan_definitions`；AutoMigrate 部署走
+`PlanStore.Migrate()`（`Service.Migrate()` 调用，同时是 system 模块的 `MigrateFunc`）。
+
+不变量：
+
+1. **平台全局表，没有 `tenant_id` 列**——与 `tenants` 本身同形。本模块的租户隔离由各 service
+   显式 `WithTenantScope` 施加，不是全局 GORM 插件；给计划表加上 `tenant_id` 会让平台控制台的读
+   被过滤成空集（§2.3 的归属规则约束的是"带该列的表"，不要求每张表都带）。
+2. **`-1` 表示无上限（`tenant.UnlimitedQuota`），`0` 不是合法值**，写路径拒绝。理由：每个消费者
+   都要区分"没有上限"与"上限已用尽"，允许 `0` 会让落库的定义把这两态压成同一个数字。
+   校验发生在写入侧（`PlanQuotaReq.resolve`），不在读侧。
+3. **空 code 的语义两侧不同**：定义侧（`tenant_plans.code`）空值非法，因为无法赋值也无法上报；
+   租户侧（`tenants.plan`）空值合法，它是"未选套餐"的列默认值，也是本特性之前所有租户行存的东西。
+4. **解析永不失败，未知值回落编译内置表**。`PlanStore.QuotaFor` 对空、未知、已停用 code 一律落到
+   `GetDefaultQuota`，而后者把未知 code 映射到 free。读路径不能因为运营者不可能弄坏的数据而变成故障页。
+   因此 `GetDefaultQuota` 不是遗留死代码：它是 seed 的值来源，也是表还不存在时（首次 AutoMigrate 之前、
+   手工 schema 的单测）唯一的解析来源。
+5. **退役是 `status = disabled`，删除行未建模**。仍有非删除租户携带该 code 时拒绝退役
+   （`ErrPlanInUse`）；一行在租户还挂着它时消失，会让该租户的配额变成"没人选择过的上限"。
+6. **种子幂等且只插不改**（`INSERT … WHERE NOT EXISTS` / 逐 code 计数后跳过）。一旦控制台能编辑阈值，
+   重放时改写既有值的 seed 会静默撤销运营者；迁移重放在本仓库是真实状态（见 `000024` 的基线说明）。
+7. **读穿透缓存有界**：TTL 5 秒（`planCacheTTL`），任何写入后立即 `Invalidate()`。阈值必须不重启就
+   传播到每个实例，而这份数据的形态是"每请求读、极少写"——与 `pkg/tenant.ModeLoader` 对
+   `tenant_mode` 的策略一致。
+8. **能指派给租户的 code 由服务端判定**（V1.5 补齐，2026-10-26）。`PlanStore.ValidateAssignment`
+   在租户创建与更新路径上调用，顺序即语义：空值合法（"未选套餐"，见不变量 3）→ 格式非法
+   `tenant.plan.code_invalid` → 表不可读或为空时只接受编译内置四档（seed 还没到达不是运营者的错，
+   provisioning 不能因此停摆，其余 code 报 `tenant.plan.unknown`）→ 已定义但停用
+   `tenant.plan.disabled`。停用判定走 `TenantPlan.IsEnabled` 的**失败开放**归一化：除 `disabled`
+   以外的状态一律算启用。控制台的指派面镜像这一条规则，不另立第二套策略。
+
+   控制台的租户表单因此从 `GET /system/tenant-ops/plan/list` 取定义，顺序沿用服务端的
+   `sort ASC, id ASC`（内置阶梯正是靠这个顺序呈现，而不是前端再排一次）；写侧只列可指派 code，
+   但**该租户当前携带的 code 即使已停用、甚至已不在定义里，也保持可选项**——否则打开一个退役套餐的
+   租户会呈现一张一保存就静默改写其套餐的表单。读侧筛选列出全部已定义 code（含停用），因为仍挂着它的
+   租户要能被筛出来如实报告（§2.5）。
+
+#### 2.4.1 配额语义：度量，不是闸门（本节的边界条款）
+
+- **后端在任何写入路径上都不因超出套餐而拒绝。** 配额的用途是让总览/成员页如实报告"用量 vs 阈值"，
+  超限在界面上高亮而不是拦截。这是本轮显式的设计决策（只做真实统计展示），§1 Out 的商业化售卖
+  仍然另行立项。
+- 可引用条款：任何在写路径上加入 `用量 >= 上限 → 拒绝` 的改动都构成 **contract change**，
+  必须走 §8 的版本号 + 变更记录 + runbook/matrix 同步流程，不能以"顺手补个校验"合入。
+  反过来，任何把总览页的阈值改成写侧强制的"临时保护"同样适用本条。
+- **`QuotaEnforcer`（`tenant_production.go`）与 `MetricsCollector`（`tenant_metrics.go`）已实现
+  但在出货请求路径中未接线**：没有生产代码构造它们。记录这一事实是为了让"看起来已有强制能力"
+  不被误读成"已经有强制"。保留的理由也记录在此：它们的用量口径与控制台同源，且经
+  `quotaFor → PlanStore.QuotaFor` 读同一份定义，因此**将来若开启强制，不会与控制台已显示的
+  阈值不一致**。未走 §2.4.1 上一条流程前，不得接线。
+
+### 2.5 平台侧租户运营读路径（V1.4 新增，2026-10-25）
+
+| 路由 | 权限 key | 性质 |
+|---|---|---|
+| `GET /api/v1/system/tenant-ops/overview` | `system:tenant:overview` | 跨租户聚合读 |
+| `GET /api/v1/system/tenant-ops/member` | `system:tenant:member-list` | 跨租户成员读 |
+| `GET /api/v1/system/tenant-ops/plan/list` | `system:tenant:plan:list` | 平台全局读 |
+| `POST /api/v1/system/tenant-ops/plan` | `system:tenant:plan:create` | 平台全局写，落审计 |
+| `PUT /api/v1/system/tenant-ops/plan/:code` | `system:tenant:plan:update` | 平台全局写，落审计 |
+
+规则（每条可被 reviewer 单独引用）：
+
+1. **每一条都是 §3.3 / §3.4 意义上的显式声明平台作用域路由**：位于 `system/*` 保护组内，由租户控制台的
+   `PlatformCapabilityMiddleware` 保护。跨租户读**只允许**这一种形态；任何租户侧 API 不得复用
+   `Service.Overview` / `Service.ListMembersAcrossPages`——它们天生无视当前请求的租户。
+   路径单独成组而非 `/system/tenant/overview` 的原因是形状而非审美：`GET /system/tenant/:id`
+   已占用该组的通配子节点，静态兄弟路径是等待在 Gin 升级时 panic 的路由决策。
+2. **权限 key 留在 `system:tenant:` 前缀下**，使 `pkg/tenant.IsPlatformOnlyPermissionKey` 不需要第二份
+   清单即可分类。后端 `pkg/tenant/platform_scope.go` 与前端 `core/layout/useLayoutMenu.tsx` 的
+   platform-only 判定必须继续对同一前缀生效；新增 key 若跳出前缀，两侧判定必须在同一 patch 内补齐。
+3. **口径必须与租户管理页一致**。所有读共享 `opsTenantScope`（排除 `id = platformGlobalTenantID`；
+   除非显式按状态过滤，否则排除 `status = deleted`，与 §2.1 的墓碑规则同源）。占用统计复用模块常量
+   （`activeTenantMemberPredicate`、`tenantStatusDeleted`、`platformGlobalTenantID`）：成员只计
+   `status = 'active'`，角色与部门尊重软删，`tenant_id = 0` 的平台行不计入任何租户的占用。
+   **禁止**在读模型里另起一套状态字符串——成员状态只有 `active | disabled`（§2.2）。
+4. **分页有界**：总览与成员页默认 20、上限 100。上限有两道，语义不同：请求绑定
+   （`Filter.Size` / `MemberRowFilter.PageSize` 的 `max=100`）**拒绝**超限输入，实测 `size=5000` →
+   `param.invalid`；服务层再钳一次（`maxTenantOverviewSize`、`maxTenantMemberPageSize`），保护的是不走
+   绑定的内部调用方。合同只承诺「有界」，不承诺超限会被静默改小。理由：每次请求都对全库聚合，
+   无界 size 会把一次控制台调用变成全表扫描。
+5. **未知套餐如实呈现**：`OverviewPlanRow.Known = false` 且 `PlanName` 为空时，页面按原始值展示，
+   不得静默归档到 free——一个"没人管理"的套餐和"free 套餐"是两个不同的运营事实。
+6. **指标集合冻结为核心组**：租户、成员、角色、部门。最近登录、会话数、安全事件**不在**本合同的总览里
+   （显式 Out），否则总览会慢慢长成第二个仪表盘。
+7. **权限↔路由绑定受门禁保护**：每条路由登记在 `permission_workbench.go` 的
+   `requiredAPIRoutesByPermission`，由 `TestRequiredAPIRoutesExistOnEngine` 对照
+   `buildWorkbenchRouteProbeEngine()` 的注册镜像校验。新增或改变路由形状必须在同一个 patch 内更新
+   probe，否则门禁失败——这是防止"权限表与实注册漂移"的唯一机械手段。
 
 ---
 
@@ -242,6 +374,92 @@ tenant_memberships
 | V1.1 | 2026-10-13 | §3.1 新增第 3 条「平台作用域兜底」（原第 3 条顺延为第 4 条，语义不变）；新增 §3.4「平台作用域声明」；§3.2 补注拒绝规则的适用范围；§6 补注「multi 是 compat 的超集」 | 澄清（Clarification） |
 | V1.2 | 2026-10-19 | 新增 §2.3.1「读写义务」：读必须带租户谓词、写必须由上下文赋值且冲突键含租户、按裸键的归属校验同样算读；给出唯一两个放行面与 fail-closed 默认 | 澄清（Clarification） |
 | V1.3 | 2026-10-23 | §2.1 补入第四态：`deleted` 是墓碑而非生命周期状态、不可作为输入、按 id/code 寻址视为不存在；明确删除标记是 `status` 而非预留的 `deleted_at`；明确删除归档租户时其成员关系同事务停用（§2.2 的 owner 要求只约束非归档租户） | 澄清（Clarification） |
+| V1.4 | 2026-10-25 | 新增 §2.4「套餐定义与配额语义」（`tenant_plans` 模型、平台全局、`-1` 无上限 / `0` 非法、未知 code 回落编译内置表、退役而非删除、幂等 seed、5 秒读穿透缓存）与 §2.4.1「配额是度量不是闸门」（写路径不因超限拒绝；`QuotaEnforcer`/`MetricsCollector` 未接线）；新增 §2.5「平台侧租户运营读路径」（`/system/tenant-ops/*` 五条路由的声明平台作用域、`system:tenant:` 前缀、统一口径、有界分页、未知套餐如实呈现、指标集合冻结、权限↔路由 probe 门禁）；§1 In/Out 改写套餐与配额的归属边界；§2.1 `plan` 列注释由「V1 不消费」改为「解析为 §2.4 阈值」 | 扩展（Extension） |
+| V1.5 | 2026-10-26 | §2.2 的「membership 删除 = `status=disabled`，不物理删除」改写为**按路径区分的四行表**（删除租户 / 删除用户 = 软禁用，显式移除成员 = 物理删除，重新加入 = 复活旧行），并把「审计链完整」的承担者从「行保留」更正为「全局操作日志」；§2.4 新增不变量 8，把 V1.4 登记为残余 gap 的**套餐指派面**移进 In 并接通前端（后端 `AssignableCodes` 删除）；同步在 EN 文本补译 §2.3.1（V1.2 遗留缺口）。写侧强制行为未改动，「把移除成员也改成软禁用」显式登记为未来的契约变更候选及其前置条件 | 澄清（§2.2）+ 扩展（§2.4 不变量 8） |
+
+**V1.5 的触发与范围**
+
+- 触发：V1.4 收口时把 §2.2 的文档↔实现漂移作为「顺带登记、本轮不裁定」的条目留在变更记录里
+  （见下方 V1.4 块最后一条）。2026-10-26 单独一轮把它处置完。
+- 裁定：**改合同承认实现**，不改写侧。理由是四条路径里已有三条按软禁用工作并被测试钉住
+  （`DeleteTenant`、`deactivateTenantMemberships` + `user_membership_test.go:152-200`），
+  只有 `RemoveMember` 走物理删除；而把它改成软禁用会同时改掉「重复移除」的错误语义
+  （现依赖 `RowsAffected == 0`）与成员列表口径，属于 §2.4.1 那类需要单独评估的写侧变更。
+- 性质：**两部分，分别为 Clarification 与 Extension**。§2.2 那部分是 Clarification（条款语义层面）——
+  「至少一个 owner」「命名空间分离」原文不动，只把「怎么下架」从单句改成按路径的表。§2.4 新增的不变量 8
+  是 **Extension**：V1.4 把指派面登记为残余 gap（Out），本轮把它移进 In 并写成规范条款。
+  其余 §2.1、§2.3、§2.3.1、§2.5、§3、§4、§5、§6、§7 的语义未改动；写侧强制仍留在 §2.4.1 的 Out 与门槛之后。
+- **来源与代价（显式声明，不粉饰）**：「软禁用、不物理删除」不是随手写的措辞，而是 2026-09-10 合同冻结时的
+  一条 Frozen 决策，理由是「审计链完整（审计评审人要求）」
+  （`.harness/archive/2026-09/evidence/2026-09-10-tenant-contract-design/summary.md:24`）。本轮把合同改成
+  追认现状，等于在**一条路径上承认该冻结要求未被实现**；这不是把文档改对了就消失的事实。
+  因此本轮同时保留两件事：①§2.2 明确写「默认方向是软禁用，物理删除是需要收敛的例外」；②收敛候选及其
+  前置条件已登记（见 §2.2 最后一条）。是否要反过来改实现，留给维护者在验收触点裁定——本合同不自行宣告
+  该 Frozen 决策已被作废。
+- 证据（逐条核对的代码位置已在 §2.2 表内给出）：`tenant_service.go:608-615`、`:869-888`、`:914-940`，
+  `user/user_membership.go:45-51`、`:78-88`，`tenant_model.go:25-33`（`Membership` 无 `DeletedAt`，
+  故 `Delete` 是 SQL `DELETE`），`operation_log_middleware.go:224-276`（非 GET 全量落库），
+  `tenant_platform_handler.go:201-239`（平台侧增删有显式 audit 标题）。
+- 指派面接通的实现与回归：`frontend/src/modules/system/iam/tenant/planOptions.ts`（派生规则，§2.4
+  不变量 8 的前端镜像）、`TenantList.tsx`（编辑表单 + 筛选器改用派生结果）、`api.ts` 的
+  `getPlanList({ skipErrorMessage })`（这份列表对表单是咨询性的，读不到时回落内置四档，不应弹错），
+  以及 5 个新 i18n 资源里的 `system.tenant.plan.outsideLadder` 提示。
+  单测 `frontend/tests/unit/modules/system/iam/tenant/planOptions.test.ts`（5 项：表不可读/空时回落、
+  沿用服务端顺序并纳入自定义 code、停用只从写侧隐藏而读侧保留、当前 code 被带住且不重复、
+  来自表里的内置 code 仍按内置标注）。后端 `AssignableCodes` 已删除（见上方 §2.4 那条 gap 的闭合说明）。
+- 同轮附带（不改变合同语义）：EN 文本 `TENANT_CONTRACT_V1.en.md` 补译 §2.3.1「读写义务」（V1.2），
+  并在其 §9 补上缺失的 V1.2 / V1.3 行；原先声明「EN 落后 V1.2 与 V1.3」的翻译注记本身已过期——
+  V1.3 的墓碑内容早已在 EN §2.1 内，本轮一并更正该注记。
+- 顺带登记 → 本轮以证据裁定为「前提不成立，无需改动」：曾登记「租户侧 `DELETE /tenants/:id/members/:user_id`
+  的 handler 不设 audit 标题，只吃到全局中间件的默认标题，与平台侧的 `SetAuditMetadata(..., BusinessDelete)`
+  不对称」。复查发现该路径属于 legacy `Handler`（`tenant_handler.go:244-263`），而它唯一的挂载入口
+  `RegisterRoutes`（`tenant_routes.go:9-28`）在出货代码里没有调用方——除包内定义外，`RegisterRoutes` 与
+  `NewHandler(` 的调用只出现在同包的 `tenant_handler_test.go`（6 处，不带包名前缀）；`system_modules.go:57`
+  声明的字段类型本身就是 `*tenantiam.PlatformHandler`，出货的租户写路径由 `system_modules.go:290-306`
+  全部挂到 `PlatformHandler`，每条都显式设标题（`tenant_platform_handler.go:131/148/168/203/223`，
+  `tenant_ops_handler.go:70/87`）。`docs/api/TENANT_API.md:17` 早已写明这一组「not mounted」，2026-10-22
+  的交付审计在运行态实测 `/api/v1/tenants` 返回 404。因此运行态不存在这条不对称；给一个没有路由的 handler
+  补标题属于死代码，不做。
+
+**V1.4 的触发与范围**
+
+- 触发：2026-10-25 的租户运营信息架构改造。租户管理此前孤零零挂在「访问控制」下，平台侧没有
+  任何全局视图能回答「这套部署有多少租户、每个租户占了套餐的多少」；而 `tenants.plan` 指向的阈值
+  是 `GetDefaultQuota` 里的 switch，运营者改一个数字需要发一次版。维护者拍板「选 B 方案，要做就做彻底」，
+  并把范围锁定为：信息架构与**读侧**视图做彻底，**写侧与商业化语义不动**。
+- 性质：这是 **Extension（扩展）而非 Clarification（澄清）**。V1 原文把「套餐、配额」整体放在 §1 Out，
+  本节把其中的**定义存储与读展示**从 Out 移进 In，同时用 §2.4.1 明确把**写侧强制**留在 Out 并给它
+  加上 contract-change 门槛。既有 §3（上下文）、§4（Casbin domain）、§5（错误码）、§6（模式）、
+  §7（归属边界）**语义均未改动**；§2.1/§2.2 只改了 `plan` 列的注释，状态机与成员不变量原文不动。
+- 归属：`tenant_plans` 与 `/system/tenant-ops/*` 全部落在 `system/iam` 的 tenant 模块内，
+  §7 的「tenants 主数据归 system/org、Casbin 归 system/iam」边界未被触碰；计划表是租户主数据的
+  属性表，不是新的资源归属维度，因此不需要在 scope 矩阵新增 `tenant_id` 条目（§2.4 不变量 1）。
+- 配套实现与回归测试：`backend/modules/system/iam/tenant/tenant_plan_model.go`、
+  `tenant_plan_store.go`、`tenant_ops_view.go`、`tenant_ops_handler.go`、迁移 `000030`；
+  `tenant_plan_store_test.go`（8 项：seed 幂等且不改写运营者编辑、经表解析且回落、缓存有界并被写入失效、
+  创建要求五个阈值、非法 code 与重复、部分更新保留未给字段、退役被在用的 code 拒绝、
+  未 seed 时指派校验回落内置集合）、
+  `tenant_ops_view_test.go`（7 项：作用域排除平台行与墓碑、按套餐阈值报告占用、未知套餐如实呈现、
+  过滤、跨租户成员带各自上限、分页稳定有界、`ListPlans` 每套餐租户数）；
+  路由形状由 `permission_workbench_routes_test.go` 的 probe 镜像守卫。
+- 残余 gap（显式）：套餐的**售卖**（下单、升降级、账期、按套餐裁剪菜单/能力之外的商业化语义）仍在 §1 Out；
+  `max_api_keys` / `max_storage_mb` 两个维度本轮只有定义与落库，总览未报告其用量（§2.5 规则 6 的核心组不含它们）。
+- 残余 gap（显式，指派面）：`PlanStore.AssignableCodes`（`tenant_plan_store.go:175`）已实现并有单测，
+  但**出货路径没有调用方**——租户表单的套餐下拉仍是四个内置字面值（`frontend/.../tenant/TenantList.tsx:696-705`），
+  所以新定义的自定义 code 能在控制台落库、能被读侧如实显示（`Known=false`），却暂时无法指派给租户。
+  原因与 §2.4.1 同源：本轮锁定「读侧与阈值可配、写侧不动」，而指派面还与前端自有套餐层级
+  （`core/entitlements/plans.ts` 的四档排序，未知 code 失败闭合为 free）耦合，需要单独一轮对齐。
+  **→ 指派面已由 V1.5 接通**：`frontend/src/modules/system/iam/tenant/planOptions.ts` 从
+  `/system/tenant-ops/plan/list` 派生选项（规则镜像 §2.4 不变量 8），`TenantList.tsx` 的编辑表单与筛选器都改用它，
+  保存仍由服务端 `ValidateAssignment` 兜底。`AssignableCodes` 本身已删除：它按字母排序（阶梯顺序错），
+  且从未有出货调用方，留着只会诱导第二套策略。
+  **仍未闭合**的是前端能力阶梯：`core/entitlements/plans.ts` 依旧是四档硬编码、未知 code 失败闭合为 free，
+  所以运营者自定义套餐的控制台**功能入口**按免费版展示（配额上限仍按定义生效）。表单用一行提示明示这一点，
+  把它变成真正的按套餐裁剪菜单/能力仍是 §1 Out 的商业化语义，需要另行立项。
+- 顺带登记（不在本轮 In 内，未改动 §2.2 原文）：§2.2 写着「membership 删除 = `status=disabled`（软禁用），
+  不物理删除，保证审计链完整」，但 `Service.RemoveMember` 走的是物理 `Delete`（`Membership` 无 `DeletedAt`）。
+  这是一个真实的合同/实现漂移，本轮不自行裁定。
+  **→ 已由 V1.5 闭合**：裁定为「改合同承认按路径区分」，§2.2 原文已改写，写侧行为未动。
 
 **V1.3 的触发与范围**
 
