@@ -767,6 +767,12 @@ const ModuleWizard: React.FC = () => {
     t(`generator.pageActions.${action}`, { lng: locale });
 
   const selectedDatasource = datasources.find((item) => item.id === selectedDatasourceId);
+  const watchedScope = Form.useWatch('scope', form) as ModuleScope | undefined;
+  const activeScope: ModuleScope = watchedScope === 'system' ? 'system' : 'business';
+  const managedTablePrefix = activeScope === 'system' ? 'system_' : 'biz_';
+  const visibleTableOptions = tableOptions.filter((item) =>
+    item.tableName.startsWith(managedTablePrefix),
+  );
 
   const loadDatasources = useCallback(async () => {
     const items = await listGeneratorDatasources();
@@ -1252,7 +1258,7 @@ const ModuleWizard: React.FC = () => {
             title: t('generator.wizard.register.overwriteTitle'),
             content: t('generator.wizard.register.overwriteContent'),
             onOk: () => {
-               void submitGenerateAndRegister(true);
+              void submitGenerateAndRegister(true);
             },
           });
           return;
@@ -1484,7 +1490,10 @@ const ModuleWizard: React.FC = () => {
                   <FormItem
                     label={t('generator.wizard.sourceTable')}
                     field="metadata.sourceTable"
-                    extra={t('generator.wizard.sourceTable.help')}
+                    extra={`${t('generator.wizard.sourceTable.help')} ${t(
+                      'generator.wizard.sourceTable.scopeFilter',
+                      { prefix: managedTablePrefix },
+                    )}`}
                   >
                     <Select
                       allowClear
@@ -1515,7 +1524,7 @@ const ModuleWizard: React.FC = () => {
                           .catch(() => undefined);
                       }}
                     >
-                      {tableOptions.map((item) => (
+                      {visibleTableOptions.map((item) => (
                         <Select.Option key={item.tableName} value={item.tableName}>
                           {item.tableName}
                           {item.comment ? ` · ${item.comment}` : ''}
@@ -1546,7 +1555,15 @@ const ModuleWizard: React.FC = () => {
                 rules={[{ required: true, message: t('common.required') }]}
               >
                 <Select
-                  onChange={() => {
+                  onChange={(value) => {
+                    const nextScope = value as ModuleScope;
+                    const nextPrefix = nextScope === 'system' ? 'system_' : 'biz_';
+                    const currentTable = String(
+                      form.getFieldValue('metadata.sourceTable' as keyof ModuleSchema) || '',
+                    ).trim();
+                    if (currentTable && !currentTable.startsWith(nextPrefix)) {
+                      form.setFieldValue('metadata.sourceTable' as keyof ModuleSchema, undefined);
+                    }
                     syncModuleNameValidation();
                   }}
                 >
@@ -2261,7 +2278,7 @@ const ModuleWizard: React.FC = () => {
                     loading={registering}
                     disabled={!oneClickEnabled}
                     onClick={() => {
-                       void submitGenerateAndRegister();
+                      void submitGenerateAndRegister();
                     }}
                   >
                     {t('generator.wizard.register.submit')}
@@ -2452,7 +2469,7 @@ const ModuleWizard: React.FC = () => {
                         loading={auditingActivation}
                         disabled={result.module.status === 1}
                         onClick={() => {
-                           void handleAuditActivation();
+                          void handleAuditActivation();
                         }}
                       >
                         {t('generator.wizard.result.checkActivation')}
