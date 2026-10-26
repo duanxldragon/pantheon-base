@@ -627,7 +627,11 @@ test('setting smoke: upload config affects runtime upload endpoint', async ({ pa
     expect(uploadPayload.ok()).toBeTruthy();
     const uploadResult = await uploadPayload.json();
     expect(uploadResult.code).toBe(200);
-    expect(uploadResult.data.url).toContain('/api/v1/system/upload/files/profile/avatar/');
+    // Compat keeps the legacy key layout; multi mode prefixes the resolved
+    // tenant (`t<id>/`) so object keys cannot collide across tenants.
+    expect(uploadResult.data.url).toMatch(
+      /\/api\/v1\/system\/upload\/files\/(?:t\d+\/)?profile\/avatar\//,
+    );
 
     const fileResponse = await page.request.get(uploadResult.data.url);
     expect(fileResponse.ok()).toBeTruthy();
