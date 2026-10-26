@@ -157,3 +157,184 @@ export function removeTenantMember(id: number, userId: number) {
     method: 'delete',
   });
 }
+
+/**
+ * Tenant-ops console (contract §2.4/§2.5). Separate from the surfaces above:
+ * these are platform-scoped reads that span tenants, so they live under
+ * `/system/tenant-ops/*` and only a platform-capable subject can reach them.
+ */
+
+/** Quota thresholds a plan resolves to. `-1` means unlimited. */
+export interface TenantQuota {
+  max_users: number;
+  max_roles: number;
+  max_depts: number;
+  max_api_keys: number;
+  max_storage_mb: number;
+}
+
+export interface OverviewPlanRow {
+  /** Raw value carried by `tenants.plan`; may be empty or unmanaged. */
+  plan: string;
+  name: string;
+  /** False when the code resolves to no definition, so the page must not file it under free. */
+  known: boolean;
+  tenantCount: number;
+  quota: TenantQuota;
+}
+
+export interface OverviewTenantRow {
+  tenantId: number;
+  code: string;
+  name: string;
+  status: TenantStatus;
+  plan: string;
+  planName: string;
+  members: number;
+  roles: number;
+  depts: number;
+  maxUsers: number;
+  maxRoles: number;
+  maxDepts: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface OverviewResp {
+  summary?: TenantSummary;
+  totals: { members: number; roles: number; depts: number };
+  plans: OverviewPlanRow[];
+  items: OverviewTenantRow[];
+  total: number;
+  page: number;
+  size: number;
+}
+
+export interface TenantMemberUsageRow {
+  tenantId: number;
+  tenantCode: string;
+  tenantName: string;
+  tenantStatus: TenantStatus;
+  plan: string;
+  planName: string;
+  maxUsers: number;
+  tenantUsage: number;
+  userId: number;
+  username: string;
+  nickname: string;
+  memberRole: TenantMemberRole;
+  memberStatus: string;
+  joinedAt: string;
+}
+
+export interface MemberUsageListResp {
+  items: TenantMemberUsageRow[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
+export interface MemberUsageQuery {
+  tenantId?: number;
+  status?: 'active' | 'removed';
+  role?: TenantMemberRole;
+  keyword?: string;
+  page?: number;
+  pageSize?: number;
+}
+
+export type PlanStatus = 'active' | 'disabled';
+
+export interface PlanRow {
+  id: number;
+  code: string;
+  name: string;
+  maxUsers: number;
+  maxRoles: number;
+  maxDepts: number;
+  maxApiKeys: number;
+  maxStorageMb: number;
+  status: PlanStatus;
+  sort: number;
+  createdAt: string;
+  updatedAt: string;
+  tenantCount: number;
+}
+
+export interface PlanQuotaPayload {
+  maxUsers?: number;
+  maxRoles?: number;
+  maxDepts?: number;
+  maxApiKeys?: number;
+  maxStorageMb?: number;
+}
+
+export interface PlanCreatePayload extends PlanQuotaPayload {
+  code: string;
+  name?: string;
+  status?: PlanStatus;
+  sort?: number;
+}
+
+export interface PlanUpdatePayload extends PlanQuotaPayload {
+  name?: string;
+  status?: PlanStatus;
+  sort?: number;
+}
+
+/**
+ * Overview filters. `plan` is any code the installation defines: plan codes are
+ * DB-backed now, so the console must not restrict them to the built-in tiers.
+ */
+export interface TenantOverviewQuery {
+  keyword?: string;
+  status?: TenantStatus;
+  plan?: string;
+  page?: number;
+  size?: number;
+}
+
+export function getTenantOverview(params?: TenantOverviewQuery) {
+  return apiRequest<OverviewResp>({
+    url: '/system/tenant-ops/overview',
+    method: 'get',
+    params,
+  });
+}
+
+export function getAllTenantMembers(params?: MemberUsageQuery) {
+  return apiRequest<MemberUsageListResp>({
+    url: '/system/tenant-ops/member',
+    method: 'get',
+    params,
+  });
+}
+
+/**
+ * Plan definitions. `skipErrorMessage` is for callers that treat the list as
+ * advisory (the tenant editor falls back to the built-in tiers when it cannot
+ * read the table) and must not turn that fallback into a user-facing failure.
+ */
+export function getPlanList(options?: { skipErrorMessage?: boolean }) {
+  return apiRequest<{ items: PlanRow[] }>({
+    url: '/system/tenant-ops/plan/list',
+    method: 'get',
+    ...options,
+  });
+}
+
+export function createPlan(data: PlanCreatePayload) {
+  return apiRequest<PlanRow>({
+    url: '/system/tenant-ops/plan',
+    method: 'post',
+    data,
+  });
+}
+
+export function updatePlan(code: string, data: PlanUpdatePayload) {
+  return apiRequest<PlanRow>({
+    url: `/system/tenant-ops/plan/${encodeURIComponent(code)}`,
+    method: 'put',
+    data,
+  });
+}

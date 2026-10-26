@@ -11,6 +11,7 @@ import {
   Tag,
   Typography,
 } from '@arco-design/web-react';
+import PasswordInput from '../../../../components/patterns/forms/PasswordInput';
 import { message } from '../../../../components/feedback/message';
 import type { ColumnProps, TableProps } from '@arco-design/web-react/es/Table/interface';
 import { IconDelete, IconEdit, IconPlus, IconUserGroup } from '@arco-design/web-react/icon';
@@ -24,10 +25,12 @@ import {
   addTenantMember,
   createTenant,
   deleteTenant,
+  getPlanList,
   getTenantList,
   getTenantMembers,
   removeTenantMember,
   updateTenant,
+  type PlanRow,
   type TenantEditableStatus,
   type TenantListResp,
   type TenantMemberRow,
@@ -36,10 +39,8 @@ import {
   type TenantUpdatePayload,
 } from './api';
 import { getSecurityOverview } from '../../../auth/security/api';
-import {
-  normalizeTenantPlan,
-  type TenantPlan,
-} from '../../../../core/entitlements/plans';
+import { normalizeTenantPlan } from '../../../../core/entitlements/plans';
+import { definedPlanOptions, editorPlanOptions, type PlanOption } from './planOptions';
 import TenantPlanMatrix from './TenantPlanMatrix';
 import { isRequestError } from '../../../../api/request';
 import {
@@ -161,7 +162,8 @@ const TenantList: React.FC = () => {
   const [formVisible, setFormVisible] = useState(false);
   const [editing, setEditing] = useState<TenantRow | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [planDraft, setPlanDraft] = useState<TenantPlan>('free');
+  const [planCodeDraft, setPlanCodeDraft] = useState<string>('free');
+  const [plans, setPlans] = useState<PlanRow[] | null>(null);
   const [form] = Form.useForm<TenantFormValues>();
   // The tenant administrator's password is validated against the deployment's
   // configurable policy rather than a number copied into this file, so the form
@@ -178,27 +180,24 @@ const TenantList: React.FC = () => {
   const [memberLoading, setMemberLoading] = useState(false);
   const [memberForm] = Form.useForm<{ userId: string; role: string }>();
 
-  const loadData = useCallback(
-    async (next: TenantListQueryState) => {
-      setLoading(true);
-      setError(null);
-      try {
-        const resp = await getTenantList({
-          keyword: next.keyword.trim() || undefined,
-          status: next.status as never,
-          plan: next.plan as never,
-          page: next.page,
-          size: next.pageSize,
-        });
-        setState(resp);
-      } catch (err) {
-        setError(err as Error);
-      } finally {
-        setLoading(false);
-      }
-    },
-    [],
-  );
+  const loadData = useCallback(async (next: TenantListQueryState) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const resp = await getTenantList({
+        keyword: next.keyword.trim() || undefined,
+        status: next.status as never,
+        plan: next.plan as never,
+        page: next.page,
+        size: next.pageSize,
+      });
+      setState(resp);
+    } catch (err) {
+      setError(err as Error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     const timer = globalThis.setTimeout(() => {
@@ -226,22 +225,53 @@ const TenantList: React.FC = () => {
     };
   }, []);
 
+  // Plan codes live in `tenant_plans` now (contract §2.4), so the editor and the
+  // filter must offer what this installation defines instead of the four literal
+  // tiers this file used to hardcode. A failed read stays silent: the server is
+  // still the authority on save (`PlanStore.ValidateAssignment`), so falling back
+  // to the built-in four only costs the operator-defined choices.
+  useEffect(() => {
+    let cancelled = false;
+    getPlanList({ skipErrorMessage: true })
+      .then((resp) => {
+        if (!cancelled) setPlans(resp?.items ?? []);
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const filterPlanOptions = useMemo(() => definedPlanOptions(plans), [plans]);
+  const editorOptions = useMemo(
+    () => editorPlanOptions(plans, editing?.plan ?? ''),
+    [editing, plans],
+  );
+
+  const planOptionLabel = useCallback(
+    (option: PlanOption) => (option.builtin ? t(`system.tenant.plan.${option.code}`) : option.name),
+    [t],
+  );
+
+  // The capability matrix is a frontend ladder of the four built-in tiers
+  // (core/entitlements/plans), so an operator-defined code resolves to free.
+  // Quotas still come from the plan definition; only the console surfaces do.
+  const planDraft = normalizeTenantPlan(planCodeDraft);
+  const planOutsideLadder = planCodeDraft !== '' && planDraft !== planCodeDraft;
+
   const search = useCallback((patch: Partial<TenantListQueryState>) => {
     setQuery((prev) => ({ ...prev, ...patch, page: 1 }));
   }, []);
 
   const reset = useCallback(() => setQuery(emptyQuery), []);
 
-  const handleTableChange = useCallback(
-    (pagination: { current?: number; pageSize?: number }) => {
-      setQuery((prev) => ({
-        ...prev,
-        page: pagination.current ?? 1,
-        pageSize: pagination.pageSize ?? prev.pageSize,
-      }));
-    },
-    [],
-  );
+  const handleTableChange = useCallback((pagination: { current?: number; pageSize?: number }) => {
+    setQuery((prev) => ({
+      ...prev,
+      page: pagination.current ?? 1,
+      pageSize: pagination.pageSize ?? prev.pageSize,
+    }));
+  }, []);
 
   const loadMembers = useCallback(
     async (tenant: TenantRow, page: number, pageSize: number) => {
@@ -281,7 +311,7 @@ const TenantList: React.FC = () => {
     setEditing(null);
     form.resetFields();
     form.setFieldsValue({ plan: 'free' });
-    setPlanDraft('free');
+    setPlanCodeDraft('free');
     setFormVisible(true);
   }, [form]);
 
@@ -298,7 +328,7 @@ const TenantList: React.FC = () => {
         status: row.status === 'deleted' ? undefined : row.status,
         metadata: row.metadata ?? '',
       });
-      setPlanDraft(normalizeTenantPlan(row.plan));
+      setPlanCodeDraft((row.plan ?? '').trim());
       setFormVisible(true);
     },
     [form],
@@ -324,14 +354,12 @@ const TenantList: React.FC = () => {
           plan: values.plan as never,
           metadata: values.metadata,
         };
-        // Provisioning is optional but strongly recommended: without an admin
-        // account the tenant is an empty shell nobody can log into.
-        const adminUsername = values.adminUsername?.trim();
-        if (adminUsername) {
-          payload.admin_username = adminUsername;
-          payload.admin_password = values.adminPassword;
-          payload.admin_nickname = values.adminNickname?.trim() || adminUsername;
-        }
+        // The console always provisions an initial administrator; an empty
+        // tenant would have no account to sign in with.
+        const adminUsername = String(values.adminUsername ?? '').trim();
+        payload.admin_username = adminUsername;
+        payload.admin_password = values.adminPassword;
+        payload.admin_nickname = values.adminNickname?.trim() || adminUsername;
         await createTenant(payload);
         message.success(t('common.createSuccess'));
       }
@@ -438,9 +466,7 @@ const TenantList: React.FC = () => {
         title: t('system.tenant.plan'),
         dataIndex: 'plan',
         width: TABLE_COLUMN_WIDTH.sm,
-        render: (value: string) => (
-          <Tag color={planTone[value] ?? 'gray'}>{planLabel(value)}</Tag>
-        ),
+        render: (value: string) => <Tag color={planTone[value] ?? 'gray'}>{planLabel(value)}</Tag>,
       },
       {
         title: t('system.tenant.status'),
@@ -500,7 +526,17 @@ const TenantList: React.FC = () => {
         ),
       },
     ],
-    [canDelete, canManageMember, canUpdate, handleDelete, openEdit, openMembers, planLabel, statusLabel, t],
+    [
+      canDelete,
+      canManageMember,
+      canUpdate,
+      handleDelete,
+      openEdit,
+      openMembers,
+      planLabel,
+      statusLabel,
+      t,
+    ],
   );
 
   const tableData = state.items;
@@ -606,14 +642,11 @@ const TenantList: React.FC = () => {
                   value={query.plan}
                   onChange={(value) => search({ plan: value })}
                 >
-                  <Select.Option value="free">{t('system.tenant.plan.free')}</Select.Option>
-                  <Select.Option value="basic">{t('system.tenant.plan.basic')}</Select.Option>
-                  <Select.Option value="professional">
-                    {t('system.tenant.plan.professional')}
-                  </Select.Option>
-                  <Select.Option value="enterprise">
-                    {t('system.tenant.plan.enterprise')}
-                  </Select.Option>
+                  {filterPlanOptions.map((option) => (
+                    <Select.Option key={option.code} value={option.code}>
+                      {planOptionLabel(option)}
+                    </Select.Option>
+                  ))}
                 </Select>
               </>
             }
@@ -675,7 +708,10 @@ const TenantList: React.FC = () => {
                     { maxLength: 64, message: t('system.tenant.codeLength') },
                   ]}
                 >
-                  <Input placeholder={t('system.tenant.codePlaceholder')} disabled={Boolean(editing)} />
+                  <Input
+                    placeholder={t('system.tenant.codePlaceholder')}
+                    disabled={Boolean(editing)}
+                  />
                 </FormItem>
               </Col>
               <Col span={12}>
@@ -693,17 +729,12 @@ const TenantList: React.FC = () => {
               </Col>
               <Col span={12}>
                 <FormItem field="plan" label={t('system.tenant.plan')}>
-                  <Select
-                    onChange={(value) => setPlanDraft(normalizeTenantPlan(value as string))}
-                  >
-                    <Select.Option value="free">{t('system.tenant.plan.free')}</Select.Option>
-                    <Select.Option value="basic">{t('system.tenant.plan.basic')}</Select.Option>
-                    <Select.Option value="professional">
-                      {t('system.tenant.plan.professional')}
-                    </Select.Option>
-                    <Select.Option value="enterprise">
-                      {t('system.tenant.plan.enterprise')}
-                    </Select.Option>
+                  <Select onChange={(value) => setPlanCodeDraft(String(value ?? '').trim())}>
+                    {editorOptions.map((option) => (
+                      <Select.Option key={option.code} value={option.code}>
+                        {planOptionLabel(option)}
+                      </Select.Option>
+                    ))}
                   </Select>
                 </FormItem>
               </Col>
@@ -718,15 +749,26 @@ const TenantList: React.FC = () => {
                       field="adminUsername"
                       label={t('system.tenant.adminUsername')}
                       extra={t('system.tenant.adminUsernameHint')}
+                      rules={[
+                        {
+                          required: true,
+                          message: t('system.tenant.adminUsernameRequired'),
+                        },
+                        {
+                          minLength: 2,
+                          message: t('system.tenant.adminUsernameLength'),
+                        },
+                        {
+                          maxLength: 64,
+                          message: t('system.tenant.adminUsernameLength'),
+                        },
+                      ]}
                     >
                       <Input placeholder={t('system.tenant.adminUsernamePlaceholder')} />
                     </FormItem>
                   </Col>
                   <Col span={12}>
-                    <FormItem
-                      field="adminNickname"
-                      label={t('system.tenant.adminNickname')}
-                    >
+                    <FormItem field="adminNickname" label={t('system.tenant.adminNickname')}>
                       <Input placeholder={t('system.tenant.adminNicknamePlaceholder')} />
                     </FormItem>
                   </Col>
@@ -736,16 +778,12 @@ const TenantList: React.FC = () => {
                       label={t('system.tenant.adminPassword')}
                       rules={[
                         {
-                          // Only required once an admin username is supplied.
                           validator: (value, callback) => {
-                            const username = form.getFieldValue('adminUsername') as
-                              | string
-                              | undefined;
-                            if (!username?.trim()) {
-                              callback();
+                            if (!value) {
+                              callback(t('system.tenant.adminPasswordRequired'));
                               return;
                             }
-                            if (!value || String(value).length < adminPasswordMinLength) {
+                            if (String(value).length < adminPasswordMinLength) {
                               callback(
                                 t('system.tenant.adminPasswordTooShort', {
                                   count: adminPasswordMinLength,
@@ -758,9 +796,7 @@ const TenantList: React.FC = () => {
                         },
                       ]}
                     >
-                      <Input.Password
-                        placeholder={t('system.tenant.adminPasswordPlaceholder')}
-                      />
+                      <PasswordInput placeholder={t('system.tenant.adminPasswordPlaceholder')} />
                     </FormItem>
                   </Col>
                 </>
@@ -792,6 +828,11 @@ const TenantList: React.FC = () => {
               </Col>
             </Row>
             <TenantPlanMatrix plan={planDraft} />
+            {planOutsideLadder ? (
+              <Typography.Paragraph type="warning">
+                {t('system.tenant.plan.outsideLadder', { plan: planCodeDraft })}
+              </Typography.Paragraph>
+            ) : null}
           </FormSection>
         </Form>
       </AppModal>

@@ -172,7 +172,13 @@ interface CapabilityFilter {
 // repeating the rule here keeps a stale/gateway-cached tree from rendering a
 // dead menu entry.
 const PLATFORM_ONLY_MENU_MODULES = new Set(['system.tenant']);
-const PLATFORM_ONLY_MENU_PATHS = new Set(['/system/tenant', '/system/menu', '/system/i18n']);
+const PLATFORM_ONLY_MENU_PATHS = new Set([
+  '/system/tenant',
+  '/system/tenant-ops/overview',
+  '/system/tenant-ops/member',
+  '/system/menu',
+  '/system/i18n',
+]);
 
 function isPlatformOnlyMenu(item: MenuNode): boolean {
   return (
