@@ -77,3 +77,25 @@ no route removal.
 5. `go test -race` cannot run on this host (MinGW linker). Race coverage comes from CI only.
 6. SonarCloud's unresolved-issue count and `Release Gate` can only be decided by CI; this review does not
    claim them green from local evidence.
+
+
+## Machine Readable
+
+```json
+{
+  "taskId": "2026-10-22-v0171-release-closeout",
+  "verdict": "approved",
+  "verdictRationale": "Approve: every change closes an already-red gate or makes a documented contract obligation reachable; one consumer-visible behaviour change is called out.",
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-22-v0171-release-closeout/manifest.json",
+    "evidence": ".harness/evidence/2026-10-22-v0171-release-closeout/commands.json",
+    "reviewFile": ".harness/evidence/2026-10-22-v0171-release-closeout/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-22-v0171-release-closeout.task.md"
+    ]
+  }
+}
+```
+
+> This block was backfilled on 2026-10-26 during the governance-schema repair round. It restates the verdict already written above in machine-readable form and links the artifacts that existed for this task; no conclusion, finding or verification claim was added, removed or reworded. The prose remains authoritative.

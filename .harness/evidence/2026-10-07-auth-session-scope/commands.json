@@ -46,6 +46,7 @@
     "tool": "codex",
     "adapter": "platform-coordinator"
   },
+  "runtimeGap": "No runtime signal is recorded. The evidence is `go test` of modules/auth/session, modules/auth/login and internal/middleware with DSN+Redis env — in-process tests against real MySQL and Redis, not a running server. The manifest claims a \"two-user/two-tenant HTTP request and response summary\" and a \"session invalidation path through DB and Redis\"; this file contains no captured HTTP trace, server log, or Redis observation.",
   "knownGaps": [
     "Legacy evidence did not record structured known gaps; consult the linked summary/review before treating as no-gap."
   ],

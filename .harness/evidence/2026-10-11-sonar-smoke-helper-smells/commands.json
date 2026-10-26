@@ -53,5 +53,6 @@
     "evidence": ".harness/evidence/2026-10-11-sonar-smoke-helper-smells/commands.json",
     "summaryFile": ".harness/evidence/2026-10-11-sonar-smoke-helper-smells/summary.md"
   },
+  "runtimeGap": "No runtime signal is recorded. What exists is two SonarCloud `api/issues/search` reads (17 unresolved CODE_SMELL issues on main at commit b8e91da6, and 0 ever recorded on the old monolith file), greps over the helper file, `eslint` on it, `check-smoke-coverage-contract.mjs` (34 smoke specs / 20 script entries), and `check-pr-governance.mjs` — static and issue-board evidence. The Playwright smoke suite that actually consumes these helpers was not executed in this round, so no browser run log or trace is available here; that verdict belongs to the hosted smoke job.",
   "knownGaps": []
 }

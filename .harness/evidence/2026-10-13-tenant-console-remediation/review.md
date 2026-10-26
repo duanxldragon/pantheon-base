@@ -202,3 +202,25 @@ Also not verified, and declared:
 - **The tenant module's unit tests remain unexecuted on this host.** Until they run on a host with a
   working cgo toolchain, the package's own test file is an unverified artifact; the live probe is the
   substitute, not an equivalent.
+
+
+## Machine Readable
+
+```json
+{
+  "taskId": "2026-10-13-tenant-console-remediation",
+  "verdict": "approved with documented P2 follow-up",
+  "verdictRationale": "Accepted with one scope correction made during review and two verification steps explicitly declared not-run.",
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-13-tenant-console-remediation/manifest.json",
+    "evidence": ".harness/evidence/2026-10-13-tenant-console-remediation/commands.json",
+    "reviewFile": ".harness/evidence/2026-10-13-tenant-console-remediation/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-13-tenant-console-remediation.task.md"
+    ]
+  }
+}
+```
+
+> This block was backfilled on 2026-10-26 during the governance-schema repair round. It restates the verdict already written above in machine-readable form and links the artifacts that existed for this task; no conclusion, finding or verification claim was added, removed or reworded. The prose remains authoritative.

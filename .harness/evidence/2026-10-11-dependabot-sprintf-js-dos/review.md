@@ -28,3 +28,25 @@ without the collateral version drift a full lockfile re-resolve would have produ
 - Assume a hand-edited lockfile is subtly invalid: covered by `npm ci --dry-run`.
 - Do not accept a broad `npm update`-style re-resolve as a security fix: explicitly rejected,
   with the 104-package drift recorded in the evidence.
+
+
+## Machine Readable
+
+```json
+{
+  "taskId": "2026-10-11-dependabot-sprintf-js-dos",
+  "verdict": "approved",
+  "verdictRationale": "Accepted: removes the only open Dependabot alert without touching runtime code or the collateral drift a full lockfile re-resolve would cause.",
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-11-dependabot-sprintf-js-dos/manifest.json",
+    "evidence": ".harness/evidence/2026-10-11-dependabot-sprintf-js-dos/commands.json",
+    "reviewFile": ".harness/evidence/2026-10-11-dependabot-sprintf-js-dos/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".harness/tasks/2026-10-11-dependabot-sprintf-js-dos/manifest.json"
+    ]
+  }
+}
+```
+
+> This block was backfilled on 2026-10-26 during the governance-schema repair round. It restates the verdict already written above in machine-readable form and links the artifacts that existed for this task; no conclusion, finding or verification claim was added, removed or reworded. The prose remains authoritative.

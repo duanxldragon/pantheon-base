@@ -87,6 +87,7 @@
       "notes": "2026-10-10: task packet, adoption, docs, sync, inventory, encoding, visual and UI quality checks all 0 findings."
     }
   ],
+  "runtimeGap": "No structured runtime signal is recorded here: runtimeLogs/runtimeMetrics/runtimeTraces/runtimePerformance are all absent, so the runtime-adjacent observations live only inside command notes — the 2026-10-10 note \"77 authenticated full-smoke tests passed across desktop/pad/phone viewports\" and the `not-run` tenant smoke. `go test ./modules/system/iam/tenant` failed on the native cgo toolchain and `npm run test:smoke:tenant` never started (no Docker daemon, no test DSN), so server-side behaviour in this round is asserted by the hosted jobs rather than by data captured in this file.",
   "knownGaps": [
     "v0.14.2 immutable publication and GitHub Release",
     "hosted required checks and Sonar 26 classification",

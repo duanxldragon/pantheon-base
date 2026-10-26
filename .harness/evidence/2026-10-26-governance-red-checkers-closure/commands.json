@@ -1,0 +1,202 @@
+{
+  "taskId": "2026-10-26-governance-red-checkers-closure",
+  "repo": "pantheon-base",
+  "executedAt": "2026-10-26T15:40:00+08:00",
+  "agent": {
+    "tool": "other",
+    "adapter": "qoder-agent"
+  },
+  "runtimeSensitive": false,
+  "runtimeGap": "No runtime behaviour was exercised and none is claimed. The only production-code change is moving the `MenuNode` interface from `frontend/src/modules/system/iam/menu/api.ts` to `frontend/src/api/menu.ts` and re-pointing one type-only import in `frontend/src/modules/platform/widgets.tsx`; the menu module re-exports the type so all seven existing consumers compile unchanged, and no value, endpoint, payload shape or rendering path was touched. Verification is therefore compile-level and gate-level: `tsc -b`, `eslint src --max-warnings 0`, the two affected vitest unit files (6 tests), `check:menu-contract`, `check-import-path-case` and the 24-checker strict matrix. No backend server, browser session or database was started in this round, so there are no runtimeLogs/runtimeMetrics/runtimeTraces/runtimePerformance to record; the hosted `Foundation Release Verify`, Playwright smoke suites and SonarCloud remain CI verdicts.",
+  "knownGaps": [
+    "The three checkers that were red are still not wired into CI: `check-runtime-evidence` and `check-inheritance-contract` have no npm script and appear in no workflow, and `check-boundaries` appears only in `.github/workflows/ci.yml:391` with `--baseline`, so its bare `--strict` reading stays invisible to the hosted chain. Promoting any of them is a gate-policy decision left to the maintainer (FR-016, FR-017 both open).",
+    "`frontend/src/core/layout/AppLayout.tsx`, `frontend/src/core/layout/useLayoutMenu.tsx`, `frontend/src/store/useMenuStore.ts` and the two module lists still import `MenuNode` through `modules/system/iam/menu/api`, which now re-exports the shared type. That is legal (neither `core` nor `store` is a scanned layer, and the menu `api` module is the subdomain's public contract) but it leaves two import paths for one type; retargeting them was out of scope.",
+    "`pantheon-ops/docs/PROJECT_INHERITANCE.md` now carries `Base version` as a second copy of `foundation-release.lock.json` (`pantheon-base-v0.16.1` / `c83f8e4c865b19ecd5351ecefac4106ec416e0bc`, corroborated by `.business-overlay-report.json` baseCommit and HEAD commit `6fc9279`). Nothing machine-checks that the two agree, so the line can drift; it is marked as a must-sync line in the document instead of being silently trusted.",
+    "`.github/pull_request_template.md` was created at the workspace root because `check-inheritance-contract` requires it there, but the workspace container is not a git repository (its `.git/` holds only `hooks/` and `info/`, `git rev-parse --is-inside-work-tree` fails), so GitHub will never auto-load it. The same markers were added to `pantheon-ops/.github/PULL_REQUEST_TEMPLATE.md`, which is the template actually used when an inheritance PR is opened.",
+    "`docs/WORKSPACE_INHERITANCE.md` and the new root template live outside every git repository, so this closure is not reproducible from a clean checkout of any single repo. Only the base-side and ops-side edits are versioned.",
+    "The 11 `runtimeGap` strings describe what each historical round recorded; they do not re-verify it. None of those rounds' commands was re-run here, so a runtime claim that was already stale stays stale, now labelled as such.",
+    "No browser or visual evidence was produced this round; the change surface has no rendered output (a type-only import move)."
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-26-governance-red-checkers-closure/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-26-governance-red-checkers-closure/",
+    "reviewFile": ".harness/evidence/2026-10-26-governance-red-checkers-closure/review.md",
+    "summaryFile": ".harness/evidence/2026-10-26-governance-red-checkers-closure/summary.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/designs/REPOSITORY_LAYOUT.md",
+      "docs/harness/FAILURE_RATCHET_POLICY.md",
+      "docs/harness/tasks/2026-10-26-governance-evidence-schema-backfill.task.md"
+    ]
+  },
+  "commands": [
+    {
+      "command": "node scripts/harness/check-boundaries.mjs --root . --strict",
+      "cwd": ".",
+      "status": "failed",
+      "notes": "Baseline before the repair: 1 finding, exit 1 — `frontend/src/modules/platform/widgets.tsx` importing `../system/iam/menu/api` under the rule 'platform frontend must not reach into sibling system modules'. This is the bare form the gate never sees in CI."
+    },
+    {
+      "command": "node scripts/harness/check-boundaries.mjs --root . --strict",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "After promoting MenuNode to `frontend/src/api/menu.ts` and deleting the stale baseline entry: '0 finding(s), 0 baselined, 0 stale baselined, 0 unresolved repo root(s), 0 warning(s)', exit 0, for both pantheon-base and pantheon-ops. First time this reading has ever been green — the import it flags has been tracked since 2026-09-22."
+    },
+    {
+      "command": "node scripts/harness/check-boundaries.mjs --strict --repo pantheon-base --baseline config/boundary-baseline.json",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "The CI form (`.github/workflows/ci.yml:391`): exit 0. Before the round it was exit 0 with '1 baselined' (reviewBy 2026-12-31); it is now exit 0 with '0 baselined, 0 stale'. Keeping the file with `entries: []` rather than deleting it is deliberate — the workflow passes the path and `loadBaseline` throws on a missing file, and a future violation still fails --strict."
+    },
+    {
+      "command": "node scripts/harness/check-runtime-evidence.mjs --root . --strict",
+      "cwd": ".",
+      "status": "failed",
+      "notes": "Baseline before the repair: '54 file(s), 0 error(s), 11 warning(s)', exit 1 — this checker counts warnings as blocking under --strict. The 11 are 2026-09-25-task-archiving-and-v0130-prep, 2026-09-28-base-ssrf-protection, 2026-09-29-v0140-release-completion, 2026-10-07-audit-request-body, 2026-10-07-auth-session-scope, 2026-10-07-governance-gate-repair, 2026-10-07-iam-data-scope, 2026-10-07-login-log-identity, 2026-10-07-performance-followup, 2026-10-07-upgrade-runbook, 2026-10-11-sonar-smoke-helper-smells. None sets runtimeSensitive in commands.json; all 11 are flagged through their task manifest (7 via manifest.runtimeSensitive=true, 4 via a non-empty verificationPlan.runtimeEvidence)."
+    },
+    {
+      "command": "node scripts/harness/check-runtime-evidence.mjs --root . --strict",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "After appending one runtimeGap string to each of the 11: '0 error(s), 0 warning(s)', exit 0 — 54 files at that moment, 55 now that this round's own commands.json exists; the file count moves with each round and both readings are the same claim. The gap text restates each round's own recorded commands and summary prose — e.g. 2026-10-07-performance-followup keeps its P95 1.18s / EXPLAIN / MySQL max_connections=151 evidence in summary.md and says so, rather than having a runtimePerformance array invented here."
+    },
+    {
+      "command": "node frontend/.tmp/g03-backfill.mjs",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Replayable script (gitignored) inserting one `\"runtimeGap\": ...,` line before the top-level `knownGaps` key of each of the 11 files, JSON.parse-validating before writing and skipping any file that already has the key. All 11 printed 'inserted'. No other key, order or value was touched."
+    },
+    {
+      "command": "node pantheon-base/scripts/harness/check-inheritance-contract.mjs --root . --strict",
+      "cwd": "..",
+      "status": "failed",
+      "notes": "Baseline before the repair, run from the workspace root: 8 findings, exit 1 — docs/WORKSPACE_INHERITANCE.md missing 3 markers (`pantheon-base`: the only authority, `pantheon-ops`: a derived business repository, 'Change base rules in `pantheon-base`, then let business repositories upgrade'), pantheon-ops/docs/PROJECT_INHERITANCE.md missing 3 markers (Base repository, Base version:, 'If a foundation rule must change, update `pantheon-base` first') plus 'Base version must be pinned to a commit or tag', and .github/pull_request_template.md 'required inheritance contract file is missing'."
+    },
+    {
+      "command": "node scripts/harness/check-inheritance-contract.mjs --root .. --strict",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "After the doc markers, the pinned Base version (`pantheon-base-v0.16.1` (`c83f8e4c865b19ecd5351ecefac4106ec416e0bc`), taken from pantheon-ops/foundation-release.lock.json and corroborated by .business-overlay-report.json and ops HEAD 6fc9279) and the new workspace-root template: 0 findings, 0 warnings, exit 0. The first attempt still reported 3 findings because the bullets were written 'Generic drift' / 'Pseudo-drift' / 'Business-only' and the checker matches those markers case-sensitively."
+    },
+    {
+      "command": "node scripts/harness/check-inheritance-contract.mjs --root . --strict",
+      "cwd": ".",
+      "status": "not-run",
+      "notes": "Deliberately not treated as a verdict. Run with --root . from inside pantheon-base the checker reports 7 findings of the form 'required inheritance contract file is missing' for docs/WORKSPACE_INHERITANCE.md, pantheon-ops/* and .github/pull_request_template.md — those paths exist one level up, so the reading is a mis-scoped invocation, not drift. Documented as the workspace-root-only form in scripts/harness/README.md and README.zh.md so the next agent does not chase it."
+    },
+    {
+      "command": "node frontend/.tmp/gov-matrix.mjs",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "24-checker strict matrix after the closure, all rc=0: check-evidence (55 files, 0 errors / 0 warnings), check-review (55 files, 0 errors), check-runtime-evidence (55 files, 0 errors / 0 warnings), check-task-packet (59 files, 0 errors, 39 warnings — the packet added this round passes and its review-file warning cleared once review.md was written), check-structure-contract (0 findings across 2573 tracked files), check-failure-registry, check-ui-quality-gate, check-generated (0 across 11 artifacts), check-doc-frontmatter (0 errors / 0 warnings), check-doc-links, check-doc-inventory, check-sync-drift, check-encoding (0 across 2312 files), check-method-health, check-adoption, check-template-health, check-visual-evidence, check-boundaries, check-feature-ledger, check-permission-contract, check-backend-response-contract, check-backend-dto-contract, check-inheritance-contract (run with --root ..), check-audit-coverage. The three 'pantheon-ops root not found' scan warnings in the backend/permission/audit rows are pre-existing (the matrix runs with --root . from pantheon-base) and those checkers exit 0 regardless. Re-run after this round's evidence set was complete; the 55/55/59 counts above are that final run."
+    },
+    {
+      "command": "node scripts/harness/check-evidence.mjs --root . --strict",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Exit 0 after the 11 edits: 'Evidence check (strict): 55 file(s), 0 error(s), 0 warning(s)'. Proves the appended runtimeGap strings satisfy the root.runtimeGap type rule (non-empty string) and did not disturb the schema that the previous round just fixed; 55 includes this round's own commands.json."
+    },
+    {
+      "command": "node scripts/harness/check-review.mjs --root . --strict",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Exit 0, 'Review check (strict): 55 file(s), 0 error(s)' — this round's review.md included."
+    },
+    {
+      "command": "node scripts/harness/check-task-packet.mjs --root .",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "59 packets, 0 errors, exit 0. [PASS] docs/harness/tasks/2026-10-26-governance-red-checkers-closure.task.md. The checker has no --strict flag; passing one would be read as a file argument and fail."
+    },
+    {
+      "command": "node scripts/harness/check-doc-frontmatter.mjs --root . --strict",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "0 errors / 0 warnings after adding this round's packet. Its frontmatter uses `status: Active`, not `Completed` — the DOCUMENT_FRONTMATTER_SCHEMA enum is Draft|Active|Approved|Superseded|Archived, which is a different vocabulary from the manifest's planned|in-progress|completed|abandoned."
+    },
+    {
+      "command": "cd frontend && node node_modules/typescript/bin/tsc -b",
+      "cwd": "frontend",
+      "status": "passed",
+      "notes": "Exit 0, no output — including the new `frontend/src/api/menu.ts`, the re-export in `modules/system/iam/menu/api.ts` and the retyped import in `modules/platform/widgets.tsx`."
+    },
+    {
+      "command": "cd frontend && node node_modules/eslint/bin/eslint.js src --max-warnings 0",
+      "cwd": "frontend",
+      "status": "passed",
+      "notes": "Exit 0 across the whole src tree, and again when run on only the three changed files. The `import type` + `export type { MenuNode }` pair satisfies the isolatedModules-style rules the flat config enforces."
+    },
+    {
+      "command": "cd frontend && node node_modules/vitest/vitest.mjs run tests/unit/modules/platform/widgets.test.ts tests/unit/core/layout/useLayoutMenu.test.tsx",
+      "cwd": "frontend",
+      "status": "passed",
+      "notes": "2 files / 6 tests passed. These are the two suites that actually consume MenuNode-shaped menu trees: the widget visibility path in widgets.tsx and the layout menu traversal — i.e. the behavioural proof that the type move changed no runtime shape."
+    },
+    {
+      "command": "cd frontend && node ./scripts/check-menu-contract.mjs && node ./scripts/check-import-path-case.mjs",
+      "cwd": "frontend",
+      "status": "passed",
+      "notes": "Menu contract: manifest / menu seed consistency passed (19 menus, 23 routes, 102 permissions, 23 component keys). Import-path case guard: 274 source files, passed — the new lowercase `api/menu.ts` filename is what this check would have caught if it had been misnamed."
+    },
+    {
+      "command": "node scripts/check-duplication.mjs && node scripts/check-task-packet-template.mjs && node frontend/scripts/cleanup-generated-modules.mjs --check",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Duplication gate 'Result: PASS'; task-packet template present and linked; '[generated-modules] OK: no generated modules found'. These are the non-harness CI-referenced steps that could observe the new file or the packet."
+    },
+    {
+      "command": "cd backend && go build ./... && go vet ./... && gofmt -l .",
+      "cwd": "backend",
+      "status": "passed",
+      "notes": "Exit 0 with empty gofmt output. No Go file changed this round; re-run as a working-tree baseline so the round cannot be blamed for backend drift."
+    },
+    {
+      "command": "cd pantheon-ops && node scripts/harness/check-adoption.mjs --root . --strict && node scripts/check-pr-governance.mjs --help",
+      "cwd": "..",
+      "status": "passed",
+      "notes": "ops: 'Adoption check (strict): 0 finding(s)' and 'OK pantheon-ops PR template governance fields are present' after the four drift markers were added to `.github/PULL_REQUEST_TEMPLATE.md`. base equivalents also rc=0, so neither template edit broke the PR governance contract that check-pr-governance.mjs enforces (it requires the 'Base/ops inheritance' label, which was already present in both)."
+    },
+    {
+      "command": "git diff --numstat -- .harness/evidence/2026-09-25-task-archiving-and-v0130-prep/commands.json (and the other 10)",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "All 11 files report exactly '1\\t0\\t<harness path>': one added line, zero deleted. The same proof for the previous round's 22 review.md files was '22 insertions / 0 deletions'."
+    },
+    {
+      "command": "git diff -- .harness/evidence | grep -E '^[+-]' | grep '\"status\"'",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Empty — no added or removed line anywhere in the evidence tree touches a \"status\" field, which is the mechanical statement that no historical verification conclusion was rewritten. Note the filter: grepping the whole diff without `^[+-]` does return lines, because the context around an inserted field legitimately contains status entries; the previous round's proof text said 'git diff | grep status is empty' for the evidence directory and that phrasing would now be false, so the corrected form is recorded here."
+    },
+    {
+      "command": "git -C pantheon-base status --porcelain -- frontend/src/api/menu.ts frontend/src/modules/platform/widgets.tsx frontend/src/modules/system/iam/menu/api.ts config/boundary-baseline.json docs/designs/REPOSITORY_LAYOUT.md docs/harness/failure-registry.md scripts/harness/README.md scripts/harness/README.zh.md",
+      "cwd": "..",
+      "status": "passed",
+      "notes": "Exactly the intended base-side shape: `?? frontend/src/api/menu.ts` (new contract file) plus `M` on the seven tracked files. Two of those seven are `scripts/harness/README.md` / `README.zh.md`, so the narrower and more useful proof is `git status --porcelain -- 'scripts/harness/*.mjs'` → 0 entries and `git status --porcelain -- .github/workflows` → 0 entries: no checker implementation and no workflow was touched. The wider working tree still carries the uncommitted output of earlier rounds in this session (172 entries), including one modified historical screenshot (`.harness/evidence/2026-09-10-tenant-verification-and-gray/artifacts/browser/tenant-picker-desktop.png`, mtime 2026-10-25 09:40) that predates this round and was not touched here. Nothing was committed or pushed."
+    },
+    {
+      "command": "node -e \"scan every string this round wrote for credential-shaped content\"",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "0 hits for DSN/password/token/secret patterns across the new and modified files, and no `.env.test` value was read or printed at any point. The ops lock file values cited here are a public tag name and a commit SHA, not secrets."
+    },
+    {
+      "command": "node frontend/.tmp/gov-matrix.mjs (final re-run, after this round's summary.md existed)",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Re-run once the artifact set was complete, because check-evidence --strict failed while summary.md was still missing ('root.linkage.summaryFile does not exist'), which is the linkage rule working as designed. Final run: 24 checkers, all rc=0; check-evidence 55 files / 0 errors / 0 warnings, check-review 55 files / 0 errors, check-runtime-evidence 55 files / 0 errors / 0 warnings, check-task-packet 59 files / 0 errors / 39 warnings, check-structure-contract 0 findings / 2573 tracked files, check-encoding 0 findings / 2312 files, check-generated 0 findings / 11 artifacts."
+    },
+    {
+      "command": "cd frontend && node node_modules/vitest/vitest.mjs run",
+      "cwd": "frontend",
+      "status": "not-run",
+      "notes": "Not run: the full unit suite was already green before this round and the change surface is one moved type plus one re-pointed import. The two suites that consume that type (widgets, useLayoutMenu) were run instead, together with tsc, eslint and the menu contract gate. A reviewer who wants the whole vitest suite re-run should ask; it is minutes, not a blocker."
+    },
+    {
+      "command": "npm run check:pr-governance",
+      "cwd": ".",
+      "status": "not-run",
+      "notes": "Cannot run off-host: it reads a GitHub PR event payload. Its template-shape half was executed directly (`node scripts/check-pr-governance.mjs --help`) in both repositories."
+    }
+  ]
+}

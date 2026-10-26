@@ -94,5 +94,18 @@
     "Tenants provisioned before this change keep their 85-key set until they are re-provisioned; this packet deliberately does not auto-backfill because a tenant administrator may have revoked keys on purpose.",
     "system:login-log:* and system:session:* remain absent from requiredAPIRoutesByPermission, so the permission workbench has no opinion about those routes. Pre-existing gap, out of scope.",
     "The SonarCloud analysis of the new commit has not run yet; the change is small but the gate result is CI-only."
-  ]
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-20-tenant-audit-permission-seed/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-20-tenant-audit-permission-seed/",
+    "reviewFile": ".harness/evidence/2026-10-20-tenant-audit-permission-seed/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-20-tenant-audit-permission-seed.task.md",
+      "docs/contracts/TENANT_CONTRACT_V1.md",
+      ".github/workflows/smoke-core.yml"
+    ],
+    "summaryFile": ".harness/evidence/2026-10-20-tenant-audit-permission-seed/summary.md"
+  },
+  "schemaBackfill": "Structural backfill on 2026-10-26 (governance-schema repair round): fields below were added or retyped so this file satisfies scripts/harness/check-evidence.mjs --strict. No command result, verdict or coverage claim was changed; every added string is a paraphrase of text already present in this round’s review.md / summary.md / commands.json, and the original array values are preserved under *Notes keys where a type had to collapse."
 }

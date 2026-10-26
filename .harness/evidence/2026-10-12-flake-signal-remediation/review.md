@@ -66,3 +66,25 @@ Argued from evidence rather than reproduced locally:
   were checked manually.
 - Two physically different servers sharing a `host:port/dbname` string would share a cache
   namespace. Single logical database today, so recorded rather than engineered around.
+
+
+## Machine Readable
+
+```json
+{
+  "taskId": "2026-10-12-flake-signal-remediation",
+  "verdict": "approved",
+  "verdictRationale": "Accepted: both races removed at source, both covered by sensors that fail against the old code, no assertion relaxed.",
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-12-flake-signal-remediation/manifest.json",
+    "evidence": ".harness/evidence/2026-10-12-flake-signal-remediation/commands.json",
+    "reviewFile": ".harness/evidence/2026-10-12-flake-signal-remediation/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-12-flake-signal-remediation.task.md"
+    ]
+  }
+}
+```
+
+> This block was backfilled on 2026-10-26 during the governance-schema repair round. It restates the verdict already written above in machine-readable form and links the artifacts that existed for this task; no conclusion, finding or verification claim was added, removed or reworded. The prose remains authoritative.

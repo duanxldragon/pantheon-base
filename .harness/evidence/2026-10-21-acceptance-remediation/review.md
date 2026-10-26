@@ -100,3 +100,25 @@ open Dependabot alerts 归零。最终 main `17af0d85`：Sonar 分支分析（10
 `Release Gate` 首次执行时 `Dependabot Alerts` job 与告警清零存在竞态而失败，告警归零后以 `gh run rerun --failed` 在同一 commit、同一规则下复跑转绿——
 这是竞态复跑，不写成首次即绿，也不构成规则让步。
 维护者新增的验收条件（Quality Gate 全过、Open issues 清零）在 Sonar 侧已满足；唯一剩余发布动作是维护者打 `pantheon-base-v0.17.0` tag 并发布产物（F5）。
+
+
+## Machine Readable
+
+```json
+{
+  "taskId": "2026-10-21-acceptance-remediation",
+  "verdict": "approved with documented P2 follow-up",
+  "verdictRationale": "Self-check stance: hosted runs closed every gate red (PR #397/#402, Sonar open issues 0, Release Gate success); it claims no second-reviewer approval and leaves the v0.17.0 tag to the maintainer.",
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-21-acceptance-remediation/manifest.json",
+    "evidence": ".harness/evidence/2026-10-21-acceptance-remediation/commands.json",
+    "reviewFile": ".harness/evidence/2026-10-21-acceptance-remediation/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-21-acceptance-remediation.task.md"
+    ]
+  }
+}
+```
+
+> This block was backfilled on 2026-10-26 during the governance-schema repair round. It restates the verdict already written above in machine-readable form and links the artifacts that existed for this task; no conclusion, finding or verification claim was added, removed or reworded. The prose remains authoritative.

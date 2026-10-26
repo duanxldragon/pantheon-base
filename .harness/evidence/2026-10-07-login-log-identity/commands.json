@@ -24,6 +24,7 @@
     "tool": "codex",
     "adapter": "platform-coordinator"
   },
+  "runtimeGap": "No runtime signal is recorded. The whole file is two `go test` entries against modules/auth/login with DSN+Redis env, whose notes report the new login-log handler tests passing. The manifest claim \"own-log authenticated runtime request\" has no backing HTTP request, server log, or browser session in this round.",
   "knownGaps": [
     "Legacy evidence did not record structured known gaps; consult the linked summary/review before treating as no-gap."
   ],

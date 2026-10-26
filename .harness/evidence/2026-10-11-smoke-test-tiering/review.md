@@ -54,3 +54,25 @@ test rather than merely documented.
   confirmation is the CI Quality Gates run.
 - Follow-ups deliberately not bundled: adding `tests/` to CI's static coverage (69 pre-existing
   errors), and factoring the duplicated mysql/redis service block out of the workflow jobs.
+
+
+## Machine Readable
+
+```json
+{
+  "taskId": "2026-10-11-smoke-test-tiering",
+  "verdict": "approved with documented P2 follow-up",
+  "verdictRationale": "Accept: behaviour-preserving by construction and measurement; follow-ups (tests/ in CI static coverage) were deliberately not bundled.",
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-11-smoke-test-tiering/manifest.json",
+    "evidence": ".harness/evidence/2026-10-11-smoke-test-tiering/commands.json",
+    "reviewFile": ".harness/evidence/2026-10-11-smoke-test-tiering/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-11-smoke-test-tiering.task.md"
+    ]
+  }
+}
+```
+
+> This block was backfilled on 2026-10-26 during the governance-schema repair round. It restates the verdict already written above in machine-readable form and links the artifacts that existed for this task; no conclusion, finding or verification claim was added, removed or reworded. The prose remains authoritative.

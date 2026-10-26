@@ -29,3 +29,25 @@ structural smells, and justified suppressions for the 11 intentional sequential-
 - **Residual risk is explicit:** the executed proof is CI (L1 + module suites plus the SonarCloud
   re-analysis), since this host cannot spawn Playwright. The structural-equivalence argument is
   strong, but the first local-equivalent execution is the CI run itself.
+
+
+## Machine Readable
+
+```json
+{
+  "taskId": "2026-10-11-sonar-smoke-helper-smells",
+  "verdict": "approved",
+  "verdictRationale": "Accept: 6 provably-equivalent mechanical fixes and 11 justified suppressions, with the executed proof being CI.",
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-11-sonar-smoke-helper-smells/manifest.json",
+    "evidence": ".harness/evidence/2026-10-11-sonar-smoke-helper-smells/commands.json",
+    "reviewFile": ".harness/evidence/2026-10-11-sonar-smoke-helper-smells/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-11-sonar-smoke-helper-smells.task.md"
+    ]
+  }
+}
+```
+
+> This block was backfilled on 2026-10-26 during the governance-schema repair round. It restates the verdict already written above in machine-readable form and links the artifacts that existed for this task; no conclusion, finding or verification claim was added, removed or reworded. The prose remains authoritative.

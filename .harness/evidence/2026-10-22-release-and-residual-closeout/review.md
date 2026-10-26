@@ -39,3 +39,25 @@ Approve. No product behavior change outside a test helper; release and governanc
 2. Historical git objects keep the old values; no history rewrite.
 3. Browser acceptance is read-only; write paths are covered by Go integration tests and CI.
 4. Race detection is hosted-only due to the Cygwin gcc restriction on this host.
+
+
+## Machine Readable
+
+```json
+{
+  "taskId": "2026-10-22-release-and-residual-closeout",
+  "verdict": "approved with documented P2 follow-up",
+  "verdictRationale": "Approve: evidenced and reversible except the immutable published assets, whose credential residue stays an open follow-up.",
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-22-release-and-residual-closeout/manifest.json",
+    "evidence": ".harness/evidence/2026-10-22-release-and-residual-closeout/commands.json",
+    "reviewFile": ".harness/evidence/2026-10-22-release-and-residual-closeout/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-22-release-and-residual-closeout.task.md"
+    ]
+  }
+}
+```
+
+> This block was backfilled on 2026-10-26 during the governance-schema repair round. It restates the verdict already written above in machine-readable form and links the artifacts that existed for this task; no conclusion, finding or verification claim was added, removed or reworded. The prose remains authoritative.

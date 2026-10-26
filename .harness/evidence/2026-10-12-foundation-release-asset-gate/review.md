@@ -103,3 +103,25 @@ folded away:
   host; they remain CI-only signals for this change.
 - The PR's SonarCloud security rating depends on the hosted re-analysis of the pushed fix; the local
   re-validation cannot reproduce the `githubactions:S7630` rule.
+
+
+## Machine Readable
+
+```json
+{
+  "taskId": "2026-10-12-foundation-release-asset-gate",
+  "verdict": "approved with documented P2 follow-up",
+  "verdictRationale": "Accepted: the failure was a missing sensor; the gate is added and wired, with residual risk recorded rather than assumed away.",
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-12-foundation-release-asset-gate/manifest.json",
+    "evidence": ".harness/evidence/2026-10-12-foundation-release-asset-gate/commands.json",
+    "reviewFile": ".harness/evidence/2026-10-12-foundation-release-asset-gate/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-12-foundation-release-asset-gate.task.md"
+    ]
+  }
+}
+```
+
+> This block was backfilled on 2026-10-26 during the governance-schema repair round. It restates the verdict already written above in machine-readable form and links the artifacts that existed for this task; no conclusion, finding or verification claim was added, removed or reworded. The prose remains authoritative.

@@ -48,3 +48,25 @@ Release content is consistent with its notes and evidence. The release was cut a
 `1b74dccb` on 2026-10-23: annotated tag `pantheon-base-v0.17.3`, four assets with verified
 checksums, and `Foundation Release Verify` (run `39920022781`) succeeded. Details and the command
 trail are in `summary.md` and `commands.json`.
+
+
+## Machine Readable
+
+```json
+{
+  "taskId": "2026-10-23-v0173-release-closeout",
+  "verdict": "approved",
+  "verdictRationale": "Release content is consistent with its notes and evidence; tag and four assets verified, Foundation Release Verify succeeded.",
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-23-v0173-release-closeout/manifest.json",
+    "evidence": ".harness/evidence/2026-10-23-v0173-release-closeout/commands.json",
+    "reviewFile": ".harness/evidence/2026-10-23-v0173-release-closeout/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-23-v0173-release-closeout.task.md"
+    ]
+  }
+}
+```
+
+> This block was backfilled on 2026-10-26 during the governance-schema repair round. It restates the verdict already written above in machine-readable form and links the artifacts that existed for this task; no conclusion, finding or verification claim was added, removed or reworded. The prose remains authoritative.

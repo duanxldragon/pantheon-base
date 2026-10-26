@@ -85,7 +85,9 @@
   "verdict": "approved",
   "structuralReview": {
     "affectedSubgraph": "route -> handler(tenant ctx) -> permission service(subject resolve) -> casbin_rule -> middleware(domain/global subject)",
-    "checks": ["sensitive-flow", "tenant-isolation", "reserved-namespace"]
+    "checksNote": "tenant-isolation and reserved-namespace were the two extra reviews actually performed (sections 2 and 4 of the prose) but are outside the checker enum cycle|hub|call-depth|sensitive-flow, so from 2026-10-26 they are recorded here as findings instead of checks.",
+    "findings": ["Tenant isolation: a request body or header can no longer decide the namespace, and a tenant cannot read another tenant policies (prose sections 1-2).", "Reserved namespace: import/backfill no longer writes global subjects and reserved role keys are blocked (prose sections 3-4)."],
+    "checks": ["sensitive-flow"]
   },
   "linkage": {
     "taskManifest": ".harness/tasks/2026-10-20-tenant-delivery-hardening/manifest.json",

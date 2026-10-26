@@ -64,6 +64,7 @@
     "tool": "codex",
     "adapter": "platform-coordinator"
   },
+  "runtimeGap": "No runtimeLogs/runtimeMetrics/runtimeTraces/runtimePerformance were captured. Recorded here are build/vet/gofmt plus `go test` of the DataScope, role-update, iam/middleware/pkg-database sets and a full `go test ./...` with PANTHEON_TEST_DSN and Redis env, alongside this file's own gap note that tenant-package tests were skipped locally on the CGO toolchain. The manifest claims a \"policy-query failure injection result\" and \"custom scope before/after role edit and list/export result\"; those are test-run assertions, not a captured query plan or request/response trace.",
   "knownGaps": [
     "tenant package tests skipped locally due to CGO toolchain (Cygwin gcc vs MinGW). Not a code failure; CI equivalent passes."
   ],

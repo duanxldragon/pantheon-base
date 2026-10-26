@@ -82,3 +82,25 @@ administrator previously had by accident (enumerating all tenants).
    that omits it will read across tenants. Uniform today, but convention rather than compiler-enforced.
 3. The tenants-CRUD ownership mismatch between contract §7 (`system/org`) and the implementation
    (`system/iam`) predates this task and was deliberately not touched.
+
+
+## Machine Readable
+
+```json
+{
+  "taskId": "2026-10-13-tenant-true-isolation",
+  "verdict": "approved with documented P2 follow-up",
+  "verdictRationale": "Accepted with two recorded exceptions (go vet and the combined targeted go test run could not complete on this host).",
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-13-tenant-true-isolation/manifest.json",
+    "evidence": ".harness/evidence/2026-10-13-tenant-true-isolation/commands.json",
+    "reviewFile": ".harness/evidence/2026-10-13-tenant-true-isolation/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-13-tenant-true-isolation.task.md"
+    ]
+  }
+}
+```
+
+> This block was backfilled on 2026-10-26 during the governance-schema repair round. It restates the verdict already written above in machine-readable form and links the artifacts that existed for this task; no conclusion, finding or verification claim was added, removed or reworded. The prose remains authoritative.

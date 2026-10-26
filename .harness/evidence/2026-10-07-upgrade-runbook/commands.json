@@ -40,6 +40,7 @@
     "tool": "codex",
     "adapter": "platform-coordinator"
   },
+  "runtimeGap": "The disposable MySQL rehearsal (v12 backup -> migration v21 with dirty=false -> binary-safe restore -> v12 with table and row counts restored) is described in prose in this round's summary.md; no command log from it is stored in this file. The commands.json entries themselves are `ls` of the migration/health-check scripts and SQL, a RELEASE_NOTES_v0.14.0.md edit, and `check:harness-docs` / `check:harness-sync`, so this file carries no runtimeLogs/runtimeMetrics/runtimeTraces for the upgrade path it documents.",
   "knownGaps": [
     "Hosted CI, Sonar classification and authenticated browser evidence remain release-qualification gaps; production migration is intentionally out of scope."
   ],

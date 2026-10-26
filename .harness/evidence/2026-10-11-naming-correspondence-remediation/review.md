@@ -76,3 +76,25 @@ changed.
   green local build is not evidence that a rename was recorded.
 - Do not accept "the check passes" as evidence on this host: the three git-shelling gates are
   explicitly listed as CI-only, with the substitution recorded.
+
+
+## Machine Readable
+
+```json
+{
+  "taskId": "2026-10-11-naming-correspondence-remediation",
+  "verdict": "approved",
+  "verdictRationale": "Accepted: closes the 12-item action list and repairs the two harness gates that reported success while enforcing nothing.",
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-11-naming-correspondence-remediation/manifest.json",
+    "evidence": ".harness/evidence/2026-10-11-naming-correspondence-remediation/commands.json",
+    "reviewFile": ".harness/evidence/2026-10-11-naming-correspondence-remediation/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".harness/tasks/2026-10-11-naming-correspondence-remediation/manifest.json"
+    ]
+  }
+}
+```
+
+> This block was backfilled on 2026-10-26 during the governance-schema repair round. It restates the verdict already written above in machine-readable form and links the artifacts that existed for this task; no conclusion, finding or verification claim was added, removed or reworded. The prose remains authoritative.

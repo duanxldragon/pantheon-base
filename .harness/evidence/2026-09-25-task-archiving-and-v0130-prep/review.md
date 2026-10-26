@@ -62,9 +62,10 @@ behavior was touched.
     "evidence": ".harness/evidence/2026-09-25-task-archiving-and-v0130-prep/commands.json",
     "reviewFile": ".harness/evidence/2026-09-25-task-archiving-and-v0130-prep/review.md",
     "changeRef": "none",
+    "planRefsNote": "The original planRefs entry pointed at .harness/ACTIVE_TASKS_REVIEW_2026-09-25.md, the working list this task consumed and which was deleted at v0.15.0 closeout (commit 9702509e). Replaced by the surviving task manifest on 2026-10-26; prose references above are left as written history.",
     "planRefs": [
       ".harness/RELEASE_v0.13.0_PREP.md",
-      ".harness/ACTIVE_TASKS_REVIEW_2026-09-25.md"
+      ".harness/tasks/2026-09-25-task-archiving-and-v0130-prep/manifest.json"
     ]
   }
 }
