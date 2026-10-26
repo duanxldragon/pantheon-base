@@ -1,0 +1,172 @@
+{
+  "taskId": "2026-10-26-pr427-ci-gate-closure",
+  "repo": "pantheon-base",
+  "executedAt": "2026-10-26T18:20:00+08:00",
+  "agent": {
+    "tool": "other",
+    "adapter": "qoder-agent"
+  },
+  "runtimeSensitive": true,
+  "runtimeGap": "Runtime was exercised, but not entirely by this host. The local readings are real: `PANTHEON_TEST_DSN_REQUIRED=true` against a live MySQL (12 packages, no skips), a live backend at 127.0.0.1:8080 plus the dev server at 127.0.0.1:5173 for the Playwright runs (the remediation spec passed once and, with the revoke step removed, failed at its own gap assertion), and an unauthenticated SonarCloud web-api read of PR #427's gate conditions. What this host cannot produce is the hosted chain itself: `Go Lint`, `Backend Tests`, `Duplication Gate`, `PR Smoke Modules`, `SonarCloud Code Analysis` and `GitHub Feedback Prereq` are recorded from the Actions run/job output (`gh run view --log-failed`, job 121491835527 of run 40298340584) and from the Sonar web-api, not from a local re-implementation of CI. No `runtimePerformance` numbers exist for this round because nothing here measured latency or throughput; the runtime claim is bounded to 'the endpoint returned the documented envelope code' and 'the gate condition reads OK at the stated actual value'.",
+  "knownGaps": [
+    "The local `pagination-contract.spec.ts` failed twice (once on the page-2 poll at 30s, once at line 474 with `--timeout=120000`) and passed on the third isolated run in 20.4s. The CI run of the same suite (`test:smoke:module:all`, job 121491835527) reports it green, and the only CI failure is the remediation spec, so the reading is recorded as host-load flakiness against a 20-30s budget, not as a contract break. No assertion was relaxed and no spec was excluded because of it.",
+    "The hosted `golangci-lint` step is `continue-on-error: true` (CI-06): the step always concludes success and the real red is the separate `Enforce go-lint gate` step whose outcome is `steps.go-lint.outcome`. A reader who only scans the step list sees green. Changing that is a workflow-policy decision left to the maintainer, so this round only records the fact.",
+    "The bare `golangci-lint run ./...` reading (goconst 10 / gosec 13 / revive 50 = 73) is repo-wide backlog the CI gate never sees, because CI lints `--new-from-rev=main`. The `0 issues` in this round's acceptance is only the CI-equivalent form; it is not a claim that the repository is lint-clean.",
+    "The earlier hosted heads of PR #427 carried 10 unresolved Sonar issues and 3.62% new-code duplication. Those before-readings are transcribed from the hosted analysis in the previous push of this round; the after-reading here is the live web-api response (`total: 1` unresolved, `new_duplicated_lines_density` actual 0.8 vs threshold 3). The remaining issue (`typescript:S3626`, `frontend/tests/smoke/system/system-pages-helpers.ts:681`) is fixed in this commit and its next-analysis reading is not yet observable from this host.",
+    "`check:evidence`, `check-review`, `check-runtime-evidence`, `check-inheritance-contract` and the bare `--strict` `check-boundaries` still have no npm script and no CI step (FR-016 / FR-017 both open), so the 24-checker matrix is a local ritual whose green state lasts only while someone runs it. Wiring them in is a gate-policy decision left to the maintainer.",
+    "The `pantheon-ops` working tree still carries uncommitted inheritance-doc changes from this session, and `docs/WORKSPACE_INHERITANCE.md` plus the workspace-root `.github/pull_request_template.md` live outside every git repository (the workspace container is not a repo), so neither is part of PR #427 and neither is reproducible from a clean checkout."
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-26-pr427-ci-gate-closure/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-26-pr427-ci-gate-closure/",
+    "reviewFile": ".harness/evidence/2026-10-26-pr427-ci-gate-closure/review.md",
+    "summaryFile": ".harness/evidence/2026-10-26-pr427-ci-gate-closure/summary.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/contracts/TENANT_CONTRACT_V1.md",
+      "docs/harness/tasks/2026-10-26-tenant-plan-assignment.task.md",
+      "docs/harness/tasks/2026-10-26-login-accessibility-and-lang.task.md",
+      "docs/harness/tasks/2026-10-26-governance-red-checkers-closure.task.md"
+    ]
+  },
+  "commands": [
+    {
+      "command": "cd backend && PATH='D:\\Go\\bin;'\"$PATH\" golangci-lint run --new-from-rev=main ./...",
+      "cwd": "backend",
+      "status": "passed",
+      "notes": "CI-equivalent form: `0 issues.`, exit 0. This closes CI-01 (the 5 findings on head e4a70094: revive stutter on `tenant.TenantPlan`, goconst on the repeated GORM predicate literals, the unused `quotaLimitOrUnlimited`, the redundant `req.PlanQuotaReq` qualifier, and the cognitive-complexity split of `syncRoleAPIPolicies`). Re-run after this round's final edits, so the reading is the head being pushed, not the head that was diagnosed."
+    },
+    {
+      "command": "cd backend && PATH='D:\\Go\\bin;'\"$PATH\" golangci-lint run ./...",
+      "cwd": "backend",
+      "status": "failed",
+      "notes": "Deliberate counter-reading (CI-07): the bare form reports 73 repo-wide findings by linter (goconst 10, gosec 13, revive 50). Recorded as failed so nobody converts the `0 issues` above into 'the repository is lint-clean'. CI never runs this form; the backlog is pre-existing and out of this round's scope."
+    },
+    {
+      "command": "cd backend && go build ./... && go vet ./modules/system/... && gofmt -l .",
+      "cwd": "backend",
+      "status": "passed",
+      "notes": "Exit 0, no output from any of the three (gofmt list empty). Covers the renamed `tenant.Plan`, the extracted predicate/plan-code constants, the `role_policy_sync.go` three-helper split and the hoisted plan-update map that carries the NOSONAR."
+    },
+    {
+      "command": "cd backend && PANTHEON_TEST_DSN_REQUIRED=true go test -count=1 ./modules/system/...",
+      "cwd": "backend",
+      "status": "failed",
+      "notes": "First attempt, with `../.env.test` not sourced: every MySQL-backed case fails with 'mysql is required (PANTHEON_TEST_DSN_REQUIRED is set) but neither PANTHEON_TEST_DSN nor PANTHEON_DSN is configured'. This failure is the skip-masking guard (FR class recorded in `docs/harness/failure-registry.md`) doing its job: a missing DSN is an error, not a silent SKIP. Kept in the record instead of deleted, because the next agent will otherwise re-derive it."
+    },
+    {
+      "command": "cd backend && set -a; . ../.env.test; set +a; export PANTHEON_TEST_DSN_REQUIRED=true PANTHEON_TEST_REDIS_REQUIRED=true; go test -timeout 600s -count=1 ./modules/system/...",
+      "cwd": "backend",
+      "status": "passed",
+      "notes": "Against the live MySQL named by `.env.test` (DSN value never printed): 12 package lines, all `ok`, 0 `FAIL`, 0 skips. Covers `modules/system/iam/tenant` (renamed plan type, new plan-store predicates, hoisted update map), `modules/system/iam/role` (the `syncRoleAPIPolicies` split) and the user/org/config/i18n/audit packages."
+    },
+    {
+      "command": "cd frontend && node node_modules/typescript/bin/tsc -b",
+      "cwd": "frontend",
+      "status": "passed",
+      "notes": "Exit 0, no diagnostics — run twice, before and after this round's last two edits (the `dropPolicy` helper in the remediation spec and the two redundant `return;` deletions). Git Bash has no npm, so the compiler is invoked through the local TypeScript binary."
+    },
+    {
+      "command": "cd frontend && node node_modules/eslint/bin/eslint.js src tests --max-warnings 0",
+      "cwd": "frontend",
+      "status": "passed",
+      "notes": "Exit 0 over both `src` and `tests`. `tests` is included because the two fixture repairs and the new revoke helper live under `frontend/tests`, and the acceptance line in the packet only named `src`."
+    },
+    {
+      "command": "cd frontend && node node_modules/@playwright/test/cli.js test --config playwright.config.ts tests/smoke/system/governance/permission-workbench-remediation-real.spec.ts",
+      "cwd": "frontend",
+      "status": "passed",
+      "notes": "1 passed (5.4s) against the live backend and the already-running dev server (the suite reuses port 5173 rather than starting its own). The case creates a role whose `permissionKeys` include `system:module:generate`, revokes the policy the role save has already synced, and only then asserts `governanceStatus = pending` / `missingApiPolicyCount = 1` / remediate `createdCount = 1`."
+    },
+    {
+      "command": "cd frontend && (remove the dropPolicy call) && node node_modules/@playwright/test/cli.js test --config playwright.config.ts tests/smoke/system/governance/permission-workbench-remediation-real.spec.ts",
+      "cwd": "frontend",
+      "status": "failed",
+      "notes": "Rollback differential for the CI-08 companion repair: with the revoke step deleted, the same spec fails at `expect(before.governanceStatus).toBe('pending')` (spec line 186 after the helper was added) — the synced grant means the role has no gap, so there is nothing to remediate. The file was restored from the pre-experiment copy and re-passed (1 passed, 5.4s). This proves the repair targets the root cause rather than a relaxed assertion."
+    },
+    {
+      "command": "cd frontend && node node_modules/@playwright/test/cli.js test --config playwright.config.ts tests/smoke/system/system-iam.spec.ts tests/smoke/system/role-authorization.spec.ts tests/smoke/system/governance tests/smoke/platform/system-secondary-route-permission.spec.ts tests/smoke/platform/pagination-contract.spec.ts --workers=1",
+      "cwd": "frontend",
+      "status": "failed",
+      "notes": "38 passed / 1 failed (8.2m). The failure is `pagination-contract.spec.ts:356` hitting its 30s test budget while three verification jobs shared the host; it is the only non-green line in the batch, and every suite that actually consumes the changed fixtures (`system-iam`, `role-authorization`, all six governance specs, `system-secondary-route-permission`) passed. Recorded as failed rather than dropped because the isolated re-run below is the same command's re-reading."
+    },
+    {
+      "command": "cd frontend && node node_modules/@playwright/test/cli.js test --config playwright.config.ts tests/smoke/platform/pagination-contract.spec.ts --workers=1",
+      "cwd": "frontend",
+      "status": "passed",
+      "notes": "Isolated re-run: 4 passed (27.8s), the previously failing case finishing in 20.4s. Two readings of the same spec (one under host load, one alone) put it inside the budget on the quiet run; the CI run of the same suite reports it green. No timeout or assertion was changed."
+    },
+    {
+      "command": "gh run view 40298340584 --repo duanxldragon/pantheon-base --log-failed",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Hosted `PR Smoke Modules` on head `76e3bdb6` (which already carries the two fixture tolerances): 'Touched smoke suites: test:smoke:module:all', exactly one failed case — `tests/smoke/system/governance/permission-workbench-remediation-real.spec.ts:141`, 'expect(before.governanceStatus).toBe(pending)' — with the retry failing identically. That is the CI-08 second-order regression this round repairs; every other module suite in the same job is green, which is the confirmation that the earlier 400-class fixture failures are gone."
+    },
+    {
+      "command": "gh pr checks 427 --repo duanxldragon/pantheon-base",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Head `76e3bdb6`: `Go Lint`, `Backend Tests`, `Duplication Gate`, `Docs Governance`, `CodeQL`, `GitHub Feedback Prereq`, `SonarCloud Code Analysis`, `Smoke Sanity`, `Frontend Contract`, `Unit Tests`, `Secret Scan` all pass; `PR Smoke Modules` and the `Quality Gates` aggregate are the only reds, and both trace to the single spec above. `mergeable: MERGEABLE`, `mergeStateStatus: BLOCKED` with `reviewDecision` empty, i.e. the remaining blocker after CI is the required-review check, not a red test."
+    },
+    {
+      "command": "curl 'https://sonarcloud.io/api/qualitygates/project_status?projectKey=duanxldragon_pantheon-base&pullRequest=427'",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "PR gate `status: OK` on all five conditions: new_reliability_rating 1, new_security_rating 1, new_maintainability_rating 1, new_duplicated_lines_density actual 0.8 vs threshold 3, security_hotspots_reviewed 100.0. This is CI-03 closed at the hosted measure: the extracted table shell took new-code duplication from 198/5462 (3.62%) to 0.8%."
+    },
+    {
+      "command": "curl 'https://sonarcloud.io/api/issues/search?componentKeys=duanxldragon_pantheon-base&pullRequest=427&resolved=false'",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "`total: 1` unresolved: `typescript:S3626` (MINOR) at `frontend/tests/smoke/system/system-pages-helpers.ts:681` — the redundant `return;` the CI-08 fixture tolerance introduced as the last statement of a void function. Both fixture copies (this one and `tests/smoke/platform/system-secondary-route-permission.spec.ts:173`) now use `if (payload.code !== 200) { expect(...) }` with no jump, which keeps the tolerance and removes the finding. Open issues therefore go 10 → 2 → 1 → 0 in code; the final 0 is the next hosted analysis's reading, not this host's."
+    },
+    {
+      "command": "node scripts/fetch-github-feedback.mjs --check --repo duanxldragon/pantheon-base --pr 427",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Exit 0. CI-05 closed: CodeQL alerts 95 and 96 (`js/file-access-to-http` at `frontend/scripts/tenant-matrix-fixture-setup.mjs:121`) dismissed as `used in tests` with the rationale already recorded on alerts 90-94, per `SECURITY.md` > GitHub Security Surfaces ('fix, or dismiss with a reason'). The hosted `GitHub Feedback Prereq` job consequently reports pass in the same `gh pr checks` reading."
+    },
+    {
+      "command": "node frontend/.tmp/gov-matrix.mjs",
+      "cwd": ".",
+      "status": "failed",
+      "notes": "First 24-checker strict run of this round: 21 rc=0, 3 rc=1 — `check-task-packet` (the new packet was missing 9 of the 13 required sections and its Primary Layer line carried prose instead of the enum value), `check-visual-evidence` ('taskManifest.implementationNotes must be an array of strings'), `check-adoption` ('implementation change detected without matching verification evidence'). All three are this round's own governance artifacts being incomplete, not pre-existing drift; each is repaired below rather than by loosening a checker."
+    },
+    {
+      "command": "node scripts/harness/check-task-packet.mjs --root .",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "After the packet was rewritten to the template (`Harness Profile`, `Contract Anchors`, `Scope` In/Out, `Expected Files` Create/Modify/Do Not Touch, `Implementation Notes`, `Verification Plan` with commands, `Linkage`, `Evidence Required`, `Human Gates`, `Completion Checklist`) and the coverage dimensions were corrected to the checker's enum (`behaviour`, `runtime-quality`, `method-health`, `maintainability` — `test-observability` and `security-surface` are not members): `[PASS] docs/harness/tasks/2026-10-26-pr427-ci-gate-closure.task.md`."
+    },
+    {
+      "command": "node scripts/harness/check-visual-evidence.mjs --root . --strict",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "'Visual evidence check (strict): 0 UI task(s), 0 warning(s), no findings' after `implementationNotes` became an array of three strings. The manifest previously stored one long prose string, which the checker reads as an unreadable manifest and reports as a warning that fails --strict."
+    },
+    {
+      "command": "node scripts/harness/check-adoption.mjs --root . --strict",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Clears once this `commands.json` exists: the checker's rule is 'an implementation file changed ⇒ a task manifest changed and a `.harness/evidence/**/commands.json` changed', so the finding was the missing artifact of this round itself, not an orphaned code change. `frontend/tests/smoke/system/governance/permission-workbench-remediation-real.spec.ts` is now also listed in the manifest's `expectedFiles.modify`."
+    },
+    {
+      "command": "node frontend/.tmp/gov-matrix.mjs",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Final 24-checker strict re-run after the packet, manifest and this evidence set exist: all rc=0, including `check-evidence --strict`, `check-review --strict`, `check-runtime-evidence --strict`, `check-task-packet`, `check-boundaries --strict`, `check-inheritance-contract` (workspace-root form) and `check-audit-coverage`."
+    },
+    {
+      "command": "node scripts/check-pr-governance.mjs --event frontend/.tmp/pr-event.json",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "PR-side governance contract against the recorded PR #427 payload: exit 0. The four hosted-red repairs and the governance artifacts of this round are all inside the PR's declared scope, and the template's required markers are untouched."
+    },
+    {
+      "command": "node -e \"scan every file this round created or modified for credential-shaped content\"",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "No DSN, password, token or secret value is printed or written anywhere in this round's outputs: the backend test run sourced `../.env.test` into the environment and only reported package verdicts; the Sonar and GitHub reads use unauthenticated public endpoints or `gh`'s stored credential. The only identifiers recorded are public repository/PR/job numbers and a Sonar issue key."
+    }
+  ]
+}
