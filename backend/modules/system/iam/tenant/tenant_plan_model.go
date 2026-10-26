@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-// TenantPlan is a platform-global plan definition (TENANT_CONTRACT_V1 §2.4).
+// Plan is a platform-global plan definition (TENANT_CONTRACT_V1 §2.4).
 //
 // It carries the quota thresholds a tenant's `plan` code resolves to, so the
 // console can report usage against a limit the operator actually controls
@@ -23,7 +23,7 @@ import (
 //     (metrics, the overview page, the console) already distinguishes
 //     "unlimited" from "exhausted"; allowing 0 would make those two states
 //     indistinguishable.
-type TenantPlan struct {
+type Plan struct {
 	ID           uint64    `gorm:"primaryKey;autoIncrement" json:"id"`
 	Code         string    `gorm:"size:32;not null;uniqueIndex:uk_tenant_plan_code" json:"code"`
 	Name         string    `gorm:"size:64;not null;default:''" json:"name"`
@@ -39,7 +39,7 @@ type TenantPlan struct {
 }
 
 // TableName pins the projection to the plan definition table.
-func (TenantPlan) TableName() string {
+func (Plan) TableName() string {
 	return "tenant_plans"
 }
 
@@ -48,6 +48,22 @@ const (
 	PlanStatusActive   = "active"
 	PlanStatusDisabled = "disabled"
 )
+
+// The built-in plan codes are the plans the compiled-in fallback table
+// describes. They are named once because three behaviours must agree on the
+// same list - SeedDefaults creating the rows, the assignment check still
+// accepting a code whose row the operator deleted, and GetDefaultQuota
+// supplying its ceilings - and a code missing from one of them reads as an
+// unassignable plan.
+const (
+	planCodeFree         = "free"
+	planCodeBasic        = "basic"
+	planCodeProfessional = "professional"
+	planCodeEnterprise   = "enterprise"
+)
+
+// builtInPlanCodes is that list in console order.
+var builtInPlanCodes = []string{planCodeFree, planCodeBasic, planCodeProfessional, planCodeEnterprise}
 
 // UnlimitedQuota is the sentinel a quota field takes when a plan places no
 // ceiling on that resource.
@@ -76,7 +92,7 @@ func planCodeAllowed(code string) bool {
 
 // AsQuota projects the row onto the Quota shape every consumer of tenant
 // limits already speaks.
-func (p TenantPlan) AsQuota() Quota {
+func (p Plan) AsQuota() Quota {
 	return Quota{
 		MaxUsers:     p.MaxUsers,
 		MaxRoles:     p.MaxRoles,
@@ -87,7 +103,7 @@ func (p TenantPlan) AsQuota() Quota {
 }
 
 // IsEnabled reports whether the plan may still be assigned to tenants.
-func (p TenantPlan) IsEnabled() bool {
+func (p Plan) IsEnabled() bool {
 	return normalizePlanStatus(p.Status) == PlanStatusActive
 }
 
@@ -137,15 +153,6 @@ type PlanUpdateReq struct {
 // the only decision this page supports is "may I retire this plan", and that
 // decision is exactly `tenantCount == 0`.
 type PlanResp struct {
-	TenantPlan
+	Plan
 	TenantCount int64 `json:"tenantCount"`
-}
-
-// quotaLimitOrUnlimited returns the limit to compare usage against, or false
-// when the resource is unlimited.
-func quotaLimitOrUnlimited(limit int) (int, bool) {
-	if limit == UnlimitedQuota {
-		return 0, false
-	}
-	return limit, true
 }

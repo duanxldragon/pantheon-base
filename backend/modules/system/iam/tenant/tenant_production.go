@@ -31,7 +31,7 @@ type Quota struct {
 // most.
 func GetDefaultQuota(plan string) Quota {
 	switch plan {
-	case "free":
+	case planCodeFree:
 		return Quota{
 			MaxUsers:     5,
 			MaxRoles:     3,
@@ -39,7 +39,7 @@ func GetDefaultQuota(plan string) Quota {
 			MaxAPIKeys:   2,
 			MaxStorageMB: 100,
 		}
-	case "basic":
+	case planCodeBasic:
 		return Quota{
 			MaxUsers:     20,
 			MaxRoles:     10,
@@ -47,7 +47,7 @@ func GetDefaultQuota(plan string) Quota {
 			MaxAPIKeys:   10,
 			MaxStorageMB: 1000,
 		}
-	case "professional":
+	case planCodeProfessional:
 		return Quota{
 			MaxUsers:     100,
 			MaxRoles:     50,
@@ -55,16 +55,16 @@ func GetDefaultQuota(plan string) Quota {
 			MaxAPIKeys:   50,
 			MaxStorageMB: 10000,
 		}
-	case "enterprise":
+	case planCodeEnterprise:
 		return Quota{
-			MaxUsers:     -1, // Unlimited
-			MaxRoles:     -1,
-			MaxDepts:     -1,
-			MaxAPIKeys:   -1,
-			MaxStorageMB: -1,
+			MaxUsers:     UnlimitedQuota,
+			MaxRoles:     UnlimitedQuota,
+			MaxDepts:     UnlimitedQuota,
+			MaxAPIKeys:   UnlimitedQuota,
+			MaxStorageMB: UnlimitedQuota,
 		}
 	default:
-		return GetDefaultQuota("free")
+		return GetDefaultQuota(planCodeFree)
 	}
 }
 

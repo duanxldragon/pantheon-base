@@ -21,9 +21,11 @@ import (
 // placeholder style stays identical across every query, and so a reader cannot
 // mistake a literal for an interpolated value.
 const (
-	condIDEquals     = "id = ?"
-	condIDNotEquals  = "id <> ?"
-	condStatusEquals = "status = ?"
+	condIDEquals        = "id = ?"
+	condIDNotEquals     = "id <> ?"
+	condStatusEquals    = "status = ?"
+	condStatusNotEquals = "status <> ?"
+	condPlanEquals      = "plan = ?"
 )
 
 var (
@@ -370,7 +372,7 @@ func (s *Service) ListTenants(filter Filter) (*ListResponse, error) {
 	if filter.Status != "" {
 		scoped = scoped.Where(condStatusEquals, filter.Status)
 	} else {
-		scoped = scoped.Where("status <> ?", tenantStatusDeleted)
+		scoped = scoped.Where(condStatusNotEquals, tenantStatusDeleted)
 	}
 
 	// Count total

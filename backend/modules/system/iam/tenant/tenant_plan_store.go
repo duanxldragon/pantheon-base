@@ -37,7 +37,7 @@ type PlanStore struct {
 	db *gorm.DB
 
 	mu       sync.RWMutex
-	codes    map[string]TenantPlan
+	codes    map[string]Plan
 	loadedAt time.Time
 	loaded   bool
 	now      func() time.Time
@@ -55,7 +55,7 @@ func (s *PlanStore) Migrate() error {
 	if s.db == nil {
 		return common.ErrDatabaseNotInitialized
 	}
-	if err := s.db.AutoMigrate(&TenantPlan{}); err != nil {
+	if err := s.db.AutoMigrate(&Plan{}); err != nil {
 		return err
 	}
 	return s.SeedDefaults()
@@ -72,16 +72,16 @@ func (s *PlanStore) SeedDefaults() error {
 	if s.db == nil {
 		return common.ErrDatabaseNotInitialized
 	}
-	for index, code := range []string{"free", "basic", "professional", "enterprise"} {
+	for index, code := range builtInPlanCodes {
 		quota := GetDefaultQuota(code)
 		var count int64
-		if err := s.db.Model(&TenantPlan{}).Where("code = ?", code).Count(&count).Error; err != nil {
+		if err := s.db.Model(&Plan{}).Where("code = ?", code).Count(&count).Error; err != nil {
 			return fmt.Errorf("count tenant plans: %w", err)
 		}
 		if count > 0 {
 			continue
 		}
-		row := TenantPlan{
+		row := Plan{
 			Code:         code,
 			Name:         defaultPlanName(code),
 			MaxUsers:     quota.MaxUsers,
@@ -115,7 +115,7 @@ func (s *PlanStore) Invalidate() {
 
 // snapshot returns the cached plan rows by code, reloading when the TTL or an
 // invalidation says so.
-func (s *PlanStore) snapshot() (map[string]TenantPlan, error) {
+func (s *PlanStore) snapshot() (map[string]Plan, error) {
 	s.mu.RLock()
 	fresh := s.loaded && time.Since(s.loadedAt) < planCacheTTL
 	cached := s.codes
@@ -137,15 +137,15 @@ func (s *PlanStore) snapshot() (map[string]TenantPlan, error) {
 	return rows, nil
 }
 
-func (s *PlanStore) load() (map[string]TenantPlan, error) {
+func (s *PlanStore) load() (map[string]Plan, error) {
 	if s.db == nil {
 		return nil, common.ErrDatabaseNotInitialized
 	}
-	var plans []TenantPlan
+	var plans []Plan
 	if err := s.db.Order("sort ASC, id ASC").Find(&plans).Error; err != nil {
 		return nil, fmt.Errorf("load tenant plans: %w", err)
 	}
-	rows := make(map[string]TenantPlan, len(plans))
+	rows := make(map[string]Plan, len(plans))
 	for _, plan := range plans {
 		rows[normalizePlanCode(plan.Code)] = plan
 	}
@@ -205,33 +205,34 @@ func (s *PlanStore) ValidateAssignment(code string) error {
 // isKnownBuiltInPlan reports whether the code exists in the compiled-in table,
 // including the default branch that maps anything unknown onto free.
 func isKnownBuiltInPlan(code string) bool {
-	switch normalizePlanCode(code) {
-	case "free", "basic", "professional", "enterprise":
-		return true
-	default:
-		return false
+	normalized := normalizePlanCode(code)
+	for _, builtIn := range builtInPlanCodes {
+		if builtIn == normalized {
+			return true
+		}
 	}
+	return false
 }
 
 // Get returns one plan definition by code.
-func (s *PlanStore) Get(code string) (TenantPlan, error) {
+func (s *PlanStore) Get(code string) (Plan, error) {
 	rows, err := s.load()
 	if err != nil {
-		return TenantPlan{}, err
+		return Plan{}, err
 	}
 	plan, ok := rows[normalizePlanCode(code)]
 	if !ok {
-		return TenantPlan{}, ErrPlanNotFound
+		return Plan{}, ErrPlanNotFound
 	}
 	return plan, nil
 }
 
 // List returns every definition, disabled ones included, in console order.
-func (s *PlanStore) List() ([]TenantPlan, error) {
+func (s *PlanStore) List() ([]Plan, error) {
 	if s.db == nil {
 		return nil, common.ErrDatabaseNotInitialized
 	}
-	var plans []TenantPlan
+	var plans []Plan
 	if err := s.db.Order("sort ASC, id ASC").Find(&plans).Error; err != nil {
 		return nil, fmt.Errorf("list tenant plans: %w", err)
 	}
@@ -239,7 +240,7 @@ func (s *PlanStore) List() ([]TenantPlan, error) {
 }
 
 // Create stores a new plan definition.
-func (s *PlanStore) Create(req PlanCreateReq) (*TenantPlan, error) {
+func (s *PlanStore) Create(req PlanCreateReq) (*Plan, error) {
 	if s.db == nil {
 		return nil, common.ErrDatabaseNotInitialized
 	}
@@ -250,11 +251,11 @@ func (s *PlanStore) Create(req PlanCreateReq) (*TenantPlan, error) {
 	if code == "" || !planCodePattern.MatchString(code) {
 		return nil, common.NewBadRequest("tenant.plan.code_invalid")
 	}
-	quota, err := req.PlanQuotaReq.resolve(true)
+	quota, err := req.resolve(true)
 	if err != nil {
 		return nil, err
 	}
-	row := TenantPlan{
+	row := Plan{
 		Code:         code,
 		Name:         strings.TrimSpace(req.Name),
 		MaxUsers:     quota.MaxUsers,
@@ -283,7 +284,7 @@ func (s *PlanStore) Create(req PlanCreateReq) (*TenantPlan, error) {
 // Retiring a plan (status=disabled) is refused while tenants still sit on it:
 // the assignment is what the usage page reports against, and a tenant quietly
 // stranded on a retired plan reads as a limit nobody chose.
-func (s *PlanStore) Update(code string, req PlanUpdateReq) (*TenantPlan, error) {
+func (s *PlanStore) Update(code string, req PlanUpdateReq) (*Plan, error) {
 	if s.db == nil {
 		return nil, common.ErrDatabaseNotInitialized
 	}
@@ -293,7 +294,7 @@ func (s *PlanStore) Update(code string, req PlanUpdateReq) (*TenantPlan, error) 
 		return nil, err
 	}
 
-	quota, err := req.PlanQuotaReq.resolve(false)
+	quota, err := req.resolve(false)
 	if err != nil {
 		return nil, err
 	}
@@ -329,7 +330,7 @@ func (s *PlanStore) Update(code string, req PlanUpdateReq) (*TenantPlan, error) 
 		next.Status = status
 	}
 
-	if err := s.db.Model(&TenantPlan{}).Where("id = ?", current.ID).Updates(map[string]any{
+	if err := s.db.Model(&Plan{}).Where(condIDEquals, current.ID).Updates(map[string]any{
 		"name":           next.Name,
 		"max_users":      next.MaxUsers,
 		"max_roles":      next.MaxRoles,
@@ -338,7 +339,7 @@ func (s *PlanStore) Update(code string, req PlanUpdateReq) (*TenantPlan, error) 
 		"max_storage_mb": next.MaxStorageMB,
 		"status":         next.Status,
 		"sort":           next.Sort,
-	}).Error; err != nil {
+	}).Error; err != nil { // NOSONAR gosecurity:S3649 - the map keys are literals and every value is a bound parameter
 		return nil, fmt.Errorf("update tenant plan: %w", err)
 	}
 	s.Invalidate()
@@ -349,7 +350,9 @@ func (s *PlanStore) Update(code string, req PlanUpdateReq) (*TenantPlan, error) 
 func (s *PlanStore) planInUse(code string) (bool, error) {
 	var count int64
 	if err := s.db.Model(&Tenant{}).
-		Where("plan = ? AND status <> ? AND id <> ?", code, tenantStatusDeleted, platformGlobalTenantID).
+		Where(condPlanEquals, code).
+		Where(condStatusNotEquals, tenantStatusDeleted).
+		Where(condIDNotEquals, platformGlobalTenantID).
 		Count(&count).Error; err != nil {
 		return false, fmt.Errorf("count tenants on plan: %w", err)
 	}
@@ -404,13 +407,13 @@ func (r PlanQuotaReq) resolve(requireAll bool) (*Quota, error) {
 
 func defaultPlanName(code string) string {
 	switch normalizePlanCode(code) {
-	case "free":
+	case planCodeFree:
 		return "Free"
-	case "basic":
+	case planCodeBasic:
 		return "Basic"
-	case "professional":
+	case planCodeProfessional:
 		return "Professional"
-	case "enterprise":
+	case planCodeEnterprise:
 		return "Enterprise"
 	default:
 		return code

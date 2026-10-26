@@ -145,7 +145,7 @@ func TestOverview_ReportsOccupancyAgainstThePlanCeiling(t *testing.T) {
 	assert.Equal(t, int64(2), resp.Totals.Roles)
 	assert.Equal(t, int64(1), resp.Totals.Depts)
 
-	require.NoError(t, db.Model(&TenantPlan{}).Where("code = ?", "free").Update("max_users", 7).Error)
+	require.NoError(t, db.Model(&Plan{}).Where("code = ?", "free").Update("max_users", 7).Error)
 	service.Plans().Invalidate()
 	after, err := service.Overview(Filter{Page: 1, Size: 20})
 	require.NoError(t, err)

@@ -75,11 +75,11 @@ type OverviewResp struct {
 // stays out unless the caller asks for it explicitly through the status filter —
 // the same rule ListTenants applies.
 func opsTenantScope(db *gorm.DB, status string) *gorm.DB {
-	scoped := db.Where("id <> ?", platformGlobalTenantID)
+	scoped := db.Where(condIDNotEquals, platformGlobalTenantID)
 	if status != "" {
 		return scoped.Where(condStatusEquals, status)
 	}
-	return scoped.Where("status <> ?", tenantStatusDeleted)
+	return scoped.Where(condStatusNotEquals, tenantStatusDeleted)
 }
 
 // The overview counts the whole installation on every request, so the page it
@@ -109,7 +109,7 @@ func (s *Service) Overview(filter Filter) (*OverviewResp, error) {
 
 	// Status facets and the filtered total come from the same helper the tenant
 	// list uses, so the two pages can never disagree about how many tenants exist.
-	base := s.db.Model(&Tenant{}).Where("id <> ?", platformGlobalTenantID)
+	base := s.db.Model(&Tenant{}).Where(condIDNotEquals, platformGlobalTenantID)
 	if keyword := strings.TrimSpace(filter.Keyword); keyword != "" {
 		pattern := "%" + likeEscape(keyword) + "%"
 		base = base.Where("code LIKE ? OR name LIKE ?", pattern, pattern)
@@ -213,8 +213,8 @@ func (s *Service) planDistribution() ([]OverviewPlanRow, error) {
 		Total int64
 	}
 	if err := s.db.Model(&Tenant{}).
-		Where("id <> ?", platformGlobalTenantID).
-		Where("status <> ?", tenantStatusDeleted).
+		Where(condIDNotEquals, platformGlobalTenantID).
+		Where(condStatusNotEquals, tenantStatusDeleted).
 		Select("plan, COUNT(*) AS total").
 		Group("plan").
 		Order("plan ASC").
@@ -501,8 +501,8 @@ func (s *Service) ListPlans() ([]PlanResp, error) {
 		Total int64
 	}
 	if err := s.db.Model(&Tenant{}).
-		Where("id <> ?", platformGlobalTenantID).
-		Where("status <> ?", tenantStatusDeleted).
+		Where(condIDNotEquals, platformGlobalTenantID).
+		Where(condStatusNotEquals, tenantStatusDeleted).
 		Select("plan, COUNT(*) AS total").
 		Group("plan").
 		Scan(&rows).Error; err != nil {
@@ -516,7 +516,7 @@ func (s *Service) ListPlans() ([]PlanResp, error) {
 	out := make([]PlanResp, 0, len(list))
 	for _, plan := range list {
 		out = append(out, PlanResp{
-			TenantPlan:  plan,
+			Plan:        plan,
 			TenantCount: counts[normalizePlanCode(plan.Code)],
 		})
 	}

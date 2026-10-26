@@ -207,7 +207,7 @@ DDL 与种子：编号迁移 `000030_tenant_plan_definitions`；AutoMigrate 部�
    在租户创建与更新路径上调用，顺序即语义：空值合法（"未选套餐"，见不变量 3）→ 格式非法
    `tenant.plan.code_invalid` → 表不可读或为空时只接受编译内置四档（seed 还没到达不是运营者的错，
    provisioning 不能因此停摆，其余 code 报 `tenant.plan.unknown`）→ 已定义但停用
-   `tenant.plan.disabled`。停用判定走 `TenantPlan.IsEnabled` 的**失败开放**归一化：除 `disabled`
+   `tenant.plan.disabled`。停用判定走 `tenant.Plan.IsEnabled` 的**失败开放**归一化：除 `disabled`
    以外的状态一律算启用。控制台的指派面镜像这一条规则，不另立第二套策略。
 
    控制台的租户表单因此从 `GET /system/tenant-ops/plan/list` 取定义，顺序沿用服务端的

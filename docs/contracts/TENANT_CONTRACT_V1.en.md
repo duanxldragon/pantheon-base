@@ -228,7 +228,7 @@ Invariants:
    `tenant.plan.code_invalid` → when the table is unreadable or empty only the compiled-in four tiers are
    accepted (a seed that has not reached the database is not the operator's fault, and provisioning must
    not stall because of it; any other code is `tenant.plan.unknown`) → a defined but disabled code is
-   `tenant.plan.disabled`. "Disabled" follows `TenantPlan.IsEnabled`, which **fails open**: any status
+   `tenant.plan.disabled`. "Disabled" follows `tenant.Plan.IsEnabled`, which **fails open**: any status
    other than `disabled` counts as enabled. The console's assignment surface mirrors this one rule rather
    than inventing a second policy.
 

@@ -65,7 +65,7 @@ func TestPlanStore_SeedDefaultsIsIdempotentAndNeverUndoesTheOperator(t *testing.
 		assert.Equal(t, GetDefaultQuota(row.Code), row.AsQuota(), "seed must match the compiled-in table")
 	}
 
-	require.NoError(t, db.Model(&TenantPlan{}).Where("code = ?", "free").Update("max_users", 8).Error)
+	require.NoError(t, db.Model(&Plan{}).Where("code = ?", "free").Update("max_users", 8).Error)
 	require.NoError(t, store.SeedDefaults())
 	store.Invalidate()
 
@@ -80,7 +80,7 @@ func TestPlanStore_QuotaForResolvesThroughTheTable(t *testing.T) {
 
 	_, err := store.Create(PlanCreateReq{Code: "startup", Name: "Startup", PlanQuotaReq: planCeilings(3, 2, 1, 1, 512)})
 	require.NoError(t, err)
-	require.NoError(t, db.Model(&TenantPlan{}).Where("code = ?", "free").Update("max_users", 9).Error)
+	require.NoError(t, db.Model(&Plan{}).Where("code = ?", "free").Update("max_users", 9).Error)
 	store.Invalidate()
 
 	assert.Equal(t, 3, store.QuotaFor("startup").MaxUsers)
@@ -103,7 +103,7 @@ func TestPlanStore_CacheIsBoundedAndDroppedByWrites(t *testing.T) {
 
 	require.Equal(t, GetDefaultQuota("basic").MaxUsers, store.QuotaFor("basic").MaxUsers)
 
-	require.NoError(t, db.Model(&TenantPlan{}).Where("code = ?", "basic").Update("max_users", 42).Error)
+	require.NoError(t, db.Model(&Plan{}).Where("code = ?", "basic").Update("max_users", 42).Error)
 	assert.Equal(t, GetDefaultQuota("basic").MaxUsers, store.QuotaFor("basic").MaxUsers, "the open window still serves the snapshot")
 
 	store.Invalidate()

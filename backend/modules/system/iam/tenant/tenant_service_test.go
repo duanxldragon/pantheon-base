@@ -165,7 +165,7 @@ func setupTestDB(t *testing.T) *gorm.DB {
 	db := testmysql.Open(t)
 	// Plan definitions are part of the fixture: Bootstrap seeds them and every
 	// quota read resolves against this table.
-	require.NoError(t, db.AutoMigrate(&Tenant{}, &Membership{}, &TenantPlan{}))
+	require.NoError(t, db.AutoMigrate(&Tenant{}, &Membership{}, &Plan{}))
 	for _, stmt := range tenantTestDDL {
 		require.NoError(t, db.Exec(stmt).Error)
 	}
