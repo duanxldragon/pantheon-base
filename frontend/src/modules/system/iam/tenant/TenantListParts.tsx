@@ -38,7 +38,7 @@ export function TenantListTable<T>({
   total,
   emptyText,
   onPageChange,
-}: TenantListTableProps<T>): React.ReactElement {
+}: Readonly<TenantListTableProps<T>>): React.ReactElement {
   const { t } = useTranslation();
 
   if (rows.length === 0 && !loading) {

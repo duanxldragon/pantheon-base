@@ -330,7 +330,9 @@ func (s *PlanStore) Update(code string, req PlanUpdateReq) (*Plan, error) {
 		next.Status = status
 	}
 
-	if err := s.db.Model(&Plan{}).Where(condIDEquals, current.ID).Updates(map[string]any{
+	// One line per statement: gosecurity:S3649 reports at the start of the call
+	// chain, and a NOSONAR only suppresses the line it sits on.
+	updates := map[string]any{
 		"name":           next.Name,
 		"max_users":      next.MaxUsers,
 		"max_roles":      next.MaxRoles,
@@ -339,7 +341,8 @@ func (s *PlanStore) Update(code string, req PlanUpdateReq) (*Plan, error) {
 		"max_storage_mb": next.MaxStorageMB,
 		"status":         next.Status,
 		"sort":           next.Sort,
-	}).Error; err != nil { // NOSONAR gosecurity:S3649 - the map keys are literals and every value is a bound parameter
+	}
+	if err := s.db.Model(&Plan{}).Where(condIDEquals, current.ID).Updates(updates).Error; err != nil { // NOSONAR gosecurity:S3649 - the map keys are literals and every value is a bound parameter
 		return nil, fmt.Errorf("update tenant plan: %w", err)
 	}
 	s.Invalidate()
