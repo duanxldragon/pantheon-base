@@ -163,7 +163,9 @@ func mustLoadTenantRow(t *testing.T, db *gorm.DB, id uint64) Tenant {
 func setupTestDB(t *testing.T) *gorm.DB {
 	t.Helper()
 	db := testmysql.Open(t)
-	require.NoError(t, db.AutoMigrate(&Tenant{}, &Membership{}))
+	// Plan definitions are part of the fixture: Bootstrap seeds them and every
+	// quota read resolves against this table.
+	require.NoError(t, db.AutoMigrate(&Tenant{}, &Membership{}, &Plan{}))
 	for _, stmt := range tenantTestDDL {
 		require.NoError(t, db.Exec(stmt).Error)
 	}

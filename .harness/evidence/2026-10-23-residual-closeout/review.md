@@ -82,3 +82,25 @@ Residual risk after the fix: the credential rules remain deliberately narrow (My
 `-p<value>`), so a credential in another shape still passes; and `repo.tar` extraction depends on a working
 system `tar`, which fails closed rather than reporting clean. The published `repo.tar` at `e6aeced9` keeps
 the original evidence text and the bundle-only gate; only a new release carries the widened gate.
+
+
+## Machine Readable
+
+```json
+{
+  "taskId": "2026-10-23-residual-closeout",
+  "verdict": "approved",
+  "verdictRationale": "Approve: two of five residuals were unexercised claims that produced real defects once exercised; one consumer-visible behaviour change is called out.",
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-23-residual-closeout/manifest.json",
+    "evidence": ".harness/evidence/2026-10-23-residual-closeout/commands.json",
+    "reviewFile": ".harness/evidence/2026-10-23-residual-closeout/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-23-residual-closeout.task.md"
+    ]
+  }
+}
+```
+
+> This block was backfilled on 2026-10-26 during the governance-schema repair round. It restates the verdict already written above in machine-readable form and links the artifacts that existed for this task; no conclusion, finding or verification claim was added, removed or reworded. The prose remains authoritative.

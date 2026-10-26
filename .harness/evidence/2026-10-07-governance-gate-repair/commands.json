@@ -56,6 +56,7 @@
     "tool": "codex",
     "adapter": "platform-coordinator"
   },
+  "runtimeGap": "Nothing was exercised at runtime. This round restored SHELL_VERSION.json, diffed harness scripts against the sibling checkout, and re-ran governance checkers (`check-method-health`, `check-sync-drift`, `check-doc-links`, the task-packet/sync/docs npm scripts), leaving `check:harness-adoption` as `not-run`. The manifest runtimeEvidence entries (\"failed run 37131143242 root cause and green rerun URL\", \"canonical source/consumer diff\") are hosted-CI bookkeeping and a file diff, not logs or metrics from a running pantheon-base process.",
   "knownGaps": [
     "hosted CI reruns (runs 37131143242/37131143233) require a pushed candidate SHA + PR merge; G02 open-PR closeout is a maintainer decision outside this local run."
   ],

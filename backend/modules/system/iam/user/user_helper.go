@@ -15,6 +15,11 @@ import (
 
 const condIDIn = "id IN ?"
 
+// condDeletedAtMissing is the raw-table form of what GORM's soft delete adds
+// automatically: the three places below query through `Table("system_*")`, which
+// carries no model, so no scope is injected and the predicate has to be written.
+const condDeletedAtMissing = "deleted_at IS NULL"
+
 func normalizeStatus(status int) int {
 	return common.NormalizeEnabledStatus(status)
 }
@@ -277,7 +282,9 @@ func (s *UserService) ensureDeptID(deptID uint64) error {
 		return nil
 	}
 	var count int64
-	if err := s.scoped(s.db.Table("system_dept")).Where(condIDEquals, deptID).Count(&count).Error; err != nil {
+	if err := s.scoped(s.db.Table("system_dept")).
+		Where(condDeletedAtMissing).
+		Where(condIDEquals, deptID).Count(&count).Error; err != nil {
 		return err
 	}
 	if count == 0 {
@@ -298,7 +305,9 @@ func (s *UserService) ensurePostForDept(deptID, postID uint64) error {
 		DeptID uint64 `gorm:"column:dept_id"`
 	}
 	var post postRow
-	if err := s.scoped(s.db.Table("system_post")).Select("id, dept_id").Where(condIDEquals, postID).First(&post).Error; err != nil {
+	if err := s.scoped(s.db.Table("system_post")).
+		Where(condDeletedAtMissing).
+		Select("id, dept_id").Where(condIDEquals, postID).First(&post).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return common.NewBadRequest("user.post.invalid")
 		}
@@ -511,7 +520,7 @@ func (s *UserService) loadRoleIDsByKey() (map[string]uint64, error) {
 		Status  int    `gorm:"column:status"`
 	}
 	var rows []row
-	if err := s.scoped(s.db.Table("system_role")).Select("id, role_key, status").Where("deleted_at IS NULL").Find(&rows).Error; err != nil {
+	if err := s.scoped(s.db.Table("system_role")).Select("id, role_key, status").Where(condDeletedAtMissing).Find(&rows).Error; err != nil {
 		return nil, err
 	}
 	result := make(map[string]uint64, len(rows))

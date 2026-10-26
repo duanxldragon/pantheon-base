@@ -45,6 +45,7 @@
       "notes": "Local dry run of the PR governance gate: OK pantheon-base PR template governance fields are present (PR #347 body uses the corrected artifact paths)."
     }
   ],
+  "runtimeGap": "No runtime signal was captured. runtimeLogs/runtimeMetrics/runtimeTraces/runtimePerformance are absent, and the task is runtime-sensitive only because its manifest lists verificationPlan.runtimeEvidence = \"116 archived task summaries counted via find .harness/archive -name summary.md\" — a filesystem count, not a running-system observation. The only backend execution recorded here is `go build ./internal/middleware/` plus `go vet ./internal/middleware/` for the S1192 const extraction: compile-level checks with no server started and no request path exercised.",
   "knownGaps": [
     "v0.13.0 tag and GitHub Release are not cut yet; RELEASE_v0.13.0_PREP.md timeline assigns them to 2026-09-26..27.",
     "pantheon-ops still consumes pantheon-base-v0.10.25; consumption sync is explicitly deferred to the next foundation release.",

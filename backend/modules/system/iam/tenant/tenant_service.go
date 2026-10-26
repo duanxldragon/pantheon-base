@@ -21,9 +21,11 @@ import (
 // placeholder style stays identical across every query, and so a reader cannot
 // mistake a literal for an interpolated value.
 const (
-	condIDEquals     = "id = ?"
-	condIDNotEquals  = "id <> ?"
-	condStatusEquals = "status = ?"
+	condIDEquals        = "id = ?"
+	condIDNotEquals     = "id <> ?"
+	condStatusEquals    = "status = ?"
+	condStatusNotEquals = "status <> ?"
+	condPlanEquals      = "plan = ?"
 )
 
 var (
@@ -98,12 +100,31 @@ func likeEscape(value string) string {
 
 // Service handles tenant CRUD and lifecycle operations
 type Service struct {
-	db *gorm.DB
+	db    *gorm.DB
+	plans *PlanStore
 }
 
 // NewService creates a new tenant service instance
 func NewService(db *gorm.DB) *Service {
-	return &Service{db: db}
+	return &Service{db: db, plans: NewPlanStore(db)}
+}
+
+// Plans exposes the plan definition store so the console surfaces (overview,
+// member list, plan editor) resolve limits through the same read-through cache
+// the lifecycle validation uses, instead of a second copy of the table.
+func (s *Service) Plans() *PlanStore { return s.plans }
+
+// Migrate creates the plan table in AutoMigrate deployments, then runs the
+// usual startup repairs. Versioned deployments already have the table from
+// migration 000030, so Bootstrap alone is enough there.
+func (s *Service) Migrate() error {
+	if s.db == nil {
+		return common.ErrDatabaseNotInitialized
+	}
+	if err := s.plans.Migrate(); err != nil {
+		return err
+	}
+	return s.Bootstrap()
 }
 
 // CreateTenant creates a new tenant and provisions it.
@@ -117,6 +138,14 @@ func (s *Service) CreateTenant(dto CreateTenantDTO) (*Tenant, error) {
 	if err := s.validateAdminPassword(dto); err != nil {
 		return nil, err
 	}
+	// The plan code must be a plan the platform actually defines (contract §2.4).
+	// Validating here rather than in a binding tag is what lets the console add a
+	// plan without a code release, and is what stops a typo from becoming a tenant
+	// whose quota silently resolves to the free tier.
+	if err := s.plans.ValidateAssignment(dto.Plan); err != nil {
+		return nil, err
+	}
+	dto.Plan = normalizePlanCode(dto.Plan)
 
 	// Reject a code that is already taken. The lookup deliberately spans every
 	// status: `code` is a UNIQUE column (contract §2.1, "全局唯一"), so a
@@ -343,7 +372,7 @@ func (s *Service) ListTenants(filter Filter) (*ListResponse, error) {
 	if filter.Status != "" {
 		scoped = scoped.Where(condStatusEquals, filter.Status)
 	} else {
-		scoped = scoped.Where("status <> ?", tenantStatusDeleted)
+		scoped = scoped.Where(condStatusNotEquals, tenantStatusDeleted)
 	}
 
 	// Count total
@@ -420,6 +449,11 @@ func (s *Service) UpdateTenant(id uint64, dto UpdateTenantDTO) error {
 	if dto.Status != nil && !tenantStatusTransitionAllowed(previousStatus, *dto.Status) {
 		return common.NewConflict("tenant.status.terminal")
 	}
+	if dto.Plan != nil && *dto.Plan != "" {
+		if err := s.plans.ValidateAssignment(*dto.Plan); err != nil {
+			return err
+		}
+	}
 
 	// Update fields individually to satisfy SonarCloud taint analysis
 	// This avoids map/struct updates that trigger false positive SQL injection warnings
@@ -438,7 +472,7 @@ func (s *Service) UpdateTenant(id uint64, dto UpdateTenantDTO) error {
 		hasUpdates = true
 	}
 	if dto.Plan != nil && *dto.Plan != "" {
-		if err := s.db.Model(row).Update("plan", *dto.Plan).Error; err != nil {
+		if err := s.db.Model(row).Update("plan", normalizePlanCode(*dto.Plan)).Error; err != nil {
 			return fmt.Errorf("update tenant plan: %w", err)
 		}
 		hasUpdates = true
@@ -605,6 +639,11 @@ func (s *Service) Bootstrap() error {
 	if s.db == nil {
 		return common.ErrDatabaseNotInitialized
 	}
+	// Plan definitions come first: every quota the console reports, and the
+	// assignment check on create/update, resolves against this table.
+	if err := s.plans.SeedDefaults(); err != nil {
+		return err
+	}
 	if err := s.ReleaseDeletedTenantCodes(); err != nil {
 		return err
 	}
@@ -724,7 +763,7 @@ func (s *Service) EnsureTenantRolePolicies() error {
 
 	restored := 0
 	for _, tenantID := range tenantIDs {
-		restored += grantTenantRolePolicies(tenantID)
+		restored += grantTenantRolePolicies(s.db, tenantID)
 	}
 	if restored > 0 {
 		logging.Info("tenant policy repair restored missing Casbin domain policies",

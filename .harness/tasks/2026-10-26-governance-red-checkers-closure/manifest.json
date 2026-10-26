@@ -1,0 +1,155 @@
+{
+  "taskId": "2026-10-26-governance-red-checkers-closure",
+  "taskDoc": "docs/harness/tasks/2026-10-26-governance-red-checkers-closure.task.md",
+  "title": "Closing the three invisible strict reds: boundary ratchet, 11 runtime gaps, 8 inheritance markers",
+  "goal": "The previous round zeroed the historical evidence-schema reds and reported three remaining strict red lines as findings G-03/G-04/G-05. This round closes all three by executing what each gate already prescribes, without weakening any checker, adding a baseline entry or re-judging a historical round. G-04 (P2): check-boundaries --root . --strict reported 1 finding, the type-only import of MenuNode from ../system/iam/menu/api in frontend/src/modules/platform/widgets.tsx, frozen in config/boundary-baseline.json since 2026-09-22 with its own ratchet 'promote MenuNode to a shared contract type (frontend/src/api)'. The ratchet was executed: MenuNode now lives in frontend/src/api/menu.ts (the public-contract location named by REPOSITORY_LAYOUT.md §8.1), modules/system/iam/menu/api.ts imports and re-exports it so all seven existing consumers are untouched, widgets.tsx imports the shared type, and the baseline entry was deleted because stale entries fail --strict, leaving entries: [] while the CI --baseline form stays exit 0. G-03 (P3): check-runtime-evidence --root . --strict exited 1 with 0 errors / 11 warnings (this checker treats warnings as blocking); 11 historical commands.json files flagged runtime-sensitive by their task manifest recorded neither a runtimeLogs/Metrics/Traces/Performance signal nor a runtimeGap. Each got one runtimeGap line restating only what its own commands.json and summary.md already say, so the closure is mechanically provable as structure-only: every file is 1 insertion / 0 deletions and no diff line touching \"status\" exists. G-05 (P3): check-inheritance-contract run from the workspace root reported 8 findings — 3 missing markers in docs/WORKSPACE_INHERITANCE.md, 3 missing markers plus an unpinned Base version in pantheon-ops/docs/PROJECT_INHERITANCE.md, and no .github/pull_request_template.md at the workspace root. All 8 are closed with the literal marker text the checker matches (it is a case-sensitive includes, so 'Generic drift' does not satisfy 'generic drift'), the Base version pinned to the value already recorded in pantheon-ops/foundation-release.lock.json and .business-overlay-report.json, and the same drift markers also added to the template ops actually uses. Root cause is the second occurrence of the FR-016 class — sensors nobody invokes cannot ratchet — recorded as FR-017 with a guide-updated promotion (README invocation forms) and the CI wiring left open for the maintainer.",
+  "primaryLayer": "platform",
+  "dependencyLayers": [
+    "system/iam",
+    "app"
+  ],
+  "status": "completed",
+  "priority": "P2",
+  "type": "governance-gate-closure",
+  "estimatedComplexity": "medium",
+  "runtimeSensitive": false,
+  "contractAnchors": [
+    "docs/designs/REPOSITORY_LAYOUT.md",
+    "config/boundary-baseline.json",
+    "docs/harness/VERIFICATION_EVIDENCE_SPEC.md",
+    "docs/harness/FAILURE_RATCHET_POLICY.md",
+    "scripts/harness/check-boundaries.mjs",
+    "scripts/harness/check-runtime-evidence.mjs",
+    "scripts/harness/check-inheritance-contract.mjs"
+  ],
+  "findings": [
+    "G-04 (closed): platform -> system/iam/menu type import eliminated by promoting MenuNode to frontend/src/api/menu.ts; check-boundaries bare --strict went from 1 finding / exit 1 to 0 findings / 0 stale / exit 0, and the CI --baseline form stays exit 0 with baselined dropping from 1 to 0. config/boundary-baseline.json now has entries: [] — its last tracked debt was executed, not renewed.",
+    "G-03 (closed): 11 historical commands.json files carry a runtimeGap; check-runtime-evidence --root . --strict is 0 errors / 0 warnings / exit 0 (55 evidence sets, including this round own). Two of the 11 (2026-10-07-performance-followup, 2026-10-07-upgrade-runbook) did capture runtime data — P95 1.18s, EXPLAIN, MySQL connection counters, and a disposable v12 -> v21 -> restore rehearsal — but only in their summary.md prose, which is what the runtimeGap strings say instead of inventing structured signals.",
+    "G-05 (closed): check-inheritance-contract --root .. --strict is 0 findings / exit 0. Note the workspace root is not a git repository (its .git/ holds only hooks/ and info/ and git rev-parse fails), so the .github/pull_request_template.md the gate requires there can never be auto-loaded by GitHub; the same markers were therefore also added to pantheon-ops/.github/PULL_REQUEST_TEMPLATE.md so the requirement is not satisfied by an inert file alone.",
+    "FR-017 (open, guide-updated): all three checkers were red on main and nothing invoked them — check-runtime-evidence and check-inheritance-contract have no npm script and appear in no workflow, and check-boundaries appears only in ci.yml with --baseline, so its bare --strict reading had never been observed. Registering the class and documenting the invocation forms is what this round could do; promoting them to blocking CI steps is the maintainer's gate-policy decision, same disposition as FR-016.",
+    "F-13 (documented risk): pantheon-ops/docs/PROJECT_INHERITANCE.md now states Base version as a second copy of foundation-release.lock.json. Nothing machine-checks that the two agree, so it can drift. Marked in the doc as a must-sync line; a checker comparing them was deliberately not introduced this round.",
+    "F-14 (pre-existing, untouched): running gofmt -l . from the pantheon-base repository root lists files under dist/foundation-releases/** (vendored release bundles). From backend/ the tree is clean; this round changed no Go file."
+  ],
+  "scope": {
+    "in": [
+      "Create frontend/src/api/menu.ts holding MenuNode, re-export it from modules/system/iam/menu/api.ts, retarget modules/platform/widgets.tsx, delete the now-stale config/boundary-baseline.json entry and record the closure in REPOSITORY_LAYOUT.md §8.3",
+      "Append one runtimeGap string to each of the 11 runtime-sensitive historical commands.json files, restating only that round's own recorded commands and prose",
+      "Add the literal inheritance markers to docs/WORKSPACE_INHERITANCE.md, add the marker block plus the pinned Base version to pantheon-ops/docs/PROJECT_INHERITANCE.md, create .github/pull_request_template.md at the workspace root and add the same drift markers to pantheon-ops/.github/PULL_REQUEST_TEMPLATE.md",
+      "Document the two invisible checkers' correct invocation forms in scripts/harness/README.md and README.zh.md",
+      "Add FR-017 to docs/harness/failure-registry.md with its review note, and correct FR-016's claim about how many check steps the docs-governance job runs (measured: 17)",
+      "Rerun the 24-checker strict matrix, the frontend compile/lint/unit/contract gates and the backend build baseline, recording measured exit codes in this round's commands.json"
+    ],
+    "out": [
+      "Editing any checker's rules, enums, scan sets or exit-code semantics; adding a baseline entry to silence a finding",
+      "Adding check-runtime-evidence, check-inheritance-contract or bare --strict check-boundaries to .github/workflows (gate-policy change, maintainer decision)",
+      "Re-judging, re-running or rewriting any historical verification conclusion, command status or gap assessment",
+      "Retargeting frontend/src/core/** or frontend/src/store/** imports that keep working through the re-export (they are in no scanned layer)",
+      "Adding new base/ops copies of platform documentation, or a new machine check that ties the ops doc line to foundation-release.lock.json",
+      "Commit, push and pull request (not requested)"
+    ]
+  },
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "governance-evidence-integrity",
+    "portableFailureClass": "static-sensor-gap / architecture-drift",
+    "ownerLayer": "consumer-repository",
+    "ratchetDecision": "guide-updated",
+    "coverageDimensions": [
+      "method-health",
+      "architecture-fitness"
+    ]
+  },
+  "expectedFiles": {
+    "create": [
+      "docs/harness/tasks/2026-10-26-governance-red-checkers-closure.task.md",
+      ".harness/tasks/2026-10-26-governance-red-checkers-closure/manifest.json",
+      ".harness/evidence/2026-10-26-governance-red-checkers-closure/commands.json",
+      ".harness/evidence/2026-10-26-governance-red-checkers-closure/review.md",
+      ".harness/evidence/2026-10-26-governance-red-checkers-closure/summary.md",
+      "frontend/src/api/menu.ts"
+    ],
+    "modify": [
+      "frontend/src/modules/system/iam/menu/api.ts",
+      "frontend/src/modules/platform/widgets.tsx",
+      "config/boundary-baseline.json",
+      "docs/designs/REPOSITORY_LAYOUT.md",
+      "docs/harness/failure-registry.md",
+      "scripts/harness/README.md",
+      "scripts/harness/README.zh.md",
+      ".harness/evidence/2026-09-25-task-archiving-and-v0130-prep/commands.json",
+      ".harness/evidence/2026-09-28-base-ssrf-protection/commands.json",
+      ".harness/evidence/2026-09-29-v0140-release-completion/commands.json",
+      ".harness/evidence/2026-10-07-audit-request-body/commands.json",
+      ".harness/evidence/2026-10-07-auth-session-scope/commands.json",
+      ".harness/evidence/2026-10-07-governance-gate-repair/commands.json",
+      ".harness/evidence/2026-10-07-iam-data-scope/commands.json",
+      ".harness/evidence/2026-10-07-login-log-identity/commands.json",
+      ".harness/evidence/2026-10-07-performance-followup/commands.json",
+      ".harness/evidence/2026-10-07-upgrade-runbook/commands.json",
+      ".harness/evidence/2026-10-11-sonar-smoke-helper-smells/commands.json"
+    ],
+    "doNotTouch": [
+      "commands[].status, commands[].command and prose conclusions in any historical evidence file",
+      "scripts/harness/check-boundaries.mjs, check-runtime-evidence.mjs and check-inheritance-contract.mjs rule bodies",
+      ".harness/archive/**",
+      "dist/foundation-releases/**",
+      ".github/workflows/**",
+      ".env.test and any credential file"
+    ],
+    "outsideBaseRepository": [
+      "docs/WORKSPACE_INHERITANCE.md (workspace root, unversioned: the workspace container is not a git repository)",
+      ".github/pull_request_template.md (workspace root, same caveat)",
+      "pantheon-ops/docs/PROJECT_INHERITANCE.md",
+      "pantheon-ops/.github/PULL_REQUEST_TEMPLATE.md"
+    ]
+  },
+  "implementationNotes": [
+    "Only the MenuNode interface moved. MenuPayload, MenuListQuery and the apiRequest calls stay in the menu module: what crosses the layer boundary is the contract type, and promoting the rest would turn implementation shape into public surface.",
+    "The baseline entry had to be deleted, not kept: check-boundaries treats an entry that no longer matches a finding as stale and fails --strict on it, which is what stops a removed violation from being silently re-introduced later.",
+    "check-inheritance-contract markers are matched with a case-sensitive String.includes, so the first draft's 'Generic drift' / 'Pseudo-drift' bullets still reported missing; the file now uses the exact lowercase strings from REQUIRED_PR_MARKERS.",
+    "check-runtime-evidence counts warnings as blocking under --strict, which is why G-03 read as exit 1 with 0 errors. The fix is the schema field (a runtimeGap string), never a runtimeLogs array invented to make the warning disappear.",
+    "Backfill was applied by a replayable gitignored script (frontend/.tmp/g03-backfill.mjs) that inserts one line before the top-level knownGaps key and JSON.parse-validates the result before writing, so all 11 edits share one shape and each file stays 1 insertion / 0 deletions.",
+    "The integrity proof for this round is narrower than the previous one: git diff filtered to added/removed lines and grepped for \"status\" is empty. Grepping the whole diff is not, because context lines around an insertion legitimately contain status."
+  ],
+  "verificationPlan": {
+    "governance": [
+      "node scripts/harness/check-boundaries.mjs --root . --strict (was 1 finding / exit 1, expect 0 finding / 0 baselined / 0 stale / exit 0)",
+      "node scripts/harness/check-boundaries.mjs --strict --repo pantheon-base --baseline config/boundary-baseline.json (the ci.yml:391 form, expect exit 0 with baselined dropping from 1 to 0)",
+      "node scripts/harness/check-runtime-evidence.mjs --root . --strict (was 0 error / 11 warning / exit 1, expect 0 / 0 / exit 0 (55 sets after this round own evidence exists))",
+      "node scripts/harness/check-inheritance-contract.mjs --root .. --strict (was 8 findings / exit 1, expect 0 findings / exit 0)",
+      "node scripts/harness/check-evidence.mjs --root . --strict and check-review.mjs --root . --strict (both must stay 0 errors / exit 0 across 55 evidence sets after the 11 edits)",
+      "node scripts/harness/check-task-packet.mjs --root . (includes this round's packet)",
+      "the remaining strict checkers in the 24-entry matrix: structure-contract, failure-registry, ui-quality-gate, generated, doc-frontmatter, doc-links, doc-inventory, sync-drift, encoding, method-health, adoption, template-health, visual-evidence, feature-ledger, permission-contract, backend-response-contract, backend-dto-contract, audit-coverage",
+      "node scripts/check-duplication.mjs, node scripts/check-task-packet-template.mjs, node frontend/scripts/cleanup-generated-modules.mjs --check, cd frontend && node ./scripts/check-menu-contract.mjs && node ./scripts/check-import-path-case.mjs",
+      "cd pantheon-ops && node scripts/harness/check-adoption.mjs --root . --strict and node scripts/check-pr-governance.mjs --help (the ops PR template gained markers)"
+    ],
+    "integrityProofs": [
+      "git diff --numstat for each of the 11 commands.json files is 1 / 0 (one insertion, zero deletions)",
+      "git diff -- .harness/evidence filtered to added/removed lines and grepped for \"status\" is empty",
+      "no checker file, no .github/workflows file and no historical review.md was modified in this round"
+    ],
+    "workspace": [
+      "cd frontend && node node_modules/typescript/bin/tsc -b",
+      "cd frontend && node node_modules/eslint/bin/eslint.js src --max-warnings 0",
+      "cd frontend && node node_modules/vitest/vitest.mjs run tests/unit/modules/platform/widgets.test.ts tests/unit/core/layout/useLayoutMenu.test.tsx",
+      "cd backend && go build ./... && go vet ./... && gofmt -l . (baseline only: no Go file changed this round)"
+    ]
+  },
+  "linkage": {
+    "taskId": "2026-10-26-governance-red-checkers-closure",
+    "taskManifest": ".harness/tasks/2026-10-26-governance-red-checkers-closure/manifest.json",
+    "assessment": "docs/harness/tasks/2026-10-26-governance-red-checkers-closure.task.md",
+    "openspecChange": "none",
+    "superpowersPlan": "none",
+    "evidenceDir": ".harness/evidence/2026-10-26-governance-red-checkers-closure/",
+    "summaryFile": ".harness/evidence/2026-10-26-governance-red-checkers-closure/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-26-governance-red-checkers-closure/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/designs/REPOSITORY_LAYOUT.md",
+      "docs/harness/FAILURE_RATCHET_POLICY.md",
+      "docs/harness/tasks/2026-10-26-governance-evidence-schema-backfill.task.md"
+    ]
+  }
+}

@@ -26,8 +26,8 @@ func setupUserTestDB(t *testing.T) *gorm.DB {
 	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_user_role (tenant_id BIGINT UNSIGNED NOT NULL DEFAULT 0, user_id BIGINT, role_id BIGINT)")
 	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_role_permission (id BIGINT PRIMARY KEY AUTO_INCREMENT, tenant_id BIGINT UNSIGNED NOT NULL DEFAULT 0, role_id BIGINT, permission_key VARCHAR(128) NOT NULL DEFAULT '')")
 	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_user_session (session_id VARCHAR(128), user_id BIGINT, revoked_at DATETIME NULL)")
-	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_dept (id BIGINT PRIMARY KEY, tenant_id BIGINT UNSIGNED NOT NULL DEFAULT 0, parent_id BIGINT, dept_name VARCHAR(128))")
-	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_post (id BIGINT PRIMARY KEY, tenant_id BIGINT UNSIGNED NOT NULL DEFAULT 0, post_code VARCHAR(64), post_name VARCHAR(128), dept_id BIGINT)")
+	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_dept (id BIGINT PRIMARY KEY, tenant_id BIGINT UNSIGNED NOT NULL DEFAULT 0, parent_id BIGINT, dept_name VARCHAR(128), deleted_at DATETIME NULL)")
+	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_post (id BIGINT PRIMARY KEY, tenant_id BIGINT UNSIGNED NOT NULL DEFAULT 0, post_code VARCHAR(64), post_name VARCHAR(128), dept_id BIGINT, deleted_at DATETIME NULL)")
 	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_log_login (id BIGINT PRIMARY KEY AUTO_INCREMENT, tenant_id BIGINT UNSIGNED NOT NULL DEFAULT 0, username VARCHAR(64), status INT, login_time DATETIME)")
 	_ = db.Exec("CREATE TABLE IF NOT EXISTS system_setting (setting_key VARCHAR(128) PRIMARY KEY, tenant_id BIGINT UNSIGNED NOT NULL DEFAULT 0, setting_value TEXT)")
 	// tenant_memberships is written by CreateUser/DeleteUser (acceptance F1/F4):
@@ -681,6 +681,12 @@ func TestUserService_ResetPassword(t *testing.T) {
 
 	_ = db.Exec("INSERT INTO system_user_session (session_id, user_id, revoked_at) VALUES ('s-1', ?, NULL)", userResp.ID)
 	_ = db.Exec("INSERT INTO system_user_session (session_id, user_id, revoked_at) VALUES ('s-2', ?, NULL)", userResp.ID)
+	if err := db.Exec(
+		"UPDATE system_user SET failed_login_attempts = 5, login_locked_until = ? WHERE id = ?",
+		time.Now().Add(time.Hour), userResp.ID,
+	).Error; err != nil {
+		t.Fatalf("seed account lockout: %v", err)
+	}
 
 	revokedCount, err := s.ResetPassword(userResp.ID, "newpassword456")
 	if err != nil {
@@ -696,6 +702,10 @@ func TestUserService_ResetPassword(t *testing.T) {
 	}
 	if err := bcrypt.CompareHashAndPassword([]byte(updatedUser.Password), []byte("newpassword456")); err != nil {
 		t.Fatalf("expected password to be updated: %v", err)
+	}
+	if updatedUser.FailedLoginAttempts != 0 || updatedUser.LoginLockedUntil != nil {
+		t.Fatalf("reset must clear account lockout, got attempts=%d lockedUntil=%v",
+			updatedUser.FailedLoginAttempts, updatedUser.LoginLockedUntil)
 	}
 
 	var revokedRows int64

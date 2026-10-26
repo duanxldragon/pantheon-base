@@ -43,3 +43,25 @@ Carried into `docs/reviews/PANTHEON_BASE_DELIVERY_REMEDIATION_2026-10-22.md` §5
 4. Contract §2.1 missing the `deleted` state.
 5. `go test -race` not runnable on this host.
 6. SonarCloud verdict is CI-only.
+
+
+## Machine Readable
+
+```json
+{
+  "taskId": "2026-10-22-delivery-audit-remediation",
+  "verdict": "approved with documented P2 follow-up",
+  "verdictRationale": "Approve: six audit findings closed, none silenced; the SonarCloud verdict stays CI-only as a residual.",
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-22-delivery-audit-remediation/manifest.json",
+    "evidence": ".harness/evidence/2026-10-22-delivery-audit-remediation/commands.json",
+    "reviewFile": ".harness/evidence/2026-10-22-delivery-audit-remediation/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-22-delivery-audit-remediation.task.md"
+    ]
+  }
+}
+```
+
+> This block was backfilled on 2026-10-26 during the governance-schema repair round. It restates the verdict already written above in machine-readable form and links the artifacts that existed for this task; no conclusion, finding or verification claim was added, removed or reworded. The prose remains authoritative.

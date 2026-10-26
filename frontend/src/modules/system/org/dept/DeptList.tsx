@@ -544,6 +544,24 @@ const DeptList: React.FC = () => {
     setVisible(true);
   };
 
+  // The dialog can open before the department tree finishes loading, which
+  // leaves the parent field on the '0' placeholder — a value the backend
+  // rejects ("dept.parent.required"). Backfill the root once the tree arrives,
+  // but never override a parent the operator already picked.
+  useEffect(() => {
+    if (!visible || editing) {
+      return;
+    }
+    const current = form.getFieldValue('parentId') as string | undefined;
+    if (current && current !== '0') {
+      return;
+    }
+    const rootDept = findRootDept(allDeptTree);
+    if (rootDept && rootDept.id > 0) {
+      form.setFieldValue('parentId', String(rootDept.id));
+    }
+  }, [visible, editing, allDeptTree, form]);
+
   const loadLeaderCandidateOptions = useCallback(
     async (deptId: number) => {
       setLeaderCandidateLoading(true);

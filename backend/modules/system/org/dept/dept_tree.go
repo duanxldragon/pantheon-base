@@ -96,10 +96,15 @@ func (s *DeptService) GetOverview() (*DeptOverviewResp, error) {
 }
 
 // loadOverviewPosts loads department post rows for overview aggregation.
+// system_post is soft-deleted, and a raw Table() query does not inherit
+// GORM's deleted_at scope, so the filter is stated explicitly — otherwise
+// every post the operator ever removed keeps inflating the overview counts.
 func (s *DeptService) loadOverviewPosts() ([]overviewPostRow, error) {
 	posts := make([]overviewPostRow, 0)
 	if s.db.Migrator().HasTable("system_post") {
-		if err := s.scoped(s.db.Table("system_post")).Select("dept_id, status").Order("id asc").Find(&posts).Error; err != nil {
+		if err := s.scoped(s.db.Table("system_post")).
+			Where("deleted_at IS NULL").
+			Select("dept_id, status").Order("id asc").Find(&posts).Error; err != nil {
 			return nil, err
 		}
 	}
@@ -212,6 +217,7 @@ func (s *DeptService) loadDeptPostCounts() (map[uint64]int, error) {
 
 	rows := make([]deptPostCountRow, 0)
 	if err := s.scoped(s.db.Table("system_post")).
+		Where("deleted_at IS NULL").
 		Select("dept_id, COUNT(1) AS count").
 		Group("dept_id").
 		Scan(&rows).Error; err != nil {

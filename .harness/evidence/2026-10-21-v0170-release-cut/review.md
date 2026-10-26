@@ -33,3 +33,25 @@ modified.
 
 Accept for publication subject to the release commit's required checks and the asset read-back
 recorded in `commands.json`.
+
+
+## Machine Readable
+
+```json
+{
+  "taskId": "2026-10-21-v0170-release-cut",
+  "verdict": "approved",
+  "verdictRationale": "Accept for publication subject to the release commit required checks and the asset read-back recorded in commands.json.",
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-21-v0170-release-cut/manifest.json",
+    "evidence": ".harness/evidence/2026-10-21-v0170-release-cut/commands.json",
+    "reviewFile": ".harness/evidence/2026-10-21-v0170-release-cut/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-21-v0170-release-cut.task.md"
+    ]
+  }
+}
+```
+
+> This block was backfilled on 2026-10-26 during the governance-schema repair round. It restates the verdict already written above in machine-readable form and links the artifacts that existed for this task; no conclusion, finding or verification claim was added, removed or reworded. The prose remains authoritative.

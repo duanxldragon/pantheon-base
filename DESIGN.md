@@ -324,10 +324,11 @@ border/background，避免交互态被高特异性规则压掉）。机械门禁
 - 营销式登录页 Assurance 区块（三点安全承诺列表）
 - Inter 作为主字体（现以 system-ui 栈为准；Source Sans 3 仅作可选增强）
 - FilterPanel 表单栅格筛选区（显式搜索/重置按钮）重新引入列表页（由 `check:search-toolbar-contract` 拦截）
+- 直接使用 `Input.Password`：Arco 自带的眼形切换是无障碍名称缺失的可聚焦 `svg`（且无属性可补），密码框必须走 `components/patterns/forms/PasswordInput`（由 `check:password-toggle` 拦截）
 
 所有视觉表面使用纯色 Token。层次通过边框、弱阴影、间距来建立。
 
-本清单由机械门禁强制执行：`frontend/scripts/check-ui-contract.mjs`（全库扫描 §7.6/§7.7/§7.9 违规，挂在 `prebuild` 链）+ `frontend/scripts/check-shell-visual-contract.mjs`（壳层结构断言）。单行豁免使用 `ui-contract-allow: <rule-id>` 行内注释并在 PR 说明理由。
+本清单由机械门禁强制执行：`frontend/scripts/check-ui-contract.mjs`（全库扫描 §7.6/§7.7/§7.9 违规，挂在 `prebuild` 链）+ `frontend/scripts/check-shell-visual-contract.mjs`（壳层结构断言）+ `frontend/scripts/check-password-toggle.mjs`（§7.9 密码切换无障碍名称）。单行豁免使用 `ui-contract-allow: <rule-id>`（密码项为 `password-toggle-allow: <原因>`）行内注释并在 PR 说明理由。
 
 ## 8. 当前实现状态判断
 

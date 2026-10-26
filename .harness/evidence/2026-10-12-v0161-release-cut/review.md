@@ -146,3 +146,25 @@ verified.
 
 **Residual risk.** The published release is consumable, but the consumer lock has not moved and the
 assembly has not been run. Those are the next two steps, and they live in another repository.
+
+
+## Machine Readable
+
+```json
+{
+  "taskId": "2026-10-12-v0161-release-cut",
+  "verdict": "approved with documented P2 follow-up",
+  "verdictRationale": "Accepted as a release-cut packet; the post-publication review records the hosted-run lessons and the consumer lock that has not moved.",
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-12-v0161-release-cut/manifest.json",
+    "evidence": ".harness/evidence/2026-10-12-v0161-release-cut/commands.json",
+    "reviewFile": ".harness/evidence/2026-10-12-v0161-release-cut/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-12-v0161-release-cut.task.md"
+    ]
+  }
+}
+```
+
+> This block was backfilled on 2026-10-26 during the governance-schema repair round. It restates the verdict already written above in machine-readable form and links the artifacts that existed for this task; no conclusion, finding or verification claim was added, removed or reworded. The prose remains authoritative.

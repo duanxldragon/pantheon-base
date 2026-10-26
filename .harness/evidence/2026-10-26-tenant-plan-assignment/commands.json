@@ -1,0 +1,101 @@
+{
+  "taskId": "2026-10-26-tenant-plan-assignment",
+  "repo": "pantheon-base",
+  "executedAt": "2026-10-26T09:20:00+08:00",
+  "agent": {
+    "tool": "other",
+    "adapter": "qoder-agent"
+  },
+  "knownGaps": [
+    "No PNG: the in-app browser surface was hidden (visibilityState=hidden), so take_screenshot returned NATIVE_BROWSER_VIEWPORT_UNAVAILABLE. Browser findings are evidenced by DOM text plus the network log; re-run in a visible window if a visual artifact is required.",
+    "The frontend capability ladder (core/entitlements/plans.ts) still hardcodes four tiers and fails an unknown code closed to free, so an operator-defined plan's console feature entries render at the free tier. Registered as still-open in contract V1.4/V1.5 notes; per-plan menu trimming stays in §1 Out.",
+    "No write-side enforcement was added: the backend still rejects no write for exceeding a quota (§2.4.1 unchanged).",
+    "Adjudicated, not fixed: the registered 'tenant-side DELETE /tenants/:id/members/:user_id sets no audit title' asymmetry does not exist at runtime — that route belongs to the legacy Handler whose RegisterRoutes entry point has no shipped caller (only tenant_handler_test.go); every shipped tenant write route is mounted on PlatformHandler (system_modules.go:290-306) and sets its title. See contract V1.5 change log and summary.md. Residue kept on record: the unmounted legacy surface still carries @Router /api/v1/tenants* swagger annotations; no generated swagger artifact is committed today (repo-wide search found no swagger.json/docs.go), so nothing advertises them, but a future swag init would.",
+    "frontend 'npm run format:check' (prettier, not a CI gate) already warns on src/i18n/resources/*.ts at HEAD; only the lines added by this work were converted to the single-quote convention, the pre-existing debt (including src/api/request.ts:17) was left alone to keep the diff reviewable.",
+    "The retained fixture database was temporarily mutated twice (tenant_plans id=5 status active) to prove the dropdown is data-driven, then restored and verified by SQL; no tenant row was touched and no create request was sent."
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-26-tenant-plan-assignment/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-26-tenant-plan-assignment/",
+    "reviewFile": ".harness/evidence/2026-10-26-tenant-plan-assignment/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/contracts/TENANT_CONTRACT_V1.md",
+      ".harness/evidence/2026-10-25-dual-mode-e2e-smoke/README.md"
+    ]
+  },
+  "commands": [
+    {
+      "command": "node node_modules/vitest/vitest.mjs run tests/unit/modules/system/iam/tenant/planOptions.test.ts",
+      "cwd": "frontend",
+      "notes": "5 tests passed after fixing the test's relative import depth and two wrong expectations.",
+      "status": "passed"
+    },
+    {
+      "command": "node node_modules/vitest/vitest.mjs run",
+      "cwd": "frontend",
+      "notes": "32 test files / 222 tests passed.",
+      "status": "passed"
+    },
+    {
+      "command": "node node_modules/typescript/bin/tsc -b",
+      "cwd": "frontend",
+      "notes": "exit 0, re-run after the i18n quote normalization.",
+      "status": "passed"
+    },
+    {
+      "command": "node node_modules/eslint/bin/eslint.js src --max-warnings 0",
+      "cwd": "frontend",
+      "notes": "CI form; separately the four touched files plus the new test also lint clean.",
+      "status": "passed"
+    },
+    {
+      "command": "node node_modules/prettier/bin/prettier.cjs --check <touched tsx/ts files>",
+      "cwd": "frontend",
+      "notes": "TenantList.tsx and the new test were formatted; i18n resources keep pre-existing HEAD warnings, added lines were converted to single quotes.",
+      "status": "passed"
+    },
+    {
+      "command": "go build ./... && go test ./modules/system/i18n/... ./modules/system/iam/tenant/... -count=1",
+      "cwd": "backend",
+      "notes": "tenant package ok after deleting PlanStore.AssignableCodes and its test (9 -> 8 cases). CAVEAT corrected in this round: without a DSN every DB-backed case in this package t.Skipf's, so that ok is not coverage evidence. The authoritative run is the PANTHEON_TEST_DSN_REQUIRED=1 entry below.",
+      "status": "passed"
+    },
+    {
+      "command": "PANTHEON_TEST_DSN_REQUIRED=1 go test ./modules/system/iam/tenant/... -count=1",
+      "cwd": "backend",
+      "notes": "Sourced PANTHEON_DSN from .env.test into the environment only (value never printed); per-test isolated databases via pkg/testmysql (CREATE/DROP of pantheon_base_plan_matrix_20261025_* clones), the retained fixture database itself is not the target. Full package ok in 62.5s of real execution. Targeted -run 'TestPlanStore' verbose: 8 PASS, 0 SKIP, 0 FAIL. The earlier bare ok was a skip-masked run; this is the coverage evidence.",
+      "status": "passed"
+    },
+    {
+      "command": "node scripts/check-i18n-hardcode.mjs; node scripts/check-menu-contract.mjs; node scripts/check-import-path-case.mjs; node scripts/check-ui-contract.mjs; node scripts/check-i18n-generated-scope.mjs; node scripts/audit-i18n-locales.mjs",
+      "cwd": "frontend",
+      "notes": "All contract checkers green; locale audit reports 3015 keys per locale with missing=0 extra=0.",
+      "status": "passed"
+    },
+    {
+      "command": "node scripts/frontmatter-check.mjs",
+      "cwd": ".",
+      "notes": "350 docs checked, 257 with frontmatter.",
+      "status": "passed"
+    },
+    {
+      "command": "node scripts/harness/check-structure-contract.mjs",
+      "cwd": ".",
+      "notes": "Re-run after the V1.5 change-log adjudication in both TENANT_CONTRACT_V1.md and .en.md: 0 findings across 2573 tracked files.",
+      "status": "passed"
+    },
+    {
+      "command": "bash .tmp/dbq.sh pantheon_base_plan_matrix_20261025 \"SELECT id, code, plan, status FROM tenants\" / tenant_plans",
+      "cwd": ".",
+      "notes": "Post-run integrity re-check after the DSN-backed test suite: the four retained tenants (free/basic/professional/enterprise, all active) and the five plan rows with opsprobe=disabled are byte-for-byte the state recorded above; the suite only created and dropped its own isolated clone databases.",
+      "status": "passed"
+    },
+    {
+      "command": "bash .tmp/dbq.sh pantheon_base_plan_matrix_20261025 \"SELECT ... FROM tenant_plans / tenants\"",
+      "cwd": ".",
+      "notes": "Read-only plus two scoped UPDATEs on tenant_plans id=5 (active for the check, then back to disabled); final SELECT confirms the pre-check state column by column and all four tenants unchanged.",
+      "status": "passed"
+    }
+  ]
+}

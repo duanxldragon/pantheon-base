@@ -25,7 +25,7 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const base = process.env.PANTHEON_API_BASE_URL ?? 'http://127.0.0.1:8081/api/v1';
+const base = process.env.PANTHEON_API_BASE_URL ?? 'http://127.0.0.1:8080/api/v1';
 const phase = process.argv[2] ?? 'up';
 const run = Date.now();
 // Repo-level .tmp (gitignored). This file lives in frontend/scripts, so it
@@ -105,7 +105,10 @@ async function loginTenantAdmin(tenant) {
   return session;
 }
 
-async function getOperationToken(session) {
+async function getOperationToken(
+  session,
+  password = process.env.PANTHEON_SMOKE_ADMIN_PASSWORD ?? '123456',
+) {
   const res = await fetch(`${base}/auth/operation-verify`, {
     method: 'POST',
     headers: {
@@ -115,7 +118,7 @@ async function getOperationToken(session) {
       'X-CSRF-Token': session.csrfToken,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ password: process.env.PANTHEON_SMOKE_ADMIN_PASSWORD ?? '123456' }),
+    body: JSON.stringify({ password }),
   });
   const body = await res.json();
   if (body.code !== 200 || !body.data?.operationToken) {
@@ -316,7 +319,7 @@ async function cleanup() {
       const session = await loginTenantAdmin(tenant);
       const existing = await listDictTypes(session, tenant.dictCode);
       if (existing.length > 0) {
-        const operationToken = await getOperationToken(session);
+        const operationToken = await getOperationToken(session, tenant.adminPassword);
         for (const item of existing) await deleteDictType(session, operationToken, item.id);
       }
     } catch (error) {

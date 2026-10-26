@@ -80,7 +80,7 @@ func TestRoleTenantScope_RenameMigratesPolicySubject(t *testing.T) {
 		t.Fatalf("create role: %v", err)
 	}
 	if err := db.Create(&database.CasbinRule{
-		PType: "p", V0: "role:editor@tenant:101", V1: "/api/v1/system/user/list", V2: "GET",
+		PType: "p", V0: "role:editor@tenant:101", V1: "/api/v1/custom/editor", V2: "GET",
 	}).Error; err != nil {
 		t.Fatalf("seed policy: %v", err)
 	}

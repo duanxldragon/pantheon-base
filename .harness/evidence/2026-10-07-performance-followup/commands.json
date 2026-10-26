@@ -52,6 +52,7 @@
     "tool": "codex",
     "adapter": "platform-coordinator"
   },
+  "runtimeGap": "The performance numbers exist, but only as prose in this round's summary.md (10-run sample with P95 = 1.18s, EXPLAIN over the user and operation-log tables, and MySQL max_connections=151 / Threads_connected=1 / Max_used_connections=39 / Connection_errors_max_connections=0) — none of it is recorded as machine-readable runtimePerformance or runtimeMetrics in this file. The commands here are `go build`/`go vet` plus `go test` of modules/system/audit and modules/platform with DSN+Redis env, and both `go test ./modules/system/iam/tenant/...` entries are `not-run`. A reviewer who must re-check the tuning decision reads summary.md, not this evidence.",
   "knownGaps": [
     "tenant package test execution locally (native cgo toolchain)",
     "larger enterprise-volume dashboard load remains unmeasured; local MySQL fixture EXPLAIN/P95/connection evidence is recorded"

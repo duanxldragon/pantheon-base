@@ -20,8 +20,15 @@ const PlatformOnlyMenuModuleTenant = "system.tenant"
 // platformOnlyMenuPaths are the seeded pages whose route groups require a
 // platform capability. Keep aligned with the PlatformCapabilityMiddleware call
 // sites in modules/system/system_modules.go.
+//
+// The tenant-ops pages already classify by module below, so listing their paths
+// is deliberate redundancy: a menu tree that reaches a console without the
+// `module` column filled (an older row, a gateway-cached payload) must still be
+// hidden rather than render a page every request of which answers 403.
 var platformOnlyMenuPaths = []string{
 	"/system/tenant",
+	"/system/tenant-ops/overview",
+	"/system/tenant-ops/member",
 	"/system/menu",
 	"/system/i18n",
 }

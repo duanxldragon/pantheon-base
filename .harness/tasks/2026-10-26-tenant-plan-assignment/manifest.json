@@ -1,0 +1,125 @@
+{
+  "taskId": "2026-10-26-tenant-plan-assignment",
+  "taskDoc": "docs/harness/tasks/2026-10-26-tenant-plan-assignment.task.md",
+  "title": "Wire the plan assignment surface to stored plan definitions (TENANT_CONTRACT V1.5)",
+  "goal": "Close the residual gap V1.4 registered in contract section 9: PlanStore.AssignableCodes had an implementation and a unit test but no shipped caller, so the tenant form's plan dropdown was still four hardcoded literals. An operator-defined code could be stored in tenant_plans and shown honestly by the overview but could never be assigned to a tenant. This packet connects the console's assignment surface to the existing read-only /system/tenant-ops/plan/list endpoint and mirrors the server's decision rule in the client, keeping the frozen scope of read side plus configurable thresholds with no write-side enforcement. The dead backend AssignableCodes is deleted rather than given a caller, because it sorted alphabetically (wrong ladder order) and its only valuable case is already covered by ValidateAssignment plus the client derivation. No schema, migration, route, permission code, menu seed or error envelope change.",
+  "primaryLayer": "system/iam",
+  "dependencyLayers": [
+    "system/config"
+  ],
+  "status": "completed",
+  "priority": "P2",
+  "type": "contract-extension",
+  "estimatedComplexity": "small",
+  "findings": [
+    "V1.4 residual gap (P2, closed): the plan dropdown ignored tenant_plans, so custom codes were unreachable for assignment while remaining fully visible in the overview.",
+    "Dead policy surface (P3, deleted): PlanStore.AssignableCodes had no shipped caller and ordered codes alphabetically, which would have produced a second source of truth about what is assignable.",
+    "Silent normalisation risk (P2, prevented): editing a tenant whose own code is no longer assignable must keep that code in the editor options, otherwise saving rewrites the tenant onto a different plan without anyone asking.",
+    "Adjudicated, not fixed: the registered asymmetry claiming tenant-side DELETE /tenants/:id/members/:user_id sets no audit title does not exist at runtime. That route belongs to the legacy Handler whose RegisterRoutes has no shipped caller (only tenant_handler_test.go); every shipped tenant write route is mounted on PlatformHandler (system_modules.go:290-306) and sets its title. Residue recorded: the unmounted legacy surface still carries @Router swagger annotations and no generated swagger artifact exists today, so nothing advertises them, but a future swag init would."
+  ],
+  "scope": {
+    "in": [
+      "frontend/src/modules/system/iam/tenant/planOptions.ts deriving assignable, filter and editor option sets from the plan list",
+      "TenantList edit form and filter consuming the derived options with a silent advisory read (skipErrorMessage)",
+      "system.tenant.plan.outsideLadder copy in five locales",
+      "Deletion of backend PlanStore.AssignableCodes and its unit test",
+      "TENANT_CONTRACT V1.5 in both the authoritative Chinese and the English mirror: section 2.4 invariant 8, section 9 gap status, and the V1.5 row reclassified from clarification to clarification (2.2) plus extension (2.4 invariant 8)"
+    ],
+    "out": [
+      "Write-side enforcement: the backend still rejects no write for exceeding a quota (section 2.4.1 unchanged)",
+      "Making the frontend capability ladder dynamic; core/entitlements/plans.ts still hardcodes four tiers and closes unknown codes to free, and stays on the books in section 9",
+      "max_api_keys and max_storage_mb on the overview: the frozen core metric group is tenants, members, roles and departments, and neither dimension has a metering source",
+      "Schema, migrations, routes, permission codes, menu seeds, error envelopes",
+      "SonarCloud rule changes, gate relaxations, skipped tests, commit, push or PR (not requested)"
+    ]
+  },
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "permission-policy",
+    "portableFailureClass": "dead-policy-surface / client-server-rule-drift / silent-normalisation",
+    "ownerLayer": "consumer-repository",
+    "ratchetDecision": "sensor-reused",
+    "coverageDimensions": [
+      "behaviour",
+      "architecture-fitness"
+    ]
+  },
+  "expectedFiles": {
+    "create": [
+      "frontend/src/modules/system/iam/tenant/planOptions.ts",
+      "frontend/tests/unit/modules/system/iam/tenant/planOptions.test.ts",
+      "docs/harness/tasks/2026-10-26-tenant-plan-assignment.task.md",
+      ".harness/tasks/2026-10-26-tenant-plan-assignment/manifest.json",
+      ".harness/evidence/2026-10-26-tenant-plan-assignment/summary.md",
+      ".harness/evidence/2026-10-26-tenant-plan-assignment/review.md",
+      ".harness/evidence/2026-10-26-tenant-plan-assignment/commands.json"
+    ],
+    "modify": [
+      "frontend/src/modules/system/iam/tenant/TenantList.tsx",
+      "frontend/src/i18n/resources/zh-CN.ts",
+      "frontend/src/i18n/resources/en-US.ts",
+      "frontend/src/i18n/resources/ja-JP.ts",
+      "frontend/src/i18n/resources/ko-KR.ts",
+      "frontend/src/i18n/resources/fr-FR.ts",
+      "backend/modules/system/iam/tenant/plan_store.go",
+      "backend/modules/system/iam/tenant/plan_store_test.go",
+      "docs/contracts/TENANT_CONTRACT_V1.md",
+      "docs/contracts/TENANT_CONTRACT_V1.en.md"
+    ],
+    "doNotTouch": [
+      "backend/pkg/database/migrations/**",
+      ".github/workflows/**",
+      "the retained fixture database pantheon_base_plan_matrix_20261025 (four tenants and five plans) held for maintainer review",
+      ".env.test and any credential file"
+    ]
+  },
+  "implementationNotes": [
+    "Order is not re-sorted client-side: the server returns sort ASC, id ASC, and sorting again would create two truths about ladder order.",
+    "Editor options must include the tenant's own code even when it is no longer assignable, so opening a retired-plan tenant cannot silently rewrite it.",
+    "The plan list is advisory for the form: on an unreadable list it falls back to the four built-in tiers silently (skipErrorMessage) instead of raising an error toast for a dropdown.",
+    "Codes outside the frontend capability ladder must state the consequence (console features render at the free tier, quota ceilings still come from that plan definition) rather than hide it.",
+    "Verification mutated tenant_plans id=5 status twice to prove the dropdown is data-driven, then restored it and re-checked by read-only SQL; no tenant row was touched and no create request was sent.",
+    "go test reporting ok is not coverage evidence here: without a DSN every DB case in the tenant package t.Skipf's and the package still prints ok, so the covering run is the one with PANTHEON_TEST_DSN_REQUIRED=1."
+  ],
+  "verificationPlan": {
+    "frontend": [
+      "node node_modules/vitest/vitest.mjs run tests/unit/modules/system/iam/tenant/planOptions.test.ts",
+      "node node_modules/vitest/vitest.mjs run (32 files / 222 tests)",
+      "node node_modules/typescript/bin/tsc -b",
+      "node node_modules/eslint/bin/eslint.js src --max-warnings 0",
+      "node scripts/audit-i18n-locales.mjs (five locales, 3015 keys, missing 0 extra 0)"
+    ],
+    "backend": [
+      "go build ./...",
+      "go test ./modules/system/i18n/... ./modules/system/iam/tenant/... -count=1",
+      "PANTHEON_TEST_DSN_REQUIRED=1 go test ./modules/system/iam/tenant/... -count=1",
+      "PANTHEON_TEST_DSN_REQUIRED=1 go test -run TestPlanStore -v (8 PASS, 0 SKIP, 0 FAIL)"
+    ],
+    "browser": [
+      "Real backend :8080 plus real Vite :5173 against the retained fixture database: /system/tenant emits GET /api/v1/system/tenant-ops/plan/list 200 on mount, the dropdown shows stored definitions rather than four literals, disabled plans stay selectable in the filter and preserved in the editor for a tenant that still uses one"
+    ],
+    "governance": [
+      "node scripts/harness/check-task-packet.mjs",
+      "node scripts/harness/check-evidence.mjs --strict",
+      "node scripts/harness/check-review.mjs --strict",
+      "node scripts/harness/check-structure-contract.mjs --strict",
+      "node scripts/harness/check-failure-registry.mjs --strict"
+    ]
+  },
+  "linkage": {
+    "taskId": "2026-10-26-tenant-plan-assignment",
+    "taskManifest": ".harness/tasks/2026-10-26-tenant-plan-assignment/manifest.json",
+    "assessment": "docs/harness/tasks/2026-10-26-tenant-plan-assignment.task.md",
+    "openspecChange": "none",
+    "superpowersPlan": "none",
+    "evidenceDir": ".harness/evidence/2026-10-26-tenant-plan-assignment/",
+    "summaryFile": ".harness/evidence/2026-10-26-tenant-plan-assignment/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-26-tenant-plan-assignment/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/contracts/TENANT_CONTRACT_V1.md",
+      ".harness/evidence/2026-10-25-dual-mode-e2e-smoke/commands.json"
+    ]
+  }
+}

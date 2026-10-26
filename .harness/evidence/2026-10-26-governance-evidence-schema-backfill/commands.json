@@ -1,0 +1,181 @@
+{
+  "taskId": "2026-10-26-governance-evidence-schema-backfill",
+  "repo": "pantheon-base",
+  "executedAt": "2026-10-26T14:40:00+08:00",
+  "agent": { "tool": "other", "adapter": "qoder-agent" },
+  "runtimeSensitive": false,
+  "runtimeGap": "No product runtime was exercised. This round changes only governance artifacts (.harness/evidence/**, docs/harness/failure-registry.md, one task packet and its manifest) plus two workspace hygiene fixes (5 generated files restored from HEAD, one gofmt violation). Nothing in the request path, database, permission model or UI behaviour moved, so no backend process, no browser session and no live data assertion belongs to this evidence set. The compile-level checks that do apply (go build, go vet, tsc -b, eslint) were re-run after the generated-file restore and are recorded below; Go unit tests, Playwright smoke and SonarCloud remain CI's verdict and were not run here.",
+  "knownGaps": [
+    "Three further strict checkers are red or ambiguous on this tree and none of them is referenced by .github/workflows/quality.yml: check-runtime-evidence --strict exits 1 with 0 errors and 11 warnings, check-boundaries --strict --root . exits 1 with 1 finding, check-inheritance-contract --strict exits 1 with 7 findings from the pantheon-base directory and 8 from the workspace root — the workspace-root reading is the correct one and shows the findings are real method-doc drift (WORKSPACE_INHERITANCE.md missing 3 inheritance markers, pantheon-ops/docs/PROJECT_INHERITANCE.md missing 3 markers plus an unpinned Base version, and no .github/pull_request_template.md at the workspace root), not missing-path artifacts. None was caused by this round: git diff --name-only contains none of the files each one names (verified by script, see the proof commands below). Two of them (check-runtime-evidence, check-inheritance-contract) appear in no workflow and no npm script at all, so nothing anywhere observes them. check-boundaries does run in CI — .github/workflows/ci.yml:391 — but with config/boundary-baseline.json, where the single finding is baselined until 2026-12-31, so the CI form exits 0 and the bare strict invocation overstates the repo state. Repairing the three is out of this packet's scope and is reported to the maintainer as findings G-03/G-04/G-05.",
+    "No historical round was re-executed. The backfilled verdictRationale, knownGaps and runtimeGap strings are restatements of prose already in that round's own review.md / summary.md / commands.json, so this evidence proves the artifacts are schema-valid and internally traceable, not that the original verification still passes today.",
+    "The actor that stripped the DO-NOT-EDIT marker from 5 generated files is undetermined. The files' mtimes (08:38) precede this session's edits (12:00 onward), HEAD carries the marker and tests/scripts/generated-marker-consistency.test.mjs passes there. The diff was archived to frontend/.tmp/f11-regression.diff (gitignored) before git restore, so the pre-restore state is recoverable but not attributable.",
+    "check-evidence/check-review are still not in CI after this round. FR-016 is recorded as open with a recommended harness change of 'gate'; adding the two npm scripts to quality.yml is a gate-policy decision and was deliberately not taken.",
+    "Five historical rounds (2026-10-07-release-closeout and the 2026-10-11/12 pairs that predate packet enforcement) have no docs/harness/tasks/*.task.md, so their planRefs fall back to .harness/tasks/<id>/manifest.json. No packet was invented for them.",
+    "Backend Go unit tests, frontend Playwright smoke and the SonarCloud verdict were not run in this round; the only executed backend checks are go build ./..., go vet ./... and gofmt -l .",
+    "This evidence set contains no credential material: no database, Redis or JWT value was read, printed or written into any file changed this round."
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-26-governance-evidence-schema-backfill/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-26-governance-evidence-schema-backfill/",
+    "reviewFile": ".harness/evidence/2026-10-26-governance-evidence-schema-backfill/review.md",
+    "summaryFile": ".harness/evidence/2026-10-26-governance-evidence-schema-backfill/summary.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/VERIFICATION_EVIDENCE_SPEC.md",
+      "docs/harness/FAILURE_RATCHET_POLICY.md",
+      ".harness/evidence/2026-10-26-login-accessibility-and-lang/review.md"
+    ]
+  },
+  "commands": [
+    {
+      "command": "node scripts/harness/check-evidence.mjs --root . --strict",
+      "cwd": ".",
+      "status": "failed",
+      "notes": "Pre-repair baseline, recorded as it happened. Exit 1 with 7 failing commands.json files: 2026-10-20-tenant-audit-permission-seed (linkage missing), 2026-10-20-tenant-delivery-hardening (knownGaps + linkage missing), 2026-10-22-delivery-audit-remediation (runtimeSensitive/runtimeGap wrong type, linkage.taskManifest missing), 2026-10-22-tenant-plan-entitlements-and-audit (knownGaps + linkage missing), 2026-10-22-v0171-release-closeout (runtimeSensitive/runtimeGap wrong type), 2026-10-23-residual-closeout (knownGaps + linkage missing), 2026-10-23-v0173-release-closeout (knownGaps + linkage missing). Both 2026-10-26 dirs already passed. Kept as 'failed' rather than overwritten, because it is the measurement this round exists to close."
+    },
+    {
+      "command": "node scripts/harness/check-review.mjs --root . --strict",
+      "cwd": ".",
+      "status": "failed",
+      "notes": "Pre-repair baseline: exit 1, 24 of 53 review.md files failed — 22 with 'missing ## Machine Readable JSON block', 2026-09-25-task-archiving-and-v0130-prep with a planRefs path that round itself archived and deleted at v0.15.0 closeout, and 2026-10-20-tenant-delivery-hardening with structuralReview.checks values outside the enum (tenant-isolation, reserved-namespace)."
+    },
+    {
+      "command": "node frontend/.tmp/gov-fix-evidence.mjs && node frontend/.tmp/gov-fix-reviews.mjs",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Replayable backfill scripts (both under the gitignored frontend/.tmp/, .gitignore:29) applied the 7 commands.json field repairs and the 22 review.md appends. Scripted rather than hand-edited so 31 files change by one reviewable rule instead of 31 separate judgements."
+    },
+    {
+      "command": "node scripts/harness/check-evidence.mjs --root . --strict",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Post-repair: 0 error(s), exit 0 across 53 evidence files at that point (this round's own directory did not exist yet); the final re-run after writing this round's artifacts reports 54 file(s), 0 error(s), 0 warning(s). This is the same command line as the baseline above; only the artifacts changed."
+    },
+    {
+      "command": "node scripts/harness/check-review.mjs --root . --strict",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Post-repair: 0 error(s), exit 0 across 53 review files. The first attempt at this was still red because a '>' note was placed between '## Machine Readable' and the json fence; the extraction regex /## Machine Readable\\s+```json/ only tolerates whitespace, so the note moved below the block."
+    },
+    {
+      "command": "node scripts/harness/check-task-packet.mjs --root .",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "0 error(s), exit 0, including this round's docs/harness/tasks/2026-10-26-governance-evidence-schema-backfill.task.md. That packet first failed with 'task manifest does not exist' and three Linkage warnings (Plan References, Evidence Directory, Review File) until .harness/tasks/<id>/manifest.json was created and the Linkage labels matched the checker's required item names. Note this checker has no --strict flag; passing one is treated as a file argument and exits 1."
+    },
+    {
+      "command": "node scripts/harness/check-structure-contract.mjs --root . --strict",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "0 finding(s) across 2573 tracked file(s), with this round's manifest and packet in the tracked set."
+    },
+    {
+      "command": "node scripts/harness/check-failure-registry.mjs --root . --strict",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "1 file, 0 error(s), 0 warning(s) after FR-016 was added (category method-health, class method-health-gap, owner consumer-repository, signal method-gate, recommended harness change gate, promotion decision registry-only, status open)."
+    },
+    {
+      "command": "node scripts/harness/check-ui-quality-gate.mjs --root . --strict",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "no findings; the password-toggle sensor added by the login round is still in the enforced set."
+    },
+    {
+      "command": "node scripts/harness/check-generated.mjs --root . --strict",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "0 finding(s) across 11 artifact(s) after the 5 stripped generated files were restored from HEAD. It reported the missing 'Code generated by pantheon low-code generator. DO NOT EDIT.' marker on backend/modules/business/generated_registry.go, backend/modules/system/iam/menu/generated_component_registry.go, frontend/src/modules/generated/business.ts, frontend/src/modules/generated/system.ts and frontend/src/core/router/generatedComponentRegistry.ts before the restore; this is a CI-blocking step (quality.yml line 214)."
+    },
+    {
+      "command": "node scripts/harness/check-doc-frontmatter.mjs --root . --strict && node scripts/harness/check-doc-links.mjs --root . --strict && node scripts/harness/check-doc-inventory.mjs --root . --strict && node scripts/harness/check-sync-drift.mjs --root . --strict && node scripts/harness/check-encoding.mjs --root . --strict",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Each 0 finding(s); encoding scanned 2312 files. Run individually as well as chained; the chained form only reports the first failure, so a single green line here is not the evidence — the per-checker matrix in frontend/.tmp/gov-matrix.txt is."
+    },
+    {
+      "command": "node scripts/harness/check-method-health.mjs --root . --strict && node scripts/harness/check-adoption.mjs --root . --strict && node scripts/harness/check-template-health.mjs --root . --strict && node scripts/harness/check-visual-evidence.mjs --root . --strict && node scripts/harness/check-feature-ledger.mjs --root . --strict",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "All exit 0. check-method-health prints a 'OpenSpec skeleton directory is missing' reason line while still exiting 0; recorded so a future reader does not mistake that line for a red gate."
+    },
+    {
+      "command": "node scripts/harness/check-permission-contract.mjs --root . --strict && node scripts/harness/check-backend-response-contract.mjs --root . --strict && node scripts/harness/check-backend-dto-contract.mjs --root . --strict && node scripts/harness/check-audit-coverage.mjs --root . --strict",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "All exit 0, each printing 'Repository root not found: pantheon-ops' / 'Backend root not found: pantheon-ops/backend' as a scan warning. These are cross-repo checks that legitimately have no consumer checkout in this workspace; they exit 0, so they are not red — but they also prove nothing about pantheon-ops from here."
+    },
+    {
+      "command": "node scripts/harness/check-runtime-evidence.mjs --root . --strict",
+      "cwd": ".",
+      "status": "failed",
+      "notes": "Exit 1 with 0 errors and 11 warnings (findings G-03): 2026-09-25-task-archiving-and-v0130-prep, 2026-09-28-base-ssrf-protection, 2026-09-29-v0140-release-completion, the seven 2026-10-07 rounds, 2026-10-11-sonar-smoke-helper-smells and one more each lack a runtime signal or a recorded runtime gap. No commands.json named here was modified by this round (verified against git diff --name-only), and the checker is not in quality.yml."
+    },
+    {
+      "command": "node scripts/harness/check-boundaries.mjs --root . --strict",
+      "cwd": ".",
+      "status": "failed",
+      "notes": "Exit 1 with 1 finding (G-04): frontend/src/modules/platform/widgets.tsx imports ../system/iam/menu/api, which the layer rule forbids ('platform frontend must not reach into sibling system modules'). Pre-existing and untouched by this round. IMPORTANT CORRECTION: this checker IS in CI, but at .github/workflows/ci.yml:391 and with a baseline — re-running the exact CI form (node scripts/harness/check-boundaries.mjs --strict --repo pantheon-base --baseline config/boundary-baseline.json) exits 0 with '0 finding(s), 1 baselined' and a 'Baseline review-by: 2026-12-31' stamp. So CI is not red here; the bare --strict invocation overstates the repo's state by one baselined violation. Left unfixed deliberately: repairing it means moving an API surface across a layer boundary, a design change this governance packet must not smuggle in, and its ratchet date is already on the books."
+    },
+    {
+      "command": "node scripts/harness/check-boundaries.mjs --strict --repo pantheon-base --baseline config/boundary-baseline.json",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "The CI form: exit 0, 0 findings, 1 baselined (the widgets.tsx import above), 0 stale baselined, 0 unresolved repo roots. Recorded so the boundary claim in this evidence set matches what the gate actually enforces."
+    },
+    {
+      "command": "node scripts/harness/check-inheritance-contract.mjs --root . --strict",
+      "cwd": ".",
+      "status": "failed",
+      "notes": "Exit 1 with 7 findings (G-05) when run from the pantheon-base directory — docs/WORKSPACE_INHERITANCE.md, pantheon-ops/CLAUDE.md and pantheon-ops/docs/PROJECT_INHERITANCE.md report 'required inheritance contract file is missing' plus .github/pull_request_template.md lacks 4 markers. CORRECTION after re-running from the workspace root (D:/workspace/go/pantheon-platform), which is where this checker belongs: 8 findings, and the three 'missing file' lines become real content drift instead — docs/WORKSPACE_INHERITANCE.md lacks 3 required inheritance markers, pantheon-ops/docs/PROJECT_INHERITANCE.md lacks 3 markers plus the 'Base version must be pinned to a commit or tag' rule, and .github/pull_request_template.md genuinely does not exist at the workspace root. So the pantheon-base-cwd reading understated the cause: these are cross-repo method-doc drift findings, not path artifacts, and none of the named files is in this repository or was touched by this round."
+    },
+    {
+      "command": "node pantheon-base/scripts/harness/check-inheritance-contract.mjs --root . --strict (from D:/workspace/go/pantheon-platform)",
+      "cwd": "..",
+      "status": "failed",
+      "notes": "Workspace-root form of G-05: exit 1, 8 findings. Recorded because the repo-directory form misattributes 3 of them as 'file missing'. Out of this packet's scope by layer, not by convenience: WORKSPACE_INHERITANCE.md and pantheon-ops/docs/PROJECT_INHERITANCE.md are workspace/ops artifacts and changing them is a method-content decision for the maintainer."
+    },
+    {
+      "command": "git diff --numstat -- .harness/evidence",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Integrity proof: the 22 backfilled review.md files each show '22  0' (22 insertions, 0 deletions) — pure appends, no prose rewritten. 2026-09-25 shows 2/1 and 2026-10-20-tenant-delivery-hardening 3/1, the two intended single-field corrections. The 7 commands.json files show their insertion counts with deletions only where a value was retyped (delivery-audit-remediation 13/9, v0171 12/9); the remaining five are 1-deletion diffs that only append fields."
+    },
+    {
+      "command": "git diff -- .harness/evidence | grep -E '^[+-].*\"status\"'",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Empty result. No historical command status line was added, removed or altered by this round — the claim that the repair is structural-only is checked mechanically rather than asserted."
+    },
+    {
+      "command": "node -e 'compare git diff --name-only against the files named by the three red checkers'",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Scripted assertion, not eyeballing: widgets.tsx, .github/pull_request_template.md and docs/WORKSPACE_INHERITANCE.md are absent from the changed-file list, and all 11 runtime-warning evidence directories are reported 'untouched'. This is what licenses calling G-03/G-04/G-05 pre-existing."
+    },
+    {
+      "command": "node scripts/check-task-packet-template.mjs && node frontend/scripts/cleanup-generated-modules.mjs --check && node ./scripts/check-menu-contract.mjs (frontend) && node scripts/check-duplication.mjs",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "The four CI governance steps that are not scripts/harness/*.mjs, run in their CI form: task-packet template 'OK pantheon-base task-packet template is present and linked'; generated-modules 'OK: no generated modules found'; menu-contract exit 0 with 19 menus / 23 routes / 102 permissions / 23 component keys matched; duplication 'Result: PASS'. Together with the harness checkers above this covers 18 of the 19 npm run check:* steps in quality.yml — the exception is check:pr-governance, which needs a GitHub PR event payload and cannot run off-host."
+    },
+    {
+      "command": "node node_modules/typescript/bin/tsc -b",
+      "cwd": "frontend",
+      "status": "passed",
+      "notes": "Exit 0 after restoring frontend/src/modules/generated/business.ts, frontend/src/modules/generated/system.ts and frontend/src/core/router/generatedComponentRegistry.ts from HEAD. The last of those had lost more than the marker (ComponentLoader, RegistryEntry and the satisfies clause were gone), so a type check is the minimum proof the restore is complete."
+    },
+    {
+      "command": "node node_modules/eslint/bin/eslint.js src --max-warnings 0",
+      "cwd": "frontend",
+      "status": "passed",
+      "notes": "Exit 0, no warnings."
+    },
+    {
+      "command": "go build ./... && go vet ./... && gofmt -l .",
+      "cwd": "backend",
+      "status": "passed",
+      "notes": "build exit 0, vet exit 0, gofmt -l printed no paths (internal/middleware/tenant_platform_scope_test.go was reformatted with gofmt -w; no logic changed). go test was not run — no executable behaviour moved in this round and the Go suites are CI's verdict."
+    }
+  ]
+}

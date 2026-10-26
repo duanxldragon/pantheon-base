@@ -369,7 +369,7 @@ func (s *Service) AcknowledgeSecurityEvent(eventID, actorID uint64, actorUsernam
 	}
 	note = strings.TrimSpace(note)
 	if note == "" {
-		return errors.New("auth.security_event.acknowledge.note_required")
+		return common.NewBadRequest("auth.security_event.acknowledge.note_required")
 	}
 	result := s.scoped(s.db.Model(&SystemAuthSecurityEvent{})).
 		Where("id = ?", eventID).
@@ -397,7 +397,7 @@ func (s *Service) BatchAcknowledgeSecurityEvents(eventIDs []uint64, actorID uint
 	}
 	note = strings.TrimSpace(note)
 	if note == "" {
-		return 0, errors.New("auth.security_event.acknowledge.note_required")
+		return 0, common.NewBadRequest("auth.security_event.acknowledge.note_required")
 	}
 	normalized := make([]uint64, 0, len(eventIDs))
 	seen := make(map[uint64]struct{}, len(eventIDs))
@@ -412,12 +412,12 @@ func (s *Service) BatchAcknowledgeSecurityEvents(eventIDs []uint64, actorID uint
 		normalized = append(normalized, id)
 	}
 	if len(normalized) == 0 {
-		return 0, errors.New("auth.security_event.acknowledge.ids_required")
+		return 0, common.NewBadRequest("auth.security_event.acknowledge.ids_required")
 	}
 	// Cap batch input so a single request cannot smuggle an arbitrarily
 	// large IN clause past BodySizeLimit.
 	if len(normalized) > 500 {
-		return 0, errors.New("param.invalid")
+		return 0, common.NewBadRequest("param.invalid")
 	}
 	result := s.scoped(s.db.Model(&SystemAuthSecurityEvent{})).
 		Where("id IN ? AND acknowledged_at IS NULL", normalized).

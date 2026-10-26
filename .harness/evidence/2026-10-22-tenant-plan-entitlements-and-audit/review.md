@@ -50,3 +50,25 @@ No product finding remains open. Two explicit non-product notes:
 - `acceptance-result.json` is the raw browser output; screenshots in `artifacts/` correspond to the named checks. Archived runner scripts were stripped of local credential defaults and now read passwords only from `ACCEPT_ADMIN_PASSWORD` / `ACCEPT_TENANT_PASSWORD`; the result JSON contains no session tokens, CSRF tokens, or cookies.
 - The four tenant accounts were created through the real tenant API in multi mode; login logs were read through the real UI against MySQL.
 - Commands and results are reproduced in `summary.md`; no result in this review was inferred from a skipped or mocked path.
+
+
+## Machine Readable
+
+```json
+{
+  "taskId": "2026-10-22-tenant-plan-entitlements-and-audit",
+  "verdict": "approved",
+  "verdictRationale": "PASS with no unresolved P0-P3 findings, re-derived from code, tests and a real four-plan browser run.",
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-22-tenant-plan-entitlements-and-audit/manifest.json",
+    "evidence": ".harness/evidence/2026-10-22-tenant-plan-entitlements-and-audit/commands.json",
+    "reviewFile": ".harness/evidence/2026-10-22-tenant-plan-entitlements-and-audit/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-22-tenant-plan-entitlements-and-audit.task.md"
+    ]
+  }
+}
+```
+
+> This block was backfilled on 2026-10-26 during the governance-schema repair round. It restates the verdict already written above in machine-readable form and links the artifacts that existed for this task; no conclusion, finding or verification claim was added, removed or reworded. The prose remains authoritative.

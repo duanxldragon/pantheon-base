@@ -42,3 +42,25 @@ workflow or gate file is modified by this PR** — only version metadata and rel
 - [x] Release artifact shape matches the previous release
 - [ ] Hosted required checks + Release Gate green on the release commit (CI, post-push)
 - [ ] Tag `pantheon-base-v0.16.0` + GitHub Release published (post-merge)
+
+
+## Machine Readable
+
+```json
+{
+  "taskId": "2026-10-12-v0160-release-closeout",
+  "verdict": "approved",
+  "verdictRationale": "Ready to release as pantheon-base-v0.16.0: pure bookkeeping, no code, contract, workflow or gate file modified.",
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-12-v0160-release-closeout/manifest.json",
+    "evidence": ".harness/evidence/2026-10-12-v0160-release-closeout/commands.json",
+    "reviewFile": ".harness/evidence/2026-10-12-v0160-release-closeout/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-12-v0160-release-closeout.task.md"
+    ]
+  }
+}
+```
+
+> This block was backfilled on 2026-10-26 during the governance-schema repair round. It restates the verdict already written above in machine-readable form and links the artifacts that existed for this task; no conclusion, finding or verification claim was added, removed or reworded. The prose remains authoritative.

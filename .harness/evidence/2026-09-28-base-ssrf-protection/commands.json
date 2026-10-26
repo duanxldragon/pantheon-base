@@ -62,6 +62,7 @@
     "tool": "codex",
     "adapter": "platform-coordinator"
   },
+  "runtimeGap": "No runtimeLogs/runtimeMetrics/runtimeTraces/runtimePerformance were captured. The manifest runtimeEvidence claims (\"Unit tests: 8/8 passed, 68.8% coverage\", \"All attack vectors validated: private IPs, cloud metadata, DNS rebinding, redirects\") come from `go test ./backend/pkg/security/ssrf/` — in-process validator unit tests — not from a running server, real outbound egress, or application logs.",
   "knownGaps": [
     "Legacy evidence did not record structured known gaps; consult the linked summary/review before treating as no-gap."
   ],

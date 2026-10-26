@@ -1,0 +1,152 @@
+{
+  "taskId": "2026-10-26-pr427-ci-gate-closure",
+  "taskDoc": "docs/harness/tasks/2026-10-26-pr427-ci-gate-closure.task.md",
+  "title": "Closing PR #427's hosted gates in code: Go Lint, Sonar new-code rules and duplication, the L2 smoke password locator, and one CodeQL review comment",
+  "goal": "PR #427 reached the hosted chain with four red signals on head e4a70094: the Go Lint job (5 golangci findings), SonarCloud Code Analysis (10 unresolved PR issues plus new-code duplication 198/5462 = 3.62% against a 3% threshold), PR Smoke Modules (2 failed cases, both strict-mode violations on getByLabel password locators) and Pull Request Automation > GitHub Feedback Prereq (a CodeQL review comment on frontend/scripts/tenant-matrix-fixture-setup.mjs:121 classified actionable-change and printing BLOCKED). Every one was closed by changing code or by the disposition the repository already records for that exact class, and none by weakening a gate: no linter rule, threshold, scan set or enable list was edited, no baseline entry was added, no failing test was skipped or deleted, and the Sonar Quality Gate definition was not touched. The lint findings became renames (tenant.TenantPlan -> tenant.Plan, with the tenant contract docs following), named constants for repeated GORM predicates and the four built-in plan codes, one deleted unused helper, and a three-helper split of syncRoleAPIPolicies that had grown to cognitive complexity 25. The Sonar vulnerability keeps the row-level '// NOSONAR gosecurity:S3649' suppression the repo already uses in tenant_service.go, re-anchored onto the line Sonar actually reports. The duplication came down by extracting the table shell, the four loading branches and the cell renderers that TenantOverview.tsx and TenantMemberList.tsx each carried a copy of. The smoke fix retargets the locators at input[type=password] the way tests/smoke/helpers/auth.ts already does, because giving the visibility toggle an accessible name in the previous round made 'Password'/'密码' resolve to two nodes - the a11y label stays, the test stops guessing. The CodeQL alert is the same js/file-access-to-http instance class already dismissed five times (alerts 90-94) with 'used in tests' for this fixture family, per SECURITY.md > GitHub Security Surfaces ('fix, or dismiss with a reason'), so 95 and 96 were dismissed with that same comment and the feedback gate now exits 0. A fifth signal then appeared behind those repairs (CI-08): this round's own role-policy sync means the list-only viewer fixture re-asks for a grant the role already holds, and the fixture now accepts only that conflict while every other non-200 still fails the run.",
+  "primaryLayer": "system/iam",
+  "dependencyLayers": [
+    "app",
+    "platform"
+  ],
+  "status": "completed",
+  "priority": "P2",
+  "type": "ci-gate-closure",
+  "estimatedComplexity": "medium",
+  "runtimeSensitive": true,
+  "contractAnchors": [
+    "docs/contracts/TENANT_CONTRACT_V1.md",
+    "docs/contracts/TENANT_CONTRACT_V1.en.md",
+    "backend/.golangci.yml",
+    ".github/workflows/quality.yml",
+    "SECURITY.md",
+    "docs/harness/VERIFICATION_EVIDENCE_SPEC.md",
+    "backend/pkg/common/error.go",
+    "backend/modules/system/iam/permission/permission_workbench.go"
+  ],
+  "findings": [
+    "CI-01 (closed): Go Lint reported 5 findings on head e4a70094. Repaired in code; golangci-lint run --new-from-rev=main ./... in backend now prints '0 issues' and exits 0, and the hosted Go Lint job is success on the follow-up head.",
+    "CI-02 (closed): SonarCloud PR analysis carried 10 unresolved issues (1 BLOCKER gosecurity:S3649, 4 CRITICAL go:S1192, 2 CRITICAL S3776, 2 MAJOR typescript:S3358, 1 CRITICAL typescript:S3776). All are addressed in code; measured after the first push the unresolved count is 2 (the BLOCKER stayed because the NOSONAR sat on the closing line of a multi-line statement while Sonar reports the statement's first line, plus one MINOR typescript:S6759 the extraction introduced), and both are fixed in the follow-up commit of this round.",
+    "CI-03 (closed): new-code duplication 198 duplicated lines of 5462 (3.62%) against the gate's 3%. 160 of the 198 came from TenantOverview.tsx and TenantMemberList.tsx each carrying their own table shell, loading-state branches and cell renderers. After the extraction the measured pair is 46/5614 = 0.82%.",
+    "CI-04 (closed): PR Smoke Modules failed 2 cases with 'strict mode violation: getByLabel(Password) resolved to 2 elements'. Root cause is the previous round's own a11y repair: the visibility toggle is now a real button named 显示密码/隐藏密码, which getByLabel matches as a substring. The labels are correct and stay; the three locators that filled the field now select input[type=password], the convention tests/smoke/helpers/auth.ts:82 already used.",
+    "CI-05 (closed): GitHub Feedback Prereq blocked on CodeQL review comment #discussion_r4375038750 (js/file-access-to-http at frontend/scripts/tenant-matrix-fixture-setup.mjs:121). Dismissed as 'used in tests' with the same rationale already recorded on alerts 90-94, because the flow is a dev-only fixture replaying its own gitignored .tmp manifest against the local smoke API; fetch-github-feedback.mjs --check then exits 0 and the hosted job is success on re-run.",
+    "CI-08 (closed): PR Smoke Modules then failed one case deterministically (both attempts) - tests/smoke/system/system-platform.spec.ts:208 with 'expect(200).toBe' receiving 400 at tests/smoke/system/system-pages-helpers.ts:675. This round's own backend change is the cause: syncRoleAPIPolicies writes the API routes a permission key declares when the role is saved, so the list-only fixture's manual grant of GET /api/v1/lowcode/dynamic-modules - which permission_workbench.go:642 binds to system:module:list - is already present, and PermissionService.ensurePolicyUnique answers the repeated (subject, path, method) triple with common.NewConflict(\"permission.policy.exists\"), which CodeForError maps to 400 because the envelope has no 409. The duplicate-conflict contract is correct and stays; the fixture was changed to accept only that message, and the same local helper in tests/smoke/platform/system-secondary-route-permission.spec.ts was given the same tolerance (its system:user:list role declares GET /api/v1/system/user/list, so it would fail the next time that suite runs). Proven on a live backend, not inferred: a throwaway role created with permissionKeys [system:module:list] came back with policies ['GET /api/v1/lowcode/dynamic-modules'], the repeated POST returned {code:400,message:'permission.policy.exists'}, and a genuine failure on the same code path (unknown roleKey) returned {code:400,message:'permission.role.invalid'} - which the tolerant assertion still rejects.",
+    "CI-06 (observed, not a defect): the hosted golangci-lint step is continue-on-error: true, so the step's conclusion is success while steps.go-lint.outcome is failure and the real red is the 'Enforce go-lint gate' step. A reader who only looks at the step list sees green. Registered here because it made the first diagnosis slower than it needed to be; changing the workflow is a gate-policy decision left to the maintainer.",
+    "CI-07 (environment limit): the local bare golangci-lint run ./... reports 73 repo-wide issues (goconst 10 / gosec 13 / revive 50) that the CI gate never sees because CI lints --new-from-rev. Only the CI-equivalent form is evidence for this gate; the bare number is recorded so nobody reads the 0 as 'the repo is lint-clean'.",
+    "CI-09 (closed, self-inflicted): the first 24-checker strict run of this round was 21/24 green, and the three reds were this round's own governance artifacts. The task packet was written without 9 of the 13 template sections and put prose where Primary Layer expects an enum value; taskManifest.implementationNotes was one long string where check-visual-evidence requires an array of strings; check-adoption reported the changed smoke spec as an implementation change without matching verification evidence because commands.json did not exist yet. All three closed by completing the artifacts, with no checker edited, plus two enum corrections only the checkers could reveal: coverageDimensions rejects test-observability and security-surface, and review.md's verdict must be one of four literals. Final run: 24/24 rc=0."
+  ],
+  "scope": {
+    "in": [
+      "Rename tenant.TenantPlan and its response field to Plan across the tenant package, its tests and the two TENANT_CONTRACT_V1 documents",
+      "Name the repeated GORM predicates (condIDEquals, condIDNotEquals, condStatusEquals, condStatusNotEquals, condPlanEquals, condDeletedAtMissing) and the four built-in plan codes, and delete the unused quotaLimitOrUnlimited helper",
+      "Split syncRoleAPIPolicies into rolePolicyRouteSets, deleteRetiredRolePolicies and missingRolePolicies with the writes unchanged",
+      "Keep the plan-update statement's gosecurity:S3649 suppression on the line Sonar reports, by hoisting the update map into a variable",
+      "Extract TenantListTable, TenantListBody and the shared cell renderers out of the two tenant operations pages into tenantListCells.tsx and TenantListParts.tsx, and annotate the extracted component's props as Readonly",
+      "Replace QuotaRatio's nested ternaries with one quotaTone function and the generator wizard's three inline prefix ternaries with tablePrefixForScope",
+      "Retarget the three password locators in the smoke specs at input[type=password]",
+      "Let the list-only viewer fixture accept only the permission.policy.exists conflict, in both suites that carry a copy of that helper",
+      "Dismiss CodeQL alerts 95 and 96 with the recorded test-fixture rationale and re-run the failed Pull Request Automation job",
+      "Re-run the backend package tests against a real MySQL DSN with PANTHEON_TEST_DSN_REQUIRED=1, the frontend compile/lint gates, and the 24-checker strict governance matrix"
+    ],
+    "out": [
+      "Editing golangci config, Sonar rules or the Quality Gate definition, adding a lint baseline, or skipping/shrinking a failing test",
+      "Turning POST /system/permission into an idempotent upsert; the duplicate (subject, path, method) conflict is what the permission page's own form reports to an operator, and CI-08 was fixed in the fixture that re-asked for a grant it already had",
+      "Changing the password toggle's accessible labels that the previous round introduced",
+      "Wiring the unobserved checkers into CI or adding npm scripts (FR-016/FR-017, maintainer decision)",
+      "Any write-side plan/quota enforcement or commercial semantics; quotas stay display-only",
+      "The 30 duplicated new lines in frontend/src/modules/system/iam/tenant/index.ts, where the routes and menus blocks are structurally similar but ModuleMenuMeta has no consumer anywhere in the repo"
+    ]
+  },
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "governance-evidence-integrity",
+    "portableFailureClass": "hosted-gate-drift",
+    "ownerLayer": "consumer-repository",
+    "ratchetDecision": "code-repaired",
+    "coverageDimensions": [
+      "behaviour",
+      "runtime-quality",
+      "method-health",
+      "maintainability"
+    ]
+  },
+  "expectedFiles": {
+    "create": [
+      "docs/harness/tasks/2026-10-26-pr427-ci-gate-closure.task.md",
+      ".harness/tasks/2026-10-26-pr427-ci-gate-closure/manifest.json",
+      ".harness/evidence/2026-10-26-pr427-ci-gate-closure/commands.json",
+      ".harness/evidence/2026-10-26-pr427-ci-gate-closure/review.md",
+      ".harness/evidence/2026-10-26-pr427-ci-gate-closure/summary.md",
+      "frontend/src/modules/system/iam/tenant/tenantListCells.tsx",
+      "frontend/src/modules/system/iam/tenant/TenantListParts.tsx"
+    ],
+    "modify": [
+      "backend/modules/system/iam/tenant/tenant_plan_model.go",
+      "backend/modules/system/iam/tenant/tenant_plan_store.go",
+      "backend/modules/system/iam/tenant/tenant_ops_view.go",
+      "backend/modules/system/iam/tenant/tenant_production.go",
+      "backend/modules/system/iam/tenant/tenant_service.go",
+      "backend/modules/system/iam/tenant/tenant_ops_view_test.go",
+      "backend/modules/system/iam/tenant/tenant_plan_store_test.go",
+      "backend/modules/system/iam/tenant/tenant_service_test.go",
+      "backend/modules/system/iam/role/role_policy_sync.go",
+      "backend/modules/system/iam/user/user_helper.go",
+      "backend/modules/system/seed.go",
+      "docs/contracts/TENANT_CONTRACT_V1.md",
+      "docs/contracts/TENANT_CONTRACT_V1.en.md",
+      "frontend/src/modules/system/iam/tenant/TenantOverview.tsx",
+      "frontend/src/modules/system/iam/tenant/TenantMemberList.tsx",
+      "frontend/src/modules/system/iam/tenant/QuotaRatio.tsx",
+      "frontend/src/modules/lowcode/generator/pages/ModuleWizard.tsx",
+      "frontend/tests/smoke/system/system-config.spec.ts",
+      "frontend/tests/smoke/system/system-pages-helpers.ts",
+      "frontend/tests/smoke/platform/system-secondary-route-permission.spec.ts",
+      "frontend/tests/smoke-core/tenant-viewpoint-switcher.spec.ts",
+      "frontend/tests/smoke/system/governance/permission-workbench-remediation-real.spec.ts"
+    ],
+    "doNotTouch": [
+      "backend/.golangci.yml, sonar.* config and .github/workflows/quality.yml (no rule, threshold, scan set or enable list edited)",
+      "Any commands[].status of a previous evidence round",
+      "The password visibility toggle aria-labels introduced by 2026-10-26-login-accessibility-and-lang"
+    ]
+  },
+  "implementationNotes": [
+    "Four hosted reds, four different owners of truth: the linter config, the Sonar PR measures, Playwright's strict mode, and the feedback classifier's default for open review threads. Only the second and third needed a judgement call - the S3649 suppression had to move to the line Sonar actually reports, and the smoke fix had to choose between reverting last round's accessibility work or retargeting the test - and both went the way that keeps the earlier decision intact.",
+    "Four hosted reds and one self-inflicted regression share one constraint: the repair may not be the gate. The lint findings were renamed and extracted rather than filtered, the S3649 suppression moved to the line Sonar reports rather than turning the rule off, the duplication was removed by deleting a copy rather than raising the 3% threshold, and the smoke locator was retargeted at the field rather than by relaxing Playwright strict mode or by undoing the previous rounds accessible toggle.",
+    "CI-08 is the second-order case: the role-save policy sync this branch adds grants API routes the permission keys already declare, so three smoke fixtures that POST the same (roleKey, path, method) now get permission.policy.exists back as HTTP 400. The conflict is a real product behaviour the permission page form depends on, so the fixtures learned to accept an already-granted route instead of the endpoint becoming an idempotent upsert, and the workbench remediation spec now revokes the synced policy first so the gap it exercises actually exists."
+  ],
+  "verificationPlan": {
+    "commands": [
+      "cd backend && golangci-lint run --new-from-rev=main ./...",
+      "cd backend && go build ./... && go vet ./modules/system/... && gofmt -l .",
+      "cd backend && PANTHEON_TEST_DSN_REQUIRED=1 go test ./modules/system/...",
+      "cd frontend && node node_modules/typescript/bin/tsc -b",
+      "cd frontend && node node_modules/eslint/bin/eslint.js src --max-warnings 0",
+      "node scripts/fetch-github-feedback.mjs --check --repo duanxldragon/pantheon-base --pr 427",
+      "node scripts/harness/check-evidence.mjs --root . --strict",
+      "node scripts/harness/check-review.mjs --root . --strict"
+    ],
+    "runtimeEvidence": [
+      "golangci-lint --new-from-rev=main: 0 issues, exit 0",
+      "go test ./modules/system/... with PANTHEON_TEST_DSN_REQUIRED=1: all packages ok, no skips",
+      "hosted Code Quality Gates on the follow-up head: Go Lint success, Backend Tests success, Duplication Gate success",
+      "Sonar PR measures: unresolved issues 10 -> 2 -> 0, new-code duplication 3.62% -> 0.82%"
+    ]
+  },
+  "linkage": {
+    "taskId": "2026-10-26-pr427-ci-gate-closure",
+    "taskManifest": ".harness/tasks/2026-10-26-pr427-ci-gate-closure/manifest.json",
+    "assessment": "docs/harness/tasks/2026-10-26-pr427-ci-gate-closure.task.md",
+    "openspecChange": "none",
+    "superpowersPlan": "none",
+    "evidenceDir": ".harness/evidence/2026-10-26-pr427-ci-gate-closure/",
+    "summaryFile": ".harness/evidence/2026-10-26-pr427-ci-gate-closure/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-26-pr427-ci-gate-closure/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/contracts/TENANT_CONTRACT_V1.md",
+      "docs/harness/tasks/2026-10-26-tenant-plan-assignment.task.md",
+      "docs/harness/tasks/2026-10-26-login-accessibility-and-lang.task.md"
+    ]
+  }
+}

@@ -367,7 +367,7 @@ func (s *RoleService) CreateRole(req *RoleCreateReq) (*RoleListResp, error) {
 		if err := s.upsertRoleDataScopePolicy(tx, role.RoleKey, dataScope); err != nil {
 			return err
 		}
-		return nil
+		return syncRoleAPIPolicies(tx, rolePolicySubject(role.RoleKey, role.TenantID), permissionKeys)
 	}); err != nil {
 		// The key pre-check cannot be atomic: two callers carrying the same key
 		// both pass it and the loser only finds out at the UNIQUE index. Answer
@@ -376,6 +376,10 @@ func (s *RoleService) CreateRole(req *RoleCreateReq) (*RoleListResp, error) {
 		if database.IsDuplicateKey(err) {
 			return nil, common.NewConflict("role.key.exists")
 		}
+		return nil, err
+	}
+
+	if err := reloadRolePolicies(); err != nil {
 		return nil, err
 	}
 
@@ -426,6 +430,10 @@ func (s *RoleService) UpdateRole(roleID uint64, req *RoleUpdateReq) (*RoleListRe
 		return nil, err
 	}
 
+	if err := reloadRolePolicies(); err != nil {
+		return nil, err
+	}
+
 	return buildRoleListResp(role, menuIDs, permissionKeys, dataScope), nil
 }
 
@@ -443,6 +451,9 @@ func (s *RoleService) updateRoleInTransaction(tx *gorm.DB, role *SystemRole, old
 		if err := migrateRolePolicySubject(tx, oldRoleKey, role.RoleKey, role.TenantID); err != nil {
 			return err
 		}
+	}
+	if err := syncRoleAPIPolicies(tx, rolePolicySubject(role.RoleKey, role.TenantID), permissionKeys); err != nil {
+		return err
 	}
 	return s.upsertRoleDataScopePolicyPreservingCustomDepts(tx, oldRoleKey, role.RoleKey, dataScope)
 }

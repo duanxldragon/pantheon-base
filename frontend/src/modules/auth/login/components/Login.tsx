@@ -35,6 +35,7 @@ import { findFirstNavigableMenuPath } from '../../../system/iam/menu/api';
 import { useAuthStore } from '../../../../store/useAuthStore';
 import { useMenuStore } from '../../../../store/useMenuStore';
 import { useTenantSessionStore } from '../../../../store/useTenantSessionStore';
+import PasswordInput from '../../../../components/patterns/forms/PasswordInput';
 import ThemeSwitcher from '../../../../core/theme/ThemeSwitcher';
 import { clearShellSessionState, LOGIN_NOTICE_STORAGE_KEY } from '../../../../core/shellState';
 import { clearTenantViewpoint } from '../../../../core/tenant/viewpoint';
@@ -451,7 +452,7 @@ export function LoginPageComponent() {
               field="password"
               rules={[{ required: true, message: t('auth.passwordRequired') }]}
             >
-              <Input.Password
+              <PasswordInput
                 disabled={Boolean(mfaChallenge)}
                 prefix={<IconLock />}
                 placeholder={t('auth.passwordPlaceholder')}

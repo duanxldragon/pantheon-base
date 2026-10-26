@@ -1,0 +1,280 @@
+{
+  "taskId": "2026-10-26-login-accessibility-and-lang",
+  "repo": "pantheon-base",
+  "executedAt": "2026-10-26T13:55:00+08:00",
+  "agent": {
+    "tool": "other",
+    "adapter": "qoder-agent"
+  },
+  "runtimeSensitive": false,
+  "knownGaps": [
+    "SecondaryVerifyModal's toggle was not re-audited in this browser pass. Its step-up prompt is raised client-side before a write (handleSaveDatasource calls ensureOperationVerified() after form validation and before the POST), and every reachable trigger in the current local data set is disabled: session revoke rows are self-only so 下线会话 renders disabled, and the generator datasource list is empty so no 测试连接 row exists. Opening it now would have meant performing a real destructive write, which is out of scope. The file is migrated to the shared component, the shared component has five unit tests with a rollback differential, and the static gate forbids raw Input.Password; the modal itself was observed earlier in this round rendering one password field.",
+    "frontend 'npm run format:check' (prettier, not a CI gate) still warns on pre-existing debt at HEAD; only the files added or touched by this work were normalised.",
+    "The pre-paint locale list in index.html duplicates SUPPORTED_LOCALES from src/i18n/index.ts. A missed update only mislabels the first frame, because the i18next languageChanged subscription rewrites document.documentElement.lang at init; a build-time template for a five-item list was judged not worth it.",
+    "Nothing was committed, pushed, or turned into a PR — no such request was made.",
+    "The lang probe prints all 14 assertions green and then hangs in browser teardown; the run was stopped after the summary was already emitted. Not a product defect: the same pages close normally in the other probes.",
+    "Screenshots referenced from browserEvidence are written to frontend/.tmp/login-shots/, which is gitignored scratch space. They are acceptance artifacts for this round, not committed evidence assets.",
+    "The repo-wide governance chain is not green and was not made green by this round: node scripts/harness/check-evidence.mjs --strict returns 1 from 7 evidence directories predating 2026-10-26 (missing knownGaps/linkage/runtimeSensitive fields), and check-review.mjs --strict returns 1 from 24 historical review.md files. No file in those directories is modified in the working tree; repairing them is a separate, explicitly unrequested governance-cleanup task."
+  ],
+  "commands": [
+    {
+      "command": "node node_modules/typescript/bin/tsc -b",
+      "cwd": "frontend",
+      "status": "passed",
+      "notes": "rc=0 after the 12-site Input.Password -> PasswordInput sweep and the i18n change."
+    },
+    {
+      "command": "node node_modules/eslint/bin/eslint.js src --max-warnings 0",
+      "cwd": "frontend",
+      "status": "passed",
+      "notes": "rc=0."
+    },
+    {
+      "command": "node node_modules/vitest/vitest.mjs run tests/unit/components/patterns/forms/PasswordInput.test.tsx",
+      "cwd": "frontend",
+      "status": "passed",
+      "notes": "5 tests. Rollback diff run twice: deleting the stopPropagation() call fails only 'keeps focus on the toggle after activating it' (activeElement becomes the <input>), deleting the aria-label fails all 5."
+    },
+    {
+      "command": "node node_modules/vitest/vitest.mjs run tests/unit/i18n/document-lang.test.ts",
+      "cwd": "frontend",
+      "status": "passed",
+      "notes": "3 tests. Rollback diff: disabling the documentElement.lang write and the languageChanged subscription fails all 3."
+    },
+    {
+      "command": "node node_modules/vitest/vitest.mjs run",
+      "cwd": "frontend",
+      "status": "passed",
+      "notes": "34 test files / 230 tests passed, including the two new files."
+    },
+    {
+      "command": "node ./scripts/check-password-toggle.mjs",
+      "cwd": "frontend",
+      "status": "passed",
+      "notes": "0 findings across 254 files. Planted a temporary src/__toggle_probe.tsx using Input.Password: 1 finding, rc=1; deleted it and the check returned to 0 findings / rc=0."
+    },
+    {
+      "command": "for s in check-menu-contract check-i18n-hardcode check-i18n-generated-scope check-system-datetime-presentation check-shell-visual-contract check-ui-contract check-password-toggle check-search-toolbar-contract check-important-budget check-system-page-admission check-smoke-web-base check-smoke-coverage-contract check-import-path-case; do node ./scripts/$s.mjs; done",
+      "cwd": "frontend",
+      "status": "passed",
+      "notes": "All 13 entries of the prebuild chain rc=0, including the newly wired check-password-toggle. Git Bash exposes no npm, so the chain was replayed script by script."
+    },
+    {
+      "command": "node scripts/audit-i18n-locales.mjs && node scripts/check-contrast.mjs",
+      "cwd": "frontend",
+      "status": "passed",
+      "notes": "Locale parity holds for auth.password.show / auth.password.hide (grep: 2 occurrences in each of zh-CN, en-US, ja-JP, ko-KR, fr-FR); contrast AA still passes in both modes."
+    },
+    {
+      "command": "node --test tests/scripts/check-ui-quality-gate.test.mjs",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "3 tests after adding frontend/scripts/check-password-toggle.mjs to config/ui-quality-gate.json enforcement.existingStaticChecks and to the test fixture copy list."
+    },
+    {
+      "command": "node .tmp/lang-toggle-probe.cjs",
+      "cwd": "frontend",
+      "status": "passed",
+      "notes": "14 assertions, all green: document.documentElement.lang correct for all five stored locales, an unknown stored value falls back to zh-CN, switching 中文 to English on the login page updates the attribute without a reload and persists pantheon_lang, and the login card toggle is a named button (Show/Hide password) with zero unnamed focusable svg, focus retained and repeatable activation."
+    },
+    {
+      "command": "node .tmp/f08-auth-probe.cjs",
+      "cwd": "frontend",
+      "status": "passed",
+      "notes": "8 assertions green plus one explicit SKIP. Logged in as the seeded admin, reached /dashboard, then on /system/user: the create-user modal exposes one named 显示密码 button, zero unnamed focusable svg, Enter keeps focus and flips the label to 隐藏密码; the reset-password modal exposes two named toggles with the same behaviour."
+    },
+    {
+      "command": "node .tmp/login-visual-probe.cjs",
+      "cwd": "frontend",
+      "status": "passed",
+      "notes": "All assertions still pass across 10 viewports after the shared-component swap: card centred to 0.5px, tools pinned to the page corner on desktop, in-flow on phones, no horizontal overflow."
+    },
+    {
+      "command": "node .tmp/f08-deeplink-diag.cjs",
+      "cwd": "frontend",
+      "status": "passed",
+      "notes": "Rule-out run for the earlier tenant/setting/generator FAILs: /system/tenant, /system/setting and /system/generator deep links all hold their URL and render their heading at 0.5s, 1.5s, 2.5s and 6.5s after domcontentloaded, so the failures were probe timing (querying the DOM before React painted), not an app redirect defect. The sweep was rewritten to wait for rendered buttons."
+    },
+    {
+      "command": "node .tmp/f08-sweep2.cjs",
+      "cwd": "frontend",
+      "status": "passed",
+      "notes": "8 assertions green after the settle fix: tenant create modal (one named toggle, zero unnamed svg, Enter keeps focus and flips to 隐藏密码) and the encrypted rows of the upload setting group (two named toggles). The other seven setting groups report no encrypted field and are logged as SKIP, not as a pass."
+    },
+    {
+      "command": "node .tmp/f08-sweep3.cjs",
+      "cwd": "frontend",
+      "status": "passed",
+      "notes": "Generator datasource modal: switching the source-mode select from 手工建模 to 从数据库表导入 then opening 数据源管理 renders one named toggle, zero unnamed svg, and Enter keeps focus on the button. Reached via the select, not a radio — the earlier radio assumption was the probe's mistake."
+    },
+    {
+      "command": "node .tmp/f08-final-sweep.cjs",
+      "cwd": "frontend",
+      "status": "passed",
+      "notes": "Consolidated single-session pass over the surfaces: 22 items, 19 PASS, 3 explicit SKIP (secondary-verify, lock, security-center), 0 FAIL. Covers login page, user create, reset password (two fields), tenant create and setting upload with named-toggle, no-unnamed-svg and focus-retained assertions each."
+    },
+    {
+      "command": "node .tmp/f08-rest.cjs",
+      "cwd": "frontend",
+      "status": "passed",
+      "notes": "Security centre is reachable at /auth/security, not /system/security (handleGoSecurity in src/core/layout/AppLayout.tsx). Its overview renders three migrated password fields: named 显示密码 x3, zero unnamed focusable svg, Enter keeps focus. This retracts finding F-10, which had been raised from a deep link to a navigation group with an empty component. Session rows show 下线会话 disabled for every row because they all belong to the signed-in admin."
+    },
+    {
+      "command": "node .tmp/f08-lock-only.cjs",
+      "cwd": "frontend",
+      "status": "passed",
+      "notes": "Screen-lock view verified through its own persistence switch (sessionStorage pantheon_shell_locked=1, then reload) instead of the user-menu click: one named 显示密码 toggle, zero unnamed focusable svg, Enter keeps focus and flips to 隐藏密码. Chosen because the Arco Dropdown wrapping the Menu does not open for a synthetic .click() in Chromium (aria-expanded stays false), which is a harness limitation, not a product defect."
+    },
+    {
+      "command": "node scripts/harness/check-task-packet.mjs",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "exit 0. Repo-wide sweep of docs/harness/tasks: every packet PASSes, including 2026-10-26-login-accessibility-and-lang.task.md and 2026-10-26-tenant-plan-assignment.task.md written this session. (The concatenated form originally planned for this slot was abandoned: check-task-packet has no --strict flag and treats it as a file argument, returning [FAIL] --strict.)"
+    },
+    {
+      "command": "node scripts/harness/check-evidence.mjs --strict",
+      "cwd": ".",
+      "status": "failed",
+      "notes": "exit 1 — 7 evidence directories FAIL, all pre-existing and outside this round: 2026-10-20-tenant-audit-permission-seed (linkage), 2026-10-20-tenant-delivery-hardening (knownGaps, linkage), 2026-10-22-delivery-audit-remediation (runtimeSensitive, runtimeGap, taskManifest), 2026-10-22-tenant-plan-entitlements-and-audit (knownGaps, linkage), 2026-10-22-v0171-release-closeout (runtimeSensitive, runtimeGap), 2026-10-23-residual-closeout (knownGaps, linkage), 2026-10-23-v0173-release-closeout (knownGaps, linkage). git status shows none of these files modified in the working tree. Both 2026-10-26 directories PASS: .harness/evidence/2026-10-26-login-accessibility-and-lang/commands.json and .harness/evidence/2026-10-26-tenant-plan-assignment/commands.json (the latter now carries the linkage block that was missing). Follow-up (same day, after maintainer authorisation): all 7 FAILs and this command's exit code were closed structurally by .harness/evidence/2026-10-26-governance-evidence-schema-backfill/commands.json, which now re-runs this checker at exit 0 across 54 files; the status above is left as the measurement taken during this round."
+    },
+    {
+      "command": "node scripts/harness/check-review.mjs --strict",
+      "cwd": ".",
+      "status": "failed",
+      "notes": "exit 1 — 24 FAIL / 29 PASS, all FAILs historical and unmodified in the working tree. Both review artifacts written this session PASS: .harness/evidence/2026-10-26-login-accessibility-and-lang/review.md and .harness/evidence/2026-10-26-tenant-plan-assignment/review.md. Follow-up (same day, after maintainer authorisation): all 24 FAILs were closed by appending or correcting Machine Readable blocks only, by .harness/evidence/2026-10-26-governance-evidence-schema-backfill/, which re-runs this checker at exit 0 / 0 errors across 54 files; the git diff proves the 22 appended files have 0 deletions and no commands[].status line moved."
+    },
+    {
+      "command": "node scripts/harness/check-structure-contract.mjs --strict && node scripts/harness/check-failure-registry.mjs --strict && node scripts/harness/check-ui-quality-gate.mjs && node scripts/harness/check-doc-frontmatter.mjs && node scripts/harness/check-doc-links.mjs && node scripts/harness/check-doc-inventory.mjs && node scripts/harness/check-sync-drift.mjs",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "every checker exit 0. Structure contract, failure registry (docs/harness/failure-registry.md, 0 errors / 0 warnings), UI quality gate (includes the new check-password-toggle ratchet), doc frontmatter for the two new task packets, doc links, doc inventory and sync drift."
+    }
+  ],
+  "browserEvidence": [
+    {
+      "surface": "login-card",
+      "viewport": "1440x900",
+      "url": "http://127.0.0.1:5173/login",
+      "screenshot": "frontend/.tmp/login-shots/f08-login-page.png",
+      "consoleErrors": [],
+      "assertions": [
+        "named toggle: 显示密码",
+        "unnamed focusable svg: 0",
+        "password inputs: 1",
+        "Enter on the focused toggle keeps focus and flips the label to 隐藏密码"
+      ]
+    },
+    {
+      "surface": "user-create-modal",
+      "viewport": "1440x900",
+      "url": "http://127.0.0.1:5173/system/user",
+      "screenshot": "frontend/.tmp/login-shots/f08-user-create.png",
+      "consoleErrors": [],
+      "assertions": [
+        "named toggle: 显示密码 x1",
+        "unnamed focusable svg: 0",
+        "Enter keeps focus on the toggle"
+      ]
+    },
+    {
+      "surface": "user-reset-password-modal",
+      "viewport": "1440x900",
+      "url": "http://127.0.0.1:5173/system/user",
+      "screenshot": "frontend/.tmp/login-shots/f08-user-reset-password.png",
+      "consoleErrors": [],
+      "assertions": [
+        "named toggle: 显示密码 x2",
+        "unnamed focusable svg: 0",
+        "Enter keeps focus on the toggle"
+      ]
+    },
+    {
+      "surface": "tenant-create-modal",
+      "viewport": "1440x900",
+      "url": "http://127.0.0.1:5173/system/tenant",
+      "screenshot": "frontend/.tmp/login-shots/f08-tenant-create.png",
+      "consoleErrors": [],
+      "assertions": [
+        "administrator password field uses the shared toggle",
+        "named toggle: 显示密码 x1",
+        "unnamed focusable svg: 0",
+        "Enter keeps focus on the toggle"
+      ]
+    },
+    {
+      "surface": "setting-upload-encrypted-rows",
+      "viewport": "1440x900",
+      "url": "http://127.0.0.1:5173/system/setting/upload",
+      "screenshot": "frontend/.tmp/login-shots/f08-setting-upload.png",
+      "consoleErrors": [],
+      "assertions": [
+        "isEncrypted rows render as password fields: 2",
+        "named toggle: 显示密码 x2",
+        "unnamed focusable svg: 0",
+        "Enter keeps focus on the toggle",
+        "the other seven setting groups render no encrypted field (logged as SKIP)"
+      ]
+    },
+    {
+      "surface": "generator-datasource-modal",
+      "viewport": "1440x900",
+      "url": "http://127.0.0.1:5173/system/generator",
+      "screenshot": "frontend/.tmp/login-shots/f08-generator-datasource.png",
+      "consoleErrors": [],
+      "assertions": [
+        "source mode switched to 从数据库表导入 via the Arco select, then 数据源管理 opened",
+        "named toggle: 显示密码 x1",
+        "unnamed focusable svg: 0",
+        "Enter keeps focus on the toggle"
+      ]
+    },
+    {
+      "surface": "security-centre",
+      "viewport": "1440x900",
+      "url": "http://127.0.0.1:5173/auth/security",
+      "screenshot": "frontend/.tmp/login-shots/f08-security-center.png",
+      "consoleErrors": [],
+      "assertions": [
+        "three migrated password fields rendered",
+        "named toggle: 显示密码 x3",
+        "unnamed focusable svg: 0",
+        "Enter keeps focus on the toggle",
+        "retracts F-10: the page is reachable at /auth/security, the earlier unreachable result came from deep-linking the /system/security navigation group"
+      ]
+    },
+    {
+      "surface": "screen-lock",
+      "viewport": "1440x900",
+      "url": "http://127.0.0.1:5173/dashboard",
+      "screenshot": "frontend/.tmp/login-shots/f08-lock.png",
+      "consoleErrors": [],
+      "assertions": [
+        "locked shell view reached through sessionStorage pantheon_shell_locked=1 plus reload",
+        "named toggle: 显示密码 x1",
+        "unnamed focusable svg: 0",
+        "Enter keeps focus on the toggle"
+      ]
+    },
+    {
+      "surface": "secondary-verification-modal",
+      "viewport": "1440x900",
+      "url": "http://127.0.0.1:5173/system/session",
+      "visualGap": "Not re-audited in this pass. The step-up prompt is raised client-side before a write and every trigger available in the local data set is disabled (all 下线会话 rows belong to the signed-in admin; the generator datasource list is empty so there is no connection-test row), so forcing it open would have required a real destructive write. Earlier in the round the modal was observed open with one password field.",
+      "consoleErrors": [],
+      "assertions": [
+        "file migrated to the shared component and forbidden by check:password-toggle",
+        "shared component carries five unit tests with a rollback differential"
+      ]
+    }
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-26-login-accessibility-and-lang/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-26-login-accessibility-and-lang/",
+    "reviewFile": ".harness/evidence/2026-10-26-login-accessibility-and-lang/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "DESIGN.md",
+      "docs/harness/VERIFICATION_EVIDENCE_SPEC.md"
+    ]
+  }
+}

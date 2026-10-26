@@ -1,0 +1,310 @@
+[
+  {
+    "key": "login",
+    "path": "/login",
+    "title": "登录",
+    "layer": "auth",
+    "titleVisible": true,
+    "brokenState": [],
+    "consoleErrors": [],
+    "horizontalOverflow": null,
+    "dialogOpened": null,
+    "dialogOverflow": null,
+    "dialogEmpty": null,
+    "notes": []
+  },
+  {
+    "key": "dashboard",
+    "path": "/dashboard",
+    "title": "工作台",
+    "layer": "platform",
+    "titleVisible": false,
+    "brokenState": [],
+    "consoleErrors": [],
+    "horizontalOverflow": null,
+    "dialogOpened": null,
+    "dialogOverflow": null,
+    "dialogEmpty": null,
+    "notes": [
+      "page title \"工作台\" not visible"
+    ]
+  },
+  {
+    "key": "auth-security",
+    "path": "/auth/security",
+    "title": "安全中心",
+    "layer": "system/auth",
+    "titleVisible": false,
+    "brokenState": [],
+    "consoleErrors": [],
+    "horizontalOverflow": null,
+    "dialogOpened": null,
+    "dialogOverflow": null,
+    "dialogEmpty": null,
+    "notes": [
+      "page title \"安全中心\" not visible"
+    ]
+  },
+  {
+    "key": "login-log",
+    "path": "/system/login-log",
+    "title": "登录日志",
+    "layer": "system/auth",
+    "titleVisible": false,
+    "brokenState": [],
+    "consoleErrors": [],
+    "horizontalOverflow": null,
+    "dialogOpened": null,
+    "dialogOverflow": null,
+    "dialogEmpty": null,
+    "notes": [
+      "page title \"登录日志\" not visible"
+    ]
+  },
+  {
+    "key": "session",
+    "path": "/system/session",
+    "title": "会话管理",
+    "layer": "system/auth",
+    "titleVisible": false,
+    "brokenState": [],
+    "consoleErrors": [],
+    "horizontalOverflow": null,
+    "dialogOpened": null,
+    "dialogOverflow": null,
+    "dialogEmpty": null,
+    "notes": [
+      "page title \"会话管理\" not visible"
+    ]
+  },
+  {
+    "key": "profile",
+    "path": "/system/profile",
+    "title": "个人中心",
+    "layer": "system/iam",
+    "titleVisible": false,
+    "brokenState": [],
+    "consoleErrors": [],
+    "horizontalOverflow": null,
+    "dialogOpened": null,
+    "dialogOverflow": null,
+    "dialogEmpty": null,
+    "notes": [
+      "page title \"个人中心\" not visible"
+    ]
+  },
+  {
+    "key": "user",
+    "path": "/system/user",
+    "title": "用户管理",
+    "layer": "system/iam",
+    "titleVisible": false,
+    "brokenState": [],
+    "consoleErrors": [],
+    "horizontalOverflow": null,
+    "dialogOpened": true,
+    "dialogOverflow": false,
+    "dialogEmpty": false,
+    "notes": [
+      "page title \"用户管理\" not visible"
+    ]
+  },
+  {
+    "key": "user-detail",
+    "path": "/system/user/1",
+    "title": "用户详情",
+    "layer": "system/iam",
+    "titleVisible": false,
+    "brokenState": [],
+    "consoleErrors": [],
+    "horizontalOverflow": null,
+    "dialogOpened": null,
+    "dialogOverflow": null,
+    "dialogEmpty": null,
+    "notes": [
+      "page title \"用户详情\" not visible"
+    ]
+  },
+  {
+    "key": "role",
+    "path": "/system/role",
+    "title": "角色管理",
+    "layer": "system/iam",
+    "titleVisible": false,
+    "brokenState": [],
+    "consoleErrors": [],
+    "horizontalOverflow": null,
+    "dialogOpened": false,
+    "dialogOverflow": null,
+    "dialogEmpty": null,
+    "notes": [
+      "page title \"角色管理\" not visible",
+      "create button \"新增\" not found"
+    ]
+  },
+  {
+    "key": "menu",
+    "path": "/system/menu",
+    "title": "菜单管理",
+    "layer": "system/iam",
+    "titleVisible": false,
+    "brokenState": [],
+    "consoleErrors": [],
+    "horizontalOverflow": null,
+    "dialogOpened": false,
+    "dialogOverflow": null,
+    "dialogEmpty": null,
+    "notes": [
+      "page title \"菜单管理\" not visible",
+      "create button \"新增\" not found"
+    ]
+  },
+  {
+    "key": "permission",
+    "path": "/system/permission",
+    "title": "权限管理",
+    "layer": "system/iam",
+    "titleVisible": false,
+    "brokenState": [],
+    "consoleErrors": [],
+    "horizontalOverflow": null,
+    "dialogOpened": false,
+    "dialogOverflow": null,
+    "dialogEmpty": null,
+    "notes": [
+      "page title \"权限管理\" not visible",
+      "create button \"新增\" not found"
+    ]
+  },
+  {
+    "key": "operation-log",
+    "path": "/system/operation-log",
+    "title": "操作日志",
+    "layer": "system/iam",
+    "titleVisible": false,
+    "brokenState": [],
+    "consoleErrors": [],
+    "horizontalOverflow": null,
+    "dialogOpened": null,
+    "dialogOverflow": null,
+    "dialogEmpty": null,
+    "notes": [
+      "page title \"操作日志\" not visible"
+    ]
+  },
+  {
+    "key": "dept",
+    "path": "/system/dept",
+    "title": "部门管理",
+    "layer": "system/org",
+    "titleVisible": false,
+    "brokenState": [],
+    "consoleErrors": [],
+    "horizontalOverflow": null,
+    "dialogOpened": false,
+    "dialogOverflow": null,
+    "dialogEmpty": null,
+    "notes": [
+      "page title \"部门管理\" not visible",
+      "create button \"新增\" not found"
+    ]
+  },
+  {
+    "key": "post",
+    "path": "/system/post",
+    "title": "岗位管理",
+    "layer": "system/org",
+    "titleVisible": false,
+    "brokenState": [],
+    "consoleErrors": [],
+    "horizontalOverflow": null,
+    "dialogOpened": false,
+    "dialogOverflow": null,
+    "dialogEmpty": null,
+    "notes": [
+      "page title \"岗位管理\" not visible",
+      "create button \"新增\" not found"
+    ]
+  },
+  {
+    "key": "dict",
+    "path": "/system/dict",
+    "title": "字典管理",
+    "layer": "system/config",
+    "titleVisible": false,
+    "brokenState": [],
+    "consoleErrors": [],
+    "horizontalOverflow": null,
+    "dialogOpened": false,
+    "dialogOverflow": null,
+    "dialogEmpty": null,
+    "notes": [
+      "page title \"字典管理\" not visible",
+      "create button \"新增\" not found"
+    ]
+  },
+  {
+    "key": "setting",
+    "path": "/system/setting",
+    "title": "系统设置",
+    "layer": "system/config",
+    "titleVisible": false,
+    "brokenState": [],
+    "consoleErrors": [],
+    "horizontalOverflow": null,
+    "dialogOpened": null,
+    "dialogOverflow": null,
+    "dialogEmpty": null,
+    "notes": [
+      "page title \"系统设置\" not visible"
+    ]
+  },
+  {
+    "key": "i18n",
+    "path": "/system/i18n",
+    "title": "国际化管理",
+    "layer": "system/config",
+    "titleVisible": false,
+    "brokenState": [],
+    "consoleErrors": [],
+    "horizontalOverflow": null,
+    "dialogOpened": null,
+    "dialogOverflow": null,
+    "dialogEmpty": null,
+    "notes": [
+      "page title \"国际化管理\" not visible"
+    ]
+  },
+  {
+    "key": "modules",
+    "path": "/system/modules",
+    "title": "模块注册表",
+    "layer": "system/lowcode",
+    "titleVisible": false,
+    "brokenState": [],
+    "consoleErrors": [],
+    "horizontalOverflow": null,
+    "dialogOpened": null,
+    "dialogOverflow": null,
+    "dialogEmpty": null,
+    "notes": [
+      "page title \"模块注册表\" not visible"
+    ]
+  },
+  {
+    "key": "generator",
+    "path": "/system/generator",
+    "title": "模块生成器",
+    "layer": "system/lowcode",
+    "titleVisible": false,
+    "brokenState": [],
+    "consoleErrors": [],
+    "horizontalOverflow": null,
+    "dialogOpened": null,
+    "dialogOverflow": null,
+    "dialogEmpty": null,
+    "notes": [
+      "page title \"模块生成器\" not visible"
+    ]
+  }
+]

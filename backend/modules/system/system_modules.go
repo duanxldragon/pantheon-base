@@ -262,13 +262,15 @@ func initIAMModules(deps *systemModuleDependencies) []contracts.BackendModule {
 			ModuleName: "tenant",
 			// MigrateFunc mirrors the permission module. RegisterBackendModules
 			// runs either Migrate() (PANTHEON_AUTO_MIGRATE=true, dev) or
-			// Bootstrap() (versioned-migration mode) — never both. The permission
+			// Bootstrap() (versioned-migration mode) — never both. Migrate adds
+			// the plan-definition table (migration 000030 owns it in versioned
+			// mode) and then runs the same repairs. The permission
 			// bootstrap purges casbin policies whose subject is not a live
 			// system_role.role_key, which includes every tenant-domain subject
 			// `role:<key>@tenant:<id>`. Without this repair on the Migrate path a
 			// dev-mode boot strips every tenant role policy and each tenant user
 			// answers 403 permission.denied on every page. Idempotent/additive.
-			MigrateFunc:   func(_ *gorm.DB) error { return deps.tenantSvc.Bootstrap() },
+			MigrateFunc:   func(_ *gorm.DB) error { return deps.tenantSvc.Migrate() },
 			BootstrapFunc: func(_ *gorm.DB) error { return deps.tenantSvc.Bootstrap() },
 			SeedMenusFunc: seedTenantModuleMenus,
 			Register: func(r *gin.RouterGroup) {
@@ -293,6 +295,15 @@ func initIAMModules(deps *systemModuleDependencies) []contracts.BackendModule {
 					systemProtected.GET("/tenant/:id/members", deps.tenantHandler.ListTenantMembers)
 					systemProtected.POST("/tenant/:id/members", deps.tenantHandler.AddTenantMember)
 					systemProtected.DELETE("/tenant/:id/members/:userId", middleware.SecureActionMiddleware(), deps.tenantHandler.RemoveTenantMember)
+					// Tenant-ops console (contract §2.5): the platform-global
+					// rollup, the cross-tenant member listing and the plan
+					// editor. Separate path segment from /tenant/:id so no static
+					// route competes with the wildcard.
+					systemProtected.GET("/tenant-ops/overview", deps.tenantHandler.GetOverview)
+					systemProtected.GET("/tenant-ops/member", deps.tenantHandler.ListAllMembers)
+					systemProtected.GET("/tenant-ops/plan/list", deps.tenantHandler.ListPlans)
+					systemProtected.POST("/tenant-ops/plan", deps.tenantHandler.CreatePlan)
+					systemProtected.PUT("/tenant-ops/plan/:code", deps.tenantHandler.UpdatePlan)
 				}
 			},
 		},

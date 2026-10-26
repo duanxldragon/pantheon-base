@@ -11,6 +11,7 @@ import {
   Space,
   Typography,
 } from '@arco-design/web-react';
+import PasswordInput from '../../../../components/patterns/forms/PasswordInput';
 import { IconUpload } from '@arco-design/web-react/icon';
 import { useTranslation } from 'react-i18next';
 import { AppModal, FormSection, SubmitBar } from '../../../../components';
@@ -112,7 +113,7 @@ const UserFormModal: React.FC<UserFormModalProps> = ({
                     field="password"
                     rules={[{ required: true, message: t('auth.passwordRequired') }]}
                   >
-                    <Input.Password onPressEnter={() => form.submit()} />
+                    <PasswordInput onPressEnter={() => form.submit()} />
                   </FormItem>
                 </Col>
               ) : null}

@@ -53,6 +53,7 @@ English version: [TENANT_RESOURCE_SCOPE_MATRIX.en.md](./TENANT_RESOURCE_SCOPE_MA
 | `system_role` | `tenant-replicated` | **2026-10-15 维护者裁决：角色按租户复制**。每个租户持有自己的 `tenant_admin` / `tenant_member` 副本；角色**定义**是全局统一的，单一来源为 `pkg/tenant` 的角色常量与 `modules/system/iam/tenant` 的 `tenantRoleDefinitions`，由 `ProvisionTenant` 代码生成而非人工逐租户维护，因此不会产生漂移 |
 | `system_menu` / `system_permission` | `platform-global` | **2026-10-15 维护者裁决：菜单与权限保持全局共享**。注意：迁移 000020 已为两表加了 `tenant_id` 列，但菜单/权限读写路径不按该列过滤，列当前未参与隔离语义（占位）。2026-10-21 验收整改：菜单写接口与 i18n 系统域写接口已加 `PlatformCapabilityMiddleware`，租户管理员不能再写全局菜单/权限表。租户差异只由 Casbin domain 表达（契约 §4），不做租户内菜单/权限定制 |
 | `system_dept` / `system_post` | `platform-global`（倾向） | 组织是组织，租户是租户，不混用 |
+| `tenants` / `tenant_plans` | `platform-global` | 2026-10-25 登记（合同 V1.4 §2.4）。两张表**都没有 `tenant_id` 列**：`tenants` 是租户主数据本身，`tenant_plans` 是它的属性定义表（套餐阈值）。本模块的隔离由各 service 显式 `WithTenantScope` 施加、不是全局插件，因此「不带该列」在这里是正确形状而非遗漏——给计划表加 `tenant_id` 会把平台控制台的读过滤成空集。唯一键 `tenant_plans.code` 全局唯一（`uk_tenant_plan_code`），没有租户内变体 |
 | 系统设置（`system_setting`） | `tenant-overridable` 候选 | canary 首选资源域（`system/config`） |
 | 字典（`system_dict_type` / `system_dict_item`） | `tenant-replicated`（自平台默认复制） | 表已带 `tenant_id`（000013 canary）。2026-10-21 验收整改：`ProvisionTenant` 初始化时将平台（tenant_id=0）字典类型与字典项幂等复制到新租户（INSERT…SELECT + NOT EXISTS），平台字典为单一来源、租户持有副本可覆盖 |
 | 审计日志 | `derived`（跟随写操作来源） | 需保留可切分维度 |

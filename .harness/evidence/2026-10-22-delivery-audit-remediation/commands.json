@@ -62,13 +62,8 @@
       "details": "Not executed in this session. The Sonar duplication position was unchanged by the remediation (the extracted constants reduce literal repetition rather than introduce it), and the authoritative duplication measurement is the SonarCloud run in CI. Recorded as a gap rather than claimed."
     }
   ],
-  "runtimeSensitive": [
-    "Backend suite needs MySQL 8.0.36 and Redis 7; both *_REQUIRED flags were true so absence fails instead of skipping.",
-    "go test -race is not runnable on this host (MinGW gcc.exe link failure); race coverage is CI-only."
-  ],
-  "runtimeGap": [
-    "SonarCloud's unresolved-issue count can only be produced by CI. Local verification shows the code shape changed, not that the gate is green."
-  ],
+  "runtimeSensitive": true,
+  "runtimeGap": "SonarCloud's unresolved-issue count can only be produced by CI. Local verification shows the code shape changed, not that the gate is green.",
   "knownGaps": [
     "check:duplication was not run this session.",
     "TestBatchRevokeSessions_IsTenantScoped flakes under many-package parallelism (shared Redis key space).",
@@ -84,6 +79,15 @@
     "planRefs": [
       "docs/contracts/TENANT_CONTRACT_V1.md",
       "docs/reviews/PANTHEON_BASE_DELIVERY_REMEDIATION_2026-10-22.md"
-    ]
-  }
+    ],
+    "taskManifest": ".harness/tasks/2026-10-22-delivery-audit-remediation/manifest.json"
+  },
+  "runtimeSensitiveNotes": [
+    "Backend suite needs MySQL 8.0.36 and Redis 7; both *_REQUIRED flags were true so absence fails instead of skipping.",
+    "go test -race is not runnable on this host (MinGW gcc.exe link failure); race coverage is CI-only."
+  ],
+  "runtimeGapNotes": [
+    "SonarCloud's unresolved-issue count can only be produced by CI. Local verification shows the code shape changed, not that the gate is green."
+  ],
+  "schemaBackfill": "Structural backfill on 2026-10-26 (governance-schema repair round): fields below were added or retyped so this file satisfies scripts/harness/check-evidence.mjs --strict. No command result, verdict or coverage claim was changed; every added string is a paraphrase of text already present in this round’s review.md / summary.md / commands.json, and the original array values are preserved under *Notes keys where a type had to collapse."
 }

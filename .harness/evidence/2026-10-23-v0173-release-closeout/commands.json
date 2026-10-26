@@ -116,5 +116,22 @@
       "details": "Foundation Release Verify succeeded: Verify Release Assets and Foundation Release Verify Summary both completed/success on 1b74dccb."
     }
   ],
-  "pending": []
+  "pending": [],
+  "knownGaps": [
+    "The full real-database backend suite was not repeated in this task: no runtime code changed between v0.17.2 and v0.17.3 (one comment line) and CI’s required checks are the authority for the release commit.",
+    "The smoke wrapper could not start its own Vite server because port 5173 was already held, so the spec ran against the existing server with PANTHEON_EXTERNAL_WEB_SERVER=1 and mocked API routes; no fixtures or database were involved.",
+    "The published v0.17.0 asset still contains the rotated development password; release assets are immutable, so the gate prevents recurrence but cannot recall the artifact."
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-23-v0173-release-closeout/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-23-v0173-release-closeout/",
+    "reviewFile": ".harness/evidence/2026-10-23-v0173-release-closeout/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-23-v0173-release-closeout.task.md",
+      "docs/contracts/TENANT_CONTRACT_V1.md"
+    ],
+    "summaryFile": ".harness/evidence/2026-10-23-v0173-release-closeout/summary.md"
+  },
+  "schemaBackfill": "Structural backfill on 2026-10-26 (governance-schema repair round): fields below were added or retyped so this file satisfies scripts/harness/check-evidence.mjs --strict. No command result, verdict or coverage claim was changed; every added string is a paraphrase of text already present in this round’s review.md / summary.md / commands.json, and the original array values are preserved under *Notes keys where a type had to collapse."
 }

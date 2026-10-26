@@ -147,5 +147,24 @@
       "phase": "post-publication review",
       "details": "Exit 0 with no gofmt output. The only backend change in this round is the duplicate comment removal in GetTenantByID; no behaviour changed, so the previously recorded real-MySQL and race results still stand."
     }
-  ]
+  ],
+  "knownGaps": [
+    "Release Gate and Foundation Release Verify on the merge commit and the tag are CI-decided, not claimed locally (review.md Not verified here).",
+    "Cross-tenant smoke (Tenant Smoke multi-mode) is CI-decided: the local environment is compat mode and the behaviour change is covered by the real-MySQL tombstone tests instead.",
+    "SonarCloud verdict is CI’s; locally only go vet / gofmt / eslint were clean.",
+    "Erratum recorded post-publication in review.md: the copy helpers do not retry INSERT ... SELECT on error 1213, the credential scanner has three rules, and assertBundleIsFreeOfCredentials scanned only the staged bundle directory (fixed in the follow-up PR #411)."
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-23-residual-closeout/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-23-residual-closeout/",
+    "reviewFile": ".harness/evidence/2026-10-23-residual-closeout/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-23-residual-closeout.task.md",
+      "docs/reviews/PANTHEON_BASE_DELIVERY_REMEDIATION_2026-10-22.md",
+      "docs/contracts/TENANT_CONTRACT_V1.md"
+    ],
+    "summaryFile": ".harness/evidence/2026-10-23-residual-closeout/summary.md"
+  },
+  "schemaBackfill": "Structural backfill on 2026-10-26 (governance-schema repair round): fields below were added or retyped so this file satisfies scripts/harness/check-evidence.mjs --strict. No command result, verdict or coverage claim was changed; every added string is a paraphrase of text already present in this round’s review.md / summary.md / commands.json, and the original array values are preserved under *Notes keys where a type had to collapse."
 }

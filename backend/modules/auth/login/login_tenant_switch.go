@@ -205,7 +205,9 @@ func tenantSwitchErrorCode(err error) int {
 		errors.Is(err, tenant.ErrTenantArchived):
 		return common.CodeForbidden
 	default:
-		return common.CodeError
+		// Same-tenant switches and revoked sessions are client-visible
+		// rejections, not server faults; keep their envelope class.
+		return common.CodeForError(err)
 	}
 }
 

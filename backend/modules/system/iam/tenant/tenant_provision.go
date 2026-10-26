@@ -186,7 +186,7 @@ func (s *Service) ProvisionTenant(in ProvisionInput) (*ProvisionResult, error) {
 	// adapter and therefore cannot join the SQL transaction above. They are
 	// idempotent (AddPolicy is a no-op when the rule exists), so a partial
 	// failure is repaired by re-running provisioning.
-	result.PolicyCount = grantTenantRolePolicies(in.TenantID)
+	result.PolicyCount = grantTenantRolePolicies(s.db, in.TenantID)
 
 	// The copies are read-then-insert as well: the tenant-side existence check
 	// decides what to insert, `system_setting` and `system_dict_type` would turn
@@ -585,14 +585,17 @@ func readPlatformAdminBindings(tx *gorm.DB, platformRoleID uint64) ([]string, []
 }
 
 // RepairTenantPlatformGrants removes platform-only menu and permission grants
-// from every tenant-owned role.
+// from every tenant-owned role, and prunes write-capable keys from the built-in
+// read-only member role.
 //
 // The grant copy used to mirror the platform administrator verbatim, so tenants
 // provisioned before this fix carry `system.tenant` / `system:i18n` / menu-write
-// bindings. Re-provisioning only adds missing rows, so without this repair the
-// old rows would outlive the fix and keep rendering menus whose routes answer
-// 403 tenant.platformOnly. Runs at startup, is idempotent and never touches the
-// platform namespace (tenant_id = 0).
+// bindings, and their member role carries write keys (security-event:clear,
+// session:delete, ...). Re-provisioning only adds missing rows, so without this
+// repair the old rows would outlive the fix and keep rendering menus and
+// actions whose routes answer 403 tenant.platformOnly / permission.denied.
+// Runs at startup, is idempotent and never touches the platform namespace
+// (tenant_id = 0).
 func (s *Service) RepairTenantPlatformGrants() error {
 	if s.db == nil {
 		return common.ErrDatabaseNotInitialized
@@ -624,7 +627,63 @@ func repairTenantPlatformGrants(tx *gorm.DB, tenantID uint64) error {
 	if err != nil {
 		return err
 	}
-	return deleteTenantPermissionGrants(tx, tenantID, platformKeys)
+	if err := deleteTenantPermissionGrants(tx, tenantID, platformKeys); err != nil {
+		return err
+	}
+	return pruneTenantMemberWriteGrants(tx, tenantID)
+}
+
+// pruneTenantMemberWriteGrants keeps the built-in member role read-only.
+//
+// Provisioning has filtered write-capable keys for a while, but tenants
+// provisioned before that filter still carry them (for example
+// security-event:clear), so the console renders actions the member's GET-only
+// Casbin surface refuses and the governance board reports a permanent gap.
+// The repair is convergent: it drops exactly the keys the read-only contract
+// does not allow, and leaves list/detail/view/tree/export untouched.
+func pruneTenantMemberWriteGrants(tx *gorm.DB, tenantID uint64) error {
+	if !tx.Migrator().HasTable("system_role") ||
+		!tx.Migrator().HasTable("system_role_permission") {
+		return nil
+	}
+	type memberRole struct {
+		TenantID uint64
+		RoleID   uint64
+	}
+	var roles []memberRole
+	roleQuery := tx.Table("system_role").
+		Select("tenant_id, id AS role_id").
+		Where(condTenantScopedRow, tenantctx.PlatformGlobalTenantID).
+		Where("role_key = ? AND deleted_at IS NULL", TenantRoleMemberKey)
+	if tenantID != 0 {
+		roleQuery = roleQuery.Where(condTenantIDMatches, tenantID)
+	}
+	if err := roleQuery.Scan(&roles).Error; err != nil {
+		return fmt.Errorf("repair tenant member grants: list roles: %w", err)
+	}
+	for _, role := range roles {
+		var keys []string
+		if err := tx.Table("system_role_permission").
+			Where("tenant_id = ? AND role_id = ?", role.TenantID, role.RoleID).
+			Pluck("permission_key", &keys).Error; err != nil {
+			return fmt.Errorf("repair tenant member grants: list permission keys: %w", err)
+		}
+		writeKeys := make([]string, 0, len(keys))
+		for _, key := range keys {
+			if !isReadOnlyPermissionKey(key) {
+				writeKeys = append(writeKeys, key)
+			}
+		}
+		if len(writeKeys) == 0 {
+			continue
+		}
+		if err := tx.Table("system_role_permission").
+			Where("tenant_id = ? AND role_id = ? AND permission_key IN ?", role.TenantID, role.RoleID, writeKeys).
+			Delete(nil).Error; err != nil {
+			return fmt.Errorf("repair tenant member grants: delete write keys: %w", err)
+		}
+	}
+	return nil
 }
 
 // collectPlatformOnlyMenuIDs resolves every menu row that belongs to a
@@ -875,7 +934,7 @@ func provisionTenantAdminBinding(tx *gorm.DB, tenantID, userID uint64, roleIDs m
 // the domain subjects role:<key>@tenant:<id> (contract §4). The middleware
 // already consults exactly these subjects for a tenant-scoped request, so this
 // is the step that turns a membership role into real permissions.
-func grantTenantRolePolicies(tenantID uint64) int {
+func grantTenantRolePolicies(db *gorm.DB, tenantID uint64) int {
 	if database.Enforcer == nil {
 		return 0
 	}
@@ -887,6 +946,46 @@ func grantTenantRolePolicies(tenantID uint64) int {
 			if err == nil && ok {
 				added++
 			}
+		}
+	}
+	return added + grantTenantMemberExportPolicies(db, tenantID)
+}
+
+// grantTenantMemberExportPolicies grants the exact POST routes behind the
+// `:export` permission keys the member role holds. A member's wildcard grant is
+// GET-only, but every export endpoint is POST, so without these rules the
+// console renders an export action that the middleware then refuses. Only keys
+// the member actually holds are granted, so the repair stays additive and never
+// widens the role beyond its permission set.
+func grantTenantMemberExportPolicies(db *gorm.DB, tenantID uint64) int {
+	if db == nil {
+		return 0
+	}
+	var roleID uint64
+	if err := db.Table("system_role").
+		Where(condTenantIDMatches+" AND role_key = ? AND deleted_at IS NULL", tenantID, TenantRoleMemberKey).
+		Limit(1).
+		Pluck("id", &roleID).Error; err != nil || roleID == 0 {
+		return 0
+	}
+	var keys []string
+	if err := db.Table("system_role_permission").
+		Where(condTenantIDMatches+" AND role_id = ?", tenantID, roleID).
+		Pluck("permission_key", &keys).Error; err != nil {
+		return 0
+	}
+	held := make(map[string]struct{}, len(keys))
+	for _, key := range keys {
+		held[strings.TrimSpace(key)] = struct{}{}
+	}
+	subject := tenantctx.RoleSubject(TenantRoleMemberKey, tenantID)
+	added := 0
+	for _, route := range tenantctx.ReadOnlyExportRoutes {
+		if _, ok := held[route.PermissionKey]; !ok {
+			continue
+		}
+		if ok, err := database.Enforcer.AddPolicy(subject, route.Path, "POST"); err == nil && ok {
+			added++
 		}
 	}
 	return added

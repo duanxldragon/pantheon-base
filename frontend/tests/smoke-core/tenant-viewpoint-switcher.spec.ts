@@ -229,7 +229,9 @@ test.describe('Tenant Viewpoint @priority:critical @smoke:tenant', () => {
     await expect(page.getByText('新增用户')).toBeVisible();
 
     await page.getByLabel('用户名').fill(viewpointUsername);
-    await page.getByLabel('密码').fill(viewpointPassword);
+    // PasswordInput's toggle button is labelled 「显示密码」, so getByLabel('密码')
+    // is ambiguous; the modal carries exactly one password field.
+    await page.locator('.arco-modal').locator('input[type="password"]').fill(viewpointPassword);
     await page.getByLabel('昵称').fill('Viewpoint User');
 
     // 「加入本租户（可登录）」默认勾选，成员角色默认 member。

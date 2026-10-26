@@ -46,6 +46,7 @@
     "tool": "codex",
     "adapter": "platform-coordinator"
   },
+  "runtimeGap": "No runtimeLogs/runtimeMetrics/runtimeTraces/runtimePerformance were captured. Verification is `go test ./internal/middleware/ -run 'TestOperationLogMultipart|TestOperationLogAuditBodyCap|TestReadAndRestoreBody|TestOperationLogAuditBodyLimit'` with and without PANTHEON_TEST_DSN, i.e. the guard exercised in-process against MySQL. The manifest claims \"persisted audit-row inspection for multipart and JSON probes\" and \"runtime upload smoke\"; neither appears here as an application log, request trace, or browser session.",
   "knownGaps": [
     "Legacy evidence did not record structured known gaps; consult the linked summary/review before treating as no-gap."
   ],

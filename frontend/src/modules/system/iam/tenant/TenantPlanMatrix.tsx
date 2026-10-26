@@ -43,9 +43,7 @@ export default function TenantPlanMatrix({ plan }: Readonly<TenantPlanMatrixProp
                 <th
                   key={item}
                   scope="col"
-                  className={
-                    item === plan ? 'tenant-plan-matrix__column--active' : undefined
-                  }
+                  className={item === plan ? 'tenant-plan-matrix__column--active' : undefined}
                 >
                   <span className="tenant-plan-matrix__plan">
                     {t(`system.tenant.plan.${item}`)}
@@ -73,9 +71,7 @@ export default function TenantPlanMatrix({ plan }: Readonly<TenantPlanMatrixProp
                   return (
                     <td
                       key={item}
-                      className={
-                        item === plan ? 'tenant-plan-matrix__column--active' : undefined
-                      }
+                      className={item === plan ? 'tenant-plan-matrix__column--active' : undefined}
                     >
                       <span
                         role="img"
@@ -85,9 +81,7 @@ export default function TenantPlanMatrix({ plan }: Readonly<TenantPlanMatrixProp
                             : t('system.tenant.planFeature.notIncluded')
                         }
                         className={
-                          included
-                            ? 'tenant-plan-matrix__included'
-                            : 'tenant-plan-matrix__excluded'
+                          included ? 'tenant-plan-matrix__included' : 'tenant-plan-matrix__excluded'
                         }
                       >
                         {included ? <IconCheck /> : <IconClose />}

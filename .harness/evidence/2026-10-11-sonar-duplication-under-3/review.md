@@ -70,3 +70,25 @@ with margin rather than by a hair.
   the change; only the cloud metric confirms the outcome.
 - The follow-up clusters (secondary-route specs, Go table-driven fixtures, `permission-workbench-remediation.spec.ts`,
   the frontend list pages) are the natural next tranche if a further margin is wanted.
+
+
+## Machine Readable
+
+```json
+{
+  "taskId": "2026-10-11-sonar-duplication-under-3",
+  "verdict": "approved with documented P2 follow-up",
+  "verdictRationale": "Accept: pure extraction of duplicated test scaffolding plus one ratchet; the remaining duplication clusters are recorded as follow-ups.",
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-11-sonar-duplication-under-3/manifest.json",
+    "evidence": ".harness/evidence/2026-10-11-sonar-duplication-under-3/commands.json",
+    "reviewFile": ".harness/evidence/2026-10-11-sonar-duplication-under-3/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".harness/tasks/2026-10-11-sonar-duplication-under-3/manifest.json"
+    ]
+  }
+}
+```
+
+> This block was backfilled on 2026-10-26 during the governance-schema repair round. It restates the verdict already written above in machine-readable form and links the artifacts that existed for this task; no conclusion, finding or verification claim was added, removed or reworded. The prose remains authoritative.

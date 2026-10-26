@@ -128,13 +128,8 @@
       "details": "Run 39765421119 on tag pantheon-base-v0.17.1: completed/success. CI, Code Quality Gates, Core Smoke Tests, Lint Workflows and Release Gate all success on main 1f68d56b."
     }
   ],
-  "runtimeSensitive": [
-    "The backend suite requires a reachable MySQL 8.0.36 and Redis 7. Both *_REQUIRED flags were set to true, so an unreachable dependency fails the run instead of skipping.",
-    "go test -race cannot run on this host: the MinGW gcc.exe fails at link time. Race coverage is therefore CI-only and is not claimed from local evidence."
-  ],
-  "runtimeGap": [
-    "SonarCloud unresolved-issue count and the Release Gate verdict are produced only by CI. Local work can show the code shape changed but cannot assert the gate is green."
-  ],
+  "runtimeSensitive": true,
+  "runtimeGap": "SonarCloud unresolved-issue count and the Release Gate verdict are produced only by CI. Local work can show the code shape changed but cannot assert the gate is green.",
   "knownGaps": [
     "TestBatchRevokeSessions_IsTenantScoped flakes when many packages run in parallel (shared Redis key space); single-package and -p 1 runs pass.",
     "Concurrent CreateTenant for two different codes is not serialized.",
@@ -151,5 +146,13 @@
       "docs/reviews/PANTHEON_BASE_DELIVERY_REMEDIATION_2026-10-22.md",
       "docs/reviews/PANTHEON_BASE_ISSUES_AND_REMEDIATION_2026-10-21.md"
     ]
-  }
+  },
+  "runtimeSensitiveNotes": [
+    "The backend suite requires a reachable MySQL 8.0.36 and Redis 7. Both *_REQUIRED flags were set to true, so an unreachable dependency fails the run instead of skipping.",
+    "go test -race cannot run on this host: the MinGW gcc.exe fails at link time. Race coverage is therefore CI-only and is not claimed from local evidence."
+  ],
+  "runtimeGapNotes": [
+    "SonarCloud unresolved-issue count and the Release Gate verdict are produced only by CI. Local work can show the code shape changed but cannot assert the gate is green."
+  ],
+  "schemaBackfill": "Structural backfill on 2026-10-26 (governance-schema repair round): fields below were added or retyped so this file satisfies scripts/harness/check-evidence.mjs --strict. No command result, verdict or coverage claim was changed; every added string is a paraphrase of text already present in this round’s review.md / summary.md / commands.json, and the original array values are preserved under *Notes keys where a type had to collapse."
 }

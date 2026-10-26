@@ -55,3 +55,25 @@ moved.
   same role/user, which is not a supported workflow.
 - The published v0.17.3 notes keep the old residual sentence by design; the correction is in this
   packet.
+
+
+## Machine Readable
+
+```json
+{
+  "taskId": "2026-10-23-iam-residual-closeout",
+  "verdict": "approved",
+  "verdictRationale": "Approve for PR: the three named code paths are fixed at the right layer and tested against real MySQL.",
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-23-iam-residual-closeout/manifest.json",
+    "evidence": ".harness/evidence/2026-10-23-iam-residual-closeout/commands.json",
+    "reviewFile": ".harness/evidence/2026-10-23-iam-residual-closeout/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-23-iam-residual-closeout.task.md"
+    ]
+  }
+}
+```
+
+> This block was backfilled on 2026-10-26 during the governance-schema repair round. It restates the verdict already written above in machine-readable form and links the artifacts that existed for this task; no conclusion, finding or verification claim was added, removed or reworded. The prose remains authoritative.

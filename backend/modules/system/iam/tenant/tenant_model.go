@@ -45,9 +45,14 @@ func (Membership) TableName() string {
 // gate requires, and the Casbin policies for the tenant's roles. Omitting them
 // still provisions the roles and settings, but creates no login.
 type CreateTenantDTO struct {
-	Code     string `json:"code" binding:"required,min=2,max=64"`
-	Name     string `json:"name" binding:"required,min=2,max=128"`
-	Plan     string `json:"plan" binding:"omitempty,oneof=free basic professional enterprise"`
+	Code string `json:"code" binding:"required,min=2,max=64"`
+	Name string `json:"name" binding:"required,min=2,max=128"`
+	// Plan carries no `oneof` on purpose: the accepted set is the enabled rows of
+	// `tenant_plans` (contract §2.4), which the operator can extend. A static tag
+	// here would reject a plan the console has no way to remove, and a new plan
+	// would need a code release. CreateTenant validates the code against the
+	// store instead.
+	Plan     string `json:"plan" binding:"omitempty,max=32"`
 	Metadata string `json:"metadata,omitempty"`
 
 	AdminUsername string `json:"admin_username,omitempty" binding:"omitempty,min=2,max=64"`
@@ -71,7 +76,7 @@ type CreateTenantDTO struct {
 type UpdateTenantDTO struct {
 	Name     *string `json:"name,omitempty" binding:"omitempty,min=2,max=128"`
 	Status   *string `json:"status,omitempty" binding:"omitempty,oneof=active suspended archived"`
-	Plan     *string `json:"plan,omitempty" binding:"omitempty,oneof=free basic professional enterprise"`
+	Plan     *string `json:"plan,omitempty" binding:"omitempty,max=32"`
 	Metadata *string `json:"metadata,omitempty"`
 }
 
@@ -87,7 +92,7 @@ type AddTenantMemberDTO struct {
 // what the console search box sends.
 type Filter struct {
 	Status  string `form:"status" binding:"omitempty,oneof=active suspended archived deleted"`
-	Plan    string `form:"plan" binding:"omitempty,oneof=free basic professional enterprise"`
+	Plan    string `form:"plan" binding:"omitempty,max=32"`
 	Keyword string `form:"keyword" binding:"omitempty,max=128"`
 	Page    int    `form:"page" binding:"omitempty,min=1"`
 	Size    int    `form:"size" binding:"omitempty,min=1,max=100"`

@@ -1,0 +1,139 @@
+{
+  "taskId": "2026-10-26-login-accessibility-and-lang",
+  "taskDoc": "docs/harness/tasks/2026-10-26-login-accessibility-and-lang.task.md",
+  "title": "Login page round two, app-wide named password visibility toggle, and locale-following <html lang>",
+  "goal": "Close the login-page round-two styling items and the two accessibility findings that came out of them, frontend only. F-07/F-08: Arco's built-in Input.Password visibility toggle is a focusable unnamed <svg> and the input wrapper steals focus back on any bubbled click, so every password surface in the product is unreachable for screen readers and awkward for keyboard users; the fix is one shared PasswordInput component (visibilityToggle={false}, controlled visibility, a real <button aria-label> in the suffix that calls stopPropagation) plus a sweep of all twelve call sites plus a static ratchet gate wired into prebuild and the UI quality-gate policy. F-09: index.html hardcoded lang=\"en\" and nothing ever updated it, so assistive technology pronounced every locale with English rules; the fix is syncDocumentLang at i18n init, a languageChanged subscription, and a pre-paint script that reads pantheon_lang. No backend, schema, migration, route, permission code, menu seed or error-envelope change.",
+  "primaryLayer": "app",
+  "dependencyLayers": [
+    "system/auth",
+    "system/iam",
+    "system/config"
+  ],
+  "status": "completed",
+  "priority": "P2",
+  "type": "accessibility-remediation",
+  "estimatedComplexity": "medium",
+  "findings": [
+    "F-07 (P2, fixed): the login card's Input.Password rendered Arco's own toggle, an svg with tabIndex=0 and no accessible name; the field was operable by keyboard but announced nothing, and after activation focus returned to the input because es/Input/input.js refocuses the input on any bubbled click inside the wrapper.",
+    "F-08 (P2, fixed): the same defect existed at twelve Input.Password call sites across login, screen lock, secondary verification, security centre (three fields), user create, reset password (two fields), tenant create, encrypted settings and the generator datasource form. Patching per site would not survive the next form, so the sites now share components/patterns/forms/PasswordInput.tsx and frontend/scripts/check-password-toggle.mjs fails the build if a raw Input.Password appears outside the owner file.",
+    "F-09 (P2, fixed): <html lang> stayed \"en\" for all five locales because nothing wrote documentElement.lang. initI18n now calls syncDocumentLang and subscribes to languageChanged, and index.html ships a pre-paint script that seeds the attribute from pantheon_lang; the static attribute is zh-CN, matching the default locale.",
+    "F-10 (P3, retracted): SecurityCenter looked unreachable because /system/security deep-links to the shell not-found view. The real entry is /auth/security (handleGoSecurity in AppLayout), and the security centre renders three migrated password fields, all browser-audited green. The empty-component menu row is a navigation group, not a missing page; no defect and no code change.",
+    "G-01 (gap, not a defect): SecondaryVerifyModal's toggle was not re-audited in this browser pass. Its step-up prompt is raised client-side before a write, and every reachable trigger in the current local data set was disabled (session revoke rows are self-only, the datasource list is empty), so opening it would have required performing a real destructive write; the file is migrated, covered by the shared component tests and the static gate, and the modal itself was observed rendering one password field earlier in the round."
+  ],
+  "scope": {
+    "in": [
+      "Login card vertical centring, absolute top-right tool row, left-side copy, ghost tool buttons, Tab/Enter keyboard flow across ten viewports",
+      "components/patterns/forms/PasswordInput.tsx plus password-input.css as the single owner of the visibility toggle",
+      "Sweep of all twelve Input.Password call sites to the shared component, dropping the now-unused Input bindings",
+      "frontend/scripts/check-password-toggle.mjs wired into package.json prebuild, config/ui-quality-gate.json and its test fixture list",
+      "syncDocumentLang at i18n init, languageChanged subscription, index.html pre-paint locale script",
+      "auth.password.show / auth.password.hide copy in zh-CN, en-US, ja-JP, ko-KR, fr-FR",
+      "Unit tests with rollback differentials and Chromium per-surface assertions"
+    ],
+    "out": [
+      "Forgot-password / self-service reset (maintainer deferred it; administrators keep resetting passwords)",
+      "Backend, database schema and migrations, routes, permission codes, menu seeds, error envelopes",
+      "Password strength and lockout security semantics",
+      "SonarCloud rule changes, gate threshold relaxations, skipped or deleted tests",
+      "Commit, push and pull request (not requested)"
+    ]
+  },
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "ui-accessibility",
+    "portableFailureClass": "unnamed-control / focus-steal / document-attribute-drift",
+    "ownerLayer": "consumer-repository",
+    "ratchetDecision": "sensor-added",
+    "coverageDimensions": [
+      "behaviour",
+      "architecture-fitness"
+    ]
+  },
+  "expectedFiles": {
+    "create": [
+      "frontend/src/components/patterns/forms/PasswordInput.tsx",
+      "frontend/src/components/patterns/forms/password-input.css",
+      "frontend/scripts/check-password-toggle.mjs",
+      "frontend/tests/unit/components/patterns/forms/PasswordInput.test.tsx",
+      "frontend/tests/unit/i18n/document-lang.test.ts",
+      "docs/harness/tasks/2026-10-26-login-accessibility-and-lang.task.md",
+      ".harness/tasks/2026-10-26-login-accessibility-and-lang/manifest.json",
+      ".harness/evidence/2026-10-26-login-accessibility-and-lang/summary.md",
+      ".harness/evidence/2026-10-26-login-accessibility-and-lang/review.md",
+      ".harness/evidence/2026-10-26-login-accessibility-and-lang/commands.json"
+    ],
+    "modify": [
+      "frontend/src/modules/auth/login/components/Login.tsx",
+      "frontend/src/core/layout/AppLayout.tsx",
+      "frontend/src/components/feedback/SecondaryVerifyModal.tsx",
+      "frontend/src/modules/auth/security/components/SecurityCenter.tsx",
+      "frontend/src/modules/system/iam/user/UserFormModal.tsx",
+      "frontend/src/modules/system/iam/user/ResetPasswordModal.tsx",
+      "frontend/src/modules/system/iam/tenant/TenantList.tsx",
+      "frontend/src/modules/system/config/setting/SettingGroupForm.tsx",
+      "frontend/src/modules/lowcode/generator/pages/components/DatasourceManagerModal.tsx",
+      "frontend/src/i18n/index.ts",
+      "frontend/index.html",
+      "frontend/package.json",
+      "config/ui-quality-gate.json",
+      "tests/scripts/check-ui-quality-gate.test.mjs",
+      "DESIGN.md"
+    ],
+    "doNotTouch": [
+      "backend/** production code",
+      "backend/pkg/database/migrations/**",
+      ".github/workflows/**",
+      "published tags and foundation-release assets",
+      ".env.test and any credential file"
+    ]
+  },
+  "implementationNotes": [
+    "Arco gives no prop to name its own toggle: es/Input/password.js renders IconEye/IconEyeInvisible with tabIndex 0 and aria-hidden undefined, so the only escape hatch is visibilityToggle={false} plus a controlled visibility plus a suffix button.",
+    "es/Input/input.js:153 puts onClick: () => inputRef.current.focus() on the inner wrapper, so the suffix button must stopPropagation() or focus jumps back to the input after a single activation; the unit test that asserts focus retention is the rollback proof for that line.",
+    "Icon direction follows the Arco convention (IconEye while visible, IconEyeInvisible while hidden) so the affordance does not invert.",
+    "The disabled state uses opacity 0.5 because no --text-disabled token exists in the palette.",
+    "index.html duplicates SUPPORTED_LOCALES in its pre-paint script; a missed edit only mislabels the first paint because i18next re-asserts the attribute at init, and a build-time template for five strings was judged not worth the machinery.",
+    "Wiring the new checker needs three synchronised edits: frontend/package.json, config/ui-quality-gate.json enforcement.existingStaticChecks, and the fixture copy list in tests/scripts/check-ui-quality-gate.test.mjs, otherwise the canonical policy test fails with ui_gate_enforcement_file_missing.",
+    "Touchpoint 2 (gate policy): adding check-password-toggle to the enforced gate set was executed under the maintainer's standing 继续 instruction and is recorded here as a rule change rather than an incidental edit."
+  ],
+  "verificationPlan": {
+    "frontend": [
+      "node node_modules/typescript/bin/tsc -b",
+      "node node_modules/eslint/bin/eslint.js src --max-warnings 0",
+      "node node_modules/vitest/vitest.mjs run",
+      "node ./scripts/check-password-toggle.mjs (0 findings) plus a planted violation proving rc=1",
+      "node ./scripts/<each of the 13 prebuild checkers>.mjs",
+      "node scripts/audit-i18n-locales.mjs && node scripts/check-contrast.mjs",
+      "node --test tests/scripts/check-ui-quality-gate.test.mjs"
+    ],
+    "browser": [
+      "Chromium at 1440x900 against 127.0.0.1:5173 with the local backend: assert named toggle, zero unnamed focusable svg and Enter-keeps-focus on login, user create, reset password, tenant create, setting upload (two fields), generator datasource, security centre (three fields) and the screen-lock view",
+      "Chromium locale pass for zh-CN, en-US, ja-JP, ko-KR, fr-FR plus an unknown stored value",
+      "Login visual probe across ten viewports for centring, tool placement and horizontal overflow"
+    ],
+    "governance": [
+      "node scripts/harness/check-task-packet.mjs docs/harness/tasks/2026-10-26-login-accessibility-and-lang.task.md",
+      "node scripts/harness/check-evidence.mjs --strict",
+      "node scripts/harness/check-review.mjs --strict",
+      "node scripts/harness/check-structure-contract.mjs --strict",
+      "node scripts/harness/check-ui-quality-gate.mjs",
+      "node scripts/harness/check-failure-registry.mjs --strict"
+    ]
+  },
+  "linkage": {
+    "taskId": "2026-10-26-login-accessibility-and-lang",
+    "taskManifest": ".harness/tasks/2026-10-26-login-accessibility-and-lang/manifest.json",
+    "assessment": "docs/harness/tasks/2026-10-26-login-accessibility-and-lang.task.md",
+    "openspecChange": "none",
+    "superpowersPlan": "none",
+    "evidenceDir": ".harness/evidence/2026-10-26-login-accessibility-and-lang/",
+    "summaryFile": ".harness/evidence/2026-10-26-login-accessibility-and-lang/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-26-login-accessibility-and-lang/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "DESIGN.md",
+      "docs/harness/VERIFICATION_EVIDENCE_SPEC.md"
+    ]
+  }
+}

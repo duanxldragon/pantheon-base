@@ -70,5 +70,25 @@
       "status": "passed",
       "details": "Frontmatter check passed for every doc."
     }
-  ]
+  ],
+  "knownGaps": [
+    "Browser layer not verified locally: Playwright runs in CI, so Tenant Smoke is the only source of truth for the viewpoint switcher. Accepted in review.md 残余风险.",
+    "Existing tenants holding reserved role keys are not cleaned automatically; renaming needs an operator decision and is listed under Human Gates. Accepted.",
+    "Platform scope can still target a specific tenant. Accepted because the platform capability itself sits behind PlatformCapabilityMiddleware.",
+    "Migration 000028 leaves historical audit events attributed to tenant 0; the tenant cannot be derived from role_key, so 0 is the conservative reading. Accepted.",
+    "runtimeSensitive: the backend suites need real MySQL/Redis, and go test -race is not runnable on this Windows host, so race and browser legs are CI-only."
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-20-tenant-delivery-hardening/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-20-tenant-delivery-hardening/",
+    "reviewFile": ".harness/evidence/2026-10-20-tenant-delivery-hardening/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-20-tenant-delivery-hardening.task.md",
+      "docs/contracts/TENANT_CONTRACT_V1.md",
+      ".github/workflows/smoke-core.yml"
+    ],
+    "summaryFile": ".harness/evidence/2026-10-20-tenant-delivery-hardening/summary.md"
+  },
+  "schemaBackfill": "Structural backfill on 2026-10-26 (governance-schema repair round): fields below were added or retyped so this file satisfies scripts/harness/check-evidence.mjs --strict. No command result, verdict or coverage claim was changed; every added string is a paraphrase of text already present in this round’s review.md / summary.md / commands.json, and the original array values are preserved under *Notes keys where a type had to collapse."
 }

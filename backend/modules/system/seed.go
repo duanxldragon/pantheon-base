@@ -20,6 +20,11 @@ const (
 	moduleTenant = "system.tenant"
 
 	menuKeyOperationLog = "operation-log"
+	// The tenant-ops group and its overview page are referenced by several
+	// children below and by the parent-path map, so the key is named once: a
+	// typo in one of them silently orphans the button at the menu root.
+	menuKeyTenantOps      = "tenant-ops"
+	menuKeyTenantOverview = "tenant-overview"
 
 	orderByIDASC   = "id ASC"
 	condPathEquals = "path = ?"
@@ -141,6 +146,16 @@ func baseMenuGroupSeeds() []menuSeed {
 			Module:    moduleIAM,
 			RouteName: "system-access",
 			Sort:      20,
+		},
+		{
+			Key:       menuKeyTenantOps,
+			TitleKey:  "system.menu.tenantOps",
+			Path:      "/system/tenant-ops",
+			Type:      "M",
+			Icon:      "cloud",
+			Module:    moduleTenant,
+			RouteName: "system-tenant-ops",
+			Sort:      25,
 		},
 		{
 			Key:       "org",
@@ -459,8 +474,22 @@ func i18nMenuSeeds() []menuSeed {
 func tenantMenuSeeds() []menuSeed {
 	return []menuSeed{
 		{
+			Key:       menuKeyTenantOverview,
+			ParentKey: menuKeyTenantOps,
+			TitleKey:  "system.menu.tenantOverview",
+			Path:      "/system/tenant-ops/overview",
+			Component: "system/tenant/TenantOverview",
+			PagePerm:  "system:tenant:overview",
+			Perms:     "",
+			Type:      "C",
+			Icon:      "dashboard",
+			RouteName: "system-tenant-overview",
+			Module:    moduleTenant,
+			Sort:      10,
+		},
+		{
 			Key:       "tenant",
-			ParentKey: "access",
+			ParentKey: menuKeyTenantOps,
 			TitleKey:  "system.menu.tenant",
 			Path:      "/system/tenant",
 			Component: "system/tenant/TenantList",
@@ -470,13 +499,32 @@ func tenantMenuSeeds() []menuSeed {
 			Icon:      "storage",
 			RouteName: "system-tenant",
 			Module:    moduleTenant,
-			Sort:      35,
+			Sort:      20,
+		},
+		{
+			Key:       "tenant-member",
+			ParentKey: menuKeyTenantOps,
+			TitleKey:  "system.menu.tenantMember",
+			Path:      "/system/tenant-ops/member",
+			Component: "system/tenant/TenantMemberList",
+			PagePerm:  "system:tenant:member-list",
+			Perms:     "",
+			Type:      "C",
+			Icon:      "user-group",
+			RouteName: "system-tenant-member",
+			Module:    moduleTenant,
+			Sort:      30,
 		},
 		{Key: "tenant-create", ParentKey: "tenant", TitleKey: "system.permission.tenant.create", Perms: "system:tenant:create", Type: "F", Sort: 1},
 		{Key: "tenant-update", ParentKey: "tenant", TitleKey: "system.permission.tenant.update", Perms: "system:tenant:update", Type: "F", Sort: 2},
 		{Key: "tenant-delete", ParentKey: "tenant", TitleKey: "system.permission.tenant.delete", Perms: "system:tenant:delete", Type: "F", Sort: 3},
 		{Key: "tenant-member-add", ParentKey: "tenant", TitleKey: "system.permission.tenant.member_add", Perms: "system:tenant:member-add", Type: "F", Sort: 4},
 		{Key: "tenant-member-remove", ParentKey: "tenant", TitleKey: "system.permission.tenant.member_remove", Perms: "system:tenant:member-remove", Type: "F", Sort: 5},
+		// The plan editor lives inside the overview page (a drawer), not as a
+		// fourth menu entry, so its buttons hang off that page.
+		{Key: "tenant-plan-list", ParentKey: menuKeyTenantOverview, TitleKey: "system.permission.tenant.plan_list", Perms: "system:tenant:plan:list", Type: "F", Sort: 6},
+		{Key: "tenant-plan-create", ParentKey: menuKeyTenantOverview, TitleKey: "system.permission.tenant.plan_create", Perms: "system:tenant:plan:create", Type: "F", Sort: 7},
+		{Key: "tenant-plan-update", ParentKey: menuKeyTenantOverview, TitleKey: "system.permission.tenant.plan_update", Perms: "system:tenant:plan:update", Type: "F", Sort: 8},
 	}
 }
 
@@ -833,26 +881,28 @@ func resolveMenuParentID(db *gorm.DB, parentKey string) (uint64, error) {
 		return 0, nil
 	}
 	parentPaths := map[string]string{
-		"access":            "/system/access",
-		"org":               "/system/org",
-		"config":            "/system/config",
-		"lowcode":           "/system/lowcode",
-		"security":          "/system/security",
-		"user":              "/system/user",
-		"role":              "/system/role",
-		"menu":              "/system/menu",
-		"dept":              "/system/dept",
-		"post":              "/system/post",
-		"permission":        "/system/permission",
-		"login-log":         "/system/login-log",
-		"session":           "/system/session",
-		"setting":           "/system/setting",
-		"modules":           "/system/modules",
-		"generator":         "/system/generator",
-		"dict":              "/system/dict",
-		"i18n":              "/system/i18n",
-		"tenant":            "/system/tenant",
-		menuKeyOperationLog: "/system/operation-log",
+		"access":              "/system/access",
+		"org":                 "/system/org",
+		"config":              "/system/config",
+		"lowcode":             "/system/lowcode",
+		"security":            "/system/security",
+		"user":                "/system/user",
+		"role":                "/system/role",
+		"menu":                "/system/menu",
+		"dept":                "/system/dept",
+		"post":                "/system/post",
+		"permission":          "/system/permission",
+		"login-log":           "/system/login-log",
+		"session":             "/system/session",
+		"setting":             "/system/setting",
+		"modules":             "/system/modules",
+		"generator":           "/system/generator",
+		"dict":                "/system/dict",
+		"i18n":                "/system/i18n",
+		menuKeyTenantOps:      "/system/tenant-ops",
+		"tenant":              "/system/tenant",
+		menuKeyTenantOverview: "/system/tenant-ops/overview",
+		menuKeyOperationLog:   "/system/operation-log",
 	}
 	parentPath, ok := parentPaths[parentKey]
 	if !ok {

@@ -87,10 +87,16 @@ export function revokeSession(sessionId: string) {
   });
 }
 
+// Every caller treats logout as best effort: AppLayout awaits it through
+// resolveSilently and then tears down local state regardless of the outcome.
+// During a session teardown the CSRF pair is usually already gone, so the
+// backend answers 403 csrf.missing — the interceptor must not surface that as
+// if the user's own action failed.
 export function logout() {
   return apiRequest<{ loggedOut: boolean }>({
     url: '/auth/logout',
     method: 'post',
+    skipErrorMessage: true,
   });
 }
 
