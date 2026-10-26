@@ -12,6 +12,7 @@ import {
   Typography,
   type FormInstance,
 } from '@arco-design/web-react';
+import PasswordInput from '../../../../components/patterns/forms/PasswordInput';
 import { IconRefresh } from '@arco-design/web-react/icon';
 import { useTranslation } from 'react-i18next';
 import { FormSection, SubmitBar } from '../../../../components';
@@ -410,7 +411,7 @@ const SettingGroupForm: React.FC<SettingGroupFormProps> = ({
           label={label}
           extra={help}
         >
-          <Input.Password
+          <PasswordInput
             placeholder={
               item.hasValue === 1
                 ? t('system.setting.leaveEmptyToKeep')

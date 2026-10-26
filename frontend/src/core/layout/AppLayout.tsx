@@ -20,6 +20,7 @@ import {
   Tooltip,
   Typography,
 } from '@arco-design/web-react';
+import PasswordInput from '../../components/patterns/forms/PasswordInput';
 import {
   IconCheck,
   IconLanguage,
@@ -1936,7 +1937,7 @@ const BaseLayout: React.FC = () => {
           <Typography.Text type="secondary">
             {t('app.lock.description', { minutes: sessionIdleMinutes })}
           </Typography.Text>
-          <Input.Password
+          <PasswordInput
             autoFocus
             value={unlockPassword}
             placeholder={t('app.lock.passwordPlaceholder')}

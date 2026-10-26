@@ -91,7 +91,11 @@ let refreshPromise: Promise<boolean> | null = null;
 let logoutTransition = false;
 
 const clearClientSession = () => {
-  request.post('/auth/logout', {}).catch(() => undefined);
+  // Silent, and typed as RequestConfig so the flag survives post()'s
+  // AxiosRequestConfig signature: the session is already being torn down here,
+  // so a 403 csrf.missing refusal is expected rather than a user-facing failure.
+  const logoutConfig: RequestConfig = { skipErrorMessage: true };
+  request.post('/auth/logout', {}, logoutConfig).catch(() => undefined);
   // A viewpoint is a session-scope preference: it must never survive a
   // logout, otherwise a freshly logged-in non-platform subject could carry
   // a header the backend refuses with 403 and the shell a stale banner.
