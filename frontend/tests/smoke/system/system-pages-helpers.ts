@@ -678,7 +678,6 @@ export async function createApiPermission(
   // conflict reports the grant as present rather than a failed grant.
   if (payload.code !== 200) {
     expect(payload.message).toBe('permission.policy.exists');
-    return;
   }
 }
 
