@@ -623,7 +623,14 @@ func (s *UserService) ResetPassword(userID uint64, newPassword string) (int64, e
 
 	var revokedSessionCount int64
 	if err := s.db.Transaction(func(tx *gorm.DB) error {
-		if err := tx.Model(&user).Update("password", string(passwordHash)).Error; err != nil {
+		// An administrative reset also lifts the account lockout: the operator
+		// has just proved ownership, and leaving failed_login_attempts/lock in
+		// place would keep the new password unusable until the lock expires.
+		if err := tx.Model(&user).Updates(map[string]any{
+			"password":              string(passwordHash),
+			"failed_login_attempts": 0,
+			"login_locked_until":    nil,
+		}).Error; err != nil {
 			return err
 		}
 

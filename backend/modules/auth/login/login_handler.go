@@ -421,7 +421,7 @@ func (h *AuthHandler) AcknowledgeSecurityEvent(c *gin.Context) {
 		c.GetString("username"),
 		req.AcknowledgementNote,
 	); err != nil {
-		common.FailWithError(c, common.CodeError, err, "auth.security_event.acknowledge.error")
+		common.FailWithError(c, common.CodeForError(err), err, "auth.security_event.acknowledge.error")
 		return
 	}
 	common.Success(c, gin.H{"acknowledged": true})
@@ -443,7 +443,7 @@ func (h *AuthHandler) BatchAcknowledgeSecurityEvents(c *gin.Context) {
 		req.AcknowledgementNote,
 	)
 	if err != nil {
-		common.FailWithError(c, common.CodeError, err, "auth.security_event.acknowledge.error")
+		common.FailWithError(c, common.CodeForError(err), err, "auth.security_event.acknowledge.error")
 		return
 	}
 	common.Success(c, SecurityEventBatchAcknowledgeResp{AcknowledgedCount: acknowledgedCount})

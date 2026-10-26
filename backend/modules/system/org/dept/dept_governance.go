@@ -153,6 +153,7 @@ func (s *DeptService) collectPostGovernanceTasks(snapshot *governanceSnapshot, q
 
 	posts := make([]postGovernanceRow, 0)
 	if err := s.scoped(s.db.Table("system_post")).
+		Where("deleted_at IS NULL").
 		Select("id, dept_id, post_code, post_name, status").
 		Order("sort asc").Order("id asc").
 		Scan(&posts).Error; err != nil {
