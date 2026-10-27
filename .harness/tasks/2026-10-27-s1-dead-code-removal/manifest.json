@@ -3,7 +3,7 @@
   "title": "Delete zero-caller backend code and 13 orphan frontend scripts",
   "goal": "Remove code that nothing references and that is not part of the downstream contract. pkg/common/token.go is a 129-line whole-file pass-through to pkg/authtoken and pkg/common/http with 34 exports and zero callers; pkg/common/http/cookie.go:89 SetTokenTTL exists only to serve it. logging_middleware.go defines a Gin middleware that no router registers. common.ErrorResponse is never constructed. database.SetEx has no caller. frontend/src/api/request.ts:241 isForbiddenRequestError has no consumer. Thirteen frontend scripts (ten capture-*.mjs plus merge-coverage-to-lcov.mjs, migrate-spacing-tokens.mjs and run-request-error-utils-test.mjs) appear in no package.json script, no CI workflow and no other script. Deleting them changes no runtime behaviour and removes a second, contradictory way to do things that already has a supported way.",
   "primaryLayer": "platform",
-  "status": "planned",
+  "status": "completed",
   "priority": "P1",
   "type": "refactor",
   "estimatedComplexity": "small",

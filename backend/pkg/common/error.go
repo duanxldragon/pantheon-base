@@ -103,13 +103,6 @@ func CodeForError(err error) int {
 	}
 }
 
-// ErrorResponse is the JSON envelope returned by HTTP handlers.
-type ErrorResponse struct {
-	Code    string `json:"code"`
-	Message string `json:"message"`
-	Detail  string `json:"detail,omitempty"`
-}
-
 // ── I18n utilities (also used by http package) ───────────────────────
 
 var i18nKeyPattern = regexp.MustCompile(`^[a-z0-9_]+(?:\.[a-z0-9_]+)+$`)

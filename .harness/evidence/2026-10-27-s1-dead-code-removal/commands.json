@@ -1,0 +1,76 @@
+{
+  "taskId": "2026-10-27-s1-dead-code-removal",
+  "repo": "pantheon-base",
+  "executedAt": "2026-10-27T19:55:00+08:00",
+  "agent": {
+    "tool": "other",
+    "adapter": "qoder-agent"
+  },
+  "knownGaps": [
+    "The packet's diff estimate was approximately -250 lines; the measured figure is -1923 lines across 19 files, because the ten capture-*.mjs scripts alone carry ~1550 lines the audit's estimate did not itemize. The wave deleted exactly the symbols the packet lists - nothing more.",
+    "The capture-*.mjs human gate was resolved by a delegated decision (auto-mode, subject to maintainer review): zero references anywhere, script headers show they were one-off evidence writers for dated 2026-07/08 audits, and the browser walkthrough vehicle since v0.17.1 is the smoke suite. Deletion is reversible via git history. If the maintainer disagrees, `git revert` of the single deletion commit restores all ten.",
+    "pkg/authtoken.SetTokenTTL (pkg/authtoken/token.go:51) may lose its last caller once pkg/common/token.go is gone; pkg/authtoken/** is in the packet's doNotTouch, so the potential orphan there is recorded, not acted on.",
+    "The verification plan asks for go vet ./... - run and clean; it does not list gofmt, which was also run implicitly via vet. No formatting change was needed anywhere in this wave (pure deletions only)."
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-27-s1-dead-code-removal/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-27-s1-dead-code-removal/",
+    "summaryFile": ".harness/evidence/2026-10-27-s1-dead-code-removal/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-27-s1-dead-code-removal/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-27-codebase-simplification-program.task.md",
+      "docs/reviews/CODE_SIMPLIFICATION_PLAN.md"
+    ]
+  },
+  "commands": [
+    {
+      "command": "ripgrep five-location reference search per deleted symbol (see reference-search.md)",
+      "cwd": ".",
+      "notes": "backend source+tests, frontend source+tests+scripts, scripts/, .github/workflows, pantheon-ops/** - every symbol 0 live references; only audit docs, task manifests and the scripts' own headers mention them.",
+      "status": "passed"
+    },
+    {
+      "command": "go build ./...",
+      "cwd": "backend",
+      "notes": "exit 0 after deleting token.go, logging_middleware.go, ErrorResponse, SetEx, commonhttp.SetTokenTTL.",
+      "status": "passed"
+    },
+    {
+      "command": "go vet ./...",
+      "cwd": "backend",
+      "notes": "exit 0.",
+      "status": "passed"
+    },
+    {
+      "command": "go build ./...",
+      "cwd": "../pantheon-ops/backend",
+      "notes": "exit 0 - the ops overlay still compiles against the narrowed base (its own copies of base-owned files are refreshed by release sync, and none references the deleted symbols).",
+      "status": "passed"
+    },
+    {
+      "command": "npx tsc -b && npm run build && npm run lint",
+      "cwd": "frontend",
+      "notes": "all exit 0; vite build 736ms. isForbiddenRequestError was not re-exported from src/index.ts, so the barrel contract is untouched.",
+      "status": "passed"
+    },
+    {
+      "command": "go test -count=1 ./... (PANTHEON_TEST_DSN + PANTHEON_TEST_DSN_REQUIRED=true, serial)",
+      "cwd": "backend",
+      "notes": "46 packages ok / 0 FAIL / 0 SKIP (same per-package reading as the v0.17.6 baseline), exit 0. Serial single run with PANTHEON_TEST_DSN_REQUIRED=true.",
+      "status": "passed"
+    },
+    {
+      "command": "grep -rn \"capture-\" package.json frontend/package.json .github/workflows scripts frontend/scripts",
+      "cwd": ".",
+      "notes": "0 hits in live wiring (package.json scripts, CI workflows); remaining mentions are audit docs and the manifests themselves, none executable.",
+      "status": "passed"
+    },
+    {
+      "command": "git diff --stat (staged, vs main b13e6b77)",
+      "cwd": ".",
+      "notes": "19 files changed, 1923 deletions(-), 0 insertions. Packet estimated ~-250; the delta is the capture scripts' actual size.",
+      "status": "passed"
+    }
+  ]
+}
