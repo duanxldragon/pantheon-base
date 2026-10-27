@@ -3,7 +3,7 @@
   "title": "Decide what a cross-tenant membership is allowed to mean",
   "goal": "The contract states that one user may belong to multiple tenants (section 2.2, invariant 1), and the product ships both a login tenant picker and a TenantSwitcher for exactly that case. But authorization is tenant-owned: replaceUserRoles stamps system_user_role.tenant_id from the user's owning tenant (user_helper.go:83-108), RoleService.ensureUsersExist is tenant-scoped (role_helper.go:301-307), and GetUserRolesForTenant filters by the claimed tenant (login_runtime.go:328-338). A membership in a second tenant therefore grants login and switching but no roles, no menu and 403 on every protected API, with no UI or API able to assign a role there. This packet does not implement anything: it records the maintainer's choice between narrowing the membership semantics (A), making role binding cross-tenant (B) and removing multi-tenant membership (C), with the cost and the failure case of each. W4 depends on the signed decision.",
   "primaryLayer": "system/iam",
-  "status": "planned",
+  "status": "completed",
   "priority": "P1",
   "type": "decision",
   "estimatedComplexity": "small",
