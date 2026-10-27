@@ -72,7 +72,7 @@
     "qualityProfile": "permission-policy",
     "portableFailureClass": "scope-leak / contract-drift / inaccessible-control / hardcoded-entitlement",
     "ownerLayer": "foundation-source",
-    "ratchetDecision": "ratchet-executed",
+    "ratchetDecision": "registry-only",
     "coverageDimensions": [
       "behaviour",
       "maintainability",

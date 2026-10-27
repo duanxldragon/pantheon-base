@@ -21,7 +21,7 @@
 - OpenSpec change：none
 - Trivial change：no
 - Quality Profile：permission-policy
-- Ratchet Decision：ratchet-executed
+- Ratchet Decision：registry-only
 - GitHub Signal：repo-quality-gate
 
 ## Harness adoption markers
@@ -33,6 +33,7 @@
 - evidence: .harness/evidence/2026-10-27-v0176-release-closeout/commands.json
 - boundaries: `check-boundaries --strict` 与 `--strict --baseline config/boundary-baseline.json` 两种形态均 no findings；baseline `entries` 为空
 - backend response contract: 未改动错误信封形状；新增路由沿用统一 envelope（`tenant_ops_handler.go`）
+- backend DTO contract: 本 PR 自身无 DTO 变更；它记录的 v0.17.6 内容把 `tenant.TenantPlan` 更名为 `tenant.Plan`，并为 `/system/tenant-ops/*` 新增只读 DTO
 - permission contract: 新增 5 个权限码并在 `permission_workbench.go:637-641` 绑定路由；无移除、无重命名
 - audit coverage: 本轮只读面（overview / member / plan list）与定义写入；发布材料不改审计链路
 - visual evidence: `check-ui-contract` 0 findings / 277 files、`check-shell-visual-contract` passed、`check-password-toggle` 0 findings / 257 files

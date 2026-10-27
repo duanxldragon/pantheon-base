@@ -80,7 +80,7 @@ system/iam
 - Quality Profile: `permission-policy`
 - Portable Failure Class: `scope-leak` / `contract-drift` / `inaccessible-control` / `hardcoded-entitlement`
 - Owner Layer: `foundation-source`
-- Ratchet Decision: `ratchet-executed`
+- Ratchet Decision: `registry-only`
 - Coverage Dimensions:
   - behaviour
   - maintainability
