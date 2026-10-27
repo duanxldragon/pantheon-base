@@ -3,7 +3,7 @@
   "title": "Make tenant deletion archive-only, as the contract already requires",
   "goal": "DeleteTenant currently rejects a deletion only when the tenant has active members AND is not archived (tenant_service.go:596-604). A tenant left active with zero active memberships — reachable by deleting all of its users, which disables their memberships — can therefore be tombstoned directly, skipping the archive state that contract sections 2.1 and 2.2 require. This wave restores the contract rule: only an archived tenant may be deleted. The existing in-transaction membership disable stays, because an archived tenant may still carry active memberships and RemoveMember refuses to drop the last owner; that behaviour is what keeps the documented retirement path from deadlocking. The frontend stops offering delete on non-archived rows, and the contract, API doc and runbooks are aligned in the same wave.",
   "primaryLayer": "system/iam",
-  "status": "planned",
+  "status": "completed",
   "priority": "P2",
   "type": "fix",
   "estimatedComplexity": "medium",
