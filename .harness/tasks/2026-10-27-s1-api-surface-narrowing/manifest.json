@@ -3,7 +3,7 @@
   "title": "Narrow over-exported package symbols that have no external consumer",
   "goal": "Four symbols are exported but only used inside their own package, which makes pkg/ look like it offers capabilities it does not: common.IsI18nMessageKey is called only by common.ResolveErrorMessageKey, rbacbind.InsertRoleMenu and InsertUserRole are called only by the sibling EnsureRoleMenu and EnsureUserRole, contracts.ProtectedGroupWithRedis is called only by sibling ProtectedGroup, and permission_handler.permissionServiceErrorCode is a one-line pass-through to common.CodeForError with a single call site. A fifth item, database.RunAutoMigrate, has no caller at all and is only kept in case a downstream wanted a GORM AutoMigrate escape hatch that the project does not otherwise use. This wave either makes them private, deletes the pass-through, or records the decision to keep the public name, so the exported surface matches the real contract.",
   "primaryLayer": "platform",
-  "status": "planned",
+  "status": "completed",
   "priority": "P3",
   "type": "refactor",
   "estimatedComplexity": "small",

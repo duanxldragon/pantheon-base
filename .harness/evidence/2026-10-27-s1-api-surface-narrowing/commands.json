@@ -1,0 +1,64 @@
+{
+  "taskId": "2026-10-27-s1-api-surface-narrowing",
+  "repo": "pantheon-base",
+  "executedAt": "2026-10-27T20:35:00+08:00",
+  "agent": {
+    "tool": "other",
+    "adapter": "qoder-agent"
+  },
+  "knownGaps": [
+    "RC-029 (permissionServiceErrorCode) was NOT deleted: the packet says the wrapper has 'a single call site', but permission_handler_test.go:22 drives the function directly by name. The programme's Out list forbids editing or deleting test assertions to let a refactor through, so the wrapper is restored and the deletion is closed as a false positive. The audit's call-site count missed the test.",
+    "RC-006 (database.RunAutoMigrate): kept, per the packet's stated default ('Keep it unless the maintainer explicitly says otherwise'). The human gate answer is delegated as keep. Zero callers confirmed at implementation time.",
+    "RC-008 (contracts.ProtectedGroupWithRedis): kept exported, as the packet's own recommendation records.",
+    "The IsI18nMessageKey rename is verified only to the package boundary; pkg/common/http/response.go keeps its independent private equivalent, whose merge is RC-019 in the S2 wave (packet forbids doing it here)."
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-27-s1-api-surface-narrowing/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-27-s1-api-surface-narrowing/",
+    "summaryFile": ".harness/evidence/2026-10-27-s1-api-surface-narrowing/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-27-s1-api-surface-narrowing/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-27-codebase-simplification-program.task.md",
+      "docs/reviews/REDUNDANT_CODE_CANDIDATES.md"
+    ]
+  },
+  "commands": [
+    {
+      "command": "go build ./...",
+      "cwd": "backend",
+      "notes": "exit 0 after the renames - the compile-time probe found no hidden consumer of the unexported names.",
+      "status": "passed"
+    },
+    {
+      "command": "go vet ./...",
+      "cwd": "backend",
+      "notes": "exit 0.",
+      "status": "passed"
+    },
+    {
+      "command": "go test -count=1 ./pkg/common/... ./pkg/rbacbind/... ./modules/system/iam/permission/... (PANTHEON_TEST_DSN + PANTHEON_TEST_DSN_REQUIRED=true)",
+      "cwd": "backend",
+      "notes": "pkg/common/http ok 0.027s, pkg/common/security ok 0.015s, pkg/rbacbind ok 0.234s, permission ok 10.708s - 0 FAIL.",
+      "status": "passed"
+    },
+    {
+      "command": "go build ./...",
+      "cwd": "../../pantheon-ops/backend",
+      "notes": "exit 0 - the ops overlay does not consume the unexported names.",
+      "status": "passed"
+    },
+    {
+      "command": "grep -rn \"IsI18nMessageKey|InsertRoleMenu(|InsertUserRole(|permissionServiceErrorCode\" backend --include=*.go",
+      "cwd": ".",
+      "notes": "After the rename: IsI18nMessageKey 0 hits; singular Insert* only inside pkg/rbacbind as insertRoleMenu/insertUserRole; permissionServiceErrorCode remains at its definition, its internal call and the test (kept - see knownGaps).",
+      "status": "passed"
+    },
+    {
+      "command": "git diff --stat (branch vs S1 base)",
+      "cwd": ".",
+      "notes": "3 files changed, +11 / -9 (this wave on top of the S1 deletion commit it is stacked on).",
+      "status": "passed"
+    }
+  ]
+}
