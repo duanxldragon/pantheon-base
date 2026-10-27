@@ -1,0 +1,130 @@
+{
+  "taskId": "2026-10-27-base-docs-artifact-landing",
+  "taskDoc": "docs/harness/tasks/2026-10-27-base-docs-artifact-landing.task.md",
+  "title": "Land the 2026-10-27 review-round governance and analysis artifacts that were stranded on an unmerged local base branch",
+  "goal": "The 2026-10-27 review round produced four assessment documents and 23 L2 task manifests, but they were committed only to the local branch chore/harness-task-packets-2026-10-27 (806e053e) and never opened as a pull request, so 30 files and 5244 added lines of delivered work exist nowhere on GitHub and block the repository-hygiene goal of leaving only main locally. This round cherry-picks that commit onto main and adds this packet so the artifacts are the product's own history rather than a local secret. Nothing here is an implementation: no Go, TypeScript, configuration or version file moves, and no foundation release is cut, because docs/harness/tasks is already an ops baseExcludedPath and .harness is an ops replaceRoot/overlay path, so the consumption chain is untouched.",
+  "primaryLayer": "platform",
+  "dependencyLayers": [
+    "system/iam",
+    "system/config"
+  ],
+  "status": "completed",
+  "priority": "P2",
+  "type": "governance-artifact-landing",
+  "estimatedComplexity": "low",
+  "contractAnchors": [
+    "docs/designs/REPOSITORY_LAYOUT.md",
+    "docs/README.md"
+  ],
+  "findings": [
+    "A1 (P2, closed here): delivered review artifacts had no landing path. The four docs/reviews files and 23 manifests existed only on an unmerged local branch with no PR (gh pr list --state all has no such head ref), which means the standing completion gate 'evidence exists' was satisfied locally while the work itself was invisible to every other consumer of the repository.",
+    "A2 (P2, closed here): the sibling branch fix/lint-and-codeql-suppressions-2026-10-27 was reported by git branch --no-merged main even though PR #430 had squash-merged it. The branch is therefore retained only as a deletion decision, proved safe by 'TREES IDENTICAL' from git diff --quiet main fix/lint-and-codeql-suppressions-2026-10-27. Squash merges make 'unmerged' an unreliable signal in this repository; the tree comparison is the proof, and that method is now recorded.",
+    "A3 (P3, follow-up, not closed here): the landed manifests describe planned and blocked follow-up work (tenant completeness remediation, the S1-S4 simplification programme). Landing them does not execute any of it, and no checker currently enforces that a planned manifest eventually gets a status change, so this packet is a filing action rather than a delivery."
+  ],
+  "scope": {
+    "in": [
+      "git cherry-pick -x 806e053e from chore/harness-task-packets-2026-10-27 onto a fresh branch off main",
+      "This round's task packet, manifest and evidence trio",
+      "Base documentation and governance verification set",
+      "Open the pull request, watch CI, merge it",
+      "Delete the two extra local branches once their content is proven to be on main"
+    ],
+    "out": [
+      "Executing any remediation or simplification step described by the landed documents",
+      "Any change to backend/, frontend/src/, frontend/tests/, configuration or version material",
+      "Cutting a foundation release or advancing VERSION/CHANGELOG",
+      "Copying ops-side governance artifacts into base",
+      "Rewriting the landed documents' content, status values or conclusions"
+    ]
+  },
+  "acceptanceCriteria": [
+    "git diff --name-only main..HEAD lists only added documentation and governance files, with zero deleted paths.",
+    "frontmatter, task-packet, evidence, review, adoption, doc-links, doc-inventory, sync-drift, method-health, structure, encoding and duplication checks all exit 0.",
+    "The PR body passes check-pr-governance.mjs against a locally generated event payload.",
+    "CI required contexts on the PR are green, and the merge lands the 30 files on main.",
+    "After the merge, the base repository has exactly one local branch, main, and no open pull request.",
+    "The deletion of each removed branch is preceded by a recorded proof that its content is on main."
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "ci-workflow",
+    "portableFailureClass": "governance-artifact-without-landing-path",
+    "ownerLayer": "foundation-source",
+    "ratchetDecision": "guide-updated",
+    "coverageDimensions": [
+      "maintainability",
+      "method-health"
+    ]
+  },
+  "expectedFiles": {
+    "create": [
+      "docs/harness/tasks/2026-10-27-base-docs-artifact-landing.task.md",
+      ".harness/tasks/2026-10-27-base-docs-artifact-landing/manifest.json",
+      ".harness/evidence/2026-10-27-base-docs-artifact-landing/commands.json",
+      ".harness/evidence/2026-10-27-base-docs-artifact-landing/summary.md",
+      ".harness/evidence/2026-10-27-base-docs-artifact-landing/review.md",
+      "docs/reviews/TENANT_FUNCTIONAL_COMPLETENESS_REVIEW_2026-10-27.md",
+      "docs/reviews/CODEBASE_SIMPLIFICATION_AUDIT.md",
+      "docs/reviews/CODE_SIMPLIFICATION_PLAN.md",
+      "docs/reviews/REDUNDANT_CODE_CANDIDATES.md"
+    ],
+    "modify": [
+      ".harness/STATUS.md"
+    ],
+    "doNotTouch": [
+      "backend",
+      "frontend/src",
+      "frontend/tests",
+      "VERSION",
+      "CHANGELOG.md",
+      "config"
+    ]
+  },
+  "implementationNotes": [
+    "Cherry-pick rather than merge: it keeps one reviewable commit, records the source with -x, and avoids introducing a side branch into main's first-parent history.",
+    "Deletion safety: a branch whose tree equals main's is content-free, so removing it loses nothing; a branch with unique files is landed first and only then removed.",
+    "No release is cut, so ops does not need a consumption round for this; the landed docs/harness/tasks path is excluded from the ops rebuild by business-overlay.json, and .harness is a replaceRoot."
+  ],
+  "verificationPlan": {
+    "commands": [
+      "node scripts/frontmatter-check.mjs",
+      "node scripts/harness/check-task-packet.mjs --root .",
+      "node scripts/harness/check-evidence.mjs --root . --strict",
+      "node scripts/harness/check-review.mjs --root . --strict",
+      "node scripts/harness/check-adoption.mjs --root . --strict",
+      "node scripts/harness/check-doc-links.mjs --root . --strict",
+      "node scripts/harness/check-doc-inventory.mjs --root . --strict",
+      "node scripts/harness/check-sync-drift.mjs --root . --strict",
+      "node scripts/harness/check-method-health.mjs --root . --strict",
+      "node scripts/harness/check-template-health.mjs --root . --strict",
+      "node scripts/harness/check-generated.mjs --root . --strict",
+      "node scripts/harness/check-structure-contract.mjs --root . --strict",
+      "node scripts/harness/check-encoding.mjs --root . --strict",
+      "node scripts/check-duplication.mjs",
+      "node frontend/scripts/cleanup-generated-modules.mjs --check",
+      "node scripts/check-pr-governance.mjs --event <generated pull_request event>"
+    ],
+    "runtimeEvidence": [
+      "git diff --name-only main..HEAD, used to prove the landing is add-only",
+      "git diff --quiet main <branch>, used as the precondition for every local branch deletion"
+    ]
+  },
+  "linkage": {
+    "taskId": "2026-10-27-base-docs-artifact-landing",
+    "taskManifest": ".harness/tasks/2026-10-27-base-docs-artifact-landing/manifest.json",
+    "assessment": "docs/harness/tasks/2026-10-27-base-docs-artifact-landing.task.md",
+    "openspecChange": "none",
+    "superpowersPlan": "none",
+    "evidenceDir": ".harness/evidence/2026-10-27-base-docs-artifact-landing/",
+    "summaryFile": ".harness/evidence/2026-10-27-base-docs-artifact-landing/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-27-base-docs-artifact-landing/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-27-v0177-lint-codeql-closure.task.md",
+      "docs/harness/tasks/2026-10-27-tenant-completeness-remediation.task.md",
+      "docs/harness/tasks/2026-10-27-codebase-simplification-program.task.md",
+      "docs/README.md"
+    ]
+  }
+}
