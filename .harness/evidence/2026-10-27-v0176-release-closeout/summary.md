@@ -69,15 +69,23 @@ Unlike the previous five patches, **this release changes the database and the sh
   needed the literal `- Template:` / `- Overlay:` / `- Coverage Dimensions:` bullets, Primary Layer
   must be a bare enum token, Workspace Context needs its six labels, and Completion Checklist needs
   the five required items verbatim.
-- CI, not local: the five required PR contexts, `Release Gate Summary` on the merge commit,
-  SonarCloud re-analysis of this branch, and `Foundation Release Verify` on the tag.
+- CI-only signals, read back after the fact: the five required PR contexts, `Release Gate Summary`
+  on the merge commit, the SonarCloud analysis of that commit, and `Foundation Release Verify` on
+  the tag. All four came back green; the readings are in the Publication state section below.
 
 ## Release-gate history
 
-- Push CI on `main@7dafa997` at the time of writing: `CI`, `Code Quality Gates`, `Security Gates`,
-  `Core Smoke Tests` and `Lint Workflows` success; `Release Gate` and `Full Smoke Suite` still in
-  progress. The release cannot be cut until `Release Gate Summary` is green on the merge commit of
-  this packet.
+- Push CI on `main@7dafa997` before this packet merged: `CI`, `Code Quality Gates`, `Security Gates`,
+  `Core Smoke Tests` and `Lint Workflows` success. The release could not be cut until
+  `Release Gate Summary` was green on the merge commit of this packet; it is green on `c9bc6c0f`.
+- PR #428 head `a3a35a4d`: `Quality Gates` (run `40429884678`), `Security Gates` (`40429282769`),
+  `Unit Tests`, `CI Summary` and `SonarCloud Code Analysis` all success, together with `CodeQL`,
+  `CodeQL Security` and `Duplication Gate`. Two earlier `Quality Gates` runs on that head are stale
+  red/cancelled results from the reruns that the docs-governance repair triggered, not the state at
+  merge time.
+- `c9bc6c0f` carries a green `Release Gate` run `40431521256` (`Release Gate Summary`, `SonarCloud
+  Gate`, `CodeQL Alerts`, `Candidate Checks`, `Full Smoke`, `Actionlint`) and a green `Foundation
+  Release Verify` run `40433836341` (`Verify Release Assets`, `Foundation Release Verify Summary`).
 - `publish-foundation-release.mjs` hard preconditions, read from the script: clean worktree, a
   completed/success `Release Gate Summary` check-run on the target commit, a matching
   `releases/<tag>/manifest.json`, the four assets present with self-consistent SHA-256, the credential
@@ -87,12 +95,6 @@ Unlike the previous five patches, **this release changes the database and the sh
 
 ## Gaps and limits
 
-- **Publication facts are pending.** The tag object, the four asset checksums and the
-  `Foundation Release Verify` run id do not exist yet, so `README.md`, `README.en.md`,
-  `.harness/STATUS.md` and `CHANGELOG.md` describe the release ahead of those facts. They are filled
-  in a follow-up commit after publishing, exactly as v0.17.5 was closed by PR #423.
-- **SonarCloud has not analysed this branch**, so the quality-gate line in the release notes is
-  carried from the previous green run until the PR checks report it.
 - **Local TSan** still cannot start (error 87); the race gate is CI Linux `go test -race ./...`.
 - **FR-016 / FR-017 stay open** by maintainer decision, so the evidence/review/runtime/inheritance
   checkers run here are advisory rather than CI-enforced.
@@ -102,6 +104,24 @@ Unlike the previous five patches, **this release changes the database and the sh
 
 ## Publication state
 
-Not yet published. State at the time of this packet: `pantheon-base-v0.17.6` is prepared, the release
-target is the merge commit of the release-material PR (not `7dafa997`, because the gate must be green
-on the commit that is tagged), and the release line stays `release/0.17`.
+Published. `pantheon-base-v0.17.6` is an annotated tag whose tag object is
+`2bc799663f83d00959d54c0c300d6393467f0d19` and which points at `c9bc6c0f5d351016afb4fffdedf12e72cc73e61d`,
+the squash merge of PR #428 (`2026-10-27T01:15:41Z`). The GitHub Release is neither draft nor
+prerelease, `published_at = 2026-10-27T01:39:12Z`, and carries all four assets:
+
+| asset | sha256 |
+|---|---|
+| `foundation-release-pantheon-base-v0.17.6.tgz` | `dbf1edd8f4bd082baee817c8e7797d298cf70f20d41b38c60d7bd39a5f362e35` |
+| `foundation-release-pantheon-base-v0.17.6.tgz.sha256` | 111 B pointer file |
+| `repo.tar` | `7a44e9ce0ed642e6d2d1f1508ef488292c46148da4a9e42a3f04ad848fda645d` |
+| `repo.tar.sha256` | 75 B pointer file |
+
+Post-publication readings: `check-release-secrets` → `release secret scan: clean (3232 file(s)
+scanned)`; `check-release-assets` → `[ok] local bundle pantheon-base-v0.17.6: foundation-release-…
+.tgz, repo.tar` and `[ok] release pantheon-base-v0.17.6 carries all 4 required assets`;
+`Foundation Release Verify` run `40433836341` → success; `Release Gate` run `40431521256` on
+`c9bc6c0f` → success with `SonarCloud quality gate for c9bc6c0f…: OK`; SonarCloud main now reports
+0 unresolved issues and a quality gate of OK with New Duplicated Lines 1.9% against a 3% ceiling;
+CodeQL open alerts on the repository = 0. The release line stayed `release/0.17`, and the target was
+the merge commit rather than `7dafa997` because `publish-foundation-release.mjs` requires a green
+`Release Gate Summary` on the commit it tags.

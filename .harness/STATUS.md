@@ -1,9 +1,9 @@
 # Pantheon Base - Harness 任务状态
 
 **最后更新**: 2026-10-27
-**当前版本**: v0.17.6 发布材料已就绪（任务包 `2026-10-27-v0176-release-closeout`，尚未发布；tag、四件资产与 `Foundation Release Verify` 待发布后回填）
+**当前版本**: v0.17.6 已发布（tag `pantheon-base-v0.17.6`，目标提交 `c9bc6c0f`，四件资产与 `Foundation Release Verify` 已核验）
 
-## v0.17.6 发布（2026-10-27，准备中）
+## v0.17.6 发布（2026-10-27）
 
 租户运营「B 方案 · 要做就做彻底」的读侧与信息架构收口，连同登录页无障碍与样式微调、
 治理红灯（G-03/G-04/G-05）一起合入主干（PR #427 → `c1b1d702`），任务包
@@ -27,9 +27,15 @@
 - **环境限制**：本机 Windows TSan 仍 error 87，`-race` 由 CI Linux 承担；生成器用例需要
   `PANTHEON_NODE_BIN` + `PANTHEON_WORKSPACE_ROOT`（F5），否则 16 个用例以
   `module.generate.server_export_failed` 失败，与产品无关。
-- **发布事实**：待发布后回填 —— 目标是发布材料 PR 的 squash 合并提交（`Release Gate Summary`
-  必须要在被打 tag 的那个 commit 上 success，不能是 `7dafa997`），release line 保持
-  `release/0.17`。
+- **发布事实**：发布材料 PR #428 于 2026-10-27T01:15:41Z squash 合并为 `c9bc6c0f`，五个必需
+  context（`Quality Gates`、`Security Gates`、`Unit Tests`、`CI Summary`、`SonarCloud Code Analysis`）
+  全绿；`Release Gate` run `40431521256` 在 `c9bc6c0f` 上 success，其中 `SonarCloud Gate` 读到该
+  提交的分析 `OK`、`Duplication Gate` success。annotated tag `pantheon-base-v0.17.6`（tag object
+  `2bc79966`）指向 `c9bc6c0f`，GitHub Release 于 2026-10-27T01:39:12Z 发布（非 draft、非 prerelease），
+  四件资产齐备（tgz `dbf1edd8…f362e35`、repo.tar `7a44e9ce…8fda645d`）；release secret scan
+  `clean (3232 files scanned)`，`check-release-assets` 本地与远端一致，`Foundation Release Verify`
+  run `40433836341` success。SonarCloud main 当前未解决 issue 0、质量门 OK（New Duplicated Lines
+  1.9%，阈值 ≤3%）、CodeQL open alert 0。
 
 ## v0.17.5 发布（2026-10-24）
 

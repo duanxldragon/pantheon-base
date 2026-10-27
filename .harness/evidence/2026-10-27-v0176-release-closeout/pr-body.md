@@ -1,3 +1,28 @@
+## 发布事实回填
+
+> 本节由发布后的收口提交补写（与 v0.17.5 由 PR #423 收口的方式一致）。上方 `pr-body.md` 保留的是
+> PR #428 合并时的原文，其中的「待 CI 回填」不做原地改写；真实读数如下，逐条命令在
+> `commands.json` 末尾。
+
+- 本 PR 合并：2026-10-27T01:15:41Z squash 为 `c9bc6c0f5d351016afb4fffdedf12e72cc73e61d`，
+  head 为 `a3a35a4d`。五个必需 context 全绿：`Quality Gates`（run `40429884678`）、
+  `Security Gates`（`40429282769`）、`Unit Tests`、`CI Summary`、`SonarCloud Code Analysis`
+  （Quality Gate passed）。`CodeQL` / `CodeQL Security` / `Duplication Gate` 亦为 success；
+  更早两条 `Quality Gates` 红/取消是文档治理修复触发的重跑残留，不是合并时状态。
+- 发布：annotated tag `pantheon-base-v0.17.6`，tag object `2bc799663f83d00959d54c0c300d6393467f0d19`
+  → 指向 `c9bc6c0f`；Release 非 draft、非 prerelease，`published_at = 2026-10-27T01:39:12Z`。
+  - `foundation-release-pantheon-base-v0.17.6.tgz` 28912081 B，sha256
+    `dbf1edd8f4bd082baee817c8e7797d298cf70f20d41b38c60d7bd39a5f362e35`
+  - `foundation-release-pantheon-base-v0.17.6.tgz.sha256` 111 B
+  - `repo.tar` 45168640 B，sha256 `7a44e9ce0ed642e6d2d1f1508ef488292c46148da4a9e42a3f04ad848fda645d`
+  - `repo.tar.sha256` 75 B
+- 门禁：`Release Gate` run `40431521256` 在 `c9bc6c0f` 上 success，其中 `SonarCloud Gate` 打印
+  `SonarCloud quality gate for c9bc6c0f…: OK`；`Foundation Release Verify` run `40433836341` success。
+- 凭据预检：`check-release-secrets` → `clean (3232 file(s) scanned)`，tgz 与 repo.tar 都已打开。
+- 资产一致性：`check-release-assets` → 本地 bundle 与远端四件资产一致（`carries all 4 required assets`）。
+- 静态面：SonarCloud main 当前未解决 issue `0`，质量门 `OK`（New Duplicated Lines 1.9%，阈值 ≤3%）；
+  CodeQL open alert `0`；本地 `check-duplication` 1.5% / 阈值 3%（898 文件、170240 行）。
+
 ## 变更摘要
 
 - 改动层级：platform（版本材料与发布记录）；被发布的范围覆盖 `system/iam`、`system/config`、`system/org`。

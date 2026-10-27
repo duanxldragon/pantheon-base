@@ -2,8 +2,8 @@
 
 Reviewed against `main` at `7dafa997`, with `pantheon-base-v0.17.5` (tag object `42495b25`, target
 `ed636967`) as the previous release. The release range is `ed636967..7dafa997`; the release target is
-the merge commit of this packet, not `7dafa997`, because `Release Gate Summary` must be green on the
-commit that gets tagged.
+the merge commit of this packet (`c9bc6c0f`), not `7dafa997`, because `Release Gate Summary` must be
+green on the commit that gets tagged.
 
 ## Scope audit
 
@@ -45,13 +45,13 @@ This packet itself touches no production code: `VERSION`, `CHANGELOG.md`, `READM
 
 No blocking finding in the release content. Residuals and follow-ups:
 
-- **F1 (P2, follow-up)**: publication facts do not exist yet. `README.md`, `README.en.md`,
-  `.harness/STATUS.md` and `CHANGELOG.md` describe the tag and the four assets ahead of publication;
-  the tag object, asset SHA-256 values and the `Foundation Release Verify` run id must be written in
-  the follow-up commit, as v0.17.5 did through PR #423. Approving this packet does not assert them.
-- **F2 (P2, follow-up)**: SonarCloud has not analysed this branch, so the quality-gate statement in the
-  release notes is carried from the previous green run and must be re-read from the PR checks before
-  merging.
+- **F1 (P2, closed)**: publication facts are now recorded. The tag object `2bc79966`, the target
+  commit `c9bc6c0f`, both payload SHA-256 values, the secret-scan reading and the
+  `Foundation Release Verify` run id are written into `.harness/STATUS.md`, this packet's
+  `summary.md` / `commands.json` and the task manifest, as v0.17.5 did through PR #423.
+- **F2 (P2, closed)**: SonarCloud analysed the merged tree. `Release Gate` run `40431521256` read
+  `SonarCloud quality gate for c9bc6c0f…: OK` on the tagged commit, and main currently reports 0
+  unresolved issues with New Duplicated Lines 1.9% against the 3% ceiling. CodeQL open alerts: 0.
 - **F3 (P3, environment)**: the 16 `module.generate.server_export_failed` failures without
   `PANTHEON_NODE_BIN` are the already-documented F5 limitation, reproduced and then cleared by
   re-running `modules/lowcode/...` with `PANTHEON_NODE_BIN` and `PANTHEON_WORKSPACE_ROOT` (ok 15.256s).
@@ -69,18 +69,24 @@ No blocking finding in the release content. Residuals and follow-ups:
 
 ## Verdict
 
-Approved with documented P2 follow-up. The release content is exactly what the five merged PRs carry,
-each release-note claim maps to a test or a file read recorded in `commands.json`, the packet changes
-no production code, and the local gate set is green. The follow-up is publication-state only: F1 and
-F2 must be closed by the CI readings and the post-publish facts commit before this release is declared
-consumable, and `pantheon-ops` consumption is tracked separately, not asserted here.
+Approved. The release content is exactly what the five merged PRs carry, each release-note claim maps
+to a test or a file read recorded in `commands.json`, the packet changes no production code, and the
+local gate set is green.
+
+PR #428 merged as `c9bc6c0f` with all five required contexts green, `Release Gate` (run
+`40431521256`) passed on that commit, and the release was cut and published from it on 2026-10-27:
+annotated tag `pantheon-base-v0.17.6` (object `2bc79966`), four assets with verified checksums,
+`check-release-secrets` clean over 3232 files, `check-release-assets` consistent between the local
+bundle and the remote release, and `Foundation Release Verify` (run `40433836341`) succeeded. Details
+and the command trail are in `summary.md` and `commands.json`. `pantheon-ops` consumption is tracked
+separately and is not asserted here.
 
 ## Machine Readable
 
 ```json
 {
   "taskId": "2026-10-27-v0176-release-closeout",
-  "verdict": "approved with documented P2 follow-up",
+  "verdict": "approved",
   "structuralReview": {
     "affectedSubgraph": [
       "release/version-material",
@@ -92,10 +98,7 @@ consumable, and `pantheon-ops` consumption is tracked separately, not asserted h
       "frontend/components/patterns/forms"
     ],
     "checks": ["cycle", "hub", "sensitive-flow"],
-    "findings": [
-      "F1 (P2, follow-up): publication facts (tag object, four asset checksums, Foundation Release Verify run) do not exist yet; README, STATUS and CHANGELOG describe the release ahead of them and must be corrected forward in the follow-up commit.",
-      "F2 (P2, follow-up): SonarCloud has not analysed this branch; the quality-gate line in RELEASE_NOTES_v0.17.6.md is carried from the previous green run until CI reports it."
-    ],
+    "findings": [],
     "notes": "The packet adds only version material and governance artifacts, so it introduces no module edge. The released subgraph does: tenant_plans becomes a new hub read by the overview, member-listing and plan-editor paths, all three of them platform-scoped reads behind five new permission codes, which is why sensitive-flow was checked against the tenant-confinement rule (platform-global table with no tenant_id, confinement applied by explicit WithTenantScope in the services). No path in the released content takes two parent locks, so the v0.17.5 lock-order conclusion still holds and no cycle appears. The MenuNode promotion removes a platform -> system/iam edge instead of adding one, and the baseline is empty, so a future edge of that shape fails the gate rather than being whitelisted."
   },
   "linkage": {

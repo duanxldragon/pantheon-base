@@ -1,7 +1,7 @@
 {
   "taskId": "2026-10-27-v0176-release-closeout",
   "repo": "pantheon-base",
-  "executedAt": "2026-10-27T09:40:00+08:00",
+  "executedAt": "2026-10-27T10:10:00+08:00",
   "agent": {
     "tool": "other",
     "adapter": "qoder-agent"
@@ -120,11 +120,65 @@
       "cwd": ".",
       "status": "passed",
       "details": "Push CI on main@7dafa997: CI, Code Quality Gates, Security Gates, Core Smoke Tests and Lint Workflows all success; Release Gate and Full Smoke Suite still running when this entry was written. gh needs the local proxy prefix because api.github.com resets on this host while git transport works."
+    },
+    {
+      "command": "HTTPS_PROXY=http://127.0.0.1:7897 gh pr checks 428 --repo duanxldragon/pantheon-base && gh pr merge 428 --repo duanxldragon/pantheon-base --squash --delete-branch",
+      "cwd": ".",
+      "status": "passed",
+      "details": "PR #428 head a3a35a4d: the five required contexts (Quality Gates run 40429884678, Security Gates 40429282769, Unit Tests, CI Summary, SonarCloud Code Analysis) are success, with CodeQL, CodeQL Security and Duplication Gate also green. Squash-merged at 2026-10-27T01:15:41Z as c9bc6c0f5d351016afb4fffdedf12e72cc73e61d; local main fast-forwarded to the same commit and only main remains locally and remotely."
+    },
+    {
+      "command": "HTTPS_PROXY=http://127.0.0.1:7897 gh api repos/duanxldragon/pantheon-base/commits/c9bc6c0f5d351016afb4fffdedf12e72cc73e61d/check-runs --jq ...（Release Gate Summary / SonarCloud Gate / CodeQL Alerts / Candidate Checks / Full Smoke / Actionlint）",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Every completed check-run on the release target commit is success except PR Smoke Core (Optional), which is skipped by design. Release Gate Summary belongs to run 40431521256; the SonarCloud Gate job log for that run prints 'SonarCloud quality gate for c9bc6c0f5d351016afb4fffdedf12e72cc73e61d: OK' and 'Candidate quality gate OK', which is the precondition publish-foundation-release.mjs enforces."
+    },
+    {
+      "command": "node scripts/foundation-release/cut-foundation-release.mjs --root . --release-version pantheon-base-v0.17.6 --release-line release/0.17 --base-commit c9bc6c0f5d351016afb4fffdedf12e72cc73e61d --release-notes $(cat RELEASE_NOTES_v0.17.6.md) --upgrade-notes ... --consumer-impact ...",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Exit 0. Produced releases/pantheon-base-v0.17.6/ (manifest.json, release-notes.md, upgrade-notes.md, consumer-impact.md, verification-summary.json) and dist/foundation-releases/pantheon-base-v0.17.6/ (tgz, tgz.sha256, repo.tar, repo.tar.sha256, bundle). Both paths are gitignored, so git status stayed clean, which is the first precondition of publish-foundation-release.mjs."
+    },
+    {
+      "command": "node scripts/foundation-release/check-release-secrets.mjs --release-version pantheon-base-v0.17.6 --root .",
+      "cwd": ".",
+      "status": "passed",
+      "details": "release secret scan: clean (3232 file(s) scanned). The scan opens both the tgz and repo.tar, so the packaged forms are covered, not just the working tree. No credential value is printed by the tool."
+    },
+    {
+      "command": "node scripts/foundation-release/publish-foundation-release.mjs --release-version pantheon-base-v0.17.6 --release-line release/0.17 --base-commit c9bc6c0f5d351016afb4fffdedf12e72cc73e61d --repo duanxldragon/pantheon-base (dry-run first, then real)",
+      "cwd": ".",
+      "status": "passed",
+      "details": "The dry run reported every precondition satisfied, so the real run created the annotated tag pantheon-base-v0.17.6 (tag object 2bc799663f83d00959d54c0c300d6393467f0d19) on c9bc6c0f and the GitHub Release (published_at 2026-10-27T01:39:12Z) with the four assets."
+    },
+    {
+      "command": "HTTPS_PROXY=http://127.0.0.1:7897 gh release view pantheon-base-v0.17.6 --repo duanxldragon/pantheon-base --json tagName,isDraft,isPrerelease,publishedAt,assets,targetCommitish && node scripts/foundation-release/check-release-assets.mjs --release-version pantheon-base-v0.17.6 --repo duanxldragon/pantheon-base",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Release is neither draft nor prerelease; assets are foundation-release-pantheon-base-v0.17.6.tgz (28912081 B, sha256 dbf1edd8f4bd082baee817c8e7797d298cf70f20d41b38c60d7bd39a5f362e35), its .sha256 (111 B), repo.tar (45168640 B, sha256 7a44e9ce0ed642e6d2d1f1508ef488292c46148da4a9e42a3f04ad848fda645d) and its .sha256 (75 B). check-release-assets prints [ok] local bundle pantheon-base-v0.17.6 and [ok] release pantheon-base-v0.17.6 carries all 4 required assets, so the local bundle and the remote release agree."
+    },
+    {
+      "command": "HTTPS_PROXY=http://127.0.0.1:7897 gh run view 40433836341 --repo duanxldragon/pantheon-base --json status,conclusion,jobs",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Foundation Release Verify on the published tag: completed / success, with Verify Release Assets and Foundation Release Verify Summary both green check-runs on c9bc6c0f."
+    },
+    {
+      "command": "curl -s \"https://sonarcloud.io/api/issues/search?componentKeys=duanxldragon_pantheon-base&branch=main&resolved=false\" and curl -s \"https://sonarcloud.io/api/qualitygates/project_status?projectKey=duanxldragon_pantheon-base\"",
+      "cwd": ".",
+      "details": "SonarCloud main: 0 unresolved issues, project status OK (new_reliability_rating 1, new_security_rating 1, new_maintainability_rating 1, new_duplicated_lines_density 1.9 against a 3 ceiling, new_security_hotspots_reviewed 100.0). gh api repos/duanxldragon/pantheon-base/code-scanning/alerts?state=open returns 0 alerts.",
+      "status": "passed"
+    },
+    {
+      "command": "node scripts/check-duplication.mjs --json",
+      "cwd": ".",
+      "status": "passed",
+      "details": "ok=true at 1.5% duplicated lines over 170240 lines in 898 files against a 3% threshold, 534 duplicate blocks. The CI Duplication Gate is report-only for pull_request events and reported DUPLICATION_RESULT=success on run 40429884678."
     }
   ],
   "knownGaps": [
-    "Release-gate and publication facts are not yet recorded: Release Gate Summary must succeed on the merge commit of this packet before publish-foundation-release.mjs will run, and Foundation Release Verify only exists after the tag is pushed. The packet and CHANGELOG name the tag and the four assets ahead of that; the real tag object, asset checksums and run ids land in the follow-up publication-facts commit, the same way v0.17.5 was closed by PR #423.",
-    "SonarCloud has not analysed this branch yet, so the release notes' quality-gate claim is carried from the previous green run and must be re-read from the PR checks before merging.",
+    "Published tags v0.17.0 through v0.17.5 and their assets are immutable; this packet only publishes v0.17.6 and records its facts. Nothing rewrites an earlier tag or release.",
+    "Consumption by pantheon-ops is not done here: advancing its foundation-release.lock.json to pantheon-base-v0.17.6, rebuilding from base and re-running the overlay/drift gates is an ops-side task.",
     "The 16 generator tests in backend/modules/lowcode/dynamicmodule fail without PANTHEON_NODE_BIN because Go's exec.LookPath(\"node\") cannot resolve the Git Bash /d/nodejs PATH form (documented F5). CI is unaffected: its ubuntu runner has node on PATH.",
     "ThreadSanitizer still cannot start on this Windows host (error 87); the race gate is the CI Linux quality.yml backend-tests job (go test -race ./...).",
     "FR-016 and FR-017 remain open by maintainer decision: check-evidence, check-review, check-runtime-evidence and check-inheritance-contract have no npm script and appear in no workflow, and check-boundaries only runs with a baseline in CI, so these local runs are not enforced signals.",
