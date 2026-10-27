@@ -3,7 +3,7 @@
   "title": "Align tenant contract, API doc, frontend types and design doc with the shipped surface",
   "goal": "Several documents describe a tenant surface that is not the one that ships. TENANT_API.md documents a GET /system/tenant/:id/members/page compatibility alias that exists only in the unmounted tenant_routes.go, and shows create/update/delete responses as a bare message object while the handler returns the common envelope. MemberUsageQuery.status is typed 'active' | 'removed' while the UI sends 'disabled', hidden by a cast. MULTI_TENANT_DESIGN.md still describes subdomains, custom domains, branding and public registration as a next phase, none of which is in the V1 contract. The contract says owner transfer is an explicit API action but no transfer endpoint exists; the shipped path is add-owner then remove-owner. This wave changes documentation and one type union, no runtime behaviour.",
   "primaryLayer": "system/iam",
-  "status": "planned",
+  "status": "completed",
   "priority": "P3",
   "type": "docs",
   "estimatedComplexity": "small",

@@ -1,0 +1,87 @@
+{
+  "taskId": "2026-10-27-tenant-contract-docs-alignment",
+  "repo": "pantheon-base",
+  "executedAt": "2026-10-27T22:10:00+08:00",
+  "agent": {
+    "tool": "other",
+    "adapter": "qoder-agent"
+  },
+  "knownGaps": [
+    "runtimeEvidence item 1 (one real create/update/delete response body captured from a running instance) is recorded as not-run: no live backend was started this session. The envelope examples were instead verified against the handler source (tenant_platform_handler.go CreateTenant/UpdateTenant/DeleteTenant -> common.Success) and the envelope constructor (pkg/common/http/response.go:31-37); the not-run clause in the manifest covers this.",
+    "The human gate 'Approve the contract revision note' is recorded as maintainer-delegated: V1.8 is additive (owner-transfer wording correction + two W2 error-code registrations), explicitly declaring no invariant or In/Out change. Open for maintainer review in the PR.",
+    "TENANT_API.md sections 2 (List) and 3 (Get) still show bare-row response bodies without the envelope shell; correcting them is outside this packet's in-scope list and is registered as a follow-up item, not slipped into this wave."
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-27-tenant-contract-docs-alignment/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-27-tenant-contract-docs-alignment/",
+    "summaryFile": ".harness/evidence/2026-10-27-tenant-contract-docs-alignment/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-27-tenant-contract-docs-alignment/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-27-tenant-completeness-remediation.task.md",
+      "docs/reviews/TENANT_FUNCTIONAL_COMPLETENESS_REVIEW_2026-10-27.md"
+    ]
+  },
+  "commands": [
+    {
+      "command": "git log --oneline -1",
+      "cwd": ".",
+      "notes": "Branch docs/tenant-contract-alignment-w5-2026-10-27 stacked on the W4 branch at 74a04c50 (includes the CI premise fix 1ccf53e4); W5 edits are uncommitted work on top.",
+      "status": "passed"
+    },
+    {
+      "command": "grep -n ListAllMembers backend/modules/system/iam/tenant/system_modules.go; sed -n '290,306p' backend/modules/system/system_modules.go",
+      "cwd": ".",
+      "notes": "Read the landed code first: production routes mount GET /tenant/:id/members only (:295); /members/page exists only in the unregistered tenant_routes.go:25.",
+      "status": "passed"
+    },
+    {
+      "command": "grep -rn 'type MemberRowFilter' -A 8 backend/modules/system/iam/tenant/tenant_ops_view.go",
+      "cwd": ".",
+      "notes": "MemberRowFilter.Status binds oneof=active disabled — the new MemberUsageQuery union ('active' | 'disabled') mirrors the backend binding exactly; 'removed' matched nothing.",
+      "status": "passed"
+    },
+    {
+      "command": "rg -n \"members/page\" docs/api/TENANT_API.md backend/modules/system/system_modules.go backend/modules/system/iam/tenant/tenant_routes.go",
+      "cwd": ".",
+      "notes": "Post-edit check (manifest verificationPlan): TENANT_API.md keeps only the explicit 'no /members/page variant exists' sentence; system_modules.go zero hits; tenant_routes.go still lists the unmounted legacy route.",
+      "status": "passed"
+    },
+    {
+      "command": "node scripts/harness/check-doc-links.mjs --root . --strict",
+      "cwd": ".",
+      "notes": "0 finding(s) — removing the alias paragraph left no dangling anchor.",
+      "status": "passed"
+    },
+    {
+      "command": "node scripts/harness/check-doc-inventory.mjs --root . --strict",
+      "cwd": ".",
+      "notes": "0 finding(s).",
+      "status": "passed"
+    },
+    {
+      "command": "cd frontend && npx tsc -b",
+      "cwd": ".",
+      "notes": "Clean after the status union change, the MemberQueryState retyping and cast removal — Arco Select onChange is compatible with the literal union without an event-boundary cast.",
+      "status": "passed"
+    },
+    {
+      "command": "cd frontend && npm run lint",
+      "cwd": ".",
+      "notes": "ESLint clean.",
+      "status": "passed"
+    },
+    {
+      "command": "node scripts/harness/check-task-packet.mjs --root .",
+      "cwd": ".",
+      "notes": "66 file(s), 0 error(s), 41 warning(s) (warnings pre-existing).",
+      "status": "passed"
+    },
+    {
+      "command": "live response capture for create/update/delete",
+      "cwd": ".",
+      "notes": "Not run — no live backend instance in this session. Verified against handler source instead (common.Success payloads), per the manifest's not-run clause.",
+      "status": "not-run"
+    }
+  ]
+}
