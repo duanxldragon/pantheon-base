@@ -98,7 +98,10 @@ tenant_memberships
 
 不变量：
 - 一个 user 可属于多个 tenant；同一 `(tenant_id, user_id)` 唯一
-- 每个非 archived 租户至少一个 `owner`；转移 owner 是显式 API 动作
+- 每个非 archived 租户至少一个 `owner`；**owner 转移没有单一端点**（V1.8 澄清），落地路径是
+  两步显式 API 动作：先把新 owner 加入（`POST /system/tenant/:id/members`，`role=owner`，已有行
+  按上表复活语义升级），再移除原 owner（`DELETE /system/tenant/:id/members/:userId`，
+  `ensureNotLastOwner` 保证任意时刻至少剩一个 owner）。两步之间租户短暂持有两个 owner，属合法中间态
 - membership 的**下架方式按路径区分**（V1.5 澄清，逐条对齐实现；原条款「一律软禁用、不物理删除」
   与实现不符）：
 
@@ -339,6 +342,9 @@ DDL 与种子：编号迁移 `000030_tenant_plan_definitions`；AutoMigrate 部�
 | 上下文缺失（非 compat） | 500 | `TENANT_CONTEXT_MISSING`（配置错误，告警） |
 | 资源不属于当前租户（查询返回空，不泄露存在性） | 200/404 | 不引入新码：返回空集或 404，不区分"不存在"与"他租户" |
 | 删除未归档租户（成员数是否为 0 不影响判定，V1.6） | 400 | `tenant.not_archived` |
+| 添加成员时目标租户不存在或已删除（墓碑，先于用户检查，W2） | 404 | `tenant.not_found` |
+| 添加成员时 `user_id` 不指向存活的 `system_user` 行（W2，V1.8 登记） | 404 | `user.not_found` |
+| 添加成员时用户已是 `owner` 而请求非 owner 角色（非 owner 行重加幂等，W2，V1.8 登记） | 400 | `tenant.member_exists` |
 | 添加成员时用户 owning tenant 与目标租户不一致（V1.7） | 400 | `tenant.member.user_not_in_tenant` |
 
 ---
@@ -389,6 +395,7 @@ DDL 与种子：编号迁移 `000030_tenant_plan_definitions`；AutoMigrate 部�
 | V1.5 | 2026-10-26 | §2.2 的「membership 删除 = `status=disabled`，不物理删除」改写为**按路径区分的四行表**（删除租户 / 删除用户 = 软禁用，显式移除成员 = 物理删除，重新加入 = 复活旧行），并把「审计链完整」的承担者从「行保留」更正为「全局操作日志」；§2.4 新增不变量 8，把 V1.4 登记为残余 gap 的**套餐指派面**移进 In 并接通前端（后端 `AssignableCodes` 删除）；同步在 EN 文本补译 §2.3.1（V1.2 遗留缺口）。写侧强制行为未改动，「把移除成员也改成软禁用」显式登记为未来的契约变更候选及其前置条件 | 澄清（§2.2）+ 扩展（§2.4 不变量 8） |
 | V1.6 | 2026-10-27 | §5 登记删除守卫错误码 `tenant.not_archived`（400）。实现此前按「成员数 > 0 且未归档」拒绝删除，与 §2.1「删除仅允许对 `archived` 执行」不符：删光用户即可把活跃租户的活跃成员数降为 0，绕过归档直接删除。现按 §2.1 原文执行（守卫是 `status` 而非成员数），平台与 legacy 两个 handler 均注册该码，控制台对非归档行禁用删除入口；§2.1 与 §2.2 条文不变 | 澄清（Clarification）+ 扩展（§5 错误码） |
 | V1.7 | 2026-10-27 | §2.2 新增不变量「跨租户 membership 不授予授权、也不在登录时提供」（W3 决策 A / TC-01）：登录发现、候选列表、可切换列表共用单一角色存在性谓词，`SwitchSessionTenant` 拒绝空角色集目标，`AddMember` 收窄到 owning tenant 用户并登记 §5 错误码 `tenant.member.user_not_in_tenant`（400）；登录选择器与 TenantSwitcher 控件移除、端点保留为过滤后的兼容面；存量跨租户 membership 行保留不清理，`/auth/current` 仍如实上报。数据层「一个 user 可属于多个 tenant」不变量不变 | 澄清（Clarification）+ 扩展（§5 错误码） |
+| V1.8 | 2026-10-27 | 纯追加修订（W5 对齐，不改变任何不变量）：① §2.2 owner 转移表述对齐实现——**无单一转移端点**，落地路径为两步显式动作（加入新 owner → 移除旧 owner，`ensureNotLastOwner` 兜底，中间双 owner 是合法中间态），原文「转移 owner 是显式 API 动作」未对应任何端点；② §5 补登记 W2 成员完整性守卫（已实现于 PR #434）的两个错误码：`user.not_found`（404——`tenant_memberships` 对 `system_user` 无外键，无此守卫会写入指名不存在用户的幽灵行）与 `tenant.member_exists`（400——owner 降级拒绝，非 owner 行重加幂等），并注明墓碑检查先于用户存在性检查。In/Out 边界、生命周期与授权不变量均不变 | 澄清（Clarification） |
 
 **V1.5 的触发与范围**
 

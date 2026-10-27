@@ -51,14 +51,18 @@ Creates a new tenant.
 **Response** (200 OK):
 ```json
 {
-  "id": 1,
-  "code": "acme-corp",
-  "name": "ACME Corporation",
-  "status": "active",
-  "plan": "enterprise",
-  "metadata": "{\"industry\":\"technology\"}",
-  "created_at": "2026-09-29T10:00:00Z",
-  "updated_at": "2026-09-29T10:00:00Z"
+  "code": 200,
+  "data": {
+    "id": 1,
+    "code": "acme-corp",
+    "name": "ACME Corporation",
+    "status": "active",
+    "plan": "enterprise",
+    "metadata": "{\"industry\":\"technology\"}",
+    "created_at": "2026-09-29T10:00:00Z",
+    "updated_at": "2026-09-29T10:00:00Z"
+  },
+  "message": "success"
 }
 ```
 
@@ -153,7 +157,9 @@ All fields are optional. Only provided fields will be updated.
 **Response** (200 OK):
 ```json
 {
-  "message": "tenant updated successfully"
+  "code": 200,
+  "data": {},
+  "message": "success"
 }
 ```
 
@@ -173,7 +179,9 @@ Marks a tenant as deleted (soft delete).
 **Response** (200 OK):
 ```json
 {
-  "message": "tenant deleted successfully"
+  "code": 200,
+  "data": {},
+  "message": "success"
 }
 ```
 
@@ -215,7 +223,9 @@ Adds a user to a tenant.
 **Response** (200 OK):
 ```json
 {
-  "message": "member added successfully"
+  "code": 200,
+  "data": {},
+  "message": "success"
 }
 ```
 
@@ -242,7 +252,7 @@ Adds a user to a tenant.
 
 **GET** `/system/tenant/:id/members`
 
-Lists one bounded page of active tenant members, ordered by creation time and ID. The response envelope is stable for all consumers; the `/members/page` path below remains as a compatibility alias.
+Lists one bounded page of active tenant members, ordered by creation time and ID. The response envelope is stable for all consumers. This is the only mounted member-list route: no `/members/page` variant exists (the legacy route group that carried it is not registered).
 
 **Authorization**: Platform capability required (`PlatformCapabilityMiddleware` + `system:tenant:*`)
 
@@ -268,9 +278,8 @@ Lists one bounded page of active tenant members, ordered by creation time and ID
 }
 ```
 
-**GET** `/system/tenant/:id/members/page`
+---
 
-Compatibility alias for the same bounded pagination contract and response envelope.
 ### 8. Remove Tenant Member
 
 **DELETE** `/system/tenant/:id/members/:userId`
