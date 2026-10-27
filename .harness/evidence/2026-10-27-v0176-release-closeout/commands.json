@@ -1,0 +1,147 @@
+{
+  "taskId": "2026-10-27-v0176-release-closeout",
+  "repo": "pantheon-base",
+  "executedAt": "2026-10-27T09:40:00+08:00",
+  "agent": {
+    "tool": "other",
+    "adapter": "qoder-agent"
+  },
+  "commands": [
+    {
+      "command": "git log --oneline ed636967..7dafa997 && git diff --stat ed636967..7dafa997 | tail -1",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Five merges since the v0.17.5 tag: 601ae446 (#423, publication facts), be75b54d (#424, compat tenant scope), c1b1d702 (#427, tenant plans/ops reads/a11y/governance), 9371594e (#426, GitHub Actions bumps), 7dafa997 (#425, frontend npm bumps). Diff: 303 files changed, 13767 insertions, 635 deletions."
+    },
+    {
+      "command": "ls backend/pkg/database/migrations/*.up.sql | tail -3 && grep -n 'CREATE TABLE\\|DROP TABLE' backend/pkg/database/migrations/000030_tenant_plan_definitions.up.sql backend/pkg/database/migrations/000030_tenant_plan_definitions.down.sql",
+      "cwd": ".",
+      "status": "passed",
+      "details": "The chain ends at 000030_tenant_plan_definitions. up runs CREATE TABLE IF NOT EXISTS `tenant_plans` plus four guarded per-code INSERTs; down runs DROP TABLE IF EXISTS `tenant_plans`. Schema is therefore 30, not 29 as in v0.17.5."
+    },
+    {
+      "command": "grep -n 'system:tenant:overview\\|system:tenant:member-list\\|system:tenant:plan' backend/modules/system/iam/permission/permission_workbench.go && grep -n 'tenant-ops\\|menuKeyTenantOps\\|menuKeyTenantOverview' backend/modules/system/seed.go",
+      "cwd": ".",
+      "status": "passed",
+      "details": "permission_workbench.go:637-641 binds the five new codes to GET /api/v1/system/tenant-ops/overview, GET .../member, GET .../plan/list, POST .../plan and PUT .../plan/:code. seed.go:151 creates the tenant-ops group (/system/tenant-ops, type M, sort 25) and parents the overview page, the existing tenant list and tenant-member (/system/tenant-ops/member); the plan create/update/list function permissions hang under the overview page."
+    },
+    {
+      "command": "cd backend && go build ./... && go vet ./... && gofmt -l .",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "BUILD_OK, VET_OK, GOFMT_DONE with no files listed."
+    },
+    {
+      "command": "cd backend && set -a; . ../.env.test; set +a; PANTHEON_NODE_BIN='D:\\nodejs\\node.exe' PANTHEON_WORKSPACE_ROOT=<repo> PANTHEON_TEST_DSN_REQUIRED=true PANTHEON_TEST_REDIS_REQUIRED=true go test -timeout 900s -count=1 ./...",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "Exit 0. 46 packages ok, 0 FAIL, 0 SKIP, 6 packages have no test files. Both required flags were set so a missing MySQL or Redis fails instead of skipping. An identical run without PANTHEON_NODE_BIN reported 16 failures in modules/lowcode/dynamicmodule with module.generate.server_export_failed; re-running only that package with PANTHEON_NODE_BIN and PANTHEON_WORKSPACE_ROOT set gives ok in 15.256s, which confirms the documented F5 environment limitation rather than a code defect."
+    },
+    {
+      "command": "cd backend && go test -count=1 -v -run 'TestPlanStore_|TestOverview_|TestMemberListing_|TestListPlans_' ./modules/system/iam/tenant",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "ok in 12.512s on real MySQL. Covers the idempotent seed that never undoes an operator edit, quota resolution through the table, the bounded cache dropped by writes, create requiring every ceiling, illegal code rejection, update keeping omitted fields, retiring an assigned plan being refused, overview scoping/occupancy/unmanaged-plan/filters/page-size clamping, cross-tenant member listing with per-tenant ceilings and stable bounded pagination, and tenants-per-plan counts."
+    },
+    {
+      "command": "cd backend && go test -count=1 -v -run 'TestRoleService_CreateRoleSyncsKnownPermissionAPIPolicies|TestRoleService_RolePolicySyncPreservesManualPolicies|TestRoleTenantScope_RolePolicySyncUsesTenantSubject' ./modules/system/iam/role",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "PASS in 0.84s, 0.81s and 0.75s on real MySQL. Role saves reach the enforcement view, manual policies survive a sync, and the subject is tenant-scoped."
+    },
+    {
+      "command": "cd backend && go test -count=1 -v -run 'TestTenantSwitchErrorCodeClassifiesClientRejections|TestBatchAcknowledgeSecurityEvents' ./modules/auth/login ./modules/auth/security",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "PASS in 0.00s and 0.30s. Same-tenant switching classifies as a client rejection instead of a 500 and security-event acknowledgement returns the governed code."
+    },
+    {
+      "command": "cd backend && go test -count=1 -v -run 'TestUserService_ResetPassword' ./modules/system/iam/user && go test -count=1 -v -run 'TestTenantOpsMenuSeedContract' ./modules/system && go test -count=1 -v -run 'TestRunMigrationsAlignsRuntimeSchemaWithCurrentContracts' ./pkg/database",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "PASS in 1.29s (reset password clears the lock counters), 0.82s (the tenant-ops menu seed contract) and 7.04s (runtime schema aligns with the current contracts, i.e. migration 000030 is part of the aligned chain)."
+    },
+    {
+      "command": "cd backend && go test -count=1 -run 'TestDeptCompatScope|TestDeptImportCompat|TestBuildDeptPathMaps_OrphanParentIsPathBoundary|TestPostService_ImportPostsStampsRequestTenant' ./modules/system/org/dept ./modules/system/org/post && go test -count=1 -run 'TestOverview_ScopesToRealTenants|TestMemberListing_SpansTenantsWithTheirOwnCeilings' ./modules/system/iam/tenant",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "ok in 0.704s (dept) and 0.583s (post); the tenant package passed in the combined run. Compat scope pins the global population, the dept import stays in the global tree, an orphan parent is a path boundary rather than a blocking error, and imported posts are stamped with the request tenant."
+    },
+    {
+      "command": "cd backend && golangci-lint run --new-from-rev=main ./...  (run as cmd.exe //c with PATH=D:\\Go\\bin;D:\\nodejs;%PATH% so the linter can find go)",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "Exit 0 with no output lines: no new findings against main at the CI form. A bare run would surface historical debt that CI does not gate on; the CI form is the one recorded here."
+    },
+    {
+      "command": "cd frontend && node node_modules/typescript/bin/tsc -b",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "Exit 0, no diagnostics."
+    },
+    {
+      "command": "cd frontend && node node_modules/eslint/bin/eslint.js src tests --max-warnings 0",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "Exit 0 with no output: zero errors and zero warnings."
+    },
+    {
+      "command": "cd frontend && while read -r c; do eval \"$c\"; done < prebuild-commands.txt  (the 14 scripts chained by the prebuild hook, run directly because Git Bash has no npm)",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "All 14 pass: patch-arco-react19 (already applied), check-menu-contract (19 menus, 23 routes, 102 permissions, 23 component keys), check-i18n-hardcode (238 files), check-i18n-generated-scope, check-system-datetime-presentation (44 files), check-shell-visual-contract, check-ui-contract (0 findings across 277 files), check-password-toggle (0 findings across 257 files), check-search-toolbar-contract (103 module files + index.css), check-important-budget, check-system-page-admission (16 entries), check-smoke-web-base (111 files), check-smoke-coverage-contract (34 specs, 20 script entries), check-import-path-case (276 source files)."
+    },
+    {
+      "command": "cd frontend && node node_modules/vite/bin/vite.js build",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "built in 774ms. The five locale bundles, react-vendor and arco-table chunks emitted; the contract chain that the npm prebuild hook would have run was executed separately (previous entry) because invoking vite directly bypasses it."
+    },
+    {
+      "command": "node scripts/frontmatter-check.mjs && node scripts/harness/check-task-packet.mjs --root . && node scripts/harness/check-structure-contract.mjs --root . --strict && node scripts/harness/check-generated.mjs --root . --strict",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Frontmatter check passed for 356 docs (263 with frontmatter). Task packet check: this packet [PASS] (it initially failed on the literal Harness Profile bullets, the bare Primary Layer token, the six Workspace Context labels and the five required checklist items; all were repaired in place rather than by weakening the checker). Structure contract (strict): 0 findings across 2712 tracked files. Generated artifact check (strict): 0 findings across 11 artifacts."
+    },
+    {
+      "command": "node scripts/harness/check-boundaries.mjs --strict && node scripts/harness/check-boundaries.mjs --strict --baseline config/boundary-baseline.json",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Both forms report no findings. config/boundary-baseline.json keeps an empty entries array with the 2026-10-26 ratchet note, so a new cross-layer import fails the gate instead of being whitelisted."
+    },
+    {
+      "command": "node scripts/harness/check-failure-registry.mjs && node scripts/harness/check-runtime-evidence.mjs --strict && node scripts/harness/check-inheritance-contract.mjs --root ..",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Failure registry [PASS] for docs/harness/failure-registry.md. Runtime evidence (strict): 56 files, 0 errors, 0 warnings. Inheritance contract (report-only) at the workspace root: 0 findings, 0 warnings. Running it with --root . inside pantheon-base produces one finding (.github/pull_request_template.md lacks the business-only marker) because that gate is workspace-level: it reads root/.github/pull_request_template.md and root/pantheon-ops/AGENTS.md, so the base repo's own template is misread as the ops template. The correct invocation is recorded in the packet's Verification Plan."
+    },
+    {
+      "command": "HTTPS_PROXY=http://127.0.0.1:7897 gh run list --repo duanxldragon/pantheon-base --branch main --limit 8 --json databaseId,name,status,conclusion,headSha",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Push CI on main@7dafa997: CI, Code Quality Gates, Security Gates, Core Smoke Tests and Lint Workflows all success; Release Gate and Full Smoke Suite still running when this entry was written. gh needs the local proxy prefix because api.github.com resets on this host while git transport works."
+    }
+  ],
+  "knownGaps": [
+    "Release-gate and publication facts are not yet recorded: Release Gate Summary must succeed on the merge commit of this packet before publish-foundation-release.mjs will run, and Foundation Release Verify only exists after the tag is pushed. The packet and CHANGELOG name the tag and the four assets ahead of that; the real tag object, asset checksums and run ids land in the follow-up publication-facts commit, the same way v0.17.5 was closed by PR #423.",
+    "SonarCloud has not analysed this branch yet, so the release notes' quality-gate claim is carried from the previous green run and must be re-read from the PR checks before merging.",
+    "The 16 generator tests in backend/modules/lowcode/dynamicmodule fail without PANTHEON_NODE_BIN because Go's exec.LookPath(\"node\") cannot resolve the Git Bash /d/nodejs PATH form (documented F5). CI is unaffected: its ubuntu runner has node on PATH.",
+    "ThreadSanitizer still cannot start on this Windows host (error 87); the race gate is the CI Linux quality.yml backend-tests job (go test -race ./...).",
+    "FR-016 and FR-017 remain open by maintainer decision: check-evidence, check-review, check-runtime-evidence and check-inheritance-contract have no npm script and appear in no workflow, and check-boundaries only runs with a baseline in CI, so these local runs are not enforced signals.",
+    "Dependabot-triggered runs cannot read the RELEASE_GATE_TOKEN repository secret, so Automate Solo PR fails on those runs. The context is not required for merge.",
+    "check-inheritance-contract is a workspace-level gate and its authoritative root (the workspace container) has no working git repository, so the workspace-root PR template and WORKSPACE_INHERITANCE.md it validates cannot be committed from here.",
+    "Quotas are displayed, not enforced: crossing a plan threshold does not make the backend reject a request. Enforcing it is a commercial-semantics change explicitly out of scope."
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-27-v0176-release-closeout/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-27-v0176-release-closeout/",
+    "summaryFile": ".harness/evidence/2026-10-27-v0176-release-closeout/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-27-v0176-release-closeout/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/VERSION_MANAGEMENT_GUIDE.md",
+      "docs/harness/tasks/2026-10-24-v0175-release-closeout.task.md",
+      ".harness/evidence/2026-10-24-single-tenant-scope-closeout/summary.md"
+    ]
+  }
+}

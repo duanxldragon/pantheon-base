@@ -1,0 +1,188 @@
+{
+  "taskId": "2026-10-27-v0176-release-closeout",
+  "taskDoc": "docs/harness/tasks/2026-10-27-v0176-release-closeout.task.md",
+  "title": "Publish v0.17.6: stored tenant plans, platform-scoped tenant operations reads, compat tenant-scope closure and password accessibility",
+  "goal": "Publish the five merges that landed after the v0.17.5 tag (PR #423, #424, #427, #426, #425) as the next consumable foundation release pantheon-base-v0.17.6 so pantheon-ops can advance its pin and consume tenant operations. Plan definitions move out of the hardcoded GetDefaultQuota switch into the tenant_plans table through migration 000030; three platform-scoped read surfaces land behind /system/tenant-ops/* with five new permission codes and a new Tenant Operations menu group; the compat-mode tenant scope that six services discarded is pinned; five defects found while driving the running system are fixed; every password surface gets an accessible name guarded by check:password-toggle; and the frontend cross-layer boundary baseline is emptied by promoting MenuNode to frontend/src/api/menu.ts. Unlike v0.17.5 this release does change the database (schema 29 to 30) and adds routes, permission codes and menu seeds. Quotas stay display-only: no request is rejected because a plan threshold was crossed.",
+  "primaryLayer": "system/iam",
+  "dependencyLayers": [
+    "platform",
+    "system/config",
+    "system/org"
+  ],
+  "status": "in-progress",
+  "priority": "P1",
+  "type": "release-closeout",
+  "estimatedComplexity": "medium",
+  "contractAnchors": [
+    "docs/contracts/TENANT_CONTRACT_V1.md",
+    "docs/designs/FOUNDATION_RELEASE_MODEL.md",
+    "docs/designs/REPOSITORY_LAYOUT.md",
+    "docs/VERSION_MANAGEMENT_GUIDE.md"
+  ],
+  "findings": [
+    "R1 (P1, fixed in be75b54d / PR #424): under compat the resolved tenant context (tenant_id 0) was discarded by six services, so single-tenant screens read every tenant's rows and dict/dept deletes could not target the caller's record.",
+    "R2 (P1, fixed in c1b1d702 / PR #427): saving a role did not propagate to the Casbin enforcement view, so the granted set and the enforced set diverged.",
+    "R3 (P2, fixed in c1b1d702): switching to another tenant inside the same tenant returned 500; confirming a security event returned the wrong error code; a password reset left the lock counters intact.",
+    "R4 (P1, fixed in c1b1d702): the permission workbench and department paths leaked across tenant scope.",
+    "R5 (P2, fixed in c1b1d702): plan thresholds lived in a Go switch, so the platform console could not state what a plan grants without a code release.",
+    "R6 (P2, fixed in c1b1d702): Arco's Input.Password rendered its visibility toggle without an accessible name on ten password surfaces, and <html lang> did not follow the active locale.",
+    "R7 (P2, fixed in c1b1d702): the generator table picker listed every table regardless of the module scope, and the department dialog could submit the parent placeholder the backend rejects.",
+    "R8 (P2, closed by executing the ratchet in c1b1d702): platform/widgets.tsx imported system/iam/menu/api; the violation was frozen in config/boundary-baseline.json. MenuNode is now in frontend/src/api/menu.ts and the baseline has no entries.",
+    "R9 (P3, registered open as FR-016 / FR-017): check-evidence, check-review, check-runtime-evidence and check-inheritance-contract have no npm script and appear in no workflow, and check-boundaries only ever runs with a baseline, so a schema or boundary addition retroactively rots older artifacts with no failing signal. Wiring them into CI is a maintainer gate-policy decision.",
+    "R10 (P3, environment limitation): the 16 generator tests in backend/modules/lowcode/dynamicmodule fail locally with module.generate.server_export_failed because Go's exec.LookPath(\"node\") cannot resolve the Git Bash /d/nodejs PATH form. With PANTHEON_NODE_BIN and PANTHEON_WORKSPACE_ROOT set the package is green; this is the already-documented F5 in .harness/evidence/2026-10-24-single-tenant-scope-closeout/summary.md, not a regression introduced here.",
+    "R11 (P3, environment limitation): dependabot-triggered runs cannot read the RELEASE_GATE_TOKEN repository secret, so Automate Solo PR fails on those runs (Bot approval not permitted, and the merge commit does not trigger push workflows). The context is not required for merge; recorded, not worked around."
+  ],
+  "scope": {
+    "in": [
+      "Version material: VERSION 0.17.6, CHANGELOG.md, RELEASE_NOTES_v0.17.6.md, README.md, README.en.md, .harness/STATUS.md",
+      "Release notes trio passed to cut-foundation-release.mjs (--release-notes, --upgrade-notes, --consumer-impact)",
+      "Task packet, manifest and evidence trio for this round plus pr-body.md",
+      "Local verification: full real-MySQL/Redis backend suite with PANTHEON_NODE_BIN set, build/vet/gofmt, CI-form golangci-lint --new-from-rev=main, frontend tsc/eslint/vite build, and the whole governance chain",
+      "Open the release-material pull request, watch CI to green on the five required contexts, and merge it",
+      "Cut and publish pantheon-base-v0.17.6 on the merge commit once Release Gate Summary is successful there, then check-release-assets and Foundation Release Verify",
+      "Record the publication facts (tag object, four asset checksums, run ids) back into the release record"
+    ],
+    "out": [
+      "Enforcing plan thresholds (the contract states quotas are displayed, not enforced)",
+      "Self-service password reset; recovery is an administrator action by decision",
+      "FR-016 / FR-017 CI wiring: adding npm scripts or workflow steps for the four unobserved checkers is a gate-policy change reserved for the maintainer",
+      "Any SonarCloud rule or project-configuration change",
+      "Rewriting the published v0.17.0 through v0.17.5 tags and assets",
+      "Relaxing gate thresholds, skipping tests or introducing suppressions to go green",
+      "pantheon-ops side changes: consumption closes in the consumer repository's own task packet"
+    ]
+  },
+  "acceptanceCriteria": [
+    "VERSION reads 0.17.6 and every version reference in README.md, README.en.md, CHANGELOG.md and .harness/STATUS.md names pantheon-base-v0.17.6 consistently with RELEASE_NOTES_v0.17.6.md.",
+    "RELEASE_NOTES_v0.17.6.md states the schema move 29 to 30, the five new routes with their five permission codes, the menu-tree change, the Go type rename and the frontend import-path change; nothing it claims is absent from the merged code.",
+    "The full backend suite against real MySQL and Redis reports 0 FAIL and 0 SKIP with PANTHEON_TEST_DSN_REQUIRED and PANTHEON_TEST_REDIS_REQUIRED set and PANTHEON_NODE_BIN configured.",
+    "go build, go vet and gofmt are clean, and golangci-lint run --new-from-rev=main ./... reports no new findings.",
+    "Frontend tsc -b, eslint src tests --max-warnings 0 and vite build succeed, with the prebuild contract chain including check:password-toggle passing.",
+    "check-task-packet (with --root .), check-doc-frontmatter, check-structure, check-generated, check-failure-registry, check-boundaries in both the bare --strict and the CI --baseline form, check-runtime-evidence --strict, check-evidence --strict, check-review --strict and check-inheritance-contract all exit 0.",
+    "config/boundary-baseline.json keeps an empty entries array.",
+    "SonarCloud Quality Gate is green with zero open new-code issues and zero unresolved issues on main.",
+    "The release-material pull request merges with all five required contexts green, and Release Gate Summary succeeds on the resulting main commit.",
+    "pantheon-base-v0.17.6 is an annotated tag carrying exactly foundation-release-*.tgz, its .sha256, repo.tar and repo.tar.sha256; the release is neither draft nor prerelease.",
+    "check-release-assets reports local and remote assets consistent, the release secret preflight scans clean, and Foundation Release Verify succeeds on the tag.",
+    "The publication facts are recorded in the release record and the ops consumption is left as an explicit, separately tracked follow-up."
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "permission-policy",
+    "portableFailureClass": "scope-leak / contract-drift / inaccessible-control / hardcoded-entitlement",
+    "ownerLayer": "foundation-source",
+    "ratchetDecision": "registry-only",
+    "coverageDimensions": [
+      "behaviour",
+      "maintainability",
+      "architecture-fitness",
+      "runtime-quality"
+    ]
+  },
+  "expectedFiles": {
+    "create": [
+      "RELEASE_NOTES_v0.17.6.md",
+      "docs/harness/tasks/2026-10-27-v0176-release-closeout.task.md",
+      ".harness/tasks/2026-10-27-v0176-release-closeout/manifest.json",
+      ".harness/evidence/2026-10-27-v0176-release-closeout/summary.md",
+      ".harness/evidence/2026-10-27-v0176-release-closeout/review.md",
+      ".harness/evidence/2026-10-27-v0176-release-closeout/commands.json",
+      ".harness/evidence/2026-10-27-v0176-release-closeout/pr-body.md"
+    ],
+    "modify": [
+      "VERSION",
+      "CHANGELOG.md",
+      "README.md",
+      "README.en.md",
+      ".harness/STATUS.md"
+    ],
+    "doNotTouch": [
+      "backend/pkg/database/migrations/** (schema is already at 30 via PR #427)",
+      "backend/modules/** and frontend/src/** production code",
+      "config/boundary-baseline.json (keep the entries array empty)",
+      ".github/workflows/** (gate-policy changes need maintainer approval)",
+      "docs/contracts/** (contract semantics are unchanged)",
+      "the published RELEASE_NOTES_v0.17.0 through v0.17.5 files, tags and assets"
+    ]
+  },
+  "implementationNotes": [
+    "The version is a patch (0.17.6) because v0.17.1 through v0.17.5 are all patches on the release/0.17 line; the release line stays unchanged for cut-foundation-release.mjs.",
+    "cut-foundation-release.mjs does not read RELEASE_NOTES_*.md automatically, so --release-notes, --upgrade-notes and --consumer-impact must be passed explicitly.",
+    "publish-foundation-release.mjs refuses to continue unless the latest Release Gate Summary check-run on the target commit succeeded, so the release target is the merge commit of this packet, not any earlier head.",
+    "The 16 local generator failures are the documented F5 environment limitation: set PANTHEON_NODE_BIN and PANTHEON_WORKSPACE_ROOT before reading a backend suite result.",
+    "README and STATUS name the tag and the four assets before publication; the real tag object, asset checksums and run ids land in the follow-up publication-facts commit, matching how v0.17.5 was closed by PR #423.",
+    "This is not a schema-neutral release: migration 000030 must run, new permission codes only grant the new pages, and 租户管理 moved under the new 租户运营 group."
+  ],
+  "verificationPlan": {
+    "backend": [
+      "go build ./...",
+      "go vet ./...",
+      "gofmt -l .",
+      "PANTHEON_NODE_BIN and PANTHEON_WORKSPACE_ROOT set, then PANTHEON_TEST_DSN_REQUIRED=true PANTHEON_TEST_REDIS_REQUIRED=true go test -count=1 ./...",
+      "golangci-lint run --new-from-rev=main ./... (the CI form; a bare run carries historical findings)"
+    ],
+    "frontend": [
+      "node node_modules/typescript/bin/tsc -b",
+      "node node_modules/eslint/bin/eslint.js src tests --max-warnings 0",
+      "node node_modules/vite/bin/vite.js build (runs the prebuild contract chain including check:password-toggle)"
+    ],
+    "governance": [
+      "npm run -s check:docs-frontmatter",
+      "npm run -s check:task-packet -- --root .",
+      "npm run -s check:structure",
+      "npm run -s check:generated",
+      "node scripts/harness/check-boundaries.mjs --strict",
+      "node scripts/harness/check-boundaries.mjs --strict --baseline config/boundary-baseline.json",
+      "node scripts/harness/check-failure-registry.mjs",
+      "node scripts/harness/check-runtime-evidence.mjs --strict",
+      "node scripts/harness/check-evidence.mjs --strict .harness/evidence/2026-10-27-v0176-release-closeout/commands.json",
+      "node scripts/harness/check-review.mjs --strict .harness/evidence/2026-10-27-v0176-release-closeout/review.md",
+      "node scripts/harness/check-inheritance-contract.mjs --root ."
+    ],
+    "release": [
+      "node scripts/foundation-release/cut-foundation-release.mjs --release-version pantheon-base-v0.17.6 --release-line release/0.17 --base-commit <merge-sha> --release-notes ... --upgrade-notes ... --consumer-impact ...",
+      "node scripts/foundation-release/check-release-secrets.mjs --release-version pantheon-base-v0.17.6",
+      "node scripts/foundation-release/publish-foundation-release.mjs --release-version pantheon-base-v0.17.6 --release-line release/0.17 --base-commit <merge-sha> --repo duanxldragon/pantheon-base",
+      "node scripts/foundation-release/check-release-assets.mjs --release-version pantheon-base-v0.17.6 --repo duanxldragon/pantheon-base",
+      "gh release view pantheon-base-v0.17.6 --repo duanxldragon/pantheon-base --json assets,tagName,isDraft,isPrerelease"
+    ]
+  },
+  "linkage": {
+    "taskId": "2026-10-27-v0176-release-closeout",
+    "taskManifest": ".harness/tasks/2026-10-27-v0176-release-closeout/manifest.json",
+    "assessment": "docs/harness/tasks/2026-10-27-v0176-release-closeout.task.md",
+    "openspecChange": "none",
+    "superpowersPlan": "none",
+    "evidenceDir": ".harness/evidence/2026-10-27-v0176-release-closeout/",
+    "summaryFile": ".harness/evidence/2026-10-27-v0176-release-closeout/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-27-v0176-release-closeout/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/VERSION_MANAGEMENT_GUIDE.md",
+      "docs/harness/tasks/2026-10-24-v0175-release-closeout.task.md",
+      ".harness/evidence/2026-10-24-single-tenant-scope-closeout/summary.md"
+    ]
+  },
+  "release": {
+    "version": "0.17.6",
+    "tag": "pantheon-base-v0.17.6",
+    "releaseLine": "release/0.17",
+    "previousRelease": "pantheon-base-v0.17.5",
+    "schemaVersion": "30",
+    "contents": [
+      "601ae446 docs(harness): record the v0.17.5 publication facts (PR #423)",
+      "be75b54d fix(system): pin compat tenant scope in dict/dept and imports (PR #424)",
+      "c1b1d702 feat(iam): tenant plans, ops reads, a11y and governance closure (PR #427)",
+      "9371594e chore(deps): bump the github-actions group with 3 updates (PR #426)",
+      "7dafa997 chore(deps): bump the frontend-npm-dependencies group with 6 updates (PR #425)"
+    ],
+    "assets": [
+      "foundation-release-pantheon-base-v0.17.6.tgz",
+      "foundation-release-pantheon-base-v0.17.6.tgz.sha256",
+      "repo.tar",
+      "repo.tar.sha256"
+    ],
+    "state": "planned"
+  }
+}

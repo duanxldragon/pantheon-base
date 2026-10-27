@@ -10,14 +10,14 @@ Pantheon Platform 是一个面向企业后台的模块化单体底座，沉淀�
 
 | 项 | 值 |
 | --- | --- |
-| 当前 foundation release | [`pantheon-base-v0.17.5`](https://github.com/duanxldragon/pantheon-base/releases/tag/pantheon-base-v0.17.5)（含四件可消费产物） |
+| 当前 foundation release | [`pantheon-base-v0.17.6`](https://github.com/duanxldragon/pantheon-base/releases/tag/pantheon-base-v0.17.6)（含四件可消费产物） |
 | Shell/Harness 基线版本 | `1.4.0`（见 [VERSION](./VERSION) / [SHELL_VERSION.json](./SHELL_VERSION.json)） |
 | 部署文档 | [docs/DEPLOYMENT_GUIDE.md](./docs/DEPLOYMENT_GUIDE.md)（MySQL 8、Redis 7、迁移 + runtime seed、健康检查、遥测、备份恢复与 schema-aware 回滚） |
-| 变更记录 | [CHANGELOG.md](./CHANGELOG.md) / [RELEASE_NOTES_v0.17.5.md](./RELEASE_NOTES_v0.17.5.md) |
+| 变更记录 | [CHANGELOG.md](./CHANGELOG.md) / [RELEASE_NOTES_v0.17.6.md](./RELEASE_NOTES_v0.17.6.md) |
 | **任务状态** | [.harness/STATUS.md](./.harness/STATUS.md) — 当前任务状态总览 |
 | **归档记录** | [.harness/ARCHIVE.md](./.harness/ARCHIVE.md) — 已完成任务归档索引 |
 
-交付状态说明：v0.17.5 是 IAM 并发收口 patch，tag `pantheon-base-v0.17.5`，四件可消费产物齐备（tgz / tgz.sha256 / repo.tar / repo.tar.sha256）并由 `Foundation Release Verify` 断言。它关闭 v0.17.4 之后登记的 5 项残留：同租户并发 provisioning 先锁 `tenants` 行再收敛写入角色、管理员、根部门与绑定，平台默认配置/字典拷贝在同一租户锁的第二个事务内执行；`replaceRolePermissions` / `replaceUserRoles` 先锁父行再删除重插，避免两个写入者交错成并集；bootstrap 回填把旧版写成的 `tenant_id = 0` 权限行先去重再回填到角色所属租户；race 门禁由 CI Linux 的 `go test -race ./...` 提供权威证据；已发布 v0.17.3 notes 的过期表述在仓库文件与可变 release body 中以带日期的勘误更正；组织架构卡片与顶部菜单的过渡改为在 `prefers-reduced-motion: no-preference` 下声明，默认视觉不变、偏好减少动效的用户不再触发过渡（SonarCloud `css:S9440` 清零）。schema 仍为 29，无路由、权限码、菜单 seed 或错误信封变化。
+交付状态说明：v0.17.6 是租户运营发布，tag `pantheon-base-v0.17.6`，四件可消费产物（tgz / tgz.sha256 / repo.tar / repo.tar.sha256）由 `Foundation Release Verify` 断言。套餐定义从硬编码 switch 迁入版本化表 `tenant_plans`（迁移 `000030`，种子按 code 守卫，对既有租户是 no-op），三个平台域读面落到 `/system/tenant-ops/*`（租户总览、跨租户成员与配额、套餐编辑器），配 5 个新权限码与新的「租户运营」菜单组。配额只做展示、不做强制：后端仍不会因为越过阈值拒绝请求，这条边界写在 `TENANT_CONTRACT_V1` 与其英文版里。同时关闭兼容模式下被六个服务丢弃的租户作用域（单租户页面会读到其它租户的行）、修复驱动真实系统时发现的 5 个缺陷（角色保存不同步 Casbin、同租户切换 500、安全事件确认错误码、重置密码不清锁定、权限工作台与部门路径越界），给全部密码面补上无障碍名称并加 `check:password-toggle` 守住回归，让 `<html lang>` 跟随当前语言，并把前端跨层 boundary 基线清空（`MenuNode` 提升到 `frontend/src/api/menu.ts`，`config/boundary-baseline.json` 的 `entries` 为空）。**schema 从 29 升到 30，新增路由、权限码与菜单 seed**；除一个 Go 类型名（`tenant.TenantPlan` → `tenant.Plan`）与一个前端类型的导入路径外没有移除或重命名。治理链已归零，根因作为 FR-016 / FR-017（状态 open）登记：4 个 checker 没有 npm script 也不在任何 workflow 里，接入 CI 属门禁策略，留给维护者拍板。
 
 ## 项目定位
 
