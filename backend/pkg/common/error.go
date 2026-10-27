@@ -107,7 +107,7 @@ func CodeForError(err error) int {
 
 var i18nKeyPattern = regexp.MustCompile(`^[a-z0-9_]+(?:\.[a-z0-9_]+)+$`)
 
-func IsI18nMessageKey(message string) bool {
+func isI18nMessageKey(message string) bool {
 	return i18nKeyPattern.MatchString(strings.TrimSpace(message))
 }
 
@@ -119,7 +119,7 @@ func ResolveErrorMessageKey(err error, fallback string) string {
 		return "request.failed"
 	}
 	message := ErrMessage(err)
-	if IsI18nMessageKey(message) {
+	if isI18nMessageKey(message) {
 		return message
 	}
 	if strings.TrimSpace(fallback) != "" {

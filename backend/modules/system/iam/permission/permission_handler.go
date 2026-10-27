@@ -16,7 +16,9 @@ const errParamInvalid = "param.invalid"
 // permissionServiceErrorCode keeps the HTTP class of a rejected policy write:
 // a cross-tenant or out-of-scope target is 403, an unknown row is 404, an
 // invalid payload is 400. Collapsing them to 500 hid acceptance F8/F14 behind a
-// generic "request failed".
+// generic "request failed". Kept as a named function because
+// permission_handler_test.go drives it directly; the pass-through body is the
+// same common.CodeForError mapping.
 func permissionServiceErrorCode(err error) int {
 	return common.CodeForError(err)
 }
