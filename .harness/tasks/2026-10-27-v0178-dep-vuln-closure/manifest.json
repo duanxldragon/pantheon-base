@@ -5,7 +5,7 @@
   "goal": "Close the two failing inputs of pantheon-ops main's Security Gates by fixing them where they are owned, then cut the next consumable foundation release pantheon-base-v0.17.8. The ops run 40457897311 (job Dependency Vulnerabilities, 122035403107) reports govulncheck success, npm audit root success, npm audit frontend failure, osv call analysis failure. Its two failing inputs are backend/go.mod and frontend/package-lock.json, and neither file is in the ops business-overlay.json repositoryOverlayPaths or replaceRoots allowlist, so they are base-owned and any consumer-side edit is overwritten by the next rebuild: from-base. Go directive 1.26.9 is below the GO-2026-6809 fix (crypto/x509 Certificate.Verify, reported called:true by the ops OSV scan), so the directive moves to 1.26.10 together with the Dockerfile image tag that CI does not read from go.mod. zod 4.3.6 sits below the GHSA-mrhx-c7xc-m3w5 fix at 4.6.6 (memory exhaustion while validating oversized constrained collections, severity high); it is a dev-only transitive reached through eslint-plugin-react-hooks and zod-validation-error with no import in src, so the lock moves to 4.6.7 with a three-field minimal diff. No schema change (still 30), no route, permission code, menu seed, i18n copy or exported symbol.",
   "primaryLayer": "platform",
   "dependencyLayers": [],
-  "status": "in-progress",
+  "status": "completed",
   "priority": "P2",
   "type": "dependency-vulnerability",
   "estimatedComplexity": "low",
@@ -19,8 +19,9 @@
     "V2 (P2, closed here): frontend/package-lock.json resolves node_modules/zod to 4.3.6, below the GHSA-mrhx-c7xc-m3w5 fix at 4.6.6, so npm audit --audit-level=high returns failure for the frontend project and blocks the same gate. zod is not a direct dependency: src has no zod import and only eslint-plugin-react-hooks and zod-validation-error require ^3.25.0 || ^4.0.0, so the blast radius is the dev toolchain, and npm run lint going green is the compatibility reading.",
     "V3 (P2, closed here as a consequence of V1): Dockerfile pins golang:1.26.5-alpine independently of go.mod. Workflows read the version from go.mod, the image tag does not, so after V1 alone a container build would run a 1.26.5 toolchain against a module that requires 1.26.10 and take the toolchain-download path in go mod download. The image tag moves to 1.26.10-alpine (verified present on Docker Hub) and the README and deployment-guide toolchain baseline text moves with it.",
     "V4 (P3, recorded NOT closed here): golang.org/x/crypto 0.57.0 carries GO-2026-5932 (openpgp is unsafe by design, unmaintained, no fixed version). Both the ops OSV reading and the base govulncheck run report it as not called, so it blocks nothing today. Deciding whether the dependency must be replaced by github.com/ProtonMail/go-crypto is a maintainer dependency-risk policy, so it is registered rather than acted on.",
-    "V5 (P2, environment, NOT closed here): ops main run 40457897338 (SonarCloud Scan) fails with HTTP 403 on GET https://api.sonarcloud.io/analysis/jres, the same credential defect base has carried since 2026-09-17. It needs a valid SONAR_TOKEN from the maintainer; no Sonar rule, project setting or workflow is changed here.",
-    "V6 (P3, method limitation, corrected during this round): the consumer's whole-tree osv-scanner command first reported 'No package sources found' here (exit 128). The initial root cause recorded in this manifest - that osv-scanner v2.3.3 skips paths containing dot-prefixed directory segments - was falsified by a control run on the same version over both drives and over a hidden .wt segment. The real cause is that OSV's recursive mode honours .gitignore, and pantheon-base/.gitignore:26 ignores .tmp/, which is exactly where this linked worktree lives. With --no-ignore the same --recursive --call-analysis=go scan runs over base's real backend and frontend sources, exits 0, and leaves only golang.org/x/crypto GO-2026-5932 with called:false, so base carries its own gate reading; the ops main run after consumption confirms the aggregate gate step rather than being the only proof."
+    "V5 (P2, environment, consumer-side, NOT closed here): ops main run 40457897338 (SonarCloud Scan) fails with HTTP 403 on GET https://api.sonarcloud.io/analysis/jres, and ops main carries 249 unresolved Sonar issues. Base does not run a scanner workflow (sonarcloud.yml has never existed in base history): its Sonar readings are the SonarCloud App analysis plus the release-gate SonarCloud Gate job, both success on e256d1fb with 0 open issues on main. The earlier wording in this round attributed the 403 to base too; corrected in review R4. Repair needs a valid SONAR_TOKEN from the maintainer; no Sonar rule, project setting or workflow was changed here.",
+    "V6 (P3, method limitation, corrected during this round): the consumer's whole-tree osv-scanner command first reported 'No package sources found' here (exit 128). The initial root cause recorded in this manifest - that osv-scanner v2.3.3 skips paths containing dot-prefixed directory segments - was falsified by a control run on the same version over both drives and over a hidden .wt segment. The real cause is that OSV's recursive mode honours .gitignore, and pantheon-base/.gitignore:26 ignores .tmp/, which is exactly where this linked worktree lives. With --no-ignore the same --recursive --call-analysis=go scan runs over base's real backend and frontend sources, exits 0, and leaves only golang.org/x/crypto GO-2026-5932 with called:false, so base carries its own gate reading; the ops main run after consumption confirms the aggregate gate step rather than being the only proof.",
+    "V7 (P3, pre-existing local strict-chain warning, closed during closeout): since #431 landed, check-runtime-evidence --strict reports .harness/evidence/2026-10-27-base-docs-artifact-landing/commands.json as runtime-sensitive evidence with neither a runtime signal nor a matchable gap statement. That manifest lists its two git-diff assertions under verificationPlan.runtimeEvidence, which is what makes the task runtime-sensitive, while the evidence records the readings only in commands and Chinese knownGaps. Closed in this closeout by one additive runtimeGap paragraph in that file - 61 files, 0 errors, 1 warning before; 0 warnings after. No threshold changed, no file skipped. The checker itself is still not wired into CI, which is the same FR-016/FR-017-class policy question reserved to the maintainer."
   ],
   "scope": {
     "in": [
@@ -171,7 +172,9 @@
     "previousRelease": "pantheon-base-v0.17.7",
     "schemaVersion": "30",
     "contents": [
-      "placeholder: filled after the merge commit is known"
+      "73d0d3a8 docs(harness): land the tenant-completeness review artifacts (PR #431)",
+      "c26c75e1 docs(harness): record the tenant remediation Phase 0 baseline (PR #432)",
+      "e256d1fb fix(deps): close the base-owned dependency vulnerabilities for v0.17.8 (PR #433)"
     ],
     "assets": [
       "foundation-release-pantheon-base-v0.17.8.tgz",
@@ -179,19 +182,29 @@
       "repo.tar",
       "repo.tar.sha256"
     ],
-    "state": "preparing",
-    "publishedAt": "",
-    "tagObject": "",
-    "targetCommit": "",
-    "assetChecksums": {},
+    "state": "published",
+    "publishedAt": "2026-10-27T08:17:19Z",
+    "tagObject": "8f85982a314b51a32ce2e7597b07be969633e70e",
+    "targetCommit": "e256d1fb4773cb02ed9f90cc1c36f02e7f07d912",
+    "assetChecksums": {
+      "foundation-release-pantheon-base-v0.17.8.tgz": "e1ec60dffcd38f0835a05fac0f96d89277aac45558e02bc5b3334dfb0828fa2f",
+      "foundation-release-pantheon-base-v0.17.8.tgz.sha256": "97fb7ed96f6a66b09f2d287550a315ac15167d764d50fa9eaa279821be00a730",
+      "repo.tar": "516740486dcf7a93ae7b0223d7614d7fc21995310216e3d51d81d417a627f8bf",
+      "repo.tar.sha256": "607cac251537b1a28737430934aba7e49de775aa8a1d363e44d91684f2226570"
+    },
     "verification": {
-      "releaseGate": "pending",
-      "sonarCloudGate": "blocked: SONAR_TOKEN 403 on the JRE metadata query since 2026-09-17 (maintainer credential)",
-      "codeQlAlerts": "pending",
-      "releaseSecretScan": "pending",
-      "releaseAssets": "pending",
-      "foundationReleaseVerifyRun": "",
-      "foundationReleaseVerify": "pending"
+      "releaseGate": "Release Gate run 40469207830 / check-run 122079301995 (Release Gate Summary) success on e256d1fb; all six jobs success",
+      "sonarCloudGate": "success on e256d1fb (release-gate SonarCloud Gate job) + SonarCloud App analysis at that revision; main quality gate OK, 0 unresolved issues. Corrects the earlier claim that base also fails with the JRE 403: that failure belongs to ops sonarcloud.yml run 40457897338 only (ops also has 249 open issues on main).",
+      "codeQlAlerts": "0 open CodeQL alerts and 0 open Dependabot alerts on the repository",
+      "releaseSecretScan": "check-release-secrets clean, 3284 files scanned (tgz and repo.tar unpacked and read)",
+      "releaseAssets": "check-release-assets: [ok] local bundle and [ok] release carries all 4 required assets; local sha256 matches the GitHub asset digests (tgz e1ec60df, repo.tar 51674048)",
+      "foundationReleaseVerifyRun": "40472462712",
+      "foundationReleaseVerify": "success (release event, pantheon-base-v0.17.8)",
+      "strictGovernanceChain": "Closeout re-run on the closeout tree (with the temporary pantheon-harness junction, removed before committing): the 16 npm governance scripts all pass; check-boundaries --strict clean with and without config/boundary-baseline.json; check-review --strict, check-evidence --strict and check-inheritance-contract clean; check-runtime-evidence --strict 61 files, 0 errors, 0 warnings after the V7 backfill."
+    },
+    "assetSizesBytes": {
+      "foundation-release-pantheon-base-v0.17.8.tgz": 29072437,
+      "repo.tar": 45772800
     }
   }
 }

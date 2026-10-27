@@ -131,8 +131,9 @@ foundation release，属于 AGENTS.md 里「触碰继承边界时升到 L2」的
   `called: false`，advisory 且无修复版本，base 代码不调用 openpgp；本轮记录为残留而不是关闭
 - 修改 `.github/workflows/security.yml` 的扫描口径或引入 `|| true`
 - 改写已发布的 v0.17.0–v0.17.7 tag 与资产
-- `SONAR_TOKEN` 相关处置：ops `SonarCloud Scan` 与 base 同名 job 因 JRE metadata 查询 403 失败，
-  是维护者凭据问题，见 Human Gates
+- `SONAR_TOKEN` 相关处置：403 只发生在 ops 的 `SonarCloud Scan`（ops `.github` 是消费者 overlay，
+  `sonarcloud.yml` 归 ops 所有）。base 没有 scanner workflow，历史上也没有过，其 Sonar 读数来自
+  SonarCloud App 分析 + 本仓 `SonarCloud Gate`，二者在 `e256d1fb` 上都是 success。见 Human Gates
 
 ## Expected Files
 
@@ -255,9 +256,15 @@ foundation release，属于 AGENTS.md 里「触碰继承边界时升到 L2」的
 - 质量门禁策略：`golang.org/x/crypto` 的 `GO-2026-5932`（openpgp 按设计不安全、无修复版本）在两处
   扫描里都是 `called: false`，因此现在不阻断任何门禁；是否把它列为「必须替换为
   `github.com/ProtonMail/go-crypto`」的硬性要求，属维护者的依赖风险策略，本轮只登记不动。
-- 质量门禁策略：`SonarCloud Scan` 自 2026-09-17 起在 base 与 ops 的每次 run 都因
-  `GET https://api.sonarcloud.io/analysis/jres → HTTP 403` 失败，需要维护者提供有效 `SONAR_TOKEN`
-  并轮换此前泄露过的 token；本轮不改 Sonar 规则、不改 workflow。
+- 质量门禁策略：ops 的 `SonarCloud Scan` 因 `GET https://api.sonarcloud.io/analysis/jres → HTTP 403`
+  失败（ops main run `40457897338`），需要维护者提供有效 `SONAR_TOKEN` 并轮换此前泄露过的 token；
+  ops `main` 还有 249 条未解决 Sonar issue。**这一条本轮写过「base 与 ops 同红」，是错的**：base 没有
+  scanner workflow，`SonarCloud Gate` 与 SonarCloud App 分析在 `e256d1fb` 上都是 success，main 分支
+  `0` 条未解决 issue、质量门 `OK`。本轮不改 Sonar 规则、不改 workflow。
+- 质量门禁策略：本地 strict 链自 `#431` 起在 `check-runtime-evidence --strict` 上有 1 条 warning
+  （`2026-10-27-base-docs-artifact-landing/commands.json` 被判 runtime-sensitive 却既无 signal 也无
+  可匹配的 gap）。本轮 closeout 只补了一段 additive `runtimeGap` 陈述把链归零，没有调阈值、没有跳过
+  文件；该 checker 目前不在 CI（与 FR-016/FR-017 同类），是否接进门禁仍属维护者拍板。
 - 最终视觉/功能验收：本轮无 UI/运行时变化，无需视觉验收。
 
 ## Completion Checklist
@@ -269,8 +276,8 @@ foundation release，属于 AGENTS.md 里「触碰继承边界时升到 L2」的
 - [x] Review completed
 - [x] 两处 base-owned 依赖版本落在正确文件，且有 before/after 差分自证。
 - [x] 版本材料六件更新到 v0.17.8，与 `RELEASE_NOTES_v0.17.8.md` 一致。
-- [ ] PR 必需 context 全绿并合并。
-- [ ] 合并后的 main HEAD 上 `Release Gate Summary` 成功。
-- [ ] `pantheon-base-v0.17.8` annotated tag + GitHub Release + 四件资产，`check-release-assets` 一致。
-- [ ] `Foundation Release Verify` run 成功，发布事实回写。
+- [x] PR 必需 context 全绿并合并。
+- [x] 合并后的 main HEAD 上 `Release Gate Summary` 成功。
+- [x] `pantheon-base-v0.17.8` annotated tag + GitHub Release + 四件资产，`check-release-assets` 一致。
+- [x] `Foundation Release Verify` run 成功，发布事实回写。
 - [ ] `pantheon-ops` 消费 v0.17.8 后 `Security Gates` 转绿；该断言在消费者仓库自己的任务包里关闭。

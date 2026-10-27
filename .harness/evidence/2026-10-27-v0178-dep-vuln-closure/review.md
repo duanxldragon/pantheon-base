@@ -42,7 +42,35 @@ So the debt this finding recorded is paid on the base side. The ops reading on `
 v0.17.8 stays as the confirmation that the aggregate gate step goes green, which is the thing no
 local run can assert for another repository.
 
+### P2 — The SonarCloud failure was attributed to base; it is consumer-only
+
+The release notes and this round's first drafts stated that `SonarCloud Scan` "stays red on both
+repositories" with the same JRE `HTTP 403`. That is false on the base side, and it is worth recording
+how it got there: the sentence was carried forward from the v0.17.6/v0.17.7 rounds, where it had been
+written while ops was the repository being debugged, and it was re-used as a known-gap line without
+being re-measured against base. Three independent readings falsify it now.
+
+- Base owns no scanner workflow. `.github/workflows/sonarcloud.yml` has never existed in base history —
+  both `git log --all` and `git log --all --diff-filter=D` on that path return nothing, so it was not
+  deleted, it was never added. The only `sonarcloud.io` reference in base is
+  `.github/workflows/release-gate.yml:174-213`, which calls the Sonar *Web API* to read an existing
+  analysis and quality-gate status; it does not upload or scan.
+- On `e256d1fb` the two Sonar check-runs base does carry, `SonarCloud Gate` and `SonarCloud Code
+  Analysis`, both concluded `success`. They come from the SonarCloud GitHub App, not from a workflow,
+  which is why the absence of `sonarcloud.yml` does not mean absence of Sonar coverage.
+- The Sonar API agrees per repository: `duanxldragon_pantheon-base` main quality gate `OK` with `0`
+  unresolved issues; `duanxldragon_pantheon-ops` main quality gate `ERROR` with `249`. Ops run
+  `40457897338` (`SonarCloud Scan`, head `f65c6020`) is the failing one, and its workflow
+  `pantheon-ops/.github/workflows/sonarcloud.yml` is consumer-owned — `.github` is one of ops's
+  `repositoryOverlayPaths`, so the next `rebuild:from-base` overwrites it from the consumer tree, not
+  from base.
+
+The consequence is a scope correction, not a green claim: base's dependency work is finished and its
+Sonar state is clean, while the 403 and the 249 open issues belong to the ops consumption round and to
+the maintainer's credential decision. Fixing it in base is impossible — there is nothing in base to fix.
+
 ### P3 — One fact, four hand-maintained copies
+
 
 The Go version is read from `backend/go.mod` by every workflow (`go-version-file`), from the
 `Dockerfile` image tag by container builds, and from prose in `README.md`, `README.en.md` and
@@ -77,11 +105,16 @@ maintenance cost of a new gate is a decision for the maintainer.
 
 ## Decision
 
-Accept this round and publish it as `pantheon-base-v0.17.8`. The two P2s are real but neither is
-closable inside a dependency patch: one is a merge-policy change reserved to the maintainer, the other
-is explicitly handed to the ops consumption round as its gate-level proof. The P3 stays open on
+Accept this round and publish it as `pantheon-base-v0.17.8`. The three P2s are real but none is closable
+inside a dependency patch: one is a merge-policy change reserved to the maintainer, one is explicitly
+handed to the ops consumption round as its gate-level proof, and the third is a scope error in this
+round's own documentation that was closed by re-measuring rather than by code. The P3 stays open on
 purpose — the version-copy problem is documented now, and the sensor for it should be scheduled on its
 own merits rather than attached to a security release.
+
+Publication happened after this verdict was written: `pantheon-base-v0.17.8` is `published` with the
+tag object, four asset digests and the Foundation Release Verify run recorded in the task manifest, so
+the verdict above describes the candidate and the manifest describes the shipped release.
 
 ## Unknowns
 
@@ -102,7 +135,8 @@ own merits rather than attached to a security release.
   "findings": [
     {"id": "R1", "severity": "P2", "title": "base owns the pinned files but its report-only security workflow never surfaced the advisories; detection came from the consumer gate", "state": "recorded-maintainer-gate-policy"},
     {"id": "R2", "severity": "P2", "title": "the first local root cause for the unreproducible OSV scan was wrong (dot-prefixed paths) and was replaced by the verified one (.gitignore honours .tmp/); the same command with --no-ignore now gives base its own gate reading", "state": "corrected-and-reproduced-locally"},
-    {"id": "R3", "severity": "P3", "title": "the Go version lives in five hand-maintained places with no checker comparing the Dockerfile tag to the go directive", "state": "open-by-design"}
+    {"id": "R3", "severity": "P3", "title": "the Go version lives in five hand-maintained places with no checker comparing the Dockerfile tag to the go directive", "state": "open-by-design"},
+    {"id": "R4", "severity": "P2", "title": "the SonarCloud JRE 403 was documented as affecting base and ops; base has never had a scanner workflow and its own Sonar signal is green, so the failure is consumer-only", "state": "corrected-by-remeasurement"}
   ],
   "structuralReview": {
     "affectedSubgraph": [
@@ -120,7 +154,7 @@ own merits rather than attached to a security release.
   },
   "residualRisk": [
     "golang.org/x/crypto GO-2026-5932 stays in the required graph; both scanners report it not called, and replacing openpgp is a maintainer dependency-risk decision.",
-    "SonarCloud Scan stays red on both repositories (SONAR_TOKEN 403 since 2026-09-17), so ops main is not fully green from this round alone.",
+    "SonarCloud Scan is red on ops main only (SONAR_TOKEN 403 since 2026-09-17, 249 open issues there), so ops is not fully green from this round alone; base's own Sonar signal is green (0 open issues, quality gate OK) and base owns no scanner workflow.",
     "The gate-level proof for ops lives in the consumption round; if ops main is still red after rebuilding from v0.17.8, the defect is in the consumption path rather than in these two version moves."
   ],
   "linkage": {

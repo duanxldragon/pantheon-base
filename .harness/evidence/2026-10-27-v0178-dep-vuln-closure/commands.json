@@ -250,17 +250,88 @@
       "cwd": ".",
       "status": "passed",
       "details": "[PASS] .harness/evidence/2026-10-27-v0177-lint-codeql-closure/review.md | [PASS] .harness/evidence/2026-10-27-v0178-dep-vuln-closure/review.md"
+    },
+    {
+      "command": "node scripts/foundation-release/cut-foundation-release.mjs --root . --release-version pantheon-base-v0.17.8 --release-line release/0.17 --base-commit e256d1fb4773cb02ed9f90cc1c36f02e7f07d912 --release-notes \"$(cat RELEASE_NOTES_v0.17.8.md)\" --upgrade-notes ... --consumer-impact ...",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Exit 0 (invoked as bare node ... because npm run ... -- --help showed the shell could not resolve npm without PATH=/d/nodejs first). Produced releases/pantheon-base-v0.17.8/ with manifest.json (createdAt 2026-10-27T08:13:29.577Z, baseCommit e256d1fb), release-notes.md, upgrade-notes.md, consumer-impact.md and verification-summary.json, plus dist/foundation-releases/pantheon-base-v0.17.8/ containing the tgz and its sha256 sidecar. The two note files were written to TEMP and passed in with $(cat) so the cut receives prose rather than a flag typo; the cut does not re-read RELEASE_NOTES_v0.17.8.md from the repo."
+    },
+    {
+      "command": "node scripts/foundation-release/check-release-secrets.mjs --release-version pantheon-base-v0.17.8 --root .",
+      "cwd": ".",
+      "status": "passed",
+      "details": "release secret scan: clean (3284 file(s) scanned). The scan unpacks and reads both the tgz and repo.tar, so no .env value can ride into an asset undetected; nothing here prints file contents."
+    },
+    {
+      "command": "node scripts/foundation-release/publish-foundation-release.mjs --release-version pantheon-base-v0.17.8 --release-line release/0.17 --base-commit e256d1fb4773cb02ed9f90cc1c36f02e7f07d912 --repo duanxldragon/pantheon-base (dry-run first, then real)",
+      "cwd": ".",
+      "status": "passed",
+      "details": "The dry run reported every precondition satisfied, so the real run created the annotated tag pantheon-base-v0.17.8 (tag object 8f85982a314b51a32ce2e7597b07be969633e70e, target e256d1fb) and the Release with its four assets, publishedAt 2026-10-27T08:17:19Z. It requires a clean git status, which is why releases/ and dist/ are gitignored. The real run printed nothing to stdout even though it exited 0, so the outcome was confirmed from GitHub rather than from the exit code (see release-view and check-release-assets below)."
+    },
+    {
+      "command": "HTTPS_PROXY=http://127.0.0.1:7897 gh release view pantheon-base-v0.17.8 --repo duanxldragon/pantheon-base --json tagName,isDraft,isPrerelease,publishedAt,targetCommitish,assets && git ls-remote github-api refs/tags/pantheon-base-v0.17.8",
+      "cwd": ".",
+      "status": "passed",
+      "details": "draft=false, prerelease=false, publishedAt=2026-10-27T08:17:19Z, target=e256d1fb4773cb02ed9f90cc1c36f02e7f07d912. Four assets: foundation-release-pantheon-base-v0.17.8.tgz 29072437 B (sha256 e1ec60df...), its .sha256 sidecar 111 B, repo.tar 45772800 B (sha256 51674048...), its .sha256 sidecar 75 B. Recorded in the task manifest release block so the published facts, not a local log line, are the source of truth."
+    },
+    {
+      "command": "node scripts/foundation-release/check-release-assets.mjs --release-version pantheon-base-v0.17.8 --repo duanxldragon/pantheon-base",
+      "cwd": ".",
+      "status": "passed",
+      "details": "[ok] local bundle pantheon-base-v0.17.8: foundation-release-pantheon-base-v0.17.8.tgz, repo.tar; [ok] release pantheon-base-v0.17.8 carries all 4 required assets. The local sha256 sidecars match the GitHub asset digests, so the tree the consumer will download is byte-identical to the one cut from e256d1fb. Re-run during closeout with the same result."
+    },
+    {
+      "command": "HTTPS_PROXY=http://127.0.0.1:7897 gh run view 40472462712 --repo duanxldragon/pantheon-base --json status,conclusion,name,headSha,jobs",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Foundation Release Verify triggered by the published release: completed / success on headSha e256d1fb, jobs Verify Release Assets and Foundation Release Verify Summary both success. This is the workflow that consumes the lock/asset contract from the consumer side, so it is the release-level evidence that v0.17.8 is consumable."
+    },
+    {
+      "command": "HTTPS_PROXY=http://127.0.0.1:7897 gh api \"repos/duanxldragon/pantheon-base/commits/e256d1fb4773cb02ed9f90cc1c36f02e7f07d912/check-runs?per_page=100\" --jq '.check_runs[] | select(.name | test(\"[Ss]onar\")) | [.name,.status,.conclusion] | @tsv'",
+      "cwd": ".",
+      "status": "passed",
+      "details": "SonarCloud Gate completed/success and SonarCloud Code Analysis completed/success on the release target. Both come from the SonarCloud GitHub App, not from a base workflow. The earlier 404 on this same call was a wrong owner (xiaolingo) in the query, corrected to duanxldragon."
+    },
+    {
+      "command": "git log --all --oneline -- .github/workflows/sonarcloud.yml; git log --all --diff-filter=D --name-only -- .github/workflows/sonarcloud.yml; grep -rn \"SONAR_TOKEN\\|SonarSource\\|sonarcloud\" .github/ scripts/",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Both git log forms return nothing: base never had a sonarcloud.yml, so it was not deleted. The grep finds only release-gate.yml:174-213 calling the Sonar Web API to read an existing analysis and quality-gate status, plus two comments in ci.yml:296 and quality.yml:459 that name the historical 2026-07-22-sonarcloud-remediation task. No base workflow uploads or scans. This falsifies the \"SonarCloud Scan stays red on both repositories\" line this round had carried forward from earlier rounds; see review R4."
+    },
+    {
+      "command": "curl -s \"https://sonarcloud.io/api/issues/search?componentKeys=duanxldragon_pantheon-base&branch=main&resolved=false&types=BUG,VULNERABILITY,CODE_SMELL&ps=1\"; curl -s \"https://sonarcloud.io/api/qualitygates/project_status?projectKey=duanxldragon_pantheon-base&branch=main\"; same pair for duanxldragon_pantheon-ops",
+      "cwd": ".",
+      "status": "passed",
+      "details": "base main: total=0 unresolved issues, quality gate OK. ops main: total=249 unresolved issues (first go:S3776 CRITICAL), quality gate ERROR with new_security_rating failing. The 403 therefore costs ops its scan, not base; ops run 40457897338 (name SonarCloud Scan, head f65c6020) is completed/failure. Credentials are never printed by these calls and no token is needed for these public-project reads."
+    },
+    {
+      "command": "for s in check:docs-frontmatter check:harness-encoding check:structure check:task-packet-template check:task-packet check:failure-registry check:harness-method check:harness-adoption check:harness-template check:harness-docs check:harness-inventory check:harness-sync check:ui-quality-gate check:harness-visual check:generated check:generated-modules; do npm run \"$s\"; done",
+      "cwd": ".",
+      "status": "passed",
+      "details": "All 16 npm governance scripts pass on the closeout tree, run with the temporary pantheon-harness junction in place (removed before committing). The closeout only edits prose and JSON evidence, so the change that had to be re-proved is the doc-facing chain: frontmatter, task packet, doc links, sync drift, template health, method health, encoding."
+    },
+    {
+      "command": "node scripts/harness/check-boundaries.mjs --root . --strict (with and without --baseline config/boundary-baseline.json) && node scripts/harness/check-review.mjs --root . --strict && node scripts/harness/check-evidence.mjs --root . --strict && node scripts/harness/check-inheritance-contract.mjs --root ..",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Boundaries: no findings in either form, the baseline keeps an empty entries array. check-review and check-evidence pass every evidence file including the two edited in this closeout. The only stderr note is the pre-existing \"Frontend business root not found: frontend/src/modules/business\" warning, which is a base-side path that only exists in a consumer tree."
+    },
+    {
+      "command": "node scripts/harness/check-runtime-evidence.mjs --root . --strict  (before and after the runtimeGap backfill in .harness/evidence/2026-10-27-base-docs-artifact-landing/commands.json)",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Before: 61 files, 0 errors, 1 warning — 2026-10-27-base-docs-artifact-landing/commands.json was reported as runtime-sensitive evidence with no signal and no recorded gap, because that manifest puts its two git-diff assertions in verificationPlan.runtimeEvidence while its Chinese knownGaps never use the runtime/log/metric/trace words the checker searches for. Red on main since #431 merged, not caused by this round. After: 61 files, 0 errors, 0 warnings. The fix is one additive runtimeGap statement that says what is true (no process telemetry existed; the two readings are repository-state, one unreproducible after the branch deletion), following the precedent set by 2026-09-25-task-archiving-and-v0130-prep. Nothing was thresholded, skipped or deleted."
     }
   ],
   "pending": [
     "PR 与 CI 读数（CodeQL、Go Lint、Backend Tests -race、Docs Governance、Frontend Contract、Duplication Gate、Release Gate）来自 GitHub run，不属于本机。",
-    "pantheon-base-v0.17.8 的发布事实（tag object、四件资产 SHA-256、check-release-assets、Foundation Release Verify run id）在切割之后由 closeout 回写。",
     "ops 主干 Security Gates 的四项输入读数在消费 v0.17.8 之后由消费者仓库的 run 提供；base 侧已经有同一条 --call-analysis=go 的权威读数，但门禁级证明仍以消费者的 run 为准。"
   ],
   "knownGaps": [
     "golang.org/x/crypto 0.57.0 的 GO-2026-5932（openpgp 按设计不安全、无修复版本）仍在依赖图里；osv-scanner 与 govulncheck 都判它未被调用，因此今天不阻断任何门禁，是否强制替换为 ProtonMail/go-crypto 属维护者的依赖风险策略（review R1/R3 之外的登记项）。",
     "本轮没有跑 go test -race：本机 cgo 关闭，race 读数属于 Linux CI 的 Backend Tests job。",
-    "SonarCloud Scan 在 base 与 ops 上仍因 JRE metadata 查询 403 失败，属维护者 SONAR_TOKEN 凭据问题，本轮未改 Sonar 规则、项目配置或 workflow。",
+    "SonarCloud Scan 只在 pantheon-ops 上因 JRE metadata 查询 403 失败（ops 主干另有 249 条未解决 issue、质量门禁 ERROR），属维护者 SONAR_TOKEN 凭据问题。base 从来没有 scanner workflow：.github/workflows/sonarcloud.yml 在 base 历史里不存在（git log --all 与 --diff-filter=D 都为空），release-gate.yml:174-213 只是读 Sonar Web API；e256d1fb 上 SonarCloud Gate 与 SonarCloud Code Analysis 均 success，Sonar API 报 base main 0 条未解决 issue、质量门禁 OK。本轮未改 Sonar 规则、项目配置或 workflow。原先写成「base 与 ops 同红」是从上一轮沿用、未重新测量，已按 review R4 更正。",
     "消费者那条完整 OSV 命令最初在本 worktree 里扫不到任何 package source（exit 128）。当时归因于「osv-scanner 跳过含点开头目录段的路径」，这是错的，已用对照实验证伪：同一个 v2.3.3 在 C: 与 D: 两个盘、在带 .wt 隐藏段的目录里都能正常扫描隐藏路径。真实原因是 osv-scanner 的递归模式遵守 .gitignore，而 pantheon-base/.gitignore 第 26 行忽略了 .tmp/，本 worktree 恰好建在 .tmp/wt-v0178。加 --no-ignore 后同一条调用图扫描得到权威读数（见 osv-in-tree-call-analysis），因此本轮不再把 base 侧的 OSV 门禁读数欠给消费者。",
     "本轮改动没有 base 主检出的平行验证：主检出此刻由另一路会话占用（fix/tenant-member-integrity-2026-10-27），全部命令都在链接 worktree .tmp/wt-v0178 内执行，主检出的分支与工作树未被触碰。"
   ],
