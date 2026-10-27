@@ -1,0 +1,113 @@
+{
+  "taskId": "2026-10-27-tenant-dead-surface-removal",
+  "repo": "pantheon-base",
+  "executedAt": "2026-10-27",
+  "agent": {
+    "tool": "other",
+    "adapter": "qoder-agent"
+  },
+  "knownGaps": [
+    "runtimeEvidence item 3 (one request to a mounted /system/tenant route from a live instance) is recorded as not-run: no smoke backend was started this session. The mounted surface's envelope/pagination/sentinel contract is instead covered by the new handler-level tests in tenant_platform_handler_test.go, which drive the same path shape the system module registers; the manifest marks the live request as optional ('if a live instance is available').",
+    "The manifest's expectedFiles.modify does not list tenant_platform_handler.go and its doNotTouch names it, but the deletion of tenant_handler.go forces the relocation of parseTenantMemberPagination (the only gin-bound caller is the mounted handler). The move is verbatim, compile-forced, and recorded as a deviation in test-migration.md; no route, middleware or response shape changed.",
+    "pantheon-ops carries inherited duplicates of all four deleted files (full copied tree with its own go.mod, no cross-references). Per the base-first rule ops is not edited here; reference-search.md flags that the foundation-release runbook should confirm sync semantics for upstream-deleted files (overwrite-only sync would retain dead copies).",
+    "The first full-suite run this session used a grep filter whose exit code (1 = no non-ok lines retained) was captured instead of go test's; the run emitted zero FAIL lines. A clean re-run with a direct exit code is recorded as the authoritative full-suite command.",
+    "The packet declared harnessProfile.qualityProfile none; corrected to auth-security in this PR (CI rejects none for non-trivial changes — the same latent issue flagged in the #443 evidence for W6/W7)."
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-27-tenant-dead-surface-removal/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-27-tenant-dead-surface-removal/",
+    "summaryFile": ".harness/evidence/2026-10-27-tenant-dead-surface-removal/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-27-tenant-dead-surface-removal/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-27-tenant-completeness-remediation.task.md",
+      "docs/reviews/TENANT_FUNCTIONAL_COMPLETENESS_REVIEW_2026-10-27.md"
+    ]
+  },
+  "commands": [
+    {
+      "command": "grep -rn \"NewHandler|RegisterRoutes(engine|BootstrapService|MigrateExistingUsersToDefaultTenant|InitializeTenantInfrastructure|EnsureDefaultTenant|AssignAdminToDefaultTenant\" backend --include=*.go (tests excluded, doomed files excluded)",
+      "cwd": ".",
+      "notes": "Fresh five-location search, location 1 (backend source). Only hit outside the four doomed files: tenant_service.go:884 doc comment mentioning BootstrapService.MigrateExistingUsersToDefaultTenant; trimmed in this PR so the final tree holds zero references. Full result quoted in reference-search.md.",
+      "status": "passed"
+    },
+    {
+      "command": "grep -rln \"NewHandler|BootstrapService|MigrateExistingUsersToDefaultTenant|InitializeTenantInfrastructure|EnsureDefaultTenant|AssignAdminToDefaultTenant\" backend --include=*_test.go",
+      "cwd": ".",
+      "notes": "Location 2 (backend tests). Only tenant_handler_test.go (the deleted file). system_modules_tenant_wiring_test.go and pkg/contracts/module_test.go were read in full: matches are generic symbols (audit.NewAuditHandler, m.RegisterRoutes(api), orderedModule fakes), no tenant references.",
+      "status": "passed"
+    },
+    {
+      "command": "grep -rn \"tenant_bootstrap|BootstrapService|EnsureDefaultTenant|MigrateExistingUsersToDefaultTenant\" frontend/src",
+      "cwd": ".",
+      "notes": "Location 3 (frontend). Zero hits.",
+      "status": "passed"
+    },
+    {
+      "command": "grep -rn \"BootstrapService|tenant_bootstrap|EnsureDefaultTenant|MigrateExistingUsersToDefaultTenant|InitializeTenantInfrastructure\" scripts .github",
+      "cwd": ".",
+      "notes": "Location 4 (scripts + CI config). Zero hits.",
+      "status": "passed"
+    },
+    {
+      "command": "grep -rn \"tenant_bootstrap|BootstrapService|EnsureDefaultTenant|MigrateExistingUsersToDefaultTenant|InitializeTenantInfrastructure\" ../pantheon-ops/backend ../pantheon-ops/frontend ../pantheon-ops/scripts",
+      "cwd": ".",
+      "notes": "Location 5 (ops overlay). All 13 hits are self-references inside the ops' own inherited copy of tenant_bootstrap.go; ops' copies of tenant_handler.go/tenant_routes.go/tenant_handler_test.go match NewHandler/RegisterRoutes only within themselves plus unrelated business modules (bizscope, business/service). Ops backend is a full copied tree (own go.mod, module github.com/duanxldragon/pantheon-base/backend) — no cross-references to base. Not edited per base-first rule; sync-semantics note recorded in reference-search.md.",
+      "status": "passed"
+    },
+    {
+      "command": "git rm backend/modules/system/iam/tenant/tenant_handler.go tenant_routes.go tenant_bootstrap.go tenant_handler_test.go",
+      "cwd": ".",
+      "notes": "Deletion executed only after the five-location search came back clean. git status confirms D on all four files.",
+      "status": "passed"
+    },
+    {
+      "command": "cd backend && go build ./...",
+      "cwd": ".",
+      "notes": "Clean build after deletion + relocation of parseTenantMemberPagination into tenant_platform_handler.go.",
+      "status": "passed"
+    },
+    {
+      "command": "cd backend && go vet ./modules/system/iam/tenant/",
+      "cwd": ".",
+      "notes": "Clean.",
+      "status": "passed"
+    },
+    {
+      "command": "export PANTHEON_TEST_DSN=<dsn from .env.test> PANTHEON_TEST_DSN_REQUIRED=true && cd backend && go test -count=1 ./modules/system/iam/tenant/...",
+      "cwd": ".",
+      "notes": "ok github.com/duanxldragon/pantheon-base/backend/modules/system/iam/tenant 59.923s. JSON recount: 126 top-level+subtest passes / 0 skip / 0 fail (baseline 119, same counting method). New tests present: TestPlatformTenantHandlerReturnsPaginationContract, TestPlatformTenantHandlerUsesBoundedContract, TestPlatformTenantHandlerErrorEnvelopeIsUnifiedAndLeakFree, TestPlatformTenantHandlerSentinelMappingRequiresNoInternalLeak, TestNormalizeTenantMemberPagination.",
+      "status": "passed"
+    },
+    {
+      "command": "export PANTHEON_TEST_DSN=<dsn from .env.test> PANTHEON_TEST_DSN_REQUIRED=true && cd backend && go test -count=1 ./...",
+      "cwd": ".",
+      "notes": "First run: zero FAIL lines retained by the output filter (grep exit 1 = nothing survived filtering, i.e. every package ok or no-test-files). Clean re-run with a direct exit code is the authoritative record: GO_TEST_EXIT=0, 46 packages ok, zero FAIL lines.",
+      "status": "passed"
+    },
+    {
+      "command": "export PANTHEON_TEST_DSN=<dsn from .env.test> PANTHEON_TEST_DSN_REQUIRED=true && cd backend && go test -count=1 ./... > /tmp/w8-full-suite.log 2>&1; echo GO_TEST_EXIT=$?",
+      "cwd": ".",
+      "notes": "Authoritative clean re-run: GO_TEST_EXIT=0; `grep -cE '^ok '` counted 46 packages ok; no FAIL lines in the log.",
+      "status": "passed"
+    },
+    {
+      "command": "grep -rn \"NewHandler|RegisterRoutes(engine|BootstrapService|MigrateExistingUsersToDefaultTenant\" backend --include=*.go",
+      "cwd": ".",
+      "notes": "Packet verification grep on the final tree: zero hits (comment trim at tenant_service.go removes the last one).",
+      "status": "passed"
+    },
+    {
+      "command": "node scripts/harness/check-doc-links.mjs --root . --strict",
+      "cwd": ".",
+      "notes": "0 finding(s) with the maturity-doc rewrite in the diff.",
+      "status": "passed"
+    },
+    {
+      "command": "node scripts/harness/check-task-packet.mjs --root .",
+      "cwd": ".",
+      "notes": "66 file(s), 0 error(s), 41 warning(s); re-run after the manifest flip (status completed, qualityProfile auth-security) with the same result.",
+      "status": "passed"
+    }
+  ]
+}

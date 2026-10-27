@@ -762,3 +762,20 @@ func TestCreateTenant_AdminPasswordHonoursConfiguredPolicy(t *testing.T) {
 	})
 	require.NoError(t, err)
 }
+
+// TestNormalizeTenantMemberPagination pins the shared pagination clamp used by
+// both member listings. It moved here from the deleted legacy handler test
+// file (W8); the helper stays in tenant_service.go and is called by the
+// mounted platform handler and the tenant-ops rollup alike.
+func TestNormalizeTenantMemberPagination(t *testing.T) {
+	page, pageSize := normalizeTenantMemberPagination(-1, 1000)
+	require.Equal(t, 1, page)
+	require.Equal(t, maxTenantMemberPageSize, pageSize)
+
+	page, pageSize = normalizeTenantMemberPagination(2, 0)
+	require.Equal(t, 2, page)
+	require.Equal(t, defaultTenantMemberPageSize, pageSize)
+
+	page, pageSize = normalizeTenantMemberPagination(int(^uint(0)>>1), 100)
+	require.LessOrEqual(t, (page-1)*pageSize, int(^uint(0)>>1))
+}

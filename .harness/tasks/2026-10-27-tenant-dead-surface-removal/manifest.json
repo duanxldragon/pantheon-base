@@ -3,7 +3,7 @@
   "title": "Delete the unmounted tenant handler, its legacy routes and the unused bootstrap service",
   "goal": "The tenant package ships two HTTP surfaces. The mounted one is PlatformHandler, registered in system_modules.go:290-306 under /system/tenant and /system/tenant-ops with the platform capability middleware. The other, Handler plus RegisterRoutes in tenant_handler.go and tenant_routes.go, is registered nowhere: NewHandler and RegisterRoutes have no production caller, only tenant_handler_test.go. tenant_bootstrap.go is likewise referenced only by its own file, and the repo's own findings document already records that as of 2026-10-13. The dead surface is not inert: it documents a /tenants/my endpoint and a GET /tenants/:id/members/page alias that TENANT_API.md still advertises, and it carries a second copy of the error mapping and envelope rules that must be kept in sync by hand. This wave deletes the three files and moves the tests that still describe live behaviour onto the production handler, so no coverage is lost.",
   "primaryLayer": "system/iam",
-  "status": "planned",
+  "status": "completed",
   "priority": "P3",
   "type": "refactor",
   "estimatedComplexity": "medium",
@@ -60,7 +60,7 @@
   "harnessProfile": {
     "template": "admin-platform",
     "overlay": "pantheon-base",
-    "qualityProfile": "none",
+    "qualityProfile": "auth-security",
     "portableFailureClass": "dead-code-accumulation",
     "ownerLayer": "consumer-repository",
     "ratchetDecision": "sensor-added",
