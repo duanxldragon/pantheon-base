@@ -236,6 +236,9 @@ func TestLegacyTenantHandlerSentinelMappingRequiresNoInternalLeak(t *testing.T) 
 	recorder = httptest.NewRecorder()
 	engine.ServeHTTP(recorder, httptest.NewRequest(http.MethodDelete, fmt.Sprintf("/tenants/%d", created.ID), nil))
 	require.Equal(t, http.StatusOK, recorder.Code)
-	requireUnifiedErrorEnvelope(t, recorder.Body.String(), 400, "tenant.has_active_members")
+	// The member row alone no longer decides the refusal: an active tenant is
+	// refused because it is not archived (contract §2.1).
+	requireUnifiedErrorEnvelope(t, recorder.Body.String(), 400, "tenant.not_archived")
 	require.NotContains(t, recorder.Body.String(), "tenant has active users")
+	require.NotContains(t, recorder.Body.String(), "must be archived")
 }

@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/duanxldragon/pantheon-base/backend/pkg/common"
+	tenantpkg "github.com/duanxldragon/pantheon-base/backend/pkg/tenant"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/testmysql"
 
 	"github.com/stretchr/testify/assert"
@@ -498,6 +499,10 @@ func TestAddMember_TombstoneTenantStillReportsTenantNotFound(t *testing.T) {
 
 	tenant, err := service.CreateTenant(CreateTenantDTO{Code: "member-tombstone", Name: "Member Tombstone"})
 	require.NoError(t, err)
+	// Contract §2.1: deletion is reserved for archived tenants, so the tombstone
+	// fixture has to archive first or DeleteTenant refuses and the tenant lives on.
+	archivedStatus := tenantpkg.TenantStatusArchived
+	require.NoError(t, service.UpdateTenant(tenant.ID, UpdateTenantDTO{Status: &archivedStatus}))
 	require.NoError(t, service.DeleteTenant(tenant.ID))
 
 	err = service.AddMember(tenant.ID, 424242, "member")
@@ -661,9 +666,10 @@ func TestDeleteTenant_WithActiveMembers(t *testing.T) {
 	err = service.AddMember(tenant.ID, 100, "admin")
 	require.NoError(t, err)
 
-	// Try to delete - should fail
+	// Try to delete - should fail: an active tenant is refused regardless of
+	// member count, because deletion is reserved for archived tenants (§2.1).
 	err = service.DeleteTenant(tenant.ID)
-	assert.Equal(t, ErrTenantHasActiveUsers, err)
+	assert.ErrorIs(t, err, ErrTenantNotArchived)
 }
 
 func TestDeleteTenant_Success(t *testing.T) {
@@ -676,7 +682,10 @@ func TestDeleteTenant_Success(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	// Delete empty tenant
+	// Delete an archived tenant. Even an empty one must be archived first:
+	// contract §2.1 reserves deletion for archived tenants.
+	archived := tenantpkg.TenantStatusArchived
+	require.NoError(t, service.UpdateTenant(tenant.ID, UpdateTenantDTO{Status: &archived}))
 	err = service.DeleteTenant(tenant.ID)
 	require.NoError(t, err)
 

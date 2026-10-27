@@ -1,0 +1,108 @@
+{
+  "taskId": "2026-10-27-tenant-delete-archive-guard",
+  "repo": "pantheon-base",
+  "executedAt": "2026-10-27T19:05:00+08:00",
+  "agent": {
+    "tool": "other",
+    "adapter": "qoder-agent"
+  },
+  "knownGaps": [
+    "The packet's fixture inventory (13 sites) predated the W2 merge. Rebasing onto b13e6b77 (W2, PR #434) added one more never-archived DeleteTenant fixture — TestAddMember_TombstoneTenantStillReportsTenantNotFound in tenant_service_test.go — which surfaced red in the post-rebase full tenant suite and was given the same archive-first treatment (one additional fixture, comment citing contract §2.1). Total fixtures updated: 14.",
+    "The red-run.log was produced by temporarily reverting only the guard hunk in tenant_service.go (the ErrTenantNotArchived sentinel stayed so the new test compiled), running the focused regression, and restoring the file. The revert never reached a commit. This mirrors the differential pattern used by the W2 evidence.",
+    "TENANT_MIGRATION_RUNBOOK.md was reviewed per the packet's scope.in; it contains no statement that a non-archived tenant can be deleted and needed no change. The remaining `has_active_members` strings in the repository live only in dated historical review documents (TENANT_FULL_FLOW_REVIEW_2026-10-14.md, PANTHEON_BASE_DELIVERY_REMEDIATION_2026-10-22.md, the v0171 task doc) and were left as historical records.",
+    "The legacy handler tenant_handler.go (the dead surface W8 removes) received the same ErrTenantNotArchived mapping as the platform handler, because its sentinel-mapping test drives the service with a real database and would otherwise answer 500 request.failed. The mapping mirrors the platform one until that wave deletes the handler.",
+    "Credentials were read only from the gitignored root .env.test into the process environment of the test wrapper. No DSN, Redis password or JWT secret appears in any file in this directory.",
+    "The focused green-run.log predates the rebase onto W2; the authoritative post-rebase verification is the full tenant suite run recorded below (ok 60.7s after the additional fixture fix)."
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-27-tenant-delete-archive-guard/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-27-tenant-delete-archive-guard/",
+    "summaryFile": ".harness/evidence/2026-10-27-tenant-delete-archive-guard/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-27-tenant-delete-archive-guard/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-27-tenant-completeness-remediation.task.md",
+      "docs/reviews/TENANT_FUNCTIONAL_COMPLETENESS_REVIEW_2026-10-27.md"
+    ]
+  },
+  "commands": [
+    {
+      "command": "go build ./...",
+      "cwd": "backend",
+      "notes": "exit 0.",
+      "status": "passed"
+    },
+    {
+      "command": "gofmt -l modules/system/iam/tenant/",
+      "cwd": "backend",
+      "notes": "no output: no formatting drift.",
+      "status": "passed"
+    },
+    {
+      "command": "go vet ./modules/system/iam/tenant/...",
+      "cwd": "backend",
+      "notes": "exit 0.",
+      "status": "passed"
+    },
+    {
+      "command": "go test -count=1 -run TestDeleteTenant_ActiveWithoutMembersStillRefused ./modules/system/iam/tenant/... with the guard hunk reverted (sentinel kept so the test compiles)",
+      "cwd": "backend",
+      "notes": "Red without the fix: the regression gets nil from DeleteTenant on an ACTIVE tenant with zero active members, and the row reads status='deleted' instead of 'active' (red-run.log). The source file was restored afterwards; the revert never reached a commit.",
+      "status": "passed"
+    },
+    {
+      "command": "go test -count=1 -run TestDeleteTenant_ActiveWithoutMembersStillRefused ./modules/system/iam/tenant/... with the fix applied",
+      "cwd": "backend",
+      "notes": "Green with the fix: PASS in 1.02s (green-run.log).",
+      "status": "passed"
+    },
+    {
+      "command": "go test -count=1 ./modules/system/iam/tenant/... (PANTHEON_TEST_DSN + PANTHEON_TEST_DSN_REQUIRED=true, serial)",
+      "cwd": "backend",
+      "notes": "ok in 60.7s, exit 0. Run on the post-rebase branch (W2 = b13e6b77) after giving TestAddMember_TombstoneTenantStillReportsTenantNotFound the same archive-first treatment; the first post-rebase run failed exactly there, proving the guard is enforced and the inventory was one fixture short of the rebase reality.",
+      "status": "passed"
+    },
+    {
+      "command": "npx tsc -b",
+      "cwd": "frontend",
+      "notes": "exit 0.",
+      "status": "passed"
+    },
+    {
+      "command": "npm run lint",
+      "cwd": "frontend",
+      "notes": "exit 0 (eslint .).",
+      "status": "passed"
+    },
+    {
+      "command": "npm run check:i18n-hardcode",
+      "cwd": "frontend",
+      "notes": "238 files scanned, 0 violations.",
+      "status": "passed"
+    },
+    {
+      "command": "npm run audit:i18n-locales",
+      "cwd": "frontend",
+      "notes": "3022 keys per locale across zh-CN, en-US, fr-FR, ja-JP, ko-KR with missing=0 extra=0 empty=0. W2 left the locales at 3021; the +1 is tenant.not_archived in all five.",
+      "status": "passed"
+    },
+    {
+      "command": "npx vitest run",
+      "cwd": "frontend",
+      "notes": "34 test files / 230 tests passed, 0 failed.",
+      "status": "passed"
+    },
+    {
+      "command": "npm run build",
+      "cwd": "frontend",
+      "notes": "exit 0, built in 628ms.",
+      "status": "passed"
+    },
+    {
+      "command": "node scripts/harness/check-task-packet.mjs --root .",
+      "cwd": ".",
+      "notes": "66 PASS lines, no FAIL lines.",
+      "status": "passed"
+    }
+  ]
+}

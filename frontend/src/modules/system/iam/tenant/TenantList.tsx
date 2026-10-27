@@ -570,7 +570,10 @@ const TenantList: React.FC = () => {
                 text: t('common.delete'),
                 icon: <IconDelete />,
                 status: 'danger',
-                disabled: !canDelete,
+                // Contract §2.1: only an archived tenant may be deleted. The
+                // backend refuses anything else with `tenant.not_archived`;
+                // the disabled state here is the affordance, not the guard.
+                disabled: !canDelete || row.status !== 'archived',
                 confirm: {
                   title: t('system.tenant.deleteConfirm', { name: row.name }),
                   onOk: () => {

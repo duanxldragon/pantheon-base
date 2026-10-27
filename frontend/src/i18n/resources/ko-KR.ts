@@ -1430,6 +1430,8 @@ const koKRFallback = {
   'tenant.not_found': '테넌트를 찾을 수 없습니다.',
   'tenant.has_active_members':
     '이 테넌트에 활성 멤버가 남아 있습니다. 먼저 상태를 "보관됨"으로 변경한 후 삭제하세요. 보관된 테넌트를 삭제하면 멤버가 자동으로 비활성화됩니다.',
+  'tenant.not_archived':
+    '이 테넌트는 보관되지 않아 삭제할 수 없습니다. 먼저 상태를 "보관됨"으로 변경한 후 삭제하세요.',
   'tenant.delete.error.archive_code_conflict':
     '테넌트 코드를 해제하지 못했습니다. 다시 시도하세요.',
   'tenant.forbidden': '이 계정은 해당 테넌트에 속하지 않아 데이터에 접근할 수 없습니다.',

@@ -2354,6 +2354,7 @@ const zhCNFallback = {
   'tenant.not_found': '租户不存在',
   'tenant.has_active_members':
     '该租户仍有关联成员。请先将租户状态改为「已归档」再执行删除；删除已归档租户时会自动停用其成员',
+  'tenant.not_archived': '该租户尚未归档，无法删除。请先把状态改为「已归档」，再执行删除',
   'tenant.delete.error.archive_code_conflict': '释放租户编码失败，请重试',
   'tenant.forbidden': '当前账号不属于该租户，无法访问该租户的数据',
   'tenant.suspended': '该租户已被暂停，暂时无法登录',

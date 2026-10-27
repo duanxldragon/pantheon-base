@@ -1540,6 +1540,8 @@ const frFRFallback = {
   'tenant.not_found': 'Locataire introuvable.',
   'tenant.has_active_members':
     'Ce locataire a encore des membres actifs. Passez d’abord son statut à « Archivé », puis supprimez-le ; la suppression d’un locataire archivé désactive ses membres.',
+  'tenant.not_archived':
+    'Ce locataire n’est pas archivé et ne peut pas être supprimé. Passez d’abord son statut à « Archivé », puis supprimez-le.',
   'tenant.delete.error.archive_code_conflict':
     'Impossible de libérer le code du locataire. Veuillez réessayer.',
   'tenant.forbidden':

@@ -2541,6 +2541,8 @@ const enUSFallback = {
   'tenant.not_found': 'Tenant not found.',
   'tenant.has_active_members':
     'This tenant still has active members. Set its status to "Archived" first, then delete it; deleting an archived tenant disables its members.',
+  'tenant.not_archived':
+    'This tenant is not archived and cannot be deleted. Set its status to "Archived" first, then delete it.',
   'tenant.delete.error.archive_code_conflict':
     'Could not release the tenant code. Please try again.',
   'tenant.forbidden':

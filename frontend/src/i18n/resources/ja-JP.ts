@@ -1492,6 +1492,8 @@ const jaJPFallback = {
   'tenant.not_found': 'テナントが見つかりません。',
   'tenant.has_active_members':
     'このテナントには有効なメンバーが残っています。ステータスを「アーカイブ済み」に変更してから削除してください。アーカイブ済みテナントの削除時にはメンバーが自動的に無効化されます。',
+  'tenant.not_archived':
+    'このテナントはアーカイブされていないため削除できません。まずステータスを「アーカイブ済み」に変更してから削除してください。',
   'tenant.delete.error.archive_code_conflict':
     'テナントコードを解放できませんでした。もう一度お試しください。',
   'tenant.forbidden':

@@ -121,8 +121,9 @@ func TestDeleteTenantArchivedWithMembersSucceeds(t *testing.T) {
 	mustInsertTenantUser(t, db, created.ID, 201)
 	require.NoError(t, service.AddMember(created.ID, 201, "owner"))
 
-	// A live tenant with members stays protected.
-	assert.ErrorIs(t, service.DeleteTenant(created.ID), ErrTenantHasActiveUsers)
+	// A live tenant stays protected with members or without: the guard is the
+	// status, not the member count (contract §2.1).
+	assert.ErrorIs(t, service.DeleteTenant(created.ID), ErrTenantNotArchived)
 
 	archived := tenant.TenantStatusArchived
 	require.NoError(t, service.UpdateTenant(created.ID, UpdateTenantDTO{Status: &archived}))
@@ -196,6 +197,10 @@ func TestDeletedTenantCannotBeRevivedByUpdate(t *testing.T) {
 
 	created, err := service.CreateTenant(CreateTenantDTO{Code: "tombstone-co", Name: "Tombstone Co"})
 	require.NoError(t, err)
+	// Delete fixtures archive first: contract §2.1 reserves deletion for
+	// archived tenants.
+	archived := tenant.TenantStatusArchived
+	require.NoError(t, service.UpdateTenant(created.ID, UpdateTenantDTO{Status: &archived}))
 	require.NoError(t, service.DeleteTenant(created.ID))
 
 	active := tenant.TenantStatusActive
@@ -226,6 +231,8 @@ func TestDeletedTenantRefusesNewMembers(t *testing.T) {
 	// attempt carries a user this tenant really owns, and the tombstone still
 	// has to win with the tenant error.
 	mustInsertTenantUser(t, db, created.ID, 777)
+	archived := tenant.TenantStatusArchived
+	require.NoError(t, service.UpdateTenant(created.ID, UpdateTenantDTO{Status: &archived}))
 	require.NoError(t, service.DeleteTenant(created.ID))
 
 	err = service.AddMember(created.ID, 777, "member")
@@ -245,6 +252,8 @@ func TestDeletedTenantCannotBeReprovisioned(t *testing.T) {
 
 	created, err := service.CreateTenant(CreateTenantDTO{Code: "tombstone-provision", Name: "Tombstone Provision"})
 	require.NoError(t, err)
+	archived := tenant.TenantStatusArchived
+	require.NoError(t, service.UpdateTenant(created.ID, UpdateTenantDTO{Status: &archived}))
 	require.NoError(t, service.DeleteTenant(created.ID))
 
 	_, err = service.ProvisionTenant(ProvisionInput{TenantID: created.ID})
@@ -296,4 +305,24 @@ func TestPlatformAddMemberRejectsUnknownUser(t *testing.T) {
 	var memberships int64
 	require.NoError(t, db.Model(&Membership{}).Where("tenant_id = ?", created.ID).Count(&memberships).Error)
 	assert.Equal(t, int64(1), memberships, "the rejected request must not leave a row behind")
+}
+
+// TestDeleteTenant_ActiveWithoutMembersStillRefused pins the TC-02 remedy. The
+// old guard (`memberCount > 0 && status != archived`) tombstoned an ACTIVE
+// tenant once its active member count reached zero — a state reachable without
+// any SQL by deleting every user, because DeleteUser disables their
+// memberships. The contract (§2.1) reserves deletion for archived tenants, so
+// the status, not the member count, is the guard.
+func TestDeleteTenant_ActiveWithoutMembersStillRefused(t *testing.T) {
+	db := setupTestDB(t)
+	service := NewService(db)
+
+	created, err := service.CreateTenant(CreateTenantDTO{Code: "bypass-co", Name: "Bypass Co"})
+	require.NoError(t, err)
+
+	assert.ErrorIs(t, service.DeleteTenant(created.ID), ErrTenantNotArchived)
+
+	var row Tenant
+	require.NoError(t, db.Unscoped().Where(condIDEquals, created.ID).Take(&row).Error)
+	assert.Equal(t, tenant.TenantStatusActive, row.Status, "the refused delete must not tombstone the tenant")
 }
