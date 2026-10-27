@@ -6,6 +6,37 @@ Pantheon Base 方法追踪记录。方法论本体位于 `pantheon-harness`。
 
 ---
 
+## [pantheon-base-v0.17.7] — 2026-10-27 (base-owned lint and CodeQL annotations)
+
+> A patch that adds thirteen comment lines and deletes none. `pantheon-ops` PR #149 could not close
+> three findings in its own tree: the consumer tree is rebuilt from a locked base snapshot and
+> `.foundation/allowed-drift.json` refuses generic drift, so these had to land here first.
+> **No schema change (still 30), no route, no permission code, no menu seed, no symbol rename, no
+> behaviour change.**
+
+### Changed
+
+- **`setting.SettingService` keeps its name behind a documented suppression.** `revive` reports the
+  stutter; renaming the exported type is a breaking change for every consumer, so `//nolint:revive`
+  records that decision at the declaration instead of silently ignoring the rule.
+- **`go/log-injection` false positives are now argued in the source.** All four sinks in
+  `backend/pkg/logging/logger.go` carry a `// codeql go/log-injection: this is a false positive`
+  annotation naming `SanitizeLogValue` / `sanitizeLogFields` and their tests, so a line-number shift
+  cannot quietly re-open a conclusion the maintainer had already dismissed.
+- **`js/file-access-to-http` false positives in the tenant-matrix smoke fixture are annotated** at all
+  seven sites: the taint source is the manifest the fixture writes itself under the gitignored `.tmp`
+  directory, and the values are used only against the backend it just provisioned.
+
+### Verification
+
+- `golangci-lint run --new-from-rev=main ./...` → 0 issues; `go build`, `go vet`, `gofmt`, frontend
+  `tsc -b`, `check-duplication` and the governance chain all clean.
+- Residual: `SonarCloud Scan` still fails with `HTTP 403` on the JRE metadata query — a credential
+  problem on the workflow since 2026-09-17, needing a valid `SONAR_TOKEN` from the maintainer. No Sonar
+  rule or project configuration was changed.
+
+---
+
 ## [pantheon-base-v0.17.6] — 2026-10-27 (tenant operations, plan storage and compat scope closure)
 
 > Plan definitions move from a hardcoded Go matrix into a versioned table, three platform-scoped read

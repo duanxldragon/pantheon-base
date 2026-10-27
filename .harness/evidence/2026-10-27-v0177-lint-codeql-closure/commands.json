@@ -1,0 +1,86 @@
+{
+  "taskId": "2026-10-27-v0177-lint-codeql-closure",
+  "repo": "pantheon-base",
+  "executedAt": "2026-10-27T13:20:00+08:00",
+  "agent": {
+    "tool": "other",
+    "adapter": "qoder-agent"
+  },
+  "commands": [
+    {
+      "command": "git diff --stat main -- backend/modules/system/config/setting/setting_service.go backend/pkg/logging/logger.go frontend/scripts/tenant-matrix-fixture-setup.mjs",
+      "cwd": ".",
+      "status": "passed",
+      "details": "setting_service.go +2, logger.go +4, tenant-matrix-fixture-setup.mjs +7. 13 insertions, 0 deletions: the release is comment-only, so no behaviour can change."
+    },
+    {
+      "command": "cd backend && go build ./... && go vet ./... && gofmt -l .",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "build exit 0, vet exit 0, gofmt listed no files."
+    },
+    {
+      "command": "cd backend && golangci-lint run --max-issues-per-linter 0 --max-same-issues 0 --new-from-rev=main ./...",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "0 issues. This is the direct proof that the //nolint:revive annotation works: the same command on main reports the SettingService stutter at setting_service.go:45, and it is the CI form of the gate that blocks pantheon-ops PR #149."
+    },
+    {
+      "command": "cd backend && go test -count=1 -run 'Sanitize' ./pkg/logging/...",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "ok github.com/duanxldragon/pantheon-base/backend/pkg/logging 0.020s. TestSanitizeLogMessage and TestSanitizeLogFields are the regression cover cited by the four go/log-injection annotations."
+    },
+    {
+      "command": "cd frontend && node node_modules/typescript/bin/tsc -b",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "exit 0. npm-run-child scripts cannot resolve node in this Git Bash session, so the TypeScript compiler is invoked directly."
+    },
+    {
+      "command": "node scripts/frontmatter-check.mjs",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Frontmatter check passed. Checked 363 docs, 266 with frontmatter."
+    },
+    {
+      "command": "node scripts/harness/check-encoding.mjs --root . --strict",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Encoding check (strict): 0 finding(s) across 2382 scanned file(s)."
+    },
+    {
+      "command": "node scripts/harness/check-structure-contract.mjs --root . --strict",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Structure contract check (strict): 0 finding(s) across 2720 tracked file(s). The new task packet and release notes land in their contracted locations."
+    },
+    {
+      "command": "node scripts/harness/check-task-packet.mjs --root . docs/harness/tasks/2026-10-27-v0177-lint-codeql-closure.task.md",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Task packet check: 1 file(s), 0 error(s), 1 warning(s). The warning is the linked review file, which is created in the same commit."
+    },
+    {
+      "command": "node scripts/check-pr-governance.mjs && node scripts/check-duplication.mjs",
+      "cwd": ".",
+      "status": "passed",
+      "details": "OK pantheon-base PR governance fields are present; duplication scan Result: PASS."
+    },
+    {
+      "command": "node scripts/harness/check-ui-quality-gate.mjs --root . --strict && node scripts/harness/check-generated.mjs --root . --strict",
+      "cwd": ".",
+      "status": "passed",
+      "details": "UI quality gate: no findings. Generated artifact check (strict): 0 finding(s) across 11 artifact(s)."
+    }
+  ],
+  "pending": [
+    "CI readings for CodeQL, Go Lint, Backend Tests (-race), Docs Governance, Frontend Contract, Duplication Gate and Release Gate are taken from the PR run, not from this host.",
+    "Publication facts for pantheon-base-v0.17.7 (tag object, four asset SHA-256 values, check-release-assets reading, Foundation Release Verify run id) are recorded after the cut, in the closeout follow-up."
+  ],
+  "environmentLimitations": [
+    "go test -race cannot run here: cgo is disabled on this Windows host, so the race reading belongs to the Linux CI Backend Tests job.",
+    "npm run <script> fails inside this Git Bash session because the npm child process cannot resolve node; every checker was invoked as node <script> instead.",
+    "SonarCloud is not reachable from a local run; the workflow's own 403 on the JRE metadata query is recorded as finding L4 and is a maintainer credential matter."
+  ]
+}

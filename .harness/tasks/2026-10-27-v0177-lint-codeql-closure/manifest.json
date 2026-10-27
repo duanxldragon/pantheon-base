@@ -1,0 +1,174 @@
+{
+  "taskId": "2026-10-27-v0177-lint-codeql-closure",
+  "taskDoc": "docs/harness/tasks/2026-10-27-v0177-lint-codeql-closure.task.md",
+  "title": "Publish v0.17.7: the three base-owned lint and CodeQL findings that pantheon-ops PR #149 cannot close in its own tree",
+  "goal": "Land the three gate findings that belong to base, then cut the next consumable foundation release pantheon-base-v0.17.7 so pantheon-ops can advance its pin and zero Go Lint and CodeQL on PR #149. The ops consumer tree is rebuilt from a locked base snapshot and .foundation/allowed-drift.json refuses generic drift, so these findings cannot be fixed in ops. setting.SettingService keeps its stutter behind a documented //nolint:revive because renaming it would break every consumer; the four go/log-injection sinks in pkg/logging and the seven js/file-access-to-http sites in the tenant-matrix smoke fixture carry code-level false-positive annotations whose reasons repeat the evidence the maintainer already used to dismiss the sibling alerts. The diff is 13 inserted comment lines and nothing else: no schema change (still 30), no route, no permission code, no menu seed, no renamed symbol.",
+  "primaryLayer": "platform",
+  "dependencyLayers": [
+    "system/config"
+  ],
+  "status": "in-progress",
+  "priority": "P2",
+  "type": "gate-closure",
+  "estimatedComplexity": "low",
+  "contractAnchors": [
+    "docs/designs/FOUNDATION_RELEASE_MODEL.md",
+    "docs/designs/REPOSITORY_LAYOUT.md",
+    "docs/VERSION_MANAGEMENT_GUIDE.md"
+  ],
+  "findings": [
+    "L1 (P2, closed here): golangci-lint revive reports the SettingService stutter at backend/modules/system/config/setting/setting_service.go:45. pantheon-ops runs the gate with --new-from-rev against its PR base, so the finding blocks PR #149 even though the file is base-owned; the rename is a breaking change for every consumer and is out of scope, so the suppression is documented in place.",
+    "L2 (P2, closed here): CodeQL go/log-injection reports backend/pkg/logging/logger.go:104 on the ops scan. Two alerts of the same rule at 111 and 118 were already dismissed by the maintainer on the SanitizeLogValue argument. Because a UI dismissal is tied to the alert fingerprint rather than to the code, the reason is now written at all four sinks so the conclusion survives a line shift.",
+    "L3 (P2, closed here): CodeQL js/file-access-to-http reports seven sites in frontend/scripts/tenant-matrix-fixture-setup.mjs. The taint source is the manifest this fixture writes itself under the gitignored .tmp directory, and every value it reads back is used only to call the backend it just provisioned; annotated in place.",
+    "L4 (P2, environment, NOT closed here): the SonarCloud Scan job fails with 'Failed to query JRE metadata: GET https://api.sonarcloud.io/analysis/jres -> HTTP 403 Forbidden. Please check the property sonar.token or the environment variable SONAR_TOKEN.' The same workflow has failed on every PR since 2026-09-17, so it is a credential/permission defect, not a regression from this round. Fixing it needs a valid SONAR_TOKEN from the maintainer; per the standing rule neither the rule set nor the project configuration is touched.",
+    "L5 (P3, environment limitation): go test -race cannot run locally because cgo is disabled on this Windows host, so the race reading comes from the Linux CI Backend Tests job. The generator tests in modules/lowcode need PANTHEON_NODE_BIN and PANTHEON_WORKSPACE_ROOT or they fail with module.generate.server_export_failed (the already-recorded F5)."
+  ],
+  "scope": {
+    "in": [
+      "Three comment-only suppressions: setting_service.go, pkg/logging/logger.go, frontend/scripts/tenant-matrix-fixture-setup.mjs",
+      "Version material: VERSION 0.17.7, CHANGELOG.md, RELEASE_NOTES_v0.17.7.md, README.md, README.en.md",
+      "Task packet, manifest and evidence trio for this round plus pr-body.md",
+      "Local verification: go build / go vet / gofmt, the CI-form golangci-lint --new-from-rev=main run, frontend tsc -b, check:duplication and the governance chain",
+      "Open the pull request, watch CI, merge it",
+      "Cut and publish pantheon-base-v0.17.7 on the merge commit once Release Gate Summary is successful there, then check-release-assets and Foundation Release Verify",
+      "Record the publication facts (tag object, asset digests, run ids) back into this packet"
+    ],
+    "out": [
+      "Renaming setting.SettingService to setting.Service: a breaking public-API change for every consumer",
+      "Any SonarCloud rule or project-configuration change, and any workflow change to work around the 403",
+      "Changing CodeQL queries, packs or .github/codeql configuration; suppression stays at the code level",
+      "Rewriting the published v0.17.0 through v0.17.6 tags and assets",
+      "Relaxing gate thresholds, skipping tests or deleting functionality to go green",
+      "pantheon-ops side changes: consumption closes in the consumer repository's own task packet"
+    ]
+  },
+  "acceptanceCriteria": [
+    "VERSION reads 0.17.7 and every version reference in README.md, README.en.md and CHANGELOG.md names pantheon-base-v0.17.7 consistently with RELEASE_NOTES_v0.17.7.md.",
+    "git diff --stat main..HEAD shows only the three code files, the version material and this packet's artifacts, with 0 deleted lines in the three code files.",
+    "golangci-lint run --new-from-rev=main ./... reports 0 issues, which is the direct proof that the revive suppression works.",
+    "go build ./..., go vet ./... and gofmt -l are clean, and frontend tsc -b exits 0.",
+    "The governance chain (docs frontmatter, harness encoding, structure, task packet, PR governance, duplication) is green locally.",
+    "All required PR contexts are green on the merge commit, and Release Gate Summary is successful there.",
+    "pantheon-base-v0.17.7 exists as an annotated tag with a non-draft, non-prerelease GitHub release carrying four checksum-valid assets; check-release-assets agrees and Foundation Release Verify succeeds.",
+    "pantheon-ops after consuming v0.17.7 reports no base-owned finding in its CI-form golangci-lint run; that assertion closes in the ops packet, not here."
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "ci-workflow",
+    "portableFailureClass": "gate-noise / false-positive-alert",
+    "ownerLayer": "foundation-source",
+    "ratchetDecision": "no-repeat-observed",
+    "coverageDimensions": [
+      "maintainability",
+      "runtime-quality"
+    ]
+  },
+  "expectedFiles": {
+    "create": [
+      "RELEASE_NOTES_v0.17.7.md",
+      "docs/harness/tasks/2026-10-27-v0177-lint-codeql-closure.task.md",
+      ".harness/tasks/2026-10-27-v0177-lint-codeql-closure/manifest.json",
+      ".harness/evidence/2026-10-27-v0177-lint-codeql-closure/summary.md",
+      ".harness/evidence/2026-10-27-v0177-lint-codeql-closure/review.md",
+      ".harness/evidence/2026-10-27-v0177-lint-codeql-closure/commands.json",
+      ".harness/evidence/2026-10-27-v0177-lint-codeql-closure/pr-body.md"
+    ],
+    "modify": [
+      "VERSION",
+      "CHANGELOG.md",
+      "README.md",
+      "README.en.md",
+      "backend/modules/system/config/setting/setting_service.go",
+      "backend/pkg/logging/logger.go",
+      "frontend/scripts/tenant-matrix-fixture-setup.mjs"
+    ],
+    "doNotTouch": [
+      "docs/contracts (no contract text changes this round)",
+      "backend/pkg/database/migrations (schema stays at 30)",
+      "config/boundary-baseline.json (emptied by v0.17.6)",
+      ".harness/STATUS.md (carries another round's uncommitted work in this workspace)"
+    ]
+  },
+  "implementationNotes": [
+    "Suppression comments follow the repository's existing shapes: //nolint:<linter> // reason for Go, // codeql <rule-id>: this is a false positive -- reason for CodeQL, each placed immediately above the flagged line.",
+    "The written reason names the guard that makes the alert a false positive (SanitizeLogValue and sanitizeLogFields for the log sinks; the self-written, gitignored .tmp manifest for the smoke fixture) instead of only asserting 'false positive'.",
+    "All four logger sinks (Info, Warn, Error, Debug) are annotated rather than only the one that currently reports, because adding comments shifts line numbers and a dismissal recorded in GitHub is keyed to the alert fingerprint, not to the code.",
+    "No function body, log format or exported symbol changes; the three code files gain lines and lose none."
+  ],
+  "verificationPlan": {
+    "backend": [
+      "go build ./...",
+      "go vet ./...",
+      "gofmt -l .",
+      "golangci-lint run --max-issues-per-linter 0 --max-same-issues 0 --new-from-rev=main ./... (the CI form)",
+      "go test ./... without -race locally; the race reading is the Linux CI Backend Tests job"
+    ],
+    "frontend": [
+      "node node_modules/typescript/bin/tsc -b",
+      "node scripts/check-duplication.mjs"
+    ],
+    "governance": [
+      "npm run check:docs-frontmatter",
+      "npm run check:harness-encoding",
+      "npm run check:structure",
+      "npm run check:task-packet",
+      "npm run check:pr-governance",
+      "node scripts/check-pr-governance.mjs --event <pr-event.json>"
+    ],
+    "release": [
+      "Release Gate Summary successful on the merge commit",
+      "npm run release:foundation:cut -- --root . --release-version pantheon-base-v0.17.7 --release-line release/0.17 --base-commit <merge sha> --release-notes ... --upgrade-notes ... --consumer-impact ...",
+      "npm run check:release-secrets",
+      "publish-foundation-release.mjs dry-run then real",
+      "npm run check:release-assets -- --release-version pantheon-base-v0.17.7 --repo duanxldragon/pantheon-base",
+      "Foundation Release Verify run success"
+    ]
+  },
+  "linkage": {
+    "taskId": "2026-10-27-v0177-lint-codeql-closure",
+    "taskManifest": ".harness/tasks/2026-10-27-v0177-lint-codeql-closure/manifest.json",
+    "assessment": "docs/harness/tasks/2026-10-27-v0177-lint-codeql-closure.task.md",
+    "openspecChange": "none",
+    "superpowersPlan": "none",
+    "evidenceDir": ".harness/evidence/2026-10-27-v0177-lint-codeql-closure/",
+    "summaryFile": ".harness/evidence/2026-10-27-v0177-lint-codeql-closure/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-27-v0177-lint-codeql-closure/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/VERSION_MANAGEMENT_GUIDE.md",
+      "docs/harness/tasks/2026-10-27-v0176-release-closeout.task.md",
+      ".harness/evidence/2026-10-24-single-tenant-scope-closeout/summary.md"
+    ]
+  },
+  "release": {
+    "version": "0.17.7",
+    "tag": "pantheon-base-v0.17.7",
+    "releaseLine": "release/0.17",
+    "previousRelease": "pantheon-base-v0.17.6",
+    "schemaVersion": "30",
+    "contents": [
+      "placeholder: filled after the merge commit is known"
+    ],
+    "assets": [
+      "foundation-release-pantheon-base-v0.17.7.tgz",
+      "foundation-release-pantheon-base-v0.17.7.tgz.sha256",
+      "repo.tar",
+      "repo.tar.sha256"
+    ],
+    "state": "preparing",
+    "publishedAt": "",
+    "tagObject": "",
+    "targetCommit": "",
+    "assetChecksums": {},
+    "verification": {
+      "releaseGate": "pending",
+      "sonarCloudGate": "blocked: SONAR_TOKEN 403 on the JRE metadata query since 2026-09-17 (maintainer credential)",
+      "codeQlAlerts": "pending",
+      "releaseSecretScan": "pending",
+      "releaseAssets": "pending",
+      "foundationReleaseVerifyRun": "",
+      "foundationReleaseVerify": "pending"
+    }
+  }
+}
