@@ -1640,6 +1640,11 @@ const koKRFallback = {
   'system.tenant.memberUserId': '사용자 ID',
   'system.tenant.memberUserIdPlaceholder': '사용자 ID 입력',
   'system.tenant.memberUserIdRequired': '사용자 ID를 입력하세요',
+  'system.tenant.member.userSelectEmpty': '이 범위에서 추가할 수 있는 사용자가 없습니다',
+  'system.tenant.member.userSelectNoPermission': '이 계정은 사용자 목록을 조회할 수 없습니다',
+  'system.tenant.member.userSelectSearch': '사용자 이름 또는 별명으로 검색',
+  'system.tenant.member.userSelectScope':
+    '후보 사용자는 현재 테넌트 뷰포인트에서 가져옵니다. 대상 테넌트가 아니면 뷰포인트를 전환하세요',
   'system.tenant.memberRole': '역할',
   'system.tenant.memberAddSuccess': '멤버가 추가되었습니다',
   'system.tenant.memberRemove': '제거',

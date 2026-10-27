@@ -217,8 +217,17 @@ Adds a user to a tenant.
 ```
 
 **Errors**:
-- `404 Not Found`: Tenant or user not found
-- Envelope `code` `400` + `tenant.member_exists`: the user is already a member (re-adding is idempotent for non-owner rows)
+- Envelope `code` `404` + `tenant.not_found`: the tenant id is unknown or the tenant is a deleted
+  tombstone. This guard runs first, so a tombstone answers with the tenant error even when
+  `user_id` is also unknown.
+- Envelope `code` `404` + `user.not_found`: `user_id` does not name a `system_user` row that still
+  exists (`deleted_at IS NULL`). `tenant_memberships` has no foreign key to `system_user`, so without
+  this guard a typo in the console created a membership row naming nobody — and a row written as
+  `owner` for a nonexistent user satisfied the last-owner invariant for a user who can never sign in.
+  A disabled user is still addable; whether a user owned by *another* tenant may hold a membership
+  here is not decided by this contract and is not rejected here.
+- Envelope `code` `400` + `tenant.member_exists`: the user is already an `owner` and a non-owner role
+  was submitted (re-adding is idempotent for non-owner rows)
 
 ---
 
@@ -503,6 +512,7 @@ Codes seen on this surface:
 | 200 | 403 | `tenant.platformOnly` | Non-platform subject on the tenant console |
 | 200 | 403 | `tenant.forbidden` | Foreign tenant id in the body / untrusted `X-Tenant-Id` |
 | 200 | 404 | `tenant.not_found` | Unknown tenant or membership |
+| 200 | 404 | `user.not_found` | Add-member submitted an id that names no existing user |
 
 > The transport status stays `200` for business failures; always branch on the envelope `code`,
 > not on the HTTP status. This is the platform-wide convention, not tenant-specific.

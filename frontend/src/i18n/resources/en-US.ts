@@ -764,6 +764,11 @@ const enUSFallback = {
   'system.tenant.memberUserId': 'User ID',
   'system.tenant.memberUserIdPlaceholder': 'Enter user ID',
   'system.tenant.memberUserIdRequired': 'Please enter the user ID',
+  'system.tenant.member.userSelectEmpty': 'No users are available in this scope',
+  'system.tenant.member.userSelectNoPermission': 'This account cannot browse the user list',
+  'system.tenant.member.userSelectSearch': 'Search by username or nickname',
+  'system.tenant.member.userSelectScope':
+    'Candidates come from the active tenant viewpoint; switch viewpoint if it is not the target tenant',
   'system.tenant.memberRole': 'Role',
   'system.tenant.memberAddSuccess': 'Member added',
   'system.tenant.memberRemove': 'Remove',
