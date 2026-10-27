@@ -55,7 +55,7 @@ answered with the artefact that settles it; red/green differentials are in
     "taskManifest": ".harness/tasks/2026-10-27-tenant-multi-membership-authorization/manifest.json",
     "evidence": ".harness/evidence/2026-10-27-tenant-multi-membership-authorization/commands.json",
     "reviewFile": ".harness/evidence/2026-10-27-tenant-multi-membership-authorization/review.md",
-    "changeRef": "11b2a8fc",
+    "changeRef": "none",
     "planRefs": [
       "docs/harness/tasks/2026-10-27-tenant-completeness-remediation.task.md",
       "docs/reviews/TENANT_MULTI_MEMBERSHIP_DECISION_2026-10-27.md",
