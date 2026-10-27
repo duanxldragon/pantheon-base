@@ -1,0 +1,146 @@
+{
+  "taskId": "2026-10-27-tenant-completeness-remediation",
+  "repo": "pantheon-base",
+  "executedAt": "2026-10-27T14:05:00+08:00",
+  "agent": {
+    "tool": "other",
+    "adapter": "qoder-agent"
+  },
+  "knownGaps": [
+    "Phase 0 changes no source file: the only artifacts are the planning packets and this evidence directory, so there is no pre-fix/post-fix test pair to report here. Each behavioural wave carries its own reproduction.",
+    "Two orphan pkg/testmysql clone databases (pantheon_base_test*) remain on the local MySQL instance, left by a tenant-package run interrupted after the wrapper had already advanced. buildTestDBName appends UnixNano plus a random suffix, so later runs cannot collide with them. Dropping a database is destructive and was not performed; cleanup awaits the maintainer.",
+    "npm run test:smoke:l0 / test:smoke:l1 and the module-level smoke tiers are not part of this program's baseline set and were not executed.",
+    "The pantheon-ops compatibility build (cd ../pantheon-ops && go build ./... && npm run build) is scheduled for the Phase 6 closeout and was not run in Phase 0.",
+    "Local MySQL credentials were read only from the gitignored root .env.test into process environment. During environment discovery one DSN value was echoed into a tool transcript before masking was corrected; no credential was written to any tracked file, log or evidence artifact, and the value is never reproduced here. The maintainer should decide whether the local development password needs rotation.",
+    "go test -count=1 ./... took roughly 15 minutes on a machine concurrently running a long-lived Python process. The 46 ok / 0 FAIL figure is protected against caching and silent skips by -count=1 plus PANTHEON_TEST_DSN_REQUIRED=true, but wall-clock timings in this packet are not comparable to an idle machine.",
+    "The backend service used for smoke had to be rebuilt first: the running binary was dated 2026-10-25T23:36, two commits behind HEAD, so the 12:40 smoke numbers recorded in smoke-tenant-baseline.md described an older tree. The re-run here is against the rebuilt HEAD binary; the pre-existing file is left untouched as history."
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-27-tenant-completeness-remediation/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-27-tenant-completeness-remediation/",
+    "summaryFile": ".harness/evidence/2026-10-27-tenant-completeness-remediation/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-27-tenant-completeness-remediation/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-27-tenant-completeness-remediation.task.md",
+      "docs/reviews/TENANT_FUNCTIONAL_COMPLETENESS_REVIEW_2026-10-27.md",
+      "docs/contracts/TENANT_CONTRACT_V1.md"
+    ]
+  },
+  "commands": [
+    {
+      "command": "go build ./...",
+      "cwd": "backend",
+      "notes": "exit 0.",
+      "status": "passed"
+    },
+    {
+      "command": "go vet ./...",
+      "cwd": "backend",
+      "notes": "exit 0, no findings.",
+      "status": "passed"
+    },
+    {
+      "command": "go test -count=1 ./... (PANTHEON_TEST_DSN + PANTHEON_TEST_DSN_REQUIRED=true + PANTHEON_TEST_REDIS_REQUIRED=true + PANTHEON_NODE_BIN + PANTHEON_WORKSPACE_ROOT)",
+      "cwd": "backend",
+      "notes": "46 packages ok, 0 FAIL, exit 0; 6 further packages report [no test files]. PANTHEON_TEST_DSN_REQUIRED=true converts every DSN-missing skip into a failure, so the ok is real execution, not the skip-masked ok that the review originally relied on.",
+      "status": "passed"
+    },
+    {
+      "command": "go test -count=1 -v ./modules/system/iam/tenant/... (same required environment)",
+      "cwd": "backend",
+      "notes": "119 PASS / 0 SKIP / 0 FAIL in 61.5s: 92 top-level Test functions plus 27 subtests. Matches the corrected baseline in the completeness review section 5.",
+      "status": "passed"
+    },
+    {
+      "command": "npx tsc -b",
+      "cwd": "frontend",
+      "notes": "exit 0. Requires D:\\nodejs first on PATH; otherwise npm hands the lifecycle script to cmd.exe, node is not resolved and every frontend gate fails with the not-recognized error.",
+      "status": "passed"
+    },
+    {
+      "command": "npm run lint",
+      "cwd": "frontend",
+      "notes": "exit 0 with --max-warnings 0.",
+      "status": "passed"
+    },
+    {
+      "command": "npm run build",
+      "cwd": "frontend",
+      "notes": "exit 0, built in 1.15s; the 14 prebuild contract checks all ran and passed.",
+      "status": "passed"
+    },
+    {
+      "command": "npx vitest run",
+      "cwd": "frontend",
+      "notes": "34 test files / 230 tests passed in 30.9s.",
+      "status": "passed"
+    },
+    {
+      "command": "npm run check:menu-contract",
+      "cwd": "frontend",
+      "notes": "19 menus / 23 routes / 102 permissions / 23 component keys.",
+      "status": "passed"
+    },
+    {
+      "command": "npm run check:i18n-hardcode",
+      "cwd": "frontend",
+      "notes": "238 files, no violations.",
+      "status": "passed"
+    },
+    {
+      "command": "npm run check:system-page-admission",
+      "cwd": "frontend",
+      "notes": "16 entries admitted.",
+      "status": "passed"
+    },
+    {
+      "command": "node scripts/run-smoke-suite.mjs --host 127.0.0.1 --port 5178 --setup scripts/tenant-matrix-fixture-setup.mjs --config playwright.config.ts -- tests/smoke-core/tenant-hostile-browser-matrix.spec.ts tests/smoke-core/tenant-hostile-browser-matrix-phase2.spec.ts tests/smoke-core/tenant-protected-resources.spec.ts --workers=1",
+      "cwd": "frontend",
+      "notes": "10 passed / 0 failed in 47.4s against the live stack (backend :8080 rebuilt from HEAD, MySQL, Redis).",
+      "status": "passed"
+    },
+    {
+      "command": "node scripts/run-smoke-suite.mjs --host 127.0.0.1 --port 5178 --config playwright.config.ts -- tests/smoke-core/tenant-viewpoint-switcher.spec.ts --workers=1",
+      "cwd": "frontend",
+      "notes": "5 passed / 0 failed in 48.0s. Tenant smoke total for the program baseline is 15 passed / 0 failed.",
+      "status": "passed"
+    },
+    {
+      "command": "node scripts/tenant-matrix-fixture-setup.mjs down && node scripts/cleanup-smoke-fixtures.mjs",
+      "cwd": "frontend",
+      "notes": "Both exit 0. Fixture counts i18n:6, depts/dicts/permissions:0. The runner only calls setup up, so teardown is mandatory after every tenant smoke run.",
+      "status": "passed"
+    },
+    {
+      "command": "node scripts/harness/check-task-packet.mjs --root .",
+      "cwd": ".",
+      "notes": "65 files, 0 errors, exit 0. 41 advisory warnings, all of the expected kind for planned waves: 29 'Linked review file does not exist' (the 22 waves have not been reviewed yet), 11 'Section ## Linkage is missing recommended item' in older packets and 1 pre-existing 'Contract anchor does not exist: permission_workbench.go:624-654' from the 2026-10-26 packet. None blocks; Docs Governance is a non-strict consumer of this checker and passed on PR #431.",
+      "status": "passed"
+    },
+    {
+      "command": "node scripts/harness/check-evidence.mjs --strict .harness/evidence/2026-10-27-tenant-completeness-remediation/commands.json",
+      "cwd": ".",
+      "notes": "1 file, 0 errors, 0 warnings. Repo-wide form also run: 60 files, 0 errors, 0 warnings (was 59 before this file landed).",
+      "status": "passed"
+    },
+    {
+      "command": "node scripts/harness/check-review.mjs --strict .harness/evidence/2026-10-27-tenant-completeness-remediation/review.md",
+      "cwd": ".",
+      "notes": "1 file, 0 errors. Repo-wide form: 60 files, 0 errors.",
+      "status": "passed"
+    },
+    {
+      "command": "node scripts/harness/check-doc-links.mjs --root . --strict",
+      "cwd": ".",
+      "notes": "0 findings.",
+      "status": "passed"
+    },
+    {
+      "command": "node scripts/harness/check-doc-inventory.mjs --root . --strict",
+      "cwd": ".",
+      "notes": "0 findings.",
+      "status": "passed"
+    }
+  ]
+}
