@@ -4,7 +4,7 @@
   "title": "Close the tenant functional-completeness gaps found by the 2026-10-27 tenant review",
   "goal": "The 2026-10-27 read-only tenant review (docs/reviews/TENANT_FUNCTIONAL_COMPLETENESS_REVIEW_2026-10-27.md) concluded that the single-tenant deployment path is complete but tenant development is not: a user added to a second tenant can log in there and still owns zero roles, because role bindings are stamped from the user's owning tenant and no assignment path exists across tenants; DeleteTenant permits deleting an active tenant once its active member count reaches zero, contradicting contract section 2.1; and AddMember accepts arbitrary user ids, so a phantom owner can displace the real last owner. This program converts the review into eight independently reviewable waves: two behavioural fixes (delete guard, member integrity), one decision plus its implementation for multi-membership authorization, one documentation/type alignment wave, one UI-automation wave, one plan-ladder decision and one dead-surface removal. No wave changes database schema, migrations, dependencies or pantheon-ops business code; every wave keeps the existing backend and frontend gate sets green.",
   "primaryLayer": "system/iam",
-  "status": "planned",
+  "status": "in-progress",
   "priority": "P1",
   "type": "remediation",
   "estimatedComplexity": "large",

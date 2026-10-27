@@ -88,6 +88,7 @@ Shared skills live in `../../pantheon-harness/skills/`; recommended shared skill
 - [企业级阶段性验收审查报告（2026-10-21，冻结判定；矩阵/问题清单/测试记录同目录）](./reviews/PANTHEON_BASE_FINAL_ACCEPTANCE_REVIEW_2026-10-21.md)
 - [租户菜单边界、登录审计归属与套餐差异化修复验收（2026-10-22）](./reviews/PANTHEON_BASE_TENANT_PLAN_AND_AUDIT_FIXES_2026-10-22.md)
 - [企业级最终验收评估报告（2026-10-07，被 2026-10-21 验收继任确认）](./reviews/ENTERPRISE_RELEASE_READINESS_REVIEW_2026-10-07.md)
+- 历史多模型评审转写（审计凭证，2026-09-10 基线评审与六模型交叉评审）：[20260910](./reviews/pantheon-base-review-20260910.md) · [ChatGPT](./reviews/pantheon-base-review-chatgpt.md) · [Claude](./reviews/pantheon-base-review-claude.md) · [DeepSeek](./reviews/pantheon-base-review-deepseek.md) · [GLM](./reviews/pantheon-base-review-glm.md) · [Grok](./reviews/pantheon-base-review-grok.md) · [Kimi](./reviews/pantheon-base-review-kimi.md)
 - [最终验收整改任务包（2026-10-07）](./harness/tasks/2026-10-07-release-readiness-remediation.task.md) — 可执行任务清单位于 `../.harness/tasks/2026-10-07-*/manifest.json`
 - [设计与实现验收清单](./acceptances/ACCEPTANCE_CHECKLIST.md)
 - [Pantheon Base Agent 执行清单](./acceptances/AGENT_EXECUTION_CHECKLIST.md)
