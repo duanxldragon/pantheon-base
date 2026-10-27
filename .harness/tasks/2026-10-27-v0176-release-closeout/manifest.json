@@ -9,7 +9,7 @@
     "system/config",
     "system/org"
   ],
-  "status": "in-progress",
+  "status": "completed",
   "priority": "P1",
   "type": "release-closeout",
   "estimatedComplexity": "medium",

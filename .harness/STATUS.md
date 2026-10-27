@@ -1,7 +1,40 @@
 # Pantheon Base - Harness 任务状态
 
 **最后更新**: 2026-10-27
-**当前版本**: v0.17.6 已发布（tag `pantheon-base-v0.17.6`，目标提交 `c9bc6c0f`，四件资产与 `Foundation Release Verify` 已核验）
+**当前版本**: v0.17.8 已发布（tag `pantheon-base-v0.17.8`，目标提交 `e256d1fb`，四件资产与 `Foundation Release Verify` 已核验）
+
+## v0.17.8 发布（2026-10-27）
+
+base 自有依赖漏洞关闭与 Sonar 归属勘误，任务包 `2026-10-27-v0178-dep-vuln-closure`，证据在
+`.harness/evidence/2026-10-27-v0178-dep-vuln-closure/`。
+
+- **修复内容**：`VERSION` → 0.17.8，关闭 base 自有的依赖漏洞告警；随包落地两项勘误——
+  ①Sonar 归属：残留备注/README（zh/en）/summary/review 原写「两仓 SonarCloud Scan 红」，
+  实际 base 无扫描器工作流、`e256d1fb` 上两个 Sonar check-run 全绿，base main 为
+  未解决 issue 0 / 门 OK，红的是消费仓（ops main 249 / 门 ERROR）与凭据侧；
+  ②`check-runtime-evidence --strict` 在 `#431` 落地后对 main 报 1 warning，已修复。
+- **发布事实**：PR #433 squash 合并为 `e256d1fb`（`2026-10-27T07:47:04Z`），Release Gate run
+  `40469207830` 六 job 全绿；annotated tag `pantheon-base-v0.17.8`（tag object `8f85982a`）指向
+  `e256d1fb`；Release 于 `2026-10-27T08:17:19Z` 发布（非 draft、非 prerelease），四件资产齐备
+  （tgz 29,072,437 B `e1ec60df…`、repo.tar 45,772,800 B `51674048…` + 两个 .sha256）；
+  secret scan clean（3284 文件，两种归档均解开读取）；`check-release-assets` 本地与远端一致；
+  `Foundation Release Verify` run `40472462712` success。
+
+## v0.17.7 发布（2026-10-27）
+
+`pantheon-ops` PR #149（消费 v0.17.6）五条红灯中三条属 base 自有文件
+（`setting_service.go`、`logger.go`、`tenant-matrix-fixture-setup.mjs`），按
+`.foundation/allowed-drift.json`「generic drift 不允许、必须回流 base」的规则在 base 修复，
+任务包 `2026-10-27-v0177-lint-codeql-closure`，证据在
+`.harness/evidence/2026-10-27-v0177-lint-codeql-closure/`。
+
+- **修复内容**：三条 lint / CodeQL 发现全部清零；决定性读数 `golangci-lint run
+  --new-from-rev=main ./...` 0 issues；`go test -run Sanitize ./pkg/logging/...` ok。
+- **环境限制**：本机 Windows 无法跑 `go test -race`（cgo disabled），race 读数由 CI Linux 承担。
+- **发布事实**：PR #430 squash 合并为 `2091a2d8`（"chore(release): publish v0.17.7 foundation
+  materials"）；tag `pantheon-base-v0.17.7` 指向 `2091a2d8`（**lightweight tag**，非 annotated——
+  与 v0.17.6/v0.17.8 的 annotated 形态不同，如实记录）；Release 于 `2026-10-27T04:52:26Z` 发布
+  （非 draft、非 prerelease），四件资产齐备。
 
 ## v0.17.6 发布（2026-10-27）
 
@@ -319,6 +352,9 @@ GitHub Release 于 `2026-10-22T00:17:53Z` 发布，四件产物齐备（tgz 19,9
 | ✅ 已完成 | v0.17.0 发布收口（`2026-10-22-release-and-residual-closeout`，F5/F2/B10/G2/D2 + 浏览器验收） |
 | ✅ 已完成 | 租户权限隔离整改（`2026-10-19-tenant-permission-isolation-remediation`，W0–W6 全部完成 + F14 收口后关闭，**零残留**） |
 | ✅ 已完成 | 全局代码精简审计（2026-10-27，只读，结论 **LEAN-WITH-DEBT**；产出 `docs/reviews/CODEBASE_SIMPLIFICATION_AUDIT.md`、`REDUNDANT_CODE_CANDIDATES.md`、`CODE_SIMPLIFICATION_PLAN.md`） |
+| ✅ 已完成 | v0.17.6 发布收口（`2026-10-27-v0176-release-closeout`，tag→`c9bc6c0f`，四件资产 + Verify 核验） |
+| ✅ 已完成 | v0.17.7 发布收口（`2026-10-27-v0177-lint-codeql-closure`，三条 base 自有 lint/CodeQL 发现回流修复，tag→`2091a2d8`，四件资产） |
+| ✅ 已完成 | v0.17.8 发布收口（`2026-10-27-v0178-dep-vuln-closure`，依赖漏洞关闭 + Sonar 归属勘误，tag→`e256d1fb`，四件资产 + Verify run 40472462712） |
 | 🆕 已计划 | 代码精简与横向重复收敛（`2026-10-27-codebase-simplification-program`，12 个波次 S1×2 / S2×6 / S3×3 / 治理决策×1，全部 `status=planned`，未开工） |
 | ✅ 已完成 | 租户功能完整性复核（2026-10-27，只读，前后端 + 租户运营；结论：单租户路径可用，**"租户开发已完成"不成立**；1 P1 / 2 P2 / 6 P3；产出 `docs/reviews/TENANT_FUNCTIONAL_COMPLETENESS_REVIEW_2026-10-27.md`） |
 | 🚧 进行中 | 租户完整性整改（`2026-10-27-tenant-completeness-remediation`，8 个波次；**W2 已完成**（PR #434），其余 `status=planned`；W3 决策未签字前 W4 不得启动） |
