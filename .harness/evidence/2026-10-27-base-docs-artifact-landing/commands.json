@@ -187,6 +187,7 @@
     "本地分支 fix/lint-and-codeql-suppressions-2026-10-27 的树等同性证明（git diff --quiet main <branch> 退出 0，输出 TREES IDENTICAL）在删除前采集，已记入 summary.md 与 review.md；该分支删除后此读数无法复现。",
     "本轮回填了 main 上 .harness/evidence/2026-10-27-v0177-lint-codeql-closure/commands.json 的 schema/knownGaps/linkage 三个必填字段。根因是 base CI 的 quality.yml 从未调用 check-evidence 与 check-review，所以这份文件合入时没有任何红灯；把这两个检查器接进门禁是门禁策略变更，按维护者三触点约定留待拍板，本轮只补数据不擅自加门禁。"
   ],
+  "runtimeGap": "No process, log, metric or trace signal was captured, and none was available to capture: this landing changes only Markdown and JSON artifacts. The task is runtime-sensitive solely because its manifest lists verificationPlan.runtimeEvidence as the two git-diff assertions (git diff --name-only main..HEAD to prove the landing is add-only, git diff --quiet main <branch> as the precondition for each local branch deletion). Both are repository-state readings, not runtime telemetry; their readings are recorded in commands and summary.md, and the second one is no longer reproducible because the branch it measured was deleted. Backfilled during the v0.17.8 closeout: check-runtime-evidence --strict had been reporting this as an unrecorded runtime gap since the landing merged, and the statement was missing rather than the evidence.",
   "runtimeSensitive": false,
   "linkage": {
     "taskManifest": ".harness/tasks/2026-10-27-base-docs-artifact-landing/manifest.json",

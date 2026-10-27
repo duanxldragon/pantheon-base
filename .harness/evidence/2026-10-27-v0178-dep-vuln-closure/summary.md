@@ -130,9 +130,17 @@ plus the build are the verification that the reduced diff is still coherent.
   advisory says openpgp is unsafe by design and unmaintained) and both scanners report it as not
   called, so it blocks nothing today. Whether to force a move to `github.com/ProtonMail/go-crypto` is
   a maintainer dependency-risk decision, registered in the packet, not acted on.
-- `SonarCloud Scan` stays red on both repositories with `HTTP 403` on the JRE metadata query — a
+- `SonarCloud Scan` is red on `pantheon-ops` only, with `HTTP 403` on the JRE metadata query — a
   `SONAR_TOKEN` credential matter since 2026-09-17. Nothing in this round changes Sonar rules,
-  project configuration or the workflow.
+  project configuration or the workflow. Base does not own a scanner workflow at all:
+  `.github/workflows/sonarcloud.yml` has never existed in base history (`git log --all --diff-filter=D`
+  and `git log --all` on that path are both empty), and no base workflow or script references
+  `SONAR_TOKEN`, `SonarSource` or `sonarcloud.io` except `release-gate.yml:174-213`, which *reads* the
+  Sonar Web API. On `e256d1fb` both Sonar signals base does have — the `SonarCloud Gate` and
+  `SonarCloud Code Analysis` check-runs from the SonarCloud App — concluded `success`, and the Sonar API
+  reports main quality gate `OK` with `0` unresolved issues, versus ops `ERROR` with `249`. An earlier
+  draft of this file said the 403 made both repositories red; that was carried forward from previous
+  rounds without being re-measured and is corrected here rather than left standing (see review R4).
 - The consumer's exact OSV command initially found no package sources in this worktree (exit 128). The
   first explanation recorded here — "osv-scanner skips paths containing dot-prefixed segments" — was
   wrong and has been falsified by a control experiment: the same v2.3.3 scans hidden paths on both C:
@@ -144,3 +152,37 @@ plus the build are the verification that the reduced diff is still coherent.
   consumer its gate reading; ops main remains the confirmation, not the proof.
 - `go test -race` cannot run on this host (cgo disabled), so the race reading belongs to the Linux CI
   `Backend Tests` job.
+
+## Release closeout
+
+PR #433 squashed into `main` as `e256d1fb4773cb02ed9f90cc1c36f02e7f07d912` at
+`2026-10-27T07:47:04Z`; the Release Gate run on that commit (`40469207830`, check-run `122079301995`
+`Release Gate Summary`) succeeded with all six jobs green. The release was then cut from that commit
+and published:
+
+| Fact | Reading |
+|------|---------|
+| Cut | `releases/pantheon-base-v0.17.8/manifest.json` `createdAt` = `2026-10-27T08:13:29.577Z` |
+| Secret scan | `check-release-secrets` clean, 3284 files (both archives unpacked and read) |
+| Tag | annotated `pantheon-base-v0.17.8`, object `8f85982a314b51a32ce2e7597b07be969633e70e`, target `e256d1fb` |
+| Release | `publishedAt` `2026-10-27T08:17:19Z`, draft=false, prerelease=false |
+| Assets | tgz 29072437 B `e1ec60df…`, repo.tar 45772800 B `51674048…`, plus both `.sha256` sidecars |
+| Consistency | `check-release-assets`: local bundle and release carry the same four assets, digests match |
+| Verify | `Foundation Release Verify` run `40472462712` on `e256d1fb`: completed/success, both jobs success |
+
+The publish step exited 0 without printing to stdout, so every row above was read back from GitHub and
+from the local `sha256sum`/`check-release-assets` rather than inferred from the exit code.
+
+Two corrections landed with this closeout, both recorded rather than silently rewritten:
+
+- **Sonar attribution (review R4).** The residual note in the release notes, `README.md`,
+  `README.en.md`, this file and `review.md` said `SonarCloud Scan` was red on both repositories. Base
+  owns no scanner workflow and never did, its two Sonar check-runs on `e256d1fb` are green, and the Sonar
+  API shows base main at `0` issues / gate `OK` against ops main at `249` / gate `ERROR`. The failure is
+  consumer-side and credential-side.
+- **`check-runtime-evidence --strict` was red on `main`** (1 warning) since `#431` landed the
+  `2026-10-27-base-docs-artifact-landing` evidence: that manifest declares its two git-diff assertions as
+  `verificationPlan.runtimeEvidence`, which makes the task runtime-sensitive, while the evidence recorded
+  neither a signal nor a gap statement the checker can match. Closed with one additive `runtimeGap`
+  paragraph in that `commands.json`, in the same shape `2026-09-25-task-archiving-and-v0130-prep` already
+  uses. Nothing was skipped or relaxed — the chain reads 61 files, 0 errors, 0 warnings.

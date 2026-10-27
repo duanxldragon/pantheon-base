@@ -91,11 +91,19 @@ Consumers advance `foundation-release.lock.json` from `pantheon-base-v0.17.7` to
 
 ## Known residual
 
-- **`SonarCloud Scan` stays red**, on base and on ops, with
-  `Failed to query JRE metadata: GET https://api.sonarcloud.io/analysis/jres → HTTP 403 Forbidden`.
-  It has failed this way on every run since 2026-09-17, so it is a credential/permission defect, not a
-  regression introduced here. Repair needs a valid `SONAR_TOKEN` from the maintainer; per the standing
-  rule, neither the Sonar rule set nor the project configuration was touched.
+- **`SonarCloud Scan` is red on `pantheon-ops`; it is not a base failure.** The step that fails is
+  ops' own `.github/workflows/sonarcloud.yml` — ops' `.github` root is a consumer overlay, so that
+  workflow belongs to the consumer — and its run `40457897338` on ops `main` ends with
+  `Failed to query JRE metadata: GET https://api.sonarcloud.io/analysis/jres → HTTP 403 Forbidden`;
+  ops also still carries 249 unresolved Sonar issues on `main`. Base has no scanner workflow and never
+  had one (`git log --diff-filter=D -- .github/workflows/sonarcloud.yml` on base history is empty), so
+  base's Sonar evidence is the SonarCloud App analysis plus this repository's own `SonarCloud Gate`
+  release-gate job. Both were `success` on the release target `e256d1fb`, and the Sonar API reports
+  quality gate `OK` with `0` unresolved issues on `main`. An earlier draft of these notes attributed
+  the 403 to base as well; that attribution was carried forward from previous rounds without being
+  re-measured and is corrected here instead of being left standing. Repairing the consumer's token is
+  a maintainer credential action; per the standing rule this round changed no Sonar rule, project
+  setting or workflow file.
 - **`golang.org/x/crypto` `GO-2026-5932`** (openpgp "unsafe by design", unmaintained, no fixed
   version) remains in the required graph. Both scanners report it as not called, so it blocks no gate
   today. Whether it must be replaced by `github.com/ProtonMail/go-crypto` is a dependency-risk policy
