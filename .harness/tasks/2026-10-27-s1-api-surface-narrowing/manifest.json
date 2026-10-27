@@ -1,0 +1,121 @@
+{
+  "taskId": "2026-10-27-s1-api-surface-narrowing",
+  "title": "Narrow over-exported package symbols that have no external consumer",
+  "goal": "Four symbols are exported but only used inside their own package, which makes pkg/ look like it offers capabilities it does not: common.IsI18nMessageKey is called only by common.ResolveErrorMessageKey, rbacbind.InsertRoleMenu and InsertUserRole are called only by the sibling EnsureRoleMenu and EnsureUserRole, contracts.ProtectedGroupWithRedis is called only by sibling ProtectedGroup, and permission_handler.permissionServiceErrorCode is a one-line pass-through to common.CodeForError with a single call site. A fifth item, database.RunAutoMigrate, has no caller at all and is only kept in case a downstream wanted a GORM AutoMigrate escape hatch that the project does not otherwise use. This wave either makes them private, deletes the pass-through, or records the decision to keep the public name, so the exported surface matches the real contract.",
+  "primaryLayer": "platform",
+  "status": "planned",
+  "priority": "P3",
+  "type": "refactor",
+  "estimatedComplexity": "small",
+  "parentTaskId": "2026-10-27-codebase-simplification-program",
+  "dependsOn": [],
+  "findings": [
+    "RC-004 (P3): common.IsI18nMessageKey (backend/pkg/common/error.go:117) is referenced only at error.go:129 by ResolveErrorMessageKey; pkg/common/http/response.go has an independent equivalent.",
+    "RC-007 (P3): rbacbind.InsertRoleMenu (backend/pkg/rbacbind/rbacbind.go:49) and InsertUserRole (:55) are called only by EnsureRoleMenu (:100) and EnsureUserRole (:116) in the same file; the batch variants are the real external API.",
+    "RC-008 (P3): contracts.ProtectedGroupWithRedis (backend/pkg/contracts/route_groups.go:16) is called only by ProtectedGroup (:13); the overlay uses ProtectedGroup and DataScopedGroup, not this constructor. Recommendation is keep, recorded rather than changed.",
+    "RC-029 (P3): permission_handler.go:20-27 permissionServiceErrorCode has a body of exactly `return common.CodeForError(err)`; the wrapper adds no mapping.",
+    "RC-006 (P3): backend/pkg/database/migrate.go:442-460 RunAutoMigrate has zero callers in the repo and in the overlay; the project migrates with golang-migrate SQL files."
+  ],
+  "scope": {
+    "in": [
+      "Rename common.IsI18nMessageKey to unexported isI18nMessageKey and update its single internal call",
+      "Rename rbacbind.InsertRoleMenu and InsertUserRole to unexported insertRoleMenu and insertUserRole",
+      "Delete permissionServiceErrorCode and call common.CodeForError directly at its single site",
+      "Decide and record whether database.RunAutoMigrate is deleted or kept as a documented public escape hatch; delete only if the maintainer confirms no downstream use",
+      "Record the decision to keep contracts.ProtectedGroupWithRedis exported"
+    ],
+    "out": [
+      "Deleting EnsureRoleMenu / EnsureUserRole / InsertRoleMenus / InsertUserRoles",
+      "Deleting ProtectedGroup or DataScopedGroup, which the overlay uses",
+      "Changing error-code behaviour: CodeForError stays the single mapping",
+      "Removing the private duplicate in pkg/common/http/response.go, which belongs to a later wave"
+    ]
+  },
+  "dependencyLayers": [
+    "platform",
+    "system/iam"
+  ],
+  "implementationNotes": [
+    "Unexporting is a compile-time probe: if anything outside the package still calls the symbol the build fails, which is exactly the signal wanted.",
+    "RunAutoMigrate is the only item in this wave that could be a deliberate public surface for downstream. Keep it unless the maintainer explicitly says otherwise; the line saving is 19 lines and not worth an unapproved contract change.",
+    "Do not merge the pkg/common and pkg/common/http message-key logic here; that is RC-019 in the S2 wave and needs its own equivalence tests."
+  ],
+  "contractAnchors": [
+    "AGENTS.md",
+    "docs/reviews/REDUNDANT_CODE_CANDIDATES.md"
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "none",
+    "portableFailureClass": "export-surface-drift",
+    "ownerLayer": "consumer-repository",
+    "ratchetDecision": "no-repeat-observed",
+    "coverageDimensions": [
+      "maintainability",
+      "architecture-fitness"
+    ]
+  },
+  "expectedFiles": {
+    "create": [],
+    "modify": [
+      "backend/pkg/common/error.go",
+      "backend/pkg/rbacbind/rbacbind.go",
+      "backend/modules/system/iam/permission/permission_handler.go"
+    ],
+    "doNotTouch": [
+      "backend/pkg/contracts/route_groups.go",
+      "backend/pkg/database/migrate.go",
+      "backend/pkg/common/http/response.go"
+    ]
+  },
+  "executionRoles": {
+    "implementerPosture": "Make the symbols private one at a time so the compiler reports any hidden consumer; leave the two deferred files untouched.",
+    "reviewerPosture": [
+      "Confirm no exported symbol lost an external consumer.",
+      "Confirm permission error responses still carry common.CodeForError's mapping.",
+      "Confirm route_groups.go and migrate.go are unchanged unless the maintainer explicitly approved."
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "cd backend && go build ./...",
+      "cd backend && go vet ./...",
+      "cd backend && go test -count=1 ./pkg/common/... ./pkg/rbacbind/... ./modules/system/iam/permission/...",
+      "grep -rn \"IsI18nMessageKey\\|InsertRoleMenu(\\|InsertUserRole(\\|permissionServiceErrorCode\" backend"
+    ],
+    "runtimeEvidence": [
+      "permission module error-code test output unchanged",
+      "grep output showing the renamed symbols appear only inside their own package"
+    ]
+  },
+  "runtimeSensitive": false,
+  "evidenceRequired": [
+    ".harness/evidence/2026-10-27-s1-api-surface-narrowing/commands.json",
+    ".harness/evidence/2026-10-27-s1-api-surface-narrowing/summary.md including the RunAutoMigrate and ProtectedGroupWithRedis decisions"
+  ],
+  "humanGates": [
+    "Whether database.RunAutoMigrate is deleted or kept as a downstream escape hatch. The packet defaults to keep."
+  ],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed",
+    "IsI18nMessageKey, InsertRoleMenu and InsertUserRole are unexported",
+    "permissionServiceErrorCode is deleted with behaviour unchanged",
+    "RunAutoMigrate and ProtectedGroupWithRedis decisions recorded in the summary"
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-27-s1-api-surface-narrowing/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-27-s1-api-surface-narrowing/",
+    "summaryFile": ".harness/evidence/2026-10-27-s1-api-surface-narrowing/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-27-s1-api-surface-narrowing/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-27-codebase-simplification-program.task.md",
+      "docs/reviews/REDUNDANT_CODE_CANDIDATES.md"
+    ]
+  }
+}

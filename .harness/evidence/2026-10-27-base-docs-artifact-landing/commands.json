@@ -1,0 +1,202 @@
+{
+  "schema": "pantheon-harness/commands-v1",
+  "taskId": "2026-10-27-base-docs-artifact-landing",
+  "repo": "pantheon-base",
+  "agent": {
+    "tool": "other",
+    "adapter": "qoder-agent"
+  },
+  "executedAt": "2026-10-27",
+  "environment": {
+    "host": "Windows 10 / Git Bash",
+    "transport": "api.github.com 与 git 均需 HTTPS_PROXY=http://127.0.0.1:7897",
+    "node": "v24.14.0"
+  },
+  "commands": [
+    {
+      "command": "git fetch --quiet origin main",
+      "cwd": ".",
+      "status": "passed",
+      "details": "(no output, exit 0)",
+      "notes": "github 传输走 HTTPS_PROXY=http://127.0.0.1:7897"
+    },
+    {
+      "command": "git rev-parse origin/main",
+      "cwd": ".",
+      "status": "passed",
+      "details": "2091a2d8409e6b4ed933b19c8ff8870f2d0eedbe"
+    },
+    {
+      "command": "git rev-list --count origin/main..main",
+      "cwd": ".",
+      "status": "passed",
+      "details": "0"
+    },
+    {
+      "command": "git rev-list --count main..origin/main",
+      "cwd": ".",
+      "status": "passed",
+      "details": "0"
+    },
+    {
+      "command": "git branch",
+      "cwd": ".",
+      "status": "passed",
+      "details": "chore/harness-task-packets-2026-10-27 | * docs/harness-task-packets-2026-10-27 | main"
+    },
+    {
+      "command": "git diff --name-only main chore/harness-task-packets-2026-10-27",
+      "cwd": ".",
+      "status": "passed",
+      "details": "30 file(s) differ from main: .harness/STATUS.md, .harness/evidence/2026-10-27-tenant-completeness-remediation/smoke-tenant-baseline.md ... docs/reviews/TENANT_FUNCTIONAL_COMPLETENESS_REVIEW_2026-10-27.md"
+    },
+    {
+      "command": "git log --oneline -1 806e053e",
+      "cwd": ".",
+      "status": "passed",
+      "details": "806e053e docs(harness): add tenant remediation and simplification task packets"
+    },
+    {
+      "command": "git rev-parse 1dd5c785",
+      "cwd": ".",
+      "status": "passed",
+      "details": "1dd5c7853dddad07a51188a1156e307f225c8aab",
+      "notes": "内容提交（cherry-pick 自 806e053e）；本轮治理工件作为其后的第二个提交落到同一分支，所以这里固定读内容提交而非 HEAD"
+    },
+    {
+      "command": "node scripts/frontmatter-check.mjs",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Frontmatter check passed. Checked 364 docs, 267 with frontmatter."
+    },
+    {
+      "command": "node scripts/harness/check-task-packet.mjs --root .",
+      "cwd": ".",
+      "status": "passed",
+      "details": "warning: Linked review file does not exist: .harness/evidence/2026-10-27-tenant-completeness-remediation/review.md | [PASS] docs/harness/tasks/2026-10-27-v0176-release-closeout.task.md | [PASS] docs/harness/tasks/2026-10-27-v0177-lint-codeql-closure.task.md"
+    },
+    {
+      "command": "node scripts/harness/check-evidence.mjs --root . --strict",
+      "cwd": ".",
+      "status": "passed",
+      "details": "[PASS] .harness/evidence/2026-10-27-base-docs-artifact-landing/commands.json | [PASS] .harness/evidence/2026-10-27-v0176-release-closeout/commands.json | [PASS] .harness/evidence/2026-10-27-v0177-lint-codeql-closure/commands.json"
+    },
+    {
+      "command": "node scripts/harness/check-review.mjs --root . --strict",
+      "cwd": ".",
+      "status": "passed",
+      "details": "[PASS] .harness/evidence/2026-10-27-base-docs-artifact-landing/review.md | [PASS] .harness/evidence/2026-10-27-v0176-release-closeout/review.md | [PASS] .harness/evidence/2026-10-27-v0177-lint-codeql-closure/review.md"
+    },
+    {
+      "command": "git log --oneline -1 main -- .harness/evidence/2026-10-27-v0177-lint-codeql-closure/commands.json",
+      "cwd": ".",
+      "status": "passed",
+      "details": "2091a2d8 chore(release): publish v0.17.7 foundation materials (#430)",
+      "notes": "证明该文件由 main 上的 v0.17.7 发布提交带入，本轮才回填 schema"
+    },
+    {
+      "command": "grep -rl check-evidence .github/workflows | wc -l",
+      "cwd": ".",
+      "status": "passed",
+      "details": "0",
+      "notes": "门禁缺口读数：期望 0，即 base CI 没有任何 workflow 调用 check-evidence"
+    },
+    {
+      "command": "node scripts/harness/check-adoption.mjs --root . --strict",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Adoption check (strict): 0 finding(s), 0 warning(s) | no findings"
+    },
+    {
+      "command": "node scripts/harness/check-doc-links.mjs --root . --strict",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Docs link check (strict): 0 finding(s)"
+    },
+    {
+      "command": "node scripts/harness/check-doc-inventory.mjs --root . --strict",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Docs inventory check (strict): 0 finding(s)"
+    },
+    {
+      "command": "node scripts/harness/check-sync-drift.mjs --root . --strict",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Sync drift check (strict): 0 finding(s)"
+    },
+    {
+      "command": "node scripts/harness/check-method-health.mjs --root . --strict",
+      "cwd": ".",
+      "status": "passed",
+      "details": "repo shell version: 1.4.0 | warning: openspec | reason: OpenSpec skeleton directory is missing"
+    },
+    {
+      "command": "node scripts/harness/check-template-health.mjs --root . --strict",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Template health check (strict): 0 finding(s), 0 warning(s)"
+    },
+    {
+      "command": "node scripts/harness/check-generated.mjs --root . --strict",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Generated artifact check (strict): 0 finding(s) across 11 artifact(s)"
+    },
+    {
+      "command": "node scripts/harness/check-structure-contract.mjs --root . --strict",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Structure contract check (strict): 0 finding(s) across 2761 tracked file(s)"
+    },
+    {
+      "command": "node scripts/harness/check-encoding.mjs --root . --strict",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Encoding check (strict): 0 finding(s) across 2423 scanned file(s)"
+    },
+    {
+      "command": "node scripts/check-duplication.mjs",
+      "cwd": ".",
+      "status": "passed",
+      "details": ".github/workflows/smoke-core.yml:41-61 | .github/workflows/smoke-full.yml:38-58 | Result: PASS"
+    },
+    {
+      "command": "node frontend/scripts/cleanup-generated-modules.mjs --check",
+      "cwd": ".",
+      "status": "passed",
+      "details": "[generated-modules] OK: no generated modules found"
+    },
+    {
+      "command": "node scripts/harness/check-evidence.mjs --root . --strict .harness/evidence/2026-10-27-base-docs-artifact-landing/commands.json",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Evidence check (strict): 1 file(s), 0 error(s), 0 warning(s) | [PASS] .harness/evidence/2026-10-27-base-docs-artifact-landing/commands.json"
+    },
+    {
+      "command": "node scripts/harness/check-review.mjs --root . --strict .harness/evidence/2026-10-27-base-docs-artifact-landing/review.md",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Review check (strict): 1 file(s), 0 error(s) | [PASS] .harness/evidence/2026-10-27-base-docs-artifact-landing/review.md"
+    }
+  ],
+  "pending": [],
+  "knownGaps": [
+    "本轮为纯文档落地，未运行 go test 与前端构建；被改动的路径不包含任何代码、配置或版本文件。",
+    "landed manifests 里规划的整改（租户完整性、S1-S4 简化）没有被执行，也没有检查器强制其后续状态变化。",
+    "本地分支 fix/lint-and-codeql-suppressions-2026-10-27 的树等同性证明（git diff --quiet main <branch> 退出 0，输出 TREES IDENTICAL）在删除前采集，已记入 summary.md 与 review.md；该分支删除后此读数无法复现。",
+    "本轮回填了 main 上 .harness/evidence/2026-10-27-v0177-lint-codeql-closure/commands.json 的 schema/knownGaps/linkage 三个必填字段。根因是 base CI 的 quality.yml 从未调用 check-evidence 与 check-review，所以这份文件合入时没有任何红灯；把这两个检查器接进门禁是门禁策略变更，按维护者三触点约定留待拍板，本轮只补数据不擅自加门禁。"
+  ],
+  "runtimeSensitive": false,
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-27-base-docs-artifact-landing/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-27-base-docs-artifact-landing/",
+    "reviewFile": ".harness/evidence/2026-10-27-base-docs-artifact-landing/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-27-base-docs-artifact-landing.task.md",
+      "docs/harness/tasks/2026-10-27-tenant-completeness-remediation.task.md",
+      "docs/harness/tasks/2026-10-27-codebase-simplification-program.task.md"
+    ]
+  }
+}

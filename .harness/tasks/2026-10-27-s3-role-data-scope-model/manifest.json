@@ -1,0 +1,123 @@
+{
+  "taskId": "2026-10-27-s3-role-data-scope-model",
+  "title": "Resolve the mirrored role data-scope model without changing the permission tables",
+  "goal": "role_service.go declares its own copy of the role data-scope policy model with a comment saying it mirrors another directory's model to avoid a cross-directory import, and the delete path writes both tables. That is a deliberate duplication, but deliberate duplication still drifts. This wave is an investigation-first task: diff the two model definitions against the live schema, prove whether they are still identical, and then either move the model to a shared home and delete the mirror, or record that the mirror must stay and add a checker that fails when the two definitions diverge. No table, migration, policy behaviour or permission result changes in this wave.",
+  "primaryLayer": "system/iam",
+  "status": "planned",
+  "priority": "P3",
+  "type": "refactor",
+  "estimatedComplexity": "small",
+  "parentTaskId": "2026-10-27-codebase-simplification-program",
+  "dependsOn": [
+    "2026-10-27-s3-tenant-scope-unification"
+  ],
+  "findings": [
+    "RC-022 (P2): role_service.go:65-78 declares a model that mirrors another directory's role data-scope policy model, with an explicit comment about avoiding a cross-directory import; the delete path writes both tables at role_service.go:614-628.",
+    "Drift risk: two definitions of one table mean a future column addition can land in one and not the other, and no checker compares them."
+  ],
+  "scope": {
+    "in": [
+      "Diff the two model definitions against the live schema and record every difference",
+      "If identical: move the model to a shared location both packages may import and delete the mirror",
+      "If not identical: record which definition is authoritative and why the mirror exists, then add a mechanical checker that fails on divergence",
+      "Keep the delete path writing the same tables it writes today"
+    ],
+    "out": [
+      "Creating, dropping or altering any table",
+      "Adding or editing a migration",
+      "Changing data-scope resolution or permission results",
+      "Moving the table between packages as a schema change"
+    ]
+  },
+  "dependencyLayers": [
+    "system/iam"
+  ],
+  "implementationNotes": [
+    "Start with the diff, not the refactor. If the models already differ, the finding is a latent defect rather than duplication and the wave's output is the drift report plus a checker.",
+    "The cross-directory import that the comment avoids may exist for a real layering reason. If moving the model would create a package cycle, keep the mirror and add the checker instead; a cycle is worse than a duplicate.",
+    "Do not touch the migration set. The two definitions describe existing tables, and this wave changes no DDL.",
+    "The checker belongs with the existing scripts/harness/check-* family and must be added to the npm script list and CI only if the maintainer approves a new gate."
+  ],
+  "contractAnchors": [
+    "AGENTS.md",
+    "docs/designs/PERMISSION_MODEL.md",
+    "docs/contracts/SYSTEM_IAM_CONTRACT.md"
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "permission-policy",
+    "portableFailureClass": "model-drift",
+    "ownerLayer": "consumer-repository",
+    "ratchetDecision": "sensor-added",
+    "coverageDimensions": [
+      "behaviour",
+      "maintainability",
+      "architecture-fitness"
+    ]
+  },
+  "expectedFiles": {
+    "create": [
+      "docs/reviews/ROLE_DATA_SCOPE_MODEL_DRIFT_2026-10-27.md"
+    ],
+    "modify": [
+      "backend/modules/system/iam/role/role_service.go"
+    ],
+    "doNotTouch": [
+      "backend/pkg/database/migrations/**",
+      "backend/modules/system/iam/permission/**",
+      "database/**"
+    ]
+  },
+  "executionRoles": {
+    "implementerPosture": "Investigate before changing anything; the default outcome may be 'keep the mirror and add a checker'.",
+    "reviewerPosture": [
+      "Check the drift report compares every column and tag, not just the struct name.",
+      "Check no migration or DDL changed.",
+      "Check data-scope results are unchanged for all five modes.",
+      "Check any new checker is deterministic and does not need a database."
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "cd backend && go build ./...",
+      "cd backend && go test -count=1 ./modules/system/iam/role/... ./modules/system/iam/permission/...",
+      "grep -rn \"role_data_scope_policy\" backend --include=*.go"
+    ],
+    "runtimeEvidence": [
+      "data-scope resolution result for all five modes before and after",
+      "schema dump of the role data-scope table compared with both model definitions"
+    ]
+  },
+  "runtimeSensitive": true,
+  "evidenceRequired": [
+    ".harness/evidence/2026-10-27-s3-role-data-scope-model/commands.json",
+    ".harness/evidence/2026-10-27-s3-role-data-scope-model/model-diff.md",
+    ".harness/evidence/2026-10-27-s3-role-data-scope-model/summary.md with the keep-or-move decision"
+  ],
+  "humanGates": [
+    "Approve moving the model or keeping the mirror plus a checker.",
+    "Approve adding a new mechanical checker to the gate set if one is proposed."
+  ],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed",
+    "Model drift report exists and compares every field",
+    "Decision recorded: shared model or mirror plus divergence checker",
+    "No schema, migration or data-scope behaviour changed"
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-27-s3-role-data-scope-model/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-27-s3-role-data-scope-model/",
+    "summaryFile": ".harness/evidence/2026-10-27-s3-role-data-scope-model/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-27-s3-role-data-scope-model/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-27-codebase-simplification-program.task.md",
+      "docs/designs/PERMISSION_MODEL.md"
+    ]
+  }
+}

@@ -1,0 +1,141 @@
+{
+  "taskId": "2026-10-27-s1-dead-code-removal",
+  "title": "Delete zero-caller backend code and 13 orphan frontend scripts",
+  "goal": "Remove code that nothing references and that is not part of the downstream contract. pkg/common/token.go is a 129-line whole-file pass-through to pkg/authtoken and pkg/common/http with 34 exports and zero callers; pkg/common/http/cookie.go:89 SetTokenTTL exists only to serve it. logging_middleware.go defines a Gin middleware that no router registers. common.ErrorResponse is never constructed. database.SetEx has no caller. frontend/src/api/request.ts:241 isForbiddenRequestError has no consumer. Thirteen frontend scripts (ten capture-*.mjs plus merge-coverage-to-lcov.mjs, migrate-spacing-tokens.mjs and run-request-error-utils-test.mjs) appear in no package.json script, no CI workflow and no other script. Deleting them changes no runtime behaviour and removes a second, contradictory way to do things that already has a supported way.",
+  "primaryLayer": "platform",
+  "status": "planned",
+  "priority": "P1",
+  "type": "refactor",
+  "estimatedComplexity": "small",
+  "parentTaskId": "2026-10-27-codebase-simplification-program",
+  "dependsOn": [],
+  "findings": [
+    "RC-001 (P1): backend/pkg/common/token.go:1-129 is a pure pass-through: constants, type aliases and about 20 wrappers over pkg/authtoken and pkg/common/http, including the deprecated GenerateOperationToken and ParseOperationToken. Whole-repo and pantheon-ops overlay search returns hits only inside token.go. Its only effect on another file is that pkg/common/http/cookie.go:89 SetTokenTTL has exactly one caller, this file.",
+    "RC-002 (P1): backend/internal/middleware/logging_middleware.go:12-39 defines StructuredLoggingMiddleware; no router or server file registers it, and the actual request logging is done elsewhere.",
+    "RC-003 (P2): backend/pkg/common/error.go:106-115 defines the exported ErrorResponse struct; nothing constructs or references it, and pkg/common/http/response.go holds the live private equivalent.",
+    "RC-005 (P3): backend/pkg/database/redis.go:76 SetEx wraps rdb.Set and has zero callers.",
+    "RC-009 (P3): frontend/src/api/request.ts:241 exports isForbiddenRequestError; no module, barrel or overlay consumer imports it.",
+    "RC-010 (P2): ten frontend/scripts/capture-*.mjs files are one-off screenshot helpers referenced by no package.json script, no .github/workflows entry and no sibling script.",
+    "RC-011 (P2): frontend/scripts/merge-coverage-to-lcov.mjs, migrate-spacing-tokens.mjs and run-request-error-utils-test.mjs have the same zero-reference status; migrate-spacing-tokens.mjs is a completed one-off migration."
+  ],
+  "scope": {
+    "in": [
+      "Delete backend/pkg/common/token.go entirely",
+      "Delete SetTokenTTL from backend/pkg/common/http/cookie.go:89 and keep the internal AccessTokenTTL / RefreshTokenTTL defaults that cookie.go itself uses",
+      "Delete backend/internal/middleware/logging_middleware.go entirely",
+      "Delete the ErrorResponse type from backend/pkg/common/error.go:106-115",
+      "Delete SetEx from backend/pkg/database/redis.go:76",
+      "Delete isForbiddenRequestError from frontend/src/api/request.ts:241",
+      "Delete the ten frontend/scripts/capture-*.mjs files",
+      "Delete frontend/scripts/merge-coverage-to-lcov.mjs, migrate-spacing-tokens.mjs and run-request-error-utils-test.mjs",
+      "Prove the deletions with five-location reference searches recorded in evidence: backend source, backend tests, frontend, scripts/CI config, pantheon-ops business overlay"
+    ],
+    "out": [
+      "Any change to pkg/authtoken or pkg/common/http behaviour, including token TTL defaults",
+      "Removing or rewriting the live logging middleware",
+      "Changing any route, response shape, error code or i18n key",
+      "Touching frontend/src/index.ts",
+      "Replacing deleted helpers with new abstractions"
+    ]
+  },
+  "dependencyLayers": [
+    "platform",
+    "system/auth"
+  ],
+  "implementationNotes": [
+    "Do the five-location search again at implementation time rather than trusting this packet: the audit ran it on 2026-10-27 and the tree may have moved.",
+    "If any _test.go file references a deleted symbol, that symbol is not dead. Restore it and close the item as a false positive instead of editing the test.",
+    "pkg/common/http/cookie.go uses its own private TTL variables; deleting the exported SetTokenTTL must not delete them.",
+    "capture-*.mjs deletion is gated on the maintainer confirming they are no longer used for manual visual walkthroughs; the rest of the wave does not depend on that answer and can land separately if needed.",
+    "No replacement helper is introduced. The supported path already exists in pkg/authtoken and pkg/common/http."
+  ],
+  "contractAnchors": [
+    "AGENTS.md",
+    "docs/reviews/CODEBASE_SIMPLIFICATION_AUDIT.md",
+    "docs/reviews/REDUNDANT_CODE_CANDIDATES.md",
+    "docs/reviews/CODE_SIMPLIFICATION_PLAN.md"
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "none",
+    "portableFailureClass": "dead-code-accumulation",
+    "ownerLayer": "consumer-repository",
+    "ratchetDecision": "no-repeat-observed",
+    "coverageDimensions": [
+      "maintainability",
+      "architecture-fitness"
+    ]
+  },
+  "expectedFiles": {
+    "create": [],
+    "modify": [
+      "backend/pkg/common/http/cookie.go",
+      "backend/pkg/common/error.go",
+      "backend/pkg/database/redis.go",
+      "frontend/src/api/request.ts"
+    ],
+    "doNotTouch": [
+      "backend/pkg/authtoken/**",
+      "backend/pkg/database/migrations/**",
+      "frontend/src/index.ts",
+      "scripts/**",
+      "config/ui-quality-gate.json"
+    ]
+  },
+  "executionRoles": {
+    "implementerPosture": "Pure deletion, one commit per backend package and one for the scripts; stop and restore if the compiler or a test disagrees.",
+    "reviewerPosture": [
+      "Confirm each deletion carries a fresh five-location search result in the evidence.",
+      "Confirm no test file was edited.",
+      "Confirm cookie.go still compiles with its private TTL defaults.",
+      "Confirm the frontend build still resolves every remaining import."
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "cd backend && go build ./...",
+      "cd backend && go vet ./...",
+      "cd backend && go test -count=1 ./...",
+      "cd frontend && npm run build",
+      "cd frontend && npm run lint",
+      "grep -rn \"capture-\" package.json frontend/package.json .github/workflows scripts frontend/scripts"
+    ],
+    "runtimeEvidence": [
+      "backend test summary showing 46 ok / 0 FAIL / 0 SKIP, unchanged from the v0.17.6 baseline",
+      "git diff --stat showing approximately -250 lines and -13 files, with the measured number recorded"
+    ]
+  },
+  "runtimeSensitive": false,
+  "evidenceRequired": [
+    ".harness/evidence/2026-10-27-s1-dead-code-removal/commands.json",
+    ".harness/evidence/2026-10-27-s1-dead-code-removal/reference-search.md with the five-location search per deleted symbol",
+    ".harness/evidence/2026-10-27-s1-dead-code-removal/summary.md with the measured diff stat"
+  ],
+  "humanGates": [
+    "Confirm the ten capture-*.mjs scripts are not still used for manual visual walkthroughs. If they are, keep them and close only RC-011."
+  ],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed",
+    "pkg/common/token.go and logging_middleware.go no longer exist",
+    "ErrorResponse, SetEx, isForbiddenRequestError and SetTokenTTL are gone with no caller lost",
+    "Thirteen orphan scripts deleted after the maintainer answer on capture-*.mjs",
+    "go test ./backend/... still 46 ok / 0 FAIL",
+    "npm run build and npm run lint pass"
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-27-s1-dead-code-removal/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-27-s1-dead-code-removal/",
+    "summaryFile": ".harness/evidence/2026-10-27-s1-dead-code-removal/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-27-s1-dead-code-removal/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-27-codebase-simplification-program.task.md",
+      "docs/reviews/CODE_SIMPLIFICATION_PLAN.md"
+    ]
+  }
+}

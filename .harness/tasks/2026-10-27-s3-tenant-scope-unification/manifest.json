@@ -1,0 +1,157 @@
+{
+  "taskId": "2026-10-27-s3-tenant-scope-unification",
+  "title": "Unify the tenant-scope trio across fourteen services behind one tested implementation",
+  "goal": "Eleven system services and three auth services each implement the same three-part helper: take the tenant from the gin context, build a scoped *gorm.DB, and resolve the owner tenant id. The copies are structurally identical but they are also the multi-tenant isolation hot path, which is why the audit put them in the last batch. This wave first pins the current behaviour with a before-snapshot test and a two-tenant end-to-end case that does not exist yet, then replaces the copies with one implementation in pkg/tenant, then proves that no query lost its tenant predicate. If the two-tenant case cannot be constructed, the wave stops rather than proceeds on static reasoning.",
+  "primaryLayer": "platform",
+  "status": "planned",
+  "priority": "P1",
+  "type": "refactor",
+  "estimatedComplexity": "large",
+  "parentTaskId": "2026-10-27-codebase-simplification-program",
+  "dependsOn": [
+    "2026-10-27-s2-id-parse-migration",
+    "2026-10-27-s2-pagination-sort-migration",
+    "2026-10-27-s2-error-mapping-dedup"
+  ],
+  "findings": [
+    "RC-012 (P1): the tenant-scope trio is duplicated at role_service.go:27-50, post_service.go:29-50, dept_service.go:31-53, user_service.go:46-74 (including a double wrapper at :58 and :63), dict_service.go:58-82, setting_service.go:59-89, permission_service.go:67-83, dashboard_service.go:54 and :349-352, login_service.go:51-58, security_service.go:128, session_service.go:79.",
+    "RC-027 (P1): the auth module carries the same duplication plus its own pagination at login_service.go:273,286, session_service.go:460,504 and security_service.go:208-229,722.",
+    "Open gap: the audit found no existing two-tenant isolation smoke in the repository. The nearest evidence is the historical isolation remediation packet and its one-off acceptance scripts, which are not part of the default test run."
+  ],
+  "scope": {
+    "in": [
+      "Add one tenant-scope helper in backend/pkg/tenant and prove it reproduces the current semantics for compat, multi and nil contexts",
+      "Pin the current behaviour first: a table-driven test asserting the scoped DB for tenant 0, a non-zero tenant and a missing context",
+      "Construct a two-tenant end-to-end case that proves a subject in tenant A cannot list, read, update or delete tenant B's row for every affected module",
+      "Replace the eleven system-service and three auth-service copies with the shared helper",
+      "Remove the user_service.go double wrapper as part of the replacement",
+      "Leave every other query predicate untouched"
+    ],
+    "out": [
+      "Changing tenant resolution rules, compat behaviour, or the platform-global tenant id",
+      "Changing the fail-closed behaviour for a missing tenant context",
+      "Changing any route, permission code, menu or error message",
+      "Schema or migration changes",
+      "Introducing request-scoped caching or a new middleware"
+    ]
+  },
+  "dependencyLayers": [
+    "system/auth",
+    "system/iam",
+    "system/org",
+    "system/config"
+  ],
+  "implementationNotes": [
+    "Stop condition: if the two-tenant end-to-end case cannot be built in this environment, do not proceed on static analysis alone. Record the blocker and close the wave as blocked.",
+    "Write the before-snapshot first. It must fail if a predicate is dropped, otherwise it proves nothing.",
+    "The three contexts are genuinely different: nil means an internal caller that intentionally wants the unfiltered service, compat means tenant_id = 0, multi means a non-zero tenant. The helper must preserve all three; collapsing compat into nil was the exact defect fixed in the 2026-10-24 packet.",
+    "Preserve fail-closed: a missing or malformed tenant context must not fall back to an unfiltered query.",
+    "Do not change what each query filters on beyond the tenant predicate. Data-scope predicates and dept predicates stay where they are.",
+    "Replace one service per commit and run that service's tests plus the two-tenant case before moving on."
+  ],
+  "contractAnchors": [
+    "AGENTS.md",
+    "DESIGN.md",
+    "docs/contracts/TENANT_CONTRACT_V1.md",
+    "docs/reviews/CODEBASE_SIMPLIFICATION_AUDIT.md"
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "permission-policy",
+    "portableFailureClass": "cross-tenant-read-write",
+    "ownerLayer": "consumer-repository",
+    "ratchetDecision": "sensor-added",
+    "coverageDimensions": [
+      "behaviour",
+      "runtime-quality",
+      "architecture-fitness"
+    ]
+  },
+  "expectedFiles": {
+    "create": [
+      "backend/pkg/tenant/scope_helper.go",
+      "backend/pkg/tenant/scope_helper_test.go",
+      "backend/modules/system/iam/tenant_isolation_smoke_test.go"
+    ],
+    "modify": [
+      "backend/modules/system/iam/role/role_service.go",
+      "backend/modules/system/iam/post/post_service.go",
+      "backend/modules/system/iam/dept/dept_service.go",
+      "backend/modules/system/iam/user/user_service.go",
+      "backend/modules/system/config/dict/dict_service.go",
+      "backend/modules/system/config/setting/setting_service.go",
+      "backend/modules/system/iam/permission/permission_service.go",
+      "backend/modules/system/platform/dashboard/dashboard_service.go",
+      "backend/modules/auth/login/login_service.go",
+      "backend/modules/auth/security/security_service.go",
+      "backend/modules/auth/session/session_service.go"
+    ],
+    "doNotTouch": [
+      "backend/pkg/tenant/authz.go",
+      "backend/pkg/database/scope.go",
+      "backend/pkg/database/migrations/**",
+      "backend/internal/middleware/data_scope_middleware.go"
+    ]
+  },
+  "executionRoles": {
+    "implementerPosture": "Behaviour pin first, then one service per commit, then the two-tenant case after each conversion.",
+    "reviewerPosture": [
+      "Check every converted query still carries its tenant predicate or an explicit platform-scope justification.",
+      "Check compat, multi and nil contexts each resolve exactly as before.",
+      "Check fail-closed is preserved for a missing context.",
+      "Check no other predicate changed in the same commit.",
+      "Check the two-tenant case actually exercises both directions."
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "cd backend && gofmt -l modules pkg",
+      "cd backend && go build ./...",
+      "cd backend && go vet ./...",
+      "cd backend && go test -count=1 ./pkg/tenant/... ./modules/system/iam/... ./modules/system/config/... ./modules/system/platform/... ./modules/auth/...",
+      "grep -rln \"func.*tenantOwnerID\" backend | wc -l"
+    ],
+    "runtimeEvidence": [
+      "two-tenant case: tenant A lists, reads, updates and deletes its own rows; the same operations against tenant B's ids return empty, 404 or 403 with no existence leak",
+      "compat-mode case: a tenant_id = 0 record remains visible and editable and a tenant row does not appear",
+      "before/after scoped-DB snapshot for one query per converted service"
+    ]
+  },
+  "runtimeSensitive": true,
+  "evidenceRequired": [
+    ".harness/evidence/2026-10-27-s3-tenant-scope-unification/commands.json",
+    ".harness/evidence/2026-10-27-s3-tenant-scope-unification/scope-snapshot.md with the before table",
+    ".harness/evidence/2026-10-27-s3-tenant-scope-unification/two-tenant-run.log",
+    ".harness/evidence/2026-10-27-s3-tenant-scope-unification/summary.md",
+    ".harness/evidence/2026-10-27-s3-tenant-scope-unification/review.md"
+  ],
+  "humanGates": [
+    "Approve proceeding without a pre-existing two-tenant smoke, or provide the environment and credentials to build one.",
+    "Approve the wave at all: it changes the multi-tenant isolation hot path for a net saving of roughly 250-400 lines."
+  ],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed",
+    "One tenant-scope implementation exists with a before-snapshot test",
+    "Fourteen services call the shared helper and no copy remains",
+    "Two-tenant case passes in both directions",
+    "Compat and nil contexts behave exactly as before",
+    "No query lost its predicate and no other predicate changed"
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-27-s3-tenant-scope-unification/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-27-s3-tenant-scope-unification/",
+    "summaryFile": ".harness/evidence/2026-10-27-s3-tenant-scope-unification/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-27-s3-tenant-scope-unification/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-27-codebase-simplification-program.task.md",
+      "docs/contracts/TENANT_CONTRACT_V1.md",
+      ".harness/tasks/2026-10-24-single-tenant-scope-closeout/manifest.json"
+    ]
+  }
+}

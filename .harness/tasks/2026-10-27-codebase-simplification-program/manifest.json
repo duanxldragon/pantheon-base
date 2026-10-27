@@ -1,0 +1,170 @@
+{
+  "taskId": "2026-10-27-codebase-simplification-program",
+  "taskDoc": "docs/harness/tasks/2026-10-27-codebase-simplification-program.task.md",
+  "title": "Program-level cleanup of horizontal duplication and orphan code found by the 2026-10-27 codebase simplification audit",
+  "goal": "The 2026-10-27 read-only audit (docs/reviews/CODEBASE_SIMPLIFICATION_AUDIT.md) found the repository architecturally healthy but carrying horizontal duplication debt: the same tenant-scope trio is re-implemented in about 11 services, pagination normalization exists in about 13 copies, path-ID parsing is inlined about 35 times, import/export boilerplate is repeated across 8 modules, and 11 handler files redeclare the same two error values. It also found a small set of genuinely dead code, the largest being the 129-line zero-caller pkg/common/token.go pass-through layer. This program converts the audit's three-batch plan into twelve independently reviewable waves: batch S1 removes dead code and narrows over-exported symbols, batch S2 converges the shared handler and service helpers behind tests, and batch S3 touches tenant scoping, the role data-scope model, the OIDC response envelope and maintainer-only governance decisions. No wave changes routes, permission codes, menus, i18n keys, error envelopes, database schema or migrations; every wave must keep go test ./backend/... at 46 ok / 0 FAIL and keep the existing gates green.",
+  "primaryLayer": "platform",
+  "status": "planned",
+  "priority": "P1",
+  "type": "refactor",
+  "estimatedComplexity": "large",
+  "findings": [
+    "AUDIT-001 / RC-001 (P1): backend/pkg/common/token.go is a 129-line, 34-export pass-through to pkg/authtoken and pkg/common/http with zero callers anywhere in the repo or in the pantheon-ops business overlay.",
+    "AUDIT-002 / RC-012 (P1): the tenant-scope trio (WithTenantContext / scoped / tenantOwnerID) is duplicated in about 11 services (role, post, dept, user, dict, setting, permission, dashboard, login, security, session).",
+    "AUDIT-003 / RC-013 (P1): pagination normalization is re-implemented about 13 times, including two copies inside role_helper.go, and Offset((page-1)*pageSize).Limit(pageSize) appears about 14 times.",
+    "AUDIT-004 / RC-014 (P1): strconv.ParseUint(c.Param(\"id\"), 10, 64) plus a 400 response block is inlined about 35 times; only user_handler.go extracted parseUintParam.",
+    "AUDIT-005 / RC-016 (P1): import / export / template-download boilerplate repeats across about 8 modules; RC-015 adds 6-8 sort-whitelist helper copies.",
+    "AUDIT-006 / RC-017 (P1): errParamInvalid and errRequestFailed are redeclared in 11 handler files.",
+    "AUDIT-007 / RC-019 (P1): the common package duplicates itself and the modules keep a third copy (GetUserID, IsI18nMessageKey, ResolveErrorMessageKey, getRoleKeysFromContext, getUserIDFromContext).",
+    "AUDIT-008 / RC-002, RC-003, RC-005, RC-007, RC-029 (P2): dead or over-exported symbols: StructuredLoggingMiddleware, common.ErrorResponse, database.SetEx, rbacbind singular insert helpers, permissionServiceErrorCode pass-through.",
+    "AUDIT-009 / RC-010, RC-011 (P2): 13 orphan frontend scripts (10 capture-*.mjs plus 3 one-off tools) are referenced by no package.json script, CI workflow or other script.",
+    "AUDIT-010 / RC-036, RC-037, RC-038 (P2): governance surface exceeds product surface; 99 unvalidated .en.md copies, 6-7 unindexed LLM review transcripts and 659 archive files need a maintainer disposition rather than an agent decision."
+  ],
+  "scope": {
+    "in": [
+      "Wave S1: delete zero-caller code and narrow over-exported symbols (RC-001 to RC-005, RC-007, RC-009 to RC-011, RC-029)",
+      "Wave S2: add shared helpers with tests, then migrate call sites for ID parsing, pagination, sorting, not-found handling, batch actions and import/export (RC-013 to RC-019, RC-023, RC-024, RC-028, RC-030)",
+      "Wave S3: unify tenant scoping, review the mirrored role data-scope model, normalise the OIDC envelope and record maintainer decisions (RC-012, RC-022, RC-026, RC-027, RC-031, RC-036, RC-037, RC-043)",
+      "Per-wave evidence under .harness/evidence/<wave-task-id>/ with commands.json, summary.md and review.md",
+      "Foundation release + base -> ops sync check after every merged wave"
+    ],
+    "out": [
+      "Any behavioural change: routes, request/response shapes, error codes, i18n keys, permission codes, menus and seeds stay byte-identical",
+      "Database schema, migrations, backfills or data repair of any kind",
+      "Dependency upgrades or new dependencies, including dev tooling",
+      "Deleting tests or weakening assertions to make a refactor pass",
+      "Reducing the exported surface of frontend/src/index.ts, which is the only stable downstream contract",
+      "Merging the dept and post modules, or genericising the seven handler service wrappers (explicitly rejected in the audit)",
+      "Touching pantheon-ops business code; only compatibility verification is in scope",
+      "Using the maintainer-only solo-override path"
+    ]
+  },
+  "dependencyLayers": [
+    "platform",
+    "system/auth",
+    "system/iam",
+    "system/org",
+    "system/config"
+  ],
+  "implementationNotes": [
+    "Every wave is a separate task packet with its own manifest, evidence directory and review; waves may be reordered inside a batch but not across batches.",
+    "Batch S1 must land and be released before batch S2 starts; batch S2 must be stable for one release cycle before batch S3 is scheduled.",
+    "Convergence means one implementation of how a thing is done, never one value of what it is: column whitelists, page-size caps, i18n keys and module-specific error codes stay per module and are passed in as parameters.",
+    "If a shared helper needs a third optional parameter to fit one more module, stop and keep that module's local implementation; record the exception in the wave review instead of growing the helper.",
+    "One pattern per commit. Do not mix pagination migration and error-mapping migration in one commit, so git bisect stays useful.",
+    "The planner/dispatcher must not edit backend/ or frontend/src/; each wave must be executed by the Generator adapter and the handoff recorded in the task packet and evidence.",
+    "Refusals only where behaviour could change: if a wave cannot prove equivalence, the wave closes as abandoned with the reason, not as completed."
+  ],
+  "contractAnchors": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "DESIGN.md",
+    "docs/README.md",
+    "docs/reviews/CODEBASE_SIMPLIFICATION_AUDIT.md",
+    "docs/reviews/REDUNDANT_CODE_CANDIDATES.md",
+    "docs/reviews/CODE_SIMPLIFICATION_PLAN.md",
+    "docs/acceptances/CODE_REVIEW_STANDARD.md"
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "none",
+    "portableFailureClass": "maintainability-gap / duplication-drift",
+    "ownerLayer": "consumer-repository",
+    "ratchetDecision": "sensor-added",
+    "coverageDimensions": [
+      "behaviour",
+      "maintainability",
+      "architecture-fitness",
+      "runtime-quality"
+    ]
+  },
+  "expectedFiles": {
+    "create": [
+      "docs/harness/tasks/2026-10-27-codebase-simplification-program.task.md",
+      ".harness/tasks/2026-10-27-codebase-simplification-program/manifest.json"
+    ],
+    "modify": [],
+    "doNotTouch": [
+      "backend/pkg/database/migrations/**",
+      "backend/modules/**/migrations/**",
+      "database/**",
+      ".github/workflows/**",
+      "frontend/src/index.ts",
+      "pantheon-ops/**",
+      "the published tags and release assets"
+    ]
+  },
+  "executionRoles": {
+    "implementerPosture": "Execute one wave per task packet through the Generator adapter; each wave is independently reviewable, independently revertable and proves equivalence before merge.",
+    "reviewerPosture": [
+      "Verify the wave removed duplication rather than behaviour: diff response envelopes, error codes, i18n keys and permission checks.",
+      "Reject any wave whose diff touches routing, migrations, permission codes, menus or seeds.",
+      "Reject any wave that edits or deletes a test to make a refactor pass.",
+      "Confirm the shared helper did not absorb module-specific values through extra optional parameters.",
+      "Confirm the wave reports its measured diff stat instead of the audit's estimate.",
+      "Confirm pantheon-ops still builds after the foundation release sync."
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "cd backend && go build ./...",
+      "cd backend && go vet ./...",
+      "cd backend && go test -count=1 ./...",
+      "cd frontend && npm run build",
+      "cd frontend && npm run lint",
+      "node scripts/harness/check-task-packet.mjs --root .",
+      "node scripts/harness/check-evidence.mjs --strict .harness/evidence/<wave-task-id>/commands.json",
+      "node scripts/harness/check-review.mjs --strict .harness/evidence/<wave-task-id>/review.md",
+      "cd ../pantheon-ops && go build ./... && npm run build"
+    ],
+    "runtimeEvidence": [
+      "go test package count and pass/fail totals before and after each wave (baseline: 46 ok, 0 FAIL, 0 SKIP)",
+      "git diff --stat per wave, compared with the audit estimate and recorded as the measured gain",
+      "for any wave that touches an HTTP response path: a before/after response body snapshot for one affected endpoint"
+    ]
+  },
+  "runtimeSensitive": false,
+  "runtimeGap": "No wave has started. This packet records the plan; all twelve wave manifests are status=planned and no modified tree has been built or tested.",
+  "evidenceRequired": [
+    ".harness/evidence/<wave-task-id>/commands.json with cwd, status and real output summary; anything not executed marked not-run with the reason",
+    ".harness/evidence/<wave-task-id>/summary.md with the measured diff stat and the closed RC ids",
+    ".harness/evidence/<wave-task-id>/review.md with the equivalence argument for every changed call site",
+    "program closeout: .harness/evidence/2026-10-27-codebase-simplification-program/summary.md aggregating the twelve waves"
+  ],
+  "humanGates": [
+    "Batch S1 deletion of the 10 capture-*.mjs scripts: confirm whether they are still used for manual visual walkthroughs.",
+    "Batch S2 import/export pipeline convergence (RC-016): approve the single-PR isolation because it touches CSV injection protection and row-level error aggregation.",
+    "Batch S3 tenant-scope unification (RC-012, RC-027): approve the risk of touching the multi-tenant hot path, and provide or approve a two-tenant end-to-end smoke before work starts.",
+    "Batch S3 role data-scope mirrored model (RC-022): decide whether the two models may share a package instead of staying duplicated.",
+    "RC-026 OIDC envelope: decide whether OIDC protocol responses may keep their current non-envelope shape.",
+    "RC-036 / RC-037 / RC-038: decide delete / keep-and-check / keep-as-is for the 99 .en.md copies, the unindexed LLM reviews and the 659 archive files.",
+    "Whether to freeze feature work and enter maintenance mode after batch S2 lands."
+  ],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed",
+    "S1 waves merged: zero-caller code deleted and go test ./backend/... still 46 ok / 0 FAIL",
+    "S2 waves merged: ID parsing, pagination, sorting, error mapping, batch actions and import/export each have one implementation, with tests",
+    "S3 waves decided: tenant-scope unification and OIDC envelope either merged or explicitly abandoned with a written reason",
+    "Measured net reduction recorded per wave and summed, replacing the audit estimate",
+    "pantheon-ops builds against the synced foundation release",
+    "No route, permission code, menu, i18n key, error code, schema or migration changed anywhere in the program"
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-27-codebase-simplification-program/manifest.json",
+    "taskDoc": "docs/harness/tasks/2026-10-27-codebase-simplification-program.task.md",
+    "evidenceDir": ".harness/evidence/2026-10-27-codebase-simplification-program/",
+    "summaryFile": ".harness/evidence/2026-10-27-codebase-simplification-program/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-27-codebase-simplification-program/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/reviews/CODEBASE_SIMPLIFICATION_AUDIT.md",
+      "docs/reviews/REDUNDANT_CODE_CANDIDATES.md",
+      "docs/reviews/CODE_SIMPLIFICATION_PLAN.md"
+    ]
+  }
+}

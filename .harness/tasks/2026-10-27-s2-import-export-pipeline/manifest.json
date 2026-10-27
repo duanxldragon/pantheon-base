@@ -1,0 +1,152 @@
+{
+  "taskId": "2026-10-27-s2-import-export-pipeline",
+  "title": "Extract one import/export pipeline from the eight module copies while keeping every validation",
+  "goal": "Eight modules repeat the same import pipeline: receive a file, validate extension and size, parse, validate row by row, aggregate successes and failures, and emit a result; six of them also build their own import template. The duplication is real, but so is the risk: this path carries file-type validation, size caps, CSV formula-injection protection, encoding handling, row-level error aggregation and authorization. This wave extracts the pipeline into one package where each module supplies only its row mapper and its error wording, and it treats any lost validation as a failed wave. It ships as its own packet and its own PR so a regression can be bisected to the import path alone, and it runs the documented import/export smoke before closing.",
+  "primaryLayer": "platform",
+  "status": "planned",
+  "priority": "P1",
+  "type": "refactor",
+  "estimatedComplexity": "large",
+  "parentTaskId": "2026-10-27-codebase-simplification-program",
+  "dependsOn": [
+    "2026-10-27-s2-shared-handler-helpers"
+  ],
+  "findings": [
+    "RC-016 (P1): handler boilerplate at dept_handler.go:229-257, post_handler.go:156-184, role_handler.go:117-145, user_handler.go:114-142, dict_handler.go:298-325 and :352-379, permission_handler.go:251-279, i18n_handler.go, audit_handler.go:482-518 in login_handler.go.",
+    "RC-016 (P1): template builders at dept_export.go:89 BuildDeptImportTemplate, post_service.go:336 BuildPostImportTemplate, role_export.go:92 BuildRoleImportTemplate, user_export.go:71 BuildUserImportTemplate, dict_service.go:340 BuildDictTypeImportTemplate and :694 BuildDictItemImportTemplate."
+  ],
+  "scope": {
+    "in": [
+      "Extract file receive, extension/MIME check, size cap, parse, row validation loop and result aggregation into one pipeline",
+      "Keep each module's row mapper, header set and error wording local",
+      "Extract template generation into one column-driven builder",
+      "Preserve CSV formula-injection escaping exactly as it behaves today",
+      "Run the documented import/export smoke for every converted module",
+      "Add a test that an oversized file, a wrong extension and a formula-injection cell are all still rejected"
+    ],
+    "out": [
+      "Changing column names, header order, template file names or result message wording",
+      "Changing upload size caps or allowed types",
+      "Changing authorization for import/export endpoints",
+      "Adding streaming, chunking or async import",
+      "Touching backend/pkg/impexp/import_helpers.go path-map behaviour, which a previous wave already hardened"
+    ]
+  },
+  "dependencyLayers": [
+    "system/auth",
+    "system/iam",
+    "system/org",
+    "system/config"
+  ],
+  "implementationNotes": [
+    "This is the highest-risk S2 wave. Convert one module, run its smoke, then convert the next; do not convert all eight and smoke once.",
+    "Inventory the validations before writing the pipeline and check each one off after conversion. Any unaccounted validation stops the wave.",
+    "CSV formula injection protection is a security boundary: a cell beginning with =, +, -, @ or a tab must still be escaped on export and rejected or neutralised on import exactly as it is now.",
+    "The pipeline must not take over authorization. Each handler keeps the permission check it has today.",
+    "If one module's import is materially different (for example a two-sheet dict import), keep it out of the pipeline and record why; do not bend the pipeline to fit it."
+  ],
+  "contractAnchors": [
+    "AGENTS.md",
+    "docs/acceptances/SYSTEM_IMPORT_EXPORT_SMOKE_GUIDE.md",
+    "docs/reviews/REDUNDANT_CODE_CANDIDATES.md"
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "i18n",
+    "portableFailureClass": "validation-loss-during-refactor",
+    "ownerLayer": "consumer-repository",
+    "ratchetDecision": "sensor-added",
+    "coverageDimensions": [
+      "behaviour",
+      "maintainability",
+      "runtime-quality"
+    ]
+  },
+  "expectedFiles": {
+    "create": [
+      "backend/pkg/impexp/pipeline.go",
+      "backend/pkg/impexp/pipeline_test.go",
+      "backend/pkg/impexp/template.go",
+      "backend/pkg/impexp/template_test.go"
+    ],
+    "modify": [
+      "backend/modules/system/iam/dept/dept_handler.go",
+      "backend/modules/system/iam/dept/dept_export.go",
+      "backend/modules/system/iam/dept/dept_import.go",
+      "backend/modules/system/iam/post/post_handler.go",
+      "backend/modules/system/iam/post/post_service.go",
+      "backend/modules/system/iam/role/role_handler.go",
+      "backend/modules/system/iam/role/role_export.go",
+      "backend/modules/system/iam/user/user_handler.go",
+      "backend/modules/system/iam/user/user_export.go",
+      "backend/modules/system/config/dict/dict_handler.go",
+      "backend/modules/system/config/dict/dict_service.go",
+      "backend/modules/system/iam/permission/permission_handler.go",
+      "backend/modules/system/config/i18n/i18n_handler.go",
+      "backend/modules/system/audit/audit_handler.go",
+      "backend/modules/auth/login/login_handler.go"
+    ],
+    "doNotTouch": [
+      "backend/pkg/impexp/import_helpers.go",
+      "backend/pkg/upload/**",
+      "backend/pkg/database/migrations/**",
+      "frontend/src/shared/utils/importExport*"
+    ]
+  },
+  "executionRoles": {
+    "implementerPosture": "One module per commit and one smoke per module; stop the wave on the first unexplained validation difference.",
+    "reviewerPosture": [
+      "Check every pre-existing validation against the inventory and require an explicit accounting for each.",
+      "Check CSV formula injection on both import and export.",
+      "Check that authorization stayed in the handler.",
+      "Check the smoke output for the converted module, not just for the pipeline package."
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "cd backend && gofmt -l modules pkg",
+      "cd backend && go build ./...",
+      "cd backend && go vet ./...",
+      "cd backend && go test -count=1 ./pkg/impexp/... ./modules/system/iam/... ./modules/system/config/...",
+      "node scripts/run-smoke-suite.mjs -- tests/smoke/system/system-org.spec.ts tests/smoke/system/system-config.spec.ts --workers=1"
+    ],
+    "runtimeEvidence": [
+      "import result for a valid file, a wrong-extension file, an oversized file and a cell containing =1+1",
+      "exported CSV showing the escaped cell",
+      "per-module smoke result"
+    ]
+  },
+  "runtimeSensitive": true,
+  "evidenceRequired": [
+    ".harness/evidence/2026-10-27-s2-import-export-pipeline/commands.json",
+    ".harness/evidence/2026-10-27-s2-import-export-pipeline/validation-inventory.md with every pre-existing check and where it lives after conversion",
+    ".harness/evidence/2026-10-27-s2-import-export-pipeline/summary.md",
+    ".harness/evidence/2026-10-27-s2-import-export-pipeline/review.md"
+  ],
+  "humanGates": [
+    "Approve running this wave as a standalone PR before any other S2 migration is merged into the same release, because the smoke matrix is the only proof of equivalence."
+  ],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed",
+    "One pipeline and one template builder exist",
+    "Every pre-existing validation is accounted for in the inventory",
+    "CSV formula injection is still escaped on export and neutralised on import",
+    "Import/export smoke passes for every converted module"
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-27-s2-import-export-pipeline/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-27-s2-import-export-pipeline/",
+    "summaryFile": ".harness/evidence/2026-10-27-s2-import-export-pipeline/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-27-s2-import-export-pipeline/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-27-codebase-simplification-program.task.md",
+      "docs/reviews/CODE_SIMPLIFICATION_PLAN.md"
+    ]
+  }
+}

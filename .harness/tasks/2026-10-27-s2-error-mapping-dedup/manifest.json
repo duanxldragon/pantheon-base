@@ -1,0 +1,145 @@
+{
+  "taskId": "2026-10-27-s2-error-mapping-dedup",
+  "title": "Unify the duplicated error values, error mapping and not-found translation",
+  "goal": "The same two error values are declared in eleven handler files, the error-to-HTTP mapping is wrapped again in three modules even though common.CodeForError already exists, gorm.ErrRecordNotFound is translated in more than thirty places, and five context/message helpers exist in two or three copies including ones inside the common package itself. This wave makes common.CodeForError plus the shared error values the single path, merges the duplicate context and message-key helpers, and keeps only the mapping differences that are real (role and menu have module-specific branches) with a comment saying why. Each module's error code and i18n key stays exactly as it is today.",
+  "primaryLayer": "platform",
+  "status": "planned",
+  "priority": "P1",
+  "type": "refactor",
+  "estimatedComplexity": "medium",
+  "parentTaskId": "2026-10-27-codebase-simplification-program",
+  "dependsOn": [
+    "2026-10-27-s2-shared-handler-helpers"
+  ],
+  "findings": [
+    "RC-017 (P2): errParamInvalid and errRequestFailed declared at menu_handler.go:12-13, role_handler.go:16-17, dept_handler.go:13-14, post_handler.go:13-14, dict_handler.go:14-15, setting_handler.go:22-23, audit_handler.go:13-14, permission_handler.go:13-14, tenant_platform_handler.go:13-14, i18n_handler.go:16, user_handler.go:13.",
+    "RC-019 (P1): common.GetUserID at error.go:139-151 and http/response.go:115-127; IsI18nMessageKey and ResolveErrorMessageKey at http/response.go:29,61-90 and error.go:117-136; menu_handler.go:110-124 getRoleKeysFromContext duplicates common.GetRoleKeys at error.go:154-174; user_handler.go:274-281 getUserIDFromContext duplicates common.GetUserID.",
+    "RC-020 (P1): role_handler.go:46-55 roleErrorResponse and menu_handler.go:126-167 menuErrorCode/menuErrorMessage/isMenuValidationError wrap common.CodeForError; permission_handler.go:20-27 was a pure pass-through and is already scheduled for deletion in S1.",
+    "RC-024 (P2): gorm.ErrRecordNotFound handling repeated at dict_service.go:988, dept_service.go:417,530-533, dept_tree.go:153, dept_import.go:164-168, i18n_handler.go:257,310,332, i18n_seed.go:238,476, tenant_service.go:233,322,337,588,892,953,1069, session_service.go:359, login_service.go:124,163,524,564, mfa_service.go:101,225,274, dynamic_module_lifecycle.go:58,87, generator_datasource_service.go:81,248, user_helper.go:311, user_service.go:326."
+  ],
+  "scope": {
+    "in": [
+      "Replace the eleven local errParamInvalid / errRequestFailed declarations with the shared values after diffing every constructor argument",
+      "Delete roleErrorResponse if it adds nothing over common.CodeForError; keep a commented branch if it does",
+      "Keep menuErrorCode / menuErrorMessage / isMenuValidationError only where they encode a real menu-specific mapping, with a one-line why",
+      "Replace the thirty-plus gorm.ErrRecordNotFound blocks with the shared translation, passing each site's existing i18n key",
+      "Make one of common.GetUserID / http.GetUserID the single implementation and have the other delegate or be removed",
+      "Point menu_handler.getRoleKeysFromContext and user_handler.getUserIDFromContext at the common implementations"
+    ],
+    "out": [
+      "Changing any error code, HTTP status or i18n key that a caller can observe",
+      "Changing pkg/common/http's public response helpers",
+      "Adding error-wrapping frameworks or a new error type hierarchy",
+      "Touching error handling in migrations, seeds or startup paths that intentionally panic or exit"
+    ]
+  },
+  "dependencyLayers": [
+    "system/auth",
+    "system/iam",
+    "system/org",
+    "system/config"
+  ],
+  "implementationNotes": [
+    "Diff the eleven errParamInvalid constructors before replacing them. If any passes a different i18n key or code, it is not the same error and stays local.",
+    "The context-key helpers must be compared key by key: the same function name can read a different context key, and 'looks identical' is not proof.",
+    "For gorm.ErrRecordNotFound, keep the site's existing key and any extra logging. Some sites translate to 404, a few may translate to a different code; only the identical ones are replaced in this wave.",
+    "role and menu keep their module-specific branches; the point is to remove the pass-through, not the mapping. A comment on the surviving branch is required so the next reader does not re-propose deleting it.",
+    "Do not touch the OIDC handler; its response shape is handled by its own S3 wave."
+  ],
+  "contractAnchors": [
+    "AGENTS.md",
+    "docs/reviews/REDUNDANT_CODE_CANDIDATES.md",
+    "docs/designs/GLOBAL_EXCEPTION_HANDLING.md"
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "none",
+    "portableFailureClass": "duplication-drift",
+    "ownerLayer": "consumer-repository",
+    "ratchetDecision": "sensor-added",
+    "coverageDimensions": [
+      "behaviour",
+      "maintainability"
+    ]
+  },
+  "expectedFiles": {
+    "create": [
+      "backend/pkg/common/error_mapping_test.go"
+    ],
+    "modify": [
+      "backend/pkg/common/error.go",
+      "backend/pkg/common/http/response.go",
+      "backend/modules/system/iam/role/role_handler.go",
+      "backend/modules/system/iam/menu/menu_handler.go",
+      "backend/modules/system/iam/dept/dept_handler.go",
+      "backend/modules/system/iam/post/post_handler.go",
+      "backend/modules/system/iam/user/user_handler.go",
+      "backend/modules/system/iam/permission/permission_handler.go",
+      "backend/modules/system/config/dict/dict_handler.go",
+      "backend/modules/system/config/setting/setting_handler.go",
+      "backend/modules/system/config/i18n/i18n_handler.go",
+      "backend/modules/system/audit/audit_handler.go",
+      "backend/modules/system/iam/tenant/tenant_platform_handler.go"
+    ],
+    "doNotTouch": [
+      "backend/modules/auth/oidc/**",
+      "backend/pkg/database/migrations/**",
+      "backend/modules/**/router*.go",
+      "frontend/**"
+    ]
+  },
+  "executionRoles": {
+    "implementerPosture": "One pattern per commit: shared error values, then mapping wrappers, then not-found translation, then context helpers.",
+    "reviewerPosture": [
+      "Confirm no observable error code, status or i18n key changed.",
+      "Confirm surviving module-specific branches carry a why comment.",
+      "Confirm context keys were compared, not assumed.",
+      "Confirm the common package has one implementation of each helper."
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "cd backend && gofmt -l modules pkg",
+      "cd backend && go build ./...",
+      "cd backend && go vet ./...",
+      "cd backend && go test -count=1 ./...",
+      "grep -rn \"var errParamInvalid\" backend | wc -l"
+    ],
+    "runtimeEvidence": [
+      "404 and 400 response bodies before and after for dict, dept, role, menu and user",
+      "declaration count before 11 and after 1, measured by grep"
+    ]
+  },
+  "runtimeSensitive": false,
+  "evidenceRequired": [
+    ".harness/evidence/2026-10-27-s2-error-mapping-dedup/commands.json",
+    ".harness/evidence/2026-10-27-s2-error-mapping-dedup/response-diff.md",
+    ".harness/evidence/2026-10-27-s2-error-mapping-dedup/summary.md with the exception list"
+  ],
+  "humanGates": [
+    "None. Any site that cannot be proven equivalent stays local and is reported at closeout."
+  ],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed",
+    "One declaration each of errParamInvalid and errRequestFailed",
+    "One implementation each of GetUserID, IsI18nMessageKey, ResolveErrorMessageKey and GetRoleKeys",
+    "Not-found translation shared, with per-site keys preserved",
+    "role and menu mapping wrappers either deleted or justified in a comment"
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-27-s2-error-mapping-dedup/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-27-s2-error-mapping-dedup/",
+    "summaryFile": ".harness/evidence/2026-10-27-s2-error-mapping-dedup/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-27-s2-error-mapping-dedup/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-27-codebase-simplification-program.task.md",
+      "docs/reviews/CODE_SIMPLIFICATION_PLAN.md"
+    ]
+  }
+}

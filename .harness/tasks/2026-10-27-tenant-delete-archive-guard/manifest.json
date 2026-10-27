@@ -1,0 +1,150 @@
+{
+  "taskId": "2026-10-27-tenant-delete-archive-guard",
+  "title": "Make tenant deletion archive-only, as the contract already requires",
+  "goal": "DeleteTenant currently rejects a deletion only when the tenant has active members AND is not archived (tenant_service.go:596-604). A tenant left active with zero active memberships — reachable by deleting all of its users, which disables their memberships — can therefore be tombstoned directly, skipping the archive state that contract sections 2.1 and 2.2 require. This wave restores the contract rule: only an archived tenant may be deleted. The existing in-transaction membership disable stays, because an archived tenant may still carry active memberships and RemoveMember refuses to drop the last owner; that behaviour is what keeps the documented retirement path from deadlocking. The frontend stops offering delete on non-archived rows, and the contract, API doc and runbooks are aligned in the same wave.",
+  "primaryLayer": "system/iam",
+  "status": "planned",
+  "priority": "P2",
+  "type": "fix",
+  "estimatedComplexity": "medium",
+  "parentTaskId": "2026-10-27-tenant-completeness-remediation",
+  "dependsOn": [],
+  "findings": [
+    "TC-02 (P2): tenant_service.go:596-604 guards with `memberCount > 0 && row.Status != tenant.TenantStatusArchived`, so an active tenant with zero active members is deletable. Contract sections 2.1 and 2.2 both state that deletion is allowed only for archived tenants.",
+    "Reachability: DeleteUser disables the user's memberships (user_membership.go:78-88), so deleting every user of a live tenant drives memberCount to zero without archiving it. The console delete action is enabled for every status, permission permitting (TenantList.tsx:511-522).",
+    "The current comment justifies allowing deletion of archived tenants with active members; this wave keeps that and removes only the non-archived bypass.",
+    "Fixture impact measured on 2026-10-27 with the suite green (119 tests): 14 DeleteTenant call sites in tests, and only tenant_lifecycle_guard_test.go:117-121 archives first. The other 13 delete a never-archived tenant and pass only because of the bypass — tenant_code_lifecycle_test.go (30, 61, 155, 221, 255, 273), tenant_lifecycle_guard_test.go (191, 216, 235), tenant_service_list_test.go (121, 187), tenant_service_test.go (456, 471). Enforcing the guard turns all of them red, so updating them is part of this wave, not an afterthought.",
+    "TestDeletedTenantRefusesNewMembers (tenant_lifecycle_guard_test.go:210-224) uses the bypass to build its tombstone fixture and then asserts AddMember returns ErrTenantNotFound. It must archive before deleting; the assertion itself stays valid."
+  ],
+  "scope": {
+    "in": [
+      "Replace the DeleteTenant guard with `if row.Status != tenant.TenantStatusArchived { return ErrTenantNotArchived }`",
+      "Add ErrTenantNotArchived in tenant_service.go and map it in tenant_platform_handler.go failServiceError to a new i18n key tenant.not_archived",
+      "Keep the transaction body unchanged: disable active memberships, allocate the deleted code, write status=deleted",
+      "Register the new error and i18n key in docs/contracts/TENANT_CONTRACT_V1.md section 5, docs/api/TENANT_API.md and the frontend error mapping in the same wave",
+      "Disable the delete action in frontend/src/modules/system/iam/tenant/TenantList.tsx unless row.status === 'archived'; keep the Popconfirm for archived rows",
+      "Add a regression test in tenant_lifecycle_guard_test.go: an active tenant with zero active members is rejected with ErrTenantNotArchived",
+      "Update the 13 existing test fixtures that delete a never-archived tenant to archive first (the files and line numbers are listed in Findings); do not weaken the new guard to keep them green",
+      "Update docs/runbooks/TENANT_TROUBLESHOOTING.md and TENANT_MIGRATION_RUNBOOK.md wherever they describe deleting a non-archived tenant"
+    ],
+    "out": [
+      "Changing the status machine, the archived terminal state or the tombstone semantics",
+      "Changing RemoveMember, ensureNotLastOwner or the membership disable rules",
+      "Any migration or data repair for tenants already tombstoned without archiving",
+      "Making archive automatic on some other action",
+      "Changing routes or response envelopes beyond the new error code"
+    ]
+  },
+  "dependencyLayers": [
+    "system/iam"
+  ],
+  "implementationNotes": [
+    "Search the test tree first: 13 existing call sites delete a non-archived tenant and encode the defect. Rewrite each to archive first, not delete the test and not relax the guard. Run the suite with PANTHEON_TEST_DSN set — without it 85 of the 119 tenant tests skip and the package reports ok in 0.04s, which hides exactly this breakage.",
+    "Error text must be a translation key, not prose; follow the existing tenant.* namespace used by failServiceError.",
+    "The UI disable is an affordance, not the enforcement; the backend guard must fail even when the request is issued directly.",
+    "Keep the two changes in separate commits (backend guard, frontend disable) so the backend fix can be bisected on its own.",
+    "If the maintainer prefers the looser rule, this wave closes as abandoned and the contract is amended instead; do not silently keep both."
+  ],
+  "contractAnchors": [
+    "AGENTS.md",
+    "docs/contracts/TENANT_CONTRACT_V1.md",
+    "docs/api/TENANT_API.md",
+    "docs/runbooks/TENANT_TROUBLESHOOTING.md",
+    "docs/runbooks/TENANT_MIGRATION_RUNBOOK.md",
+    "docs/reviews/TENANT_FUNCTIONAL_COMPLETENESS_REVIEW_2026-10-27.md"
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "auth-security",
+    "portableFailureClass": "contract-drift",
+    "ownerLayer": "consumer-repository",
+    "ratchetDecision": "sensor-added",
+    "coverageDimensions": [
+      "behaviour",
+      "runtime-quality"
+    ]
+  },
+  "expectedFiles": {
+    "create": [],
+    "modify": [
+      "backend/modules/system/iam/tenant/tenant_service.go",
+      "backend/modules/system/iam/tenant/tenant_platform_handler.go",
+      "backend/modules/system/iam/tenant/tenant_lifecycle_guard_test.go",
+      "backend/modules/system/iam/tenant/tenant_code_lifecycle_test.go",
+      "backend/modules/system/iam/tenant/tenant_service_list_test.go",
+      "backend/modules/system/iam/tenant/tenant_service_test.go",
+      "frontend/src/modules/system/iam/tenant/TenantList.tsx",
+      "frontend/src/locales/**/system.json",
+      "docs/contracts/TENANT_CONTRACT_V1.md",
+      "docs/api/TENANT_API.md",
+      "docs/runbooks/TENANT_TROUBLESHOOTING.md",
+      "docs/runbooks/TENANT_MIGRATION_RUNBOOK.md"
+    ],
+    "doNotTouch": [
+      "backend/pkg/database/migrations/**",
+      "backend/modules/system/iam/user/**",
+      "frontend/src/index.ts",
+      "pantheon-ops/**"
+    ]
+  },
+  "executionRoles": {
+    "implementerPosture": "Write the failing test first, then change the guard; keep the transaction body untouched.",
+    "reviewerPosture": [
+      "Confirm the new test fails against the old guard and passes against the new one.",
+      "Confirm archived tenants with active members are still deletable in one transaction.",
+      "Confirm the new error code appears in contract, API doc and frontend mapping.",
+      "Confirm the delete action is disabled for active, suspended and deleted rows."
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "cd backend && go build ./...",
+      "export PANTHEON_TEST_DSN='<dsn>' PANTHEON_TEST_DSN_REQUIRED=true && cd backend && go test -count=1 ./modules/system/iam/tenant/...",
+      "export PANTHEON_TEST_DSN='<dsn>' PANTHEON_TEST_DSN_REQUIRED=true && cd backend && go test -count=1 ./...",
+      "cd frontend && npx tsc -b",
+      "cd frontend && npm run lint",
+      "cd frontend && npm run check:i18n-hardcode",
+      "node scripts/harness/check-task-packet.mjs --root ."
+    ],
+    "runtimeEvidence": [
+      "test output naming the new guard test and showing it red before the fix",
+      "a direct API call deleting an active zero-member tenant returning tenant.not_archived",
+      "an archived tenant with active members still deleting successfully",
+      "measured baseline on 2026-10-27 with MySQL: tenant package 119 pass / 0 skip / 0 fail in 65s; the same command without PANTHEON_TEST_DSN reports ok in 0.04s with 85 skips and proves nothing"
+    ]
+  },
+  "runtimeSensitive": true,
+  "evidenceRequired": [
+    ".harness/evidence/2026-10-27-tenant-delete-archive-guard/commands.json",
+    ".harness/evidence/2026-10-27-tenant-delete-archive-guard/repro.md with the pre-fix failure and post-fix result",
+    ".harness/evidence/2026-10-27-tenant-delete-archive-guard/summary.md"
+  ],
+  "humanGates": [
+    "Confirm the strict contract reading (delete only archived) is preferred over amending the contract to allow the current behaviour."
+  ],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed",
+    "DeleteTenant rejects every non-archived tenant with tenant.not_archived",
+    "Archived tenant deletion with active members still works and disables memberships in the same transaction",
+    "The UI delete action is disabled outside archived status",
+    "Every existing DeleteTenant fixture archives before deleting; none was deleted to keep the suite green",
+    "Contract, API doc and runbooks describe the same rule",
+    "go test ./... with PANTHEON_TEST_DSN set remains green and the tenant package still reports 119 passing tests or more"
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-27-tenant-delete-archive-guard/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-27-tenant-delete-archive-guard/",
+    "summaryFile": ".harness/evidence/2026-10-27-tenant-delete-archive-guard/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-27-tenant-delete-archive-guard/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-27-tenant-completeness-remediation.task.md",
+      "docs/reviews/TENANT_FUNCTIONAL_COMPLETENESS_REVIEW_2026-10-27.md"
+    ]
+  }
+}

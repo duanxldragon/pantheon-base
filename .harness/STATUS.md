@@ -318,6 +318,10 @@ GitHub Release 于 `2026-10-22T00:17:53Z` 发布，四件产物齐备（tgz 19,9
 | ✅ 已完成 | v0.16.1 发布收口（`2026-10-12-v0161-release-cut`，四件产物已发布并过 Verify；全自动发布待 PAT secret） |
 | ✅ 已完成 | v0.17.0 发布收口（`2026-10-22-release-and-residual-closeout`，F5/F2/B10/G2/D2 + 浏览器验收） |
 | ✅ 已完成 | 租户权限隔离整改（`2026-10-19-tenant-permission-isolation-remediation`，W0–W6 全部完成 + F14 收口后关闭，**零残留**） |
+| ✅ 已完成 | 全局代码精简审计（2026-10-27，只读，结论 **LEAN-WITH-DEBT**；产出 `docs/reviews/CODEBASE_SIMPLIFICATION_AUDIT.md`、`REDUNDANT_CODE_CANDIDATES.md`、`CODE_SIMPLIFICATION_PLAN.md`） |
+| 🆕 已计划 | 代码精简与横向重复收敛（`2026-10-27-codebase-simplification-program`，12 个波次 S1×2 / S2×6 / S3×3 / 治理决策×1，全部 `status=planned`，未开工） |
+| ✅ 已完成 | 租户功能完整性复核（2026-10-27，只读，前后端 + 租户运营；结论：单租户路径可用，**"租户开发已完成"不成立**；1 P1 / 2 P2 / 6 P3；产出 `docs/reviews/TENANT_FUNCTIONAL_COMPLETENESS_REVIEW_2026-10-27.md`） |
+| 🆕 已计划 | 租户完整性整改（`2026-10-27-tenant-completeness-remediation`，8 个波次，全部 `status=planned`，未开工；W3 决策未签字前 W4 不得启动） |
 | ⏸️ 暂停 | 无 |
 
 ## 租户权限隔离整改（2026-10-19，已收口）
@@ -424,6 +428,60 @@ GitHub Release 于 `2026-10-22T00:17:53Z` 发布，四件产物齐备（tgz 19,9
 
 平台作用域仍会列出全部租户角色、无策略角色仍 fail-closed 500、部门表改为扁平行——三项都是显式剩余项，
 分别需要产品决策或独立交互设计。
+
+## 租户完整性整改（2026-10-27，已计划未开工）
+
+2026-10-27 的租户功能完整性复核（前后端 + 租户运营，只读）结论：**单租户部署路径功能完整可用**，
+原生租户用户端到端有 e2e 证据；但**"租户开发已完成"不成立**——跨租户 membership 可登录不可用，
+删除租户可绕过归档校验，成员写入不校验用户存在。8 个波次如下，全部 `status=planned`。
+
+- **父任务**：`.harness/tasks/2026-10-27-tenant-completeness-remediation/`（`status: planned`）
+- **计划文档**：`docs/harness/tasks/2026-10-27-tenant-completeness-remediation.task.md`
+- **复核报告**：`docs/reviews/TENANT_FUNCTIONAL_COMPLETENESS_REVIEW_2026-10-27.md`
+
+| ID | 级别 | 缺陷 |
+|---|---|---|
+| TC-01 | P1 | 跨租户 membership 只给登录，不给任何授权（角色绑定按属主租户落库） |
+| TC-02 | P2 | `DeleteTenant` 守卫为 `memberCount > 0 && status != archived`，删光成员即可绕过归档 |
+| TC-03 | P2 | `AddMember` 不校验用户存在且无外键，幽灵 owner 可满足"最后 owner"不变量；UI 填裸 id |
+| TC-04 | P3 | 租户控制台无 UI 自动化；登录选择租户的 e2e 只断言 shell 渲染 |
+| TC-05 | P3 | `TENANT_API.md` 文档化未挂载的 `/members/page`，增删改响应示例与真实 envelope 不符 |
+| TC-06 | P3 | `MemberUsageQuery.status` 类型与 UI 实际发送值不一致，靠 cast 掩盖 |
+| TC-07 | P3 | 前端 plan 门槛写死四档，自定义 plan code 一律归一为 `free`（具体后果：trial 租户看不到生成器页）。**代码已三处自述**（`planOptions.ts:4-20`、`TenantList.tsx:256-260`、`outsideLadder` 警告），属已文档化的限制，缺的是"后果"与契约表述 |
+| TC-08 | P3 | `tenant_handler.go` / `tenant_routes.go` / `tenant_bootstrap.go` 零引用，且残留旧文档口径 |
+
+| Wave | 任务包 | 级别 | 状态 | 依赖 |
+|---|---|---|---|---|
+| W1 | `2026-10-27-tenant-delete-archive-guard` | P2 | planned | — |
+| W2 | `2026-10-27-tenant-member-integrity` | P2 | planned | — |
+| W3 | `2026-10-27-tenant-multi-membership-decision` | P1 | planned | — |
+| W4 | `2026-10-27-tenant-multi-membership-authorization` | P1 | planned | W2、W3 签字 |
+| W5 | `2026-10-27-tenant-contract-docs-alignment` | P3 | planned | W1、W2、W4 |
+| W6 | `2026-10-27-tenant-console-ui-automation` | P3 | planned | W1、W2、W4 |
+| W7 | `2026-10-27-tenant-plan-ladder-decision` | P3 | planned | W5 |
+| W8 | `2026-10-27-tenant-dead-surface-removal` | P3 | planned | W5 |
+
+**维护者门禁**：W3 的 A/B/C 决策未签字前 W4 不得启动；W1 需确认"严格按契约读"还是修订契约；
+W4 需批准移除登录租户选择器与 `TenantSwitcher` 但保留端点为兼容面；W6 需决定 `smoke-tenant` 是否转为阻断式检查；
+W7 需在 A/B/C 中选一。W2、W8 无门禁。
+
+**显式不在范围内**：表结构/迁移/数据回填、计费、独立 schema、membership 角色到 IAM 角色的隐式映射、
+删除历史跨租户 membership 行、`pantheon-ops` 业务改动、降低测试强度。
+
+**2026-10-27 测试基线（各波次开工前的对照值）**：
+
+| 项 | 实测结果 |
+|---|---|
+| `go build ./...` / `go vet ./...` | 通过 |
+| 后端全量 `go test ./...`（带 `PANTHEON_TEST_DSN`） | 46 包 ok，exit 0 |
+| 租户包 `./modules/system/iam/tenant/...` | **119 pass / 0 skip / 0 fail**（约 65s，真实 MySQL） |
+| 前端 `tsc -b` / `lint` / `build` | 通过（build 含 14 项 prebuild 契约检查） |
+| 前端 `vitest run` | 34 文件 / 230 测试通过（**无 entitlements 覆盖**，见 W7） |
+| 租户 smoke 套件（4 个 spec） | **15 passed / 0 failed**（10 矩阵 + 5 视角，约 95s）。栈已起（后端 :8080、MySQL、Redis），专用 Vite 走 5178 避开占用的 5173；夹具已 `down` 清理。证据：`.harness/evidence/2026-10-27-tenant-completeness-remediation/smoke-tenant-baseline.md` |
+
+> **DSN 陷阱**：不设 `PANTHEON_TEST_DSN` 时，租户包 119 个用例里有 85 个静默 skip，整包
+> 0.04s 报 `ok`。各波次验证一律加 `PANTHEON_TEST_DSN_REQUIRED=true`，让 skip 变成 fail。
+> 本轮据此更正了复核报告 §5（原文的"全绿"是 no-DSN 结果）。
 
 ## 2026-10-07 整改任务包（已收口）
 

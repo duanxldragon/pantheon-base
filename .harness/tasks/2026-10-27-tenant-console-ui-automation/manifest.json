@@ -1,0 +1,147 @@
+{
+  "taskId": "2026-10-27-tenant-console-ui-automation",
+  "title": "Cover the platform tenant console with Playwright and make the picker spec assert usability",
+  "goal": "The tenant console (TenantList, TenantOverview, TenantMemberList, TenantPlanEditor) has no automated UI coverage. The existing tenant specs cover the platform viewpoint header, cross-tenant isolation and the login picker, but not tenant CRUD, archive/delete, member add/remove, the ops overview or the plan editor. The login-picker spec is worse than uncovered: it builds a genuine multi-membership user, picks the tenant where the user has no roles, and asserts only that the app shell renders, which is exactly the failure mode (login succeeds, console is empty). This wave adds a console spec and strengthens the picker spec so it asserts a usable console or an explicit refusal, per the W3/W4 decision.",
+  "primaryLayer": "system/iam",
+  "status": "planned",
+  "priority": "P3",
+  "type": "test",
+  "estimatedComplexity": "medium",
+  "parentTaskId": "2026-10-27-tenant-completeness-remediation",
+  "dependsOn": [
+    "2026-10-27-tenant-delete-archive-guard",
+    "2026-10-27-tenant-member-integrity",
+    "2026-10-27-tenant-multi-membership-authorization"
+  ],
+  "findings": [
+    "TC-04 (P3): no e2e covers tenant create, edit, archive, delete, member add/remove, the ops overview or the plan editor; smoke-tenant is push-only and report-only.",
+    "The picker spec (tenant-hostile-browser-matrix.spec.ts:82-92, :138-140) constructs the cross-membership case but asserts only that .app-shell__header is visible, so the empty-menu outcome passes.",
+    "The console pages have no unit tests either, so a regression in TenantList/Overview/PlanEditor has no signal before release."
+  ],
+  "scope": {
+    "in": [
+      "Add frontend/tests/smoke-core/tenant-console.spec.ts using the existing tenant-fixture helpers (setupMatrixTenants, teardownMatrixTenants, loginAsPlatformAdmin)",
+      "Cover: tenant list renders with summary cards; create a tenant with an admin; edit its name/plan; suspend and archive it; delete is unavailable before archived and succeeds after; deleted rows are absent from the default list",
+      "Cover: member add through the new user selector (W2) and member removal; the last-owner removal is refused with the documented error",
+      "Cover: tenant-ops overview numbers and the plan editor creating a custom code, assigning it to a tenant, and refusing to disable an in-use plan",
+      "Strengthen the login-picker spec: after the W4 decision, a cross-membership user either is not offered the unusable tenant, or switching there yields a working menu; assert the documented outcome and at least one protected API response, not just the shell",
+      "Add the new spec to the npm run test:smoke:tenant script in frontend/package.json (it currently lists tenant-hostile-browser-matrix, its phase2, tenant-protected-resources and the viewpoint spec) and to the smoke-tenant CI job; keep the job report-only unless the human gate approves making it blocking",
+      "Record the run command and the fixture prerequisites (tenantmatrixdb, seeded admin) in the spec header"
+    ],
+    "out": [
+      "Making smoke-tenant a required check without the maintainer's approval",
+      "Changing production source to make a test pass",
+      "Replacing the existing isolation or viewpoint specs",
+      "Testing the compatibility endpoints that W4 retains",
+      "Adding a new test runner or dependency"
+    ]
+  },
+  "dependencyLayers": [
+    "system/iam",
+    "system/auth",
+    "platform"
+  ],
+  "implementationNotes": [
+    "The spec must create its own data and tear it down; do not depend on rows left by another spec.",
+    "Use the existing fixtures and helpers; if a helper is missing, add it to tenant-fixture.ts rather than duplicating login code.",
+    "The console delete test needs the W1 rule: create a tenant, assert delete is unavailable while active, archive it, then delete.",
+    "The plan-editor test must use a unique code per run (timestamp suffix) so reruns are idempotent.",
+    "The existing tenant specs need a live stack: scripts/run-smoke-suite.mjs starts Vite and scripts/tenant-matrix-fixture-setup.mjs provisions fixtures against a backend on 127.0.0.1:8080, which needs MySQL, Redis and a migrated database. Measured on 2026-10-27 12:40 with that stack up: the four existing specs ran 15 passed / 0 failed (matrix 10, viewpoint 5) in about 95s. Port 5173 was occupied by another dev server, so the suite was run on 5178 via the runner's --port flag; playwright takes baseURL from PANTHEON_WEB_BASE_URL, so no test change was needed. Fixtures must be torn down with tenant-matrix-fixture-setup.mjs down plus cleanup-smoke-fixtures.mjs, because the runner only calls setup up. Use the same recipe for the new console spec.",
+    "If a Playwright run is impossible in the executing environment, the wave still lands the spec and records not-run with the missing prerequisite; do not claim a green run.",
+    "A screenshot of the console before and after archive is the visual evidence; follow the project's existing capture helpers."
+  ],
+  "contractAnchors": [
+    "AGENTS.md",
+    "docs/contracts/TENANT_CONTRACT_V1.md",
+    "docs/api/TENANT_API.md",
+    "docs/acceptances/CODE_REVIEW_STANDARD.md",
+    "docs/reviews/TENANT_FUNCTIONAL_COMPLETENESS_REVIEW_2026-10-27.md"
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "none",
+    "portableFailureClass": "test-coverage-gap",
+    "ownerLayer": "consumer-repository",
+    "ratchetDecision": "sensor-added",
+    "coverageDimensions": [
+      "behaviour",
+      "runtime-quality"
+    ]
+  },
+  "expectedFiles": {
+    "create": [
+      "frontend/tests/smoke-core/tenant-console.spec.ts"
+    ],
+    "modify": [
+      "frontend/tests/smoke-core/tenant-hostile-browser-matrix.spec.ts",
+      "frontend/tests/smoke-core/auth-tenant-picker.spec.ts",
+      "frontend/package.json",
+      ".github/workflows/smoke-core.yml",
+      "frontend/playwright.config.ts"
+    ],
+    "doNotTouch": [
+      "backend/**",
+      "frontend/src/index.ts",
+      ".github/workflows/release*.yml",
+      "pantheon-ops/**"
+    ]
+  },
+  "executionRoles": {
+    "implementerPosture": "Write the spec against the shipped behaviour; if the UI lacks a stable selector, add an accessible role/label rather than a positional locator.",
+    "reviewerPosture": [
+      "Confirm each test asserts an outcome, not just that a page rendered.",
+      "Confirm data is created and torn down per run.",
+      "Confirm the picker test now fails if the chosen tenant yields an empty menu.",
+      "Confirm the CI change only adds the spec to the existing job unless the gate was approved.",
+      "Confirm no production file changed to satisfy a locator."
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "cd frontend && npx tsc -b",
+      "cd frontend && npm run lint",
+      "cd frontend && npx playwright test tests/smoke-core/tenant-console.spec.ts",
+      "cd frontend && npx playwright test tests/smoke-core/tenant-hostile-browser-matrix.spec.ts tests/smoke-core/auth-tenant-picker.spec.ts",
+      "node scripts/harness/check-task-packet.mjs --root ."
+    ],
+    "runtimeEvidence": [
+      "Playwright run output showing every new test passing against the local tenantmatrixdb fixture",
+      "screenshots of the tenant list before archive and after delete",
+      "if the environment is unavailable: not-run with the exact missing prerequisite"
+    ]
+  },
+  "runtimeSensitive": true,
+  "evidenceRequired": [
+    ".harness/evidence/2026-10-27-tenant-console-ui-automation/commands.json",
+    ".harness/evidence/2026-10-27-tenant-console-ui-automation/playwright.txt with the run summary",
+    ".harness/evidence/2026-10-27-tenant-console-ui-automation/screenshots/",
+    ".harness/evidence/2026-10-27-tenant-console-ui-automation/summary.md"
+  ],
+  "humanGates": [
+    "Decide whether smoke-tenant becomes a blocking required check; the default is to add the spec while keeping the job report-only."
+  ],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed",
+    "Tenant console CRUD, archive/delete, members and plan editor have automated coverage",
+    "The login-picker spec no longer accepts an empty console as success",
+    "The new spec runs in the smoke-tenant job",
+    "The CI gate state is unchanged unless explicitly approved",
+    "No production source changed to satisfy a locator"
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-27-tenant-console-ui-automation/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-27-tenant-console-ui-automation/",
+    "summaryFile": ".harness/evidence/2026-10-27-tenant-console-ui-automation/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-27-tenant-console-ui-automation/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-27-tenant-completeness-remediation.task.md",
+      "docs/reviews/TENANT_FUNCTIONAL_COMPLETENESS_REVIEW_2026-10-27.md"
+    ]
+  }
+}

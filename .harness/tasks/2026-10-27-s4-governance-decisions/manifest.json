@@ -1,0 +1,126 @@
+{
+  "taskId": "2026-10-27-s4-governance-decisions",
+  "title": "Record maintainer decisions for the governance-surface items the audit left open",
+  "goal": "Four findings from the audit cannot be resolved by an agent because each is a product or governance policy choice, not a defect: 99 English document copies that no checker keeps in sync, six to seven LLM review transcripts that the documentation index does not reference, 659 archived harness files, and a handful of exported types whose only consumer might be a future feature. This wave produces decisions, not code: for each item, a recorded choice between delete, keep-and-check, or keep-as-is, with the reason and the cost. Anything chosen as 'delete' becomes its own follow-up packet; anything chosen as 'keep-and-check' names the checker to add.",
+  "primaryLayer": "platform",
+  "status": "planned",
+  "priority": "P3",
+  "type": "governance",
+  "estimatedComplexity": "small",
+  "parentTaskId": "2026-10-27-codebase-simplification-program",
+  "dependsOn": [
+    "2026-10-27-s1-dead-code-removal"
+  ],
+  "findings": [
+    "RC-036 (P2): 99 docs/**/*.en.md bilingual copies exist with no mechanical check that they match their Chinese source; docs/README.md links only some of them.",
+    "RC-037 (P2): six LLM review transcripts (pantheon-base-review-{chatgpt,claude,deepseek,glm,grok,kimi}.md) plus pantheon-base-review-20260910.md are not listed in the docs index and are referenced by no other document.",
+    "RC-038 (P3): .harness/archive holds 659 of the 1,081 tracked harness files; this is a repository-size and evidence-retention question, not a code question.",
+    "RC-031 (P3): the dashboard widget type family in frontend/src/core/router/types.ts is exported but consumed only inside its own union; it may be a planned feature surface.",
+    "RC-043 (P2): backend/pkg/common/re_export.go re-exports 112 lines and 12 symbols showed no qualified reference; package-internal bare-name use and downstream use were not fully ruled out."
+  ],
+  "scope": {
+    "in": [
+      "For each of the five items, record delete / keep-and-check / keep-as-is with a one-paragraph reason and a cost estimate",
+      "For each keep-and-check, name the exact checker and where it would run",
+      "For each delete, create a follow-up task packet id and do not delete anything in this wave",
+      "Update docs/README.md's index only for documents the decision keeps"
+    ],
+    "out": [
+      "Deleting any document, archive file or source file in this wave",
+      "Adding a new CI gate without the maintainer's approval",
+      "Changing the documentation layout or the docs/harness versus .harness split, which docs/README.md already justifies",
+      "Touching frontend/src/index.ts"
+    ]
+  },
+  "dependencyLayers": [
+    "platform"
+  ],
+  "implementationNotes": [
+    "This is a decision packet. Its evidence is a decision table, and a wave that changes no files is a valid closeout.",
+    "The docs/README.md rule 'delete before archive' applies to one-off documents with no reuse value; the 99 .en.md copies are not automatically in that class because they may be user-facing.",
+    "The docs/harness versus .harness split is explicitly documented as intentional and is not part of this decision set; do not re-open it.",
+    "For re_export.go, the decision needs a symbol-by-symbol downstream check against pantheon-ops/backend/modules/business, not a package-level grep.",
+    "If the maintainer wants the bilingual copies kept, the checker must compare content, not just existence, or it adds noise without adding safety."
+  ],
+  "contractAnchors": [
+    "AGENTS.md",
+    "docs/README.md",
+    "docs/reviews/REDUNDANT_CODE_CANDIDATES.md"
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "none",
+    "portableFailureClass": "governance-drift",
+    "ownerLayer": "consumer-repository",
+    "ratchetDecision": "guide-updated",
+    "coverageDimensions": [
+      "maintainability",
+      "method-health"
+    ]
+  },
+  "expectedFiles": {
+    "create": [
+      "docs/reviews/GOVERNANCE_SURFACE_DECISIONS_2026-10-27.md"
+    ],
+    "modify": [
+      "docs/README.md"
+    ],
+    "doNotTouch": [
+      ".harness/archive/**",
+      "docs/**/*.en.md",
+      "scripts/harness/**",
+      ".github/workflows/**",
+      "frontend/src/core/router/types.ts"
+    ]
+  },
+  "executionRoles": {
+    "implementerPosture": "Produce the decision table; do not action any deletion inside this packet.",
+    "reviewerPosture": [
+      "Check every item has exactly one decision and a reason.",
+      "Check every keep-and-check names a real checker and a real run location.",
+      "Check every delete produced a follow-up packet id.",
+      "Check no file was deleted in this wave."
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "node scripts/harness/check-doc-links.mjs --root . --strict",
+      "node scripts/harness/check-doc-inventory.mjs --root . --strict",
+      "node scripts/harness/check-task-packet.mjs --root ."
+    ],
+    "runtimeEvidence": [
+      "none; this is a documentation decision, so the evidence is the decision table and the gate results"
+    ]
+  },
+  "runtimeSensitive": false,
+  "evidenceRequired": [
+    ".harness/evidence/2026-10-27-s4-governance-decisions/commands.json",
+    ".harness/evidence/2026-10-27-s4-governance-decisions/decisions.md",
+    ".harness/evidence/2026-10-27-s4-governance-decisions/summary.md"
+  ],
+  "humanGates": [
+    "Every decision in this wave is a maintainer decision; the packet cannot close without them."
+  ],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed",
+    "Five decisions recorded, each with a reason and a cost",
+    "Each delete decision has a follow-up packet id",
+    "No file deleted in this wave"
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-27-s4-governance-decisions/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-27-s4-governance-decisions/",
+    "summaryFile": ".harness/evidence/2026-10-27-s4-governance-decisions/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-27-s4-governance-decisions/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-27-codebase-simplification-program.task.md",
+      "docs/reviews/REDUNDANT_CODE_CANDIDATES.md"
+    ]
+  }
+}

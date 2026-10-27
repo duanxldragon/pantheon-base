@@ -1,0 +1,148 @@
+{
+  "taskId": "2026-10-27-tenant-member-integrity",
+  "title": "Reject unknown users when adding a tenant member and count only real owners",
+  "goal": "AddMember validates only that the tenant exists (tenant_service.go:858-903), and tenant_memberships has no foreign key to system_user (000013_tenant_canary.up.sql:48-59). Any id — a typo, a deleted user, a user from another tenant — becomes a member row. Worse, a row with role=owner for a nonexistent user is counted by ensureNotLastOwner (tenant_service.go:948-975), so the real last owner can be removed, leaving the tenant with an owner that can never log in. This wave makes the write path honest: the user must exist and not be deleted, the last-owner count must join system_user, and the console must stop asking operators to type a numeric id. It deliberately does not decide whether cross-tenant membership is allowed; that is W3/W4. The test fixtures currently add ids that do not exist, which encoded the defect; they must be updated to create real users rather than relaxing the new check.",
+  "primaryLayer": "system/iam",
+  "status": "planned",
+  "priority": "P2",
+  "type": "fix",
+  "estimatedComplexity": "medium",
+  "parentTaskId": "2026-10-27-tenant-completeness-remediation",
+  "dependsOn": [],
+  "findings": [
+    "TC-03 (P2): AddMember has no user-existence check, and the suite confirms it by construction: every tenant test writes membership rows for user ids that have no system_user row. Measured call sites on 2026-10-27: tenant_service_test.go uses 100 (8 calls) and 200+i (loop); tenant_lifecycle_guard_test.go uses 100, 101, 102, 201 and 777; tenant_handler_test.go uses 101-103 and 88001. All three files pass today (119 tests green), which is the proof that the check does not exist.",
+    "TC-03 (P2): ensureNotLastOwner counts tenant_memberships rows with role=owner and status=active without joining system_user, so a phantom owner row satisfies the invariant and permits removing the real owner. The owner guard itself works for real rows — TestRemoveMemberRefusesLastOwner passes — the gap is only who is counted.",
+    "TC-03 usability: TenantList.tsx:847-856 asks for a raw numeric user id, making the phantom path a realistic operator error rather than an API-only scenario.",
+    "Ordering constraint already pinned by a test: TestDeletedTenantRefusesNewMembers (tenant_lifecycle_guard_test.go:210-224) expects ErrTenantNotFound for a tombstone, so the tenant-existence check must stay ahead of the new user check."
+  ],
+  "scope": {
+    "in": [
+      "AddMember validates that user_id identifies a live system_user row (deleted_at IS NULL) before writing the membership; keep the tenant-existence check first so a tombstone still returns ErrTenantNotFound",
+      "Return the existing user-not-found error contract (user.batch.not_found or an equivalent registered key) and map it in tenant_platform_handler.go",
+      "ensureNotLastOwner counts owners through system_user, requiring the user row to be undeleted and enabled",
+      "Update every tenant test fixture that adds a nonexistent user, instead of lowering the new validation: tenant_service_test.go (100, 200+i), tenant_lifecycle_guard_test.go (100, 101, 102, 201, 777) and tenant_handler_test.go (101-103, 88001). Add one shared helper that creates the system_user rows so each test states ids it owns",
+      "Add regressions: unknown user id is rejected; a phantom owner row does not prevent removing the real last owner from being blocked; removing the real last owner still fails while a second real owner exists",
+      "Replace the free-text user id field in the tenant member dialog with a tenant-scoped user selector (existing users fetched with the current X-Tenant-Id scope, excluding users already active in this tenant), keeping the membership-role select",
+      "Show a clear empty state when the tenant has no addable users"
+    ],
+    "out": [
+      "Deciding or implementing cross-tenant membership policy (W3/W4)",
+      "Mapping the membership role (owner/admin/member) to an IAM role",
+      "Changing the membership table schema or adding a foreign key",
+      "Changing RemoveMember semantics beyond the owner count",
+      "Deleting the existing AddMember tests instead of fixing their fixtures",
+      "Adding a platform-wide user search to the member dialog"
+    ]
+  },
+  "dependencyLayers": [
+    "system/iam"
+  ],
+  "implementationNotes": [
+    "Order of checks matters: tenant first, then user, so the tombstone regression keeps returning ErrTenantNotFound and does not leak whether a user id exists.",
+    "Use a scoped query consistent with the rest of the tenant service; do not introduce a raw unscoped lookup just to satisfy the check.",
+    "The owner count joins system_user. Check the test database DDL in tenant_service_test.go: it creates system_user, so the join works; the fixtures simply never inserted rows.",
+    "A disabled (status != 1) user is not a live owner. Keep the add path permissive about status if the existing behaviour depends on it, but exclude disabled and deleted users from the owner count.",
+    "The member selector must reuse the existing user-list API and the X-Tenant-Id request scope; do not add a new endpoint for it.",
+    "If the selector cannot paginate cleanly, cap it at the first bounded page and say so in one comment; do not build a new search service.",
+    "This wave must land before W4 so that W4 can assume every membership row points at a real user.",
+    "tenant_handler_test.go is deleted by W8. If W8 lands first, ignore it here; if this wave lands first, patch its two AddMember calls as part of the fixture update so the file is not left red in between. Do not delete the file here.",
+    "Run with PANTHEON_TEST_DSN set. Without it 85 tenant tests skip and the package reports ok in 0.04s, so a missed fixture would look green."
+  ],
+  "contractAnchors": [
+    "AGENTS.md",
+    "docs/contracts/TENANT_CONTRACT_V1.md",
+    "docs/api/TENANT_API.md",
+    "docs/reviews/TENANT_FUNCTIONAL_COMPLETENESS_REVIEW_2026-10-27.md"
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "auth-security",
+    "portableFailureClass": "data-integrity-gap",
+    "ownerLayer": "consumer-repository",
+    "ratchetDecision": "sensor-added",
+    "coverageDimensions": [
+      "behaviour",
+      "runtime-quality",
+      "maintainability"
+    ]
+  },
+  "expectedFiles": {
+    "create": [],
+    "modify": [
+      "backend/modules/system/iam/tenant/tenant_service.go",
+      "backend/modules/system/iam/tenant/tenant_platform_handler.go",
+      "backend/modules/system/iam/tenant/tenant_service_test.go",
+      "backend/modules/system/iam/tenant/tenant_lifecycle_guard_test.go",
+      "backend/modules/system/iam/tenant/tenant_handler_test.go",
+      "backend/modules/system/iam/tenant/tenant_ops_view_test.go",
+      "frontend/src/modules/system/iam/tenant/TenantList.tsx",
+      "frontend/src/locales/**/system.json",
+      "docs/api/TENANT_API.md"
+    ],
+    "doNotTouch": [
+      "backend/pkg/database/migrations/**",
+      "backend/modules/system/iam/user/user_membership.go",
+      "frontend/src/index.ts",
+      "pantheon-ops/**"
+    ]
+  },
+  "executionRoles": {
+    "implementerPosture": "Update the fixtures first so the suite expresses real users, then add the failing phantom-owner test, then fix the service and the UI.",
+    "reviewerPosture": [
+      "Confirm every test id now maps to a real system_user row.",
+      "Confirm a phantom owner row no longer satisfies the last-owner invariant.",
+      "Confirm AddMember still returns ErrTenantNotFound for a tombstone before reaching the user check.",
+      "Confirm the member dialog no longer accepts free-text ids and sends the selected user id.",
+      "Confirm no new endpoint or dependency was added."
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "cd backend && go build ./...",
+      "export PANTHEON_TEST_DSN='<dsn>' PANTHEON_TEST_DSN_REQUIRED=true && cd backend && go test -count=1 ./modules/system/iam/tenant/...",
+      "export PANTHEON_TEST_DSN='<dsn>' PANTHEON_TEST_DSN_REQUIRED=true && cd backend && go test -count=1 ./...",
+      "cd frontend && npx tsc -b",
+      "cd frontend && npm run lint",
+      "cd frontend && npm run check:i18n-hardcode",
+      "node scripts/harness/check-task-packet.mjs --root ."
+    ],
+    "runtimeEvidence": [
+      "the new phantom-owner test red before the fix and green after",
+      "a direct POST /system/tenant/:id/members with an unknown user id returning the user-not-found error",
+      "a screenshot or Playwright trace of the member dialog with the user selector",
+      "measured baseline on 2026-10-27 with MySQL: tenant package 119 pass / 0 skip; the phantom-member capability is visible in the green baseline, so the new tests must be written against it"
+    ]
+  },
+  "runtimeSensitive": true,
+  "evidenceRequired": [
+    ".harness/evidence/2026-10-27-tenant-member-integrity/commands.json",
+    ".harness/evidence/2026-10-27-tenant-member-integrity/repro.md with the phantom-owner failure and its fix",
+    ".harness/evidence/2026-10-27-tenant-member-integrity/summary.md"
+  ],
+  "humanGates": [],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed",
+    "AddMember rejects unknown and deleted user ids",
+    "ensureNotLastOwner ignores phantom, deleted and disabled owners",
+    "The real last owner cannot be removed while a second real owner exists and cannot be removed when it is the only one",
+    "All tenant tests reference real user rows",
+    "The member dialog uses a user selector and no free-text id",
+    "go test ./backend/... remains green"
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-27-tenant-member-integrity/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-27-tenant-member-integrity/",
+    "summaryFile": ".harness/evidence/2026-10-27-tenant-member-integrity/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-27-tenant-member-integrity/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-27-tenant-completeness-remediation.task.md",
+      "docs/reviews/TENANT_FUNCTIONAL_COMPLETENESS_REVIEW_2026-10-27.md"
+    ]
+  }
+}

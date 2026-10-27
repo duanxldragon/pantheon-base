@@ -1,0 +1,173 @@
+{
+  "taskId": "2026-10-27-tenant-multi-membership-authorization",
+  "title": "Implement option A for multi-membership: no tenant is offered unless the subject has a role there",
+  "goal": "This packet implements the option recorded by 2026-10-27-tenant-multi-membership-decision. It is written for option A (the recommended default) and must not start until that decision is signed; if B or C is chosen, close this packet as abandoned and rewrite it from the decision. Option A makes the shipped behaviour honest: a membership in a tenant where the subject owns no role is not a usable context. AddMember is narrowed to users owned by the target tenant (system_user.tenant_id = tenantID), and the three read points that hand a tenant to a subject — login discovery, the login candidate list and the switchable list — only return tenants where at least one enabled role binding exists. SwitchSessionTenant refuses a target that yields zero roles. Because a user owns roles only in its owning tenant, this makes the login picker and TenantSwitcher unreachable by construction, so their UI is removed while the endpoints keep returning a filtered (usually single-item) list for API compatibility.",
+  "primaryLayer": "system/iam",
+  "status": "planned",
+  "priority": "P1",
+  "type": "fix",
+  "estimatedComplexity": "large",
+  "parentTaskId": "2026-10-27-tenant-completeness-remediation",
+  "dependsOn": [
+    "2026-10-27-tenant-multi-membership-decision",
+    "2026-10-27-tenant-member-integrity"
+  ],
+  "findings": [
+    "TC-01 (P1): cross-tenant memberships grant login and switching but no roles; the login picker and TenantSwitcher both offer the unusable tenant.",
+    "The contract invariant 'one user may belong to multiple tenants' (section 2.2) stays true at the data layer; option A changes what a non-owning membership implies for login, and writes that limitation down.",
+    "Because role bindings are stamped from the owning tenant, a subject can never hold roles in two tenants. After filtering, at most one usable candidate remains, so the two UI controls cannot render and would be dead code if kept.",
+    "pkg/tenant/authz.go already exists and holds all three read paths: DiscoverDefaultTenant:159-180 (which already denies with ErrTenantForbidden when more than one active membership exists), ListActiveMembershipsForUser:313-343, and the switchable handler at login/login_tenant_switch.go:39-83. The predicate belongs there; no new package or import direction is needed.",
+    "Existing coverage to re-point rather than delete: login_tenant_gate_test.go:389 and :404 assert ListLoginTenantCandidates returns the membership list today, so both change meaning under option A. The session switch has no empty-role case yet."
+  ],
+  "scope": {
+    "in": [
+      "Read the signed W3 decision first; if it is not option A, close this packet as abandoned and open the packet the decision names",
+      "AddMember rejects a user whose system_user.tenant_id is not the target tenant, with a registered error key (for example tenant.member.user_not_in_tenant); keep the tenant-existence, user-existence and last-owner checks",
+      "Add a role-presence predicate to login discovery (pkg/tenant.DiscoverDefaultTenant or a role-aware wrapper): a membership only resolves when an enabled system_user_role row exists for (user, tenant)",
+      "Filter ListLoginTenantCandidates and the /auth/tenants/switchable response with the same predicate",
+      "SwitchSessionTenant refuses the switch when loadRolesForTenant returns an empty set",
+      "Remove TenantSwitcher from AppLayout and the tenant picker from the login form; keep the two endpoints returning the filtered list and document them as compatibility surfaces that now return at most one item",
+      "Rewrite the affected Playwright specs: a cross-membership user is no longer offered the second tenant, and the shell after login carries the owning tenant or platform scope; keep the isolation assertions untouched",
+      "Clarify contract section 2.2 and TENANT_API.md: a membership outside the user's owning tenant grants no authorization and is not offered at login; existing rows are not deleted here",
+      "Add regressions: cross-tenant AddMember rejected; discovery ignores a membership with no roles; candidates and switchable exclude it; switch refuses an empty role set"
+    ],
+    "out": [
+      "Changing the system_user_role schema or the membership table",
+      "Deleting existing cross-tenant membership rows; a cleanup runbook is a separate packet",
+      "Any implicit mapping from membership role to IAM role",
+      "Implementing option B (cross-tenant role binding) or C (single-tenant membership) inside this packet",
+      "Changing the platform viewpoint header mechanism (X-Tenant-Id), which is a separate capability",
+      "Deleting the isolation, picker-rejection or wrong-password assertions rather than adapting their premise"
+    ]
+  },
+  "dependencyLayers": [
+    "system/iam",
+    "system/auth",
+    "platform"
+  ],
+  "implementationNotes": [
+    "The predicate must be one implementation reused by discovery, candidates and switchable; three copies will drift and re-open this defect.",
+    "Discovery lives in pkg/tenant and must not import modules/auth/login. The role-presence query goes in pkg/tenant/authz.go next to DiscoverDefaultTenant, reading system_user_role (and system_role for the enabled check) by plain SQL or the shared read model, the same way GateSessionIssuance already reads membership tables. No import cycle exists because the query goes downward, not upward.",
+    "Do not filter ListActiveMemberships (pkg/tenant/membership.go). /auth/current attaches the caller's own membership role from it (login_tenant_switch.go:100-120) and must keep reporting the row as it is.",
+    "The switch guard uses loadRolesForTenant (session_service.go:239-247), which falls back to GetUserRoles when the loader does not implement TenantRoleLoader. That fallback returns the subject's own-tenant roles, so an empty-role check on it would pass for a cross-tenant target. The refusal must use the same tenant-aware predicate as discovery, not the fallback result.",
+    "Platform viewpoint is a different path: platform-capable subjects are served by TenantViewpointSwitcher via X-Tenant-Id, and TenantSwitcher already hides for them (TenantSwitcher.tsx:31-72). Do not add a role filter to the platform viewpoint middleware.",
+    "Keep the check fail-closed: a lookup error denies rather than returning the unfiltered list.",
+    "The switch refusal must happen before the session row is re-stamped, so a failed switch leaves the current session intact.",
+    "The removed UI controls and the retained endpoints must be recorded in TENANT_API.md; a client that still calls them gets a filtered list, not an error.",
+    "Existing cross-tenant membership rows remain in the table. The packet must state that they become unreachable at login rather than silently cleaned.",
+    "If the maintainer chooses B at W3, the prerequisite is fixing replaceUserRoles (user_helper.go:88 deletes bindings for the user across all tenants) before any cross-tenant binding is written."
+  ],
+  "contractAnchors": [
+    "AGENTS.md",
+    "docs/contracts/TENANT_CONTRACT_V1.md",
+    "docs/api/TENANT_API.md",
+    "docs/reviews/TENANT_MULTI_MEMBERSHIP_DECISION_2026-10-27.md",
+    "docs/reviews/TENANT_FUNCTIONAL_COMPLETENESS_REVIEW_2026-10-27.md"
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "auth-security",
+    "portableFailureClass": "tenant-authorization-gap",
+    "ownerLayer": "consumer-repository",
+    "ratchetDecision": "sensor-added",
+    "coverageDimensions": [
+      "behaviour",
+      "architecture-fitness",
+      "runtime-quality"
+    ]
+  },
+  "expectedFiles": {
+    "create": [],
+    "modify": [
+      "backend/pkg/tenant/authz.go",
+      "backend/pkg/tenant/authz_test.go",
+      "backend/modules/auth/login/login_tenant_candidates.go",
+      "backend/modules/auth/session/session_service.go",
+      "backend/modules/system/iam/tenant/tenant_service.go",
+      "backend/modules/system/iam/tenant/tenant_platform_handler.go",
+      "backend/pkg/tenant/tenant_test.go",
+      "backend/modules/auth/login/login_tenant_gate_test.go",
+      "backend/modules/auth/session/session_service_test.go",
+      "backend/modules/system/iam/tenant/tenant_service_test.go",
+      "frontend/src/core/layout/AppLayout.tsx",
+      "frontend/src/modules/auth/login/components/Login.tsx",
+      "frontend/src/modules/auth/tenant/TenantSwitcher.tsx",
+      "frontend/tests/smoke-core/tenant-hostile-browser-matrix.spec.ts",
+      "frontend/tests/smoke-core/auth-tenant-picker.spec.ts",
+      "docs/contracts/TENANT_CONTRACT_V1.md",
+      "docs/api/TENANT_API.md"
+    ],
+    "doNotTouch": [
+      "backend/pkg/database/migrations/**",
+      "frontend/src/core/tenant/viewpoint.ts",
+      "frontend/src/index.ts",
+      "pantheon-ops/**"
+    ]
+  },
+  "executionRoles": {
+    "implementerPosture": "Confirm the decision is option A, then reproduce the blank-console case with a test before changing the read paths; keep the predicate in one place.",
+    "reviewerPosture": [
+      "Confirm discovery, candidates and switchable all use the same role-presence predicate.",
+      "Confirm a switch to an empty-role tenant is refused before the session is re-stamped.",
+      "Confirm the removed controls left no dead imports or unreachable routes.",
+      "Confirm existing cross-tenant rows are neither deleted nor silently usable.",
+      "Confirm the e2e changes keep every isolation assertion.",
+      "Confirm contract and API docs state the new limitation."
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "cd backend && go build ./...",
+      "export PANTHEON_TEST_DSN='<dsn>' PANTHEON_TEST_DSN_REQUIRED=true && cd backend && go test -count=1 ./pkg/tenant/... ./modules/auth/login/... ./modules/auth/session/... ./modules/system/iam/tenant/...",
+      "export PANTHEON_TEST_DSN='<dsn>' PANTHEON_TEST_DSN_REQUIRED=true && cd backend && go test -count=1 ./...",
+      "cd frontend && npx tsc -b",
+      "cd frontend && npm run lint",
+      "cd frontend && npm run build",
+      "cd frontend && npx playwright test tests/smoke-core/tenant-hostile-browser-matrix.spec.ts tests/smoke-core/auth-tenant-picker.spec.ts",
+      "node scripts/harness/check-task-packet.mjs --root ."
+    ],
+    "runtimeEvidence": [
+      "login candidate response before and after for a user with memberships in two tenants and roles in one",
+      "a login that previously produced an empty menu now resolving the owning tenant",
+      "the switch endpoint refusing a target with no roles",
+      "Playwright output, or not-run with the missing MySQL/fixture environment"
+    ]
+  },
+  "runtimeSensitive": true,
+  "evidenceRequired": [
+    ".harness/evidence/2026-10-27-tenant-multi-membership-authorization/commands.json",
+    ".harness/evidence/2026-10-27-tenant-multi-membership-authorization/before-after.md with the candidate response snapshots",
+    ".harness/evidence/2026-10-27-tenant-multi-membership-authorization/summary.md"
+  ],
+  "humanGates": [
+    "The W3 decision must be signed as option A before this packet starts.",
+    "Approve removing the login picker and TenantSwitcher while keeping their endpoints as compatibility surfaces."
+  ],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed",
+    "AddMember rejects users not owned by the target tenant",
+    "Discovery, candidates and switchable share one role-presence predicate",
+    "SwitchSessionTenant refuses an empty-role target without mutating the session",
+    "The login picker and TenantSwitcher are removed and their endpoints documented as filtered compatibility surfaces",
+    "Existing cross-tenant rows are explicitly not deleted",
+    "Contract and API docs describe the same limitation",
+    "go test ./... is green and the e2e specs compile"
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-27-tenant-multi-membership-authorization/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-27-tenant-multi-membership-authorization/",
+    "summaryFile": ".harness/evidence/2026-10-27-tenant-multi-membership-authorization/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-27-tenant-multi-membership-authorization/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-27-tenant-completeness-remediation.task.md",
+      "docs/reviews/TENANT_MULTI_MEMBERSHIP_DECISION_2026-10-27.md",
+      "docs/reviews/TENANT_FUNCTIONAL_COMPLETENESS_REVIEW_2026-10-27.md"
+    ]
+  }
+}
