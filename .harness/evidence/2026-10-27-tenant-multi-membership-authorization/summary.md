@@ -60,12 +60,32 @@ membership 永远是零角色上下文——登录能进、控制台全空（TC-
 |---|---|
 | `cd backend && go build ./...` | OK |
 | `go test -count=1 ./pkg/tenant/... ./modules/auth/login/... ./modules/auth/session/... ./modules/system/iam/tenant/...` | 4 包全 ok |
-| `go test -count=1 ./...`（全量基线） | exit 0，零 FAIL |
+| `go test -count=1 ./...`（**改动前基线** @321a6384，非本树验证——见下方 CI 修正节） | exit 0，零 FAIL |
 | `cd frontend && npx tsc -b` | OK |
 | `cd frontend && npm run lint` | OK |
 | `cd frontend && npm run build` | OK（511ms） |
 | `node scripts/harness/check-task-packet.mjs --root .` | 66 files / 0 errors |
 | Playwright e2e（live 后端矩阵 + mock picker） | **未运行** — 需要 live 后端+种子租户环境；spec 已重写并通过 tsc/lint（见下方 gap） |
+| `go test -count=1 ./...`（**修正后全量重跑**，commit `1ccf53e4` 之后） | exit 0，零 FAIL |
+
+## CI 修正（第一轮 CI 抓到的 premise 遗漏，commit `1ccf53e4`）
+
+上表的「全量 ./...」行实为改动前基线（321a6384 的绿树确认），不是本分支树的
+验证；本分支的绿态证据只覆盖 4 个 tenant 域包。CI（PR #442 Backend Tests /
+Unit Tests，run 40506002882 / 40505917751 / 40506002829）随后抓到两个遗漏：
+
+- `TestLoginHandlerAuditsImplicitTenantLoginInTenant`（login 包 attribution
+  套件）：fixture 只有 membership 无绑定 → W4 门禁按设计 403。修正：补种子
+  `SystemUserRole{101, user, 1}`。
+- `TestCreateUserWritesTenantMembershipForFirstLogin`（user 包 F1）：建用户
+  未带 RoleIDs → 无绑定 → 门禁按设计拒绝首登。修正：种子 tenant-owned 角色
+  （282 租户的角色 201——角色分配是租户域的，平台角色不可跨租户指派）并传
+  `RoleIDs: [201]`。
+
+两个都是**测试前提适配**（与红态记录的 premise-adaptation 同一性质），
+生产行为零改动；修正后 `go test -count=1 ./...` 全量重跑 exit 0 零 FAIL。
+教训登记：premise 适配必须覆盖「同包内非 tenant 域套件」，不能只跑
+tenant 域 4 包；本节与 commands.json 追加条目即为该教训的 ratchet 记录。
 
 ## 显式 gap
 

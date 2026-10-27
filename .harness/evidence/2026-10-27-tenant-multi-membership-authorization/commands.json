@@ -46,7 +46,7 @@
     {
       "command": "export PANTHEON_TEST_DSN=... PANTHEON_TEST_DSN_REQUIRED=true && cd backend && go test -count=1 ./...",
       "cwd": ".",
-      "notes": "Full backend suite exit 0, zero FAIL lines (46-package baseline holds).",
+      "notes": "Pre-change baseline on 321a6384, NOT a verification of the W4 tree. CI later showed the W4 tree failed ./... in two suites outside the 4-package green scope; see the appended correction entries.",
       "status": "passed"
     },
     {
@@ -83,6 +83,24 @@
       "command": "go test -count=1 -v (same set on branch) > green-run.log",
       "cwd": "backend",
       "notes": "Green differential: 44 PASS / 0 FAIL on the branch. green-run.log.",
+      "status": "passed"
+    },
+    {
+      "command": "gh pr checks 442 / gh run view 40506002882 --log-failed",
+      "cwd": ".",
+      "notes": "CI correction intake: Backend Tests + Unit Tests failed with TestLoginHandlerAuditsImplicitTenantLoginInTenant (code=403, membership without binding) and TestCreateUserWritesTenantMembershipForFirstLogin (first login gated, no RoleIDs). Both are premise misses in suites outside the 4-package green run; production code unchanged.",
+      "status": "passed"
+    },
+    {
+      "command": "export PANTHEON_TEST_DSN=... PANTHEON_TEST_DSN_REQUIRED=true && cd backend && go test ./modules/auth/login/... ./modules/system/iam/user/... ./pkg/tenant/...",
+      "cwd": ".",
+      "notes": "After fix commit 1ccf53e4 (seed SystemUserRole in the attribution fixture; seed tenant-owned role 201 and pass RoleIDs in the F1 test): login ok, user ok, pkg/tenant ok.",
+      "status": "passed"
+    },
+    {
+      "command": "export PANTHEON_TEST_DSN=... PANTHEON_TEST_DSN_REQUIRED=true && cd backend && go test -count=1 ./...",
+      "cwd": ".",
+      "notes": "Post-fix full suite on the W4 tree: exit 0, zero FAIL lines.",
       "status": "passed"
     }
   ]
