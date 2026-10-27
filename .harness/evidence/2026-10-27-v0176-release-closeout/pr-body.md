@@ -1,3 +1,27 @@
+## 发布事实回填
+
+> 本节由发布后的收口提交补写（与 v0.17.5 由 PR #423 收口的方式一致）。下方保留的是 PR #428 合并时的
+> 原文，其中标注「待 CI 回填」的行只追加了实际读数，不改写当时的判断；逐条命令在 `commands.json` 末尾。
+
+- 本 PR 合并：2026-10-27T01:15:41Z squash 为 `c9bc6c0f5d351016afb4fffdedf12e72cc73e61d`，
+  head 为 `a3a35a4d`。五个必需 context 全绿：`Quality Gates`（run `40429884678`）、
+  `Security Gates`（`40429282769`）、`Unit Tests`、`CI Summary`、`SonarCloud Code Analysis`
+  （Quality Gate passed）。`CodeQL` / `CodeQL Security` / `Duplication Gate` 亦为 success；
+  更早两条 `Quality Gates` 红/取消是文档治理修复触发的重跑残留，不是合并时状态。
+- 发布：annotated tag `pantheon-base-v0.17.6`，tag object `2bc799663f83d00959d54c0c300d6393467f0d19`
+  → 指向 `c9bc6c0f`；Release 非 draft、非 prerelease，`published_at = 2026-10-27T01:39:12Z`。
+  - `foundation-release-pantheon-base-v0.17.6.tgz` 28912081 B，sha256
+    `dbf1edd8f4bd082baee817c8e7797d298cf70f20d41b38c60d7bd39a5f362e35`
+  - `foundation-release-pantheon-base-v0.17.6.tgz.sha256` 111 B
+  - `repo.tar` 45168640 B，sha256 `7a44e9ce0ed642e6d2d1f1508ef488292c46148da4a9e42a3f04ad848fda645d`
+  - `repo.tar.sha256` 75 B
+- 门禁：`Release Gate` run `40431521256` 在 `c9bc6c0f` 上 success，其中 `SonarCloud Gate` 打印
+  `SonarCloud quality gate for c9bc6c0f…: OK`；`Foundation Release Verify` run `40433836341` success。
+- 凭据预检：`check-release-secrets` → `clean (3232 file(s) scanned)`，tgz 与 repo.tar 都已打开。
+- 资产一致性：`check-release-assets` → 本地 bundle 与远端四件资产一致（`carries all 4 required assets`）。
+- 静态面：SonarCloud main 当前未解决 issue `0`，质量门 `OK`（New Duplicated Lines 1.9%，阈值 ≤3%）；
+  CodeQL open alert `0`；本地 `check-duplication` 1.5% / 阈值 3%（898 文件、170240 行）。
+
 ## 变更摘要
 
 - 改动层级：platform（版本材料与发布记录）；被发布的范围覆盖 `system/iam`、`system/config`、`system/org`。
@@ -69,29 +93,32 @@
   generated / boundaries / failure-registry / runtime-evidence / inheritance 全绿；
   新增面回归（plan store 17 例、overview/member/plan-list、dept/post compat、role policy sync、
   tenant switch、security event、reset password、menu seed、schema 对齐）逐个 PASS
-- [ ] CodeQL 结果已检查并解释
-- [ ] 如有 open CodeQL alert，已说明是新增问题、既有 baseline、误报还是已补 follow-up
+- [ ] CodeQL 结果已检查并解释 — 合并时未勾；仓库 open alert 现为 0，读数见上方「发布事实回填」
+- [ ] 如有 open CodeQL alert，已说明是新增问题、既有 baseline、误报还是已补 follow-up — 不适用，open alert 0
 - [x] Full Smoke 仅在必要时手动或预发布执行，未错误纳入 PR 必过门禁
-- [ ] GitHub required checks 通过 — 待 CI 回填
+- [ ] GitHub required checks 通过 — 合并时未勾；五个必需 context 实际全绿，读数见上方「发布事实回填」
 - [x] Copilot review 已请求，或已说明当前仓库/账号不可用：本仓库走 ruleset + 单维护者流程，
   approving review count 为 0，不请求 Copilot review
 - [x] 已启用或确认将启用 squash auto-merge
 
 补充说明：发布目标提交是本 PR 的 squash 合并提交，不是 `7dafa997`——
 `publish-foundation-release.mjs` 要求目标提交上有 success 的 `Release Gate Summary`。
-README / STATUS / CHANGELOG 里对 tag 与四件资产的描述是前瞻性的，真实发布事实在合并并发布后由后续
-提交回填（与 v0.17.5 由 #423 收口的方式一致）。
+README / STATUS / CHANGELOG 里对 tag 与四件资产的描述当时是前瞻性的，真实发布事实在合并并发布后由后续
+提交回填（与 v0.17.5 由 #423 收口的方式一致）；这个回填就是上方的「发布事实回填」一节。
 
 ## 审核留痕
 
 - Copilot review：unavailable（单维护者 ruleset 流程，required approving reviews = 0）
-- CodeQL 结果：待 CI 回填
-- GitHub checks 结果：待 CI 回填
+- CodeQL 结果：待 CI 回填 → 实际：`CodeQL` 与 `CodeQL Security` 在 head `a3a35a4d` success，
+  `CodeQL Alerts` 在 `c9bc6c0f` success，仓库 open alert 0
+- GitHub checks 结果：待 CI 回填 → 实际：五个必需 context 全绿后于 2026-10-27T01:15:41Z squash 合并
 - Auto-merge：enabled
-- Duplication Gate 结果：待 CI 回填（上一轮 New Code Duplication 0.0%，阈值 3%）
+- Duplication Gate 结果：待 CI 回填 → 实际：head `a3a35a4d` 上 success（PR 事件为 report-only），
+  SonarCloud New Duplicated Lines 1.9% / 阈值 3%，本地全库 1.5%
 - 是否高风险改动：发布本身中风险（本 release 含 schema 29→30 与新增权限码/菜单 seed），
   但本 PR 的代码差异只是版本材料与治理工件
-- Residual risk / follow-up：①发布事实待回填；②SonarCloud 需对本分支重新分析后复读；
+- Residual risk / follow-up：①发布事实待回填（已由本记录的收口提交回填，见上方「发布事实回填」）；
+  ②SonarCloud 需对本分支重新分析后复读（`c9bc6c0f` 的分析为 OK，main 未解决 issue 0）；
   ③FR-016 / FR-017 仍 open（4 个 checker 未进 CI，属维护者的门禁策略决定）；
   ④`check-inheritance-contract` 必须在 workspace root 调用，在 base 仓内用 `--root .` 会误报；
   ⑤dependabot 触发的 run 读不到 `RELEASE_GATE_TOKEN`，`Automate Solo PR` 恒红（非必需 context）

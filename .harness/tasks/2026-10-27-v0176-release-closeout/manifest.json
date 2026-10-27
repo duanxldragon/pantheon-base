@@ -111,7 +111,7 @@
     "cut-foundation-release.mjs does not read RELEASE_NOTES_*.md automatically, so --release-notes, --upgrade-notes and --consumer-impact must be passed explicitly.",
     "publish-foundation-release.mjs refuses to continue unless the latest Release Gate Summary check-run on the target commit succeeded, so the release target is the merge commit of this packet, not any earlier head.",
     "The 16 local generator failures are the documented F5 environment limitation: set PANTHEON_NODE_BIN and PANTHEON_WORKSPACE_ROOT before reading a backend suite result.",
-    "README and STATUS name the tag and the four assets before publication; the real tag object, asset checksums and run ids land in the follow-up publication-facts commit, matching how v0.17.5 was closed by PR #423.",
+    "README and STATUS named the tag and the four assets before publication; the tag object, asset checksums and run ids are now recorded from the live release, and this publication-facts commit closes the loop the same way v0.17.5 was closed by PR #423.",
     "This is not a schema-neutral release: migration 000030 must run, new permission codes only grant the new pages, and 租户管理 moved under the new 租户运营 group."
   ],
   "verificationPlan": {
@@ -183,6 +183,22 @@
       "repo.tar",
       "repo.tar.sha256"
     ],
-    "state": "planned"
+    "state": "published",
+    "publishedAt": "2026-10-27T01:39:12Z",
+    "tagObject": "2bc799663f83d00959d54c0c300d6393467f0d19",
+    "targetCommit": "c9bc6c0f5d351016afb4fffdedf12e72cc73e61d",
+    "assetChecksums": {
+      "foundation-release-pantheon-base-v0.17.6.tgz": "dbf1edd8f4bd082baee817c8e7797d298cf70f20d41b38c60d7bd39a5f362e35",
+      "repo.tar": "7a44e9ce0ed642e6d2d1f1508ef488292c46148da4a9e42a3f04ad848fda645d"
+    },
+    "verification": {
+      "releaseGate": "40431521256 success on c9bc6c0f",
+      "sonarCloudGate": "OK on the c9bc6c0f main analysis; 0 unresolved issues; New Duplicated Lines 1.9% (threshold 3%)",
+      "codeQlAlerts": "0 open alerts",
+      "releaseSecretScan": "clean (3232 files scanned)",
+      "releaseAssets": "check-release-assets: local and remote assets consistent",
+      "foundationReleaseVerifyRun": "40433836341",
+      "foundationReleaseVerify": "success"
+    }
   }
 }
