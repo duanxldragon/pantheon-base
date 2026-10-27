@@ -3,7 +3,7 @@
   "title": "Reject unknown users when adding a tenant member and count only real owners",
   "goal": "AddMember validates only that the tenant exists (tenant_service.go:858-903), and tenant_memberships has no foreign key to system_user (000013_tenant_canary.up.sql:48-59). Any id — a typo, a deleted user, a user from another tenant — becomes a member row. Worse, a row with role=owner for a nonexistent user is counted by ensureNotLastOwner (tenant_service.go:948-975), so the real last owner can be removed, leaving the tenant with an owner that can never log in. This wave makes the write path honest: the user must exist and not be deleted, the last-owner count must join system_user, and the console must stop asking operators to type a numeric id. It deliberately does not decide whether cross-tenant membership is allowed; that is W3/W4. The test fixtures currently add ids that do not exist, which encoded the defect; they must be updated to create real users rather than relaxing the new check.",
   "primaryLayer": "system/iam",
-  "status": "planned",
+  "status": "completed",
   "priority": "P2",
   "type": "fix",
   "estimatedComplexity": "medium",
