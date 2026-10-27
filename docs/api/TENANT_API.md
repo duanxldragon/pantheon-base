@@ -178,13 +178,16 @@ Marks a tenant as deleted (soft delete).
 ```
 
 **Errors**:
-- `400 Bad Request`: Tenant has active members
+- `400 Bad Request` + `tenant.not_archived`: the tenant is not archived — deletion is reserved
+  for archived tenants (contract §2.1)
 - `404 Not Found`: Tenant not found
 
-**Note**: An active tenant cannot be deleted while it still has active members. Remove the
-members first, or — because the last owner can never be removed — set the tenant to
-`archived` first and then delete it. Deleting an archived tenant disables its remaining
-memberships in the same transaction.
+**Note**: Deletion is the final step of the documented retirement path, not a
+member-management action. The guard is the tenant's status, not its member count: an active
+tenant is refused even when it has no active members (a state reachable by deleting every
+user, which disables their memberships). Because the last owner can never be removed (§2.2),
+set the tenant to `archived` first and then delete it. Deleting an archived tenant disables
+its remaining memberships in the same transaction.
 
 ---
 

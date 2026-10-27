@@ -54,6 +54,11 @@ func (h *Handler) failServiceError(c *gin.Context, err error) {
 		common.FailWithError(c, common.CodeParamInvalid, err, "tenant.member.last_owner")
 	case errors.Is(err, common.ErrConflict):
 		common.FailWithError(c, common.CodeParamInvalid, err, errRequestFailed)
+	case errors.Is(err, ErrTenantNotArchived):
+		// Contract §2.1: deletion is reserved for archived tenants. The legacy
+		// handler mirrors the platform mapping until the dead-surface wave
+		// removes this handler.
+		common.FailWithError(c, common.CodeParamInvalid, err, "tenant.not_archived")
 	case errors.Is(err, ErrTenantHasActiveUsers):
 		common.FailWithError(c, common.CodeParamInvalid, err, "tenant.has_active_members")
 	case errors.Is(err, ErrTenantAdminUsernameTaken):

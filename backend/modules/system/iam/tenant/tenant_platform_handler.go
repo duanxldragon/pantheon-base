@@ -82,6 +82,12 @@ func (h *PlatformHandler) failServiceError(c *gin.Context, err error, fallback s
 		// own i18n key; the envelope has no 409 sentinel, so they report as a
 		// caller error instead of a server fault.
 		common.FailWithError(c, common.CodeParamInvalid, err, fallback)
+	case errors.Is(err, ErrTenantNotArchived):
+		// Contract §2.1: only an archived tenant may be deleted. This replaces
+		// the old "has active members" refusal, which let an active tenant with
+		// zero active members be tombstoned directly and skipped archiving.
+		// The remedy is the same archive-then-delete path the runbook records.
+		common.FailWithError(c, common.CodeParamInvalid, err, "tenant.not_archived")
 	case errors.Is(err, ErrTenantHasActiveUsers):
 		// A state conflict, not a fault: DELETE /tenant is refused while an
 		// active membership remains (contract §2.2) and the tenant is not

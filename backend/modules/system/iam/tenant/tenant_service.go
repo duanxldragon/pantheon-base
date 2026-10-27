@@ -42,7 +42,20 @@ var (
 	// way. ReleaseDeletedTenantCodes clears this state at startup.
 	ErrTenantCodeReserved = errors.New("tenant code reserved by a deleted tenant")
 	// ErrTenantHasActiveUsers is returned when deleting a tenant that still has active members.
+	//
+	// Deprecated: DeleteTenant now refuses every non-archived tenant with
+	// ErrTenantNotArchived (contract §2.1), so this sentinel is no longer
+	// produced by the service. It stays declared, and stays mapped in the
+	// handlers, until the dead-surface wave removes the legacy handler that
+	// still references it; removing it here would widen this wave's diff into
+	// the error-mapping contract.
 	ErrTenantHasActiveUsers = errors.New("tenant has active users, cannot delete")
+	// ErrTenantNotArchived is returned when deleting a tenant that is not in
+	// the `archived` terminal state. Contract §2.1: "删除仅允许对 `archived`
+	// 租户执行", and archiving is the documented retirement path because the
+	// last owner can never be removed (§2.2). Callers render
+	// `tenant.not_archived` and point the operator at archive-then-delete.
+	ErrTenantNotArchived = errors.New("tenant must be archived before it can be deleted")
 	// ErrMembershipExists is returned when adding a user who is already a tenant member.
 	ErrMembershipExists = errors.New("user is already a member of this tenant")
 	// ErrMembershipNotFound is returned when removing a non-existent tenant membership.
@@ -599,8 +612,13 @@ func (s *Service) DeleteTenant(id uint64) error {
 		return fmt.Errorf("check tenant members: %w", err)
 	}
 
-	if memberCount > 0 && row.Status != tenant.TenantStatusArchived {
-		return ErrTenantHasActiveUsers
+	// Contract §2.1: deletion is reserved for an archived tenant. The live
+	// status is rejected here even when the tenant has no active members -
+	// that combination is reachable by deleting every user (DeleteUser
+	// disables their memberships), and allowing it would tombstone a tenant
+	// that never passed through the archive state the contract requires.
+	if row.Status != tenant.TenantStatusArchived {
+		return ErrTenantNotArchived
 	}
 
 	// Mark tenant as deleted, releasing its code first. Every write shares one
