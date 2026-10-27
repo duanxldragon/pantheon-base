@@ -6,6 +6,78 @@ Pantheon Base 方法追踪记录。方法论本体位于 `pantheon-harness`。
 
 ---
 
+## [pantheon-base-v0.17.6] — 2026-10-27 (tenant operations, plan storage and compat scope closure)
+
+> Plan definitions move from a hardcoded Go matrix into a versioned table, three platform-scoped read
+> surfaces land behind `/system/tenant-ops/*`, and the tenant console is rebuilt around them. The
+> compat-mode tenant scope that six services were discarding is pinned, five defects found by driving
+> the running system are fixed, every password surface announces itself, and the frontend cross-layer
+> boundary baseline is emptied rather than kept frozen. **This release changes the database
+> (29 → 30) and adds routes, permission codes and menu seeds.** Quotas stay display-only: no request
+> is rejected because a threshold was crossed.
+
+### Added
+
+- **Stored plan definitions (migration `000030_tenant_plan_definitions`).** The `tenant_plans`
+  table is platform-global (no `tenant_id`), seeded by plan code with the same four built-in codes and
+  thresholds the old `GetDefaultQuota` switch returned, so upgrading an existing database is a no-op
+  for tenants already on those codes. `-1` is unlimited, `0` is rejected by the service layer, and
+  codes are validated against `^[a-z][a-z0-9_-]{1,31}$` because they travel inside SQL identifiers.
+  Retirement is `status = 'disabled'` and is refused while tenants still carry the code
+  (`PlanStore.Update` → `ErrPlanInUse`); deleting a plan is not modelled.
+- **Tenant operations read surfaces.** `GET /system/tenant-ops/overview` (tenant aggregate),
+  `GET /system/tenant-ops/member` (cross-tenant members and quotas), plus
+  `GET|POST|PUT /system/tenant-ops/plan*` for the definitions, each behind its own permission code
+  (`system:tenant:overview`, `:member-list`, `:plan:list`, `:plan:create`, `:plan:update`). The
+  existing `/system/tenant/*` write routes are unchanged.
+- **Tenant operations console.** A 租户运营 menu group holds the overview page, the tenant list and
+  the member/quota list, with a plan editor that reads and writes the stored definitions. Quota cells
+  render as ratios against the threshold, not as an enforcement verdict. All five locale bundles moved
+  with the pages.
+- **`PasswordInput` and `check:password-toggle`.** A shared wrapper gives Arco's visibility toggle an
+  `aria-label`; the new checker is part of `prebuild` and fails the build if a raw `Input.Password`
+  reappears.
+- Real-MySQL/Redis regressions for the plan store, the tenant-ops reads, the compat scope pins in
+  dict/dept/post, the import path-map boundary, role policy sync, same-tenant switching,
+  security-event codes and password-reset lock counters.
+
+### Fixed
+
+- **Compat mode keeps its tenant scope (P1).** The resolved `tenant_id = 0` context was discarded by
+  six services, so single-tenant screens read every tenant's rows and dict/dept deletes could not
+  target the caller's record. The scope is pinned into dict reorder, the dept/post import-export path
+  maps and tenant stamping on writes; a missing parent is now a path boundary, so one historical
+  orphan row cannot block an import or export.
+- **Role saves reach the enforcement view (P1).** `syncRoleAPIPolicies` runs from the same transaction
+  boundary as the grant rows.
+- **Same-tenant switch no longer returns 500 (P2)**, security-event confirmation returns the right
+  code (P2), a password reset clears the lock counters (P2), and the permission workbench and
+  department paths stop leaking across tenant scope (P1).
+- **Generator table list is scope-filtered (P2).** A system-scope module could select `biz_*` tables;
+  the picker now filters by the active scope's prefix.
+- **Department parent backfill (P2).** The dialog could open before the tree arrived and submit the
+  placeholder the backend rejects; the root is backfilled once loading completes and never overrides a
+  parent the operator chose.
+- **`<html lang>` follows the locale (P2)**, before paint from a static script and again when i18n
+  initialises, because assistive tech takes pronunciation from that attribute.
+- **Logout no longer toasts CSRF (P3)** when the best-effort POST fails.
+- **Login page layout (P3)**: column balance, control placement and mobile rendering corrected.
+
+### Changed
+
+- `tenant.TenantPlan` is now `tenant.Plan` (Go stutter); internal to the module, no JSON, table or
+  route shape changed.
+- `MenuNode` moved to `frontend/src/api/menu.ts` and the last entry was removed from
+  `config/boundary-baseline.json`, so `check-boundaries --strict` is clean in both the bare and the CI
+  `--baseline` form and any new cross-layer import fails loudly.
+- The governance chain was zeroed: 31 historical strict errors repaired across `commands.json` and
+  `review.md` as pure restatements of text already in those rounds. The root cause is registered as
+  **FR-016 / FR-017 (open)**: four checkers have no npm script and appear in no workflow, so a schema
+  or boundary addition can rot older artifacts with no failing signal. Wiring them into CI is a
+  gate-policy decision reserved for the maintainer.
+- Frontend dependencies (`i18next`, `react-i18next`, `zustand`, `eslint`, `typescript-eslint`, `vite`)
+  and CI actions (`setup-python`, `codeql-action/{init,analyze}`) advanced; see PR #425 and #426.
+
 ## [pantheon-base-v0.17.5] — 2026-10-24 (IAM concurrency closeout)
 
 > v0.17.4 left five IAM residuals. Two were write-path races: same-tenant `ProvisionTenant`

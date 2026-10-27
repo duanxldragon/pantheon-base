@@ -1,7 +1,35 @@
 # Pantheon Base - Harness 任务状态
 
-**最后更新**: 2026-10-24
-**当前版本**: v0.17.5 已发布（tag `pantheon-base-v0.17.5`，目标提交 `ed636967`，四件资产与 `Foundation Release Verify` 已核验）
+**最后更新**: 2026-10-27
+**当前版本**: v0.17.6 发布材料已就绪（任务包 `2026-10-27-v0176-release-closeout`，尚未发布；tag、四件资产与 `Foundation Release Verify` 待发布后回填）
+
+## v0.17.6 发布（2026-10-27，准备中）
+
+租户运营「B 方案 · 要做就做彻底」的读侧与信息架构收口，连同登录页无障碍与样式微调、
+治理红灯（G-03/G-04/G-05）一起合入主干（PR #427 → `c1b1d702`），任务包
+`2026-10-27-v0176-release-closeout`，证据在 `.harness/evidence/2026-10-27-v0176-release-closeout/`。
+
+- **套餐落库（P1）**：新表 `tenant_plans`（平台全局，无 `tenant_id`）取代散落在代码里的
+  阈值常量；迁移 `000030_tenant_plan_definitions` 把 schema 从 29 升到 30。`-1` 表示不限，
+  `0` 被服务层拒绝为无效阈值；`planCodePattern` 为 `^[a-z][a-z0-9_-]{1,31}$`。种子按 code
+  守卫、从不 UPDATE，已有编辑值不会被覆盖；退役口径是 `status = 'disabled'`，仍被引用时
+  以 `ErrPlanInUse` 拒绝。down 迁移是 `DROP TABLE`，会丢失编辑值，需先演练。
+- **租户运营读侧（P1）**：`tenant.TenantPlan` 更名为 `tenant.Plan`；5 条新路由对应 5 个新
+  权限码，配套菜单 seed。总览 / 租户管理 / 成员与配额三页信息架构接通。
+- **配额语义（P2，显式）**：只展示、不强制 —— 后端不按套餐拒绝请求。这是本轮拍板的边界，
+  不是遗漏。
+- **登录页（P3）**：左右分栏均分、主题与语言控件绝对定位到右上角、移动端视口重排；
+  Ghost Hover、Tab/Enter 键盘路径。「忘记密码」按维护者决定不做，重置密码由管理员执行。
+- **验证**：全量真库套件 46 包 ok / 0 FAIL / 0 SKIP；`golangci-lint run --new-from-rev=main
+  ./...` 0 发现；前端 `tsc -b`、`eslint --max-warnings 0`、`vite build` 干净，14 项 prebuild
+  契约全过；治理链全绿（boundary 两种形态、runtime evidence 56 文件 0/0、inheritance
+  `--root ..` 0 findings）。
+- **环境限制**：本机 Windows TSan 仍 error 87，`-race` 由 CI Linux 承担；生成器用例需要
+  `PANTHEON_NODE_BIN` + `PANTHEON_WORKSPACE_ROOT`（F5），否则 16 个用例以
+  `module.generate.server_export_failed` 失败，与产品无关。
+- **发布事实**：待发布后回填 —— 目标是发布材料 PR 的 squash 合并提交（`Release Gate Summary`
+  必须要在被打 tag 的那个 commit 上 success，不能是 `7dafa997`），release line 保持
+  `release/0.17`。
 
 ## v0.17.5 发布（2026-10-24）
 
