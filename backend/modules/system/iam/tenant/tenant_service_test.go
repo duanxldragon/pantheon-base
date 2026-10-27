@@ -176,6 +176,68 @@ func setupTestDB(t *testing.T) *gorm.DB {
 	return db
 }
 
+// mustInsertTenantUser creates a live `system_user` row owned by tenantID and
+// returns it.
+//
+// Membership fixtures used to name arbitrary ids with no user behind them,
+// which is exactly the defect this helper makes impossible to express: a
+// phantom owner satisfied the last-owner count and a typo'd id silently
+// produced an unusable member row. `tenant_memberships` has no foreign key to
+// `system_user` (contract §2.2), so the fixture, not the database, has to state
+// that the subject exists.
+func mustInsertTenantUser(t *testing.T, db *gorm.DB, tenantID, userID uint64) SystemUserFixture {
+	t.Helper()
+	row := SystemUserFixture{
+		ID:       userID,
+		TenantID: tenantID,
+		Username: fmt.Sprintf("member-%d", userID),
+		Nickname: fmt.Sprintf("Member %d", userID),
+		Password: "not-a-real-hash",
+		Status:   common.StatusEnabled,
+	}
+	require.NoError(t, db.Table("system_user").Create(row).Error)
+	return row
+}
+
+// SystemUserFixture is the subset of the production user row this package needs.
+// It is declared here rather than importing the user module so the tenant suite
+// keeps testing the shared table without taking on a module dependency.
+type SystemUserFixture struct {
+	ID       uint64
+	TenantID uint64
+	Username string
+	Nickname string
+	Password string
+	Status   int
+}
+
+// mustInsertTenantUsers creates `count` live users owned by tenantID with
+// consecutive ids starting at firstUserID.
+func mustInsertTenantUsers(t *testing.T, db *gorm.DB, tenantID, firstUserID uint64, count int) {
+	t.Helper()
+	for offset := 0; offset < count; offset++ {
+		mustInsertTenantUser(t, db, tenantID, firstUserID+uint64(offset))
+	}
+}
+
+// mustMarkUserDeleted soft-deletes a user row the way DeleteUser does, leaving
+// its membership row in place - the state that a phantom owner arrives through
+// in production.
+func mustMarkUserDeleted(t *testing.T, db *gorm.DB, userID uint64) {
+	t.Helper()
+	require.NoError(t, db.Table("system_user").
+		Where("id = ?", userID).
+		Update("deleted_at", gorm.Expr("NOW(3)")).Error)
+}
+
+// mustSetUserStatus moves a user between enabled and disabled.
+func mustSetUserStatus(t *testing.T, db *gorm.DB, userID uint64, status int) {
+	t.Helper()
+	require.NoError(t, db.Table("system_user").
+		Where("id = ?", userID).
+		Update("status", status).Error)
+}
+
 func TestCreateTenant(t *testing.T) {
 	db := setupTestDB(t)
 	service := NewService(db)
@@ -301,6 +363,7 @@ func TestAddMember(t *testing.T) {
 	})
 	require.NoError(t, err)
 
+	mustInsertTenantUser(t, db, tenant.ID, 100)
 	// Add member
 	err = service.AddMember(tenant.ID, 100, "admin")
 	require.NoError(t, err)
@@ -325,6 +388,7 @@ func TestAddMember_Duplicate(t *testing.T) {
 	})
 	require.NoError(t, err)
 
+	mustInsertTenantUser(t, db, tenant.ID, 100)
 	err = service.AddMember(tenant.ID, 100, "admin")
 	require.NoError(t, err)
 
@@ -350,6 +414,7 @@ func TestAddMember_OwnerIsProtected(t *testing.T) {
 	})
 	require.NoError(t, err)
 
+	mustInsertTenantUser(t, db, tenant.ID, 100)
 	require.NoError(t, service.AddMember(tenant.ID, 100, "owner"))
 	// Re-adding owner is a no-op; a non-owner role can never demote the owner.
 	require.NoError(t, service.AddMember(tenant.ID, 100, "owner"))
@@ -358,6 +423,147 @@ func TestAddMember_OwnerIsProtected(t *testing.T) {
 	members, _, err := service.ListTenantMembers(tenant.ID, 1, 20)
 	require.NoError(t, err)
 	assert.Equal(t, "owner", members[0].Role)
+}
+
+// TestAddMember_RejectsUnknownUser is the phantom-member defect: an id with no
+// `system_user` row behind it used to create a membership unconditionally, so a
+// typo in the console produced a member that can never log in - and, when the
+// role chosen was owner, a row that satisfied the last-owner count for a user
+// that does not exist.
+func TestAddMember_RejectsUnknownUser(t *testing.T) {
+	db := setupTestDB(t)
+	service := NewService(db)
+
+	tenant, err := service.CreateTenant(CreateTenantDTO{Code: "member-ghost", Name: "Member Ghost"})
+	require.NoError(t, err)
+
+	err = service.AddMember(tenant.ID, 424242, "owner")
+	require.Error(t, err)
+	assert.ErrorIs(t, err, common.ErrNotFound)
+	assert.Contains(t, err.Error(), "user.not_found")
+
+	_, total, err := service.ListTenantMembers(tenant.ID, 1, 20)
+	require.NoError(t, err)
+	assert.Equal(t, int64(0), total)
+}
+
+// TestAddMember_DoesNotDecideCrossTenantMembership records the boundary this
+// wave stops at. `system_user.tenant_id` is the owning tenant (contract §2.3)
+// and a membership naming a user owned elsewhere can never carry a role binding,
+// because bindings are stamped from the owning tenant - but whether that row
+// should be rejected, allowed, or mapped to a role is the policy question the
+// cross-tenant waves own, so the new user guard deliberately does not answer it.
+// When that wave lands, this test is the anchor it has to update.
+func TestAddMember_DoesNotDecideCrossTenantMembership(t *testing.T) {
+	db := setupTestDB(t)
+	service := NewService(db)
+
+	owner, err := service.CreateTenant(CreateTenantDTO{Code: "member-owner", Name: "Member Owner"})
+	require.NoError(t, err)
+	other, err := service.CreateTenant(CreateTenantDTO{Code: "member-other", Name: "Member Other"})
+	require.NoError(t, err)
+
+	mustInsertTenantUser(t, db, owner.ID, 515)
+
+	require.NoError(t, service.AddMember(other.ID, 515, "member"))
+
+	_, total, err := service.ListTenantMembers(other.ID, 1, 20)
+	require.NoError(t, err)
+	assert.Equal(t, int64(1), total)
+}
+
+// TestAddMember_RejectsDeletedUser: DeleteUser soft-deletes the row and disables
+// the membership in the same transaction, so an undeleted check is what keeps a
+// removed account from being re-summoned into the member list.
+func TestAddMember_RejectsDeletedUser(t *testing.T) {
+	db := setupTestDB(t)
+	service := NewService(db)
+
+	tenant, err := service.CreateTenant(CreateTenantDTO{Code: "member-deleted", Name: "Member Deleted"})
+	require.NoError(t, err)
+
+	mustInsertTenantUser(t, db, tenant.ID, 520)
+	mustMarkUserDeleted(t, db, 520)
+
+	require.ErrorIs(t, service.AddMember(tenant.ID, 520, "member"), common.ErrNotFound)
+}
+
+// TestAddMember_TombstoneTenantStillReportsTenantNotFound pins the order of the
+// two guards: the tenant-existence check runs first, so adding a member to a
+// deleted tenant answers with the tenant error even when the user id is also
+// unknown. Callers key their messaging off that distinction.
+func TestAddMember_TombstoneTenantStillReportsTenantNotFound(t *testing.T) {
+	db := setupTestDB(t)
+	service := NewService(db)
+
+	tenant, err := service.CreateTenant(CreateTenantDTO{Code: "member-tombstone", Name: "Member Tombstone"})
+	require.NoError(t, err)
+	require.NoError(t, service.DeleteTenant(tenant.ID))
+
+	err = service.AddMember(tenant.ID, 424242, "member")
+	assert.Equal(t, ErrTenantNotFound, err)
+}
+
+// TestRemoveMember_PhantomOwnerDoesNotProtectRealOwner is the second half of the
+// same defect: the owner count used to read `tenant_memberships` alone, so one
+// row naming a nonexistent user was enough to let the last real owner be removed
+// and leave the tenant with nobody who can administer it.
+func TestRemoveMember_PhantomOwnerDoesNotProtectRealOwner(t *testing.T) {
+	db := setupTestDB(t)
+	service := NewService(db)
+
+	tenant, err := service.CreateTenant(CreateTenantDTO{Code: "owner-ghost", Name: "Owner Ghost"})
+	require.NoError(t, err)
+
+	mustInsertTenantUser(t, db, tenant.ID, 600)
+	require.NoError(t, service.AddMember(tenant.ID, 600, "owner"))
+	// A phantom owner written straight to the table, bypassing AddMember, is the
+	// historical state the fix has to survive - the row exists, the user does not.
+	require.NoError(t, db.Table("tenant_memberships").Create(map[string]any{
+		"tenant_id": tenant.ID, "user_id": 601, "role": "owner", "status": "active",
+	}).Error)
+
+	require.ErrorIs(t, service.RemoveMember(tenant.ID, 600), ErrLastOwner)
+
+	_, total, err := service.ListTenantMembers(tenant.ID, 1, 20)
+	require.NoError(t, err)
+	assert.Equal(t, int64(2), total)
+}
+
+// TestRemoveMember_LastLiveOwnerAmongTwoLiveOwners: the invariant the fix must
+// not break - removing one of two real owners succeeds, removing the last one
+// does not.
+func TestRemoveMember_LastLiveOwnerAmongTwoLiveOwners(t *testing.T) {
+	db := setupTestDB(t)
+	service := NewService(db)
+
+	tenant, err := service.CreateTenant(CreateTenantDTO{Code: "owner-two", Name: "Owner Two"})
+	require.NoError(t, err)
+
+	mustInsertTenantUsers(t, db, tenant.ID, 610, 2)
+	require.NoError(t, service.AddMember(tenant.ID, 610, "owner"))
+	require.NoError(t, service.AddMember(tenant.ID, 611, "owner"))
+
+	require.NoError(t, service.RemoveMember(tenant.ID, 610))
+	require.ErrorIs(t, service.RemoveMember(tenant.ID, 611), ErrLastOwner)
+}
+
+// TestRemoveMember_DisabledUserOwnerDoesNotCount: the owner count asks for an
+// enabled user, not merely an undeleted one - a disabled account cannot sign in
+// to repair a tenant, so it cannot be the owner that satisfies the invariant.
+func TestRemoveMember_DisabledUserOwnerDoesNotCount(t *testing.T) {
+	db := setupTestDB(t)
+	service := NewService(db)
+
+	tenant, err := service.CreateTenant(CreateTenantDTO{Code: "owner-disabled", Name: "Owner Disabled"})
+	require.NoError(t, err)
+
+	mustInsertTenantUsers(t, db, tenant.ID, 620, 2)
+	require.NoError(t, service.AddMember(tenant.ID, 620, "owner"))
+	require.NoError(t, service.AddMember(tenant.ID, 621, "owner"))
+	mustSetUserStatus(t, db, 621, common.StatusDisabled)
+
+	require.ErrorIs(t, service.RemoveMember(tenant.ID, 620), ErrLastOwner)
 }
 
 func TestRemoveMember(t *testing.T) {
@@ -370,6 +576,7 @@ func TestRemoveMember(t *testing.T) {
 	})
 	require.NoError(t, err)
 
+	mustInsertTenantUser(t, db, tenant.ID, 100)
 	err = service.AddMember(tenant.ID, 100, "admin")
 	require.NoError(t, err)
 
@@ -398,6 +605,7 @@ func TestListTenantMembers_PaginationContract(t *testing.T) {
 	require.NoError(t, err)
 
 	const memberCount = 7
+	mustInsertTenantUsers(t, db, tenant.ID, 201, memberCount)
 	for i := 1; i <= memberCount; i++ {
 		require.NoError(t, service.AddMember(tenant.ID, uint64(200+i), "member"))
 	}
@@ -449,6 +657,7 @@ func TestDeleteTenant_WithActiveMembers(t *testing.T) {
 	})
 	require.NoError(t, err)
 
+	mustInsertTenantUser(t, db, tenant.ID, 100)
 	err = service.AddMember(tenant.ID, 100, "admin")
 	require.NoError(t, err)
 

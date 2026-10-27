@@ -30,6 +30,7 @@ func TestListTenantMembersHandlerReturnsPaginationContract(t *testing.T) {
 	service := NewService(db)
 	tenant, err := service.CreateTenant(CreateTenantDTO{Code: "handler-page", Name: "Handler Page"})
 	require.NoError(t, err)
+	mustInsertTenantUsers(t, db, tenant.ID, 101, 3)
 	for userID := uint64(101); userID <= 103; userID++ {
 		require.NoError(t, service.AddMember(tenant.ID, userID, "member"))
 	}
@@ -79,6 +80,7 @@ func TestListTenantMembersHandlerUsesBoundedContract(t *testing.T) {
 	service := NewService(db)
 	tenant, err := service.CreateTenant(CreateTenantDTO{Code: "handler-legacy", Name: "Handler Legacy"})
 	require.NoError(t, err)
+	mustInsertTenantUsers(t, db, tenant.ID, 1, 105)
 	for userID := uint64(1); userID <= 105; userID++ {
 		require.NoError(t, service.AddMember(tenant.ID, userID, "member"))
 	}
@@ -228,6 +230,7 @@ func TestLegacyTenantHandlerSentinelMappingRequiresNoInternalLeak(t *testing.T) 
 	requireUnifiedErrorEnvelope(t, recorder.Body.String(), 400, "tenant.code_taken")
 	require.NotContains(t, recorder.Body.String(), "tenant code already exists")
 
+	mustInsertTenantUser(t, db, created.ID, 88001)
 	require.NoError(t, service.AddMember(created.ID, 88001, "member"))
 
 	recorder = httptest.NewRecorder()

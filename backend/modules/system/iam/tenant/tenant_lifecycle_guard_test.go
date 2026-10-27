@@ -1,11 +1,17 @@
 package tenant
 
 import (
+	"encoding/json"
 	"errors"
+	"fmt"
+	"net/http"
+	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/duanxldragon/pantheon-base/backend/pkg/tenant"
 
+	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
@@ -70,6 +76,7 @@ func TestRemoveMemberRefusesLastOwner(t *testing.T) {
 	created, err := service.CreateTenant(CreateTenantDTO{Code: "owner-co", Name: "Owner Co"})
 	require.NoError(t, err)
 
+	mustInsertTenantUsers(t, db, created.ID, 100, 3)
 	require.NoError(t, service.AddMember(created.ID, 100, "owner"))
 	require.NoError(t, service.AddMember(created.ID, 101, "member"))
 
@@ -111,6 +118,7 @@ func TestDeleteTenantArchivedWithMembersSucceeds(t *testing.T) {
 
 	created, err := service.CreateTenant(CreateTenantDTO{Code: "retire-co", Name: "Retire Co"})
 	require.NoError(t, err)
+	mustInsertTenantUser(t, db, created.ID, 201)
 	require.NoError(t, service.AddMember(created.ID, 201, "owner"))
 
 	// A live tenant with members stays protected.
@@ -213,6 +221,11 @@ func TestDeletedTenantRefusesNewMembers(t *testing.T) {
 
 	created, err := service.CreateTenant(CreateTenantDTO{Code: "tombstone-members", Name: "Tombstone Members"})
 	require.NoError(t, err)
+	// The user row is created before the tenant is deleted so that the guard
+	// under test cannot pass by rejecting an unknown subject: the membership
+	// attempt carries a user this tenant really owns, and the tombstone still
+	// has to win with the tenant error.
+	mustInsertTenantUser(t, db, created.ID, 777)
 	require.NoError(t, service.DeleteTenant(created.ID))
 
 	err = service.AddMember(created.ID, 777, "member")
@@ -236,4 +249,51 @@ func TestDeletedTenantCannotBeReprovisioned(t *testing.T) {
 
 	_, err = service.ProvisionTenant(ProvisionInput{TenantID: created.ID})
 	assert.ErrorIs(t, err, ErrTenantNotFound)
+}
+
+// TestPlatformAddMemberRejectsUnknownUser drives the guard through the mounted
+// write route (system_modules.go mounts POST /system/tenant/:id/members on
+// PlatformHandler.AddTenantMember) rather than only the service, because the
+// defect was observable as an HTTP 200 success envelope: an id naming no user
+// came back as "member added". The envelope must answer with the user key so the
+// console can distinguish "no such user" from "no such tenant".
+func TestPlatformAddMemberRejectsUnknownUser(t *testing.T) {
+	db := setupTestDB(t)
+	service := NewService(db)
+	handler := NewPlatformHandler(service)
+
+	created, err := service.CreateTenant(CreateTenantDTO{Code: "member-http", Name: "Member HTTP"})
+	require.NoError(t, err)
+	mustInsertTenantUser(t, db, created.ID, 900)
+
+	gin.SetMode(gin.TestMode)
+	engine := gin.New()
+	engine.POST("/system/tenant/:id/members", handler.AddTenantMember)
+
+	envelope := func(body string) (int, string) {
+		t.Helper()
+		recorder := httptest.NewRecorder()
+		request := httptest.NewRequest(http.MethodPost, fmt.Sprintf("/system/tenant/%d/members", created.ID), strings.NewReader(body))
+		request.Header.Set("Content-Type", "application/json")
+		engine.ServeHTTP(recorder, request)
+		var parsed struct {
+			Code    int    `json:"code"`
+			Message string `json:"message"`
+		}
+		require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &parsed))
+		return parsed.Code, parsed.Message
+	}
+
+	// 424242 has no system_user row.
+	code, message := envelope(`{"user_id": 424242, "role": "member"}`)
+	assert.Equal(t, 404, code, "body: %s", message)
+	assert.Equal(t, "user.not_found", message)
+
+	// A user that does exist still gets in, so the guard is not a blanket refusal.
+	code, _ = envelope(`{"user_id": 900, "role": "member"}`)
+	assert.Equal(t, 200, code)
+
+	var memberships int64
+	require.NoError(t, db.Model(&Membership{}).Where("tenant_id = ?", created.ID).Count(&memberships).Error)
+	assert.Equal(t, int64(1), memberships, "the rejected request must not leave a row behind")
 }
