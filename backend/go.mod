@@ -1,6 +1,6 @@
 module github.com/duanxldragon/pantheon-base/backend
 
-go 1.26.9
+go 1.26.10
 
 require (
 	github.com/casbin/casbin/v2 v2.135.0

@@ -10,14 +10,14 @@ Pantheon Platform 是一个面向企业后台的模块化单体底座，沉淀�
 
 | 项 | 值 |
 | --- | --- |
-| 当前 foundation release | [`pantheon-base-v0.17.7`](https://github.com/duanxldragon/pantheon-base/releases/tag/pantheon-base-v0.17.7)（含四件可消费产物） |
+| 当前 foundation release | [`pantheon-base-v0.17.8`](https://github.com/duanxldragon/pantheon-base/releases/tag/pantheon-base-v0.17.8)（含四件可消费产物） |
 | Shell/Harness 基线版本 | `1.4.0`（见 [VERSION](./VERSION) / [SHELL_VERSION.json](./SHELL_VERSION.json)） |
 | 部署文档 | [docs/DEPLOYMENT_GUIDE.md](./docs/DEPLOYMENT_GUIDE.md)（MySQL 8、Redis 7、迁移 + runtime seed、健康检查、遥测、备份恢复与 schema-aware 回滚） |
-| 变更记录 | [CHANGELOG.md](./CHANGELOG.md) / [RELEASE_NOTES_v0.17.7.md](./RELEASE_NOTES_v0.17.7.md) |
+| 变更记录 | [CHANGELOG.md](./CHANGELOG.md) / [RELEASE_NOTES_v0.17.8.md](./RELEASE_NOTES_v0.17.8.md) |
 | **任务状态** | [.harness/STATUS.md](./.harness/STATUS.md) — 当前任务状态总览 |
 | **归档记录** | [.harness/ARCHIVE.md](./.harness/ARCHIVE.md) — 已完成任务归档索引 |
 
-交付状态说明：v0.17.7 是一个 patch 序列版本，只做一件事——把 `pantheon-ops` 无法在自己树里关闭的三处 base 归属门禁结论落到 base 主干：`setting.SettingService` 的 revive stutter 用带理由的 `//nolint:revive` 就地记录（改名会破坏所有消费者），`backend/pkg/logging/logger.go` 四个 sink 与 `frontend/scripts/tenant-matrix-fixture-setup.mjs` 七处站点补上 `// codeql …: this is a false positive` 标注，理由写在代码里而不是只留在 GitHub 的 dismiss 记录中。全部改动是 13 行注释、0 行删除：**schema 仍是 30，没有新路由、权限码、菜单 seed、i18n 文案或公开符号变化**，消费者只需把 `foundation-release.lock.json` 推进到 v0.17.7 再 `npm run rebuild:from-base`。租户运营的全部内容（套餐落库 `000030`、`/system/tenant-ops/*` 三个平台域读面与 5 个权限码、兼容作用域收口、密码面无障碍、boundary 基线清空）在 v0.17.6，配额仍然只展示不强制。残留：`SonarCloud Scan` 自 2026-09-17 起在每次 PR run 上都因 `GET https://api.sonarcloud.io/analysis/jres` 返回 403 而失败，属凭据/权限问题，需要维护者提供有效 `SONAR_TOKEN`；本轮不改 Sonar 规则与项目配置。FR-016 / FR-017（4 个 checker 无 npm script 也不在任何 workflow）仍为 open，接入 CI 属门禁策略，留给维护者拍板。
+交付状态说明：v0.17.8 是一个 patch 序列版本，只搬两个 base 拥有的依赖事实——`backend/go.mod` 的 go directive 从 1.26.9 抬到 1.26.10（关闭 `GO-2026-6809`：`crypto/x509` 对被攻破的中间证书不再信任，ops 的 OSV 扫描把这一条读成 `called: true` 并因此拒绝），`frontend/package-lock.json` 的 `zod` 从 4.3.6 抬到 4.6.7（关闭 high 级 `GHSA-mrhx-c7xc-m3w5`，它让 frontend 的 `npm audit --audit-level=high` 返回 failure；`zod` 不是直接依赖、`src/` 也不 import 它，只经 `eslint-plugin-react-hooks` 与 `zod-validation-error` 进入，影响面限于 dev 工具链）。`Dockerfile` 的镜像标签与两份文档的工具链基线一起对齐，因为它是 go 版本的第二个独立读取通道，CI 的 `go-version-file` 覆盖不到。**schema 仍是 30，没有新路由、权限码、菜单 seed、i18n 文案或公开符号变化，`backend/` 与 `frontend/src/` 的产品源码一行未改**，消费者只需把 `foundation-release.lock.json` 推进到 v0.17.8 再 `npm run rebuild:from-base`；重建后这两个文件自动带上修复，ops 主干 `Security Gates` 的 `npm audit (frontend)` 与 `osv call analysis` 两项失败输入翻绿。上一版 v0.17.7 落地的是三处 base 归属的 lint 与 CodeQL 注释级结论；租户运营的全部内容（套餐落库 `000030`、`/system/tenant-ops/*` 三个平台域读面与 5 个权限码、兼容作用域收口、密码面无障碍、boundary 基线清空）在 v0.17.6，配额仍然只展示不强制。残留：`SonarCloud Scan` 自 2026-09-17 起在 base 与 ops 的每次 run 上都因 `GET https://api.sonarcloud.io/analysis/jres` 返回 403 而失败，属凭据/权限问题，需要维护者提供有效 `SONAR_TOKEN`；本轮不改 Sonar 规则与项目配置。`golang.org/x/crypto` 的 `GO-2026-5932`（openpgp 按设计不安全、无修复版本）在两处扫描里都是未调用，是否强制替换成 `ProtonMail/go-crypto` 属维护者的依赖风险策略，本轮只登记。FR-016 / FR-017（4 个 checker 无 npm script 也不在任何 workflow）仍为 open，接入 CI 属门禁策略，留给维护者拍板。
 
 ## 项目定位
 
@@ -81,7 +81,7 @@ schema/generated/          # 跨端治理生成输出
 
 ## 快速启动
 
-工具链基线为 Go 1.26.5；本地、CI 和容器构建均以 `go.mod` 声明的版本为准。
+工具链基线为 Go 1.26.10；本地、CI 和容器构建均以 `go.mod` 声明的版本为准。
 
 ### 1. 启动基础设施
 
