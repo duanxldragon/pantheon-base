@@ -1,0 +1,108 @@
+{
+  "taskId": "2026-10-27-tenant-multi-membership-decision",
+  "repo": "pantheon-base",
+  "executedAt": "2026-10-27T20:30:00+08:00",
+  "agent": {
+    "tool": "other",
+    "adapter": "qoder-agent"
+  },
+  "knownGaps": [
+    "This is a decision packet: no source, contract, or API doc file is modified by design (packet doNotTouch: backend/**, frontend/src/**, TENANT_CONTRACT_V1.md, TENANT_API.md). The contract clarification and code changes belong to W4/W5.",
+    "The signed choice (option A) is a maintainer-delegated decision recorded for review. If the maintainer changes it to B or C, packet 2026-10-27-tenant-multi-membership-authorization must be closed abandoned and rewritten per its own packet rule before any implementation starts.",
+    "The option B prerequisite (replaceUserRoles deletes WHERE user_id = ? with no tenant predicate, user_helper.go:88) was re-verified against main d2b95775 on 2026-10-27; it remains true and is recorded in the decision document as a hard prerequisite of any future V2 workstream.",
+    "Line citations for the three login read points (pkg/tenant/authz.go:159/313, login_tenant_switch.go:39, login_runtime.go:328, user_helper.go:83, role_helper.go:301) were re-verified against main d2b95775; all still accurate after the W1/W2 merges.",
+    "The packet's original W4/W5 task-doc links did not exist (only the parent program task doc does); the decision document links the per-wave manifest paths instead, and the strict doc-link check now reports 0 findings."
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-27-tenant-multi-membership-decision/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-27-tenant-multi-membership-decision/",
+    "summaryFile": ".harness/evidence/2026-10-27-tenant-multi-membership-decision/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-27-tenant-multi-membership-decision/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-27-tenant-completeness-remediation.task.md",
+      "docs/reviews/TENANT_FUNCTIONAL_COMPLETENESS_REVIEW_2026-10-27.md",
+      "docs/reviews/TENANT_MULTI_MEMBERSHIP_DECISION_2026-10-27.md"
+    ]
+  },
+  "commands": [
+    {
+      "command": "git log --oneline -1 origin/main",
+      "cwd": ".",
+      "notes": "d2b95775 fix(tenant): refuse deleting any tenant that is not archived (W1) (#436) — decision verified against the current main.",
+      "status": "passed"
+    },
+    {
+      "command": "grep -n \"func (.*replaceUserRoles|.*ensureUsersExist|.*GetUserRolesForTenant|.*DiscoverDefaultTenant|.*ListActiveMembershipsForUser|.*ListSwitchableTenants)\"",
+      "cwd": "backend",
+      "notes": "All six cited read/write points confirmed at their cited lines: user_helper.go:83, role_helper.go:301, login_runtime.go:328, authz.go:159, authz.go:313, login_tenant_switch.go:39. pkg/tenant/membership.go:70 ListActiveMemberships confirmed untouched by the plan.",
+      "status": "passed"
+    },
+    {
+      "command": "sed -n '83,95p' backend/modules/system/iam/user/user_helper.go",
+      "cwd": ".",
+      "notes": "replaceUserRoles body shows DELETE FROM system_user_role WHERE user_id = ? with no tenant predicate (option B hard prerequisite), and lockUserOwningTenantIDTx stamps bindings with the user's owning tenant (the mechanism behind TC-01).",
+      "status": "passed"
+    },
+    {
+      "command": "sed -n '159,200p' backend/pkg/tenant/authz.go",
+      "cwd": ".",
+      "notes": "DiscoverDefaultTenant returns ErrTenantForbidden when more than one active membership exists — confirming the manifest's claim that the picker is the only path a multi-membership subject can take today.",
+      "status": "passed"
+    },
+    {
+      "command": "sed -n '858,915p' backend/modules/system/iam/tenant/tenant_service.go",
+      "cwd": ".",
+      "notes": "W2's memberUserExists validates existence only and its comment explicitly defers ownership policy to the cross-tenant waves — confirming option A's AddMember narrowing is still open work for W4.",
+      "status": "passed"
+    },
+    {
+      "command": "sed -n '20,40p' frontend/src/modules/auth/tenant/TenantSwitcher.tsx",
+      "cwd": ".",
+      "notes": "TenantSwitcher hides itself for platform-capable subjects (served by TenantViewpointSwitcher via X-Tenant-Id, which reads tenants not memberships) — option A's filtering therefore affects only ordinary subjects.",
+      "status": "passed"
+    },
+    {
+      "command": "sed -n '78,95p' frontend/tests/smoke-core/tenant-hostile-browser-matrix.spec.ts && sed -n '134,142p' frontend/tests/smoke-core/tenant-hostile-browser-matrix.spec.ts",
+      "cwd": ".",
+      "notes": "The e2e constructs the exact cross-membership scenario (owner of tenant A added as member to tenant B) and asserts only that the app shell renders after choosing B — the defect escape the decision document cites.",
+      "status": "passed"
+    },
+    {
+      "command": "node scripts/harness/check-doc-links.mjs --root . --strict",
+      "cwd": ".",
+      "notes": "First run: 2 findings (decision doc linked non-existent per-wave task docs). Fixed by pointing W4/W5 references at the manifest paths. Second run: 0 findings.",
+      "status": "passed"
+    },
+    {
+      "command": "node scripts/harness/check-doc-inventory.mjs --root . --strict",
+      "cwd": ".",
+      "notes": "0 findings.",
+      "status": "passed"
+    },
+    {
+      "command": "node scripts/harness/check-task-packet.mjs --root .",
+      "cwd": ".",
+      "notes": "PASS — all task packets validate, including this packet's manifest flip.",
+      "status": "passed"
+    },
+    {
+      "command": "node scripts/harness/check-evidence.mjs --strict .harness/evidence/2026-10-27-tenant-multi-membership-decision/commands.json",
+      "cwd": ".",
+      "notes": "Strict evidence validation of this directory's commands.json.",
+      "status": "passed"
+    },
+    {
+      "command": "node scripts/harness/check-review.mjs --strict .harness/evidence/2026-10-27-tenant-multi-membership-decision/review.md",
+      "cwd": ".",
+      "notes": "Strict review validation of this directory's review.md.",
+      "status": "passed"
+    },
+    {
+      "command": "git diff --stat",
+      "cwd": ".",
+      "notes": "docs/reviews/TENANT_MULTI_MEMBERSHIP_DECISION_2026-10-27.md (new) + this evidence directory + the manifest status flip. No other path touched — matching the packet's expectedFiles (create the decision doc) and doNotTouch set.",
+      "status": "passed"
+    }
+  ]
+}
