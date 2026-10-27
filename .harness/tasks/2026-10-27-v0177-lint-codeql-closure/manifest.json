@@ -7,7 +7,7 @@
   "dependencyLayers": [
     "system/config"
   ],
-  "status": "in-progress",
+  "status": "completed",
   "priority": "P2",
   "type": "gate-closure",
   "estimatedComplexity": "low",
