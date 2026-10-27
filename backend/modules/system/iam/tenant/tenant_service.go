@@ -880,9 +880,7 @@ func membershipScope(tenantID, userID uint64) map[string]any {
 //
 // The lookup is deliberately not scoped to `tenantID`, and a disabled user is
 // still addable: which tenant a user is *owned* by is membership policy reserved
-// for the cross-tenant waves, and
-// BootstrapService.MigrateExistingUsersToDefaultTenant assigns users whose
-// owning tenant is not the tenant being migrated into.
+// for the cross-tenant waves.
 func (s *Service) memberUserExists(userID uint64) (bool, error) {
 	var found int64
 	// NOSONAR gosecurity:S3649 - bound placeholders only; userID is a

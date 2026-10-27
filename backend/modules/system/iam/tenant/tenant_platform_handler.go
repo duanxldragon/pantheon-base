@@ -45,6 +45,21 @@ func parseTenantID(c *gin.Context) (uint64, bool) {
 	return id, true
 }
 
+// parseTenantMemberPagination reads the bounded member-list pagination query.
+// It moved here from the deleted legacy Handler (W8): the mounted
+// /system/tenant/:id/members route is the only caller.
+func parseTenantMemberPagination(c *gin.Context) (int, int) {
+	page, err := strconv.Atoi(c.DefaultQuery("page", "1"))
+	if err != nil {
+		page = 1
+	}
+	pageSize, err := strconv.Atoi(c.DefaultQuery("pageSize", "20"))
+	if err != nil {
+		pageSize = defaultTenantMemberPageSize
+	}
+	return normalizeTenantMemberPagination(page, pageSize)
+}
+
 func (h *PlatformHandler) failServiceError(c *gin.Context, err error, fallback string) {
 	switch {
 	case errors.Is(err, common.ErrBadRequest):
