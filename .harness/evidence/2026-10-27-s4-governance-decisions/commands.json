@@ -1,0 +1,102 @@
+{
+  "taskId": "2026-10-27-s4-governance-decisions",
+  "repo": "pantheon-base",
+  "executedAt": "2026-10-27T21:20:00+08:00",
+  "agent": {
+    "tool": "other",
+    "adapter": "qoder-agent"
+  },
+  "knownGaps": [
+    "The audit's RC-036 count was 99 .en.md copies; the measured count on this branch (S1-1 baseline) is 95. The decision table uses the measured number; the audit predates several doc waves that may have added/removed copies. The checker decision is unaffected by the count drift.",
+    "The audit's RC-043 count was 12 zero-reference symbols; the measured count is 10 of 18. Per-symbol consumer counts are recorded in the decision document section 1; the measured table supersedes the audit estimate (program rule: measured net figures replace audit estimates).",
+    "The RC-036 keep-and-check checker (scripts/harness/check-doc-bilingual.mjs) is specified in the decision document but NOT implemented or wired into CI in this wave: adding a CI gate requires maintainer approval per AGENTS.md. The follow-up packet 2026-10-27-docs-bilingual-content-check is named but not created (only the delete decision requires a created packet).",
+    "The RC-031 keep-as-is decision rests on the type family being a coherent planned surface; it is not machine-verifiable. Revisit points are recorded (S3 or the lowcode program).",
+    "This wave was executed on a branch stacked on refactor/s1-dead-code-removal-2026-10-27 so the packet's dependsOn is enforced mechanically; the PR cannot merge before the S1 deletion wave."
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-27-s4-governance-decisions/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-27-s4-governance-decisions/",
+    "summaryFile": ".harness/evidence/2026-10-27-s4-governance-decisions/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-27-s4-governance-decisions/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-27-codebase-simplification-program.task.md",
+      "docs/reviews/REDUNDANT_CODE_CANDIDATES.md",
+      "docs/reviews/GOVERNANCE_SURFACE_DECISIONS_2026-10-27.md"
+    ]
+  },
+  "commands": [
+    {
+      "command": "git checkout -b decision/s4-governance-surfaces-2026-10-27 refactor/s1-dead-code-removal-2026-10-27",
+      "cwd": ".",
+      "notes": "Stacked on the S1 deletion wave so dependsOn is enforced by merge order.",
+      "status": "passed"
+    },
+    {
+      "command": "find docs -name '*.en.md' | wc -l",
+      "cwd": ".",
+      "notes": "RC-036 measured: 95 bilingual copies (audit said 99; drift recorded in knownGaps).",
+      "status": "passed"
+    },
+    {
+      "command": "ls docs/reviews/pantheon-base-review-*.md | wc -l && grep -c 'pantheon-base-review' docs/README.md",
+      "cwd": ".",
+      "notes": "RC-037 measured: 7 transcripts, 0 references in docs/README.md before this wave.",
+      "status": "passed"
+    },
+    {
+      "command": "find .harness/archive -type f | wc -l && find .harness -type f -not -path '.harness/archive/*' | wc -l",
+      "cwd": ".",
+      "notes": "RC-038 measured: 659 archive files of 1193 total harness files (659/1081 in the audit; the denominator grew with today's evidence waves).",
+      "status": "passed"
+    },
+    {
+      "command": "grep -rn 'DashboardWidget' frontend/src --include=*.ts --include=*.tsx | grep -v 'core/router/types.ts'",
+      "cwd": ".",
+      "notes": "RC-031 measured: zero type-level consumers outside core/router/types.ts itself (i18n hits are key-name substrings only; RouteDataWarmer in prefetch.ts is a separate type that does not reference the widget family).",
+      "status": "passed"
+    },
+    {
+      "command": "for sym in $(grep -oE '^(func|type|const|var)\\s+[A-Z][A-Za-z0-9_]*|^\\t[A-Z][A-Za-z0-9_]*\\s+=' backend/pkg/common/re_export.go | ...); do grep -rE \"common\\.${sym}\\b\" backend --include=*.go -l | grep -v re_export.go | wc -l; done",
+      "cwd": ".",
+      "notes": "RC-043 per-symbol measurement: base backend + pantheon-ops/backend qualified-reference file counts for all 18 aliases. Result: 10 zero-consumer (SetAccessTokenCookie, SetCSRFCookie, SetRefreshTokenCookie, ClearTokenCookies, ValidateRequiredProductionSecret, DefaultDevSecrets, GenerateRandomSecret, IsProductionEnv, ResolveSecret, FailWithData), 8 consumed (Fail 26/48, Success 22/44, FailWithError 17/37, FailWithCode 2/5, GetRequestID 4/4, InitSecurityConfig 1/1, Response 3/5, SuccessWithStatus 1/1, base/ops file counts). Full table in the decision document section 1.",
+      "status": "passed"
+    },
+    {
+      "command": "node scripts/harness/check-doc-links.mjs --root . --strict",
+      "cwd": ".",
+      "notes": "Strict doc-link check after the README index addition and decision doc creation.",
+      "status": "passed"
+    },
+    {
+      "command": "node scripts/harness/check-doc-inventory.mjs --root . --strict",
+      "cwd": ".",
+      "notes": "Strict doc-inventory check with the 7 transcripts now indexed.",
+      "status": "passed"
+    },
+    {
+      "command": "node scripts/harness/check-task-packet.mjs --root .",
+      "cwd": ".",
+      "notes": "PASS — includes the new follow-up packet manifest 2026-10-27-s4-re-export-alias-removal.",
+      "status": "passed"
+    },
+    {
+      "command": "node scripts/harness/check-evidence.mjs --strict .harness/evidence/2026-10-27-s4-governance-decisions/commands.json",
+      "cwd": ".",
+      "notes": "Strict evidence validation of this directory.",
+      "status": "passed"
+    },
+    {
+      "command": "node scripts/harness/check-review.mjs --strict .harness/evidence/2026-10-27-s4-governance-decisions/review.md",
+      "cwd": ".",
+      "notes": "Strict review validation of this directory.",
+      "status": "passed"
+    },
+    {
+      "command": "git diff --stat",
+      "cwd": ".",
+      "notes": "docs/reviews/GOVERNANCE_SURFACE_DECISIONS_2026-10-27.md (new), docs/README.md (7-transcript index line), the follow-up packet manifest (new), this evidence directory, and the S4 manifest status flip. No file deleted — matching the packet's delete-not-in-this-wave rule.",
+      "status": "passed"
+    }
+  ]
+}

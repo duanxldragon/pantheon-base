@@ -1,0 +1,111 @@
+{
+  "taskId": "2026-10-27-s4-re-export-alias-removal",
+  "title": "Remove the ten zero-consumer aliases from pkg/common/re_export.go",
+  "goal": "The S4 governance decision wave measured every re-export alias in backend/pkg/common/re_export.go for qualified references (common.<Sym>) across base backend and pantheon-ops/backend: ten of eighteen have zero consumers, which makes the re-export surface lie about what pkg/common provides. This packet deletes exactly those ten aliases — SetAccessTokenCookie, SetCSRFCookie, SetRefreshTokenCookie, ClearTokenCookies, ValidateRequiredProductionSecret, DefaultDevSecrets, GenerateRandomSecret, IsProductionEnv, ResolveSecret, FailWithData — and keeps the eight consumed ones. The underlying functions in pkg/common/http and pkg/common/security are untouched; consumers use them via their defining packages already.",
+  "primaryLayer": "platform",
+  "status": "planned",
+  "priority": "P3",
+  "type": "refactor",
+  "estimatedComplexity": "small",
+  "parentTaskId": "2026-10-27-codebase-simplification-program",
+  "dependsOn": [
+    "2026-10-27-s4-governance-decisions"
+  ],
+  "findings": [
+    "RC-043 (P2): backend/pkg/common/re_export.go re-exports 112 lines; the S4 measurement (2026-10-27, docs/reviews/GOVERNANCE_SURFACE_DECISIONS_2026-10-27.md section 1) shows 10 of 18 aliases with zero qualified references in both repositories."
+  ],
+  "scope": {
+    "in": [
+      "Delete the ten zero-consumer alias declarations from backend/pkg/common/re_export.go",
+      "Re-run the per-symbol reference search before deleting and record it in evidence",
+      "Prove equivalence: go build ./... in both backend modules and the full backend test suite",
+      "Record the eight kept aliases with their consumer counts in the evidence"
+    ],
+    "out": [
+      "Deleting the underlying functions in pkg/common/http or pkg/common/security",
+      "Touching frontend/src/index.ts",
+      "Removing any of the eight consumed aliases"
+    ]
+  },
+  "dependencyLayers": [
+    "platform"
+  ],
+  "implementationNotes": [
+    "The re-export aliases are type/const/func declarations, not wrappers: deletion cannot change behaviour, only the compile-time surface.",
+    "If the build breaks, a consumer was missed by the grep (e.g. dot-import or reflection); treat that as a finding, restore the alias, and record the false negative in evidence.",
+    "The eight kept aliases stay until a future wave finds them zero-consumer; this packet is not an invitation to shrink further."
+  ],
+  "contractAnchors": [
+    "AGENTS.md",
+    "docs/reviews/GOVERNANCE_SURFACE_DECISIONS_2026-10-27.md",
+    "docs/reviews/REDUNDANT_CODE_CANDIDATES.md"
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "none",
+    "portableFailureClass": "governance-drift",
+    "ownerLayer": "consumer-repository",
+    "ratchetDecision": "no-repeat-observed",
+    "coverageDimensions": [
+      "maintainability"
+    ]
+  },
+  "expectedFiles": {
+    "create": [],
+    "modify": [
+      "backend/pkg/common/re_export.go"
+    ],
+    "doNotTouch": [
+      "backend/pkg/common/http/**",
+      "backend/pkg/common/security/**",
+      "frontend/src/index.ts"
+    ]
+  },
+  "executionRoles": {
+    "implementerPosture": "Pure deletion of ten alias declarations; zero behaviour change.",
+    "reviewerPosture": [
+      "Check exactly the ten named aliases were removed and the eight kept ones remain.",
+      "Check no underlying function moved or changed.",
+      "Check the dual-repo build and full suite ran green."
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "cd backend && go build ./... && go vet ./...",
+      "cd ../pantheon-ops/backend && go build ./...",
+      "export PANTHEON_TEST_DSN='<dsn>' PANTHEON_TEST_DSN_REQUIRED=true && cd backend && go test -count=1 ./...",
+      "node scripts/harness/check-task-packet.mjs --root ."
+    ],
+    "runtimeEvidence": [
+      "none; deletion of unreferenced declarations is proven by compilation of both modules and the test suite"
+    ]
+  },
+  "runtimeSensitive": false,
+  "evidenceRequired": [
+    ".harness/evidence/2026-10-27-s4-re-export-alias-removal/commands.json",
+    ".harness/evidence/2026-10-27-s4-re-export-alias-removal/summary.md",
+    ".harness/evidence/2026-10-27-s4-re-export-alias-removal/review.md"
+  ],
+  "humanGates": [],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed",
+    "Exactly the ten zero-consumer aliases removed; the eight consumed aliases untouched",
+    "Both backend modules compile; full backend suite green"
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-27-s4-re-export-alias-removal/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-27-s4-re-export-alias-removal/",
+    "summaryFile": ".harness/evidence/2026-10-27-s4-re-export-alias-removal/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-27-s4-re-export-alias-removal/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-27-codebase-simplification-program.task.md",
+      "docs/reviews/GOVERNANCE_SURFACE_DECISIONS_2026-10-27.md"
+    ]
+  }
+}
