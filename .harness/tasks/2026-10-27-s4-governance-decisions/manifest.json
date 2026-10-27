@@ -3,7 +3,7 @@
   "title": "Record maintainer decisions for the governance-surface items the audit left open",
   "goal": "Four findings from the audit cannot be resolved by an agent because each is a product or governance policy choice, not a defect: 99 English document copies that no checker keeps in sync, six to seven LLM review transcripts that the documentation index does not reference, 659 archived harness files, and a handful of exported types whose only consumer might be a future feature. This wave produces decisions, not code: for each item, a recorded choice between delete, keep-and-check, or keep-as-is, with the reason and the cost. Anything chosen as 'delete' becomes its own follow-up packet; anything chosen as 'keep-and-check' names the checker to add.",
   "primaryLayer": "platform",
-  "status": "planned",
+  "status": "completed",
   "priority": "P3",
   "type": "governance",
   "estimatedComplexity": "small",
