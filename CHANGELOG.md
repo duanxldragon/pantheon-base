@@ -6,6 +6,57 @@ Pantheon Base 方法追踪记录。方法论本体位于 `pantheon-harness`。
 
 ---
 
+## [pantheon-base-v0.17.8] — 2026-10-27 (base-owned dependency vulnerability closure)
+
+> Two files move: `backend/go.mod` gains one line-changed directive, `frontend/package-lock.json`
+> changes three fields on one entry. `Dockerfile` and the toolchain text in `README.md`,
+> `README.en.md` and `docs/DEPLOYMENT_GUIDE.md` follow because they read the same fact through a
+> channel CI does not. **No schema change (still 30), no route, permission code, menu seed, i18n copy
+> or exported symbol changes.**
+
+### Fixed
+
+- **Go toolchain raised to 1.26.10 (`GO-2026-6809`).** `crypto/x509`'s `Certificate.Verify` distrusts
+  compromised intermediate certificates from 1.26.10; the ops `Enforce OSV call analysis` step read
+  stdlib 1.26.9 as `called: true`, which failed the whole `Dependency Vulnerabilities` gate. The
+  directive is the instrument, not a label: CI installs the toolchain through `go-version-file`, and
+  the scanner derives the stdlib version from it. This is the same shape as the 2026-09-22 round that
+  cleared seven reachable stdlib CVEs by moving 1.26.5 to 1.26.6.
+- **`zod` raised to 4.6.7 (`GHSA-mrhx-c7xc-m3w5`, high).** `zod < 4.6.6` can exhaust memory while
+  validating oversized constrained collections, so `npm audit --audit-level=high` returned failure for
+  the frontend project. `zod` is not a direct dependency and `src/` never imports it — it is reached
+  through `eslint-plugin-react-hooks` and `zod-validation-error`, which accept `^3.25.0 || ^4.0.0`, so
+  the change is confined to the dev toolchain and `npm run lint` is the compatibility reading.
+- **`Dockerfile` image tag aligned with the directive.** `golang:1.26.5-alpine` is a second,
+  independent read of the Go version. Left alone, container builds would run a 1.26.5 toolchain
+  against a module that requires 1.26.10 and resolve it through a toolchain download at
+  `go mod download`; the tag is now `golang:1.26.10-alpine` with the alignment reason in the file.
+
+### Why this landed in base
+
+`pantheon-ops` main's `Security Gates` (run `40457897311`, job `Dependency Vulnerabilities`
+`122035403107`) reports `govulncheck: success`, `npm audit (root): success`,
+`npm audit (frontend): failure`, `osv call analysis: failure`. Its two failing inputs are
+`backend/go.mod` and `frontend/package-lock.json`, and neither appears in the consumer's
+`repositoryOverlayPaths` or `replaceRoots`, so both are base-owned and a consumer-side bump is
+overwritten by the next `rebuild:from-base`. Base-first is the only landing side.
+
+### Verification
+
+- `govulncheck` v1.3.0 on the real backend source: `No vulnerabilities found` (0 called).
+- `osv-scanner` v2.3.3 lockfile differential: pre-fix reports `stdlib GO-2026-6809` and
+  `zod GHSA-mrhx-c7xc-m3w5`; post-fix reports neither, leaving only `golang.org/x/crypto`
+  `GO-2026-5932`, which both scanners record as not called.
+- `npm audit --package-lock-only --audit-level=high`: 1 high before, `found 0 vulnerabilities` after.
+- New toolchain: `go build`, `go vet`, `gofmt -l`, `go test -count=1 ./...` (37 packages ok, 0 FAIL);
+  frontend `npm ci`, `tsc -b`, `npm run build`, `npm run lint` clean; governance chain clean.
+- Residual, unchanged by this release: `SonarCloud Scan` fails on every run since 2026-09-17 with
+  `HTTP 403` on the JRE metadata query — a `SONAR_TOKEN` credential matter for the maintainer.
+  `golang.org/x/crypto` `GO-2026-5932` (openpgp is unsafe by design, no fix release, not called)
+  stays registered as a dependency-risk decision for the maintainer rather than being closed here.
+
+---
+
 ## [pantheon-base-v0.17.7] — 2026-10-27 (base-owned lint and CodeQL annotations)
 
 > A patch that adds thirteen comment lines and deletes none. `pantheon-ops` PR #149 could not close

@@ -1,0 +1,197 @@
+{
+  "taskId": "2026-10-27-v0178-dep-vuln-closure",
+  "taskDoc": "docs/harness/tasks/2026-10-27-v0178-dep-vuln-closure.task.md",
+  "title": "Publish v0.17.8: the two base-owned dependency defects that keep pantheon-ops main's Security Gates red",
+  "goal": "Close the two failing inputs of pantheon-ops main's Security Gates by fixing them where they are owned, then cut the next consumable foundation release pantheon-base-v0.17.8. The ops run 40457897311 (job Dependency Vulnerabilities, 122035403107) reports govulncheck success, npm audit root success, npm audit frontend failure, osv call analysis failure. Its two failing inputs are backend/go.mod and frontend/package-lock.json, and neither file is in the ops business-overlay.json repositoryOverlayPaths or replaceRoots allowlist, so they are base-owned and any consumer-side edit is overwritten by the next rebuild: from-base. Go directive 1.26.9 is below the GO-2026-6809 fix (crypto/x509 Certificate.Verify, reported called:true by the ops OSV scan), so the directive moves to 1.26.10 together with the Dockerfile image tag that CI does not read from go.mod. zod 4.3.6 sits below the GHSA-mrhx-c7xc-m3w5 fix at 4.6.6 (memory exhaustion while validating oversized constrained collections, severity high); it is a dev-only transitive reached through eslint-plugin-react-hooks and zod-validation-error with no import in src, so the lock moves to 4.6.7 with a three-field minimal diff. No schema change (still 30), no route, permission code, menu seed, i18n copy or exported symbol.",
+  "primaryLayer": "platform",
+  "dependencyLayers": [],
+  "status": "in-progress",
+  "priority": "P2",
+  "type": "dependency-vulnerability",
+  "estimatedComplexity": "low",
+  "contractAnchors": [
+    "docs/designs/FOUNDATION_RELEASE_MODEL.md",
+    "docs/VERSION_MANAGEMENT_GUIDE.md",
+    "SECURITY.md"
+  ],
+  "findings": [
+    "V1 (P2, closed here): backend/go.mod declares go 1.26.9. GO-2026-6809 (crypto/x509 Certificate.Verify, 'Distrust compromised intermediate certificates') is fixed in 1.26.10 and the ops OSV scan records it as called:true for stdlib 1.26.9, which fails the Enforce OSV call analysis step and therefore the Enforce dependency vulnerability gate. Raising the directive is the same instrument this repository used on 2026-09-22 to clear seven reachable stdlib CVEs (1.26.5 to 1.26.6), and CI installs the toolchain from go.mod via go-version-file so the directive is the real version, not a label.",
+    "V2 (P2, closed here): frontend/package-lock.json resolves node_modules/zod to 4.3.6, below the GHSA-mrhx-c7xc-m3w5 fix at 4.6.6, so npm audit --audit-level=high returns failure for the frontend project and blocks the same gate. zod is not a direct dependency: src has no zod import and only eslint-plugin-react-hooks and zod-validation-error require ^3.25.0 || ^4.0.0, so the blast radius is the dev toolchain, and npm run lint going green is the compatibility reading.",
+    "V3 (P2, closed here as a consequence of V1): Dockerfile pins golang:1.26.5-alpine independently of go.mod. Workflows read the version from go.mod, the image tag does not, so after V1 alone a container build would run a 1.26.5 toolchain against a module that requires 1.26.10 and take the toolchain-download path in go mod download. The image tag moves to 1.26.10-alpine (verified present on Docker Hub) and the README and deployment-guide toolchain baseline text moves with it.",
+    "V4 (P3, recorded NOT closed here): golang.org/x/crypto 0.57.0 carries GO-2026-5932 (openpgp is unsafe by design, unmaintained, no fixed version). Both the ops OSV reading and the base govulncheck run report it as not called, so it blocks nothing today. Deciding whether the dependency must be replaced by github.com/ProtonMail/go-crypto is a maintainer dependency-risk policy, so it is registered rather than acted on.",
+    "V5 (P2, environment, NOT closed here): ops main run 40457897338 (SonarCloud Scan) fails with HTTP 403 on GET https://api.sonarcloud.io/analysis/jres, the same credential defect base has carried since 2026-09-17. It needs a valid SONAR_TOKEN from the maintainer; no Sonar rule, project setting or workflow is changed here.",
+    "V6 (P3, method limitation, corrected during this round): the consumer's whole-tree osv-scanner command first reported 'No package sources found' here (exit 128). The initial root cause recorded in this manifest - that osv-scanner v2.3.3 skips paths containing dot-prefixed directory segments - was falsified by a control run on the same version over both drives and over a hidden .wt segment. The real cause is that OSV's recursive mode honours .gitignore, and pantheon-base/.gitignore:26 ignores .tmp/, which is exactly where this linked worktree lives. With --no-ignore the same --recursive --call-analysis=go scan runs over base's real backend and frontend sources, exits 0, and leaves only golang.org/x/crypto GO-2026-5932 with called:false, so base carries its own gate reading; the ops main run after consumption confirms the aggregate gate step rather than being the only proof."
+  ],
+  "scope": {
+    "in": [
+      "backend/go.mod: go 1.26.9 to go 1.26.10 (one line)",
+      "frontend/package-lock.json: node_modules/zod 4.3.6 to 4.6.7 (version, resolved, integrity)",
+      "Dockerfile: golang:1.26.5-alpine to golang:1.26.10-alpine plus the alignment comment",
+      "README.md, README.en.md, docs/DEPLOYMENT_GUIDE.md toolchain baseline and current-release text",
+      "Version material: VERSION 0.17.8, CHANGELOG.md, RELEASE_NOTES_v0.17.8.md",
+      "Task packet, manifest and evidence trio for this round plus pr-body.md",
+      "Local verification: new-toolchain go build / vet / gofmt / test, govulncheck v1.3.0 re-scan, npm ci plus tsc -b, build and lint, npm audit and OSV before/after differentials, the governance chain",
+      "Open the pull request, watch CI, merge it",
+      "Cut and publish pantheon-base-v0.17.8 on the merge commit once Release Gate Summary is successful there, then check-release-assets and Foundation Release Verify",
+      "Record the publication facts (tag object, asset digests, run ids) back into this packet"
+    ],
+    "out": [
+      "Hand-editing backend/go.mod or frontend/package-lock.json inside pantheon-ops: both are base-owned and a consumer edit is reverted by the next rebuild:from-base",
+      "Relaxing any gate: Enforce OSV call analysis, npm audit --audit-level=high and Enforce dependency vulnerability gate keep their thresholds and only their inputs are fixed",
+      "Upgrading or replacing golang.org/x/crypto for GO-2026-5932: not called, advisory, no fix release, maintainer policy decision",
+      "Any SonarCloud rule, project-configuration or workflow change to work around the 403",
+      "Changing .github/workflows scanning configuration",
+      "Rewriting the published v0.17.0 through v0.17.7 tags and assets",
+      "pantheon-ops side changes: consumption closes in the consumer repository's own task packet"
+    ]
+  },
+  "acceptanceCriteria": [
+    "backend/go.mod declares go 1.26.10 and Dockerfile's backend-builder image is golang:1.26.10-alpine, so the two toolchain reads agree.",
+    "frontend/package-lock.json resolves node_modules/zod to 4.6.7 and npm audit --package-lock-only --audit-level=high reports 0 vulnerabilities where the pre-fix lockfile reports 1 high.",
+    "osv-scanner v2.3.3 on the pre-fix lockfile pair reports stdlib GO-2026-6809 and zod GHSA-mrhx-c7xc-m3w5; on the post-fix pair both are absent and only the not-called x/crypto advisory remains.",
+    "go run golang.org/x/vuln/cmd/govulncheck@v1.3.0 ./... on the real backend source reports No vulnerabilities found (0 called).",
+    "go build ./..., go vet ./..., gofmt -l and go test -count=1 ./... are clean under go1.26.10, and npm ci, tsc -b, npm run build and npm run lint are clean on the updated lockfile.",
+    "git diff --stat shows only go.mod, package-lock.json, Dockerfile, the three version documents, the six version materials and this packet's artifacts.",
+    "The governance chain (frontmatter, structure, encoding, task packet, evidence, review, adoption, doc links, doc inventory, generated, duplication, PR governance) is green locally.",
+    "All required PR contexts are green on the merge commit, and Release Gate Summary is successful there.",
+    "pantheon-base-v0.17.8 exists as an annotated tag with a non-draft, non-prerelease GitHub release carrying four checksum-valid assets; check-release-assets agrees and Foundation Release Verify succeeds.",
+    "pantheon-ops main after consuming v0.17.8 reports Security Gates with all four Dependency Vulnerabilities inputs successful; that assertion closes in the ops packet, not here."
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "ci-workflow",
+    "portableFailureClass": "dependency-vulnerability / ownership-routing",
+    "ownerLayer": "foundation-source",
+    "ratchetDecision": "guide-updated",
+    "coverageDimensions": [
+      "architecture-fitness",
+      "maintainability"
+    ]
+  },
+  "expectedFiles": {
+    "create": [
+      "RELEASE_NOTES_v0.17.8.md",
+      "docs/harness/tasks/2026-10-27-v0178-dep-vuln-closure.task.md",
+      ".harness/tasks/2026-10-27-v0178-dep-vuln-closure/manifest.json",
+      ".harness/evidence/2026-10-27-v0178-dep-vuln-closure/summary.md",
+      ".harness/evidence/2026-10-27-v0178-dep-vuln-closure/review.md",
+      ".harness/evidence/2026-10-27-v0178-dep-vuln-closure/commands.json",
+      ".harness/evidence/2026-10-27-v0178-dep-vuln-closure/pr-body.md"
+    ],
+    "modify": [
+      "backend/go.mod",
+      "frontend/package-lock.json",
+      "Dockerfile",
+      "README.md",
+      "README.en.md",
+      "docs/DEPLOYMENT_GUIDE.md",
+      "VERSION",
+      "CHANGELOG.md"
+    ],
+    "doNotTouch": [
+      "docs/contracts (no contract text changes this round)",
+      "backend/pkg/database/migrations (schema stays at 30)",
+      "config/boundary-baseline.json (emptied by v0.17.6)",
+      ".github/workflows (gate thresholds stay; only scanned inputs change)",
+      ".harness/STATUS.md (the main checkout carries another session's in-flight work)"
+    ]
+  },
+  "implementationNotes": [
+    "Ownership is the reason this round exists in base: ops declares replaceRoots [.github, .harness] and a 60-entry repositoryOverlayPaths, and neither backend/go.mod nor frontend/package-lock.json appears in them, so those files are base-owned consumer-tree inputs.",
+    "The go directive is not decoration: CI installs the toolchain from it through go-version-file, and osv-scanner derives the stdlib version from it, which is exactly the entry the failing gate reads.",
+    "package-lock.json carries a three-field minimal diff. npm update zod resolves the right values but also deletes six libc arrays from optional native packages because this host's npm differs from CI's; that unrelated churn is reverted and npm ci plus the build prove the reduced lock is still a consistent installable state.",
+    "Dockerfile's image tag and go.mod's directive are two separate reads of one fact; leaving the image at 1.26.5 would make container builds resolve a toolchain download against a module that requires 1.26.10, so both move together and the reason is written into the Dockerfile.",
+    "No source file changes: nothing executes differently except the stdlib and dev toolchain actually in use."
+  ],
+  "verificationPlan": {
+    "backend": [
+      "go version (expect go1.26.10 via GOTOOLCHAIN=auto)",
+      "go build ./...",
+      "go vet ./...",
+      "gofmt -l .",
+      "go test -count=1 ./...",
+      "go run golang.org/x/vuln/cmd/govulncheck@v1.3.0 ./... (expect No vulnerabilities found)",
+      "go test -race is a Linux CI reading: cgo is disabled on this host"
+    ],
+    "frontend": [
+      "npm ci",
+      "node node_modules/typescript/bin/tsc -b",
+      "npm run build",
+      "npm run lint (eslint-plugin-react-hooks is zod's only runtime consumer)",
+      "npm audit --package-lock-only --registry=https://registry.npmjs.org --audit-level=high before and after"
+    ],
+    "security": [
+      "osv-scanner@v2.3.3 scan --lockfile on the pre-fix pair and the post-fix pair",
+      "ops CI job Dependency Vulnerabilities step echo: the four input outcomes before and after consumption"
+    ],
+    "governance": [
+      "node scripts/frontmatter-check.mjs",
+      "node scripts/harness/check-structure-contract.mjs --root . --strict",
+      "node scripts/harness/check-encoding.mjs --root . --strict",
+      "node scripts/harness/check-task-packet.mjs --root .",
+      "node scripts/harness/check-evidence.mjs --root . --strict",
+      "node scripts/harness/check-review.mjs --root . --strict",
+      "node scripts/harness/check-doc-links.mjs --root . --strict",
+      "node scripts/harness/check-doc-inventory.mjs --root . --strict",
+      "node scripts/harness/check-generated.mjs --root . --strict",
+      "node scripts/check-duplication.mjs",
+      "node scripts/check-pr-governance.mjs --event <pr-event.json>"
+    ],
+    "release": [
+      "Release Gate Summary successful on the merge commit",
+      "npm run release:foundation:cut -- --root . --release-version pantheon-base-v0.17.8 --release-line release/0.17 --base-commit <merge sha> --release-notes ... --upgrade-notes ... --consumer-impact ...",
+      "npm run check:release-secrets",
+      "publish-foundation-release.mjs dry-run then real",
+      "npm run check:release-assets -- --release-version pantheon-base-v0.17.8 --repo duanxldragon/pantheon-base",
+      "Foundation Release Verify run success"
+    ]
+  },
+  "linkage": {
+    "taskId": "2026-10-27-v0178-dep-vuln-closure",
+    "taskManifest": ".harness/tasks/2026-10-27-v0178-dep-vuln-closure/manifest.json",
+    "taskDoc": "docs/harness/tasks/2026-10-27-v0178-dep-vuln-closure.task.md",
+    "openspecChange": "none",
+    "superpowersPlan": "none",
+    "evidenceDir": ".harness/evidence/2026-10-27-v0178-dep-vuln-closure/",
+    "summaryFile": ".harness/evidence/2026-10-27-v0178-dep-vuln-closure/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-27-v0178-dep-vuln-closure/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/VERSION_MANAGEMENT_GUIDE.md",
+      "docs/harness/tasks/2026-10-27-v0177-lint-codeql-closure.task.md",
+      "docs/reviews/PANTHEON_BASE_ISSUES_AND_REMEDIATION_2026-10-21.md",
+      ".harness/archive/2026-09/evidence/2026-09-22-production-redis-and-security-gates/summary.md"
+    ]
+  },
+  "release": {
+    "version": "0.17.8",
+    "tag": "pantheon-base-v0.17.8",
+    "releaseLine": "release/0.17",
+    "previousRelease": "pantheon-base-v0.17.7",
+    "schemaVersion": "30",
+    "contents": [
+      "placeholder: filled after the merge commit is known"
+    ],
+    "assets": [
+      "foundation-release-pantheon-base-v0.17.8.tgz",
+      "foundation-release-pantheon-base-v0.17.8.tgz.sha256",
+      "repo.tar",
+      "repo.tar.sha256"
+    ],
+    "state": "preparing",
+    "publishedAt": "",
+    "tagObject": "",
+    "targetCommit": "",
+    "assetChecksums": {},
+    "verification": {
+      "releaseGate": "pending",
+      "sonarCloudGate": "blocked: SONAR_TOKEN 403 on the JRE metadata query since 2026-09-17 (maintainer credential)",
+      "codeQlAlerts": "pending",
+      "releaseSecretScan": "pending",
+      "releaseAssets": "pending",
+      "foundationReleaseVerifyRun": "",
+      "foundationReleaseVerify": "pending"
+    }
+  }
+}
