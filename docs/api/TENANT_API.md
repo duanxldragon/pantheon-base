@@ -227,8 +227,12 @@ Adds a user to a tenant.
   exists (`deleted_at IS NULL`). `tenant_memberships` has no foreign key to `system_user`, so without
   this guard a typo in the console created a membership row naming nobody — and a row written as
   `owner` for a nonexistent user satisfied the last-owner invariant for a user who can never sign in.
-  A disabled user is still addable; whether a user owned by *another* tenant may hold a membership
-  here is not decided by this contract and is not rejected here.
+  A disabled user is still addable.
+- Envelope `code` `400` + `tenant.member.user_not_in_tenant`: the user is owned by another tenant
+  (`system_user.tenant_id` is not the target tenant). Role bindings are stamped from the owning
+  tenant, so a cross-tenant membership would grant login eligibility with zero roles — an unusable
+  context (tenant contract §2.2, V1.7). This closes the defect where such a row was accepted and the
+  login picker then offered a tenant that rendered an empty console.
 - Envelope `code` `400` + `tenant.member_exists`: the user is already an `owner` and a non-owner role
   was submitted (re-adding is idempotent for non-owner rows)
 
@@ -291,8 +295,16 @@ Removes a user from a tenant.
 
 **GET** `/auth/tenants/switchable`
 
-Returns the tenants the current authenticated user may switch into (active memberships). This is
-the mounted equivalent of the legacy `GET /tenants/my`; the legacy group is not registered.
+Returns the tenants the current authenticated user may switch into: active memberships in active
+tenants **where the user holds at least one role binding** (tenant contract §2.2, V1.7 — a
+membership without roles is not a usable context). This is the mounted equivalent of the legacy
+`GET /tenants/my`; the legacy group is not registered.
+
+**Compatibility surface (V1.7)**: the login tenant picker and the shell TenantSwitcher control were
+removed because a subject can hold role bindings in at most one tenant (its owning one), so this
+list is filtered down to at most one item and the controls could never render. The endpoint stays
+for API compatibility: a client that still calls it gets the filtered list, not an error. The same
+predicate filters `GET /auth/login-tenants` (the login candidate list).
 
 **Authorization**: Requires authentication (any authenticated user)
 
@@ -511,6 +523,7 @@ Codes seen on this surface:
 | 200 | 200 | `success` | OK |
 | 200 | 400 | `param.invalid` | Binding/validation failure (also used for state conflicts; the envelope has no 409) |
 | 200 | 400 | `tenant.member.last_owner` | Removing the last active owner (contract §2.2) |
+| 200 | 400 | `tenant.member.user_not_in_tenant` | Add-member submitted a user owned by another tenant (contract §2.2 V1.7) |
 | 200 | 400 | `tenant.status.terminal` | Trying to move an archived tenant (contract §2.1) |
 | 200 | 403 | `tenant.platformOnly` | Non-platform subject on the tenant console |
 | 200 | 403 | `tenant.forbidden` | Foreign tenant id in the body / untrusted `X-Tenant-Id` |

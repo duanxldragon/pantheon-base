@@ -87,11 +87,6 @@ const jaJPFallback = {
   'auth.login.consoleTitle': '本人確認',
   'auth.login.securityNotice':
     '管理者が割り当てたアカウントでサインインしてください。ログイン時刻、端末、送信元 IP はセキュリティ監査のため記録されます。',
-  'auth.login.tenant.title': 'ワークスペーステナントを選択',
-  'auth.login.tenant.hint':
-    'このアカウントは複数のテナントに所属しています。今回のログイン範囲を選択してください。',
-  'auth.login.tenant.placeholder': 'テナントを選択',
-  'auth.login.tenant.back': '認証情報に戻る',
   'auth.login.idleTimeoutNotice':
     '長時間操作がなかったため自動的にサインアウトされました。続行するには再度サインインしてください。',
   'auth.login.feature.modules': 'モジュラーモノリス',
@@ -1499,6 +1494,7 @@ const jaJPFallback = {
   'tenant.forbidden':
     'このアカウントはこのテナントに所属していないため、データにアクセスできません。',
   'tenant.suspended': 'このテナントは停止中のため、ログインできません。',
+  'tenant.member.user_not_in_tenant': 'このユーザーは別のテナントに所属しているため、メンバーとして追加できません。',
   'tenant.archived': 'このテナントはアーカイブ済みのため、ログインできません。',
   'tenant.context.missing':
     'このセッションにはテナントコンテキストがありません。再度ログインしてください。',

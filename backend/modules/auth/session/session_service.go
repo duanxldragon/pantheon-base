@@ -224,6 +224,13 @@ func (s *Service) SwitchSessionTenant(ctx context.Context, sessionID string, use
 	if err != nil {
 		return nil, err
 	}
+	// W4 (W3 decision A, TC-01): a target where the subject holds no role
+	// binding would re-issue a session with an empty role set — the blank
+	// console. The membership gate above passes, so the refusal here is what
+	// makes the switch path agree with the login paths.
+	if len(roles) == 0 {
+		return nil, tenant.ErrTenantForbidden
+	}
 
 	now := time.Now()
 	sess.TenantID = tenantID

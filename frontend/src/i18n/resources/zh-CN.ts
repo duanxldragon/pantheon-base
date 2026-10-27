@@ -104,10 +104,6 @@ const zhCNFallback = {
   'auth.login.consoleTitle': '身份验证',
   'auth.login.securityNotice':
     '请使用管理员分配的账号登录。系统会记录登录时间、设备与来源 IP 用于安全审计。',
-  'auth.login.tenant.title': '选择工作租户',
-  'auth.login.tenant.hint': '该账号属于多个租户，请选择本次登录的工作范围。',
-  'auth.login.tenant.placeholder': '请选择租户',
-  'auth.login.tenant.back': '返回重新输入',
   'auth.login.idleTimeoutNotice': '当前账号因超过会话空闲时长被自动退出，请重新登录继续操作。',
   'auth.login.feature.modules': '模块化单体',
   'auth.login.feature.security': '安全会话',
@@ -2358,6 +2354,7 @@ const zhCNFallback = {
   'tenant.delete.error.archive_code_conflict': '释放租户编码失败，请重试',
   'tenant.forbidden': '当前账号不属于该租户，无法访问该租户的数据',
   'tenant.suspended': '该租户已被暂停，暂时无法登录',
+  'tenant.member.user_not_in_tenant': '该成员属于其他租户，无法添加为当前租户成员',
   'tenant.archived': '该租户已归档，无法登录',
   'tenant.context.missing': '当前会话缺少租户上下文，请重新登录',
   'tenant.id.invalid': '租户标识无效',

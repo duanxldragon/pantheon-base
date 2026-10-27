@@ -112,11 +112,6 @@ const enUSFallback = {
   'auth.login.consoleTitle': 'Identity verification',
   'auth.login.securityNotice':
     'Sign in with an administrator-assigned account. Login time, device, and source IP are recorded for security audit.',
-  'auth.login.tenant.title': 'Choose a workspace tenant',
-  'auth.login.tenant.hint':
-    'This account belongs to multiple tenants. Choose the scope for this sign-in.',
-  'auth.login.tenant.placeholder': 'Select a tenant',
-  'auth.login.tenant.back': 'Back to credentials',
   'auth.login.idleTimeoutNotice':
     'This account was signed out automatically after being idle for too long. Sign in again to continue.',
   'auth.login.feature.modules': 'Modular Monolith',
@@ -2548,6 +2543,7 @@ const enUSFallback = {
   'tenant.forbidden':
     'Your account does not belong to this tenant, so its data cannot be accessed.',
   'tenant.suspended': 'This tenant is suspended and cannot be signed in to right now.',
+  'tenant.member.user_not_in_tenant': 'That user belongs to another tenant and cannot be added as a member here.',
   'tenant.archived': 'This tenant is archived and cannot be signed in to.',
   'tenant.context.missing': 'This session has no tenant context. Please sign in again.',
   'tenant.id.invalid': 'Invalid tenant identifier.',
