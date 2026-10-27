@@ -893,12 +893,16 @@ func (s *Service) liveUser(userID uint64) (bool, error) {
 // What the invariant needs is "an owner that exists and is enabled", because a
 // disabled or deleted account cannot repair a tenant.
 func (s *Service) liveOwnerCount(tenantID uint64) (int64, error) {
+	// The NOSONAR marks below suppress gosecurity:S3649 only: the join text is
+	// static and every value bound to these placeholders is a uint64 or a package
+	// constant, so there is no request-supplied SQL text on this path.
+	const ownerMembershipScope = "tenant_memberships.tenant_id = ? AND tenant_memberships.role = ? AND tenant_memberships.status = ?" // NOSONAR gosecurity:S3649
+	const liveOwnerUserScope = "system_user.deleted_at IS NULL AND system_user.status = ?"                                            // NOSONAR gosecurity:S3649
 	var owners int64
 	if err := s.db.Table("tenant_memberships").
-		Joins("JOIN system_user ON system_user.id = tenant_memberships.user_id"). // NOSONAR gosecurity:S3649 - static join, no request-supplied text
-		Where("tenant_memberships.tenant_id = ? AND tenant_memberships.role = ? AND tenant_memberships.status = ?", // NOSONAR gosecurity:S3649
-			tenantID, tenant.MembershipRoleOwner, tenant.MembershipActive).
-		Where("system_user.deleted_at IS NULL AND system_user.status = ?", common.StatusEnabled). // NOSONAR gosecurity:S3649
+		Joins("JOIN system_user ON system_user.id = tenant_memberships.user_id").
+		Where(ownerMembershipScope, tenantID, tenant.MembershipRoleOwner, tenant.MembershipActive).
+		Where(liveOwnerUserScope, common.StatusEnabled).
 		Count(&owners).Error; err != nil {
 		return 0, fmt.Errorf("count tenant owners: %w", err)
 	}

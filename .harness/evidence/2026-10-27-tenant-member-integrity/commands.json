@@ -1,7 +1,7 @@
 {
   "taskId": "2026-10-27-tenant-member-integrity",
   "repo": "pantheon-base",
-  "executedAt": "2026-10-27T15:45:00+08:00",
+  "executedAt": "2026-10-27T18:20:00+08:00",
   "agent": {
     "tool": "other",
     "adapter": "qoder-agent"
@@ -155,6 +155,12 @@
       "cwd": ".",
       "notes": "not-run: this wave brought up no smoke fixture (no smoke spec was executed), so there was nothing to tear down. The commands remain mandatory for any wave that does run smoke.",
       "status": "not-run"
+    },
+    {
+      "command": "gofmt -l modules/system/iam/tenant/ ; go build ./... ; go test -count=1 ./modules/system/iam/tenant/... (PANTHEON_TEST_DSN + PANTHEON_TEST_DSN_REQUIRED=true + PANTHEON_TEST_REDIS_REQUIRED=true)",
+      "cwd": "backend",
+      "notes": "CI 'Fast Checks' (Check Go formatting) and 'Go Lint' (golangci-lint gofmt) both failed on tenant_service.go:898: the two-line Where call carried trailing NOSONAR comments, and gofmt wants the continuation line re-indented to the comment column. Fixed by hoisting the two static predicate strings into named consts (same pattern as tenant_plan_store.go's condIDEquals), keeping both NOSONAR gosecurity:S3649 markers on the SQL text; the consts are named ownerMembershipScope/liveOwnerUserScope so they do not shadow the package-level membershipScope helper. gofmt -l now reports nothing for the package; go build ./... exit 0; tenant package go test -count=1 exit 0 (72.9s, no skip, DSN required). Read-only refactor: no behaviour change, no assertion touched.",
+      "status": "passed"
     }
   ]
 }
