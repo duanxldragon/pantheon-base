@@ -9,6 +9,7 @@
   "knownGaps": [
     "runtimeEvidence item 1 (one real create/update/delete response body captured from a running instance) is recorded as not-run: no live backend was started this session. The envelope examples were instead verified against the handler source (tenant_platform_handler.go CreateTenant/UpdateTenant/DeleteTenant -> common.Success) and the envelope constructor (pkg/common/http/response.go:31-37); the not-run clause in the manifest covers this.",
     "The human gate 'Approve the contract revision note' is recorded as maintainer-delegated: V1.8 is additive (owner-transfer wording correction + two W2 error-code registrations), explicitly declaring no invariant or In/Out change. Open for maintainer review in the PR.",
+    "First CI round failed PR Governance Prereq + Docs Governance with 'Quality Profile must not be none for non-trivial changes': the manifest declared qualityProfile none while the wave is non-trivial (dependencyLayers non-empty). Corrected to ui-runtime (the wave's only runtime surface is the frontend type union) and the PR body regenerated. Observation for later waves: W6/W7/W8 manifests also declare qualityProfile none and will hit the same gate when executed; fix each at its own wave rather than cross-editing packets here.",
     "TENANT_API.md sections 2 (List) and 3 (Get) still show bare-row response bodies without the envelope shell; correcting them is outside this packet's in-scope list and is registered as a follow-up item, not slipped into this wave."
   ],
   "linkage": {
