@@ -355,9 +355,9 @@ GitHub Release 于 `2026-10-22T00:17:53Z` 发布，四件产物齐备（tgz 19,9
 | ✅ 已完成 | v0.17.6 发布收口（`2026-10-27-v0176-release-closeout`，tag→`c9bc6c0f`，四件资产 + Verify 核验） |
 | ✅ 已完成 | v0.17.7 发布收口（`2026-10-27-v0177-lint-codeql-closure`，三条 base 自有 lint/CodeQL 发现回流修复，tag→`2091a2d8`，四件资产） |
 | ✅ 已完成 | v0.17.8 发布收口（`2026-10-27-v0178-dep-vuln-closure`，依赖漏洞关闭 + Sonar 归属勘误，tag→`e256d1fb`，四件资产 + Verify run 40472462712） |
-| 🆕 已计划 | 代码精简与横向重复收敛（`2026-10-27-codebase-simplification-program`，12 个波次 S1×2 / S2×6 / S3×3 / 治理决策×1，全部 `status=planned`，未开工） |
+| 🚧 进行中 | 代码精简与横向重复收敛（`2026-10-27-codebase-simplification-program`：**S1×2 已完成**（#438 #439，其中 dead-code 波实测 **19 文件 +0/−1923** 纯删除）、**S4 已完成**（#441，五项治理面决策落档 `docs/reviews/GOVERNANCE_SURFACE_DECISIONS_2026-10-27.md`）；S2×6 挂在 foundation release 波次之前（维护者触点，已记录未派发）；S3×3 后续排期；follow-up `2026-10-27-s4-re-export-alias-removal` planned，双语 checker 接 CI 待批准） |
 | ✅ 已完成 | 租户功能完整性复核（2026-10-27，只读，前后端 + 租户运营；结论：单租户路径可用，**"租户开发已完成"不成立**；1 P1 / 2 P2 / 6 P3；产出 `docs/reviews/TENANT_FUNCTIONAL_COMPLETENESS_REVIEW_2026-10-27.md`） |
-| 🚧 进行中 | 租户完整性整改（`2026-10-27-tenant-completeness-remediation`，8 个波次；**W2 已完成**（PR #434），其余 `status=planned`；W3 决策未签字前 W4 不得启动） |
+| 🚧 进行中 | 租户完整性整改（`2026-10-27-tenant-completeness-remediation`，8 个波次；**W1–W5 已完成**（#436 / #434 / #440 / #442 / #443，#442/#443 合并中），W6–W8 planned；W3 决策 A 已按 maintainer-delegated 记录于签字文档） |
 | ⏸️ 暂停 | 无 |
 
 ## 租户权限隔离整改（2026-10-19，已收口）
@@ -465,14 +465,14 @@ GitHub Release 于 `2026-10-22T00:17:53Z` 发布，四件产物齐备（tgz 19,9
 平台作用域仍会列出全部租户角色、无策略角色仍 fail-closed 500、部门表改为扁平行——三项都是显式剩余项，
 分别需要产品决策或独立交互设计。
 
-## 租户完整性整改（2026-10-27，进行中：W2 已完成）
+## 租户完整性整改（2026-10-27，进行中：W1–W5 已完成，W6–W8 待启动）
 
 2026-10-27 的租户功能完整性复核（前后端 + 租户运营，只读）结论：**单租户部署路径功能完整可用**，
 原生租户用户端到端有 e2e 证据；但**"租户开发已完成"不成立**——跨租户 membership 可登录不可用，
-删除租户可绕过归档校验，成员写入不校验用户存在。8 个波次如下；**W2（成员完整性）已完成**，
-其余仍 `status=planned`。
+删除租户可绕过归档校验，成员写入不校验用户存在。8 个波次如下；**W1–W5 已完成**，
+W6–W8 仍 `status=planned`。
 
-- **父任务**：`.harness/tasks/2026-10-27-tenant-completeness-remediation/`（`status: planned`）
+- **父任务**：`.harness/tasks/2026-10-27-tenant-completeness-remediation/`（`status: in_progress`）
 - **计划文档**：`docs/harness/tasks/2026-10-27-tenant-completeness-remediation.task.md`
 - **复核报告**：`docs/reviews/TENANT_FUNCTIONAL_COMPLETENESS_REVIEW_2026-10-27.md`
 
@@ -489,11 +489,11 @@ GitHub Release 于 `2026-10-22T00:17:53Z` 发布，四件产物齐备（tgz 19,9
 
 | Wave | 任务包 | 级别 | 状态 | 依赖 |
 |---|---|---|---|---|
-| W1 | `2026-10-27-tenant-delete-archive-guard` | P2 | planned | — |
+| W1 | `2026-10-27-tenant-delete-archive-guard` | P2 | **completed**（PR #436） | — |
 | W2 | `2026-10-27-tenant-member-integrity` | P2 | **completed**（PR #434） | — |
-| W3 | `2026-10-27-tenant-multi-membership-decision` | P1 | planned | — |
-| W4 | `2026-10-27-tenant-multi-membership-authorization` | P1 | planned | W2、W3 签字 |
-| W5 | `2026-10-27-tenant-contract-docs-alignment` | P3 | planned | W1、W2、W4 |
+| W3 | `2026-10-27-tenant-multi-membership-decision` | P1 | **completed**（PR #440，决策 A 签字） | — |
+| W4 | `2026-10-27-tenant-multi-membership-authorization` | P1 | **completed**（PR #442，合并中） | W2、W3 签字 |
+| W5 | `2026-10-27-tenant-contract-docs-alignment` | P3 | **completed**（PR #443，合并中） | W1、W2、W4 |
 | W6 | `2026-10-27-tenant-console-ui-automation` | P3 | planned | W1、W2、W4 |
 | W7 | `2026-10-27-tenant-plan-ladder-decision` | P3 | planned | W5 |
 | W8 | `2026-10-27-tenant-dead-surface-removal` | P3 | planned | W5 |
@@ -508,8 +508,34 @@ W4 必须显式修改它。验证：租户包 100 顶层 + 27 子测试 / 0 skip
 检查 + 230 vitest + 3021×5 i18n key 全绿；红/绿差分只回退两个生产文件即让 4 条新用例必红。
 证据：`.harness/evidence/2026-10-27-tenant-member-integrity/`。
 
-**维护者门禁**：W3 的 A/B/C 决策未签字前 W4 不得启动；W1 需确认"严格按契约读"还是修订契约；
-W4 需批准移除登录租户选择器与 `TenantSwitcher` 但保留端点为兼容面；W6 需决定 `smoke-tenant` 是否转为阻断式检查；
+**W1 收口（2026-10-27，PR #436）**：删除守卫改为 `status != archived` 即拒绝（400
+`tenant.not_archived`），成员数不再参与判定——删光用户绕过归档的路径封死；平台与 legacy
+两个 handler 都注册该码，控制台对非归档行禁用删除入口；契约 §2.1 条文不变、§5 登记
+V1.6。证据：`.harness/evidence/2026-10-27-tenant-delete-archive-guard/`。
+
+**W3 收口（2026-10-27，PR #440）**：跨租户 membership 语义按**选项 A（收窄）**决策——
+角色绑定只从属主租户落库，跨租户 membership 永远是零角色上下文；决策文档
+`docs/reviews/TENANT_MULTI_MEMBERSHIP_DECISION_2026-10-27.md` 签字（maintainer-delegated
+记录），W4 据此启动。证据：`.harness/evidence/2026-10-27-tenant-multi-membership-decision/`。
+
+**W4 收口（2026-10-27，PR #442，合并中）**：单一谓词 `pkg/tenant.HasRoleBindingInTenant`
+（fail-closed）贯穿登录发现（先过滤再判歧义）、候选列表、可切换列表；`GateSessionIssuance`
+在 `EnsureTenantLoginable` 之后追加角色存在性检查；`SwitchSessionTenant` 在重盖会话前拒绝
+空角色目标；`AddMember` 以 `userOwnedByTenant` 收窄并登记 `400 tenant.member.user_not_in_tenant`
+（契约 V1.7）；登录租户选择器与 TenantSwitcher 按构造不可渲染而移除，端点保留为过滤后的
+兼容面。第一轮 CI 抓到两个 premise 遗漏（attribution / F1 测试），已补种子并全量 `./...`
+重跑绿——教训与证据见 `.harness/evidence/2026-10-27-tenant-multi-membership-authorization/`。
+
+**W5 收口（2026-10-27，PR #443，合并中）**：文档对齐已交付面——TENANT_API.md 四个响应
+示例对齐真实信封、未挂载的 `/members/page` 别名段删除；`MemberUsageQuery.status` →
+`'active' | 'disabled'`（与 UI 发送值、后端 binding 三方一致）并移除掩盖 cast；
+MULTI_TENANT_DESIGN.md 标注视野文档 + 「not in V1」清单；契约 §2.2 owner 转移改写为
+两步落地路径（无单一端点），V1.8 追加登记 W2 两个错误码。证据：
+`.harness/evidence/2026-10-27-tenant-contract-docs-alignment/`。
+
+**维护者门禁**：W3 的 A/B/C 决策已按选项 A 签字（maintainer-delegated 记录）；
+W1 的契约表述按「修订契约承认实现」处置（V1.6）；W4 的 UI 移除作为决策 A 推论按
+maintainer-delegated 记录；W6 需决定 `smoke-tenant` 是否转为阻断式检查；
 W7 需在 A/B/C 中选一。W2、W8 无门禁。
 
 **显式不在范围内**：表结构/迁移/数据回填、计费、独立 schema、membership 角色到 IAM 角色的隐式映射、
