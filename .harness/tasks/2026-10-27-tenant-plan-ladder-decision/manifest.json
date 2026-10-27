@@ -1,0 +1,135 @@
+{
+  "taskId": "2026-10-27-tenant-plan-ladder-decision",
+  "title": "Decide what a plan code outside the four-tier ladder means",
+  "goal": "Plan storage is data-driven: tenant_plans is the authority, the console plan editor creates and disables codes, and the compiled-in four-tier table is only the seed plus a fallback for codes the table does not hold. The frontend feature gate is not data-driven. core/entitlements/plans.ts closes the union to four codes, ranks them 0-3, maps every other code to free, and hides lowcode surfaces below a rank. The code already says so: planOptions.ts:4-20 and TenantList.tsx:256-260 both state that an operator-defined code resolves to free, and the tenant dialog renders a warning when the typed code is outside the ladder. So this is a documented limitation, not a silent bug - but the warning never says what it costs, and the operator has no way to grant a custom plan the feature surfaces its quotas imply. This packet decides which way out and implements nothing.",
+  "primaryLayer": "system/iam",
+  "status": "planned",
+  "priority": "P3",
+  "type": "decision",
+  "estimatedComplexity": "small",
+  "parentTaskId": "2026-10-27-tenant-completeness-remediation",
+  "dependsOn": [
+    "2026-10-27-tenant-contract-docs-alignment"
+  ],
+  "findings": [
+    "TC-07 (P3): frontend/src/core/entitlements/plans.ts:16-23 closes TenantPlan to four literals, :58-63 hardcodes PLAN_RANK, :70-75 maps any other code to free, and :37-56 hardcodes the feature-to-tier matrix. The backend accepts any code matching ^[a-z][a-z0-9_-]{1,31}$ (tenant_plan_model.go:76,88-91) and the console plan editor creates one (TenantPlanEditor.tsx, POST /system/tenant-ops/plan).",
+    "Concrete consequence: create plan trial with enterprise quotas, assign a tenant to it, log in as that tenant's user. context.tenant.plan is trial, normalizeTenantPlan returns free, PlanFeatureGuard hides lowcode.dynamic-module and the generator pages even though the quota row says otherwise. Quota and visible surface disagree, and only one of them is data the operator controls.",
+    "The limitation is documented rather than accidental: planOptions.ts:4-20 explains the four-tier ladder and the fallback, TenantList.tsx:256-260 repeats it at the call site, and TenantList.tsx:831-835 shows system.tenant.plan.outsideLadder when the typed code is outside the ladder. What is missing is the consequence (paid surfaces resolve to free) and any way to attach features to a custom plan.",
+    "Second drift: TenantPlanMatrix renders the four built-in tiers from PLAN_FEATURES, so a custom plan is invisible on the console page that is supposed to explain what a plan includes.",
+    "No test covers the entitlements module: on 2026-10-27 the frontend unit suite ran 34 files / 230 tests green, and none of them import core/entitlements. The rank and fallback rules are therefore unverified by tests as well as undocumented in the contract.",
+    "The backend half is not affected: PlanStore reads the table, GetDefaultQuota is the documented fallback, and tenant_plan_store_test.go pins seed idempotence and quota resolution."
+  ],
+  "scope": {
+    "in": [
+      "Write docs/reviews/TENANT_PLAN_LADDER_DECISION_2026-10-27.md with the concrete consequence above and one row per option",
+      "Option A (smallest): accept the ladder. Plans outside it are quota-only by design; make that explicit in the outsideLadder warning copy and in contract section 2.4, and stop presenting the four-tier matrix as if it covered every plan. No source logic changes",
+      "Option B: make entitlements server-driven. Add a rank (or tier) and a feature set to tenant_plans, return them through the existing plan payload and the session context, and delete PLAN_RANK, PLAN_FEATURES and normalizeTenantPlan from the frontend. This needs a migration, so it lands as a separate packet outside this program",
+      "Option C: keep plans as quota definitions only and remove the plan-driven feature gate: delete the rank machinery, PlanFeatureGuard, the lowcode entries on the plan matrix and the AppLayout path gate; those pages then depend only on page and action permissions, which already exist",
+      "Record the recommendation, the cost, and which consequence each option leaves standing",
+      "Name the follow-up packet id for whichever option is chosen, and state that the chosen option is not part of V1 completeness"
+    ],
+    "out": [
+      "Implementing any option in this packet",
+      "Editing backend or frontend source",
+      "Adding a migration or changing tenant_plans",
+      "Changing what a plan's quota numbers mean",
+      "Removing permission checks on the lowcode pages under any option"
+    ]
+  },
+  "dependencyLayers": [
+    "system/iam",
+    "platform"
+  ],
+  "implementationNotes": [
+    "This is a decision packet: a wave that changes no source file is a valid closeout.",
+    "Do not describe the current behaviour as a defect discovered in this review. The code documents it in three places; the review's contribution is that the consequence is not stated to the operator and the feature matrix does not cover custom plans.",
+    "Option A and option C both avoid a migration; option B is the only one that keeps custom plans working with feature gating, and the only one that changes the schema, so it cannot land inside this program.",
+    "Option C must say plainly that it gives paid lowcode surfaces to every tenant that has the page permission, because that is the product decision being made, not a side effect.",
+    "The recommendation should follow the smallest complete change: if plan-based packaging is not a shipped product requirement, C is smaller than B and honest; if it is, B is the only option that survives; if custom plans are simply quota buckets, A costs a copy change and a contract sentence.",
+    "Do not propose keeping the four-tier rank in the frontend while allowing custom codes without saying which option that is; that is the current state."
+  ],
+  "contractAnchors": [
+    "AGENTS.md",
+    "docs/contracts/TENANT_CONTRACT_V1.md",
+    "docs/api/TENANT_API.md",
+    "docs/reviews/TENANT_FUNCTIONAL_COMPLETENESS_REVIEW_2026-10-27.md"
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "none",
+    "portableFailureClass": "entitlement-model-drift",
+    "ownerLayer": "consumer-repository",
+    "ratchetDecision": "guide-updated",
+    "coverageDimensions": [
+      "behaviour",
+      "architecture-fitness"
+    ]
+  },
+  "expectedFiles": {
+    "create": [
+      "docs/reviews/TENANT_PLAN_LADDER_DECISION_2026-10-27.md"
+    ],
+    "modify": [],
+    "doNotTouch": [
+      "backend/**",
+      "frontend/src/**",
+      "backend/pkg/database/migrations/**"
+    ]
+  },
+  "executionRoles": {
+    "implementerPosture": "Write the decision document only; reproduce the consequence from code reading and say it was not executed in a browser if it was not.",
+    "reviewerPosture": [
+      "Confirm the reproduction is reachable through the console as written.",
+      "Confirm the document credits the existing in-code documentation instead of reporting a fresh bug.",
+      "Confirm each option states what it fixes, what it breaks and whether it needs a migration.",
+      "Confirm the recommendation names one option and one follow-up packet.",
+      "Confirm no option weakens page or action permissions.",
+      "Confirm the document says this is not a V1 completeness blocker."
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "node scripts/harness/check-doc-links.mjs --root . --strict",
+      "node scripts/harness/check-doc-inventory.mjs --root . --strict",
+      "node scripts/harness/check-task-packet.mjs --root ."
+    ],
+    "runtimeEvidence": [
+      "none required; if the implementer can run the console, attach the screenshot of a trial-plan tenant missing the generator page and note it was produced with a local instance",
+      "baseline recorded on 2026-10-27: frontend unit suite 34 files / 230 tests pass and contains no entitlements test; frontend build (14 prebuild contract checks) passes"
+    ]
+  },
+  "runtimeSensitive": false,
+  "evidenceRequired": [
+    ".harness/evidence/2026-10-27-tenant-plan-ladder-decision/decision.md with the option table and the signed choice",
+    ".harness/evidence/2026-10-27-tenant-plan-ladder-decision/commands.json",
+    ".harness/evidence/2026-10-27-tenant-plan-ladder-decision/summary.md"
+  ],
+  "humanGates": [
+    "Choose A (ladder is quota-only, document it), B (server-driven entitlements, separate migration packet) or C (remove the plan-driven feature gate)."
+  ],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed",
+    "The custom-plan consequence is documented with the exact files and the user-visible result",
+    "The document credits the existing in-code documentation and the outsideLadder warning",
+    "Three options recorded with cost, migration need and remaining consequence",
+    "One option recommended and the follow-up packet named",
+    "The document states this is not a V1 completeness blocker"
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-27-tenant-plan-ladder-decision/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-27-tenant-plan-ladder-decision/",
+    "summaryFile": ".harness/evidence/2026-10-27-tenant-plan-ladder-decision/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-27-tenant-plan-ladder-decision/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-27-tenant-completeness-remediation.task.md",
+      "docs/reviews/TENANT_FUNCTIONAL_COMPLETENESS_REVIEW_2026-10-27.md",
+      "docs/contracts/TENANT_CONTRACT_V1.md"
+    ]
+  }
+}

@@ -1,0 +1,147 @@
+{
+  "taskId": "2026-10-27-s2-pagination-sort-migration",
+  "title": "Converge the 13 pagination normalizers and the 6-8 sort whitelist helpers onto the shared helpers",
+  "goal": "Thirteen pagination normalizers and six to eight sort whitelist helpers do the same two things: clamp page and pageSize, and map a requested column to an allowed one or fall back to the default. Each keeps its own defaults, caps and column list, which is correct, but the code that applies them is copied. This wave replaces the copies with the shared helpers while passing each module's own values in as parameters, and merges the two copies that exist inside role_helper.go. The measurable outcome is one pagination implementation and one sort implementation, with the per-module caps and whitelists unchanged and every boundary case covered by a test.",
+  "primaryLayer": "platform",
+  "status": "planned",
+  "priority": "P1",
+  "type": "refactor",
+  "estimatedComplexity": "medium",
+  "parentTaskId": "2026-10-27-codebase-simplification-program",
+  "dependsOn": [
+    "2026-10-27-s2-shared-handler-helpers"
+  ],
+  "findings": [
+    "RC-013 (P1): normalizers at role_helper.go:523-539 and :541-557 (two in one module), post_service.go:690-706, permission_service.go:963-979, user_helper.go:29-48, dict_service.go:1339, audit_service.go:378, security_service.go:722, login_service.go, session_service.go:460, tenant_ops_view.go:390, tenant_handler.go:276, tenant_platform_handler.go:187, setting_audit.go:162. Offset/Limit call sites at role_service.go:134,766; post_service.go:97; permission_service.go:226; user_service.go:266; dict_service.go:602; audit_service.go:96; security_service.go:229; session_service.go:504; setting_audit.go:180; login_service.go:286; tenant_ops_view.go:437; tenant_service.go:1005,1039.",
+    "RC-015 (P1): sort whitelist helpers at role_helper.go:559+, post_service.go:708+, permission_service.go:984+, user_helper.go:50+, menu_service.go:597-630, plus dept, dict, audit and security variants.",
+    "RC-028 (P2): setting_audit.go:162 carries its own inline pagination."
+  ],
+  "scope": {
+    "in": [
+      "Merge the two role_helper.go normalizers into one and then onto the shared helper",
+      "Replace each module normalizer with the shared helper, passing that module's default page size and cap",
+      "Replace each sort helper with the shared helper, passing that module's allowed-column map and default column",
+      "Replace the 14 Offset/Limit sites with the offset returned by the helper",
+      "Replace the setting_audit inline pagination",
+      "Add boundary tests: page 0, page negative, pageSize 0, pageSize above cap, unknown sort column"
+    ],
+    "out": [
+      "Changing any module's default page size, maximum page size or default sort column",
+      "Changing the JSON list response shape, total counting or empty-list behaviour",
+      "Adding cursor pagination or any new pagination mode",
+      "Touching GORM query construction beyond the Offset/Limit values"
+    ]
+  },
+  "dependencyLayers": [
+    "system/auth",
+    "system/iam",
+    "system/org",
+    "system/config"
+  ],
+  "implementationNotes": [
+    "Capture each module's current default and cap before replacing it. If two modules genuinely disagree, that disagreement is preserved, not harmonised.",
+    "The two role_helper.go copies may differ in edge-case handling; diff them first. If they do differ, the merged version must adopt the behaviour of the one actually called at each site.",
+    "Replace the normalizer and the Offset/Limit site in the same commit for a given module, otherwise the intermediate tree can page differently.",
+    "If a module's normalizer also sanitises something else (for example keyword trimming), keep that part local.",
+    "Do not change tenant-service queries in this wave if W9 will rewrite them; coordinate by leaving tenant_service.go:1005,1039 to W9 and noting it in the summary."
+  ],
+  "contractAnchors": [
+    "AGENTS.md",
+    "docs/reviews/REDUNDANT_CODE_CANDIDATES.md"
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "none",
+    "portableFailureClass": "duplication-drift",
+    "ownerLayer": "consumer-repository",
+    "ratchetDecision": "sensor-added",
+    "coverageDimensions": [
+      "behaviour",
+      "maintainability"
+    ]
+  },
+  "expectedFiles": {
+    "create": [
+      "backend/pkg/common/pagination_test.go",
+      "backend/pkg/common/sort_test.go"
+    ],
+    "modify": [
+      "backend/modules/system/iam/role/role_helper.go",
+      "backend/modules/system/iam/role/role_service.go",
+      "backend/modules/system/iam/post/post_service.go",
+      "backend/modules/system/iam/permission/permission_service.go",
+      "backend/modules/system/iam/user/user_helper.go",
+      "backend/modules/system/iam/user/user_service.go",
+      "backend/modules/system/iam/menu/menu_service.go",
+      "backend/modules/system/config/dict/dict_service.go",
+      "backend/modules/system/audit/audit_service.go",
+      "backend/modules/system/audit/setting_audit.go",
+      "backend/modules/auth/login/login_service.go",
+      "backend/modules/auth/session/session_service.go",
+      "backend/modules/auth/security/security_service.go",
+      "backend/modules/system/iam/tenant/tenant_ops_view.go",
+      "backend/modules/system/iam/tenant/tenant_handler.go",
+      "backend/modules/system/iam/tenant/tenant_platform_handler.go"
+    ],
+    "doNotTouch": [
+      "backend/modules/system/iam/tenant/tenant_service.go",
+      "backend/pkg/common/http/response.go",
+      "backend/pkg/database/migrations/**",
+      "frontend/**"
+    ]
+  },
+  "executionRoles": {
+    "implementerPosture": "One module per commit, normalizer and its Offset/Limit site together.",
+    "reviewerPosture": [
+      "Confirm each module's default page size, cap and default sort column are unchanged.",
+      "Confirm the list response shape and total count are unchanged.",
+      "Confirm role_helper.go now has one normalizer.",
+      "Confirm boundary tests exist for every helper."
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "cd backend && gofmt -l modules pkg",
+      "cd backend && go build ./...",
+      "cd backend && go vet ./...",
+      "cd backend && go test -count=1 ./modules/... ./pkg/common/...",
+      "grep -rn \"Offset((page\" backend | wc -l"
+    ],
+    "runtimeEvidence": [
+      "list endpoint page=0, pageSize=0 and pageSize=10000 responses before and after, per modified module",
+      "normalizer count before 13 and after 1, measured by grep"
+    ]
+  },
+  "runtimeSensitive": false,
+  "evidenceRequired": [
+    ".harness/evidence/2026-10-27-s2-pagination-sort-migration/commands.json",
+    ".harness/evidence/2026-10-27-s2-pagination-sort-migration/response-diff.md",
+    ".harness/evidence/2026-10-27-s2-pagination-sort-migration/summary.md with the measured counts and the tenant_service deferral"
+  ],
+  "humanGates": [
+    "If two modules' pagination caps must be unified to make the helper work, stop: that is a behaviour change and needs a decision."
+  ],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed",
+    "One pagination implementation and one sort implementation remain",
+    "role_helper.go contains a single normalizer",
+    "Boundary tests cover zero, negative, oversized and unknown inputs",
+    "tenant_service.go pagination is explicitly deferred to the tenant-scope wave"
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-27-s2-pagination-sort-migration/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-27-s2-pagination-sort-migration/",
+    "summaryFile": ".harness/evidence/2026-10-27-s2-pagination-sort-migration/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-27-s2-pagination-sort-migration/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-27-codebase-simplification-program.task.md",
+      "docs/reviews/CODE_SIMPLIFICATION_PLAN.md"
+    ]
+  }
+}

@@ -1,0 +1,144 @@
+{
+  "taskId": "2026-10-27-tenant-contract-docs-alignment",
+  "title": "Align tenant contract, API doc, frontend types and design doc with the shipped surface",
+  "goal": "Several documents describe a tenant surface that is not the one that ships. TENANT_API.md documents a GET /system/tenant/:id/members/page compatibility alias that exists only in the unmounted tenant_routes.go, and shows create/update/delete responses as a bare message object while the handler returns the common envelope. MemberUsageQuery.status is typed 'active' | 'removed' while the UI sends 'disabled', hidden by a cast. MULTI_TENANT_DESIGN.md still describes subdomains, custom domains, branding and public registration as a next phase, none of which is in the V1 contract. The contract says owner transfer is an explicit API action but no transfer endpoint exists; the shipped path is add-owner then remove-owner. This wave changes documentation and one type union, no runtime behaviour.",
+  "primaryLayer": "system/iam",
+  "status": "planned",
+  "priority": "P3",
+  "type": "docs",
+  "estimatedComplexity": "small",
+  "parentTaskId": "2026-10-27-tenant-completeness-remediation",
+  "dependsOn": [
+    "2026-10-27-tenant-delete-archive-guard",
+    "2026-10-27-tenant-member-integrity",
+    "2026-10-27-tenant-multi-membership-authorization"
+  ],
+  "findings": [
+    "TC-05 (P3): TENANT_API.md:229,255 document /system/tenant/:id/members/page as a live compatibility alias; the route is registered only in tenant_routes.go:25, and RegisterRoutes/NewHandler have no production caller.",
+    "TC-05 (P3): TENANT_API.md:153-157 and :169-174 show create/update/delete responses as {\"message\": ...}; tenant_platform_handler.go:143,163,178 return common.Success with an envelope.",
+    "TC-06 (P3): api.ts:239 types status as 'active' | 'removed'; TenantMemberList.tsx:230-236 sends 'disabled'; the cast at :84 hides the mismatch.",
+    "TC-08 (P3): MULTI_TENANT_DESIGN.md describes subdomains, custom domains, branding and public registration as an implementation phase; TENANT_CONTRACT_V1.md section 1 puts them out of scope.",
+    "TC-07 wording: TENANT_CONTRACT_V1.md section 2.2 says owner transfer is an explicit API action; the service exposes add-owner and remove-owner but no transfer endpoint."
+  ],
+  "scope": {
+    "in": [
+      "Remove the /members/page compatibility-alias paragraphs from TENANT_API.md and state that only /members is mounted",
+      "Align the create/update/delete response examples in TENANT_API.md with the common envelope actually returned",
+      "Update the delete, add-member and switchable sections to the behaviour landed by W1, W2 and W4",
+      "Change MemberUsageQuery.status to 'active' | 'disabled' and remove the cast in TenantMemberList.tsx",
+      "Add a status banner to the top of docs/designs/MULTI_TENANT_DESIGN.md: vision document, not a V1 commitment; the binding scope is TENANT_CONTRACT_V1.md section 1",
+      "Rewrite the owner-transfer sentence in contract section 2.2 to describe the shipped two-step path (add a second owner, then remove the previous one) and state that no single transfer endpoint exists",
+      "Add a revision note to the contract recording the W1/W2/W4 clarifications, without changing any invariant"
+    ],
+    "out": [
+      "Adding a transfer endpoint or any other runtime change",
+      "Changing the contract's In/Out scope",
+      "Rewriting the whole design document or deleting it",
+      "Changing permission codes, menus, i18n keys or routes",
+      "Aligning documents to behaviour the dependent waves have not landed yet (run this wave afterwards)"
+    ]
+  },
+  "dependencyLayers": [
+    "system/iam",
+    "system/auth"
+  ],
+  "implementationNotes": [
+    "Documentation must describe the shipped behaviour, not the intended one. If a dependent wave was abandoned, document the surviving behaviour and say so.",
+    "The status union change is type-only; do not change what the UI sends at runtime.",
+    "For the design document, add a banner and a short 'what is not in V1' list that points at the contract; do not delete the exploratory content.",
+    "The contract revision note must be additive: clarify wording, do not re-open the In/Out boundary.",
+    "Run check-doc-links and check-doc-inventory after editing; removing the alias paragraph must leave no dangling anchor."
+  ],
+  "contractAnchors": [
+    "AGENTS.md",
+    "docs/README.md",
+    "docs/contracts/TENANT_CONTRACT_V1.md",
+    "docs/api/TENANT_API.md",
+    "docs/designs/MULTI_TENANT_DESIGN.md",
+    "docs/reviews/TENANT_FUNCTIONAL_COMPLETENESS_REVIEW_2026-10-27.md"
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "none",
+    "portableFailureClass": "documentation-drift",
+    "ownerLayer": "consumer-repository",
+    "ratchetDecision": "sensor-added",
+    "coverageDimensions": [
+      "maintainability",
+      "behaviour"
+    ]
+  },
+  "expectedFiles": {
+    "create": [],
+    "modify": [
+      "docs/api/TENANT_API.md",
+      "docs/contracts/TENANT_CONTRACT_V1.md",
+      "docs/designs/MULTI_TENANT_DESIGN.md",
+      "frontend/src/modules/system/iam/tenant/api.ts",
+      "frontend/src/modules/system/iam/tenant/TenantMemberList.tsx"
+    ],
+    "doNotTouch": [
+      "backend/**",
+      "frontend/src/index.ts",
+      "docs/archive/**",
+      "pantheon-ops/**"
+    ]
+  },
+  "executionRoles": {
+    "implementerPosture": "Read the landed code first, then edit the documents to match it; change only the type union in source.",
+    "reviewerPosture": [
+      "Spot-check every edited example against a real handler response.",
+      "Confirm no documented route is absent from system_modules.go.",
+      "Confirm the type union matches every value the UI sends.",
+      "Confirm the design banner names the binding contract.",
+      "Confirm the contract change is a clarification, not a scope change."
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "cd frontend && npx tsc -b",
+      "cd frontend && npm run lint",
+      "node scripts/harness/check-doc-links.mjs --root . --strict",
+      "node scripts/harness/check-doc-inventory.mjs --root . --strict",
+      "node scripts/harness/check-task-packet.mjs --root .",
+      "rg -n \"members/page\" docs/api/TENANT_API.md backend/modules/system/system_modules.go backend/modules/system/iam/tenant/tenant_routes.go"
+    ],
+    "runtimeEvidence": [
+      "one real response body for create, update and delete captured from a running instance, or an explicit not-run with the environment gap",
+      "baseline recorded on 2026-10-27: backend build/vet and 46 packages of tests pass; frontend tsc, eslint and build (including the 14 prebuild contract checks) pass, so this wave starts from a green tree"
+    ]
+  },
+  "runtimeSensitive": false,
+  "evidenceRequired": [
+    ".harness/evidence/2026-10-27-tenant-contract-docs-alignment/commands.json",
+    ".harness/evidence/2026-10-27-tenant-contract-docs-alignment/doc-diff.md explaining each corrected claim",
+    ".harness/evidence/2026-10-27-tenant-contract-docs-alignment/summary.md"
+  ],
+  "humanGates": [
+    "Approve the contract revision note; it clarifies owner transfer and multi-membership without changing the In/Out boundary."
+  ],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed",
+    "TENANT_API.md documents only mounted routes and the real envelope",
+    "MemberUsageQuery.status matches the UI values with no cast",
+    "MULTI_TENANT_DESIGN.md is marked as a vision document",
+    "Contract section 2.2 describes the shipped owner-transfer path",
+    "Doc link and inventory gates pass"
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-27-tenant-contract-docs-alignment/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-27-tenant-contract-docs-alignment/",
+    "summaryFile": ".harness/evidence/2026-10-27-tenant-contract-docs-alignment/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-27-tenant-contract-docs-alignment/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-27-tenant-completeness-remediation.task.md",
+      "docs/reviews/TENANT_FUNCTIONAL_COMPLETENESS_REVIEW_2026-10-27.md"
+    ]
+  }
+}

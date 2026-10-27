@@ -1,0 +1,117 @@
+{
+  "taskId": "2026-10-27-s3-oidc-envelope",
+  "title": "Decide and document whether the OIDC handler may keep its non-standard response shape",
+  "goal": "The OIDC handler writes six raw c.JSON responses instead of using common.Success and common.Fail, which looks like the same drift the tenant handler has. It may not be drift: OIDC endpoints are consumed by an identity provider and by standards-aware clients, and wrapping a token response in a business envelope would break them. This wave is an investigation with an evidence-backed decision as its deliverable: for each of the six responses, identify the protocol contract it belongs to, and either keep it raw with a comment naming the contract, or move it onto the common envelope if it is genuinely a business endpoint. No code change is required if every response turns out to be protocol-shaped.",
+  "primaryLayer": "system/auth",
+  "status": "planned",
+  "priority": "P3",
+  "type": "investigation",
+  "estimatedComplexity": "small",
+  "parentTaskId": "2026-10-27-codebase-simplification-program",
+  "dependsOn": [],
+  "findings": [
+    "RC-026 (P3): backend/modules/auth/oidc/handler.go:28,46,55,63,88,94 write raw c.JSON while the rest of the codebase uses the common envelope.",
+    "Unknown: whether each of the six responses is part of an OIDC protocol contract (authorization code, token, userinfo, discovery) or a business endpoint that merely lives in this handler."
+  ],
+  "scope": {
+    "in": [
+      "Classify each of the six raw responses against its protocol contract",
+      "Add a one-line comment naming the contract for each response that must stay raw",
+      "Move any response that is genuinely a business endpoint onto common.Success / common.Fail",
+      "Record the classification table in evidence"
+    ],
+    "out": [
+      "Changing any OIDC response body, status, header or field name",
+      "Changing the OIDC callback URL, state handling, nonce handling or token validation",
+      "Refactoring the OIDC flow itself",
+      "Touching identity-provider configuration"
+    ]
+  },
+  "dependencyLayers": [
+    "system/auth"
+  ],
+  "implementationNotes": [
+    "Default to keep. An identity provider is not a party that can be asked to change its parser, so a protocol response that is raw today stays raw unless it is provably a business endpoint.",
+    "The deliverable is the classification, not a diff. A wave that changes nothing and documents why is a successful wave.",
+    "If any endpoint is business-shaped, changing it requires a matching frontend change and belongs in its own commit with a response diff.",
+    "Do not use this wave to touch the tenant handler envelope; that is a separate S2 packet."
+  ],
+  "contractAnchors": [
+    "AGENTS.md",
+    "docs/contracts/SYSTEM_AUTH_CONTRACT.md",
+    "docs/designs/AUTH_MODULE_DESIGN.md"
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "auth-security",
+    "portableFailureClass": "contract-misread",
+    "ownerLayer": "consumer-repository",
+    "ratchetDecision": "no-repeat-observed",
+    "coverageDimensions": [
+      "behaviour",
+      "maintainability"
+    ]
+  },
+  "expectedFiles": {
+    "create": [
+      "docs/reviews/OIDC_RESPONSE_CONTRACT_2026-10-27.md"
+    ],
+    "modify": [
+      "backend/modules/auth/oidc/handler.go"
+    ],
+    "doNotTouch": [
+      "frontend/src/modules/auth/**",
+      "backend/pkg/common/http/response.go",
+      "backend/modules/system/iam/tenant/tenant_handler.go"
+    ]
+  },
+  "executionRoles": {
+    "implementerPosture": "Classify first; only change responses proven to be business endpoints.",
+    "reviewerPosture": [
+      "Check each classification against the protocol spec, not against intuition.",
+      "Check every surviving raw response has a contract comment.",
+      "Check the OIDC end-to-end login still works."
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "cd backend && go build ./...",
+      "cd backend && go test -count=1 ./modules/auth/...",
+      "grep -n \"c.JSON\" backend/modules/auth/oidc/handler.go"
+    ],
+    "runtimeEvidence": [
+      "one OIDC login round-trip against the configured provider, or an explicit runtime gap naming the missing provider"
+    ]
+  },
+  "runtimeSensitive": true,
+  "evidenceRequired": [
+    ".harness/evidence/2026-10-27-s3-oidc-envelope/commands.json",
+    ".harness/evidence/2026-10-27-s3-oidc-envelope/classification.md with one row per raw response",
+    ".harness/evidence/2026-10-27-s3-oidc-envelope/summary.md"
+  ],
+  "humanGates": [
+    "Confirm any proposed envelope change for an OIDC endpoint; the default decision is keep raw."
+  ],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed",
+    "All six raw responses are classified",
+    "Every surviving raw response names its protocol contract in a comment",
+    "OIDC login still works or the runtime gap is recorded"
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-27-s3-oidc-envelope/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-27-s3-oidc-envelope/",
+    "summaryFile": ".harness/evidence/2026-10-27-s3-oidc-envelope/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-27-s3-oidc-envelope/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-27-codebase-simplification-program.task.md",
+      "docs/contracts/SYSTEM_AUTH_CONTRACT.md"
+    ]
+  }
+}

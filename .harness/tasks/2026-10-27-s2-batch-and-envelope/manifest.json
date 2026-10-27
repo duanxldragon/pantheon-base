@@ -1,0 +1,138 @@
+{
+  "taskId": "2026-10-27-s2-batch-and-envelope",
+  "title": "Unify batch status/delete handlers and the tenant response envelope, and remove the redundant user scope wrapper",
+  "goal": "Six modules implement batch status and batch delete handlers with the same five steps: parse the ID list, reject an empty list, call the service, collect per-item failures, respond. common.BatchDeleteResp and BatchDeleteFailure already exist as the shared return types, so the intent was already shared but the handler wrapper was not. Separately, the tenant handlers write raw c.JSON in nine places while the rest of the module uses common.Success and common.Fail, which forces the frontend to parse two envelope shapes. This wave extracts one batch helper, moves the tenant handlers onto the common envelope, and removes the double scope wrapper in user_service.go after confirming it is not a deliberate tenant-plus-dept composition.",
+  "primaryLayer": "platform",
+  "status": "planned",
+  "priority": "P2",
+  "type": "refactor",
+  "estimatedComplexity": "medium",
+  "parentTaskId": "2026-10-27-codebase-simplification-program",
+  "dependsOn": [
+    "2026-10-27-s2-shared-handler-helpers",
+    "2026-10-27-s2-error-mapping-dedup"
+  ],
+  "findings": [
+    "RC-023 (P2): batch handlers at role_handler.go:171-198, dept_handler.go:125-184, post_handler.go:86-128, dict_handler.go:95-119 and :198-222, user_handler.go:229-256, permission_handler.go:211-224.",
+    "RC-025 (P2): tenant_handler.go:90,115,142,174,198,232,262,310,347 write raw c.JSON while the rest of the module uses common.Success/Fail.",
+    "RC-030 (P2): user_service.go:58 and :63 apply two scope wrappers to the same query without an evident second filter."
+  ],
+  "scope": {
+    "in": [
+      "Extract one batch action helper that parses the ID list, rejects empty input, invokes the service and builds common.BatchDeleteResp",
+      "Migrate the six batch handler families onto it, preserving each module's permission check and partial-failure semantics",
+      "Replace the nine raw c.JSON calls in tenant_handler.go with common.Success and common.Fail",
+      "Confirm the two user_service.go scope wrappers are redundant, then remove the inner one",
+      "Update any frontend tenant call site that depended on the raw JSON shape, after verifying none does"
+    ],
+    "out": [
+      "Changing batch request payloads or the success/failure tally format",
+      "Changing tenant permission checks or tenant isolation behaviour",
+      "Changing the shared envelope itself",
+      "Touching tenant_service.go query construction, which belongs to the S3 tenant wave"
+    ]
+  },
+  "dependencyLayers": [
+    "system/iam",
+    "system/org",
+    "system/config"
+  ],
+  "implementationNotes": [
+    "The envelope change (RC-025) is the only item here visible to the frontend. Capture a real tenant response before and after, and grep frontend/src for a parser that keys off the raw shape before changing it.",
+    "If a tenant endpoint is consumed by an external caller rather than the bundled frontend, keep the raw shape and record it; the audit found no such caller but did not prove it for every tenant route.",
+    "The user_service.go double wrapper must be proven redundant by reading both layers. If the outer layer adds a dept or data-scope predicate, the item is a false positive and is dropped.",
+    "Batch helpers must preserve each module's distinct permission check; do not move authorization into the shared helper."
+  ],
+  "contractAnchors": [
+    "AGENTS.md",
+    "DESIGN.md",
+    "docs/reviews/REDUNDANT_CODE_CANDIDATES.md"
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "permission-policy",
+    "portableFailureClass": "response-contract-drift",
+    "ownerLayer": "consumer-repository",
+    "ratchetDecision": "sensor-added",
+    "coverageDimensions": [
+      "behaviour",
+      "maintainability",
+      "runtime-quality"
+    ]
+  },
+  "expectedFiles": {
+    "create": [
+      "backend/pkg/common/batch_handler.go",
+      "backend/pkg/common/batch_handler_test.go"
+    ],
+    "modify": [
+      "backend/modules/system/iam/role/role_handler.go",
+      "backend/modules/system/iam/dept/dept_handler.go",
+      "backend/modules/system/iam/post/post_handler.go",
+      "backend/modules/system/config/dict/dict_handler.go",
+      "backend/modules/system/iam/user/user_handler.go",
+      "backend/modules/system/iam/user/user_service.go",
+      "backend/modules/system/iam/permission/permission_handler.go",
+      "backend/modules/system/iam/tenant/tenant_handler.go"
+    ],
+    "doNotTouch": [
+      "backend/pkg/common/http/response.go",
+      "backend/modules/system/iam/tenant/tenant_service.go",
+      "backend/pkg/database/migrations/**"
+    ]
+  },
+  "executionRoles": {
+    "implementerPosture": "Batch helper and migrations first, then the tenant envelope as its own commit with the frontend check attached.",
+    "reviewerPosture": [
+      "Confirm each module's permission check still runs before the batch action.",
+      "Confirm partial-failure counts are unchanged.",
+      "Confirm the tenant envelope change is matched by the frontend or proven unused.",
+      "Confirm the removed user_service wrapper was not carrying a predicate."
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "cd backend && gofmt -l modules pkg",
+      "cd backend && go build ./...",
+      "cd backend && go vet ./...",
+      "cd backend && go test -count=1 ./modules/... ./pkg/common/...",
+      "cd frontend && npm run build"
+    ],
+    "runtimeEvidence": [
+      "batch endpoint response for success, partial failure, empty list and an unauthorized id",
+      "one tenant endpoint raw body before and after the envelope change",
+      "user list response under a dept-scoped operator after removing the inner wrapper"
+    ]
+  },
+  "runtimeSensitive": true,
+  "evidenceRequired": [
+    ".harness/evidence/2026-10-27-s2-batch-and-envelope/commands.json",
+    ".harness/evidence/2026-10-27-s2-batch-and-envelope/response-diff.md",
+    ".harness/evidence/2026-10-27-s2-batch-and-envelope/summary.md"
+  ],
+  "humanGates": [
+    "Approve the tenant response envelope change if any tenant route has a consumer outside the bundled frontend."
+  ],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed",
+    "One batch action helper used by all six handler families",
+    "Tenant handlers use the common envelope or the exception is recorded",
+    "user_service double wrapper removed or proven load-bearing"
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-27-s2-batch-and-envelope/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-27-s2-batch-and-envelope/",
+    "summaryFile": ".harness/evidence/2026-10-27-s2-batch-and-envelope/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-27-s2-batch-and-envelope/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-27-codebase-simplification-program.task.md",
+      "docs/reviews/CODE_SIMPLIFICATION_PLAN.md"
+    ]
+  }
+}

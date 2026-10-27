@@ -1,0 +1,188 @@
+{
+  "taskId": "2026-10-27-tenant-completeness-remediation",
+  "taskDoc": "docs/harness/tasks/2026-10-27-tenant-completeness-remediation.task.md",
+  "title": "Close the tenant functional-completeness gaps found by the 2026-10-27 tenant review",
+  "goal": "The 2026-10-27 read-only tenant review (docs/reviews/TENANT_FUNCTIONAL_COMPLETENESS_REVIEW_2026-10-27.md) concluded that the single-tenant deployment path is complete but tenant development is not: a user added to a second tenant can log in there and still owns zero roles, because role bindings are stamped from the user's owning tenant and no assignment path exists across tenants; DeleteTenant permits deleting an active tenant once its active member count reaches zero, contradicting contract section 2.1; and AddMember accepts arbitrary user ids, so a phantom owner can displace the real last owner. This program converts the review into eight independently reviewable waves: two behavioural fixes (delete guard, member integrity), one decision plus its implementation for multi-membership authorization, one documentation/type alignment wave, one UI-automation wave, one plan-ladder decision and one dead-surface removal. No wave changes database schema, migrations, dependencies or pantheon-ops business code; every wave keeps the existing backend and frontend gate sets green.",
+  "primaryLayer": "system/iam",
+  "status": "planned",
+  "priority": "P1",
+  "type": "remediation",
+  "estimatedComplexity": "large",
+  "findings": [
+    "TC-01 (P1): a cross-tenant membership grants login but zero authorization. replaceUserRoles stamps system_user_role.tenant_id from the user's owning tenant (user_helper.go:83-108); RoleService.ensureUsersExist is tenant-scoped (role_helper.go:301-307); GetUserRolesForTenant filters bindings by the claimed tenant (login_runtime.go:328-338). A user added to tenant B via POST /system/tenant/B/members therefore resolves to an empty role set, an empty menu tree and 403 on every protected API, while the login picker and TenantSwitcher both offer that tenant.",
+    "TC-02 (P2): DeleteTenant requires 'has active members AND not archived' rather than 'not archived' (tenant_service.go:596-604). Deleting all users disables their memberships, after which an active tenant can be deleted without going through archived, contradicting contract sections 2.1 and 2.2.",
+    "TC-03 (P2): AddMember validates only that the tenant exists (tenant_service.go:858-903); tenant_memberships has no user foreign key (000013_tenant_canary.up.sql:48-59). An arbitrary or mistyped user id becomes a member, and a phantom owner row makes ensureNotLastOwner (tenant_service.go:948-975) allow removal of the real last owner.",
+    "TC-04 (P3): the platform tenant console has no automated UI coverage for tenant CRUD, archive/delete, member add/remove, the ops overview or the plan editor; smoke-tenant is push-only and report-only.",
+    "TC-05 (P3): TENANT_API.md documents an unmounted GET /system/tenant/:id/members/page compatibility alias (lines 229, 255) that exists only in the unmounted tenant_routes.go.",
+    "TC-06 (P3): MemberUsageQuery.status is typed 'active' | 'removed' (api.ts:239) while the UI sends 'disabled' (TenantMemberList.tsx:230-236) behind a cast that defeats type checking.",
+    "TC-07 (P3): the frontend plan capability ladder is hard-coded to four codes and unknown codes normalize to free (core/entitlements/plans.ts); registered in contract V1.5 as an explicit residual.",
+    "TC-08 (P3): tenant dead surface remains in the tree: tenant_handler.go + tenant_routes.go (unmounted in production, test-only), tenant_bootstrap.go (zero references), and MULTI_TENANT_DESIGN.md still describes subdomains, custom domains, branding and public registration as a next phase."
+  ],
+  "scope": {
+    "in": [
+      "W1 2026-10-27-tenant-delete-archive-guard: delete only archived tenants; keep the in-transaction membership disable for archived tenants that still have active members; disable the UI delete action on non-archived rows; align contract, API doc and runbooks",
+      "W2 2026-10-27-tenant-member-integrity: reject unknown user ids in AddMember, count only real users in ensureNotLastOwner, replace the raw user-id input with a tenant-scoped user picker, and add regressions",
+      "W3 2026-10-27-tenant-multi-membership-decision: record the maintainer choice between narrowing membership semantics (A), adding cross-tenant role binding (B) and removing multi-tenant membership (C)",
+      "W4 2026-10-27-tenant-multi-membership-authorization: implement the decided option; the default packet implements A and additionally filters login candidates, auto-resolution and switchable tenants to those where the subject has at least one role",
+      "W5 2026-10-27-tenant-contract-docs-alignment: correct the unmounted members/page alias, fix the status union, mark MULTI_TENANT_DESIGN.md as vision-not-contract, and document owner transfer as add-owner then remove-owner",
+      "W6 2026-10-27-tenant-console-ui-automation: add Playwright coverage for the tenant console and strengthen the login-picker spec to assert usability, not just login success",
+      "W7 2026-10-27-tenant-plan-ladder-decision: decide keep-four-tier, server-driven entitlements, or remove plan UI gating; explicitly not part of V1 completeness",
+      "W8 2026-10-27-tenant-dead-surface-removal: delete the unmounted raw-JSON handler and routes and tenant_bootstrap.go, migrating their tests to the production handlers without losing coverage",
+      "Per-wave evidence under .harness/evidence/<wave-task-id>/ with commands.json, summary.md and review.md",
+      "Foundation release and base -> ops sync check after the program lands"
+    ],
+    "out": [
+      "Database schema, migrations, backfills or any data repair, including cleanup of historical cross-tenant membership rows",
+      "Billing, plan sale, upgrade/downgrade and billing periods (contract section 1 Out)",
+      "Independent schema/database, custom domains, branding and public registration",
+      "An implicit mapping from the membership role (owner/admin/member) to an IAM role, which contract section 2.2 forbids",
+      "Dependency upgrades or new dependencies",
+      "Touching pantheon-ops business code; only compatibility verification is in scope",
+      "Reducing the exported surface of frontend/src/index.ts",
+      "Using the maintainer-only solo-override path",
+      "Deleting or weakening tests to make a wave pass"
+    ]
+  },
+  "dependencyLayers": [
+    "system/iam",
+    "system/auth",
+    "platform"
+  ],
+  "implementationNotes": [
+    "Wave order: W1 and W2 may run in parallel; W3 must precede W4; W5 runs after W1/W2/W4 so it documents the final behaviour; W6 depends on W1, W2 and the W3 decision; W7 and W8 may be scheduled independently.",
+    "W3 and W7 are decision packets, not implementation packets: the deliverable is a decision document, not a diff. W4 must not start before the maintainer signs W3.",
+    "Any new error code or i18n key introduced by W1 must be registered in contract section 5, TENANT_API.md and the frontend error mapping in the same wave; two out of three is an incomplete wave.",
+    "Filtering unusable tenant candidates and validating member writes are two ends of one defect: doing only one leaves the login picker offering a blank console.",
+    "Historical cross-tenant membership rows are out of scope. W4 may only stop new ones from being written and hide them from login candidates; a data-cleanup runbook is a separate packet.",
+    "One change class per commit so git bisect stays useful; W1's backend guard and frontend disable may share a wave but must be two commits.",
+    "The planner/dispatcher must not edit backend/ or frontend/src/; each wave must be executed by the Generator adapter and the handoff recorded in the manifest and evidence.",
+    "Refusals only where behaviour could change: a wave that cannot reproduce the review's failure case must close as abandoned with the reason, not as completed."
+  ],
+  "contractAnchors": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "docs/contracts/TENANT_CONTRACT_V1.md",
+    "docs/api/TENANT_API.md",
+    "docs/reviews/TENANT_FUNCTIONAL_COMPLETENESS_REVIEW_2026-10-27.md",
+    "docs/runbooks/TENANT_TROUBLESHOOTING.md",
+    "docs/acceptances/CODE_REVIEW_STANDARD.md"
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "auth-security",
+    "portableFailureClass": "tenant-authorization-gap / contract-drift",
+    "ownerLayer": "consumer-repository",
+    "ratchetDecision": "sensor-added",
+    "coverageDimensions": [
+      "behaviour",
+      "maintainability",
+      "architecture-fitness",
+      "runtime-quality"
+    ]
+  },
+  "expectedFiles": {
+    "create": [
+      "docs/harness/tasks/2026-10-27-tenant-completeness-remediation.task.md",
+      ".harness/tasks/2026-10-27-tenant-completeness-remediation/manifest.json",
+      ".harness/tasks/2026-10-27-tenant-delete-archive-guard/manifest.json",
+      ".harness/tasks/2026-10-27-tenant-member-integrity/manifest.json",
+      ".harness/tasks/2026-10-27-tenant-multi-membership-decision/manifest.json",
+      ".harness/tasks/2026-10-27-tenant-multi-membership-authorization/manifest.json",
+      ".harness/tasks/2026-10-27-tenant-contract-docs-alignment/manifest.json",
+      ".harness/tasks/2026-10-27-tenant-console-ui-automation/manifest.json",
+      ".harness/tasks/2026-10-27-tenant-plan-ladder-decision/manifest.json",
+      ".harness/tasks/2026-10-27-tenant-dead-surface-removal/manifest.json"
+    ],
+    "modify": [],
+    "doNotTouch": [
+      "backend/pkg/database/migrations/**",
+      "database/**",
+      "frontend/src/index.ts",
+      "pantheon-ops/**",
+      "the published tags and release assets"
+    ]
+  },
+  "executionRoles": {
+    "implementerPosture": "Execute one wave per task packet through the Generator adapter; reproduce the review's failure case first, then fix it, then prove the gate set is green.",
+    "reviewerPosture": [
+      "Confirm the wave reproduces the documented failure case before the fix and passes the same case after it.",
+      "Reject any wave that changes schema, migrations, permission codes, menus or i18n keys beyond the ones it declares.",
+      "Reject any wave that deletes or weakens a test instead of migrating it.",
+      "Confirm every new error code or i18n key is registered in contract, API doc and frontend mapping together.",
+      "Confirm pantheon-ops still builds after the foundation release sync."
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "cd backend && go build ./...",
+      "cd backend && go vet ./...",
+      "cd backend && go test -count=1 ./...",
+      "cd backend && go test -count=1 ./modules/system/iam/tenant/... ./pkg/tenant/... ./modules/auth/... ./internal/middleware/...",
+      "cd frontend && npm run build",
+      "cd frontend && npm run lint",
+      "cd frontend && npx tsc -b",
+      "cd frontend && npm run check:menu-contract",
+      "cd frontend && npm run check:i18n-hardcode",
+      "cd frontend && npm run check:system-page-admission",
+      "node scripts/harness/check-task-packet.mjs --root .",
+      "node scripts/harness/check-evidence.mjs --strict .harness/evidence/<wave-task-id>/commands.json",
+      "node scripts/harness/check-review.mjs --strict .harness/evidence/<wave-task-id>/review.md",
+      "cd ../pantheon-ops && go build ./... && npm run build"
+    ],
+    "runtimeEvidence": [
+      "backend test summary before and after each behavioural wave (baseline: 46 ok, 0 FAIL, 0 SKIP)",
+      "a failing-then-passing test name for TC-01, TC-02 and TC-03",
+      "login-candidate response snapshot before and after W4 for the same user and membership set",
+      "Playwright output and key screenshots for W6, or an explicit not-run with the missing environment"
+    ]
+  },
+  "runtimeSensitive": true,
+  "runtimeGap": "No wave has started. This packet records the plan; all eight wave manifests are status=planned and no modified tree has been built or tested.",
+  "evidenceRequired": [
+    ".harness/evidence/<wave-task-id>/commands.json with cwd, status and real output summary; anything not executed marked not-run with the reason",
+    ".harness/evidence/<wave-task-id>/summary.md with the change list, git diff --stat and the closed TC ids",
+    ".harness/evidence/<wave-task-id>/review.md with the pre-fix failure reproduction and the post-fix result",
+    "W3/W7 decision documents",
+    "W4 before/after login-candidate response snapshots",
+    "W6 Playwright output and screenshots, or not-run with the environment gap",
+    "program closeout: .harness/evidence/2026-10-27-tenant-completeness-remediation/summary.md"
+  ],
+  "humanGates": [
+    "W1: confirm returning to the contract rule (delete only archived) instead of amending the contract wording.",
+    "W3: choose option A (narrow membership semantics), B (cross-tenant role binding) or C (single-tenant membership only).",
+    "W4: confirm the implementation scope against the W3 decision; if B or C is chosen, rewrite the packet before executing.",
+    "W6: decide whether smoke-tenant becomes a blocking gate, which is a CI policy change.",
+    "W7: decide whether the plan capability ladder becomes a V2 commercial workstream or stays as-is with quota thresholds only.",
+    "W8: approve the test-migration plan for the legacy handler so coverage does not drop."
+  ],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed",
+    "TC-02 closed: no non-archived tenant can be deleted; archived tenants remain deletable with active members",
+    "TC-03 closed: unknown user ids are rejected and phantom owner rows no longer count",
+    "TC-01 closed: login candidates, auto-resolution and switchable tenants never offer a tenant where the subject has no role; new memberships follow the W3 decision",
+    "TC-05 and TC-06 closed: API doc matches the mounted routes and the frontend status type matches the UI",
+    "TC-04 closed: the tenant console has automated UI coverage and the login-picker spec asserts usability",
+    "TC-07 decided (build or keep) and explicitly excluded from V1 completeness",
+    "TC-08 closed: dead entry points removed with coverage preserved and the design doc marked as vision",
+    "pantheon-ops builds against the synced foundation release",
+    "No schema, migration, permission code, menu or i18n key changed beyond the W1 error key"
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-27-tenant-completeness-remediation/manifest.json",
+    "taskDoc": "docs/harness/tasks/2026-10-27-tenant-completeness-remediation.task.md",
+    "evidenceDir": ".harness/evidence/2026-10-27-tenant-completeness-remediation/",
+    "summaryFile": ".harness/evidence/2026-10-27-tenant-completeness-remediation/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-27-tenant-completeness-remediation/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/reviews/TENANT_FUNCTIONAL_COMPLETENESS_REVIEW_2026-10-27.md",
+      "docs/contracts/TENANT_CONTRACT_V1.md",
+      "docs/api/TENANT_API.md"
+    ]
+  }
+}

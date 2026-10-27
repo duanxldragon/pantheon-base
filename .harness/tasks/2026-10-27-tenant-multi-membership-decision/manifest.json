@@ -1,0 +1,131 @@
+{
+  "taskId": "2026-10-27-tenant-multi-membership-decision",
+  "title": "Decide what a cross-tenant membership is allowed to mean",
+  "goal": "The contract states that one user may belong to multiple tenants (section 2.2, invariant 1), and the product ships both a login tenant picker and a TenantSwitcher for exactly that case. But authorization is tenant-owned: replaceUserRoles stamps system_user_role.tenant_id from the user's owning tenant (user_helper.go:83-108), RoleService.ensureUsersExist is tenant-scoped (role_helper.go:301-307), and GetUserRolesForTenant filters by the claimed tenant (login_runtime.go:328-338). A membership in a second tenant therefore grants login and switching but no roles, no menu and 403 on every protected API, with no UI or API able to assign a role there. This packet does not implement anything: it records the maintainer's choice between narrowing the membership semantics (A), making role binding cross-tenant (B) and removing multi-tenant membership (C), with the cost and the failure case of each. W4 depends on the signed decision.",
+  "primaryLayer": "system/iam",
+  "status": "planned",
+  "priority": "P1",
+  "type": "decision",
+  "estimatedComplexity": "small",
+  "parentTaskId": "2026-10-27-tenant-completeness-remediation",
+  "dependsOn": [],
+  "findings": [
+    "TC-01 (P1): a user can hold an active membership in tenant B while every role binding it owns lives in tenant A, so the login picker offers B and the resulting session has an empty role set. TenantSwitcher.tsx:22-34 already documents the same reasoning for platform-capable subjects but not for ordinary multi-membership users.",
+    "The existing e2e constructs this exact scenario (tenant-hostile-browser-matrix.spec.ts:82-92) but asserts only that the app shell renders after choosing B (:138-140), so the defect is not caught.",
+    "A decision is required before code because the three resolutions change different contracts: A keeps section 2.2's invariant but narrows what a membership implies; B changes the ownership model of role bindings; C removes a shipped user-facing capability.",
+    "Where the three read points actually live (verified 2026-10-27): pkg/tenant/authz.go:159-180 DiscoverDefaultTenant, pkg/tenant/authz.go:313-343 ListActiveMembershipsForUser (the candidate list), modules/auth/login/login_tenant_switch.go:39-83 ListSwitchableTenants. DiscoverDefaultTenant already denies with ErrTenantForbidden when more than one active membership exists, so today the picker is the only path a multi-membership subject can take.",
+    "Option A does not break the platform viewpoint: TenantSwitcher hides itself for platform-capable subjects (TenantSwitcher.tsx:31-72) and those are served by TenantViewpointSwitcher through X-Tenant-Id, which reads tenants, not memberships. Filtering the membership paths only affects ordinary subjects.",
+    "Filtering must not touch ListActiveMemberships (pkg/tenant/membership.go): /auth/current uses it to attach the caller's own membership role (login_tenant_switch.go:100-120), which must keep reporting what the membership row says even when that membership is not loginable."
+  ],
+  "scope": {
+    "in": [
+      "Produce docs/reviews/TENANT_MULTI_MEMBERSHIP_DECISION_2026-10-27.md with one row per option: what changes, what data or contract text changes, the failure case it fixes, the new failure case it can introduce, and the cost",
+      "Option A: narrow AddMember to users owned by the tenant (system_user.tenant_id = tenantID) and filter the three login read points (DiscoverDefaultTenant, ListActiveMembershipsForUser, ListSwitchableTenants) to tenants where the subject has at least one IAM role binding; because a subject can never own roles in two tenants, this makes the login picker and TenantSwitcher unreachable, so option A also removes those two UI controls while keeping the endpoints as filtered compatibility surfaces; contract clarifies that a cross-tenant membership grants no permissions and is not offered",
+      "Option B: allow cross-tenant role binding. AddMember accepts role_ids and writes system_user_role with the target tenant; ensureUsersExist accepts users that are live members of the target tenant; contract redefines 'user owning tenant' versus 'binding tenant'. Record that replaceUserRoles currently deletes all of a user's bindings across tenants and would have to be scoped to the target tenant first",
+      "Option C: remove multi-tenant membership. Drop the login picker and TenantSwitcher, make membership single-tenant, amend contract section 2.2, and record the data migration as a separate packet",
+      "Record the recommendation (A for V1, B as a V2 workstream) and the exact follow-up packet ids",
+      "State explicitly that the decision does not authorise automatic cleanup of existing cross-tenant membership rows"
+    ],
+    "out": [
+      "Implementing any option in this packet",
+      "Editing backend or frontend source",
+      "Deleting or cleaning historical membership rows",
+      "Changing the contract text before the decision is signed",
+      "Choosing B or C without naming the implementation packet and its risks"
+    ]
+  },
+  "dependencyLayers": [
+    "system/iam",
+    "system/auth"
+  ],
+  "implementationNotes": [
+    "This is a decision packet: a wave that changes no source file is a valid closeout.",
+    "For option B, the decisive detail is that replaceUserRoles deletes `WHERE user_id = ?` (user_helper.go:88) with no tenant predicate. Under B, editing a user in one tenant would wipe its bindings in every other tenant. Any B decision must carry that fix as a prerequisite.",
+    "For option A, the filtering belongs at three read points, not one: DiscoverDefaultTenant, ListLoginTenantCandidates and the switchable endpoint. Filtering only the picker leaves auto-resolution able to stamp an unusable claim. The underlying functions are in pkg/tenant/authz.go, so one predicate there can serve all three.",
+    "Do not filter ListActiveMemberships itself. /auth/current reports the caller's membership role from it, and a membership that is not loginable must still be reported as what it is, not hidden as absent.",
+    "Do not propose an implicit membership-role to IAM-role mapping in any option; contract section 2.2 forbids it.",
+    "Every option must name what happens to the existing rows produced by the current AddMember. 'Leave them and hide them from login' is acceptable only if written down."
+  ],
+  "contractAnchors": [
+    "AGENTS.md",
+    "docs/contracts/TENANT_CONTRACT_V1.md",
+    "docs/api/TENANT_API.md",
+    "docs/reviews/TENANT_FUNCTIONAL_COMPLETENESS_REVIEW_2026-10-27.md"
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "auth-security",
+    "portableFailureClass": "tenant-authorization-gap",
+    "ownerLayer": "consumer-repository",
+    "ratchetDecision": "guide-updated",
+    "coverageDimensions": [
+      "behaviour",
+      "architecture-fitness",
+      "method-health"
+    ]
+  },
+  "expectedFiles": {
+    "create": [
+      "docs/reviews/TENANT_MULTI_MEMBERSHIP_DECISION_2026-10-27.md"
+    ],
+    "modify": [],
+    "doNotTouch": [
+      "backend/**",
+      "frontend/src/**",
+      "docs/contracts/TENANT_CONTRACT_V1.md",
+      "docs/api/TENANT_API.md"
+    ]
+  },
+  "executionRoles": {
+    "implementerPosture": "Write the decision document; do not implement, edit source or amend the contract.",
+    "reviewerPosture": [
+      "Check every option states what changes, what it fixes and what it breaks.",
+      "Check the recommendation names the V1 and V2 packets.",
+      "Check no option relies on implicit role mapping.",
+      "Check the existing-row disposition is stated."
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "node scripts/harness/check-doc-links.mjs --root . --strict",
+      "node scripts/harness/check-doc-inventory.mjs --root . --strict",
+      "node scripts/harness/check-task-packet.mjs --root ."
+    ],
+    "runtimeEvidence": [
+      "none; the deliverable is a decision document, so the evidence is the document and the gate results"
+    ]
+  },
+  "runtimeSensitive": false,
+  "evidenceRequired": [
+    ".harness/evidence/2026-10-27-tenant-multi-membership-decision/decision.md with the option table and the signed choice",
+    ".harness/evidence/2026-10-27-tenant-multi-membership-decision/commands.json",
+    ".harness/evidence/2026-10-27-tenant-multi-membership-decision/summary.md"
+  ],
+  "humanGates": [
+    "Choose A (narrow membership semantics), B (cross-tenant role binding) or C (single-tenant membership only). W4 must not start before this is signed."
+  ],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed",
+    "Three options documented with cost, failure case and contract impact",
+    "Recommendation recorded",
+    "Existing cross-tenant membership rows have a stated disposition",
+    "Maintainer signature recorded and the follow-up packet id named"
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-27-tenant-multi-membership-decision/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-27-tenant-multi-membership-decision/",
+    "summaryFile": ".harness/evidence/2026-10-27-tenant-multi-membership-decision/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-27-tenant-multi-membership-decision/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-27-tenant-completeness-remediation.task.md",
+      "docs/reviews/TENANT_FUNCTIONAL_COMPLETENESS_REVIEW_2026-10-27.md",
+      "docs/contracts/TENANT_CONTRACT_V1.md"
+    ]
+  }
+}

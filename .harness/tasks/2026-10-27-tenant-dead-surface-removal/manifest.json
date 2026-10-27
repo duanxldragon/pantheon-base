@@ -1,0 +1,148 @@
+{
+  "taskId": "2026-10-27-tenant-dead-surface-removal",
+  "title": "Delete the unmounted tenant handler, its legacy routes and the unused bootstrap service",
+  "goal": "The tenant package ships two HTTP surfaces. The mounted one is PlatformHandler, registered in system_modules.go:290-306 under /system/tenant and /system/tenant-ops with the platform capability middleware. The other, Handler plus RegisterRoutes in tenant_handler.go and tenant_routes.go, is registered nowhere: NewHandler and RegisterRoutes have no production caller, only tenant_handler_test.go. tenant_bootstrap.go is likewise referenced only by its own file, and the repo's own findings document already records that as of 2026-10-13. The dead surface is not inert: it documents a /tenants/my endpoint and a GET /tenants/:id/members/page alias that TENANT_API.md still advertises, and it carries a second copy of the error mapping and envelope rules that must be kept in sync by hand. This wave deletes the three files and moves the tests that still describe live behaviour onto the production handler, so no coverage is lost.",
+  "primaryLayer": "system/iam",
+  "status": "planned",
+  "priority": "P3",
+  "type": "refactor",
+  "estimatedComplexity": "medium",
+  "parentTaskId": "2026-10-27-tenant-completeness-remediation",
+  "dependsOn": [
+    "2026-10-27-tenant-contract-docs-alignment"
+  ],
+  "findings": [
+    "TC-08 (P3): tenant_handler.go:29-30 NewHandler and tenant_routes.go:9 RegisterRoutes have no caller outside tenant_handler_test.go; the live routes are registered from PlatformHandler in system_modules.go:290-306.",
+    "TC-08 (P3): tenant_bootstrap.go defines BootstrapService and four methods (EnsureDefaultTenant, AssignAdminToDefaultTenant, MigrateExistingUsersToDefaultTenant, InitializeTenantInfrastructure) with zero references anywhere in the tree; docs/TENANT_INITIALIZATION_FINDINGS_2026-10-13.md:79-82 already records the same result, while docs/TENANT_MATURITY_FINAL_2026-09-29.md:121-124 still presents them as shipped capabilities.",
+    "TC-08 (P3): the dead handler is the only reason TENANT_API.md documents GET /system/tenant/:id/members/page and includes the /tenants/my endpoint; both disappear with the file, so the doc cleanup (W5) and this deletion must agree.",
+    "Coverage note: tenant_handler_test.go is the package's only httptest file and all of it passes today with MySQL (measured 2026-10-27: tenant package 119 pass / 0 skip). It holds five tests - TestNormalizeTenantMemberPagination, TestListTenantMembersHandlerReturnsPaginationContract, TestListTenantMembersHandlerUsesBoundedContract, TestLegacyTenantHandlerErrorEnvelopeIsUnifiedAndLeakFree and TestLegacyTenantHandlerSentinelMappingRequiresNoInternalLeak. The pagination helper lives in tenant_service.go:974,1046 and is used by tenant_ops_view.go:390, so its tests must move; the envelope, no-leak and sentinel assertions must be re-pointed at PlatformHandler.",
+    "The two ListTenantMembersHandler tests exercise the unmounted /members/page alias and will have no target after deletion; they must be dropped or rewritten against the mounted /system/tenant/:id/members handler, which is the surface a client can actually call. Dropping them without a replacement would leave the mounted listing without a pagination assertion."
+  ],
+  "scope": {
+    "in": [
+      "Re-run the reference search before deleting: backend source, backend tests, frontend, scripts and CI config, and the pantheon-ops overlay; record the five results in evidence",
+      "Delete backend/modules/system/iam/tenant/tenant_handler.go",
+      "Delete backend/modules/system/iam/tenant/tenant_routes.go",
+      "Delete backend/modules/system/iam/tenant/tenant_bootstrap.go",
+      "Delete backend/modules/system/iam/tenant/tenant_handler_test.go and redistribute its five tests: move TestNormalizeTenantMemberPagination to a service-level test file, re-point the unified-envelope, no-internal-leak and sentinel-mapping assertions at PlatformHandler, and rewrite the two ListTenantMembersHandler pagination tests against the mounted /system/tenant/:id/members route (the /members/page route they call is not mounted and is removed from the API doc by W5)",
+      "Add a platform-handler test that drives at least one success and one mapped error through the mounted route group, so the envelope contract is asserted against the surface that ships",
+      "Update docs/TENANT_MATURITY_FINAL_2026-09-29.md so it no longer lists the deleted bootstrap entry points as shipped; mark the document historical if that is more accurate than editing each line",
+      "Record in evidence which legacy endpoints had no production equivalent and what replaces them (for example /tenants/my versus /auth/tenants/switchable)"
+    ],
+    "out": [
+      "Changing the mounted /system/tenant or /system/tenant-ops routes, their middleware or their response shapes",
+      "Deleting tenant_production.go, tenant_metrics.go, tenant_ops_handler.go, tenant_ops_view.go or tenant_plan_store.go",
+      "Changing error codes, i18n keys or messages produced by the live handler",
+      "Rewriting TENANT_API.md (that is W5)",
+      "Touching frontend source"
+    ]
+  },
+  "dependencyLayers": [
+    "system/iam",
+    "platform"
+  ],
+  "implementationNotes": [
+    "Delete only after the reference search comes back empty in all five locations; if a reference appears, stop and close the item as a false positive rather than editing the referencing code.",
+    "The pagination helper and its constants live in tenant_service.go:974,1046 and stay; only the test moves.",
+    "Do not lose the no-internal-leak assertion. It is the only check that a service error does not surface SQL or driver text, and the production handler has its own failServiceError (tenant_platform_handler.go:48) that must satisfy the same property.",
+    "The unmounted routes are also reachable by nothing, so no deprecation shim is needed. A client that called them was already calling a route that did not exist.",
+    "Keep the evidence explicit about the /tenants/my replacement path, because that endpoint appears in older documentation and a downstream consumer may have copied it.",
+    "tenant_handler_test.go adds memberships for user ids 101-103 and 88001, none of which exist in system_user. If W2 has not landed first, those fixtures are the only reason the file is green; when the tests are migrated, create real users or target the production handler tests that already do. Do not carry the phantom ids into the new file.",
+    "Run with PANTHEON_TEST_DSN set. Without it all five tests in this file skip along with 80 others and the deletion appears free of consequences."
+  ],
+  "contractAnchors": [
+    "AGENTS.md",
+    "docs/contracts/TENANT_CONTRACT_V1.md",
+    "docs/api/TENANT_API.md",
+    "docs/TENANT_INITIALIZATION_FINDINGS_2026-10-13.md",
+    "docs/reviews/TENANT_FUNCTIONAL_COMPLETENESS_REVIEW_2026-10-27.md"
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "none",
+    "portableFailureClass": "dead-code-accumulation",
+    "ownerLayer": "consumer-repository",
+    "ratchetDecision": "sensor-added",
+    "coverageDimensions": [
+      "maintainability",
+      "architecture-fitness"
+    ]
+  },
+  "expectedFiles": {
+    "create": [
+      "backend/modules/system/iam/tenant/tenant_platform_handler_test.go"
+    ],
+    "modify": [
+      "backend/modules/system/iam/tenant/tenant_service_test.go",
+      "docs/TENANT_MATURITY_FINAL_2026-09-29.md"
+    ],
+    "doNotTouch": [
+      "backend/modules/system/system_modules.go",
+      "backend/modules/system/iam/tenant/tenant_platform_handler.go",
+      "backend/modules/system/iam/tenant/tenant_ops_handler.go",
+      "backend/pkg/database/migrations/**",
+      "docs/api/TENANT_API.md",
+      "frontend/**"
+    ]
+  },
+  "executionRoles": {
+    "implementerPosture": "Search first, then delete; move tests to the production handler before deleting the legacy file so the suite never goes red for lack of the assertion.",
+    "reviewerPosture": [
+      "Confirm the five-location search in evidence is fresh, not copied from this packet.",
+      "Confirm every deleted file has zero references in the final tree.",
+      "Confirm the pagination test survived in a service-level file.",
+      "Confirm the envelope, no-leak and sentinel assertions now run against PlatformHandler.",
+      "Confirm no mounted route, middleware or response shape changed.",
+      "Confirm go test ./... still passes with the same or higher test count for the package."
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "cd backend && go build ./...",
+      "cd backend && go vet ./...",
+      "export PANTHEON_TEST_DSN='<dsn>' PANTHEON_TEST_DSN_REQUIRED=true && cd backend && go test -count=1 ./modules/system/iam/tenant/...",
+      "export PANTHEON_TEST_DSN='<dsn>' PANTHEON_TEST_DSN_REQUIRED=true && cd backend && go test -count=1 ./...",
+      "grep -rn \"NewHandler\\|RegisterRoutes(engine\\|BootstrapService\\|MigrateExistingUsersToDefaultTenant\" backend --include=*.go",
+      "node scripts/harness/check-doc-links.mjs --root . --strict",
+      "node scripts/harness/check-task-packet.mjs --root ."
+    ],
+    "runtimeEvidence": [
+      "test count for the tenant package before and after, showing no assertion lost; measured baseline on 2026-10-27 is 119 pass / 0 skip / 0 fail with MySQL",
+      "the reference search output for the three deleted files",
+      "if a live instance is available: one request to a mounted /system/tenant route returning the expected envelope, proving the surviving surface still answers"
+    ]
+  },
+  "runtimeSensitive": false,
+  "evidenceRequired": [
+    ".harness/evidence/2026-10-27-tenant-dead-surface-removal/commands.json",
+    ".harness/evidence/2026-10-27-tenant-dead-surface-removal/reference-search.md with the five-location search per deleted symbol",
+    ".harness/evidence/2026-10-27-tenant-dead-surface-removal/test-migration.md mapping each deleted test to where its assertion now lives",
+    ".harness/evidence/2026-10-27-tenant-dead-surface-removal/summary.md with the diff stat"
+  ],
+  "humanGates": [],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed",
+    "tenant_handler.go, tenant_routes.go, tenant_bootstrap.go and tenant_handler_test.go no longer exist",
+    "Every live assertion from the deleted test file now runs against PlatformHandler or the service",
+    "The unmounted /members/page route is gone from both code and docs",
+    "No mounted route, middleware or response shape changed",
+    "go test ./... passes and the tenant package lost no coverage",
+    "The maturity document no longer presents the deleted bootstrap entry points as shipped"
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-27-tenant-dead-surface-removal/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-27-tenant-dead-surface-removal/",
+    "summaryFile": ".harness/evidence/2026-10-27-tenant-dead-surface-removal/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-27-tenant-dead-surface-removal/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-27-tenant-completeness-remediation.task.md",
+      "docs/reviews/TENANT_FUNCTIONAL_COMPLETENESS_REVIEW_2026-10-27.md"
+    ]
+  }
+}
