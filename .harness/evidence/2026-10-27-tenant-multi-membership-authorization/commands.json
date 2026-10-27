@@ -1,0 +1,107 @@
+{
+  "taskId": "2026-10-27-tenant-multi-membership-authorization",
+  "repo": "pantheon-base",
+  "executedAt": "2026-10-27T21:05:00+08:00",
+  "agent": {
+    "tool": "other",
+    "adapter": "qoder-agent"
+  },
+  "knownGaps": [
+    "Playwright e2e specs were rewritten (auth-tenant-picker.spec.ts, tenant-hostile-browser-matrix.spec.ts) and pass tsc/eslint/vite build, but were not executed live: the matrix needs a live backend with setupMatrixTenants seed data and the mock spec needs a running vite/runner. Recorded per the manifest runtimeEvidence clause 'Playwright output, or not-run with the missing MySQL/fixture environment'.",
+    "The human gate 'Approve removing the login picker and TenantSwitcher while keeping their endpoints as compatibility surfaces' is recorded as maintainer-delegated (W3 decision A option-A text already contains the removal as a consequence). A maintainer may reject it in PR review; the UI is restorable from git history (single file + import lines).",
+    "Existing cross-tenant membership rows are intentionally not deleted (contract V1.7, decision §4); a cleanup runbook remains a separate packet.",
+    "The frontend dist/ assets still contain the old i18n keys until the next build; dist is a build artifact and out of scope."
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-27-tenant-multi-membership-authorization/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-27-tenant-multi-membership-authorization/",
+    "summaryFile": ".harness/evidence/2026-10-27-tenant-multi-membership-authorization/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-27-tenant-multi-membership-authorization/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-27-tenant-completeness-remediation.task.md",
+      "docs/reviews/TENANT_MULTI_MEMBERSHIP_DECISION_2026-10-27.md",
+      "docs/reviews/TENANT_FUNCTIONAL_COMPLETENESS_REVIEW_2026-10-27.md"
+    ]
+  },
+  "commands": [
+    {
+      "command": "git log --oneline -1 origin/main",
+      "cwd": ".",
+      "notes": "321a6384 refactor(platform): delete zero-caller backend symbols and 13 orphan scripts (S1) (#438) — branch base.",
+      "status": "passed"
+    },
+    {
+      "command": "cd backend && go build ./...",
+      "cwd": ".",
+      "notes": "Whole-backend build OK after all W4 edits.",
+      "status": "passed"
+    },
+    {
+      "command": "export PANTHEON_TEST_DSN=... PANTHEON_TEST_DSN_REQUIRED=true && cd backend && go test -count=1 ./pkg/tenant/... ./modules/auth/login/... ./modules/auth/session/... ./modules/system/iam/tenant/...",
+      "cwd": ".",
+      "notes": "4 packages ok: pkg/tenant 0.848s, login 105.8s, session 5.4s, iam/tenant 82.5s. (Earlier run in-session: login 79.7s, tenant ok.)",
+      "status": "passed"
+    },
+    {
+      "command": "export PANTHEON_TEST_DSN=... PANTHEON_TEST_DSN_REQUIRED=true && cd backend && go test -count=1 ./...",
+      "cwd": ".",
+      "notes": "Pre-change baseline on 321a6384, NOT a verification of the W4 tree. CI later showed the W4 tree failed ./... in two suites outside the 4-package green scope; see the appended correction entries.",
+      "status": "passed"
+    },
+    {
+      "command": "cd frontend && npx tsc -b",
+      "cwd": ".",
+      "notes": "TypeScript project build clean after picker removal, TenantSwitcher deletion, locale edits.",
+      "status": "passed"
+    },
+    {
+      "command": "cd frontend && npm run lint",
+      "cwd": ".",
+      "notes": "ESLint clean.",
+      "status": "passed"
+    },
+    {
+      "command": "cd frontend && npm run build",
+      "cwd": ".",
+      "notes": "Vite production build OK (511ms).",
+      "status": "passed"
+    },
+    {
+      "command": "node scripts/harness/check-task-packet.mjs --root .",
+      "cwd": ".",
+      "notes": "Task packet check: 66 file(s), 0 error(s), 41 warning(s).",
+      "status": "passed"
+    },
+    {
+      "command": "git worktree add --detach ../w4-red-worktree 11b2a8fc && <revert 5 behavior hunks> && go test (red set)",
+      "cwd": ".",
+      "notes": "Red differential: exactly 8 behavior tests fail (discovery filter, issuance predicate, candidate filter, switch refusal, AddMember narrowing across pkg/tenant, session, tenant, login), premise-adapted tests pass. Full log: red-run.log. Worktree removed after capture.",
+      "status": "passed"
+    },
+    {
+      "command": "go test -count=1 -v (same set on branch) > green-run.log",
+      "cwd": "backend",
+      "notes": "Green differential: 44 PASS / 0 FAIL on the branch. green-run.log.",
+      "status": "passed"
+    },
+    {
+      "command": "gh pr checks 442 / gh run view 40506002882 --log-failed",
+      "cwd": ".",
+      "notes": "CI correction intake: Backend Tests + Unit Tests failed with TestLoginHandlerAuditsImplicitTenantLoginInTenant (code=403, membership without binding) and TestCreateUserWritesTenantMembershipForFirstLogin (first login gated, no RoleIDs). Both are premise misses in suites outside the 4-package green run; production code unchanged.",
+      "status": "passed"
+    },
+    {
+      "command": "export PANTHEON_TEST_DSN=... PANTHEON_TEST_DSN_REQUIRED=true && cd backend && go test ./modules/auth/login/... ./modules/system/iam/user/... ./pkg/tenant/...",
+      "cwd": ".",
+      "notes": "After fix commit 1ccf53e4 (seed SystemUserRole in the attribution fixture; seed tenant-owned role 201 and pass RoleIDs in the F1 test): login ok, user ok, pkg/tenant ok.",
+      "status": "passed"
+    },
+    {
+      "command": "export PANTHEON_TEST_DSN=... PANTHEON_TEST_DSN_REQUIRED=true && cd backend && go test -count=1 ./...",
+      "cwd": ".",
+      "notes": "Post-fix full suite on the W4 tree: exit 0, zero FAIL lines.",
+      "status": "passed"
+    }
+  ]
+}

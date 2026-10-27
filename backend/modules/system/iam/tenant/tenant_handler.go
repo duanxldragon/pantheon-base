@@ -52,6 +52,11 @@ func (h *Handler) failServiceError(c *gin.Context, err error) {
 		common.FailWithError(c, common.CodeParamInvalid, err, "tenant.member_exists")
 	case errors.Is(err, ErrLastOwner):
 		common.FailWithError(c, common.CodeParamInvalid, err, "tenant.member.last_owner")
+	case errors.Is(err, ErrMemberUserNotInTenant):
+		// W4 (W3 decision A): ownership narrowing on AddMember. The legacy
+		// handler mirrors the platform mapping until the dead-surface wave
+		// removes this handler.
+		common.FailWithError(c, common.CodeParamInvalid, err, "tenant.member.user_not_in_tenant")
 	case errors.Is(err, common.ErrConflict):
 		common.FailWithError(c, common.CodeParamInvalid, err, errRequestFailed)
 	case errors.Is(err, ErrTenantNotArchived):

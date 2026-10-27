@@ -90,11 +90,6 @@ const frFRFallback = {
   'auth.login.consoleTitle': "Vérification d'identité",
   'auth.login.securityNotice':
     "Connectez-vous avec un compte attribué par un administrateur. L'heure de connexion, l'appareil et l'IP source sont enregistrés pour l'audit de sécurité.",
-  'auth.login.tenant.title': 'Choisir le locataire de travail',
-  'auth.login.tenant.hint':
-    'Ce compte appartient à plusieurs locataires. Choisissez le périmètre de cette connexion.',
-  'auth.login.tenant.placeholder': 'Sélectionner un locataire',
-  'auth.login.tenant.back': 'Retour aux identifiants',
   'auth.login.idleTimeoutNotice':
     'Ce compte a été déconnecté automatiquement après une trop longue inactivité. Reconnectez-vous pour continuer.',
   'auth.login.feature.modules': 'Monolithe modulaire',
@@ -1547,6 +1542,7 @@ const frFRFallback = {
   'tenant.forbidden':
     "Votre compte n'appartient pas à ce locataire, ses données sont donc inaccessibles.",
   'tenant.suspended': 'Ce locataire est suspendu et ne permet pas de connexion pour le moment.',
+  'tenant.member.user_not_in_tenant': "Cet utilisateur appartient à un autre tenant et ne peut pas être ajouté comme membre ici.",
   'tenant.archived': 'Ce locataire est archivé et ne permet pas de connexion.',
   'tenant.context.missing':
     "Cette session n'a pas de contexte de locataire. Veuillez vous reconnecter.",

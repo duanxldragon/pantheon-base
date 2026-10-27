@@ -56,6 +56,14 @@ var (
 	// last owner can never be removed (§2.2). Callers render
 	// `tenant.not_archived` and point the operator at archive-then-delete.
 	ErrTenantNotArchived = errors.New("tenant must be archived before it can be deleted")
+
+	// ErrMemberUserNotInTenant is the W4 ownership narrowing (W3 decision A,
+	// docs/reviews/TENANT_MULTI_MEMBERSHIP_DECISION_2026-10-27.md): AddMember
+	// only accepts users whose owning tenant (system_user.tenant_id) is the
+	// target tenant. A membership naming a user owned elsewhere can never carry
+	// a role binding (bindings are stamped from the owning tenant), so
+	// accepting the row would only produce the TC-01 blank-console membership.
+	ErrMemberUserNotInTenant = errors.New("tenant member user is owned by another tenant")
 	// ErrMembershipExists is returned when adding a user who is already a tenant member.
 	ErrMembershipExists = errors.New("user is already a member of this tenant")
 	// ErrMembershipNotFound is returned when removing a non-existent tenant membership.
@@ -887,6 +895,25 @@ func (s *Service) memberUserExists(userID uint64) (bool, error) {
 	return found > 0, nil
 }
 
+// userOwnedByTenant answers whether userID names an undeleted `system_user`
+// row whose owning tenant (system_user.tenant_id, contract §2.3) is tenantID.
+//
+// W4 (W3 decision A): role bindings are stamped from the user's owning tenant,
+// so only an owned user can ever hold a usable binding in this tenant. The
+// lookup mirrors memberUserExists's shape: bound placeholders only, and a
+// deleted user row answers false.
+func (s *Service) userOwnedByTenant(userID, tenantID uint64) (bool, error) {
+	var owned int64
+	// NOSONAR gosecurity:S3649 - bound placeholders only; userID and tenantID
+	// are parsed uint64s and reach GORM exclusively as `?` arguments.
+	if err := s.db.Table("system_user").
+		Where("id = ? AND tenant_id = ? AND deleted_at IS NULL", userID, tenantID). // NOSONAR gosecurity:S3649
+		Count(&owned).Error; err != nil {
+		return false, fmt.Errorf("check tenant member ownership: %w", err)
+	}
+	return owned > 0, nil
+}
+
 // liveUser answers whether userID names a user that can still act: an undeleted,
 // enabled `system_user` row. Used by the owner guard, where "can still act" is
 // the whole point - a disabled or deleted account cannot administer a tenant, so
@@ -957,6 +984,19 @@ func (s *Service) AddMember(tenantID, userID uint64, role string) error {
 	}
 	if !live {
 		return common.NewNotFound("user.not_found")
+	}
+
+	// W4 (W3 decision A): the ownership narrowing. A membership naming a user
+	// owned by another tenant can never carry a role binding (bindings are
+	// stamped from the user's owning tenant), so accepting the row only
+	// produces the TC-01 blank-console membership. This closes the boundary
+	// memberUserExists deliberately left open.
+	owned, err := s.userOwnedByTenant(userID, tenantID)
+	if err != nil {
+		return err
+	}
+	if !owned {
+		return ErrMemberUserNotInTenant
 	}
 
 	var existing Membership

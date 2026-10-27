@@ -3,7 +3,7 @@
   "title": "Implement option A for multi-membership: no tenant is offered unless the subject has a role there",
   "goal": "This packet implements the option recorded by 2026-10-27-tenant-multi-membership-decision. It is written for option A (the recommended default) and must not start until that decision is signed; if B or C is chosen, close this packet as abandoned and rewrite it from the decision. Option A makes the shipped behaviour honest: a membership in a tenant where the subject owns no role is not a usable context. AddMember is narrowed to users owned by the target tenant (system_user.tenant_id = tenantID), and the three read points that hand a tenant to a subject — login discovery, the login candidate list and the switchable list — only return tenants where at least one enabled role binding exists. SwitchSessionTenant refuses a target that yields zero roles. Because a user owns roles only in its owning tenant, this makes the login picker and TenantSwitcher unreachable by construction, so their UI is removed while the endpoints keep returning a filtered (usually single-item) list for API compatibility.",
   "primaryLayer": "system/iam",
-  "status": "planned",
+  "status": "completed",
   "priority": "P1",
   "type": "fix",
   "estimatedComplexity": "large",

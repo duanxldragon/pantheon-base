@@ -226,8 +226,8 @@ export async function loginAsTenantAdmin(browser: Browser, tenant: MatrixTenant)
   const login = await loginByApi(page.request, {
     username: tenant.adminUsername,
     password: tenant.adminPassword,
-    // A tenant's own administrator has exactly one membership, so this resolves
-    // deterministically instead of opening the login picker.
+    // The owning tenant is also the only usable one (contract §2.2 V1.7);
+    // naming it keeps the request deterministic without relying on discovery.
     tenantId: tenant.id,
   } as Parameters<typeof loginByApi>[1]);
   await installClientSession(page, login);

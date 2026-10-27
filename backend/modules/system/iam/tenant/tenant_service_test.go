@@ -448,14 +448,15 @@ func TestAddMember_RejectsUnknownUser(t *testing.T) {
 	assert.Equal(t, int64(0), total)
 }
 
-// TestAddMember_DoesNotDecideCrossTenantMembership records the boundary this
-// wave stops at. `system_user.tenant_id` is the owning tenant (contract §2.3)
-// and a membership naming a user owned elsewhere can never carry a role binding,
-// because bindings are stamped from the owning tenant - but whether that row
-// should be rejected, allowed, or mapped to a role is the policy question the
-// cross-tenant waves own, so the new user guard deliberately does not answer it.
-// When that wave lands, this test is the anchor it has to update.
-func TestAddMember_DoesNotDecideCrossTenantMembership(t *testing.T) {
+// TestAddMember_RejectsUserOwnedByAnotherTenant closes the boundary W2's
+// TestAddMember_DoesNotDecideCrossTenantMembership recorded. W3 decision A
+// (docs/reviews/TENANT_MULTI_MEMBERSHIP_DECISION_2026-10-27.md) narrows
+// AddMember to users whose owning tenant is the target: a membership naming a
+// user owned elsewhere can never carry a role binding (bindings are stamped
+// from the owning tenant), so accepting the row only produces the TC-01
+// blank-console membership. The ownership narrowing is this wave's answer to
+// that policy question.
+func TestAddMember_RejectsUserOwnedByAnotherTenant(t *testing.T) {
 	db := setupTestDB(t)
 	service := NewService(db)
 
@@ -466,11 +467,13 @@ func TestAddMember_DoesNotDecideCrossTenantMembership(t *testing.T) {
 
 	mustInsertTenantUser(t, db, owner.ID, 515)
 
-	require.NoError(t, service.AddMember(other.ID, 515, "member"))
+	err = service.AddMember(other.ID, 515, "member")
+	require.Error(t, err)
+	assert.ErrorIs(t, err, ErrMemberUserNotInTenant)
 
 	_, total, err := service.ListTenantMembers(other.ID, 1, 20)
 	require.NoError(t, err)
-	assert.Equal(t, int64(1), total)
+	assert.Equal(t, int64(0), total)
 }
 
 // TestAddMember_RejectsDeletedUser: DeleteUser soft-deletes the row and disables
