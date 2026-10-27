@@ -844,6 +844,71 @@ func membershipScope(tenantID, userID uint64) map[string]any {
 	return map[string]any{"tenant_id": tenantID, "user_id": userID}
 }
 
+// memberUserExists answers whether userID names an undeleted `system_user` row.
+//
+// `tenant_memberships` has no foreign key to `system_user` (contract §2.2), so
+// without this predicate the membership table accepts ids that name nobody. A
+// phantom member cannot log in, and a phantom `owner` row satisfies the
+// last-owner count for a user that does not exist, which is how a real owner
+// could be removed from a tenant that then had no way to administer itself.
+//
+// The lookup is deliberately not scoped to `tenantID`, and a disabled user is
+// still addable: which tenant a user is *owned* by is membership policy reserved
+// for the cross-tenant waves, and
+// BootstrapService.MigrateExistingUsersToDefaultTenant assigns users whose
+// owning tenant is not the tenant being migrated into.
+func (s *Service) memberUserExists(userID uint64) (bool, error) {
+	var found int64
+	// NOSONAR gosecurity:S3649 - bound placeholders only; userID is a
+	// parsed uint64 and reaches GORM exclusively as a `?` argument, never as SQL text.
+	if err := s.db.Table("system_user").
+		Where("id = ? AND deleted_at IS NULL", userID). // NOSONAR gosecurity:S3649
+		Count(&found).Error; err != nil {
+		return false, fmt.Errorf("check tenant member user: %w", err)
+	}
+	return found > 0, nil
+}
+
+// liveUser answers whether userID names a user that can still act: an undeleted,
+// enabled `system_user` row. Used by the owner guard, where "can still act" is
+// the whole point - a disabled or deleted account cannot administer a tenant, so
+// a membership row naming one is not the protection the invariant is meant to
+// guarantee.
+func (s *Service) liveUser(userID uint64) (bool, error) {
+	var live int64
+	// NOSONAR gosecurity:S3649 - bound placeholders only; userID is a
+	// parsed uint64 and reaches GORM exclusively as a `?` argument, never as SQL text.
+	if err := s.db.Table("system_user").
+		Where("id = ? AND deleted_at IS NULL AND status = ?", userID, common.StatusEnabled). // NOSONAR gosecurity:S3649
+		Count(&live).Error; err != nil {
+		return false, fmt.Errorf("check live user: %w", err)
+	}
+	return live > 0, nil
+}
+
+// liveOwnerCount counts the owner memberships whose user can still sign in.
+//
+// The user row is not required to belong to this tenant here: legacy rows may
+// name a user owned elsewhere, and refusing to remove those would strand them.
+// What the invariant needs is "an owner that exists and is enabled", because a
+// disabled or deleted account cannot repair a tenant.
+func (s *Service) liveOwnerCount(tenantID uint64) (int64, error) {
+	// The NOSONAR marks below suppress gosecurity:S3649 only: the join text is
+	// static and every value bound to these placeholders is a uint64 or a package
+	// constant, so there is no request-supplied SQL text on this path.
+	const ownerMembershipScope = "tenant_memberships.tenant_id = ? AND tenant_memberships.role = ? AND tenant_memberships.status = ?" // NOSONAR gosecurity:S3649
+	const liveOwnerUserScope = "system_user.deleted_at IS NULL AND system_user.status = ?"                                            // NOSONAR gosecurity:S3649
+	var owners int64
+	if err := s.db.Table("tenant_memberships").
+		Joins("JOIN system_user ON system_user.id = tenant_memberships.user_id").
+		Where(ownerMembershipScope, tenantID, tenant.MembershipRoleOwner, tenant.MembershipActive).
+		Where(liveOwnerUserScope, common.StatusEnabled).
+		Count(&owners).Error; err != nil {
+		return 0, fmt.Errorf("count tenant owners: %w", err)
+	}
+	return owners, nil
+}
+
 // AddMember adds a user to a tenant with specified role.
 //
 // Re-adding is idempotent for non-owner rows: user create inside a tenant
@@ -855,10 +920,25 @@ func membershipScope(tenantID, userID uint64) map[string]any {
 // updates its role and re-activates instead. `owner` rows stay protected:
 // re-adding owner is a no-op, adding a non-owner role over owner is rejected
 // so this endpoint can never demote the tenant owner.
+//
+// The subject must be an undeleted user (memberUserExists): a membership row
+// naming a nonexistent user cannot be used to log in and, when written as
+// owner, displaces the last-owner invariant.
 func (s *Service) AddMember(tenantID, userID uint64, role string) error {
 	// Verify tenant exists
 	if _, err := s.GetTenantByID(tenantID); err != nil {
 		return err
+	}
+
+	// The tenant guard runs first on purpose: adding a member to a tombstone has
+	// to answer with the tenant error even when the user id is also unknown,
+	// because callers key their messaging off that distinction.
+	live, err := s.memberUserExists(userID)
+	if err != nil {
+		return err
+	}
+	if !live {
+		return common.NewNotFound("user.not_found")
 	}
 
 	var existing Membership
@@ -869,7 +949,7 @@ func (s *Service) AddMember(tenantID, userID uint64, role string) error {
 	// rule cannot be satisfied from this code path - suppression is done here on the maintainer's
 	// instruction instead of changing the Sonar rule configuration or the Quality Gate.
 	memberRow := s.db.Model(&Membership{}).Where(membershipScope(tenantID, userID)) // NOSONAR gosecurity:S3649 - bound placeholders only, no dynamic SQL text
-	err := memberRow.Limit(1).First(&existing).Error
+	err = memberRow.Limit(1).First(&existing).Error
 	if err == nil {
 		if existing.Role == "owner" {
 			if role == "owner" {
@@ -945,6 +1025,11 @@ func (s *Service) RemoveMember(tenantID, userID uint64) error {
 // active owner. Removing a non-owner, or one of several owners, is unaffected;
 // a missing row falls through to the delete path so it still answers
 // ErrMembershipNotFound once.
+//
+// "Owner" means an owner whose user can still sign in. A row naming a deleted,
+// disabled or nonexistent user is not protection - it is the ghost the invariant
+// is meant to prevent - so it neither blocks a removal on its own nor counts
+// toward the surviving owner set.
 func (s *Service) ensureNotLastOwner(tenantID, userID uint64) error {
 	var member Membership
 	if err := s.db.Model(&Membership{}).
@@ -958,11 +1043,16 @@ func (s *Service) ensureNotLastOwner(tenantID, userID uint64) error {
 	if member.Role != tenant.MembershipRoleOwner || member.Status != tenant.MembershipActive {
 		return nil
 	}
-	var owners int64
-	if err := s.db.Model(&Membership{}).
-		Where("tenant_id = ? AND role = ? AND status = ?", tenantID, tenant.MembershipRoleOwner, tenant.MembershipActive).
-		Count(&owners).Error; err != nil {
-		return fmt.Errorf("count tenant owners: %w", err)
+	targetIsOwner, err := s.liveUser(userID)
+	if err != nil {
+		return err
+	}
+	if !targetIsOwner {
+		return nil
+	}
+	owners, err := s.liveOwnerCount(tenantID)
+	if err != nil {
+		return err
 	}
 	if owners <= 1 {
 		return ErrLastOwner

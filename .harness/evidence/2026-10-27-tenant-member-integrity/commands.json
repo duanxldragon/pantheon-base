@@ -1,0 +1,166 @@
+{
+  "taskId": "2026-10-27-tenant-member-integrity",
+  "repo": "pantheon-base",
+  "executedAt": "2026-10-27T18:20:00+08:00",
+  "agent": {
+    "tool": "other",
+    "adapter": "qoder-agent"
+  },
+  "knownGaps": [
+    "The packet lists `frontend/src/locales/**/system.json` as a file to modify; that path does not exist in this repository. Locale resources are the TypeScript files under `frontend/src/i18n/resources/`, which is where the four new keys were added. This is a path correction in the packet, not a change of intent.",
+    "The packet names `user.batch.not_found or an equivalent registered key`. `user.batch.not_found` is the batch endpoint's own key; the single-value key `user.not_found` was reused instead because it is already registered in all five locales and describes exactly one missing user. No new error key was introduced.",
+    "The packet asks for a `tenant-scoped user selector`. The candidate list is whatever `GET /system/user` returns for the `X-Tenant-Id` the request carries, which is the platform-global pool when the operator is browsing from the platform viewpoint. It is not filtered by the target tenant id, because deciding which tenant's users may join another tenant is W3/W4 scope (`scope.out`). The mismatch is surfaced in the UI with a scope notice instead of being silently resolved.",
+    "The add path validates existence only (`deleted_at IS NULL`) and stays permissive about `status`, per the packet's implementation note. A disabled user can therefore still be added; the owner-protection count is the place that requires enabled, and that asymmetry is documented in `docs/api/TENANT_API.md`.",
+    "The first full `go test -count=1 ./...` attempt in this wave was run as three concurrent invocations, which saturated the local MySQL instance: `modules/system/i18n` hit `panic: test timed out after 10m0s`. That package does not touch tenant code, so it is not a W2 regression, but the number was discarded. The authoritative reading below is a single serial run with nothing else executing.",
+    "The same concurrency left orphan `pantheon_base_test*` clone databases on the local MySQL instance (2 at the Phase 0 baseline, 23 observed while the runs were in flight). `DROP DATABASE` is destructive and was not performed; the count and the disposal decision belong to the maintainer.",
+    "The runtime screenshot was taken against the already-running dev stack (vite on 5173 serving this working tree, `pantheon-server-ops.exe` built at 13:55 on 8080). That server binary predates the handler change in this wave, so the screenshot evidences the UI selector only; the 404 envelope is evidenced by the committed mounted-route test, not by that server.",
+    "No tenant smoke fixture was brought up in this wave, so the mandatory `tenant-matrix-fixture-setup.mjs down` and `cleanup-smoke-fixtures.mjs` teardown had nothing to clean; both are recorded as not-run rather than as passes.",
+    "Credentials were read only from the gitignored root `.env.test` into the process environment of the test wrapper. No DSN, Redis password or JWT secret appears in any file in this directory; the logs here were scanned for `password=`, `@tcp(`, `PANTHEON_DSN` and `123456` before being committed.",
+    "linkage.changeRef is `none` because check-evidence.mjs resolves it as a path inside the repository (`scripts/harness/check-evidence.mjs:220`), not as a git ref. The change lives on branch `fix/tenant-member-integrity-2026-10-27` and the PR number is recorded in the programme task file when this wave merges."
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-27-tenant-member-integrity/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-27-tenant-member-integrity/",
+    "summaryFile": ".harness/evidence/2026-10-27-tenant-member-integrity/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-27-tenant-member-integrity/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-27-tenant-completeness-remediation.task.md",
+      "docs/reviews/TENANT_FUNCTIONAL_COMPLETENESS_REVIEW_2026-10-27.md"
+    ]
+  },
+  "commands": [
+    {
+      "command": "go build ./...",
+      "cwd": "backend",
+      "notes": "exit 0.",
+      "status": "passed"
+    },
+    {
+      "command": "go vet ./modules/system/iam/tenant/...",
+      "cwd": "backend",
+      "notes": "exit 0, including the new test files.",
+      "status": "passed"
+    },
+    {
+      "command": "go test -count=1 -v ./modules/system/iam/tenant/... (PANTHEON_TEST_DSN + PANTHEON_TEST_DSN_REQUIRED=true + PANTHEON_TEST_REDIS_REQUIRED=true + PANTHEON_NODE_BIN + PANTHEON_WORKSPACE_ROOT, serial, nothing else running)",
+      "cwd": "backend",
+      "notes": "100 top-level PASS + 27 subtest PASS / 0 SKIP / 0 FAIL in 63.9s, exit 0 (tenant-package-serial.log). The Phase 0 baseline was 92 top-level + 27 subtests; the 8 extra top-level cases are the 7 regressions in tenant_service_test.go plus the mounted-route case in tenant_lifecycle_guard_test.go.",
+      "status": "passed"
+    },
+    {
+      "command": "go test -count=1 -timeout 30m ./... (same required environment, single serial run)",
+      "cwd": "backend",
+      "notes": "46 packages ok / 0 FAIL / exit=0, 6 further packages report [no test files] (full-suite-serial.log). Matches the Phase 0 baseline figure exactly.",
+      "status": "passed"
+    },
+    {
+      "command": "go test -count=1 -run 'TestAddMember|TestRemoveMember' ./modules/system/iam/tenant/... with tenant_service.go and tenant_platform_handler.go reverted to HEAD",
+      "cwd": "backend",
+      "notes": "Red without the fix: TestAddMember_RejectsUnknownUser, TestAddMember_RejectsDeletedUser, TestRemoveMember_PhantomOwnerDoesNotProtectRealOwner and TestRemoveMember_DisabledUserOwnerDoesNotCount all FAIL (red-without-fix.log, differential.txt). The source files were restored byte-identically afterwards (diff -q).",
+      "status": "passed"
+    },
+    {
+      "command": "go test -count=1 -run 'TestAddMember|TestRemoveMember|TestPlatformAddMember' ./modules/system/iam/tenant/... with the fix applied",
+      "cwd": "backend",
+      "notes": "Green with the fix: 10 PASS / 0 FAIL, including TestPlatformAddMemberRejectsUnknownUser, which drives the mounted gin route and asserts the 404 envelope carries user.not_found for an unknown id and 200 plus exactly one surviving membership row for a real one (green-with-fix.log, mounted-route-guard-test.log).",
+      "status": "passed"
+    },
+    {
+      "command": "npx tsc -b",
+      "cwd": "frontend",
+      "notes": "exit 0.",
+      "status": "passed"
+    },
+    {
+      "command": "npm run lint",
+      "cwd": "frontend",
+      "notes": "exit 0 (eslint . --max-warnings 0).",
+      "status": "passed"
+    },
+    {
+      "command": "npm run build",
+      "cwd": "frontend",
+      "notes": "exit 0, built in 642ms; the 14 prebuild contract checks all ran and passed.",
+      "status": "passed"
+    },
+    {
+      "command": "npx vitest run",
+      "cwd": "frontend",
+      "notes": "34 test files / 230 tests passed, 0 failed.",
+      "status": "passed"
+    },
+    {
+      "command": "npm run check:i18n-hardcode",
+      "cwd": "frontend",
+      "notes": "238 files scanned, 0 violations.",
+      "status": "passed"
+    },
+    {
+      "command": "npm run check:menu-contract",
+      "cwd": "frontend",
+      "notes": "19 menus / 23 routes / 102 permissions / 23 component keys - unchanged by this wave.",
+      "status": "passed"
+    },
+    {
+      "command": "npm run check:system-page-admission",
+      "cwd": "frontend",
+      "notes": "16 entries, unchanged.",
+      "status": "passed"
+    },
+    {
+      "command": "npm run audit:i18n-locales",
+      "cwd": "frontend",
+      "notes": "3021 keys per locale across zh-CN, en-US, fr-FR, ja-JP, ko-KR with missing=0 extra=0 empty=0. The wave added 4 keys to every locale (3020 -> 3021 is the Phase 0 count plus this wave's additions).",
+      "status": "passed"
+    },
+    {
+      "command": "npx prettier <each locale resource> (repo config) and diff against the file",
+      "cwd": "frontend",
+      "notes": "No hunk touches any line added by this wave. The five locale resources do have pre-existing prettier drift at HEAD, verified by running the same comparison against the HEAD copies; that drift is not a CI gate and was not widened here.",
+      "status": "passed"
+    },
+    {
+      "command": "playwright chromium: log in, open /system/tenant, open the member dialog of the first tenant, expand the user selector, select one option, close without submitting",
+      "cwd": "frontend",
+      "notes": "Produced member-dialog-open.png (searchable select expanded, one candidate rendered as 'admin · Administrator', scope notice visible because the viewpoint is platform-global while the target tenant is plan-enterprise) and member-dialog-selected.png. The 新增 button was never clicked, so no membership row was written to the dev database.",
+      "status": "passed"
+    },
+    {
+      "command": "node scripts/harness/check-task-packet.mjs --root .",
+      "cwd": ".",
+      "notes": "exit 0, every packet including this one passes.",
+      "status": "passed"
+    },
+    {
+      "command": "node scripts/harness/check-evidence.mjs --strict",
+      "cwd": ".",
+      "notes": "exit 0; this evidence directory is listed [PASS].",
+      "status": "passed"
+    },
+    {
+      "command": "node scripts/harness/check-review.mjs --strict",
+      "cwd": ".",
+      "notes": "exit 0; this review.md is listed [PASS].",
+      "status": "passed"
+    },
+    {
+      "command": "node scripts/harness/check-doc-links.mjs --root . --strict && node scripts/harness/check-doc-inventory.mjs --root . --strict",
+      "cwd": ".",
+      "notes": "Both exit 0: 'Docs link check (strict): 0 finding(s)' and 'Docs inventory check (strict): 0 finding(s)'.",
+      "status": "passed"
+    },
+    {
+      "command": "node scripts/tenant-matrix-fixture-setup.mjs down && node scripts/cleanup-smoke-fixtures.mjs",
+      "cwd": ".",
+      "notes": "not-run: this wave brought up no smoke fixture (no smoke spec was executed), so there was nothing to tear down. The commands remain mandatory for any wave that does run smoke.",
+      "status": "not-run"
+    },
+    {
+      "command": "gofmt -l modules/system/iam/tenant/ ; go build ./... ; go test -count=1 ./modules/system/iam/tenant/... (PANTHEON_TEST_DSN + PANTHEON_TEST_DSN_REQUIRED=true + PANTHEON_TEST_REDIS_REQUIRED=true)",
+      "cwd": "backend",
+      "notes": "CI 'Fast Checks' (Check Go formatting) and 'Go Lint' (golangci-lint gofmt) both failed on tenant_service.go:898: the two-line Where call carried trailing NOSONAR comments, and gofmt wants the continuation line re-indented to the comment column. Fixed by hoisting the two static predicate strings into named consts (same pattern as tenant_plan_store.go's condIDEquals), keeping both NOSONAR gosecurity:S3649 markers on the SQL text; the consts are named ownerMembershipScope/liveOwnerUserScope so they do not shadow the package-level membershipScope helper. gofmt -l now reports nothing for the package; go build ./... exit 0; tenant package go test -count=1 exit 0 (72.9s, no skip, DSN required). Read-only refactor: no behaviour change, no assertion touched.",
+      "status": "passed"
+    }
+  ]
+}

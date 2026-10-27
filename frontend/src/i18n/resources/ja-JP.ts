@@ -1712,6 +1712,11 @@ const jaJPFallback = {
   'system.tenant.memberUserId': 'ユーザー ID',
   'system.tenant.memberUserIdPlaceholder': 'ユーザー ID を入力',
   'system.tenant.memberUserIdRequired': 'ユーザー ID を入力してください',
+  'system.tenant.member.userSelectEmpty': 'この範囲に追加できるユーザーはいません',
+  'system.tenant.member.userSelectNoPermission': 'このアカウントはユーザー一覧を参照できません',
+  'system.tenant.member.userSelectSearch': 'ユーザー名またはニックネームで検索',
+  'system.tenant.member.userSelectScope':
+    '候補は現在のテナントビューポイントから取得しています。対象のテナントでなければビューポイントを切り替えてください',
   'system.tenant.memberRole': 'ロール',
   'system.tenant.memberAddSuccess': 'メンバーを追加しました',
   'system.tenant.memberRemove': '削除',

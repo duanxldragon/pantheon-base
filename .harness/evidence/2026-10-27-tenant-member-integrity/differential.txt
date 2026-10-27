@@ -1,0 +1,29 @@
+wave W2 - 2026-10-27 - all runs with PANTHEON_TEST_DSN_REQUIRED=true PANTHEON_TEST_REDIS_REQUIRED=true -count=1
+
+red  (service+handler reverted to HEAD): 4 FAIL / 6 PASS of the 10 member cases  -> red-without-fix.log
+  --- PASS: TestDeletedTenantRefusesNewMembers (0.84s)
+  --- PASS: TestAddMember_Duplicate (0.87s)
+  --- PASS: TestAddMember_OwnerIsProtected (0.90s)
+  --- FAIL: TestAddMember_RejectsUnknownUser (0.84s)
+  --- PASS: TestAddMember_DoesNotDecideCrossTenantMembership (0.89s)
+  --- FAIL: TestAddMember_RejectsDeletedUser (0.81s)
+  --- PASS: TestAddMember_TombstoneTenantStillReportsTenantNotFound (0.75s)
+  --- FAIL: TestRemoveMember_PhantomOwnerDoesNotProtectRealOwner (0.77s)
+  --- PASS: TestRemoveMember_LastLiveOwnerAmongTwoLiveOwners (0.82s)
+  --- FAIL: TestRemoveMember_DisabledUserOwnerDoesNotCount (0.86s)
+
+green (same set, fix restored): 10 PASS / 0 FAIL          -> green-with-fix.log
+  --- PASS: TestDeletedTenantRefusesNewMembers (0.95s)
+  --- PASS: TestAddMember_Duplicate (0.81s)
+  --- PASS: TestAddMember_OwnerIsProtected (0.88s)
+  --- PASS: TestAddMember_RejectsUnknownUser (0.87s)
+  --- PASS: TestAddMember_DoesNotDecideCrossTenantMembership (0.86s)
+  --- PASS: TestAddMember_RejectsDeletedUser (0.85s)
+  --- PASS: TestAddMember_TombstoneTenantStillReportsTenantNotFound (0.82s)
+  --- PASS: TestRemoveMember_PhantomOwnerDoesNotProtectRealOwner (0.85s)
+  --- PASS: TestRemoveMember_LastLiveOwnerAmongTwoLiveOwners (0.82s)
+  --- PASS: TestRemoveMember_DisabledUserOwnerDoesNotCount (1.02s)
+
+mounted route test: -> mounted-route-guard-test.log
+  --- PASS: TestPlatformAddMemberRejectsUnknownUser (17.74s)
+  ok  	github.com/duanxldragon/pantheon-base/backend/modules/system/iam/tenant	17.773s

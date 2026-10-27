@@ -1776,6 +1776,12 @@ const frFRFallback = {
   'system.tenant.memberUserId': 'ID utilisateur',
   'system.tenant.memberUserIdPlaceholder': 'Saisir l’ID utilisateur',
   'system.tenant.memberUserIdRequired': 'Veuillez saisir l’ID utilisateur',
+  'system.tenant.member.userSelectEmpty': 'Aucun utilisateur disponible dans ce périmètre',
+  'system.tenant.member.userSelectNoPermission':
+    'Ce compte ne peut pas parcourir la liste des utilisateurs',
+  'system.tenant.member.userSelectSearch': 'Rechercher par nom d’utilisateur ou surnom',
+  'system.tenant.member.userSelectScope':
+    'Les candidats proviennent du point de vue tenant actif ; changez de point de vue s’il ne s’agit pas du tenant cible',
   'system.tenant.memberRole': 'Rôle',
   'system.tenant.memberAddSuccess': 'Membre ajouté',
   'system.tenant.memberRemove': 'Retirer',

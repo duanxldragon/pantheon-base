@@ -710,6 +710,11 @@ const zhCNFallback = {
   'system.tenant.memberUserId': '用户 ID',
   'system.tenant.memberUserIdPlaceholder': '请输入用户 ID',
   'system.tenant.memberUserIdRequired': '请输入用户 ID',
+  'system.tenant.member.userSelectEmpty': '当前范围内没有可添加的用户',
+  'system.tenant.member.userSelectNoPermission': '当前账号无权浏览用户列表',
+  'system.tenant.member.userSelectSearch': '搜索用户名或昵称',
+  'system.tenant.member.userSelectScope':
+    '候选用户来自当前租户视角，与目标租户不一致时请先切换视角',
   'system.tenant.memberRole': '成员角色',
   'system.tenant.memberAddSuccess': '成员添加成功',
   'system.tenant.memberRemove': '移除',
