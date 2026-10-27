@@ -56,6 +56,11 @@ func (h *PlatformHandler) failServiceError(c *gin.Context, err error, fallback s
 		// The subject of the request does not exist. Reporting that as 500
 		// blames the server for a caller mistake and invites blind retries.
 		common.FailWithError(c, common.CodeNotFound, err, "tenant.not_found")
+	case errors.Is(err, common.ErrNotFound):
+		// The member target does not resolve to a user that still exists. The key
+		// travels inside the error (user.not_found), so the console can say
+		// "no such user" instead of "the server failed".
+		common.FailWithError(c, common.CodeNotFound, err, "user.not_found")
 	case errors.Is(err, ErrTenantCodeExists):
 		// Duplicate key: the input is unacceptable as sent, which is the
 		// caller's to fix (the envelope code set has no 409 sentinel).
