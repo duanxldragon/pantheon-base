@@ -47,6 +47,25 @@ The reason this matters is that `git branch --no-merged main` listed the first b
 even though its content is on `main`. Squash merges make that signal systematically unreliable
 here, so tree equality is the gate for every deletion.
 
+## In-flight repair found by re-running the chain
+
+Re-running the full base check set against the landed tree turned up a red that is not mine:
+`node scripts/harness/check-evidence.mjs --root . --strict` reported 2 errors on
+`.harness/evidence/2026-10-27-v0177-lint-codeql-closure/commands.json`, a file PR #430 merged into
+`main`. It still had the pre-contract shape — no `schema`, no `knownGaps`, no `linkage` — so it
+failed the root-level requirements at `scripts/harness/check-evidence.mjs:162` and `:321`.
+The fields are now filled in: `knownGaps` records that the v0.17.7 CodeQL annotations do not change
+GitHub's alert state (the conclusion ops measured independently during consumption), and `linkage`
+points at that round's manifest, summary and review, all of which already exist.
+
+The reason it merged red is worth separating from the repair. `quality.yml` invokes fourteen harness
+checkers; `check-evidence` and `check-review` are not among them, and neither appears in any other
+workflow (`grep -rl check-evidence .github/workflows | wc -l` → `0`). The evidence contract is
+therefore policed by a checker that CI never runs. Adding those two steps would close the class of
+failure permanently, but it converts an advisory checker into a merge blocker, which is a gate-policy
+decision rather than a cleanup — so the data is repaired here and the gate is filed as finding A4 for
+the maintainer.
+
 ## Verification
 
 `commands.json` in this directory holds the per-command readings. All executed checks exit 0:

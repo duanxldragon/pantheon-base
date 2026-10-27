@@ -76,6 +76,32 @@
       "details": "warning: Linked review file does not exist: .harness/evidence/2026-10-27-tenant-completeness-remediation/review.md | [PASS] docs/harness/tasks/2026-10-27-v0176-release-closeout.task.md | [PASS] docs/harness/tasks/2026-10-27-v0177-lint-codeql-closure.task.md"
     },
     {
+      "command": "node scripts/harness/check-evidence.mjs --root . --strict",
+      "cwd": ".",
+      "status": "passed",
+      "details": "[PASS] .harness/evidence/2026-10-27-base-docs-artifact-landing/commands.json | [PASS] .harness/evidence/2026-10-27-v0176-release-closeout/commands.json | [PASS] .harness/evidence/2026-10-27-v0177-lint-codeql-closure/commands.json"
+    },
+    {
+      "command": "node scripts/harness/check-review.mjs --root . --strict",
+      "cwd": ".",
+      "status": "passed",
+      "details": "[PASS] .harness/evidence/2026-10-27-base-docs-artifact-landing/review.md | [PASS] .harness/evidence/2026-10-27-v0176-release-closeout/review.md | [PASS] .harness/evidence/2026-10-27-v0177-lint-codeql-closure/review.md"
+    },
+    {
+      "command": "git log --oneline -1 main -- .harness/evidence/2026-10-27-v0177-lint-codeql-closure/commands.json",
+      "cwd": ".",
+      "status": "passed",
+      "details": "2091a2d8 chore(release): publish v0.17.7 foundation materials (#430)",
+      "notes": "证明该文件由 main 上的 v0.17.7 发布提交带入，本轮才回填 schema"
+    },
+    {
+      "command": "grep -rl check-evidence .github/workflows | wc -l",
+      "cwd": ".",
+      "status": "passed",
+      "details": "0",
+      "notes": "门禁缺口读数：期望 0，即 base CI 没有任何 workflow 调用 check-evidence"
+    },
+    {
       "command": "node scripts/harness/check-adoption.mjs --root . --strict",
       "cwd": ".",
       "status": "passed",
@@ -121,13 +147,13 @@
       "command": "node scripts/harness/check-structure-contract.mjs --root . --strict",
       "cwd": ".",
       "status": "passed",
-      "details": "Structure contract check (strict): 0 finding(s) across 2756 tracked file(s)"
+      "details": "Structure contract check (strict): 0 finding(s) across 2761 tracked file(s)"
     },
     {
       "command": "node scripts/harness/check-encoding.mjs --root . --strict",
       "cwd": ".",
       "status": "passed",
-      "details": "Encoding check (strict): 0 finding(s) across 2418 scanned file(s)"
+      "details": "Encoding check (strict): 0 finding(s) across 2423 scanned file(s)"
     },
     {
       "command": "node scripts/check-duplication.mjs",
@@ -158,7 +184,8 @@
   "knownGaps": [
     "本轮为纯文档落地，未运行 go test 与前端构建；被改动的路径不包含任何代码、配置或版本文件。",
     "landed manifests 里规划的整改（租户完整性、S1-S4 简化）没有被执行，也没有检查器强制其后续状态变化。",
-    "本地分支 fix/lint-and-codeql-suppressions-2026-10-27 的树等同性证明（git diff --quiet main <branch> 退出 0，输出 TREES IDENTICAL）在删除前采集，已记入 summary.md 与 review.md；该分支删除后此读数无法复现。"
+    "本地分支 fix/lint-and-codeql-suppressions-2026-10-27 的树等同性证明（git diff --quiet main <branch> 退出 0，输出 TREES IDENTICAL）在删除前采集，已记入 summary.md 与 review.md；该分支删除后此读数无法复现。",
+    "本轮回填了 main 上 .harness/evidence/2026-10-27-v0177-lint-codeql-closure/commands.json 的 schema/knownGaps/linkage 三个必填字段。根因是 base CI 的 quality.yml 从未调用 check-evidence 与 check-review，所以这份文件合入时没有任何红灯；把这两个检查器接进门禁是门禁策略变更，按维护者三触点约定留待拍板，本轮只补数据不擅自加门禁。"
   ],
   "runtimeSensitive": false,
   "linkage": {

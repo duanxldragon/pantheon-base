@@ -1,4 +1,5 @@
 {
+  "schema": "pantheon-harness/commands-v1",
   "taskId": "2026-10-27-v0177-lint-codeql-closure",
   "repo": "pantheon-base",
   "executedAt": "2026-10-27T13:20:00+08:00",
@@ -82,5 +83,21 @@
     "go test -race cannot run here: cgo is disabled on this Windows host, so the race reading belongs to the Linux CI Backend Tests job.",
     "npm run <script> fails inside this Git Bash session because the npm child process cannot resolve node; every checker was invoked as node <script> instead.",
     "SonarCloud is not reachable from a local run; the workflow's own 403 on the JRE metadata query is recorded as finding L4 and is a maintainer credential matter."
-  ]
+  ],
+  "knownGaps": [
+    "The four go/log-injection and seven js/file-access-to-http inline CodeQL annotations in this release do not change GitHub's alert state; only the code scanning API dismissal does. Ops measured nine alerts still open on the PR ref after the annotated commits landed and dismissed them through PATCH /code-scanning/alerts. The base release procedure still claims the annotations are the suppression, so the gap is a method gap, recorded as finding D1 in the ops v0.17.7 consumption review.",
+    "No runtime acceptance run (backend startup plus golang-migrate) accompanies this release; it is comment-only Go and script changes, so the gap is inherited from the previous round rather than introduced here."
+  ],
+  "runtimeSensitive": false,
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-27-v0177-lint-codeql-closure/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-27-v0177-lint-codeql-closure/",
+    "summaryFile": ".harness/evidence/2026-10-27-v0177-lint-codeql-closure/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-27-v0177-lint-codeql-closure/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-27-v0177-lint-codeql-closure.task.md",
+      ".harness/evidence/2026-10-27-v0176-release-closeout/summary.md"
+    ]
+  }
 }

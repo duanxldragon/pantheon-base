@@ -27,6 +27,20 @@ or after its unique content has been landed and merged.
 Evidence: `git diff --quiet main fix/lint-and-codeql-suppressions-2026-10-27` → exit 0, printed
 `TREES IDENTICAL`; deletion then removed nothing that is not already on `main`.
 
+### P2 - `check-evidence --strict` is red on `main` and no CI job runs that checker
+
+The v0.17.7 release round merged
+`.harness/evidence/2026-10-27-v0177-lint-codeql-closure/commands.json` with the pre-contract shape:
+no `schema`, no `knownGaps`, no `linkage`. `node scripts/harness/check-evidence.mjs --root . --strict`
+reports 2 errors for it, so base `main` has been failing a strict governance check since PR #430.
+It stayed invisible because `quality.yml` wires fourteen harness checkers and `check-evidence` /
+`check-review` are not among them — the two checkers that police the evidence contract are the only
+ones with no gate. This round repairs the file in place; the missing gate is not added here because
+turning a checker into a blocking signal is a gate-policy decision, which belongs to the maintainer.
+
+Evidence: `node scripts/harness/check-evidence.mjs --root . --strict` → `59 file(s), 2 error(s)`
+before the repair, `0 error(s)` after; `grep -rl check-evidence .github/workflows | wc -l` → `0`.
+
 ### P3 - The landed manifests describe work that this round does not do
 
 The tenant-completeness remediation and the S1–S4 simplification programme are filed as planned
@@ -54,10 +68,14 @@ record non-`completed` statuses and no matching `.harness/evidence/*` implementa
 
 ## Decision
 
-Accept the landing and merge it. The two P2s are process observations that this round itself acts
-on — the stranded work is landed, and the deletion rule is now written down where the next operator
-will hit it. The P3 stays open on purpose: the simplification programme is out of scope for this
-round and should be scheduled on its own merits, not by the fact that its plan is now on `main`.
+Accept the landing and merge it. The three P2s are process observations that this round acts on
+directly: the stranded work is landed, the deletion rule is now written down where the next operator
+will hit it, and the red evidence file is repaired so `check-evidence --strict` reports 0 errors on
+the merged tree. The gate half of A4 — wiring `check-evidence` and `check-review` into
+`quality.yml` — is deliberately not done here; it converts an advisory checker into a merge blocker
+and is a gate-policy call for the maintainer. The P3 stays open on purpose: the simplification
+programme is out of scope for this round and should be scheduled on its own merits, not by the fact
+that its plan is now on `main`.
 
 ## Unknowns
 
@@ -77,7 +95,8 @@ round and should be scheduled on its own merits, not by the fact that its plan i
   "findings": [
     {"id": "A1", "severity": "P2", "title": "Delivered review artifacts had no landing path and no gate distinguishes tree-local from main", "state": "closed-for-these-files-process-gap-open"},
     {"id": "A2", "severity": "P2", "title": "git branch --no-merged is unreliable after squash merges; tree equality is the deletion gate", "state": "documented-rule"},
-    {"id": "A3", "severity": "P3", "title": "Landed manifests describe planned remediation and simplification work not executed here", "state": "open-by-design"}
+    {"id": "A3", "severity": "P3", "title": "Landed manifests describe planned remediation and simplification work not executed here", "state": "open-by-design"},
+    {"id": "A4", "severity": "P2", "title": "v0.17.7 commands.json violated the evidence contract on main because no CI job runs check-evidence", "state": "data-repaired-gate-recommendation-open"}
   ],
   "structuralReview": {
     "affectedSubgraph": [
@@ -94,7 +113,8 @@ round and should be scheduled on its own merits, not by the fact that its plan i
   },
   "residualRisk": [
     "The landed assessments were written before the v0.17.6/v0.17.7 rounds and have not been re-validated against current code.",
-    "Planned simplification manifests now live on main without an owner or schedule, which can read as in-flight work."
+    "Planned simplification manifests now live on main without an owner or schedule, which can read as in-flight work.",
+    "check-evidence and check-review still have no CI wiring, so the next non-conforming commands.json will merge red again until the maintainer approves adding them as gate steps."
   ],
   "linkage": {
     "taskManifest": ".harness/tasks/2026-10-27-base-docs-artifact-landing/manifest.json",

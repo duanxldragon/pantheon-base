@@ -19,13 +19,15 @@
   "findings": [
     "A1 (P2, closed here): delivered review artifacts had no landing path. The four docs/reviews files and 23 manifests existed only on an unmerged local branch with no PR (gh pr list --state all has no such head ref), which means the standing completion gate 'evidence exists' was satisfied locally while the work itself was invisible to every other consumer of the repository.",
     "A2 (P2, closed here): the sibling branch fix/lint-and-codeql-suppressions-2026-10-27 was reported by git branch --no-merged main even though PR #430 had squash-merged it. The branch is therefore retained only as a deletion decision, proved safe by 'TREES IDENTICAL' from git diff --quiet main fix/lint-and-codeql-suppressions-2026-10-27. Squash merges make 'unmerged' an unreliable signal in this repository; the tree comparison is the proof, and that method is now recorded.",
-    "A3 (P3, follow-up, not closed here): the landed manifests describe planned and blocked follow-up work (tenant completeness remediation, the S1-S4 simplification programme). Landing them does not execute any of it, and no checker currently enforces that a planned manifest eventually gets a status change, so this packet is a filing action rather than a delivery."
+    "A3 (P3, follow-up, not closed here): the landed manifests describe planned and blocked follow-up work (tenant completeness remediation, the S1-S4 simplification programme). Landing them does not execute any of it, and no checker currently enforces that a planned manifest eventually gets a status change, so this packet is a filing action rather than a delivery.",
+    "A4 (P2, data repaired here, gate recommendation open): re-running the check set showed that check-evidence --strict reports 2 errors on .harness/evidence/2026-10-27-v0177-lint-codeql-closure/commands.json, a file base PR #430 merged into main. It kept the pre-contract shape (no schema, no knownGaps, no linkage), so schema and linkage were backfilled in this round. It merged red because quality.yml runs fourteen harness checkers and check-evidence / check-review are not among them; wiring them into CI is a gate-policy change and is left for the maintainer to approve."
   ],
   "scope": {
     "in": [
       "git cherry-pick -x 806e053e from chore/harness-task-packets-2026-10-27 onto a fresh branch off main",
       "This round's task packet, manifest and evidence trio",
       "Base documentation and governance verification set",
+      "Backfill the evidence-contract fields (schema, knownGaps, linkage) on main's .harness/evidence/2026-10-27-v0177-lint-codeql-closure/commands.json",
       "Open the pull request, watch CI, merge it",
       "Delete the two extra local branches once their content is proven to be on main"
     ],
