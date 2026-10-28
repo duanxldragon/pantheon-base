@@ -37,8 +37,13 @@ func tenantAuditTitle(action string) string {
 }
 
 func parseTenantID(c *gin.Context) (uint64, bool) {
-	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
-	if err != nil || id == 0 {
+	id, ok := common.ParseUintParam(c, "id")
+	if !ok {
+		return 0, false
+	}
+	// The zero check stays local: the shared helper deliberately passes zero
+	// through, and this module treats id 0 as invalid with the same envelope.
+	if id == 0 {
 		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
 		return 0, false
 	}
@@ -257,8 +262,11 @@ func (h *PlatformHandler) RemoveTenantMember(c *gin.Context) {
 	if !ok {
 		return
 	}
-	userID, err := strconv.ParseUint(c.Param("userId"), 10, 64)
-	if err != nil || userID == 0 {
+	userID, ok := common.ParseUintParam(c, "userId")
+	if !ok {
+		return
+	}
+	if userID == 0 {
 		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
 		return
 	}
