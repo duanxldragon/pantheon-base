@@ -1,9 +1,8 @@
 # Review — `2026-10-28-release-gate-green`
 
-Reviewed the working tree on branch `chore/release-gate-green`
-(base `e8275eef`, which merges the S3 waves and the release-notes relocation
-onto `main`). Measured diff: 8 tracked files, +330/−294, plus the new task
-packet and this evidence directory.
+Reviewed the working tree on branch `fix/release-gate-green`
+(base `cbd37694`, the merge of #460, #461 and #462). Measured diff: 8 tracked
+files, +332/−294, plus the new task packet and this evidence directory.
 
 ## Reviewer posture, item by item
 

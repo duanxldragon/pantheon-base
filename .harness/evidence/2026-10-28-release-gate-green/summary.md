@@ -83,7 +83,7 @@ deleted.
 | `check:task-packet`, `check:structure`, `check:harness-encoding`, `check:docs-frontmatter` | PASS, 0/2882, 0/2534, 392 docs |
 | `check-doc-links`, `check-doc-inventory`, `check:generated`, `check:ui-quality-gate` | 0, 0, 0/11, 0 |
 
-Measured change surface: 8 tracked files, +330/−294 — two dependency files, one
+Measured change surface: 8 tracked files, +332/−294 — two dependency files, one
 comment, one signature, two test refactors, one 11-line component extraction and
 the STATUS entry.
 

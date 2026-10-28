@@ -167,7 +167,7 @@
       "command": "git status --short && git diff --stat",
       "cwd": ".",
       "status": "passed",
-      "details": "Measured surface: 8 tracked files changed, +330/−294 — go.mod/go.sum (dependency move), oidc/handler.go (7 lines, comment only), pkg/database/notfound.go (2 lines, signature), tenant_isolation_smoke_test.go (463 lines, same assertions reorganised), pkg/tenant/scope_helper_test.go (71 lines, extraction), TenantList.tsx (11 lines), .harness/STATUS.md (+22). No workflow, Sonar config, migration, VERSION or CHANGELOG file appears. Untracked: the packet and this evidence directory."
+      "details": "Measured surface: 8 tracked files changed, +332/−294 — go.mod/go.sum (dependency move), oidc/handler.go (7 lines, comment only), pkg/database/notfound.go (2 lines, signature), tenant_isolation_smoke_test.go (463 lines, same assertions reorganised), pkg/tenant/scope_helper_test.go (71 lines, extraction), TenantList.tsx (11 lines), .harness/STATUS.md (+24). No workflow, Sonar config, migration, VERSION or CHANGELOG file appears. Untracked: the packet and this evidence directory."
     }
   ],
   "knownGaps": [

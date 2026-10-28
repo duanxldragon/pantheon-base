@@ -40,7 +40,7 @@
 - audit coverage: unchanged
 - visual evidence: not-applicable（无标记或样式变化，`vite build` 产物正常）
 - inheritance contract: 未改 sharedPaths 或继承合同；`pantheon-ops` 无需动作
-- base drift: 分支基于 `main`（经 `e8275eef` 合入 S3 波次与发布说明目录化）
+- base drift: 分支基于 `main` @ `cbd37694`（#460 计划阶梯、#461 S3 波次、#462 发布说明目录化均已合入）
 - Base/ops inheritance: 无同步要求；依赖树自包含于 base
 
 ## 边界说明
