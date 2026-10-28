@@ -205,7 +205,7 @@ func (s *Service) ListSecurityEvents(query *SecurityEventQuery) (*SecurityEventP
 	}
 	// Read path: retention is swept by the registered maintenance task, not
 	// while serving this list (task 2026-09-22-request-path-maintenance).
-	page, pageSize := normalizeSecurityEventPageQuery(query)
+	page, pageSize, offset := normalizeSecurityEventPageQuery(query)
 	db := applySecurityEventFilters(s.scoped(s.db.Model(&SystemAuthSecurityEvent{})), query)
 
 	var total int64
@@ -226,7 +226,7 @@ func (s *Service) ListSecurityEvents(query *SecurityEventQuery) (*SecurityEventP
 		return nil, err
 	}
 	var events []SystemAuthSecurityEvent
-	if err := db.Order(orderEventRecent).Offset((page - 1) * pageSize).Limit(pageSize).Find(&events).Error; err != nil {
+	if err := db.Order(orderEventRecent).Offset(offset).Limit(pageSize).Find(&events).Error; err != nil {
 		return nil, err
 	}
 	return &SecurityEventPageResp{
@@ -719,22 +719,15 @@ func formatNullableTime(value *time.Time) *string {
 	return &formatted
 }
 
-func normalizeSecurityEventPageQuery(query *SecurityEventQuery) (int, int) {
-	if query == nil {
-		return 1, 10
+// normalizeSecurityEventPageQuery clamps the security event query through the
+// shared pagination helper with the security module's own cap; the nil-extract
+// prelude keeps the service's nil-tolerant contract.
+func normalizeSecurityEventPageQuery(query *SecurityEventQuery) (int, int, int) {
+	var page, pageSize int
+	if query != nil {
+		page, pageSize = query.Page, query.PageSize
 	}
-	page := query.Page
-	pageSize := query.PageSize
-	if page <= 0 {
-		page = 1
-	}
-	if pageSize <= 0 {
-		pageSize = 10
-	}
-	if pageSize > 100 {
-		pageSize = 100
-	}
-	return page, pageSize
+	return common.NormalizePagination(page, pageSize, 100)
 }
 
 // PasswordChangeReq is the password update request DTO.
