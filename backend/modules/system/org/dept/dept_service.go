@@ -9,6 +9,7 @@ import (
 	"github.com/duanxldragon/pantheon-base/backend/pkg/common"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/tenant"
 
+	"github.com/duanxldragon/pantheon-base/backend/pkg/database"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -414,10 +415,7 @@ func (s *DeptService) resolveDeptLeaderFields(deptID uint64, leader string, lead
 		Joins("JOIN system_post AS p ON p.id = u.post_id AND p.dept_id = u.dept_id").
 		Where("u.deleted_at IS NULL AND u.status = ? AND u.id = ? AND u.dept_id = ? AND u.post_id > 0", 1, leaderUserID, deptID).
 		Take(&row).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return "", 0, common.NewBadRequest("dept.leader.user_invalid")
-		}
-		return "", 0, err
+		return "", 0, database.TranslateNotFound(err, common.NewBadRequest("dept.leader.user_invalid"))
 	}
 
 	displayName := strings.TrimSpace(row.Nickname)

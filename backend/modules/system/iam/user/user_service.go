@@ -1,7 +1,6 @@
 package user
 
 import (
-	"errors"
 	"strings"
 	"time"
 
@@ -323,10 +322,7 @@ func (s *UserService) ListUsers(query *UserListQuery, dataScope *common.DataScop
 func (s *UserService) loadTenantUser(userID uint64) (*SystemUser, error) {
 	var user SystemUser
 	if err := s.scoped(s.db).First(&user, userID).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, common.NewNotFound("user.not_found")
-		}
-		return nil, err
+		return nil, database.TranslateNotFound(err, common.NewNotFound("user.not_found"))
 	}
 	return &user, nil
 }

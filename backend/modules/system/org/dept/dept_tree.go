@@ -1,13 +1,12 @@
 package dept
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 
 	"github.com/duanxldragon/pantheon-base/backend/pkg/common"
 
-	"gorm.io/gorm"
+	"github.com/duanxldragon/pantheon-base/backend/pkg/database"
 	"gorm.io/gorm/clause"
 )
 
@@ -150,10 +149,7 @@ func (s *DeptService) ListLeaderCandidates(deptID uint64) ([]DeptLeaderCandidate
 
 	var dept SystemDept
 	if err := s.scoped(s.db).First(&dept, deptID).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, common.NewNotFound("dept.not_found")
-		}
-		return nil, err
+		return nil, database.TranslateNotFound(err, common.NewNotFound("dept.not_found"))
 	}
 	if dept.IsRoot == common.StatusFlagYes {
 		return []DeptLeaderCandidateResp{}, nil
