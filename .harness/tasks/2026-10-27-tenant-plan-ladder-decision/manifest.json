@@ -3,7 +3,7 @@
   "title": "Decide what a plan code outside the four-tier ladder means",
   "goal": "Plan storage is data-driven: tenant_plans is the authority, the console plan editor creates and disables codes, and the compiled-in four-tier table is only the seed plus a fallback for codes the table does not hold. The frontend feature gate is not data-driven. core/entitlements/plans.ts closes the union to four codes, ranks them 0-3, maps every other code to free, and hides lowcode surfaces below a rank. The code already says so: planOptions.ts:4-20 and TenantList.tsx:256-260 both state that an operator-defined code resolves to free, and the tenant dialog renders a warning when the typed code is outside the ladder. So this is a documented limitation, not a silent bug - but the warning never says what it costs, and the operator has no way to grant a custom plan the feature surfaces its quotas imply. This packet decides which way out and implements nothing.",
   "primaryLayer": "system/iam",
-  "status": "planned",
+  "status": "completed",
   "priority": "P3",
   "type": "decision",
   "estimatedComplexity": "small",
