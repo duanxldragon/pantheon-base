@@ -335,14 +335,12 @@ func (s *PostService) ExportPosts(query *PostListQuery) (*impexp.CSVFile, error)
 }
 
 func (s *PostService) BuildPostImportTemplate() *impexp.CSVFile {
-	return &impexp.CSVFile{
-		Filename: "system-post-import-template.csv",
-		Headers:  []string{"deptPath", "postCode", "postName", "sort", "status", "remark"},
-		Rows: [][]string{
-			{"#说明：保留第一行表头；deptPath 使用部门导出的完整路径；postCode 是稳定唯一编码；status 使用 1=启用、2=禁用。", "", "", "", "", ""},
-			{"#Pantheon Base/研发中心", "developer", "研发工程师", "10", "1", "负责研发交付"},
-		},
-	}
+	return impexp.BuildImportTemplate(
+		"system-post-import-template.csv",
+		"#说明：保留第一行表头；deptPath 使用部门导出的完整路径；postCode 是稳定唯一编码；status 使用 1=启用、2=禁用。",
+		[]string{"deptPath", "postCode", "postName", "sort", "status", "remark"},
+		[]string{"#Pantheon Base/研发中心", "developer", "研发工程师", "10", "1", "负责研发交付"},
+	)
 }
 
 // postImportRow 表示一次导入解析后的单行数据。
@@ -363,16 +361,6 @@ func appendPostImportDeptError(result *impexp.ImportResult, rowNumber int, err e
 	}
 	impexp.AppendImportError(result, rowNumber, "deptPath", common.ErrMessage(err))
 	return nil
-}
-
-// validateImportHeaders 校验导入表头是否包含必填列，缺失时追加错误到 result。
-func validateImportHeaders(headerIndex map[string]int, result *impexp.ImportResult) {
-	requiredHeaders := []string{"deptPath", "postCode", "postName", "sort", "status", "remark"}
-	for _, header := range requiredHeaders {
-		if _, ok := headerIndex[header]; !ok {
-			impexp.AppendImportError(result, 0, header, "import.header.missing")
-		}
-	}
 }
 
 // readImportRow 解析并校验单行导入记录：
@@ -478,10 +466,7 @@ func applyImportRows(
 }
 
 func (s *PostService) ImportPosts(records [][]string) (*impexp.ImportResult, error) {
-	result := &impexp.ImportResult{
-		Applied: false,
-		Errors:  []impexp.ImportError{},
-	}
+	result := impexp.NewImportResult()
 	if s.db == nil {
 		return nil, common.ErrDatabaseNotInitialized
 	}
@@ -490,11 +475,8 @@ func (s *PostService) ImportPosts(records [][]string) (*impexp.ImportResult, err
 		return result, nil
 	}
 
-	headerIndex := make(map[string]int, len(records[0]))
-	for index, header := range records[0] {
-		headerIndex[strings.TrimSpace(header)] = index
-	}
-	validateImportHeaders(headerIndex, result)
+	headerIndex := impexp.BuildHeaderIndex(records)
+	impexp.RequireHeaders(result, headerIndex, "deptPath", "postCode", "postName", "sort", "status", "remark")
 	if result.Failed > 0 {
 		return result, nil
 	}
