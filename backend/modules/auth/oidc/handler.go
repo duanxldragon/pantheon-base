@@ -66,9 +66,10 @@ func HandleOIDCCallback(service *Service) gin.HandlerFunc {
 			return
 		}
 
-		// Raw: interim business payload (session creation is pending — see
-		// the TODO below); moving it onto the common envelope belongs to the
-		// session-integration change that also updates the consumer.
+		// Raw: interim business payload. Session creation against the existing
+		// session service is still pending, so moving this body onto the common
+		// envelope belongs to the session-integration change that also updates
+		// the consumer.
 		// 会话创建待接入既有 session service; 当前先返回用户信息。
 		c.JSON(http.StatusOK, gin.H{
 			"success": true,

@@ -3,6 +3,8 @@ package tenant
 import (
 	"strings"
 	"testing"
+
+	"gorm.io/gorm"
 )
 
 // TestScoperScopeSemantics pins the read-filter SQL the shared Scoper renders
@@ -17,42 +19,55 @@ func TestScoperScopeSemantics(t *testing.T) {
 	multiCtx := &Context{TenantID: 101, Mode: ModeMulti}
 	compatCtx := &Context{TenantID: PlatformGlobalTenantID, Mode: ModeCompat}
 
-	cases := []struct {
-		name       string
-		ctx        *Context
-		wantClause bool
-		wantArg    uint64
-	}{
+	cases := []scopeCase{
 		{name: "nil context stays unfiltered", ctx: nil, wantClause: false},
 		{name: "compat pins tenant_id = 0", ctx: compatCtx, wantClause: true, wantArg: 0},
 		{name: "multi pins the claimed tenant", ctx: multiCtx, wantClause: true, wantArg: 101},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			scoper := Scoper{TenantCtx: tc.ctx}
-			var rows []scopeSQLRow
-			stmt := scoper.Scoped(db.Model(&scopeSQLRow{})).Find(&rows).Statement
-			sql := stmt.SQL.String()
-			if !tc.wantClause {
-				if strings.Contains(sql, "tenant_id") {
-					t.Fatalf("nil context must not filter, got SQL %q", sql)
-				}
-				return
-			}
-			if !strings.Contains(sql, "tenant_id = ?") {
-				t.Fatalf("expected a tenant_id = ? predicate in SQL %q", sql)
-			}
-			found := false
-			for _, v := range stmt.Vars {
-				if arg, ok := v.(uint64); ok && arg == tc.wantArg {
-					found = true
-				}
-			}
-			if !found {
-				t.Fatalf("vars %v do not carry tenant pin %d", stmt.Vars, tc.wantArg)
-			}
+			assertScopeSQL(t, db, tc)
 		})
 	}
+}
+
+// scopeCase is one context/filter expectation for assertScopeSQL.
+type scopeCase struct {
+	name       string
+	ctx        *Context
+	wantClause bool
+	wantArg    uint64
+}
+
+// assertScopeSQL renders the Scoper query and checks the predicate it carries.
+func assertScopeSQL(t *testing.T, db *gorm.DB, tc scopeCase) {
+	t.Helper()
+	scoper := Scoper{TenantCtx: tc.ctx}
+	var rows []scopeSQLRow
+	stmt := scoper.Scoped(db.Model(&scopeSQLRow{})).Find(&rows).Statement
+	sql := stmt.SQL.String()
+	if !tc.wantClause {
+		if strings.Contains(sql, "tenant_id") {
+			t.Fatalf("nil context must not filter, got SQL %q", sql)
+		}
+		return
+	}
+	if !strings.Contains(sql, "tenant_id = ?") {
+		t.Fatalf("expected a tenant_id = ? predicate in SQL %q", sql)
+	}
+	if !carriesUint64(stmt.Vars, tc.wantArg) {
+		t.Fatalf("vars %v do not carry tenant pin %d", stmt.Vars, tc.wantArg)
+	}
+}
+
+// carriesUint64 reports whether vars holds the given uint64 pin.
+func carriesUint64(vars []any, want uint64) bool {
+	for _, v := range vars {
+		if arg, ok := v.(uint64); ok && arg == want {
+			return true
+		}
+	}
+	return false
 }
 
 // TestScoperOwnerTenantID pins the write-owner rule (contract §3.3: ownership

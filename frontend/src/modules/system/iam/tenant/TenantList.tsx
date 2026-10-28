@@ -123,14 +123,15 @@ const TenantList: React.FC = () => {
   // disappearing from the navigation (which left operators with no way to
   // discover the feature).
   const tenantModeEnabled = publicSettings.tenantMode === 'multi';
-  const canCreate = isAdmin || hasPerm('system:tenant:create');
-  const canUpdate = isAdmin || hasPerm('system:tenant:update');
-  const canDelete = isAdmin || hasPerm('system:tenant:delete');
-  const canManageMember = isAdmin || hasPerm('system:tenant:member-add');
+  const can = (perm: string) => isAdmin || hasPerm(perm);
+  const canCreate = can('system:tenant:create');
+  const canUpdate = can('system:tenant:update');
+  const canDelete = can('system:tenant:delete');
+  const canManageMember = can('system:tenant:member-add');
   // The picker is a read of the user list, so it is offered only to subjects
   // that can actually perform that read; without it the select stays empty and
   // says so rather than looking like a data bug.
-  const canBrowseUsers = isAdmin || hasPerm('system:user:list');
+  const canBrowseUsers = can('system:user:list');
 
   // The request interceptor already reports the server's message for a
   // RequestError. Re-reporting it here stacked two toasts — a specific one and a

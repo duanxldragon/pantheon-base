@@ -87,251 +87,284 @@ func TestTwoTenantIsolationSmoke(t *testing.T) {
 
 	seedSmokeData(t, db)
 
-	t.Run("role list and mutate stay inside the caller's tenant", func(t *testing.T) {
-		svc := role.NewRoleService(db).WithTenantContext(smokeMulti(smokeTenantA))
+	subtests := []struct {
+		name string
+		run  func(t *testing.T, db *gorm.DB)
+	}{
+		{"role list and mutate stay inside the caller's tenant", smokeRoleIsolation},
+		{"post list and mutate stay inside the caller's tenant", smokePostIsolation},
+		{"dept tree and mutate stay inside the caller's tenant", smokeDeptIsolation},
+		{"user list and mutate stay inside the caller's tenant", smokeUserIsolation},
+		{"dict list, mutate and write-owner stay inside the caller's tenant", smokeDictIsolation},
+		{"setting reads resolve the caller's override, never another tenant's", smokeSettingIsolation},
+		{"permission data-scope console lists only the caller's tenant roles", smokeDataScopeIsolation},
+		{"login logs list and delete stay inside the caller's tenant", smokeLoginLogIsolation},
+		{"security events list stays inside the caller's tenant", smokeSecurityEventIsolation},
+		{"admin session list stays inside the caller's tenant", smokeAdminSessionIsolation},
+		{"platform summary counts only the caller's tenant rows", smokeDashboardIsolation},
+	}
+	for _, st := range subtests {
+		t.Run(st.name, func(t *testing.T) {
+			st.run(t, db)
+		})
+	}
+}
 
-		page, err := svc.ListRoles(nil)
-		if err != nil {
-			t.Fatalf("list roles: %v", err)
-		}
-		if page.Total != 1 || len(page.Items) != 1 || page.Items[0].RoleKey != "ops-a" {
-			t.Fatalf("tenant A must see only its own role, got total=%d items=%+v", page.Total, page.Items)
-		}
+func smokeRoleIsolation(t *testing.T, db *gorm.DB) {
+	t.Helper()
+	svc := role.NewRoleService(db).WithTenantContext(smokeMulti(smokeTenantA))
 
-		// Same update shape succeeds on A's row and fails on B's row. The
-		// request must carry A's own data scope: a role update rewrites the
-		// policy row, and an omitted scope falls back to "all".
-		aUpdate := &role.RoleUpdateReq{RoleName: "A 运营改", RoleKey: "ops-a", MenuIDs: []uint64{1}, DataScope: common.DataScopeModeSelf}
-		if _, err := svc.UpdateRole(page.Items[0].ID, aUpdate); err != nil {
-			t.Fatalf("tenant A updates its own role: %v", err)
-		}
-		if _, err := svc.UpdateRole(smokeRoleBID, aUpdate); err == nil {
-			t.Fatalf("tenant A must not update tenant B's role")
-		}
-		if err := svc.DeleteRole(smokeRoleBID); err == nil {
-			t.Fatalf("tenant A must not delete tenant B's role")
-		}
-		if countSmokeRows(t, db, "system_role", smokeTenantB) != 1 {
-			t.Fatalf("tenant B's role must be untouched")
-		}
-	})
+	page, err := svc.ListRoles(nil)
+	if err != nil {
+		t.Fatalf("list roles: %v", err)
+	}
+	if page.Total != 1 || len(page.Items) != 1 || page.Items[0].RoleKey != "ops-a" {
+		t.Fatalf("tenant A must see only its own role, got total=%d items=%+v", page.Total, page.Items)
+	}
 
-	t.Run("post list and mutate stay inside the caller's tenant", func(t *testing.T) {
-		svc := post.NewPostService(db).WithTenantContext(smokeMulti(smokeTenantA))
+	// Same update shape succeeds on A's row and fails on B's row. The request
+	// must carry A's own data scope: a role update rewrites the policy row, and
+	// an omitted scope falls back to "all".
+	aUpdate := &role.RoleUpdateReq{RoleName: "A 运营改", RoleKey: "ops-a", MenuIDs: []uint64{1}, DataScope: common.DataScopeModeSelf}
+	if _, err := svc.UpdateRole(page.Items[0].ID, aUpdate); err != nil {
+		t.Fatalf("tenant A updates its own role: %v", err)
+	}
+	if _, err := svc.UpdateRole(smokeRoleBID, aUpdate); err == nil {
+		t.Fatalf("tenant A must not update tenant B's role")
+	}
+	if err := svc.DeleteRole(smokeRoleBID); err == nil {
+		t.Fatalf("tenant A must not delete tenant B's role")
+	}
+	if countSmokeRows(t, db, "system_role", smokeTenantB) != 1 {
+		t.Fatalf("tenant B's role must be untouched")
+	}
+}
 
-		page, err := svc.ListPosts(nil)
-		if err != nil {
-			t.Fatalf("list posts: %v", err)
-		}
-		if page.Total != 1 || len(page.Items) != 1 {
-			t.Fatalf("tenant A must see only its own post, got total=%d items=%+v", page.Total, page.Items)
-		}
+func smokePostIsolation(t *testing.T, db *gorm.DB) {
+	t.Helper()
+	svc := post.NewPostService(db).WithTenantContext(smokeMulti(smokeTenantA))
 
-		aUpdate := &post.PostUpdateReq{DeptID: smokeDeptAChildID, PostCode: "p-a", PostName: "A 岗位", Sort: 1, Status: 1}
-		if _, err := svc.UpdatePost(page.Items[0].ID, aUpdate); err != nil {
-			t.Fatalf("tenant A updates its own post: %v", err)
-		}
-		if _, err := svc.UpdatePost(smokePostBID, aUpdate); err == nil {
-			t.Fatalf("tenant A must not update tenant B's post")
-		}
-		if err := svc.DeletePost(smokePostBID); err == nil {
-			t.Fatalf("tenant A must not delete tenant B's post")
-		}
-		if countSmokeRows(t, db, "system_post", smokeTenantB) != 1 {
-			t.Fatalf("tenant B's post must be untouched")
-		}
-	})
+	page, err := svc.ListPosts(nil)
+	if err != nil {
+		t.Fatalf("list posts: %v", err)
+	}
+	if page.Total != 1 || len(page.Items) != 1 {
+		t.Fatalf("tenant A must see only its own post, got total=%d items=%+v", page.Total, page.Items)
+	}
 
-	t.Run("dept tree and mutate stay inside the caller's tenant", func(t *testing.T) {
-		svc := dept.NewDeptService(db).WithTenantContext(smokeMulti(smokeTenantA))
+	aUpdate := &post.PostUpdateReq{DeptID: smokeDeptAChildID, PostCode: "p-a", PostName: "A 岗位", Sort: 1, Status: 1}
+	if _, err := svc.UpdatePost(page.Items[0].ID, aUpdate); err != nil {
+		t.Fatalf("tenant A updates its own post: %v", err)
+	}
+	if _, err := svc.UpdatePost(smokePostBID, aUpdate); err == nil {
+		t.Fatalf("tenant A must not update tenant B's post")
+	}
+	if err := svc.DeletePost(smokePostBID); err == nil {
+		t.Fatalf("tenant A must not delete tenant B's post")
+	}
+	if countSmokeRows(t, db, "system_post", smokeTenantB) != 1 {
+		t.Fatalf("tenant B's post must be untouched")
+	}
+}
 
-		tree, err := svc.GetDeptTree(nil)
-		if err != nil {
-			t.Fatalf("get dept tree: %v", err)
-		}
-		if len(tree) != 1 || tree[0].DeptName != "A 部门" {
-			t.Fatalf("tenant A must see only its own dept, got %+v", tree)
-		}
+func smokeDeptIsolation(t *testing.T, db *gorm.DB) {
+	t.Helper()
+	svc := dept.NewDeptService(db).WithTenantContext(smokeMulti(smokeTenantA))
 
-		aUpdate := &dept.DeptUpdateReq{ParentID: 0, DeptName: "A 部门改", Sort: 1, Status: 1}
-		if _, err := svc.UpdateDept(tree[0].ID, aUpdate); err != nil {
-			t.Fatalf("tenant A updates its own dept: %v", err)
-		}
-		if _, err := svc.UpdateDept(smokeDeptBID, aUpdate); err == nil {
-			t.Fatalf("tenant A must not update tenant B's dept")
-		}
-		if err := svc.DeleteDept(smokeDeptBChildID); err == nil {
-			t.Fatalf("tenant A must not delete tenant B's dept")
-		}
-		if countSmokeRows(t, db, "system_dept", smokeTenantB) != 2 {
-			t.Fatalf("tenant B's dept tree must be untouched")
-		}
-	})
+	tree, err := svc.GetDeptTree(nil)
+	if err != nil {
+		t.Fatalf("get dept tree: %v", err)
+	}
+	if len(tree) != 1 || tree[0].DeptName != "A 部门" {
+		t.Fatalf("tenant A must see only its own dept, got %+v", tree)
+	}
 
-	t.Run("user list and mutate stay inside the caller's tenant", func(t *testing.T) {
-		svc := user.NewUserService(db).WithTenantContext(smokeMulti(smokeTenantA))
+	aUpdate := &dept.DeptUpdateReq{ParentID: 0, DeptName: "A 部门改", Sort: 1, Status: 1}
+	if _, err := svc.UpdateDept(tree[0].ID, aUpdate); err != nil {
+		t.Fatalf("tenant A updates its own dept: %v", err)
+	}
+	if _, err := svc.UpdateDept(smokeDeptBID, aUpdate); err == nil {
+		t.Fatalf("tenant A must not update tenant B's dept")
+	}
+	if err := svc.DeleteDept(smokeDeptBChildID); err == nil {
+		t.Fatalf("tenant A must not delete tenant B's dept")
+	}
+	if countSmokeRows(t, db, "system_dept", smokeTenantB) != 2 {
+		t.Fatalf("tenant B's dept tree must be untouched")
+	}
+}
 
-		page, err := svc.ListUsers(nil, nil)
-		if err != nil {
-			t.Fatalf("list users: %v", err)
-		}
-		if page.Total != 1 || len(page.Items) != 1 || page.Items[0].Username != "user-a" {
-			t.Fatalf("tenant A must see only its own user, got total=%d items=%+v", page.Total, page.Items)
-		}
+func smokeUserIsolation(t *testing.T, db *gorm.DB) {
+	t.Helper()
+	svc := user.NewUserService(db).WithTenantContext(smokeMulti(smokeTenantA))
 
-		if _, err := svc.GetUserDetail(smokeUserBID); err == nil {
-			t.Fatalf("tenant A must not read tenant B's user detail")
-		}
-		aUpdate := &user.UserUpdateReq{Nickname: "A 用户改", Status: 1}
-		if _, err := svc.UpdateUser(page.Items[0].ID, aUpdate); err != nil {
-			t.Fatalf("tenant A updates its own user: %v", err)
-		}
-		if _, err := svc.UpdateUser(smokeUserBID, aUpdate); err == nil {
-			t.Fatalf("tenant A must not update tenant B's user")
-		}
-		if err := svc.DeleteUser(smokeUserBID); err == nil {
-			t.Fatalf("tenant A must not delete tenant B's user")
-		}
-		if countSmokeRows(t, db, "system_user", smokeTenantB) != 1 {
-			t.Fatalf("tenant B's user must be untouched")
-		}
-	})
+	page, err := svc.ListUsers(nil, nil)
+	if err != nil {
+		t.Fatalf("list users: %v", err)
+	}
+	if page.Total != 1 || len(page.Items) != 1 || page.Items[0].Username != "user-a" {
+		t.Fatalf("tenant A must see only its own user, got total=%d items=%+v", page.Total, page.Items)
+	}
 
-	t.Run("dict list, mutate and write-owner stay inside the caller's tenant", func(t *testing.T) {
-		svc := dict.NewDictService(db).WithTenantContext(smokeMulti(smokeTenantA))
+	if _, err := svc.GetUserDetail(smokeUserBID); err == nil {
+		t.Fatalf("tenant A must not read tenant B's user detail")
+	}
+	aUpdate := &user.UserUpdateReq{Nickname: "A 用户改", Status: 1}
+	if _, err := svc.UpdateUser(page.Items[0].ID, aUpdate); err != nil {
+		t.Fatalf("tenant A updates its own user: %v", err)
+	}
+	if _, err := svc.UpdateUser(smokeUserBID, aUpdate); err == nil {
+		t.Fatalf("tenant A must not update tenant B's user")
+	}
+	if err := svc.DeleteUser(smokeUserBID); err == nil {
+		t.Fatalf("tenant A must not delete tenant B's user")
+	}
+	if countSmokeRows(t, db, "system_user", smokeTenantB) != 1 {
+		t.Fatalf("tenant B's user must be untouched")
+	}
+}
 
-		types, err := svc.ListDictTypes(nil)
-		if err != nil {
-			t.Fatalf("list dict types: %v", err)
-		}
-		if len(types) != 1 || types[0].DictCode != "smoke-a" {
-			t.Fatalf("tenant A must see only its own dict type, got %+v", types)
-		}
+func smokeDictIsolation(t *testing.T, db *gorm.DB) {
+	t.Helper()
+	svc := dict.NewDictService(db).WithTenantContext(smokeMulti(smokeTenantA))
 
-		created, err := svc.CreateDictType(&dict.DictTypeCreateReq{DictCode: "smoke-created", DictName: "A 新建", Status: 1})
-		if err != nil {
-			t.Fatalf("tenant A creates a dict type: %v", err)
-		}
-		var createdRow struct {
-			TenantID uint64
-		}
-		if err := db.Table("system_dict_type").Select("tenant_id").Where("id = ?", created.ID).Scan(&createdRow).Error; err != nil {
-			t.Fatalf("load created dict type: %v", err)
-		}
-		if createdRow.TenantID != smokeTenantA {
-			t.Fatalf("write owner must come from the context (tenant %d), got %d", smokeTenantA, createdRow.TenantID)
-		}
+	types, err := svc.ListDictTypes(nil)
+	if err != nil {
+		t.Fatalf("list dict types: %v", err)
+	}
+	if len(types) != 1 || types[0].DictCode != "smoke-a" {
+		t.Fatalf("tenant A must see only its own dict type, got %+v", types)
+	}
 
-		aUpdate := &dict.DictTypeUpdateReq{DictCode: "smoke-a", DictName: "A 字典改", Status: 1}
-		if _, err := svc.UpdateDictType(types[0].ID, aUpdate); err != nil {
-			t.Fatalf("tenant A updates its own dict type: %v", err)
-		}
-		if _, err := svc.UpdateDictType(smokeDictBID, aUpdate); err == nil {
-			t.Fatalf("tenant A must not update tenant B's dict type")
-		}
-		if err := svc.DeleteDictType(smokeDictBID); err == nil {
-			t.Fatalf("tenant A must not delete tenant B's dict type")
-		}
-		if countSmokeRows(t, db, "system_dict_type", smokeTenantB) != 1 {
-			t.Fatalf("tenant B's dict type must be untouched")
-		}
-	})
+	created, err := svc.CreateDictType(&dict.DictTypeCreateReq{DictCode: "smoke-created", DictName: "A 新建", Status: 1})
+	if err != nil {
+		t.Fatalf("tenant A creates a dict type: %v", err)
+	}
+	var createdRow struct {
+		TenantID uint64
+	}
+	if err := db.Table("system_dict_type").Select("tenant_id").Where("id = ?", created.ID).Scan(&createdRow).Error; err != nil {
+		t.Fatalf("load created dict type: %v", err)
+	}
+	if createdRow.TenantID != smokeTenantA {
+		t.Fatalf("write owner must come from the context (tenant %d), got %d", smokeTenantA, createdRow.TenantID)
+	}
 
-	t.Run("setting reads resolve the caller's override, never another tenant's", func(t *testing.T) {
-		svc := setting.NewSettingService(db).WithTenantContext(smokeMulti(smokeTenantA))
+	aUpdate := &dict.DictTypeUpdateReq{DictCode: "smoke-a", DictName: "A 字典改", Status: 1}
+	if _, err := svc.UpdateDictType(types[0].ID, aUpdate); err != nil {
+		t.Fatalf("tenant A updates its own dict type: %v", err)
+	}
+	if _, err := svc.UpdateDictType(smokeDictBID, aUpdate); err == nil {
+		t.Fatalf("tenant A must not update tenant B's dict type")
+	}
+	if err := svc.DeleteDictType(smokeDictBID); err == nil {
+		t.Fatalf("tenant A must not delete tenant B's dict type")
+	}
+	if countSmokeRows(t, db, "system_dict_type", smokeTenantB) != 1 {
+		t.Fatalf("tenant B's dict type must be untouched")
+	}
+}
 
-		value, err := svc.GetByKey("site.name")
-		if err != nil {
-			t.Fatalf("get by key: %v", err)
-		}
-		if value != "override-a" {
-			t.Fatalf("tenant A must resolve its own override, got %q", value)
-		}
+func smokeSettingIsolation(t *testing.T, db *gorm.DB) {
+	t.Helper()
+	svc := setting.NewSettingService(db).WithTenantContext(smokeMulti(smokeTenantA))
 
-		compatSvc := setting.NewSettingService(db).WithTenantContext(smokeCompat())
-		compatValue, err := compatSvc.GetByKey("site.name")
-		if err != nil {
-			t.Fatalf("compat get by key: %v", err)
-		}
-		if compatValue != "platform-global" {
-			t.Fatalf("compat must resolve the platform-global value, got %q", compatValue)
-		}
-	})
+	value, err := svc.GetByKey("site.name")
+	if err != nil {
+		t.Fatalf("get by key: %v", err)
+	}
+	if value != "override-a" {
+		t.Fatalf("tenant A must resolve its own override, got %q", value)
+	}
 
-	t.Run("permission data-scope console lists only the caller's tenant roles", func(t *testing.T) {
-		svc := permission.NewPermissionService(db).WithTenantContext(smokeMulti(smokeTenantA))
+	compatSvc := setting.NewSettingService(db).WithTenantContext(smokeCompat())
+	compatValue, err := compatSvc.GetByKey("site.name")
+	if err != nil {
+		t.Fatalf("compat get by key: %v", err)
+	}
+	if compatValue != "platform-global" {
+		t.Fatalf("compat must resolve the platform-global value, got %q", compatValue)
+	}
+}
 
-		page, err := svc.ListDataScopePolicies(nil)
-		if err != nil {
-			t.Fatalf("list data scope policies: %v", err)
-		}
-		if page.Total != 1 || len(page.Items) != 1 || page.Items[0].RoleKey != "ops-a" {
-			t.Fatalf("tenant A must list only its own role row, got total=%d items=%+v", page.Total, page.Items)
-		}
-		if page.Items[0].Mode != common.DataScopeModeSelf {
-			t.Fatalf("tenant A must echo its own policy mode, got %q", page.Items[0].Mode)
-		}
-	})
+func smokeDataScopeIsolation(t *testing.T, db *gorm.DB) {
+	t.Helper()
+	svc := permission.NewPermissionService(db).WithTenantContext(smokeMulti(smokeTenantA))
 
-	t.Run("login logs list and delete stay inside the caller's tenant", func(t *testing.T) {
-		svc := login.NewLoginService(db, nil, nil, nil).WithTenantContext(smokeMulti(smokeTenantA))
+	page, err := svc.ListDataScopePolicies(nil)
+	if err != nil {
+		t.Fatalf("list data scope policies: %v", err)
+	}
+	if page.Total != 1 || len(page.Items) != 1 || page.Items[0].RoleKey != "ops-a" {
+		t.Fatalf("tenant A must list only its own role row, got total=%d items=%+v", page.Total, page.Items)
+	}
+	if page.Items[0].Mode != common.DataScopeModeSelf {
+		t.Fatalf("tenant A must echo its own policy mode, got %q", page.Items[0].Mode)
+	}
+}
 
-		page, err := svc.ListLoginLogs(&login.LoginLogQuery{Page: 1, PageSize: 10})
-		if err != nil {
-			t.Fatalf("list login logs: %v", err)
-		}
-		if page.Total != 1 || len(page.Items) != 1 {
-			t.Fatalf("tenant A must see only its own login log, got total=%d items=%+v", page.Total, page.Items)
-		}
+func smokeLoginLogIsolation(t *testing.T, db *gorm.DB) {
+	t.Helper()
+	svc := login.NewLoginService(db, nil, nil, nil).WithTenantContext(smokeMulti(smokeTenantA))
 
-		if affected, err := svc.BatchDeleteLoginLogs([]uint64{smokeLoginLogBID}); err != nil || affected != 0 {
-			t.Fatalf("tenant A must not delete tenant B's login log (affected=%d, err=%v)", affected, err)
-		}
-		if countSmokeRows(t, db, "system_log_login", smokeTenantB) != 1 {
-			t.Fatalf("tenant B's login log must be untouched")
-		}
-	})
+	page, err := svc.ListLoginLogs(&login.LoginLogQuery{Page: 1, PageSize: 10})
+	if err != nil {
+		t.Fatalf("list login logs: %v", err)
+	}
+	if page.Total != 1 || len(page.Items) != 1 {
+		t.Fatalf("tenant A must see only its own login log, got total=%d items=%+v", page.Total, page.Items)
+	}
 
-	t.Run("security events list stays inside the caller's tenant", func(t *testing.T) {
-		svc := authsecurity.NewService(db, nil, nil).WithTenantContext(smokeMulti(smokeTenantA))
+	if affected, err := svc.BatchDeleteLoginLogs([]uint64{smokeLoginLogBID}); err != nil || affected != 0 {
+		t.Fatalf("tenant A must not delete tenant B's login log (affected=%d, err=%v)", affected, err)
+	}
+	if countSmokeRows(t, db, "system_log_login", smokeTenantB) != 1 {
+		t.Fatalf("tenant B's login log must be untouched")
+	}
+}
 
-		page, err := svc.ListSecurityEvents(&authsecurity.SecurityEventQuery{Page: 1, PageSize: 10})
-		if err != nil {
-			t.Fatalf("list security events: %v", err)
-		}
-		if page.Total != 1 || len(page.Items) != 1 {
-			t.Fatalf("tenant A must see only its own security event, got total=%d items=%+v", page.Total, page.Items)
-		}
-	})
+func smokeSecurityEventIsolation(t *testing.T, db *gorm.DB) {
+	t.Helper()
+	svc := authsecurity.NewService(db, nil, nil).WithTenantContext(smokeMulti(smokeTenantA))
 
-	t.Run("admin session list stays inside the caller's tenant", func(t *testing.T) {
-		rdb := testredis.OpenDB(t, testredis.DBSession)
-		oldRDB := database.RDB
-		database.RDB = rdb
-		t.Cleanup(func() { database.RDB = oldRDB })
+	page, err := svc.ListSecurityEvents(&authsecurity.SecurityEventQuery{Page: 1, PageSize: 10})
+	if err != nil {
+		t.Fatalf("list security events: %v", err)
+	}
+	if page.Total != 1 || len(page.Items) != 1 {
+		t.Fatalf("tenant A must see only its own security event, got total=%d items=%+v", page.Total, page.Items)
+	}
+}
 
-		svc := authsession.NewService(db, sessionPolicyStub{}, nil, nil).WithTenantContext(smokeMulti(smokeTenantA))
+func smokeAdminSessionIsolation(t *testing.T, db *gorm.DB) {
+	t.Helper()
+	rdb := testredis.OpenDB(t, testredis.DBSession)
+	oldRDB := database.RDB
+	database.RDB = rdb
+	t.Cleanup(func() { database.RDB = oldRDB })
 
-		page, err := svc.ListAllSessions(&authsession.AdminSessionQuery{Page: 1, PageSize: 10})
-		if err != nil {
-			t.Fatalf("list admin sessions: %v", err)
-		}
-		if page.Total != 1 || len(page.Items) != 1 {
-			t.Fatalf("tenant A must see only its own session, got total=%d items=%+v", page.Total, page.Items)
-		}
-	})
+	svc := authsession.NewService(db, sessionPolicyStub{}, nil, nil).WithTenantContext(smokeMulti(smokeTenantA))
 
-	t.Run("platform summary counts only the caller's tenant rows", func(t *testing.T) {
-		svc := platform.NewDashboardService(db).WithTenantContext(smokeMulti(smokeTenantA))
+	page, err := svc.ListAllSessions(&authsession.AdminSessionQuery{Page: 1, PageSize: 10})
+	if err != nil {
+		t.Fatalf("list admin sessions: %v", err)
+	}
+	if page.Total != 1 || len(page.Items) != 1 {
+		t.Fatalf("tenant A must see only its own session, got total=%d items=%+v", page.Total, page.Items)
+	}
+}
 
-		summary, err := svc.GetSummary()
-		if err != nil {
-			t.Fatalf("get summary: %v", err)
-		}
-		if summary.TotalRoles != 1 || summary.TotalUsers != 1 {
-			t.Fatalf("tenant A summary must count only its own rows, got roles=%d users=%d", summary.TotalRoles, summary.TotalUsers)
-		}
-	})
+func smokeDashboardIsolation(t *testing.T, db *gorm.DB) {
+	t.Helper()
+	svc := platform.NewDashboardService(db).WithTenantContext(smokeMulti(smokeTenantA))
+
+	summary, err := svc.GetSummary()
+	if err != nil {
+		t.Fatalf("get summary: %v", err)
+	}
+	if summary.TotalRoles != 1 || summary.TotalUsers != 1 {
+		t.Fatalf("tenant A summary must count only its own rows, got roles=%d users=%d", summary.TotalRoles, summary.TotalUsers)
+	}
 }
 
 // sessionPolicyStub satisfies ListAllSessions' policy read.
