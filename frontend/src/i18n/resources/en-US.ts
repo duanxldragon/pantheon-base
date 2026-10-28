@@ -699,7 +699,7 @@ const enUSFallback = {
   'system.tenant.plan.professional': 'Professional',
   'system.tenant.plan.enterprise': 'Enterprise',
   'system.tenant.plan.outsideLadder':
-    '"{{plan}}" is not part of the console capability ladder, so its features show at the free tier; the quota ceilings still come from this plan definition.',
+    '"{{plan}}" is not part of the console capability ladder, so its features show at the free tier and the lowcode gated surfaces stay hidden; the quota ceilings still come from this plan definition.',
   'system.tenant.planFeature.title': 'Plan feature comparison',
   'system.tenant.planFeature.description':
     'The plan decides which feature entries the tenant console exposes; role permissions still govern what each user may do.',

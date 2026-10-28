@@ -1580,7 +1580,7 @@ const koKRFallback = {
   'system.tenant.plan.professional': '프로페셔널',
   'system.tenant.plan.enterprise': '엔터프라이즈',
   'system.tenant.plan.outsideLadder':
-    '{{plan}} 은 콘솔 기능 사다리에 포함되지 않아 기능은 Free 등급으로 표시됩니다. 상한 값은 이 플랜 정의를 따릅니다.',
+    '{{plan}} 은 콘솔 기능 사다리에 포함되지 않아 기능은 Free 등급으로 표시되며 lowcode 게이트 대상 화면은 숨겨집니다. 상한 값은 이 플랜 정의를 따릅니다.',
   'system.tenant.planFeature.title': '요금제 기능 비교',
   'system.tenant.planFeature.description':
     '요금제는 테넌트 콘솔에서 사용할 수 있는 기능 진입점을 결정합니다. 실제 작업 권한은 역할 권한 부여로 제어됩니다.',

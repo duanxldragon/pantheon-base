@@ -1649,7 +1649,7 @@ const jaJPFallback = {
   'system.tenant.plan.professional': 'プロフェッショナル',
   'system.tenant.plan.enterprise': 'エンタープライズ',
   'system.tenant.plan.outsideLadder':
-    '{{plan}} はコンソールの機能階層に含まれないため、機能は Free プラン相当で表示されます。上限値はこのプラン定義に従います。',
+    '{{plan}} はコンソールの機能階層に含まれないため、機能は Free プラン相当で表示され、lowcode の制御対象画面は非表示になります。上限値はこのプラン定義に従います。',
   'system.tenant.planFeature.title': 'プラン機能比較',
   'system.tenant.planFeature.description':
     'プランはテナントコンソールで利用できる機能入口を決めます。実際の操作権限はロール認可で制御されます。',
