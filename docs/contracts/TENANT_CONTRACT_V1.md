@@ -228,6 +228,16 @@ DDL 与种子：编号迁移 `000030_tenant_plan_definitions`；AutoMigrate 部�
    租户会呈现一张一保存就静默改写其套餐的表单。读侧筛选列出全部已定义 code（含停用），因为仍挂着它的
    租户要能被筛出来如实报告（§2.5）。
 
+**前端能力矩阵边界（W7 决策 A，2026-10-28）**：本节的配额权威与前端**能力矩阵**是两套面。
+能力矩阵（`frontend/src/core/entitlements/plans.ts` 的内建四档 rank 与 `lowcode.*` feature key）
+**只覆盖内建四档**；`normalizeTenantPlan` 对未知 code **fail-closed 归 `free`**——陈旧后端或
+失败的 lookup 不得静默发放付费面。因此操作员自定义 code 的语义是「**配额桶 + `free` 能力档**」：
+其阈值按本节表行照常生效，但 lowcode 门控面在租户视角不可见。该门控是 **UX-only**——隐藏
+不授予也不撤销任何权限，授权仍由 §2.3/§3 的权限链决定；控制台的 `outsideLadder` 警告向操作员
+告知这一后果（`system.tenant.plan.outsideLadder`，五语言）。让自定义 code 完整参与能力门控
+（服务端 entitlements）属 V2 商业化工作流，不在 V1；选项裁剪与理由见
+[套餐能力阶梯语义决策](../reviews/TENANT_PLAN_LADDER_DECISION_2026-10-28.md)。
+
 #### 2.4.1 配额语义：度量，不是闸门（本节的边界条款）
 
 - **后端在任何写入路径上都不因超出套餐而拒绝。** 配额的用途是让总览/成员页如实报告"用量 vs 阈值"，
@@ -396,6 +406,7 @@ DDL 与种子：编号迁移 `000030_tenant_plan_definitions`；AutoMigrate 部�
 | V1.6 | 2026-10-27 | §5 登记删除守卫错误码 `tenant.not_archived`（400）。实现此前按「成员数 > 0 且未归档」拒绝删除，与 §2.1「删除仅允许对 `archived` 执行」不符：删光用户即可把活跃租户的活跃成员数降为 0，绕过归档直接删除。现按 §2.1 原文执行（守卫是 `status` 而非成员数），平台与 legacy 两个 handler 均注册该码，控制台对非归档行禁用删除入口；§2.1 与 §2.2 条文不变 | 澄清（Clarification）+ 扩展（§5 错误码） |
 | V1.7 | 2026-10-27 | §2.2 新增不变量「跨租户 membership 不授予授权、也不在登录时提供」（W3 决策 A / TC-01）：登录发现、候选列表、可切换列表共用单一角色存在性谓词，`SwitchSessionTenant` 拒绝空角色集目标，`AddMember` 收窄到 owning tenant 用户并登记 §5 错误码 `tenant.member.user_not_in_tenant`（400）；登录选择器与 TenantSwitcher 控件移除、端点保留为过滤后的兼容面；存量跨租户 membership 行保留不清理，`/auth/current` 仍如实上报。数据层「一个 user 可属于多个 tenant」不变量不变 | 澄清（Clarification）+ 扩展（§5 错误码） |
 | V1.8 | 2026-10-27 | 纯追加修订（W5 对齐，不改变任何不变量）：① §2.2 owner 转移表述对齐实现——**无单一转移端点**，落地路径为两步显式动作（加入新 owner → 移除旧 owner，`ensureNotLastOwner` 兜底，中间双 owner 是合法中间态），原文「转移 owner 是显式 API 动作」未对应任何端点；② §5 补登记 W2 成员完整性守卫（已实现于 PR #434）的两个错误码：`user.not_found`（404——`tenant_memberships` 对 `system_user` 无外键，无此守卫会写入指名不存在用户的幽灵行）与 `tenant.member_exists`（400——owner 降级拒绝，非 owner 行重加幂等），并注明墓碑检查先于用户存在性检查。In/Out 边界、生命周期与授权不变量均不变 | 澄清（Clarification） |
+| V1.9 | 2026-10-28 | §2.4 新增「前端能力矩阵边界」段（澄清，Clarification）：前端能力矩阵只覆盖内建四档、`normalizeTenantPlan` 对未知 code fail-closed 归 `free`、自定义 code = 配额桶 + `free` 能力档、门控 UX-only（隐藏不授予也不撤销权限）；`outsideLadder` 警告文案五语言同步补「lowcode 门控面不可见」后果句。服务端 entitlements（自定义 code 完整参与能力门控）登记为 V2 商业化工作流，不在 V1；决策与选项裁剪见 [套餐能力阶梯语义决策](../reviews/TENANT_PLAN_LADDER_DECISION_2026-10-28.md)（W7 决策 A，maintainer-delegated）。不变量、错误码与写侧行为均不变 | 澄清（Clarification） |
 
 **V1.5 的触发与范围**
 

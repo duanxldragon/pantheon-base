@@ -567,7 +567,10 @@ report-only**，新 spec 照常随 `npm run test:smoke:tenant` 进 job（maintai
 （`plans.ts` rank 0-3、`normalizeTenantPlan` fail-closed 归 free），自定义 plan code 就是
 配额桶（配额权威本就在 `tenant_plans` 表，`tenant_plan_model.go` quota 字段），要修的只是
 后果未告知：A 的实现 = `outsideLadder` 警告补后果一句（五语言）+ 设计文档/合同 §2.4 相邻处
-写明边界，随后续 L1 小 PR 落地，不计入 V1 完成度；B（服务端 entitlements）登记为 V2
+写明边界，随后续 L1 小 PR 落地（**已落地，本 PR**：五语言补「lowcode 门控面不可见」后果句 +
+合同 §2.4 新增「前端能力矩阵边界」段、§9 记 V1.9 澄清；设计文档 MULTI_TENANT_DESIGN.md 无
+套餐章节——vision 文档且层级从属合同，规范表述落合同，路径修正随本 PR 记录），不计入 V1
+完成度；B（服务端 entitlements）登记为 V2
 商业化工作流（唯一保留自定义 code 完整能力的方案，唯一需迁移的方案，立项时新建包）；
 C（移除门控）否决（把付费 lowcode 面开放给所有持页面权限租户，是产品能力回退）。
 证据：`.harness/evidence/2026-10-27-tenant-plan-ladder-decision/`。

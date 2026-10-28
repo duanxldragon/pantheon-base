@@ -649,7 +649,7 @@ const zhCNFallback = {
   'system.tenant.plan.professional': '专业版',
   'system.tenant.plan.enterprise': '旗舰版',
   'system.tenant.plan.outsideLadder':
-    '「{{plan}}」不在前台能力阶梯内：控制台功能按免费版展示，配额上限仍按该套餐定义生效。',
+    '「{{plan}}」不在前台能力阶梯内：控制台功能按免费版展示，lowcode 门控面不可见；配额上限仍按该套餐定义生效。',
   'system.tenant.planFeature.title': '套餐功能对照',
   'system.tenant.planFeature.description':
     '套餐决定租户控制台中可用的功能入口；具体操作仍由角色授权控制。',

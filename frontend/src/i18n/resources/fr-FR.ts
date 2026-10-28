@@ -1711,7 +1711,7 @@ const frFRFallback = {
   'system.tenant.plan.professional': 'Professionnel',
   'system.tenant.plan.enterprise': 'Entreprise',
   'system.tenant.plan.outsideLadder':
-    'La formule {{plan}} ne fait pas partie de la grille de capacités de la console : les fonctionnalités affichées correspondent au niveau gratuit, alors que les quotas suivent bien cette définition de formule.',
+    'La formule {{plan}} ne fait pas partie de la grille de capacités de la console : les fonctionnalités affichées correspondent au niveau gratuit et les surfaces lowcode contrôlées restent masquées ; les quotas suivent bien cette définition de formule.',
   'system.tenant.planFeature.title': 'Comparatif des fonctionnalités par formule',
   'system.tenant.planFeature.description':
     'La formule détermine les entrées de fonctionnalités exposées dans la console du locataire ; les permissions de rôle continuent de régir les actions autorisées.',
