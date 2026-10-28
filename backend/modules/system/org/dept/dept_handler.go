@@ -8,9 +8,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-const errRequestFailed = "request.failed"
-const errParamInvalid = "param.invalid"
-
 type DeptHandler struct {
 	service *DeptService
 }
@@ -31,7 +28,7 @@ func (h *DeptHandler) svc(c *gin.Context) *DeptService {
 func (h *DeptHandler) GetDeptTree(c *gin.Context) {
 	var query DeptListQuery
 	if err := c.ShouldBindQuery(&query); err != nil {
-		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
+		common.Fail(c, common.CodeParamInvalid, common.MessageParamInvalid)
 		return
 	}
 
@@ -55,7 +52,7 @@ func (h *DeptHandler) GetDeptOverview(c *gin.Context) {
 func (h *DeptHandler) GetGovernanceTasks(c *gin.Context) {
 	var query DeptGovernanceTaskQuery
 	if err := c.ShouldBindQuery(&query); err != nil {
-		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
+		common.Fail(c, common.CodeParamInvalid, common.MessageParamInvalid)
 		return
 	}
 
@@ -75,7 +72,7 @@ func (h *DeptHandler) GetDeptLeaderCandidates(c *gin.Context) {
 
 	items, err := h.svc(c).ListLeaderCandidates(deptID)
 	if err != nil {
-		common.FailWithError(c, common.CodeForError(err), err, errRequestFailed)
+		common.FailWithError(c, common.CodeForError(err), err, common.MessageRequestFailed)
 		return
 	}
 	common.Success(c, items)
@@ -85,13 +82,13 @@ func (h *DeptHandler) CreateDept(c *gin.Context) {
 	common.SetAuditMetadata(c, "dept.create.title", common.BusinessInsert)
 	var req DeptCreateReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
+		common.Fail(c, common.CodeParamInvalid, common.MessageParamInvalid)
 		return
 	}
 
 	dept, err := h.svc(c).CreateDept(&req)
 	if err != nil {
-		common.FailWithError(c, common.CodeForError(err), err, errRequestFailed)
+		common.FailWithError(c, common.CodeForError(err), err, common.MessageRequestFailed)
 		return
 	}
 	common.Success(c, dept)
@@ -101,7 +98,7 @@ func (h *DeptHandler) UpdateDept(c *gin.Context) {
 	common.SetAuditMetadata(c, "dept.update.title", common.BusinessUpdate)
 	var req DeptUpdateReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
+		common.Fail(c, common.CodeParamInvalid, common.MessageParamInvalid)
 		return
 	}
 
@@ -112,7 +109,7 @@ func (h *DeptHandler) UpdateDept(c *gin.Context) {
 
 	dept, err := h.svc(c).UpdateDept(deptID, &req)
 	if err != nil {
-		common.FailWithError(c, common.CodeForError(err), err, errRequestFailed)
+		common.FailWithError(c, common.CodeForError(err), err, common.MessageRequestFailed)
 		return
 	}
 	common.Success(c, dept)
@@ -123,13 +120,13 @@ func (h *DeptHandler) BatchUpdateDeptStatus(c *gin.Context) {
 
 	var req DeptBatchStatusReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
+		common.Fail(c, common.CodeParamInvalid, common.MessageParamInvalid)
 		return
 	}
 
 	updatedCount, err := h.svc(c).BatchUpdateDeptStatus(req.DeptIDs, req.Status)
 	if err != nil {
-		common.FailWithError(c, common.CodeForError(err), err, errRequestFailed)
+		common.FailWithError(c, common.CodeForError(err), err, common.MessageRequestFailed)
 		return
 	}
 	common.Success(c, gin.H{"updatedCount": updatedCount})
@@ -140,13 +137,13 @@ func (h *DeptHandler) BatchUpdateDeptLeader(c *gin.Context) {
 
 	var req DeptBatchLeaderReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
+		common.Fail(c, common.CodeParamInvalid, common.MessageParamInvalid)
 		return
 	}
 
 	updatedCount, err := h.svc(c).BatchUpdateDeptLeader(req.Items)
 	if err != nil {
-		common.FailWithError(c, common.CodeForError(err), err, errRequestFailed)
+		common.FailWithError(c, common.CodeForError(err), err, common.MessageRequestFailed)
 		return
 	}
 	common.Success(c, gin.H{"updatedCount": updatedCount})
@@ -160,7 +157,7 @@ func (h *DeptHandler) DeleteDept(c *gin.Context) {
 	}
 
 	if err := h.svc(c).DeleteDept(deptID); err != nil {
-		common.FailWithError(c, common.CodeForError(err), err, errRequestFailed)
+		common.FailWithError(c, common.CodeForError(err), err, common.MessageRequestFailed)
 		return
 	}
 	common.Success(c, gin.H{"deleted": true})
@@ -171,7 +168,7 @@ func (h *DeptHandler) BatchDeleteDepts(c *gin.Context) {
 
 	var req common.BatchDeleteReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
+		common.Fail(c, common.CodeParamInvalid, common.MessageParamInvalid)
 		return
 	}
 	resp := common.BatchDelete(req.IDs, h.svc(c).DeleteDept)
@@ -183,7 +180,7 @@ func (h *DeptHandler) ExportDepts(c *gin.Context) {
 
 	var query DeptListQuery
 	if err := c.ShouldBindJSON(&query); err != nil {
-		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
+		common.Fail(c, common.CodeParamInvalid, common.MessageParamInvalid)
 		return
 	}
 	file, err := h.svc(c).ExportDepts(c.Request.Context(), &query)
@@ -201,7 +198,7 @@ func (h *DeptHandler) ExportGovernanceTasks(c *gin.Context) {
 
 	var query DeptGovernanceTaskQuery
 	if err := c.ShouldBindJSON(&query); err != nil {
-		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
+		common.Fail(c, common.CodeParamInvalid, common.MessageParamInvalid)
 		return
 	}
 	file, err := h.svc(c).ExportGovernanceTasks(&query)

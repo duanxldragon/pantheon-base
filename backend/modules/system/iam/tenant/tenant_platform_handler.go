@@ -10,8 +10,6 @@ import (
 )
 
 const (
-	errParamInvalid       = "param.invalid"
-	errRequestFailed      = "request.failed"
 	tenantAuditPrefix     = "tenant."
 	tenantAuditSuffix     = ".title"
 	tenantListErrorKey    = "tenant.list.error"
@@ -44,7 +42,7 @@ func parseTenantID(c *gin.Context) (uint64, bool) {
 	// The zero check stays local: the shared helper deliberately passes zero
 	// through, and this module treats id 0 as invalid with the same envelope.
 	if id == 0 {
-		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
+		common.Fail(c, common.CodeParamInvalid, common.MessageParamInvalid)
 		return 0, false
 	}
 	return id, true
@@ -137,7 +135,7 @@ func (h *PlatformHandler) failServiceError(c *gin.Context, err error, fallback s
 func (h *PlatformHandler) ListTenants(c *gin.Context) {
 	var filter Filter
 	if err := c.ShouldBindQuery(&filter); err != nil {
-		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
+		common.Fail(c, common.CodeParamInvalid, common.MessageParamInvalid)
 		return
 	}
 	resp, err := h.service.ListTenants(filter)
@@ -156,7 +154,7 @@ func (h *PlatformHandler) GetTenant(c *gin.Context) {
 	}
 	row, err := h.service.GetTenantByID(id)
 	if err != nil {
-		h.failServiceError(c, err, errRequestFailed)
+		h.failServiceError(c, err, common.MessageRequestFailed)
 		return
 	}
 	common.Success(c, row)
@@ -168,12 +166,12 @@ func (h *PlatformHandler) CreateTenant(c *gin.Context) {
 
 	var dto CreateTenantDTO
 	if err := c.ShouldBindJSON(&dto); err != nil {
-		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
+		common.Fail(c, common.CodeParamInvalid, common.MessageParamInvalid)
 		return
 	}
 	row, err := h.service.CreateTenant(dto)
 	if err != nil {
-		h.failServiceError(c, err, errRequestFailed)
+		h.failServiceError(c, err, common.MessageRequestFailed)
 		return
 	}
 	common.Success(c, row)
@@ -189,11 +187,11 @@ func (h *PlatformHandler) UpdateTenant(c *gin.Context) {
 	}
 	var dto UpdateTenantDTO
 	if err := c.ShouldBindJSON(&dto); err != nil {
-		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
+		common.Fail(c, common.CodeParamInvalid, common.MessageParamInvalid)
 		return
 	}
 	if err := h.service.UpdateTenant(id, dto); err != nil {
-		h.failServiceError(c, err, errRequestFailed)
+		h.failServiceError(c, err, common.MessageRequestFailed)
 		return
 	}
 	common.Success(c, gin.H{})
@@ -208,7 +206,7 @@ func (h *PlatformHandler) DeleteTenant(c *gin.Context) {
 		return
 	}
 	if err := h.service.DeleteTenant(id); err != nil {
-		h.failServiceError(c, err, errRequestFailed)
+		h.failServiceError(c, err, common.MessageRequestFailed)
 		return
 	}
 	common.Success(c, gin.H{})
@@ -244,11 +242,11 @@ func (h *PlatformHandler) AddTenantMember(c *gin.Context) {
 	}
 	var dto AddTenantMemberDTO
 	if err := c.ShouldBindJSON(&dto); err != nil {
-		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
+		common.Fail(c, common.CodeParamInvalid, common.MessageParamInvalid)
 		return
 	}
 	if err := h.service.AddMember(id, dto.UserID, dto.Role); err != nil {
-		h.failServiceError(c, err, errRequestFailed)
+		h.failServiceError(c, err, common.MessageRequestFailed)
 		return
 	}
 	common.Success(c, gin.H{})
@@ -267,11 +265,11 @@ func (h *PlatformHandler) RemoveTenantMember(c *gin.Context) {
 		return
 	}
 	if userID == 0 {
-		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
+		common.Fail(c, common.CodeParamInvalid, common.MessageParamInvalid)
 		return
 	}
 	if err := h.service.RemoveMember(id, userID); err != nil {
-		h.failServiceError(c, err, errRequestFailed)
+		h.failServiceError(c, err, common.MessageRequestFailed)
 		return
 	}
 	common.Success(c, gin.H{})

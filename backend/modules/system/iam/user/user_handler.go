@@ -8,8 +8,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-const errParamInvalid = "param.invalid"
-
 type UserHandler struct {
 	service *UserService
 }
@@ -54,7 +52,7 @@ func (h *UserHandler) UpdateProfile(c *gin.Context) {
 
 	var req UserProfileUpdateReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
+		common.Fail(c, common.CodeParamInvalid, common.MessageParamInvalid)
 		return
 	}
 
@@ -70,7 +68,7 @@ func (h *UserHandler) UpdateProfile(c *gin.Context) {
 func (h *UserHandler) GetUserList(c *gin.Context) {
 	var query UserListQuery
 	if err := c.ShouldBindQuery(&query); err != nil {
-		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
+		common.Fail(c, common.CodeParamInvalid, common.MessageParamInvalid)
 		return
 	}
 
@@ -88,7 +86,7 @@ func (h *UserHandler) ExportUsers(c *gin.Context) {
 
 	var query UserListQuery
 	if err := c.ShouldBindJSON(&query); err != nil {
-		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
+		common.Fail(c, common.CodeParamInvalid, common.MessageParamInvalid)
 		return
 	}
 	dataScope := common.GetDataScope(c)
@@ -161,7 +159,7 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 	common.SetAuditMetadata(c, "user.create.title", common.BusinessInsert)
 	var req UserCreateReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
+		common.Fail(c, common.CodeParamInvalid, common.MessageParamInvalid)
 		return
 	}
 
@@ -178,7 +176,7 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 	common.SetAuditMetadata(c, "user.update.title", common.BusinessUpdate)
 	var req UserUpdateReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
+		common.Fail(c, common.CodeParamInvalid, common.MessageParamInvalid)
 		return
 	}
 
@@ -206,7 +204,7 @@ func (h *UserHandler) ResetPassword(c *gin.Context) {
 
 	var req UserResetPasswordReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
+		common.Fail(c, common.CodeParamInvalid, common.MessageParamInvalid)
 		return
 	}
 
@@ -226,7 +224,7 @@ func (h *UserHandler) BatchUpdateUserStatus(c *gin.Context) {
 
 	var req UserBatchStatusReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
+		common.Fail(c, common.CodeParamInvalid, common.MessageParamInvalid)
 		return
 	}
 
@@ -243,7 +241,7 @@ func (h *UserHandler) BatchDeleteUsers(c *gin.Context) {
 
 	var req common.BatchDeleteReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
+		common.Fail(c, common.CodeParamInvalid, common.MessageParamInvalid)
 		return
 	}
 	resp := common.BatchDelete(req.IDs, h.svc(c).DeleteUser)

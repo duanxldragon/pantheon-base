@@ -91,7 +91,7 @@ func (s *RoleService) ensureAdminUserBinding() error {
 
 func (s *RoleService) validateRoleCreate(req *RoleCreateReq) error {
 	if strings.TrimSpace(req.RoleName) == "" || strings.TrimSpace(req.RoleKey) == "" {
-		return common.NewBadRequest(errParamInvalid)
+		return common.NewBadRequest(common.MessageParamInvalid)
 	}
 	if err := s.ensureRoleKeyAllowed(req.RoleKey, 0); err != nil {
 		return err
@@ -113,7 +113,7 @@ func (s *RoleService) validateRoleCreate(req *RoleCreateReq) error {
 
 func (s *RoleService) validateRoleUpdate(role *SystemRole, req *RoleUpdateReq) error {
 	if strings.TrimSpace(req.RoleName) == "" || strings.TrimSpace(req.RoleKey) == "" {
-		return common.NewBadRequest(errParamInvalid)
+		return common.NewBadRequest(common.MessageParamInvalid)
 	}
 	if role.RoleKey == "admin" && role.TenantID == tenant.PlatformGlobalTenantID &&
 		(strings.TrimSpace(req.RoleKey) != "admin" || req.Status == common.StatusDisabled) {

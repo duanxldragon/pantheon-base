@@ -547,7 +547,7 @@ func (s *DictService) BatchUpdateDictTypeStatus(typeIDs []uint64, status int) (i
 		return 0, common.NewBadRequest("dict.type.batch.empty")
 	}
 	if !common.IsEnabledStatus(status) {
-		return 0, common.NewBadRequest(errParamInvalid)
+		return 0, common.NewBadRequest(common.MessageParamInvalid)
 	}
 
 	var rows []SystemDictType
@@ -940,7 +940,7 @@ func (s *DictService) BatchUpdateDictItemStatus(itemIDs []uint64, status int) (i
 		return 0, common.NewBadRequest("dict.item.batch.empty")
 	}
 	if !common.IsEnabledStatus(status) {
-		return 0, common.NewBadRequest(errParamInvalid)
+		return 0, common.NewBadRequest(common.MessageParamInvalid)
 	}
 
 	var rows []SystemDictItem
@@ -973,7 +973,7 @@ func (s *DictService) ReorderDictItem(itemID uint64, direction string) (*DictIte
 		return nil, common.ErrDatabaseNotInitialized
 	}
 	if direction != "up" && direction != "down" {
-		return nil, common.NewBadRequest(errParamInvalid)
+		return nil, common.NewBadRequest(common.MessageParamInvalid)
 	}
 
 	var current SystemDictItem
@@ -1133,7 +1133,7 @@ func (s *DictService) RefreshDictOptionsCache(codes []string) (*DictCacheRefresh
 func (s *DictService) AnalyzeDictUsage(dictCode string) (*DictUsageAnalysisResp, error) {
 	trimmedCode := strings.TrimSpace(dictCode)
 	if trimmedCode == "" {
-		return nil, common.NewBadRequest(errParamInvalid)
+		return nil, common.NewBadRequest(common.MessageParamInvalid)
 	}
 	projectRoot, err := resolveProjectRoot()
 	if err != nil {
@@ -1277,7 +1277,7 @@ func (s *DictService) queryEnabledDictOptions(codes []string) (DictOptionMapResp
 func (s *DictService) validateDictType(typeID uint64, dictCode string) error {
 	trimmedCode := strings.TrimSpace(dictCode)
 	if trimmedCode == "" {
-		return common.NewBadRequest(errParamInvalid)
+		return common.NewBadRequest(common.MessageParamInvalid)
 	}
 
 	var count int64
@@ -1298,7 +1298,7 @@ func (s *DictService) validateDictItem(itemID uint64, dictCode string, itemValue
 	trimmedCode := strings.TrimSpace(dictCode)
 	trimmedValue := strings.TrimSpace(itemValue)
 	if trimmedCode == "" || trimmedValue == "" {
-		return common.NewBadRequest(errParamInvalid)
+		return common.NewBadRequest(common.MessageParamInvalid)
 	}
 
 	var typeCount int64

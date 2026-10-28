@@ -105,6 +105,14 @@ func CodeForError(err error) int {
 
 // ── I18n utilities (also used by http package) ───────────────────────
 
+// Shared envelope message keys. Handlers pass these as the Fail/FailWithError
+// fallback when a bound parameter or a service error carries no i18n key; the
+// values are part of the observable envelope contract.
+const (
+	MessageParamInvalid  = "param.invalid"
+	MessageRequestFailed = "request.failed"
+)
+
 var i18nKeyPattern = regexp.MustCompile(`^[a-z0-9_]+(?:\.[a-z0-9_]+)+$`)
 
 func isI18nMessageKey(message string) bool {
@@ -116,7 +124,7 @@ func ResolveErrorMessageKey(err error, fallback string) string {
 		if strings.TrimSpace(fallback) != "" {
 			return fallback
 		}
-		return "request.failed"
+		return MessageRequestFailed
 	}
 	message := ErrMessage(err)
 	if isI18nMessageKey(message) {
@@ -125,7 +133,7 @@ func ResolveErrorMessageKey(err error, fallback string) string {
 	if strings.TrimSpace(fallback) != "" {
 		return fallback
 	}
-	return "request.failed"
+	return MessageRequestFailed
 }
 
 // GetUserID extracts the user ID from the Gin context.

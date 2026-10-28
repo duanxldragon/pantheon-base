@@ -7,9 +7,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-const errRequestFailed = "request.failed"
-const errParamInvalid = "param.invalid"
-
 type MenuHandler struct {
 	service *MenuService
 }
@@ -22,7 +19,7 @@ func NewMenuHandler(s *MenuService) *MenuHandler {
 func (h *MenuHandler) GetMenuTree(c *gin.Context) {
 	var query MenuListQuery
 	if err := c.ShouldBindQuery(&query); err != nil {
-		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
+		common.Fail(c, common.CodeParamInvalid, common.MessageParamInvalid)
 		return
 	}
 
@@ -52,7 +49,7 @@ func (h *MenuHandler) CreateMenu(c *gin.Context) {
 
 	var req MenuCreateReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
+		common.Fail(c, common.CodeParamInvalid, common.MessageParamInvalid)
 		return
 	}
 
@@ -70,7 +67,7 @@ func (h *MenuHandler) UpdateMenu(c *gin.Context) {
 
 	var req MenuUpdateReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
+		common.Fail(c, common.CodeParamInvalid, common.MessageParamInvalid)
 		return
 	}
 
@@ -97,7 +94,7 @@ func (h *MenuHandler) DeleteMenu(c *gin.Context) {
 	}
 
 	if err := h.service.DeleteMenu(menuID); err != nil {
-		common.FailWithError(c, common.CodeError, err, errRequestFailed)
+		common.FailWithError(c, common.CodeError, err, common.MessageRequestFailed)
 		return
 	}
 	common.Success(c, gin.H{"deleted": true})
