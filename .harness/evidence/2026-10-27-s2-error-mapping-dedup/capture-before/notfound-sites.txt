@@ -1,0 +1,200 @@
+modules/auth/login/login_runtime.go-827-		First(&lastLogin).Error
+modules/auth/login/login_runtime.go:828:	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+modules/auth/login/login_runtime.go-829-		return nil, err
+--
+modules/auth/login/login_service.go-123-	}
+modules/auth/login/login_service.go:124:	if errors.Is(err, gorm.ErrRecordNotFound) {
+modules/auth/login/login_service.go-125-		if err := s.failLoginSourceBlocked(nil, sourceKey, policy, now); err != nil {
+--
+modules/auth/login/login_service.go-162-			}
+modules/auth/login/login_service.go:163:			if !errors.Is(err, gorm.ErrRecordNotFound) {
+modules/auth/login/login_service.go-164-				return nil, err
+--
+modules/auth/login/login_service.go-523-	if err := s.db.Where("source_key = ?", normalizedKey).First(&throttle).Error; err != nil {
+modules/auth/login/login_service.go:524:		if errors.Is(err, gorm.ErrRecordNotFound) {
+modules/auth/login/login_service.go-525-			return false, nil
+--
+modules/auth/login/login_service.go-563-	err := s.db.Where("source_key = ?", normalizedKey).First(&throttle).Error
+modules/auth/login/login_service.go:564:	if errors.Is(err, gorm.ErrRecordNotFound) {
+modules/auth/login/login_service.go-565-		return s.createSourceThrottleFailure(normalizedKey, policy, now)
+--
+modules/auth/login/login_tenant_switch.go-207-	switch {
+modules/auth/login/login_tenant_switch.go:208:	case errors.Is(err, gorm.ErrRecordNotFound):
+modules/auth/login/login_tenant_switch.go-209-		return common.CodeUnauthorized
+--
+modules/auth/login/login_tenant_switch.go-223-	switch {
+modules/auth/login/login_tenant_switch.go:224:	case errors.Is(err, gorm.ErrRecordNotFound):
+modules/auth/login/login_tenant_switch.go-225-		return msgTokenInvalid
+--
+modules/auth/mfa/mfa_service.go-100-	err := s.db.Where(userIDAndFactorTypeEnabledWhereClause, currentUser.ID, "totp", 1).First(&factor).Error
+modules/auth/mfa/mfa_service.go:101:	setupRequired := errors.Is(err, gorm.ErrRecordNotFound)
+modules/auth/mfa/mfa_service.go-102-	if err != nil && !setupRequired {
+--
+modules/auth/mfa/mfa_service.go-224-	if err := s.db.WithContext(ctx).Where("challenge_id = ?", challengeID).First(&challenge).Error; err != nil {
+modules/auth/mfa/mfa_service.go:225:		if errors.Is(err, gorm.ErrRecordNotFound) {
+modules/auth/mfa/mfa_service.go-226-			return nil, errors.New("auth.mfa.challenge_invalid")
+--
+modules/auth/mfa/mfa_service.go-273-	err := tx.Where(userIDAndFactorTypeWhereClause, userID, "totp").First(&factor).Error
+modules/auth/mfa/mfa_service.go:274:	if errors.Is(err, gorm.ErrRecordNotFound) {
+modules/auth/mfa/mfa_service.go-275-		factor = SystemAuthFactor{
+--
+modules/auth/session/session_service.go-365-	if err := s.db.Where(sessionIDAndUserIDWhereClause, targetSessionID, userID).First(&sess).Error; err != nil {
+modules/auth/session/session_service.go:366:		if errors.Is(err, gorm.ErrRecordNotFound) {
+modules/auth/session/session_service.go-367-			return common.ErrUnauthorized
+--
+modules/lowcode/dynamicmodule/dynamic_module_lifecycle.go-57-		// 无注册记录的模块一律拒绝卸载：防止对任意磁盘目录（尤其 system/*）执行清理/删除。
+modules/lowcode/dynamicmodule/dynamic_module_lifecycle.go:58:		if errors.Is(err, gorm.ErrRecordNotFound) {
+modules/lowcode/dynamicmodule/dynamic_module_lifecycle.go-59-			return ModuleRegistration{}, common.NewNotFound(msgModuleNotFound)
+--
+modules/lowcode/dynamicmodule/dynamic_module_lifecycle.go-86-	if err := s.db.Where(condNameEquals, moduleName).First(&registration).Error; err != nil {
+modules/lowcode/dynamicmodule/dynamic_module_lifecycle.go:87:		if errors.Is(err, gorm.ErrRecordNotFound) {
+modules/lowcode/dynamicmodule/dynamic_module_lifecycle.go-88-			return common.NewNotFound(msgModuleNotFound)
+--
+modules/lowcode/dynamicmodule/dynamic_module_service.go-215-	}
+modules/lowcode/dynamicmodule/dynamic_module_service.go:216:	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+modules/lowcode/dynamicmodule/dynamic_module_service.go-217-		return nil, nil, nil, err
+--
+modules/lowcode/dynamicmodule/dynamic_module_service.go-310-	err := s.db.Where(condNameEquals, moduleName).First(&registration).Error
+modules/lowcode/dynamicmodule/dynamic_module_service.go:311:	if errors.Is(err, gorm.ErrRecordNotFound) {
+modules/lowcode/dynamicmodule/dynamic_module_service.go-312-		return registration, false, nil
+--
+modules/lowcode/dynamicmodule/dynamic_module_sync.go-105-	switch {
+modules/lowcode/dynamicmodule/dynamic_module_sync.go:106:	case errors.Is(err, gorm.ErrRecordNotFound):
+modules/lowcode/dynamicmodule/dynamic_module_sync.go-107-		return s.db.Create(&registration).Error
+--
+modules/lowcode/dynamicmodule/dynamic_module_sync.go-383-	switch {
+modules/lowcode/dynamicmodule/dynamic_module_sync.go:384:	case errors.Is(err, gorm.ErrRecordNotFound):
+modules/lowcode/dynamicmodule/dynamic_module_sync.go-385-		return s.db.Create(&registration).Error
+--
+modules/lowcode/generator/generator_datasource_service.go-80-	if err := s.db.First(&existing, numericID).Error; err != nil {
+modules/lowcode/generator/generator_datasource_service.go:81:		if errors.Is(err, gorm.ErrRecordNotFound) {
+modules/lowcode/generator/generator_datasource_service.go-82-			return nil, common.NewNotFound(msgDatasourceNotFound)
+--
+modules/lowcode/generator/generator_datasource_service.go-247-	if err := s.db.First(&row, numericID).Error; err != nil {
+modules/lowcode/generator/generator_datasource_service.go:248:		if errors.Is(err, gorm.ErrRecordNotFound) {
+modules/lowcode/generator/generator_datasource_service.go-249-			return nil, common.NewNotFound(msgDatasourceNotFound)
+--
+modules/lowcode/generator/generator_introspection_service.go-93-		Take(&table).Error; err != nil {
+modules/lowcode/generator/generator_introspection_service.go:94:		if errors.Is(err, gorm.ErrRecordNotFound) {
+modules/lowcode/generator/generator_introspection_service.go-95-			return nil, common.NewNotFound("generator.table.not_found")
+--
+modules/system/config/dict/dict_service.go-985-	if err != nil {
+modules/system/config/dict/dict_service.go:986:		if errors.Is(err, gorm.ErrRecordNotFound) {
+modules/system/config/dict/dict_service.go-987-			resp := toDictItemResp(current)
+--
+--
+modules/system/config/setting/setting_seed.go-158-	if err := s.db.Where("setting_key = ? AND tenant_id = 0", settingKey).First(&row).Error; err != nil {
+modules/system/config/setting/setting_seed.go:159:		if errors.Is(err, gorm.ErrRecordNotFound) {
+modules/system/config/setting/setting_seed.go-160-			return nil
+--
+modules/system/config/setting/setting_seed.go-179-	if err := s.db.Where("setting_key = ? AND tenant_id = 0", settingKey).First(&row).Error; err != nil {
+modules/system/config/setting/setting_seed.go:180:		if errors.Is(err, gorm.ErrRecordNotFound) {
+modules/system/config/setting/setting_seed.go-181-			return nil
+--
+modules/system/i18n/i18n_export.go-183-			result.Updated++
+modules/system/i18n/i18n_export.go:184:		case errors.Is(err, gorm.ErrRecordNotFound):
+modules/system/i18n/i18n_export.go-185-			if err := tx.Create(&SystemI18n{
+--
+modules/system/i18n/i18n_handler.go-256-	if err != nil {
+modules/system/i18n/i18n_handler.go:257:		if errors.Is(err, gorm.ErrRecordNotFound) {
+modules/system/i18n/i18n_handler.go-258-			common.Fail(c, common.CodeError, errI18nNotFound)
+--
+modules/system/i18n/i18n_handler.go-309-	if err := h.service.Update(id, &req); err != nil {
+modules/system/i18n/i18n_handler.go:310:		if errors.Is(err, gorm.ErrRecordNotFound) {
+modules/system/i18n/i18n_handler.go-311-			common.Fail(c, common.CodeError, errI18nNotFound)
+--
+modules/system/i18n/i18n_handler.go-331-	if err := h.service.Delete(id); err != nil {
+modules/system/i18n/i18n_handler.go:332:		if errors.Is(err, gorm.ErrRecordNotFound) {
+modules/system/i18n/i18n_handler.go-333-			common.Fail(c, common.CodeError, errI18nNotFound)
+--
+modules/system/i18n/i18n_seed.go-237-			}
+modules/system/i18n/i18n_seed.go:238:		case errors.Is(err, gorm.ErrRecordNotFound):
+modules/system/i18n/i18n_seed.go-239-			if err := s.db.Create(&item).Error; err != nil {
+--
+modules/system/i18n/i18n_seed.go-475-		}
+modules/system/i18n/i18n_seed.go:476:	case errors.Is(err, gorm.ErrRecordNotFound):
+modules/system/i18n/i18n_seed.go-477-		if err := s.db.Create(&SystemI18n{
+--
+--
+modules/system/iam/permission/permission_workbench.go-696-		First(&role).Error; err != nil {
+modules/system/iam/permission/permission_workbench.go:697:		if errors.Is(err, gorm.ErrRecordNotFound) {
+modules/system/iam/permission/permission_workbench.go-698-			return nil, common.NewBadRequest(errPermissionRoleInvalid)
+--
+modules/system/iam/role/role_handler.go-45-func roleErrorResponse(c *gin.Context, err error) {
+modules/system/iam/role/role_handler.go:46:	if errors.Is(err, gorm.ErrRecordNotFound) || errors.Is(err, common.ErrNotFound) {
+modules/system/iam/role/role_handler.go-47-		common.Fail(c, common.CodeNotFound, errRoleNotFound)
+--
+modules/system/iam/role/role_helper.go-27-	switch {
+modules/system/iam/role/role_helper.go:28:	case errors.Is(err, gorm.ErrRecordNotFound):
+modules/system/iam/role/role_helper.go-29-		adminRole = SystemRole{
+--
+modules/system/iam/tenant/tenant_provision.go-232-		Take(&existing).Error; err != nil {
+modules/system/iam/tenant/tenant_provision.go:233:		if errors.Is(err, gorm.ErrRecordNotFound) {
+modules/system/iam/tenant/tenant_provision.go-234-			return ErrTenantNotFound
+--
+modules/system/iam/tenant/tenant_service.go-253-		return &blocker, nil
+modules/system/iam/tenant/tenant_service.go:254:	case errors.Is(err, gorm.ErrRecordNotFound):
+modules/system/iam/tenant/tenant_service.go-255-		return nil, nil
+--
+modules/system/iam/tenant/tenant_service.go-342-	if err := s.db.Where(condIDEquals, id).First(&tenant).Error; err != nil {
+modules/system/iam/tenant/tenant_service.go:343:		if errors.Is(err, gorm.ErrRecordNotFound) {
+modules/system/iam/tenant/tenant_service.go-344-			return nil, ErrTenantNotFound
+--
+modules/system/iam/tenant/tenant_service.go-357-	if err := s.db.Where("code = ?", code).First(&tenant).Error; err != nil {
+modules/system/iam/tenant/tenant_service.go:358:		if errors.Is(err, gorm.ErrRecordNotFound) {
+modules/system/iam/tenant/tenant_service.go-359-			return nil, ErrTenantNotFound
+--
+modules/system/iam/tenant/tenant_service.go-608-	if err := s.db.Select("id", "code", "status").Where(condIDEquals, id).Take(&row).Error; err != nil {
+modules/system/iam/tenant/tenant_service.go:609:		if errors.Is(err, gorm.ErrRecordNotFound) {
+modules/system/iam/tenant/tenant_service.go-610-			return ErrTenantNotFound
+--
+modules/system/iam/tenant/tenant_service.go-1027-	}
+modules/system/iam/tenant/tenant_service.go:1028:	if !errors.Is(err, gorm.ErrRecordNotFound) {
+modules/system/iam/tenant/tenant_service.go-1029-		return fmt.Errorf("check membership existence: %w", err)
+--
+modules/system/iam/tenant/tenant_service.go-1093-		Limit(1).First(&member).Error; err != nil {
+modules/system/iam/tenant/tenant_service.go:1094:		if errors.Is(err, gorm.ErrRecordNotFound) {
+modules/system/iam/tenant/tenant_service.go-1095-			return nil
+--
+modules/system/iam/tenant/tenant_service.go-1214-		First(&membership).Error
+modules/system/iam/tenant/tenant_service.go:1215:	if errors.Is(err, gorm.ErrRecordNotFound) {
+modules/system/iam/tenant/tenant_service.go-1216-		return "", false, nil
+--
+--
+--
+--
+modules/system/iam/user/user_helper.go-305-		Select("id, dept_id").Where(condIDEquals, postID).First(&post).Error; err != nil {
+modules/system/iam/user/user_helper.go:306:		if errors.Is(err, gorm.ErrRecordNotFound) {
+modules/system/iam/user/user_helper.go-307-			return common.NewBadRequest("user.post.invalid")
+--
+modules/system/iam/user/user_service.go-325-	if err := s.scoped(s.db).First(&user, userID).Error; err != nil {
+modules/system/iam/user/user_service.go:326:		if errors.Is(err, gorm.ErrRecordNotFound) {
+modules/system/iam/user/user_service.go-327-			return nil, common.NewNotFound("user.not_found")
+--
+--
+modules/system/org/dept/dept_import.go-163-	err := s.scoped(tx).Where("parent_id = ? AND dept_name = ?", parentID, row.DeptName).First(&dept).Error
+modules/system/org/dept/dept_import.go:164:	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+modules/system/org/dept/dept_import.go-165-		return err
+--
+modules/system/org/dept/dept_import.go-167-
+modules/system/org/dept/dept_import.go:168:	if errors.Is(err, gorm.ErrRecordNotFound) {
+modules/system/org/dept/dept_import.go-169-		return s.createImportDept(tx, row, parentID, pathToID, result)
+--
+modules/system/org/dept/dept_service.go-416-		Take(&row).Error; err != nil {
+modules/system/org/dept/dept_service.go:417:		if errors.Is(err, gorm.ErrRecordNotFound) {
+modules/system/org/dept/dept_service.go-418-			return "", 0, common.NewBadRequest("dept.leader.user_invalid")
+--
+modules/system/org/dept/dept_service.go-529-	err := tx.Where("is_root = ?", common.StatusFlagYes).Order("id asc").First(&root).Error
+modules/system/org/dept/dept_service.go:530:	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+modules/system/org/dept/dept_service.go-531-		return root, err
+modules/system/org/dept/dept_service.go-532-	}
+modules/system/org/dept/dept_service.go:533:	if errors.Is(err, gorm.ErrRecordNotFound) {
+modules/system/org/dept/dept_service.go-534-		root = SystemDept{
+--
+modules/system/org/dept/dept_tree.go-152-	if err := s.scoped(s.db).First(&dept, deptID).Error; err != nil {
+modules/system/org/dept/dept_tree.go:153:		if errors.Is(err, gorm.ErrRecordNotFound) {
+modules/system/org/dept/dept_tree.go-154-			return nil, common.NewNotFound("dept.not_found")
+--
+modules/system/org/post/post_service.go-608-	if err := s.scoped(s.db.Table("system_dept")).Select("id, is_root").Where("id = ?", deptID).First(&dept).Error; err != nil {
+modules/system/org/post/post_service.go:609:		if errors.Is(err, gorm.ErrRecordNotFound) {
+modules/system/org/post/post_service.go-610-			return common.NewBadRequest("post.dept.invalid")

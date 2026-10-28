@@ -3,7 +3,7 @@
   "title": "Unify the duplicated error values, error mapping and not-found translation",
   "goal": "The same two error values are declared in eleven handler files, the error-to-HTTP mapping is wrapped again in three modules even though common.CodeForError already exists, gorm.ErrRecordNotFound is translated in more than thirty places, and five context/message helpers exist in two or three copies including ones inside the common package itself. This wave makes common.CodeForError plus the shared error values the single path, merges the duplicate context and message-key helpers, and keeps only the mapping differences that are real (role and menu have module-specific branches) with a comment saying why. Each module's error code and i18n key stays exactly as it is today.",
   "primaryLayer": "platform",
-  "status": "planned",
+  "status": "completed",
   "priority": "P1",
   "type": "refactor",
   "estimatedComplexity": "medium",
@@ -54,7 +54,7 @@
   "harnessProfile": {
     "template": "admin-platform",
     "overlay": "pantheon-base",
-    "qualityProfile": "none",
+    "qualityProfile": "auth-security",
     "portableFailureClass": "duplication-drift",
     "ownerLayer": "consumer-repository",
     "ratchetDecision": "sensor-added",
