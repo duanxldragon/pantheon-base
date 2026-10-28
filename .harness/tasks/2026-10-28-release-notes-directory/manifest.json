@@ -1,0 +1,172 @@
+{
+  "taskId": "2026-10-28-release-notes-directory",
+  "title": "Move release notes into docs/release-notes with bilingual indexes and update every reference",
+  "goal": "Collapse the fourteen RELEASE_NOTES_v*.md files that accumulated at the repository root into docs/release-notes/, add zh/en indexes wired into the docs and root READMEs, repoint every markdown link, and declare the placement rule in REPOSITORY_LAYOUT. Documentation-only: no code, schema, route, permission or release-tooling change.",
+  "primaryLayer": "platform",
+  "status": "completed",
+  "priority": "P3",
+  "type": "docs",
+  "estimatedComplexity": "small",
+  "parentTaskId": "none",
+  "dependsOn": [],
+  "findings": [
+    "The repository root carried 14 RELEASE_NOTES_v*.md files (v0.13.1 through v0.17.8) alongside entry docs, which the maintainer asked to consolidate into a directory with an index.",
+    "The release tooling does not read the file path: cut-foundation-release.mjs takes --release-notes as literal text, so moving the files cannot change release behaviour.",
+    "docs/releases/ was rejected as the destination because .gitignore's unanchored 'releases/' rule matches a releases/ directory at any depth; docs/release-notes/ has no ignore interaction.",
+    "Only three markdown link sites pointed at the old root paths: the root READMEs (latest notes), three anchors in the 2026-10-07 enterprise review, and five documentation links inside v0.14.0 itself.",
+    "The .harness/archive/2026-10/RELEASE_STATUS_v0.14.0.md relative link was already stale before the move (it resolved under .harness/archive/), so the archived snapshot is left untouched.",
+    "check-evidence/check-review --strict resolve planRefs as repo paths, so four historical planRefs entries pointing at root RELEASE_NOTES_v*.md had to be repointed to docs/release-notes/; only the path changed, no verdict, command readout or knownGap did."
+  ],
+  "scope": {
+    "in": [
+      "git mv the 14 RELEASE_NOTES_v*.md files into docs/release-notes/ with history preserved",
+      "Add docs/release-notes/README.md and README.en.md indexes (version, release date, link) and wire them into docs/README(.en)",
+      "Repoint the root README(.en) changelog links and the three 2026-10-07 review anchors",
+      "Fix the five relative documentation links inside RELEASE_NOTES_v0.14.0.md",
+      "Repoint four historical evidence planRefs (iam-race-closeout commands.json+review.md, iam-residual-closeout commands.json, v0178-dep-vuln-closure review.md) to the new path",
+      "Declare docs/release-notes/ placement in REPOSITORY_LAYOUT.md and REPOSITORY_LAYOUT.en.md (section 1 note, section 2.1 rule 9)"
+    ],
+    "out": [
+      "Rewriting release-note bodies beyond the v0.14.0 link prefix",
+      "Editing CHANGELOG.md, VERSION, .harness/STATUS.md, historical task packets or evidence beyond the four path-only planRefs repoints",
+      "Touching release scripts or workflows (they take note text via --release-notes)",
+      "Any backend, frontend, schema, route, permission or i18n change"
+    ]
+  },
+  "dependencyLayers": [
+    "platform"
+  ],
+  "implementationNotes": [
+    "Index tables are ordered newest first; dates come from each file's Release date header or the matching CHANGELOG entry.",
+    "Filename mentions inside historical packets, evidence, CHANGELOG and the failure registry are narrative, not links, and stay as written.",
+    "The archived 2026-10 status snapshot keeps its pre-existing stale relative link rather than being retro-edited.",
+    "The v0.14.0 Documentation Links block is the only release-note body edit: './docs/...' becomes '../...' from the new directory.",
+    "The four historical planRefs edits are link-only repairs required by the strict evidence/review checkers; their recorded verdicts and readouts are unchanged."
+  ],
+  "contractAnchors": [
+    "docs/designs/REPOSITORY_LAYOUT.md",
+    "docs/README.md",
+    "docs/VERSION_MANAGEMENT_GUIDE.md"
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "none",
+    "portableFailureClass": "navigation-dead-end",
+    "ownerLayer": "foundation-source",
+    "ratchetDecision": "no-repeat-observed",
+    "coverageDimensions": [
+      "maintainability"
+    ]
+  },
+  "expectedFiles": {
+    "create": [
+      "docs/harness/tasks/2026-10-28-release-notes-directory.task.md",
+      ".harness/tasks/2026-10-28-release-notes-directory/manifest.json",
+      ".harness/evidence/2026-10-28-release-notes-directory/commands.json",
+      ".harness/evidence/2026-10-28-release-notes-directory/summary.md",
+      ".harness/evidence/2026-10-28-release-notes-directory/review.md",
+      ".harness/evidence/2026-10-28-release-notes-directory/pr-body.md",
+      "docs/release-notes/README.md",
+      "docs/release-notes/README.en.md"
+    ],
+    "modify": [
+      "README.md",
+      "README.en.md",
+      "docs/README.md",
+      "docs/README.en.md",
+      "docs/designs/REPOSITORY_LAYOUT.md",
+      "docs/designs/REPOSITORY_LAYOUT.en.md",
+      "docs/reviews/ENTERPRISE_RELEASE_READINESS_REVIEW_2026-10-07.md",
+      ".harness/evidence/2026-10-23-iam-race-closeout/commands.json",
+      ".harness/evidence/2026-10-23-iam-race-closeout/review.md",
+      ".harness/evidence/2026-10-23-iam-residual-closeout/commands.json",
+      ".harness/evidence/2026-10-27-v0178-dep-vuln-closure/review.md",
+      "docs/release-notes/RELEASE_NOTES_v0.13.1.md",
+      "docs/release-notes/RELEASE_NOTES_v0.14.0.md",
+      "docs/release-notes/RELEASE_NOTES_v0.15.0.md",
+      "docs/release-notes/RELEASE_NOTES_v0.16.0.md",
+      "docs/release-notes/RELEASE_NOTES_v0.16.1.md",
+      "docs/release-notes/RELEASE_NOTES_v0.17.0.md",
+      "docs/release-notes/RELEASE_NOTES_v0.17.1.md",
+      "docs/release-notes/RELEASE_NOTES_v0.17.2.md",
+      "docs/release-notes/RELEASE_NOTES_v0.17.3.md",
+      "docs/release-notes/RELEASE_NOTES_v0.17.4.md",
+      "docs/release-notes/RELEASE_NOTES_v0.17.5.md",
+      "docs/release-notes/RELEASE_NOTES_v0.17.6.md",
+      "docs/release-notes/RELEASE_NOTES_v0.17.7.md",
+      "docs/release-notes/RELEASE_NOTES_v0.17.8.md"
+    ],
+    "doNotTouch": [
+      "backend/**",
+      "frontend/**",
+      ".github/workflows/*",
+      "scripts/foundation-release/**",
+      "CHANGELOG.md",
+      "VERSION",
+      ".harness/archive/**"
+    ]
+  },
+  "executionRoles": {
+    "implementerPosture": "Move files with git mv, keep bodies byte-identical apart from the v0.14.0 link prefix, and make the index the single entry point.",
+    "reviewerPosture": [
+      "Confirm all 14 files are renames (history preserved) and the root holds no RELEASE_NOTES_*.md.",
+      "Confirm the indexes cover every moved file and are reachable from docs/README(.en) and the root READMEs.",
+      "Confirm every markdown link resolves under docs and no link still targets the old root path.",
+      "Confirm REPOSITORY_LAYOUT(.en) states the placement rule and no code, workflow or release script changed.",
+      "Confirm historical packets, evidence and archive snapshots were not retro-edited."
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "node scripts/harness/check-doc-links.mjs --root . --strict",
+      "node scripts/harness/check-doc-inventory.mjs --root . --strict",
+      "npm run check:docs-frontmatter",
+      "npm run check:harness-encoding",
+      "npm run check:structure",
+      "npm run check:task-packet-template",
+      "npm run check:task-packet",
+      "npm run check:generated",
+      "npm run check:ui-quality-gate",
+      "node scripts/harness/check-evidence.mjs --strict",
+      "node scripts/harness/check-review.mjs --strict"
+    ],
+    "runtimeEvidence": [
+      "Doc checker readouts (links, inventory, frontmatter, encoding, structure) with zero findings",
+      "git status rename list proving 14 moves and no root leftovers",
+      "grep result for stale old-path links and the reason historical mentions stay"
+    ]
+  },
+  "runtimeSensitive": false,
+  "evidenceRequired": [
+    ".harness/evidence/2026-10-28-release-notes-directory/commands.json",
+    ".harness/evidence/2026-10-28-release-notes-directory/summary.md",
+    ".harness/evidence/2026-10-28-release-notes-directory/review.md"
+  ],
+  "humanGates": [
+    "none — documentation relocation requested directly by the maintainer; no behaviour, contract semantics or release process changes"
+  ],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed",
+    "All 14 release notes live under docs/release-notes/ and the root has none",
+    "Bilingual index covers all 14 versions and is linked from docs/README(.en)",
+    "Every markdown link resolves; no link targets the old root path",
+    "REPOSITORY_LAYOUT(.en) declares the new placement rule",
+    "No code, workflow, release script, CHANGELOG or historical evidence changed"
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-28-release-notes-directory/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-28-release-notes-directory/",
+    "summaryFile": ".harness/evidence/2026-10-28-release-notes-directory/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-28-release-notes-directory/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/designs/REPOSITORY_LAYOUT.md",
+      "docs/README.md"
+    ]
+  }
+}

@@ -91,7 +91,7 @@ regressions that fail before and pass after, and the fifth is closed as a dated 
     "evidence": ".harness/evidence/2026-10-23-iam-race-closeout/commands.json",
     "reviewFile": ".harness/evidence/2026-10-23-iam-race-closeout/review.md",
     "changeRef": "none",
-    "planRefs": ["RELEASE_NOTES_v0.17.4.md"]
+    "planRefs": ["docs/release-notes/RELEASE_NOTES_v0.17.4.md"]
   }
 }
 ```

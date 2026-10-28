@@ -87,6 +87,7 @@ For Chinese-first onboarding, read:
 - [DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md)
 - [DEV_DB_INIT_GUIDE.md](./DEV_DB_INIT_GUIDE.md)
 - [VERSION_MANAGEMENT_GUIDE.md](./VERSION_MANAGEMENT_GUIDE.md)
+- [Release notes index (from v0.13.1)](./release-notes/README.en.md)
 - [testing-quick-start.md](./testing-quick-start.md)
 - [testing-usage-guide.md](./testing-usage-guide.md)
 - [testing-strategy-optimization.md](./testing-strategy-optimization.md)
