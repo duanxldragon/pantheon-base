@@ -21,9 +21,7 @@ import (
 )
 
 const (
-	defaultDictItemPage     = 1
-	defaultDictItemPageSize = 10
-	maxDictItemPageSize     = 100
+	maxDictItemPageSize = 100
 )
 
 const (
@@ -580,7 +578,7 @@ func (s *DictService) listDictItems(query *DictItemListQuery, paginate bool) (*D
 		return nil, common.ErrDatabaseNotInitialized
 	}
 	if query == nil || strings.TrimSpace(query.DictCode) == "" {
-		page, pageSize := normalizeDictItemPageQuery(query)
+		page, pageSize, _ := normalizeDictItemPageQuery(query)
 		return &DictItemPageResp{
 			Items:    []DictItemResp{},
 			Total:    0,
@@ -591,7 +589,7 @@ func (s *DictService) listDictItems(query *DictItemListQuery, paginate bool) (*D
 
 	db := s.buildDictItemListQuery(query)
 	db = db.Scopes(s.tenantScope())
-	page, pageSize := normalizeDictItemPageQuery(query)
+	page, pageSize, offset := normalizeDictItemPageQuery(query)
 	var total int64
 	if err := db.Count(&total).Error; err != nil {
 		return nil, err
@@ -599,7 +597,7 @@ func (s *DictService) listDictItems(query *DictItemListQuery, paginate bool) (*D
 
 	resultDB := s.applyDictItemListSort(db, query)
 	if paginate {
-		resultDB = resultDB.Offset((page - 1) * pageSize).Limit(pageSize)
+		resultDB = resultDB.Offset(offset).Limit(pageSize)
 	}
 	var rows []SystemDictItem
 	if err := resultDB.Find(&rows).Error; err != nil {
@@ -1336,22 +1334,24 @@ func normalizeDictModule(module string) string {
 	return strings.TrimSpace(module)
 }
 
-func normalizeDictItemPageQuery(query *DictItemListQuery) (int, int) {
-	page := defaultDictItemPage
-	pageSize := defaultDictItemPageSize
-	if query == nil {
-		return page, pageSize
+// normalizeDictItemPageQuery clamps the dict item list query through the
+// shared pagination helper with the dict module's own cap; the nil-extract
+// prelude keeps the service's nil-tolerant contract.
+func normalizeDictItemPageQuery(query *DictItemListQuery) (int, int, int) {
+	var page, pageSize int
+	if query != nil {
+		page, pageSize = query.Page, query.PageSize
 	}
-	if query.Page > 0 {
-		page = query.Page
-	}
-	if query.PageSize > 0 {
-		pageSize = query.PageSize
-	}
-	if pageSize > maxDictItemPageSize {
-		pageSize = maxDictItemPageSize
-	}
-	return page, pageSize
+	return common.NormalizePagination(page, pageSize, maxDictItemPageSize)
+}
+
+var dictItemSortColumns = map[string]string{
+	"itemLabelKey":   "item_label_key",
+	"item_label_key": "item_label_key",
+	"itemValue":      "item_value",
+	"item_value":     "item_value",
+	"sort":           "sort",
+	"status":         "status",
 }
 
 // normalizeDictItemSort maps a client-supplied sort field to a whitelisted
@@ -1363,21 +1363,8 @@ func normalizeDictItemSort(query *DictItemListQuery) (string, bool, bool) {
 		return "", false, false
 	}
 
-	sortWhitelist := map[string]string{
-		"itemLabelKey":   "item_label_key",
-		"item_label_key": "item_label_key",
-		"itemValue":      "item_value",
-		"item_value":     "item_value",
-		"sort":           "sort",
-		"status":         "status",
-	}
-
-	column, ok := sortWhitelist[strings.TrimSpace(query.SortField)]
-	if !ok {
-		return "", false, false
-	}
-
-	return column, strings.ToLower(strings.TrimSpace(query.SortOrder)) == "desc", true
+	column := common.NormalizeSort(query.SortField, dictItemSortColumns, "")
+	return column, strings.ToLower(strings.TrimSpace(query.SortOrder)) == "desc", column != ""
 }
 
 func normalizeDictCodes(codes []string) []string {

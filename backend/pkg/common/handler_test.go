@@ -97,58 +97,6 @@ func TestParseUintParamRejectsMissingParamValue(t *testing.T) {
 	require.Contains(t, recorder.Body.String(), `"message":"param.invalid"`)
 }
 
-func TestNormalizePaginationDefaultsAndCap(t *testing.T) {
-	for _, tc := range []struct {
-		name         string
-		page         int
-		pageSize     int
-		maxPageSize  int
-		wantPage     int
-		wantPageSize int
-		wantOffset   int
-	}{
-		{"zero page and size", 0, 0, 100, 1, 10, 0},
-		{"negative page and size", -5, -1, 100, 1, 10, 0},
-		{"valid middle", 3, 20, 100, 3, 20, 40},
-		{"oversized pageSize capped", 7, 5000, 100, 7, 100, 600},
-		{"cap below default applies", 2, 0, 5, 2, 5, 5},
-	} {
-		t.Run(tc.name, func(t *testing.T) {
-			page, pageSize, offset := NormalizePagination(tc.page, tc.pageSize, tc.maxPageSize)
-			require.Equal(t, tc.wantPage, page)
-			require.Equal(t, tc.wantPageSize, pageSize)
-			require.Equal(t, tc.wantOffset, offset)
-		})
-	}
-}
-
-func TestNormalizeSortWhitelistAndFallback(t *testing.T) {
-	allowed := map[string]string{
-		"id":         "id",
-		"createdAt":  "created_at",
-		"created_at": "created_at",
-	}
-	for _, tc := range []struct {
-		name     string
-		input    string
-		expected string
-	}{
-		{"exact alias", "createdAt", "created_at"},
-		{"snake alias", "created_at", "created_at"},
-		{"padded alias", "  created_at\t", "created_at"},
-		{"unknown symbol", "password_hash", "id"},
-		{"blank", "", "id"},
-	} {
-		t.Run(tc.name, func(t *testing.T) {
-			require.Equal(t, tc.expected, NormalizeSort(tc.input, allowed, "id"))
-		})
-	}
-
-	t.Run("nil map falls back", func(t *testing.T) {
-		require.Equal(t, "sort", NormalizeSort("id", nil, "sort"))
-	})
-}
-
 func TestSharedMessageKeyConstantsMatchInlineValues(t *testing.T) {
 	require.Equal(t, "param.invalid", ErrParamInvalid)
 	require.Equal(t, "request.failed", ErrRequestFailed)

@@ -3,7 +3,7 @@
   "title": "Converge the 13 pagination normalizers and the 6-8 sort whitelist helpers onto the shared helpers",
   "goal": "Thirteen pagination normalizers and six to eight sort whitelist helpers do the same two things: clamp page and pageSize, and map a requested column to an allowed one or fall back to the default. Each keeps its own defaults, caps and column list, which is correct, but the code that applies them is copied. This wave replaces the copies with the shared helpers while passing each module's own values in as parameters, and merges the two copies that exist inside role_helper.go. The measurable outcome is one pagination implementation and one sort implementation, with the per-module caps and whitelists unchanged and every boundary case covered by a test.",
   "primaryLayer": "platform",
-  "status": "planned",
+  "status": "completed",
   "priority": "P1",
   "type": "refactor",
   "estimatedComplexity": "medium",
@@ -52,7 +52,7 @@
   "harnessProfile": {
     "template": "admin-platform",
     "overlay": "pantheon-base",
-    "qualityProfile": "none",
+    "qualityProfile": "auth-security",
     "portableFailureClass": "duplication-drift",
     "ownerLayer": "consumer-repository",
     "ratchetDecision": "sensor-added",

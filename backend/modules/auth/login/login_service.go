@@ -270,7 +270,7 @@ func (s *LoginService) listLoginLogs(query *LoginLogQuery, filterUsername string
 	}
 
 	var logs []SystemLogLogin
-	page, pageSize := normalizePageQuery(queryPage(query), queryPageSize(query))
+	page, pageSize, offset := normalizePageQuery(queryPage(query), queryPageSize(query))
 	db := s.scopedLoginLogQuery(query, filterUsername)
 
 	var total int64
@@ -283,7 +283,7 @@ func (s *LoginService) listLoginLogs(query *LoginLogQuery, filterUsername string
 		Count(&successCount).Error; err != nil {
 		return nil, err
 	}
-	if err := db.Order(loginTimeDescOrderClause).Offset((page - 1) * pageSize).Limit(pageSize).Find(&logs).Error; err != nil {
+	if err := db.Order(loginTimeDescOrderClause).Offset(offset).Limit(pageSize).Find(&logs).Error; err != nil {
 		return nil, err
 	}
 
@@ -716,17 +716,8 @@ func queryPageSize(query *LoginLogQuery) int {
 	return query.PageSize
 }
 
-func normalizePageQuery(page, pageSize int) (int, int) {
-	if page <= 0 {
-		page = 1
-	}
-	if pageSize <= 0 {
-		pageSize = 10
-	}
-	if pageSize > 100 {
-		pageSize = 100
-	}
-	return page, pageSize
+func normalizePageQuery(page, pageSize int) (int, int, int) {
+	return common.NormalizePagination(page, pageSize, 100)
 }
 
 type cleanupWindow = authsession.CleanupWindow

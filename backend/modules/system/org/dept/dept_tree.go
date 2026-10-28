@@ -231,25 +231,23 @@ func (s *DeptService) loadDeptPostCounts() (map[uint64]int, error) {
 	return result, nil
 }
 
+var deptSortColumns = map[string]string{
+	"id":        "id",
+	"deptName":  "dept_name",
+	"dept_name": "dept_name",
+	"sort":      "sort",
+	"leader":    "leader",
+	"status":    "status",
+}
+
 // normalizeDeptSort normalizes sort field and direction
 func normalizeDeptSort(query *DeptListQuery) (string, bool) {
 	if query == nil {
 		return "sort", false
 	}
 
-	sortWhitelist := map[string]string{
-		"id":        "id",
-		"deptName":  "dept_name",
-		"dept_name": "dept_name",
-		"sort":      "sort",
-		"leader":    "leader",
-		"status":    "status",
-	}
-	column, ok := sortWhitelist[strings.TrimSpace(query.SortField)]
-	if !ok {
-		column = "sort"
-	}
-	return column, strings.ToLower(strings.TrimSpace(query.SortOrder)) == "desc"
+	return common.NormalizeSort(query.SortField, deptSortColumns, "sort"),
+		strings.ToLower(strings.TrimSpace(query.SortOrder)) == "desc"
 }
 
 // filterDeptTreeNodes filters departments based on query

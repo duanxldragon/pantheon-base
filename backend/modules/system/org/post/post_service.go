@@ -83,7 +83,7 @@ func (s *PostService) ListPosts(query *PostListQuery) (*PostListPageResp, error)
 
 	var posts []SystemPost
 	db := s.scoped(s.db.Model(&SystemPost{}))
-	page, pageSize := normalizePostPageQuery(query)
+	page, pageSize, offset := normalizePostPageQuery(query)
 	db = applyPostListFilters(db, query)
 
 	var total int64
@@ -94,7 +94,7 @@ func (s *PostService) ListPosts(query *PostListQuery) (*PostListPageResp, error)
 	sortColumn, sortDesc := normalizePostSort(query)
 	if err := db.
 		Order(clause.OrderByColumn{Column: clause.Column{Name: sortColumn}, Desc: sortDesc}).
-		Offset((page - 1) * pageSize).
+		Offset(offset).
 		Limit(pageSize).
 		Find(&posts).Error; err != nil {
 		return nil, err
@@ -687,44 +687,34 @@ func splitGovernanceLabels(value string) []string {
 	return result
 }
 
-func normalizePostPageQuery(query *PostListQuery) (int, int) {
-	page := 1
-	pageSize := 10
-	if query == nil {
-		return page, pageSize
+// normalizePostPageQuery clamps the post list query through the shared
+// pagination helper with the post module's own cap; the nil-extract prelude
+// keeps the service's nil-tolerant contract.
+func normalizePostPageQuery(query *PostListQuery) (int, int, int) {
+	var page, pageSize int
+	if query != nil {
+		page, pageSize = query.Page, query.PageSize
 	}
-	if query.Page > 0 {
-		page = query.Page
-	}
-	if query.PageSize > 0 {
-		pageSize = query.PageSize
-	}
-	if pageSize > 100 {
-		pageSize = 100
-	}
-	return page, pageSize
+	return common.NormalizePagination(page, pageSize, 100)
+}
+
+var postSortColumns = map[string]string{
+	"id":        "id",
+	"postCode":  "post_code",
+	"post_code": "post_code",
+	"postName":  "post_name",
+	"post_name": "post_name",
+	"sort":      "sort",
+	"status":    "status",
+	"createdAt": "created_at",
 }
 
 func normalizePostSort(query *PostListQuery) (string, bool) {
 	if query == nil {
 		return "id", true
 	}
-
-	sortWhitelist := map[string]string{
-		"id":        "id",
-		"postCode":  "post_code",
-		"post_code": "post_code",
-		"postName":  "post_name",
-		"post_name": "post_name",
-		"sort":      "sort",
-		"status":    "status",
-		"createdAt": "created_at",
-	}
-	column, ok := sortWhitelist[strings.TrimSpace(query.SortField)]
-	if !ok {
-		column = "id"
-	}
-	return column, strings.ToLower(strings.TrimSpace(query.SortOrder)) == "desc"
+	return common.NormalizeSort(query.SortField, postSortColumns, "id"),
+		strings.ToLower(strings.TrimSpace(query.SortOrder)) == "desc"
 }
 
 func normalizePostStatus(status int) int {

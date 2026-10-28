@@ -195,7 +195,7 @@ func (s *PermissionService) ListPolicies(query *PermissionPolicyQuery) (*Permiss
 
 	var policies []database.CasbinRule
 	db := s.applyPolicyTenantScope(s.db.Model(&database.CasbinRule{}).Where(permissionPtypeClause, "p"))
-	page, pageSize := normalizePermissionPageQuery(query)
+	page, pageSize, offset := normalizePermissionPageQuery(query)
 	if query != nil {
 		if strings.TrimSpace(query.Keyword) != "" {
 			keyword := "%" + common.EscapeLikePattern(strings.TrimSpace(query.Keyword)) + "%"
@@ -223,7 +223,7 @@ func (s *PermissionService) ListPolicies(query *PermissionPolicyQuery) (*Permiss
 		orderedDB = orderedDB.Order(clause.OrderByColumn{Column: clause.Column{Name: "id"}, Desc: true})
 	}
 	if err := orderedDB.
-		Offset((page - 1) * pageSize).
+		Offset(offset).
 		Limit(pageSize).
 		Find(&policies).Error; err != nil {
 		return nil, err
@@ -960,44 +960,37 @@ func (s *PermissionService) ensurePolicyUnique(policyID uint64, subject string, 
 	return nil
 }
 
-func normalizePermissionPageQuery(query *PermissionPolicyQuery) (int, int) {
-	page := 1
-	pageSize := 10
-	if query == nil {
-		return page, pageSize
+// normalizePermissionPageQuery clamps the policy list query through the
+// shared pagination helper with the permission module's own cap; the
+// nil-extract prelude keeps the service's nil-tolerant contract.
+func normalizePermissionPageQuery(query *PermissionPolicyQuery) (int, int, int) {
+	var page, pageSize int
+	if query != nil {
+		page, pageSize = query.Page, query.PageSize
 	}
-	if query.Page > 0 {
-		page = query.Page
-	}
-	if query.PageSize > 0 {
-		pageSize = query.PageSize
-	}
-	if pageSize > 100 {
-		pageSize = 100
-	}
-	return page, pageSize
+	return common.NormalizePagination(page, pageSize, 100)
+}
+
+var permissionPolicySortColumns = map[string]string{
+	"id":      "id",
+	"roleKey": "v0",
+	"path":    "v1",
+	"method":  "v2",
 }
 
 // normalizePermissionPolicySort maps a client-supplied sort field to a
 // whitelisted Casbin rule column (v0=roleKey, v1=path, v2=method), guarding
-// against ORDER BY injection. Unknown fields fall back to id desc.
+// against ORDER BY injection. Unknown or blank fields fall back to id desc
+// regardless of the requested order — that forced direction is behaviour and
+// stays.
 func normalizePermissionPolicySort(query *PermissionPolicyQuery) (string, bool) {
 	if query == nil {
 		return "id", true
 	}
-
-	sortWhitelist := map[string]string{
-		"id":      "id",
-		"roleKey": "v0",
-		"path":    "v1",
-		"method":  "v2",
-	}
-
-	column, ok := sortWhitelist[strings.TrimSpace(query.SortField)]
-	if !ok {
+	column := common.NormalizeSort(query.SortField, permissionPolicySortColumns, "")
+	if column == "" {
 		return "id", true
 	}
-
 	return column, strings.ToLower(strings.TrimSpace(query.SortOrder)) == "desc"
 }
 
