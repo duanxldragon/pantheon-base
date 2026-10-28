@@ -24,3 +24,26 @@ Reviewed against the working tree on branch `refactor/s1-api-surface-narrowing-2
 
 Small, exactly scoped, with one honest deviation (RC-029 → false positive) recorded rather than
 forced. Ready to merge once the S1 deletion wave it is stacked on merges.
+
+> Added 2026-10-28: the Machine Readable block below retro-fits this already-merged review to the
+> strict `check-review.mjs` contract. This closes the debt registered in `.harness/STATUS.md`
+> (merged evidence predating the strict checker); the verdict matches the prose verdict above.
+
+## Machine Readable
+
+```json
+{
+  "taskId": "2026-10-27-s1-api-surface-narrowing",
+  "verdict": "approved",
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-27-s1-api-surface-narrowing/manifest.json",
+    "evidence": ".harness/evidence/2026-10-27-s1-api-surface-narrowing/commands.json",
+    "reviewFile": ".harness/evidence/2026-10-27-s1-api-surface-narrowing/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-27-codebase-simplification-program.task.md",
+      "docs/reviews/REDUNDANT_CODE_CANDIDATES.md"
+    ]
+  }
+}
+```

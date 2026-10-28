@@ -548,10 +548,12 @@ TENANT_MATURITY_FINAL §4 订正四个 bootstrap 入口为「未接线、已删�
 **登记的后续债务（随 W8 发现）**：① pantheon-ops 继承了四份已删文件的副本
 （独立 go.mod、无交叉引用），按 base-first 规则不在 ops 直改，待下次
 foundation release 同步清理——runbook 需确认对上游删除文件的同步语义
-（仅覆盖不删除则死副本会残留）；② 存量证据三份 review.md
+（仅覆盖不删除则死副本会残留）；② ~~存量证据三份 review.md
 （`s1-api-surface-narrowing` / `s1-dead-code-removal` / `tenant-delete-archive-guard`）
-缺 `## Machine Readable` JSON 块，本地 `check-review.mjs --strict` FAIL——
-属已合并历史证据的补齐项，登记待小 PR 处置。
+缺 `## Machine Readable` JSON 块，本地 `check-review.mjs --strict` FAIL~~
+——**已关闭（2026-10-28）**：三份 review.md 已补 `## Machine Readable` 块
+（verdict approved，与各自 prose verdict 一致），全量 `.harness/evidence/*/review.md`
+strict 检查 0 error；随小 PR 合入。
 
 **维护者门禁**：W3 的 A/B/C 决策已按选项 A 签字（maintainer-delegated 记录）；
 W1 的契约表述按「修订契约承认实现」处置（V1.6）；W4 的 UI 移除作为决策 A 推论按

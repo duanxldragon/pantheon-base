@@ -42,3 +42,26 @@ revert path atomic: one `git revert` restores all ten scripts if the maintainer 
 
 Pure deletion, one commit per concern (backend packages, scripts, frontend symbol), verified in
 both repos. Ready to merge.
+
+> Added 2026-10-28: the Machine Readable block below retro-fits this already-merged review to the
+> strict `check-review.mjs` contract. This closes the debt registered in `.harness/STATUS.md`
+> (merged evidence predating the strict checker); the verdict matches the prose verdict above.
+
+## Machine Readable
+
+```json
+{
+  "taskId": "2026-10-27-s1-dead-code-removal",
+  "verdict": "approved",
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-27-s1-dead-code-removal/manifest.json",
+    "evidence": ".harness/evidence/2026-10-27-s1-dead-code-removal/commands.json",
+    "reviewFile": ".harness/evidence/2026-10-27-s1-dead-code-removal/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-27-codebase-simplification-program.task.md",
+      "docs/reviews/CODE_SIMPLIFICATION_PLAN.md"
+    ]
+  }
+}
+```
