@@ -1,0 +1,75 @@
+{
+  "taskId": "2026-10-27-s2-pagination-sort-migration",
+  "repo": "pantheon-base",
+  "executedAt": "2026-10-28",
+  "agent": {
+    "tool": "other",
+    "adapter": "qoder-agent"
+  },
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-27-s2-pagination-sort-migration/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-27-s2-pagination-sort-migration/",
+    "summaryFile": ".harness/evidence/2026-10-27-s2-pagination-sort-migration/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-27-s2-pagination-sort-migration/review.md",
+    "changeRef": "backend/modules/system/iam/role/role_helper.go",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-27-codebase-simplification-program.task.md",
+      "docs/reviews/CODE_SIMPLIFICATION_PLAN.md"
+    ]
+  },
+  "commands": [
+    {
+      "command": "cd backend && gofmt -l modules pkg",
+      "cwd": ".",
+      "notes": "Packet verification command. Expected empty; observed empty.",
+      "status": "passed"
+    },
+    {
+      "command": "cd backend && go build ./...",
+      "cwd": ".",
+      "notes": "Packet verification command. Expected exit 0; observed exit 0.",
+      "status": "passed"
+    },
+    {
+      "command": "cd backend && go vet ./...",
+      "cwd": ".",
+      "notes": "Packet verification command. Expected exit 0; observed exit 0.",
+      "status": "passed"
+    },
+    {
+      "command": "cd backend && PANTHEON_TEST_DSN=$(grep '^PANTHEON_DSN' ../.env.test | sed -E 's/^[^=]+=\"(.*)\"$/\\1/') PANTHEON_TEST_DSN_REQUIRED=true go test -count=1 ./modules/... ./pkg/common/...",
+      "cwd": ".",
+      "notes": "Packet verification command over the full module + common surface, DB integration included. Expected all packages ok; observed all ok, exit 0, no failures.",
+      "status": "passed"
+    },
+    {
+      "command": "grep -rn 'Offset((page - 1) * pageSize)' backend/modules --include='*.go'",
+      "cwd": ".",
+      "notes": "Packet measured outcome, inline offset arithmetic. Before 14; after 4, each enumerated: setting_audit.go:180 (semantics exception), tenant_ops_view.go:437 + tenant_service.go:1151,1185 (W9 deferral, doNotTouch).",
+      "status": "passed"
+    },
+    {
+      "command": "grep -rhE 'pageSize > (100|max[A-Za-z]+)' backend/modules | wc -l",
+      "cwd": ".",
+      "notes": "Clamp-copy census. Before 11; after 1 (tenant_service.go:1199, W9 deferral). setting_audit's <=-style guard is the other exempt site.",
+      "status": "passed"
+    },
+    {
+      "command": "grep -rh 'sortWhitelist := map' backend/modules | wc -l",
+      "cwd": ".",
+      "notes": "RC-015 sort-whitelist copy census. Before 8; after 0 — all eight lookups go through common.NormalizeSort with package-level column maps.",
+      "status": "passed"
+    },
+    {
+      "command": "temporary TestZZPaginationSortProbe in 11 packages, run then deleted (before any change)",
+      "cwd": "backend",
+      "notes": "Boundary behaviour capture: per-module normalizer outputs for nil/zero/negative/valid/oversize and sort cases. 79 lines saved to capture-before/normalizers.txt; after-side equivalence asserted by the updated module pure tests (see response-diff.md).",
+      "status": "passed"
+    }
+  ],
+  "knownGaps": [
+    "setting_audit.go inline pagination not converged: its oversize fallback (pageSize>100 falls back to 10, not clamp-to-100) differs from shared helper semantics; preserved per the packet's 'disagreement is preserved' note; unifying it is a behaviour decision for the maintainer.",
+    "Tenant member pagination (tenant_service.go, tenant_ops_view.go, tenant_platform_handler.go) not converged: default pageSize 20 plus a maxPage overflow clamp cannot be expressed by the shared helper without behaviour change, and tenant_service.go is doNotTouch pending the W9 tenant-scope rewrite; deferred there per packet note.",
+    "The 'normalizer count before 13 and after 1' metric is reported at implementation level: clamp/whitelist implementations went 13+8 to 1+1 plus the two documented exceptions; the named module functions remain as nil-safe extraction adapters so the nil-tolerant service contracts are unchanged."
+  ]
+}
