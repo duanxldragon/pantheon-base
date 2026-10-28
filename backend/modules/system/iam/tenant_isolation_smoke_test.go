@@ -52,11 +52,12 @@ func smokeDB(t *testing.T) *gorm.DB {
 	t.Helper()
 	db := testmysql.Open(t)
 	if err := db.AutoMigrate(
-		&role.SystemRole{}, &database.CasbinRule{},
+		&role.SystemRole{}, &role.SystemRoleMenu{}, &role.SystemRolePermission{},
+		&database.CasbinRule{},
 		&post.SystemPost{},
 		&dept.SystemDept{},
 		&user.SystemUser{}, &user.SystemUserRole{},
-		&dict.SystemDictType{},
+		&dict.SystemDictType{}, &dict.SystemDictItem{},
 		&setting.SystemSetting{},
 		&permission.PermissionRoleDataScopePolicy{},
 		&login.SystemLogLogin{},
@@ -66,18 +67,17 @@ func smokeDB(t *testing.T) *gorm.DB {
 		t.Fatalf("migrate smoke tables: %v", err)
 	}
 	// role update validates menu ids against system_menu (id 1 seeded), and
-	// session list joins system_user for the username column.
-	if err := db.Exec("CREATE TABLE IF NOT EXISTS system_menu (id BIGINT UNSIGNED PRIMARY KEY, page_perm TEXT, perms TEXT, type TEXT, module TEXT, path TEXT)").Error; err != nil {
+	// session list joins system_user for the username column. The dashboard
+	// counts visible menus and today's operation logs, so is_visible and
+	// system_log_oper must exist even though no subtest writes them.
+	if err := db.Exec("CREATE TABLE IF NOT EXISTS system_menu (id BIGINT UNSIGNED PRIMARY KEY, page_perm TEXT, perms TEXT, type TEXT, module TEXT, path TEXT, is_visible INT NOT NULL DEFAULT 1)").Error; err != nil {
 		t.Fatalf("create system_menu: %v", err)
 	}
 	if err := db.Exec("INSERT INTO system_menu (id, page_perm, perms, type) VALUES (1, 'sys:user:list', '', 'C')").Error; err != nil {
 		t.Fatalf("seed system_menu: %v", err)
 	}
-	if err := db.Exec("CREATE TABLE IF NOT EXISTS system_role_menu (role_id BIGINT UNSIGNED, menu_id BIGINT UNSIGNED)").Error; err != nil {
-		t.Fatalf("create system_role_menu: %v", err)
-	}
-	if err := db.Exec("CREATE TABLE IF NOT EXISTS system_role_permission (role_id BIGINT UNSIGNED, permission_key VARCHAR(128))").Error; err != nil {
-		t.Fatalf("create system_role_permission: %v", err)
+	if err := db.Exec("CREATE TABLE IF NOT EXISTS system_log_oper (id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT, tenant_id BIGINT UNSIGNED NOT NULL DEFAULT 0, oper_time DATETIME)").Error; err != nil {
+		t.Fatalf("create system_log_oper: %v", err)
 	}
 	return db
 }
@@ -364,8 +364,8 @@ func seedSmokeData(t *testing.T, db *gorm.DB) {
 		&role.SystemRole{ID: smokeRoleBID, TenantID: smokeTenantB, RoleName: "B 运营", RoleKey: "ops-b", Status: 1, Sort: 1},
 		&post.SystemPost{ID: smokePostAID, TenantID: smokeTenantA, DeptID: smokeDeptAID, PostCode: "p-a", PostName: "A 岗位", Sort: 1, Status: 1},
 		&post.SystemPost{ID: smokePostBID, TenantID: smokeTenantB, DeptID: smokeDeptBID, PostCode: "p-b", PostName: "B 岗位", Sort: 1, Status: 1},
-		&dept.SystemDept{ID: smokeDeptAID, TenantID: smokeTenantA, DeptName: "A 部门", ParentID: 0, Sort: 1, Status: 1},
-		&dept.SystemDept{ID: smokeDeptBID, TenantID: smokeTenantB, DeptName: "B 部门", ParentID: 0, Sort: 1, Status: 1},
+		&dept.SystemDept{ID: smokeDeptAID, TenantID: smokeTenantA, DeptName: "A 部门", ParentID: 0, IsRoot: common.StatusFlagYes, Sort: 1, Status: 1},
+		&dept.SystemDept{ID: smokeDeptBID, TenantID: smokeTenantB, DeptName: "B 部门", ParentID: 0, IsRoot: common.StatusFlagYes, Sort: 1, Status: 1},
 		&user.SystemUser{ID: smokeUserAID, TenantID: smokeTenantA, Username: "user-a", Password: "seed-hash", Nickname: "A 用户", Status: 1},
 		&user.SystemUser{ID: smokeUserBID, TenantID: smokeTenantB, Username: "user-b", Password: "seed-hash", Nickname: "B 用户", Status: 1},
 		&dict.SystemDictType{ID: 1101, TenantID: smokeTenantA, DictCode: "smoke-a", DictName: "A 字典", Module: "system", Status: 1},
