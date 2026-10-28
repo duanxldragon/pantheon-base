@@ -361,35 +361,6 @@ func TestGetUserIDFromContext_WrongType(t *testing.T) {
 	}
 }
 
-// ---- parseUintParam ----
-
-func TestParseUintParam_Valid(t *testing.T) {
-	gin.SetMode(gin.TestMode)
-	recorder := httptest.NewRecorder()
-	c, _ := gin.CreateTestContext(recorder)
-	c.Params = []gin.Param{{Key: "id", Value: "123"}}
-
-	id, err := parseUintParam(c, "id")
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if id != 123 {
-		t.Fatalf("expected 123, got %d", id)
-	}
-}
-
-func TestParseUintParam_Invalid(t *testing.T) {
-	gin.SetMode(gin.TestMode)
-	recorder := httptest.NewRecorder()
-	c, _ := gin.CreateTestContext(recorder)
-	c.Params = []gin.Param{{Key: "id", Value: "abc"}}
-
-	_, err := parseUintParam(c, "id")
-	if err == nil {
-		t.Fatal("expected error for non-numeric param")
-	}
-}
-
 // ---- handler-level: invalid body returns 400 ----
 
 func TestHandler_GetProfile_Unauthenticated(t *testing.T) {

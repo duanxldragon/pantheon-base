@@ -1,7 +1,6 @@
 package dict
 
 import (
-	"strconv"
 	"strings"
 
 	"github.com/duanxldragon/pantheon-base/backend/pkg/common"
@@ -65,9 +64,8 @@ func (h *DictHandler) UpdateDictType(c *gin.Context) {
 		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
 		return
 	}
-	typeID, err := strconv.ParseUint(c.Param("id"), 10, 64)
-	if err != nil {
-		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
+	typeID, ok := common.ParseUintParam(c, "id")
+	if !ok {
 		return
 	}
 	row, err := h.boundService(c).UpdateDictType(typeID, &req)
@@ -80,9 +78,8 @@ func (h *DictHandler) UpdateDictType(c *gin.Context) {
 
 func (h *DictHandler) DeleteDictType(c *gin.Context) {
 	common.SetAuditMetadata(c, "dict.type.delete.title", common.BusinessDelete)
-	typeID, err := strconv.ParseUint(c.Param("id"), 10, 64)
-	if err != nil {
-		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
+	typeID, ok := common.ParseUintParam(c, "id")
+	if !ok {
 		return
 	}
 	if err := h.boundService(c).DeleteDictType(typeID); err != nil {
@@ -168,9 +165,8 @@ func (h *DictHandler) UpdateDictItem(c *gin.Context) {
 		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
 		return
 	}
-	itemID, err := strconv.ParseUint(c.Param("id"), 10, 64)
-	if err != nil {
-		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
+	itemID, ok := common.ParseUintParam(c, "id")
+	if !ok {
 		return
 	}
 	row, err := h.boundService(c).UpdateDictItem(itemID, &req)
@@ -183,9 +179,8 @@ func (h *DictHandler) UpdateDictItem(c *gin.Context) {
 
 func (h *DictHandler) DeleteDictItem(c *gin.Context) {
 	common.SetAuditMetadata(c, "dict.item.delete.title", common.BusinessDelete)
-	itemID, err := strconv.ParseUint(c.Param("id"), 10, 64)
-	if err != nil {
-		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
+	itemID, ok := common.ParseUintParam(c, "id")
+	if !ok {
 		return
 	}
 	if err := h.boundService(c).DeleteDictItem(itemID); err != nil {
@@ -223,9 +218,8 @@ func (h *DictHandler) BatchDeleteDictItems(c *gin.Context) {
 
 func (h *DictHandler) ReorderDictItem(c *gin.Context) {
 	common.SetAuditMetadata(c, "dict.item.sort.title", common.BusinessUpdate)
-	itemID, err := strconv.ParseUint(c.Param("id"), 10, 64)
-	if err != nil {
-		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
+	itemID, ok := common.ParseUintParam(c, "id")
+	if !ok {
 		return
 	}
 	var req DictItemReorderReq

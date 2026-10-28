@@ -1,8 +1,6 @@
 package permission
 
 import (
-	"strconv"
-
 	"github.com/duanxldragon/pantheon-base/backend/pkg/common"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/impexp"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/tenant"
@@ -181,9 +179,8 @@ func (h *PermissionHandler) UpdatePolicy(c *gin.Context) {
 		return
 	}
 
-	policyID, err := strconv.ParseUint(c.Param("id"), 10, 64)
-	if err != nil {
-		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
+	policyID, ok := common.ParseUintParam(c, "id")
+	if !ok {
 		return
 	}
 
@@ -197,9 +194,8 @@ func (h *PermissionHandler) UpdatePolicy(c *gin.Context) {
 
 func (h *PermissionHandler) DeletePolicy(c *gin.Context) {
 	common.SetAuditMetadata(c, "permission.policy.delete.title", common.BusinessDelete)
-	policyID, err := strconv.ParseUint(c.Param("id"), 10, 64)
-	if err != nil {
-		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
+	policyID, ok := common.ParseUintParam(c, "id")
+	if !ok {
 		return
 	}
 

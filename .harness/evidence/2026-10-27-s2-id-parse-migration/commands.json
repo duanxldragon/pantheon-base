@@ -1,0 +1,72 @@
+{
+  "taskId": "2026-10-27-s2-id-parse-migration",
+  "repo": "pantheon-base",
+  "executedAt": "2026-10-28",
+  "agent": {
+    "tool": "other",
+    "adapter": "qoder-agent"
+  },
+  "knownGaps": [
+    "The packet declared harnessProfile.qualityProfile none; corrected to auth-security in this PR (CI rejects none for non-trivial changes — same correction pattern as W5/W8/S4/S2-helpers).",
+    "Two i18n sites (i18n_handler.go:250, :326) keep their local implementation: their failure branch uses errIDInvalid = \"id.invalid\" (plus an id==0 check), which the shared helper cannot reproduce with its existing parameters — the packet explicitly scopes this exception (\"keep that site local and record it; do not add a parameter for one caller\"). 27 sites → 25 migrated + 2 local.",
+    "Packet drift vs reality: expectedFiles.modify named backend/modules/system/iam/tenant/tenant_handler.go (deleted in W8, #445) and iam/dept|iam/post paths (actual: org/dept, org/post). The wave modified the real files; drift recorded here per the packet's own reporting rule.",
+    "user_service_pure_test.go lost TestParseUintParam_Valid/Invalid: the two tests exercised only the deleted private wrapper; the shared helper carries stricter equivalents (valid/zero/garbage/negative/float/overflow/missing) in pkg/common/handler_test.go. No assertion covering surviving behaviour was weakened.",
+    "Login handler's msgParamInvalid (22 remaining uses in the file) and every module-local errParamInvalid stay in place — their dedup is the RC-017 error-mapping wave, not this one."
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-27-s2-id-parse-migration/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-27-s2-id-parse-migration/",
+    "summaryFile": ".harness/evidence/2026-10-27-s2-id-parse-migration/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-27-s2-id-parse-migration/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-27-codebase-simplification-program.task.md",
+      "docs/reviews/REDUNDANT_CODE_CANDIDATES.md",
+      "docs/reviews/CODE_SIMPLIFICATION_PLAN.md"
+    ]
+  },
+  "commands": [
+    {
+      "command": "grep -rn 'ParseUint(c.Param(' backend/modules --include='*.go' | grep -v _test.go",
+      "cwd": ".",
+      "notes": "Pre-migration census: 27 sites in 10 files (role 6, dict 5, dept 3, post 2, permission 2, menu 2, i18n 2, audit 2, login 1, tenant_platform 2) + user's thin private wrapper with 4 callers. All 10,64; all failure branches write the param.invalid envelope except i18n (id.invalid).",
+      "status": "passed"
+    },
+    {
+      "command": "temporary TestZZCapturePreMigration400 probes in role/dict/dept (nil-service engines, parse-first methods), deleted after capture",
+      "cwd": "backend",
+      "notes": "Pre-change 400 bodies captured: ROLE_PRE_400_BODY / DICT_PRE_400_BODY / DEPT_PRE_400_BODY all = {\"code\":400,\"data\":null,\"message\":\"param.invalid\"} (HTTP 200 envelope); tenant already proven by the merged TestPlatformTenantHandlerErrorEnvelopeIsUnifiedAndLeakFree. Stored in pre-migration-400-captures.md.",
+      "status": "passed"
+    },
+    {
+      "command": "one commit per handler file: role(6) → dict(5) → dept(3) → post(2) → permission(2) → menu(2) → audit(2) → login(1) → tenant_platform(2) → user(4 + wrapper deletion + private-test removal); i18n kept local",
+      "cwd": ".",
+      "notes": "Each file built, vetted and package-tested before its commit (065cef6a…ea7b54e7). tenant keeps its local id==0/userId==0 rejection with the same envelope; only the parse-plus-400 half moves to common.ParseUintParam.",
+      "status": "passed"
+    },
+    {
+      "command": "grep -rn 'ParseUint(c.Param(' backend/modules --include='*.go' | grep -v _test.go | wc -l",
+      "cwd": ".",
+      "notes": "Post-migration count: 2 — exactly the two recorded i18n exceptions.",
+      "status": "passed"
+    },
+    {
+      "command": "gofmt -l backend/modules; go build ./... (per-package during migration); go vet on every touched package",
+      "cwd": ".",
+      "notes": "gofmt clean; every touched package builds, vets and tests green before its commit.",
+      "status": "passed"
+    },
+    {
+      "command": "export PANTHEON_TEST_DSN=<dsn from .env.test> PANTHEON_TEST_DSN_REQUIRED=true && cd backend && go test -count=1 ./...",
+      "cwd": ".",
+      "notes": "GO_TEST_EXIT=0; 46 packages ok; zero FAIL lines. Full suite green with 25 sites migrated.",
+      "status": "passed"
+    },
+    {
+      "command": "node scripts/harness/check-task-packet.mjs",
+      "cwd": ".",
+      "notes": "After the manifest flip (status completed, qualityProfile auth-security): 66 file(s), 0 error(s), 41 warning(s).",
+      "status": "passed"
+    }
+  ]
+}

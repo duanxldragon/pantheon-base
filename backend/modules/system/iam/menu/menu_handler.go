@@ -1,8 +1,6 @@
 package menu
 
 import (
-	"strconv"
-
 	"github.com/duanxldragon/pantheon-base/backend/pkg/common"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/tenant"
 
@@ -76,9 +74,8 @@ func (h *MenuHandler) UpdateMenu(c *gin.Context) {
 		return
 	}
 
-	menuID, err := strconv.ParseUint(c.Param("id"), 10, 64)
-	if err != nil {
-		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
+	menuID, ok := common.ParseUintParam(c, "id")
+	if !ok {
 		return
 	}
 
@@ -94,9 +91,8 @@ func (h *MenuHandler) UpdateMenu(c *gin.Context) {
 func (h *MenuHandler) DeleteMenu(c *gin.Context) {
 	common.SetAuditMetadata(c, "menu.delete.title", common.BusinessDelete)
 
-	menuID, err := strconv.ParseUint(c.Param("id"), 10, 64)
-	if err != nil {
-		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
+	menuID, ok := common.ParseUintParam(c, "id")
+	if !ok {
 		return
 	}
 
