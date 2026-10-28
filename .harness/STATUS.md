@@ -8,6 +8,8 @@
 `main` 的 `Release Gate` 红在两条 job 上，任务包 `2026-10-28-release-gate-green`，证据在
 `.harness/evidence/2026-10-28-release-gate-green/`。
 
+- **基线**：改动基于 `main` @ `cbd37694`——#460（计划阶梯 A）、#462（发布说明目录化）、
+  #461（三项 S3 波次）均已合入；本包是该基线之上主干门禁的整改。
 - **Dependabot Alerts（1 条 high）**：`GHSA-mgcc-cww5-fp2q` / `CVE-2026-116587` 打在
   `github.com/go-jose/go-jose/v3`。该模块不是直接依赖，而是 `coreos/go-oidc/v3 v3.9.0`
   的传递依赖，v3 线无修复版。处置：`go-oidc` 升 `v3.21.0`（改用 go-jose/v4），锁定
