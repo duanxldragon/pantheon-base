@@ -3,7 +3,7 @@
   "title": "Remove the ten zero-consumer aliases from pkg/common/re_export.go",
   "goal": "The S4 governance decision wave measured every re-export alias in backend/pkg/common/re_export.go for qualified references (common.<Sym>) across base backend and pantheon-ops/backend: ten of eighteen have zero consumers, which makes the re-export surface lie about what pkg/common provides. This packet deletes exactly those ten aliases — SetAccessTokenCookie, SetCSRFCookie, SetRefreshTokenCookie, ClearTokenCookies, ValidateRequiredProductionSecret, DefaultDevSecrets, GenerateRandomSecret, IsProductionEnv, ResolveSecret, FailWithData — and keeps the eight consumed ones. The underlying functions in pkg/common/http and pkg/common/security are untouched; consumers use them via their defining packages already.",
   "primaryLayer": "platform",
-  "status": "planned",
+  "status": "completed",
   "priority": "P3",
   "type": "refactor",
   "estimatedComplexity": "small",
@@ -43,7 +43,7 @@
   "harnessProfile": {
     "template": "admin-platform",
     "overlay": "pantheon-base",
-    "qualityProfile": "none",
+    "qualityProfile": "auth-security",
     "portableFailureClass": "governance-drift",
     "ownerLayer": "consumer-repository",
     "ratchetDecision": "no-repeat-observed",
