@@ -7,22 +7,23 @@
 
 ## Harness 链路
 
-- Task ID：`2026-10-27-s3-tenant-scope-unification`（主包；伴随 `2026-10-27-s3-oidc-envelope`、`2026-10-27-s3-role-data-scope-model`）
-- Task Manifest：`.harness/tasks/2026-10-27-s3-tenant-scope-unification/manifest.json`、`.harness/tasks/2026-10-27-s3-oidc-envelope/manifest.json`、`.harness/tasks/2026-10-27-s3-role-data-scope-model/manifest.json`
-- Evidence：`.harness/evidence/2026-10-27-s3-tenant-scope-unification/`、`.harness/evidence/2026-10-27-s3-oidc-envelope/`、`.harness/evidence/2026-10-27-s3-role-data-scope-model/`
-- Verification evidence：三份 `commands.json`；`scope-snapshot.md`、`two-tenant-run.log`、`classification.md`、`model-diff.md` 及各自 `summary.md`
-- Review Artifact：三份 `review.md`，machine-readable verdict 均为 `approved`
+- Task ID：2026-10-27-s3-tenant-scope-unification
+- Task Manifest：.harness/tasks/2026-10-27-s3-tenant-scope-unification/manifest.json
+- Evidence：.harness/evidence/2026-10-27-s3-tenant-scope-unification/commands.json
+- Verification evidence：.harness/evidence/2026-10-27-s3-tenant-scope-unification/summary.md
+- Review Artifact：.harness/evidence/2026-10-27-s3-tenant-scope-unification/review.md
 - OpenSpec change：none
 - Trivial change：no
 - Quality Profile：permission-policy
 - Ratchet Decision：sensor-added
 - GitHub Signal：repo-quality-gate
+- 伴随任务包：2026-10-27-s3-oidc-envelope（`.harness/evidence/2026-10-27-s3-oidc-envelope/`）、2026-10-27-s3-role-data-scope-model（`.harness/evidence/2026-10-27-s3-role-data-scope-model/`），各自 commands/summary/review 齐备
 
 ## Harness adoption markers
 
 - task id: 2026-10-27-s3-tenant-scope-unification
 - task manifest: .harness/tasks/2026-10-27-s3-tenant-scope-unification/manifest.json
-- evidence: .harness/evidence/2026-10-27-s3-tenant-scope-unification/
+- evidence: .harness/evidence/2026-10-27-s3-tenant-scope-unification/commands.json
 - boundaries: platform + system/auth + system/iam + system/org + system/config; business/* untouched
 - backend response contract: unchanged (OIDC responses classified and kept; comments only)
 - backend DTO contract: unchanged
