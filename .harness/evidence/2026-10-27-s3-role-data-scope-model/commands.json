@@ -1,0 +1,85 @@
+{
+  "taskId": "2026-10-27-s3-role-data-scope-model",
+  "repo": "pantheon-base",
+  "executedAt": "2026-10-28T19:55:00+08:00",
+  "agent": {
+    "tool": "other",
+    "adapter": "qoder-agent"
+  },
+  "runtimeSensitive": true,
+  "runtimeGap": "A schema dump of system_role_data_scope could not be compared locally: no MySQL DSN or credentials are available on this machine. The comparison used the migration files as the schema source of truth (000001, 000002, 000020), which this wave does not modify. CI's MySQL-backed tests exercise the table.",
+  "knownGaps": [
+    "Decision: delete the mirror and use permission.PermissionRoleDataScopePolicy, rather than keep the mirror plus a divergence checker. Justification: role already imports permission (role_policy_sync.go and role tests), there is no package cycle (`go list -deps ./modules/system/iam/permission` contains 0 role packages), and a single authoritative model eliminates the drift surface structurally. No new gate script was added, so no gate-approval is needed.",
+    "The role package diff also contains the sibling tenant-scope wave (Scoper conversion). The model-specific delta is the deleted struct plus rewrites of its references; the two waves share the same role_service.go.",
+    "Schema-vs-model deltas were recorded, not fixed: migrations name the composite index idx_role_data_scope_tenant_role (non-unique) while both models declare uniqueIndex:uk_role_data_scope_tenant_role; the legacy scope_defs column and created_at/updated_at are unmapped by any model. These are migration-governance items (migrations are doNotTouch here), not model-vs-model drift.",
+    "The pre-existing delete path still writes the legacy permission_role_data_scope_policy table in addition to system_role_data_scope; that behaviour is unchanged, and `grep role_data_scope_policy` matches only this legacy table name, a comment and the dashboard table whitelist — not the deleted Go type.",
+    "linkage.changeRef is `none` because check-evidence.mjs resolves changeRef as a repository path, not as a git ref."
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-27-s3-role-data-scope-model/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-27-s3-role-data-scope-model/",
+    "summaryFile": ".harness/evidence/2026-10-27-s3-role-data-scope-model/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-27-s3-role-data-scope-model/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-27-codebase-simplification-program.task.md",
+      "docs/designs/PERMISSION_MODEL.md"
+    ]
+  },
+  "commands": [
+    {
+      "command": "gofmt -l modules pkg",
+      "cwd": "backend",
+      "notes": "exit 0, no output.",
+      "status": "passed"
+    },
+    {
+      "command": "go build ./...",
+      "cwd": "backend",
+      "notes": "exit 0.",
+      "status": "passed"
+    },
+    {
+      "command": "go vet ./...",
+      "cwd": "backend",
+      "notes": "exit 0.",
+      "status": "passed"
+    },
+    {
+      "command": "go test -count=1 ./modules/system/iam/role/... ./modules/system/iam/permission/...",
+      "cwd": "backend",
+      "notes": "2 ok / 0 FAIL. The full suite is also green: 47 ok / 0 FAIL.",
+      "status": "passed"
+    },
+    {
+      "command": "grep -rn \"roleDataScopePolicy\" --include=*.go .",
+      "cwd": "backend",
+      "notes": "0 hits — the package-local mirror type no longer exists.",
+      "status": "passed"
+    },
+    {
+      "command": "go list -deps ./modules/system/iam/permission | grep -c \"pantheon-base/backend/modules/system/iam/role\"",
+      "cwd": "backend",
+      "notes": "0 — permission does not depend on role, so importing permission from role creates no cycle.",
+      "status": "passed"
+    },
+    {
+      "command": "git diff --stat -- modules/system/iam/role/",
+      "cwd": "backend",
+      "notes": "7 files changed, +54/−75 (includes the sibling tenant-scope Scoper conversion in the same package; the model delta is the deleted struct plus reference rewrites).",
+      "status": "passed"
+    },
+    {
+      "command": "grep -rn \"role_data_scope_policy\" --include=*.go .",
+      "cwd": "backend",
+      "notes": "Hits only the pre-existing legacy table name permission_role_data_scope_policy (delete path, unchanged), one comment, and the dashboard table whitelist. No reference to the deleted Go type.",
+      "status": "passed"
+    },
+    {
+      "command": "schema dump of system_role_data_scope compared with both models",
+      "cwd": "backend",
+      "notes": "Not executable locally (no MySQL credentials). Compared against migrations 000001/000002/000020 instead; recorded in model-diff.md.",
+      "status": "not-run"
+    }
+  ]
+}

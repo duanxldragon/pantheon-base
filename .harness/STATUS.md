@@ -1,6 +1,6 @@
 # Pantheon Base - Harness 任务状态
 
-**最后更新**: 2026-10-27
+**最后更新**: 2026-10-28
 **当前版本**: v0.17.8 已发布（tag `pantheon-base-v0.17.8`，目标提交 `e256d1fb`，四件资产与 `Foundation Release Verify` 已核验）
 
 ## v0.17.8 发布（2026-10-27）
@@ -355,10 +355,21 @@ GitHub Release 于 `2026-10-22T00:17:53Z` 发布，四件产物齐备（tgz 19,9
 | ✅ 已完成 | v0.17.6 发布收口（`2026-10-27-v0176-release-closeout`，tag→`c9bc6c0f`，四件资产 + Verify 核验） |
 | ✅ 已完成 | v0.17.7 发布收口（`2026-10-27-v0177-lint-codeql-closure`，三条 base 自有 lint/CodeQL 发现回流修复，tag→`2091a2d8`，四件资产） |
 | ✅ 已完成 | v0.17.8 发布收口（`2026-10-27-v0178-dep-vuln-closure`，依赖漏洞关闭 + Sonar 归属勘误，tag→`e256d1fb`，四件资产 + Verify run 40472462712） |
-| 🚧 进行中 | 代码精简与横向重复收敛（`2026-10-27-codebase-simplification-program`：**S1×2 已完成**（#438 #439，其中 dead-code 波实测 **19 文件 +0/−1923** 纯删除）、**S4 已完成**（#441，五项治理面决策落档 `docs/reviews/GOVERNANCE_SURFACE_DECISIONS_2026-10-27.md`；follow-up 别名删除波 #447 实测 **re_export.go 112→52 行**，删十个零消费别名、全量 46 包绿）；**S2 已完成 6/6**（#450 共享 helper 五件、#451 id-parse 27 站点迁移、#452 pagination-sort 13 分页 + 8 sort normalizer 迁移，实测内联白名单 8→0、钳制 11→1、内联 Offset 14→4、#454 error-mapping dedup（20 重复错误声明收敛到共享常量、gorm not-found 翻译收敛到 `database.TranslateNotFound`、context helper 三重复制归一，净 −82 行）、#455 batch-and-envelope 零代码差收口（RC-023 已由前波收敛、RC-025 表面已随租户波删除、RC-030 证伪为 WithDataScope 谓词）、#456 import-export pipeline（8 导入端点 7 模块收敛到 `impexp.ReadImportCSV` + 四个服务原语 + `BuildImportTemplate`，逐模块 commit 阶梯，validation inventory 全量记账，CSV 公式注入行为 golden 锁定，活体 API smoke 11/11）；原三项维护者门禁（RC-016 standalone-PR、error-mapping 批准、batch 收口确认）按维护者 2026-10-28 全权委托执行，全部以 evidence + strict 校验落档；smoke 指南 §1 role「仅导出」文档漂移随本条一并修正）；S3×3 待排期——programme 规则要求 S2 稳定一个发布周期（foundation release）后才可开工，release 切割属 do-not-touch，待维护者决定；setting_audit 钳制语义分歧与 tenant member 分页（W9）仍为显式维护者决策；双语 checker 接 CI 待批准。登记债务②（三份存量 review.md 缺 Machine Readable 块）已随 #448 关闭，全量 `.harness/evidence/*/review.md` strict 0 error） |
+| 🚧 进行中 | 代码精简与横向重复收敛（`2026-10-27-codebase-simplification-program`：**S1×2 已完成**（#438 #439，其中 dead-code 波实测 **19 文件 +0/−1923** 纯删除）、**S4 已完成**（#441，五项治理面决策落档 `docs/reviews/GOVERNANCE_SURFACE_DECISIONS_2026-10-27.md`；follow-up 别名删除波 #447 实测 **re_export.go 112→52 行**，删十个零消费别名、全量 46 包绿）；**S2 已完成 6/6**（#450 共享 helper 五件、#451 id-parse 27 站点迁移、#452 pagination-sort 13 分页 + 8 sort normalizer 迁移，实测内联白名单 8→0、钳制 11→1、内联 Offset 14→4、#454 error-mapping dedup（20 重复错误声明收敛到共享常量、gorm not-found 翻译收敛到 `database.TranslateNotFound`、context helper 三重复制归一，净 −82 行）、#455 batch-and-envelope 零代码差收口（RC-023 已由前波收敛、RC-025 表面已随租户波删除、RC-030 证伪为 WithDataScope 谓词）、#456 import-export pipeline（8 导入端点 7 模块收敛到 `impexp.ReadImportCSV` + 四个服务原语 + `BuildImportTemplate`，逐模块 commit 阶梯，validation inventory 全量记账，CSV 公式注入行为 golden 锁定，活体 API smoke 11/11）；原三项维护者门禁（RC-016 standalone-PR、error-mapping 批准、batch 收口确认）按维护者 2026-10-28 全权委托执行，全部以 evidence + strict 校验落档；smoke 指南 §1 role「仅导出」文档漂移随本条一并修正）；S3×3 已完成（2026-10-28，见下节「代码精简 S3 收口」）——programme 规则要求 S2 稳定一个发布周期（foundation release）后才可开工，该排期门禁由维护者 2026-10-28 直接指令覆盖，release 切割仍属 do-not-touch、待维护者决定；setting_audit 钳制语义分歧与 tenant member 分页（W9）仍为显式维护者决策；双语 checker 接 CI 待批准。登记债务②（三份存量 review.md 缺 Machine Readable 块）已随 #448 关闭，全量 `.harness/evidence/*/review.md` strict 0 error） |
 | ✅ 已完成 | 租户功能完整性复核（2026-10-27，只读，前后端 + 租户运营；结论：单租户路径可用，**"租户开发已完成"不成立**；1 P1 / 2 P2 / 6 P3；产出 `docs/reviews/TENANT_FUNCTIONAL_COMPLETENESS_REVIEW_2026-10-27.md`） |
 | ✅ 已完成 | 租户完整性整改（`2026-10-27-tenant-completeness-remediation`，8 个波次 **W1–W8 全部完成**（#436 / #434 / #440 / #442 / #443 / W6 控制台 spec #459 / W7 决策包 / #445）；W3 决策 A、W7 决策 A、W6 的 report-only 门禁默认均按 maintainer-delegated 记录，详见下节各收口段） |
 | ⏸️ 暂停 | 无 |
+
+## 代码精简 S3 收口（2026-10-28）
+
+维护者 2026-10-28 直接指令完成三项剩余 S3 波次；programme 的「S2 稳定一个 release 周期」排期门禁由该指令覆盖（release 切割仍属 do-not-touch）。三项均带 task packet、evidence、review。
+
+- **`2026-10-27-s3-tenant-scope-unification`（P1，RC-012/RC-027）**：11 个 system service + 3 个 auth service 的三件套收敛到 `backend/pkg/tenant.Scoper` / `OwnerTenantID`；生产代码 25 文件 +267/−364（含新 helper 净 −44），新增离线 SQL 快照测试（nil/compat/multi 三上下文）与两租户隔离冒烟（11 service）。本地无 MySQL DSN → 冒烟 skip，CI 以 `PANTHEON_TEST_DSN_REQUIRED=true`（`ci.yml:143,332`、`quality.yml:362`）承担运行读数。setting 覆盖叠加全局、dashboard 表白名单、login Runtime 组合根为有意保留的变体。证据：`.harness/evidence/2026-10-27-s3-tenant-scope-unification/`。
+- **`2026-10-27-s3-oidc-envelope`（P3，RC-026）**：六处裸 `c.JSON` 逐条对照 RFC 6749 §4.1.1/§4.1.2.1 与实际消费方分类——无一属协议 JSON 体，且模块处于休眠（包外 0 引用、无路由、无前端消费方）→ **全部保留原样**并逐处注明契约；diff 仅注释 +13/−0。分类表：`docs/reviews/OIDC_RESPONSE_CONTRACT_2026-10-27.md`。运行态 gap：无 IdP、未挂路由，登录往返留待 SSO 接入波次。
+- **`2026-10-27-s3-role-data-scope-model`（P3，RC-022）**：两份 role data-scope 模型逐字段逐 tag 完全一致 → 删除 role 侧镜像，改指 `permission.PermissionRoleDataScopePolicy`；`go list -deps` 证明 permission 不依赖 role（无环），delete 路径仍写同一组表，零 DDL/迁移/data-scope 行为变更。schema-vs-model 的索引命名与遗留列差异已记录、归迁移治理包。证据：`.harness/evidence/2026-10-27-s3-role-data-scope-model/`。
+- **`2026-10-28-plan-ladder-option-a-impl`（W7 实现）**：已随 PR #460（`a053805b`）合并，manifest 状态翻为 completed。
+
+programme 本体仍为进行中：完成清单中的 foundation release 切割与 pantheon-ops 对同步后 foundation 的构建验证属 release/外仓门禁，未在本轮范围内。
 
 ## 租户权限隔离整改（2026-10-19，已收口）
 

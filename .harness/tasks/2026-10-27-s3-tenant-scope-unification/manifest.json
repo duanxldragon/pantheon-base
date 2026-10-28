@@ -3,7 +3,7 @@
   "title": "Unify the tenant-scope trio across fourteen services behind one tested implementation",
   "goal": "Eleven system services and three auth services each implement the same three-part helper: take the tenant from the gin context, build a scoped *gorm.DB, and resolve the owner tenant id. The copies are structurally identical but they are also the multi-tenant isolation hot path, which is why the audit put them in the last batch. This wave first pins the current behaviour with a before-snapshot test and a two-tenant end-to-end case that does not exist yet, then replaces the copies with one implementation in pkg/tenant, then proves that no query lost its tenant predicate. If the two-tenant case cannot be constructed, the wave stops rather than proceeds on static reasoning.",
   "primaryLayer": "platform",
-  "status": "planned",
+  "status": "completed",
   "priority": "P1",
   "type": "refactor",
   "estimatedComplexity": "large",

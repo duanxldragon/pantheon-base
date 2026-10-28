@@ -3,7 +3,7 @@
   "title": "Implement plan-ladder decision A: outsideLadder lowcode consequence (five locales) and contract §2.4 capability-matrix boundary",
   "goal": "Land the implementation follow-up that the signed W7 decision A reserved for a standalone small PR: the operator-facing consequence (the outsideLadder warning does not name the hidden lowcode surfaces) and the contract-side statement of the capability-matrix boundary (builtin four tiers only; custom code = quota bucket + free capability tier; gating is UX-only). Zero logic, schema, route or permission changes; normalizeTenantPlan fail-closed semantics untouched per the decision's design constraint.",
   "primaryLayer": "system/iam",
-  "status": "in-progress",
+  "status": "completed",
   "priority": "P3",
   "type": "docs",
   "estimatedComplexity": "small",

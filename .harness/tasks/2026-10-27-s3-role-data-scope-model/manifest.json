@@ -3,7 +3,7 @@
   "title": "Resolve the mirrored role data-scope model without changing the permission tables",
   "goal": "role_service.go declares its own copy of the role data-scope policy model with a comment saying it mirrors another directory's model to avoid a cross-directory import, and the delete path writes both tables. That is a deliberate duplication, but deliberate duplication still drifts. This wave is an investigation-first task: diff the two model definitions against the live schema, prove whether they are still identical, and then either move the model to a shared home and delete the mirror, or record that the mirror must stay and add a checker that fails when the two definitions diverge. No table, migration, policy behaviour or permission result changes in this wave.",
   "primaryLayer": "system/iam",
-  "status": "planned",
+  "status": "completed",
   "priority": "P3",
   "type": "refactor",
   "estimatedComplexity": "small",
