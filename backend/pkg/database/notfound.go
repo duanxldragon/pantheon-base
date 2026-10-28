@@ -13,7 +13,7 @@ import (
 // dependency here. The replacement is supplied by the caller so each site
 // keeps its own output class — common.NewNotFound (404), common.NewBadRequest
 // (400) or a plain error (500) — instead of the helper picking one.
-func TranslateNotFound(err error, replacement error) error {
+func TranslateNotFound(err, replacement error) error {
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return replacement
 	}
