@@ -1,8 +1,6 @@
 package user
 
 import (
-	"strconv"
-
 	"github.com/duanxldragon/pantheon-base/backend/pkg/common"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/impexp"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/tenant"
@@ -143,9 +141,8 @@ func (h *UserHandler) ImportUsers(c *gin.Context) {
 
 // GetUserDetail 获取用户详情。
 func (h *UserHandler) GetUserDetail(c *gin.Context) {
-	userID, err := parseUintParam(c, "id")
-	if err != nil {
-		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
+	userID, ok := common.ParseUintParam(c, "id")
+	if !ok {
 		return
 	}
 
@@ -185,9 +182,8 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 		return
 	}
 
-	userID, err := parseUintParam(c, "id")
-	if err != nil {
-		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
+	userID, ok := common.ParseUintParam(c, "id")
+	if !ok {
 		return
 	}
 
@@ -203,9 +199,8 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 func (h *UserHandler) ResetPassword(c *gin.Context) {
 	common.SetAuditMetadata(c, "user.password.reset.title", common.BusinessUpdate)
 
-	userID, err := parseUintParam(c, "id")
-	if err != nil {
-		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
+	userID, ok := common.ParseUintParam(c, "id")
+	if !ok {
 		return
 	}
 
@@ -258,9 +253,8 @@ func (h *UserHandler) BatchDeleteUsers(c *gin.Context) {
 // DeleteUser 删除用户。
 func (h *UserHandler) DeleteUser(c *gin.Context) {
 	common.SetAuditMetadata(c, "user.delete.title", common.BusinessDelete)
-	userID, err := parseUintParam(c, "id")
-	if err != nil {
-		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
+	userID, ok := common.ParseUintParam(c, "id")
+	if !ok {
 		return
 	}
 
@@ -278,9 +272,4 @@ func getUserIDFromContext(c *gin.Context) (uint64, bool) {
 	}
 	userID, ok := userIDValue.(uint64)
 	return userID, ok
-}
-
-func parseUintParam(c *gin.Context, key string) (uint64, error) {
-	value := c.Param(key)
-	return strconv.ParseUint(value, 10, 64)
 }
