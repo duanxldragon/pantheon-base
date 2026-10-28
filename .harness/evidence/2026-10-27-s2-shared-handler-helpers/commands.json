@@ -1,0 +1,76 @@
+{
+  "taskId": "2026-10-27-s2-shared-handler-helpers",
+  "repo": "pantheon-base",
+  "executedAt": "2026-10-28",
+  "agent": {
+    "tool": "other",
+    "adapter": "qoder-agent"
+  },
+  "knownGaps": [
+    "The packet declared harnessProfile.qualityProfile none; corrected to auth-security in this PR (CI rejects none for non-trivial changes — same correction pattern as W5/W8/S4-alias).",
+    "Placement deviation recorded per the packet's own note: NotFoundIfMissing lives in backend/pkg/database (notfound.go) because pkg/common is gorm-free and must stay that way; expectedFiles.create named only the two pkg/common files, so backend/pkg/database/notfound.go + notfound_test.go are additional creates.",
+    "NormalizePagination returns (page, pageSize, offset); today's inline normalizers return (page, pageSize) and derive the offset at the call site. The offset is additive and call sites may ignore it; the page/pageSize semantics are identical to the inline blocks (defaults 1/10, cap as parameter)."
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-27-s2-shared-handler-helpers/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-27-s2-shared-handler-helpers/",
+    "summaryFile": ".harness/evidence/2026-10-27-s2-shared-handler-helpers/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-27-s2-shared-handler-helpers/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-27-codebase-simplification-program.task.md",
+      "docs/reviews/REDUNDANT_CODE_CANDIDATES.md",
+      "docs/reviews/CODE_SIMPLIFICATION_PLAN.md"
+    ]
+  },
+  "commands": [
+    {
+      "command": "sed -n '72,76p;523,539p' backend/modules/system/org/post/post_handler.go backend/modules/system/iam/role/role_helper.go (pattern reads: inline ParseUint 400 blocks, pagination normalizers, sort whitelists, errors.Is(gorm.ErrRecordNotFound) sites; grep errParamInvalid/errRequestFailed across 11 handler files)",
+      "cwd": ".",
+      "notes": "Confirmed the dominant shapes: parse-400 = common.Fail(c, common.CodeParamInvalid, errParamInvalid); pagination defaults 1/10 everywhere with per-module caps; sort = TrimSpace + map lookup + fallback; not-found = errors.Is then errors.New(i18n key). pkg/common greps show zero gorm imports.",
+      "status": "passed"
+    },
+    {
+      "command": "go test -run TestZZCapture400BodyForS2Evidence -v ./modules/system/iam/tenant/ (temporary probe, deleted after capture)",
+      "cwd": "backend",
+      "notes": "CAPTURED_HTTP_STATUS=200; CAPTURED_400_BODY={\"code\":400,\"data\":null,\"message\":\"param.invalid\"}. The replacement target, stored in 400-response-capture.md.",
+      "status": "passed"
+    },
+    {
+      "command": "create backend/pkg/common/handler.go (ParseUintParam, NormalizePagination, NormalizeSort, ErrParamInvalid, ErrRequestFailed) + backend/pkg/database/notfound.go (NotFoundIfMissing)",
+      "cwd": ".",
+      "notes": "Five helpers, add-only. Zero call-site change: git status shows exactly five new files and no modification. doNotTouch list (modules/**, common/http/response.go, common/error.go) untouched.",
+      "status": "passed"
+    },
+    {
+      "command": "cd backend && gofmt -l pkg/common pkg/database; go build ./...; go vet ./pkg/common/... ./pkg/database/...",
+      "cwd": ".",
+      "notes": "gofmt clean after formatting handler_test.go once; BUILD_OK; VET_OK.",
+      "status": "passed"
+    },
+    {
+      "command": "cd backend && go test -count=1 ./pkg/common/... ./pkg/database/...",
+      "cwd": ".",
+      "notes": "ok pkg/common (ParseUintParam: valid/zero/garbage/negative/float/overflow/missing-param; NormalizePagination: zero/negative/valid/capped/cap-below-default; NormalizeSort: exact/snake/padded/unknown/blank/nil-map), ok pkg/database (NotFoundIfMissing: direct/wrapped/other-identity/nil).",
+      "status": "passed"
+    },
+    {
+      "command": "export PANTHEON_TEST_DSN=<dsn from .env.test> PANTHEON_TEST_DSN_REQUIRED=true && cd backend && go test -count=1 ./...",
+      "cwd": ".",
+      "notes": "GO_TEST_EXIT=0; 46 packages ok; zero FAIL lines. Full suite green with the five helpers added.",
+      "status": "passed"
+    },
+    {
+      "command": "cd /d/workspace/go/pantheon-platform/pantheon-ops/backend && go build ./...",
+      "cwd": ".",
+      "notes": "OPS_BUILD_OK — ops module unaffected (new base files, no shared source).",
+      "status": "passed"
+    },
+    {
+      "command": "node scripts/harness/check-task-packet.mjs",
+      "cwd": ".",
+      "notes": "After the manifest flip (status completed, qualityProfile auth-security): 66 file(s), 0 error(s), 41 warning(s).",
+      "status": "passed"
+    }
+  ]
+}
