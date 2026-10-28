@@ -1,134 +1,134 @@
 {
-  "taskId": "2026-10-27-s2-id-parse-migration",
-  "title": "Replace the 35 inline path-ID parse blocks with the shared helper",
-  "goal": "Thirty-five handler sites repeat the same six lines: parse c.Param(\"id\") with strconv.ParseUint, and on failure write a 400 response. user_handler.go already extracts parseUintParam, proving the extraction is safe in this codebase. This wave replaces the other 34 sites with the shared helper added in the previous wave and keeps each handler's existing error code, message and i18n key. The measurable outcome is that the inline count drops to at most two sites, the two that genuinely need a different response, and every replaced site is proven to emit the same bytes as before.",
-  "primaryLayer": "platform",
-  "status": "planned",
-  "priority": "P1",
-  "type": "refactor",
-  "estimatedComplexity": "medium",
-  "parentTaskId": "2026-10-27-codebase-simplification-program",
-  "dependsOn": [
-    "2026-10-27-s2-shared-handler-helpers"
+ "taskId": "2026-10-27-s2-id-parse-migration",
+ "title": "Replace the 35 inline path-ID parse blocks with the shared helper",
+ "goal": "Thirty-five handler sites repeat the same six lines: parse c.Param(\"id\") with strconv.ParseUint, and on failure write a 400 response. user_handler.go already extracts parseUintParam, proving the extraction is safe in this codebase. This wave replaces the other 34 sites with the shared helper added in the previous wave and keeps each handler's existing error code, message and i18n key. The measurable outcome is that the inline count drops to at most two sites, the two that genuinely need a different response, and every replaced site is proven to emit the same bytes as before.",
+ "primaryLayer": "platform",
+ "status": "completed",
+ "priority": "P1",
+ "type": "refactor",
+ "estimatedComplexity": "medium",
+ "parentTaskId": "2026-10-27-codebase-simplification-program",
+ "dependsOn": [
+  "2026-10-27-s2-shared-handler-helpers"
+ ],
+ "findings": [
+  "RC-014 (P1): inline ParseUint(c.Param(\"id\")) blocks at role_handler.go:157,201,222,245,268,292; tenant_handler.go:103,157,187,215,245,251,298; dict_handler.go:68,83,171,186,226; i18n_handler.go:250,295,326; dept_handler.go:73,111,161; menu_handler.go:79,97; permission_handler.go:182,198; post_handler.go:72,105; audit_handler.go:67,83; tenant_platform_handler.go:40,229; login_handler.go:406. user_handler.go:283-286 is the only extracted copy."
+ ],
+ "scope": {
+  "in": [
+   "Replace the 34 inline path-ID parse blocks with the shared helper",
+   "Preserve each site's existing 400 status, error code, i18n key and message",
+   "Change user_handler.go's private parseUintParam to delegate to the shared helper, or delete it if the helper covers it",
+   "Record the two sites, if any, that keep a local implementation and why"
   ],
-  "findings": [
-    "RC-014 (P1): inline ParseUint(c.Param(\"id\")) blocks at role_handler.go:157,201,222,245,268,292; tenant_handler.go:103,157,187,215,245,251,298; dict_handler.go:68,83,171,186,226; i18n_handler.go:250,295,326; dept_handler.go:73,111,161; menu_handler.go:79,97; permission_handler.go:182,198; post_handler.go:72,105; audit_handler.go:67,83; tenant_platform_handler.go:40,229; login_handler.go:406. user_handler.go:283-286 is the only extracted copy."
+  "out": [
+   "Changing any route path, parameter name or method",
+   "Changing the 400 response body for any endpoint",
+   "Introducing handler-level generic wrappers or middleware for parameter parsing",
+   "Touching service-layer ID handling, which is not HTTP input"
+  ]
+ },
+ "dependencyLayers": [
+  "system/auth",
+  "system/iam",
+  "system/org",
+  "system/config"
+ ],
+ "implementationNotes": [
+  "Replace one handler file per commit. The modules are independent and a bad file should not block the other ten.",
+  "Diff the pre-change 400 body for at least role, tenant, dict and dept before replacing; those four cover the differing shapes seen in the audit.",
+  "Some handlers return a module-specific error key (for example tenant-scoped resources). If the helper cannot reproduce it with its existing parameters, keep that site local and record it; do not add a parameter for one caller.",
+  "The helper must not swallow the parse error silently: the current sites return immediately after writing 400, and the replacement must too."
+ ],
+ "contractAnchors": [
+  "AGENTS.md",
+  "docs/reviews/REDUNDANT_CODE_CANDIDATES.md"
+ ],
+ "harnessProfile": {
+  "template": "admin-platform",
+  "overlay": "pantheon-base",
+  "qualityProfile": "auth-security",
+  "portableFailureClass": "duplication-drift",
+  "ownerLayer": "consumer-repository",
+  "ratchetDecision": "sensor-added",
+  "coverageDimensions": [
+   "behaviour",
+   "maintainability"
+  ]
+ },
+ "expectedFiles": {
+  "create": [],
+  "modify": [
+   "backend/modules/system/iam/role/role_handler.go",
+   "backend/modules/system/iam/permission/permission_handler.go",
+   "backend/modules/system/iam/menu/menu_handler.go",
+   "backend/modules/system/iam/dept/dept_handler.go",
+   "backend/modules/system/iam/post/post_handler.go",
+   "backend/modules/system/iam/user/user_handler.go",
+   "backend/modules/system/config/dict/dict_handler.go",
+   "backend/modules/system/config/i18n/i18n_handler.go",
+   "backend/modules/system/audit/audit_handler.go",
+   "backend/modules/system/iam/tenant/tenant_handler.go",
+   "backend/modules/system/iam/tenant/tenant_platform_handler.go",
+   "backend/modules/auth/login/login_handler.go"
   ],
-  "scope": {
-    "in": [
-      "Replace the 34 inline path-ID parse blocks with the shared helper",
-      "Preserve each site's existing 400 status, error code, i18n key and message",
-      "Change user_handler.go's private parseUintParam to delegate to the shared helper, or delete it if the helper covers it",
-      "Record the two sites, if any, that keep a local implementation and why"
-    ],
-    "out": [
-      "Changing any route path, parameter name or method",
-      "Changing the 400 response body for any endpoint",
-      "Introducing handler-level generic wrappers or middleware for parameter parsing",
-      "Touching service-layer ID handling, which is not HTTP input"
-    ]
-  },
-  "dependencyLayers": [
-    "system/auth",
-    "system/iam",
-    "system/org",
-    "system/config"
+  "doNotTouch": [
+   "backend/modules/**/router*.go",
+   "backend/pkg/common/http/response.go",
+   "backend/pkg/database/migrations/**",
+   "frontend/**"
+  ]
+ },
+ "executionRoles": {
+  "implementerPosture": "One handler file per commit; prove the 400 body is unchanged before moving to the next file.",
+  "reviewerPosture": [
+   "Confirm each replaced site emits the same status, code, i18n key and message as before.",
+   "Confirm no site silently continues after a parse failure.",
+   "Confirm the inline count is measured, not assumed.",
+   "Confirm the sites left local have a written reason."
+  ]
+ },
+ "verificationPlan": {
+  "commands": [
+   "cd backend && gofmt -l modules",
+   "cd backend && go build ./...",
+   "cd backend && go vet ./...",
+   "cd backend && go test -count=1 ./modules/...",
+   "grep -rn \"ParseUint(c.Param(\\\"id\\\")\" backend | wc -l"
   ],
-  "implementationNotes": [
-    "Replace one handler file per commit. The modules are independent and a bad file should not block the other ten.",
-    "Diff the pre-change 400 body for at least role, tenant, dict and dept before replacing; those four cover the differing shapes seen in the audit.",
-    "Some handlers return a module-specific error key (for example tenant-scoped resources). If the helper cannot reproduce it with its existing parameters, keep that site local and record it; do not add a parameter for one caller.",
-    "The helper must not swallow the parse error silently: the current sites return immediately after writing 400, and the replacement must too."
-  ],
-  "contractAnchors": [
-    "AGENTS.md",
-    "docs/reviews/REDUNDANT_CODE_CANDIDATES.md"
-  ],
-  "harnessProfile": {
-    "template": "admin-platform",
-    "overlay": "pantheon-base",
-    "qualityProfile": "none",
-    "portableFailureClass": "duplication-drift",
-    "ownerLayer": "consumer-repository",
-    "ratchetDecision": "sensor-added",
-    "coverageDimensions": [
-      "behaviour",
-      "maintainability"
-    ]
-  },
-  "expectedFiles": {
-    "create": [],
-    "modify": [
-      "backend/modules/system/iam/role/role_handler.go",
-      "backend/modules/system/iam/permission/permission_handler.go",
-      "backend/modules/system/iam/menu/menu_handler.go",
-      "backend/modules/system/iam/dept/dept_handler.go",
-      "backend/modules/system/iam/post/post_handler.go",
-      "backend/modules/system/iam/user/user_handler.go",
-      "backend/modules/system/config/dict/dict_handler.go",
-      "backend/modules/system/config/i18n/i18n_handler.go",
-      "backend/modules/system/audit/audit_handler.go",
-      "backend/modules/system/iam/tenant/tenant_handler.go",
-      "backend/modules/system/iam/tenant/tenant_platform_handler.go",
-      "backend/modules/auth/login/login_handler.go"
-    ],
-    "doNotTouch": [
-      "backend/modules/**/router*.go",
-      "backend/pkg/common/http/response.go",
-      "backend/pkg/database/migrations/**",
-      "frontend/**"
-    ]
-  },
-  "executionRoles": {
-    "implementerPosture": "One handler file per commit; prove the 400 body is unchanged before moving to the next file.",
-    "reviewerPosture": [
-      "Confirm each replaced site emits the same status, code, i18n key and message as before.",
-      "Confirm no site silently continues after a parse failure.",
-      "Confirm the inline count is measured, not assumed.",
-      "Confirm the sites left local have a written reason."
-    ]
-  },
-  "verificationPlan": {
-    "commands": [
-      "cd backend && gofmt -l modules",
-      "cd backend && go build ./...",
-      "cd backend && go vet ./...",
-      "cd backend && go test -count=1 ./modules/...",
-      "grep -rn \"ParseUint(c.Param(\\\"id\\\")\" backend | wc -l"
-    ],
-    "runtimeEvidence": [
-      "before/after 400 response body for one endpoint per modified module",
-      "inline count before 35 and after at most 2, with the survivors named"
-    ]
-  },
-  "runtimeSensitive": false,
-  "evidenceRequired": [
-    ".harness/evidence/2026-10-27-s2-id-parse-migration/commands.json",
-    ".harness/evidence/2026-10-27-s2-id-parse-migration/response-diff.md with the before/after 400 bodies",
-    ".harness/evidence/2026-10-27-s2-id-parse-migration/summary.md with the measured inline count"
-  ],
-  "humanGates": [
-    "None unless a module's 400 body cannot be reproduced, in which case that site stays local and the exception is reported at closeout."
-  ],
-  "completionChecklist": [
-    "Layer and boundary declared",
-    "Contract anchors read",
-    "Verification run or exception recorded",
-    "Evidence saved or summarized",
-    "Review completed",
-    "Inline path-ID parse count is at most 2 and the survivors are named with a reason",
-    "Every modified handler returns the same 400 body as before",
-    "go test ./modules/... passes"
-  ],
-  "linkage": {
-    "taskManifest": ".harness/tasks/2026-10-27-s2-id-parse-migration/manifest.json",
-    "evidenceDir": ".harness/evidence/2026-10-27-s2-id-parse-migration/",
-    "summaryFile": ".harness/evidence/2026-10-27-s2-id-parse-migration/summary.md",
-    "reviewFile": ".harness/evidence/2026-10-27-s2-id-parse-migration/review.md",
-    "changeRef": "none",
-    "planRefs": [
-      "docs/harness/tasks/2026-10-27-codebase-simplification-program.task.md",
-      "docs/reviews/CODE_SIMPLIFICATION_PLAN.md"
-    ]
-  }
+  "runtimeEvidence": [
+   "before/after 400 response body for one endpoint per modified module",
+   "inline count before 35 and after at most 2, with the survivors named"
+  ]
+ },
+ "runtimeSensitive": false,
+ "evidenceRequired": [
+  ".harness/evidence/2026-10-27-s2-id-parse-migration/commands.json",
+  ".harness/evidence/2026-10-27-s2-id-parse-migration/response-diff.md with the before/after 400 bodies",
+  ".harness/evidence/2026-10-27-s2-id-parse-migration/summary.md with the measured inline count"
+ ],
+ "humanGates": [
+  "None unless a module's 400 body cannot be reproduced, in which case that site stays local and the exception is reported at closeout."
+ ],
+ "completionChecklist": [
+  "Layer and boundary declared",
+  "Contract anchors read",
+  "Verification run or exception recorded",
+  "Evidence saved or summarized",
+  "Review completed",
+  "Inline path-ID parse count is at most 2 and the survivors are named with a reason",
+  "Every modified handler returns the same 400 body as before",
+  "go test ./modules/... passes"
+ ],
+ "linkage": {
+  "taskManifest": ".harness/tasks/2026-10-27-s2-id-parse-migration/manifest.json",
+  "evidenceDir": ".harness/evidence/2026-10-27-s2-id-parse-migration/",
+  "summaryFile": ".harness/evidence/2026-10-27-s2-id-parse-migration/summary.md",
+  "reviewFile": ".harness/evidence/2026-10-27-s2-id-parse-migration/review.md",
+  "changeRef": "none",
+  "planRefs": [
+   "docs/harness/tasks/2026-10-27-codebase-simplification-program.task.md",
+   "docs/reviews/CODE_SIMPLIFICATION_PLAN.md"
+  ]
+ }
 }
