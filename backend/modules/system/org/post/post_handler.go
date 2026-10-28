@@ -1,8 +1,6 @@
 package post
 
 import (
-	"strconv"
-
 	"github.com/duanxldragon/pantheon-base/backend/pkg/common"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/impexp"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/tenant"
@@ -69,9 +67,8 @@ func (h *PostHandler) UpdatePost(c *gin.Context) {
 		return
 	}
 
-	postID, err := strconv.ParseUint(c.Param("id"), 10, 64)
-	if err != nil {
-		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
+	postID, ok := common.ParseUintParam(c, "id")
+	if !ok {
 		return
 	}
 
@@ -102,9 +99,8 @@ func (h *PostHandler) BatchUpdatePostStatus(c *gin.Context) {
 
 func (h *PostHandler) DeletePost(c *gin.Context) {
 	common.SetAuditMetadata(c, "post.delete.title", common.BusinessDelete)
-	postID, err := strconv.ParseUint(c.Param("id"), 10, 64)
-	if err != nil {
-		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
+	postID, ok := common.ParseUintParam(c, "id")
+	if !ok {
 		return
 	}
 
