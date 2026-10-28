@@ -51,3 +51,26 @@ The wave does exactly what the packet authorises, the red/green differential is 
 regression test itself, the fixture inventory correction (13 → 14) is documented rather than
 hidden, and every surface the packet's `expectedFiles` names moved together: guard, sentinel,
 handler mapping, i18n (5 locales), UI affordance, contract, API doc, runbook. Ready to merge.
+
+> Added 2026-10-28: the Machine Readable block below retro-fits this already-merged review to the
+> strict `check-review.mjs` contract. This closes the debt registered in `.harness/STATUS.md`
+> (merged evidence predating the strict checker); the verdict matches the prose verdict above.
+
+## Machine Readable
+
+```json
+{
+  "taskId": "2026-10-27-tenant-delete-archive-guard",
+  "verdict": "approved",
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-27-tenant-delete-archive-guard/manifest.json",
+    "evidence": ".harness/evidence/2026-10-27-tenant-delete-archive-guard/commands.json",
+    "reviewFile": ".harness/evidence/2026-10-27-tenant-delete-archive-guard/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-27-tenant-completeness-remediation.task.md",
+      "docs/reviews/TENANT_FUNCTIONAL_COMPLETENESS_REVIEW_2026-10-27.md"
+    ]
+  }
+}
+```
