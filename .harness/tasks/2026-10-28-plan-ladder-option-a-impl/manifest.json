@@ -1,0 +1,149 @@
+{
+  "taskId": "2026-10-28-plan-ladder-option-a-impl",
+  "title": "Implement plan-ladder decision A: outsideLadder lowcode consequence (five locales) and contract §2.4 capability-matrix boundary",
+  "goal": "Land the implementation follow-up that the signed W7 decision A reserved for a standalone small PR: the operator-facing consequence (the outsideLadder warning does not name the hidden lowcode surfaces) and the contract-side statement of the capability-matrix boundary (builtin four tiers only; custom code = quota bucket + free capability tier; gating is UX-only). Zero logic, schema, route or permission changes; normalizeTenantPlan fail-closed semantics untouched per the decision's design constraint.",
+  "primaryLayer": "system/iam",
+  "status": "in-progress",
+  "priority": "P3",
+  "type": "docs",
+  "estimatedComplexity": "small",
+  "parentTaskId": "none",
+  "dependsOn": [
+    "2026-10-27-tenant-plan-ladder-decision"
+  ],
+  "findings": [
+    "W7 decision A (2026-10-28, maintainer-delegated) reserved its implementation as a follow-up L1 PR: outsideLadder consequence sentence in five locales plus contract/design-doc boundary wording.",
+    "Premise correction recorded by this packet: the decision doc §1 claims the warning 'only says not-in-ladder, not the price', but the copy in place since #427 (2026-10-25) already separates capabilities-at-free from quotas-still-apply. The real delta is naming the lowcode gated surfaces.",
+    "The decision doc's '设计文档 §2.4 相邻处' does not exist: MULTI_TENANT_DESIGN.md is a vision document with no plan/capability section and defers to the contract. The normative boundary paragraph therefore lands in the contract §2.4 the decision itself cites as its anchor.",
+    "TenantPlanMatrix already renders custom codes as free (the call site passes normalizeTenantPlan's normalized value), so decision item 3 is confirmation-only."
+  ],
+  "scope": {
+    "in": [
+      "Append the 'lowcode gated surfaces stay hidden' clause to system.tenant.plan.outsideLadder in all five locales, keeping the quota/capability sentence split the decision requires",
+      "Add the frontend capability-matrix boundary paragraph to docs/contracts/TENANT_CONTRACT_V1.md §2.4 and record V1.9 (Clarification) in §9",
+      "Update .harness/STATUS.md's W7 closeout paragraph with the landing record",
+      "Confirm (no code change) that TenantPlanMatrix renders custom codes as free via the normalized call-site value"
+    ],
+    "out": [
+      "Any change that lets a custom plan code obtain a rank (decision option B = V2 server-side entitlements, own packet when chartered)",
+      "Relaxing normalizeTenantPlan fail-closed semantics (decision design constraint)",
+      "Editing the signed decision document or MULTI_TENANT_DESIGN.md",
+      "Logic changes to TenantPlanMatrix / usePlanEntitlements / AppLayout",
+      "Any schema, route, permission, menu or seed change"
+    ]
+  },
+  "dependencyLayers": [
+    "system/iam"
+  ],
+  "implementationNotes": [
+    "The five locales carry the same sentence as equivalent translations, not independent wording; no page enumeration (generator/wizard/widget) to avoid copy that rots as gating consumers evolve.",
+    "The contract paragraph must keep three statements apart: quotas still apply from the table row, capabilities resolve to free (fail-closed normalization), and gating is UX-only (hiding neither grants nor revokes permissions; authorization stays with the §2.3/§3 permission chain). The decision's 'newly introduced failure mode' (operators mistaking quota rollback) is prevented by exactly this split.",
+    "V1.9 is a Clarification: no invariant, error code, In/Out edge or write-side behaviour changes, so the §8 contract-change gate flow is not triggered; the §9 version row keeps it traceable.",
+    "No new test asserts the copy (grep confirms nothing pins the old string); the regression sensor for locale parity is audit:i18n-locales, and consistency with the matrix is guaranteed by the existing normalized call site."
+  ],
+  "contractAnchors": [
+    "docs/contracts/TENANT_CONTRACT_V1.md",
+    "docs/reviews/TENANT_PLAN_LADDER_DECISION_2026-10-28.md",
+    "docs/harness/tasks/2026-10-27-tenant-completeness-remediation.task.md"
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "i18n",
+    "portableFailureClass": "documented-limitation-untold",
+    "ownerLayer": "foundation-source",
+    "ratchetDecision": "no-repeat-observed",
+    "coverageDimensions": [
+      "maintainability"
+    ]
+  },
+  "expectedFiles": {
+    "create": [
+      "docs/harness/tasks/2026-10-28-plan-ladder-option-a-impl.task.md",
+      ".harness/tasks/2026-10-28-plan-ladder-option-a-impl/manifest.json",
+      ".harness/evidence/2026-10-28-plan-ladder-option-a-impl/commands.json",
+      ".harness/evidence/2026-10-28-plan-ladder-option-a-impl/summary.md",
+      ".harness/evidence/2026-10-28-plan-ladder-option-a-impl/review.md"
+    ],
+    "modify": [
+      "frontend/src/i18n/resources/zh-CN.ts",
+      "frontend/src/i18n/resources/en-US.ts",
+      "frontend/src/i18n/resources/ja-JP.ts",
+      "frontend/src/i18n/resources/ko-KR.ts",
+      "frontend/src/i18n/resources/fr-FR.ts",
+      "docs/contracts/TENANT_CONTRACT_V1.md",
+      ".harness/STATUS.md"
+    ],
+    "doNotTouch": [
+      "backend/**",
+      "frontend/src/core/entitlements/**",
+      "frontend/src/modules/**",
+      "docs/designs/MULTI_TENANT_DESIGN.md",
+      "docs/reviews/TENANT_PLAN_LADDER_DECISION_2026-10-28.md",
+      ".github/workflows/*",
+      "pantheon-ops/**"
+    ]
+  },
+  "executionRoles": {
+    "implementerPosture": "Copy and contract wording only; translate one sentence five ways; keep the decision's quota/capability split; touch no gating logic.",
+    "reviewerPosture": [
+      "Confirm all five locales carry the same lowcode consequence clause and the quota/capability split survives.",
+      "Confirm the contract paragraph states the three-part boundary (quota applies / capability free / UX-only gating) and cites the decision document.",
+      "Confirm no invariant, error code, In/Out edge or write-side behaviour changed (V1.9 is Clarification).",
+      "Confirm normalizeTenantPlan and the gating consumers are untouched and the matrix still receives the normalized value.",
+      "Confirm the decision document and MULTI_TENANT_DESIGN.md were not edited."
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "cd frontend && npm run audit:i18n-locales",
+      "cd frontend && npx tsc -b",
+      "cd frontend && npm run lint",
+      "cd frontend && npm run check:i18n-hardcode",
+      "cd frontend && npx vitest run",
+      "cd frontend && npm run build",
+      "node scripts/harness/check-doc-links.mjs --root . --strict",
+      "node scripts/harness/check-doc-inventory.mjs --root . --strict",
+      "node scripts/harness/check-task-packet.mjs --root .",
+      "node scripts/harness/check-evidence.mjs --strict",
+      "node scripts/harness/check-review.mjs --strict"
+    ],
+    "runtimeEvidence": [
+      "Five-locale parity readout (3019 keys each, missing=0 extra=0 empty=0)",
+      "tsc/lint/vitest/build exit readouts",
+      "doc checkers 0 findings including the new contract-to-decision link"
+    ]
+  },
+  "runtimeSensitive": false,
+  "evidenceRequired": [
+    ".harness/evidence/2026-10-28-plan-ladder-option-a-impl/commands.json",
+    ".harness/evidence/2026-10-28-plan-ladder-option-a-impl/summary.md",
+    ".harness/evidence/2026-10-28-plan-ladder-option-a-impl/review.md"
+  ],
+  "humanGates": [
+    "none — decision A was signed maintainer-delegated on 2026-10-28; this packet executes its already-signed landing list and raises no new option"
+  ],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed",
+    "All five locales name the lowcode consequence with the quota/capability split intact",
+    "Contract §2.4 carries the capability-matrix boundary paragraph and §9 records V1.9 (Clarification)",
+    "TenantPlanMatrix custom-code free rendering confirmed (no logic change)",
+    "normalizeTenantPlan fail-closed semantics untouched",
+    "Decision document and design document unedited (path correction recorded in evidence only)"
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-28-plan-ladder-option-a-impl/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-28-plan-ladder-option-a-impl/",
+    "summaryFile": ".harness/evidence/2026-10-28-plan-ladder-option-a-impl/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-28-plan-ladder-option-a-impl/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-27-tenant-completeness-remediation.task.md",
+      "docs/reviews/TENANT_PLAN_LADDER_DECISION_2026-10-28.md"
+    ]
+  }
+}
