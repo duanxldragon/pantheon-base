@@ -1,0 +1,63 @@
+{
+  "taskId": "2026-10-27-s4-re-export-alias-removal",
+  "repo": "pantheon-base",
+  "executedAt": "2026-10-28",
+  "agent": {
+    "tool": "other",
+    "adapter": "qoder-agent"
+  },
+  "knownGaps": [
+    "The packet declared harnessProfile.qualityProfile none; corrected to auth-security in this PR (CI rejects none for non-trivial changes — same correction pattern as W5/W8).",
+    "Kept-alias qualified-reference counts drifted slightly from the S4 baseline (Fail 26→25, FailWithError 17→16, Response 3→2 base files) because the tenant waves #440–#446 changed the file set between measurements; the doomed ten remain 0/0 in both repos, which is the deletion premise."
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-27-s4-re-export-alias-removal/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-27-s4-re-export-alias-removal/",
+    "summaryFile": ".harness/evidence/2026-10-27-s4-re-export-alias-removal/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-27-s4-re-export-alias-removal/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-27-codebase-simplification-program.task.md",
+      "docs/reviews/GOVERNANCE_SURFACE_DECISIONS_2026-10-27.md",
+      "docs/reviews/REDUNDANT_CODE_CANDIDATES.md"
+    ]
+  },
+  "commands": [
+    {
+      "command": "for sym in <18 aliases>; do grep -rlE \"common\\.$sym\\b\" backend --include='*.go' | grep -v re_export.go | wc -l; grep -rlE \"common\\.$sym\\b\" ../pantheon-ops/backend --include='*.go' | wc -l; done",
+      "cwd": ".",
+      "notes": "Fresh per-symbol reference search, 2026-10-28: all ten doomed aliases 0 base / 0 ops; kept eight at 25/22/16/4/2/2/1/1 base and 48/44/37/4/5/5/1/1 ops. Full table in reference-search.md.",
+      "status": "passed"
+    },
+    {
+      "command": "node -e ... (edit backend/pkg/common/re_export.go: remove 10 aliases + net/http import)",
+      "cwd": ".",
+      "notes": "re_export.go 112 -> 52 lines. Underlying functions in pkg/common/http and pkg/common/security untouched.",
+      "status": "passed"
+    },
+    {
+      "command": "cd backend && go build ./... && go vet ./pkg/common/...",
+      "cwd": ".",
+      "notes": "BASE_OK — both clean.",
+      "status": "passed"
+    },
+    {
+      "command": "cd ../../pantheon-ops/backend && go build ./...",
+      "cwd": ".",
+      "notes": "OPS_OK — ops module compiles without the ten aliases.",
+      "status": "passed"
+    },
+    {
+      "command": "export PANTHEON_TEST_DSN=<dsn from .env.test> PANTHEON_TEST_DSN_REQUIRED=true && cd backend && go test -count=1 ./...",
+      "cwd": ".",
+      "notes": "GO_TEST_EXIT=0; 46 packages ok; zero FAIL lines. Full suite green with the ten aliases deleted.",
+      "status": "passed"
+    },
+    {
+      "command": "node scripts/harness/check-task-packet.mjs --root .",
+      "cwd": ".",
+      "notes": "After the manifest flip (status completed, qualityProfile auth-security): 66 file(s), 0 error(s), 41 warning(s).",
+      "status": "passed"
+    }
+  ]
+}
