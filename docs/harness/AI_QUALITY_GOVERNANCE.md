@@ -106,6 +106,10 @@ Deferred Code Issues:
 警告 = 非必需门禁未通过，记录但不阻塞
 ```
 
+静态分析类问题（如 Sonar `S3776` 认知复杂度）的修复，必须在提交前用**同一条规则**
+复测并记录改前/改后读数。仅凭“结构上更简洁”断言问题已消失视为未验证——远程规则
+的计数口径与阅读直觉并不一致，未复测的修复可能在合并后原样留着红灯（FR-018）。
+
 ## 6. CI Signal Placement
 
 Use fast and deterministic signals in PR required checks.

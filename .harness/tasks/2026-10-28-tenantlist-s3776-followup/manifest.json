@@ -1,0 +1,149 @@
+{
+  "taskId": "2026-10-28-tenantlist-s3776-followup",
+  "title": "Clear TenantList typescript:S3776 by re-measuring the rule instead of trusting the diff",
+  "goal": "The 2026-10-28-release-gate-green packet (PR #463) claimed the typescript:S3776 finding on frontend/src/modules/system/iam/tenant/TenantList.tsx was cleared by collapsing five isAdmin || hasPerm('...') sequences into can(perm). main's next SonarCloud analysis (revision 1ae6481c, 2026-10-28T14:19Z) still reported the issue at complexity 16. Re-measuring with eslint-plugin-sonarjs@3's sonarjs/cognitive-complexity - the rule SonarCloud reports - reproduced 16 before and after that helper; the real contributor was the component's four-state inline branch chain. Extracting it into renderBody() measures 16 -> 10, and 5 for the new function. This packet lands that fix and records the measurement rule as FR-018 plus a guide change, so a static-analysis claim is not merged again without a before/after reading.",
+  "primaryLayer": "platform",
+  "status": "completed",
+  "priority": "P1",
+  "type": "remediation",
+  "estimatedComplexity": "small",
+  "parentTaskId": "2026-10-27-codebase-simplification-program",
+  "dependsOn": [
+    "2026-10-28-release-gate-green"
+  ],
+  "findings": [
+    "PR #463 merged on a claim, not a measurement: the packet's own summary recorded the TenantList reduction as fact, and main's SonarCloud analysis at 1ae6481c still carries typescript:S3776 at TenantList.tsx:116 = 16 (issue key AaF89PoZ78TOH8UMk82y).",
+    "can(perm) was behaviourally correct but metrically neutral: sonarjs/cognitive-complexity does not increment for logical operator sequences inside a plain const initializer, so five collapsed || expressions moved nothing.",
+    "The measured contributors were the component body's if/else-if/else chain plus the nested ternaries in JSX; extracting the chain into a component-local renderBody() measures the component at 10 and the new function at 5.",
+    "The four states are behaviour-identical after extraction: same predicates (tenantModeEnabled, loading && tableData.length === 0, error && tableData.length === 0), same returned elements, same onRetry body, same navigate target, same class names and i18n keys."
+  ],
+  "scope": {
+    "in": [
+      "Extract TenantList's four-state body resolution into a component-local renderBody() and render {renderBody()} instead of {bodyContent}",
+      "Add the static-analysis re-measurement rule to docs/harness/AI_QUALITY_GOVERNANCE.md section 5.2",
+      "Register FR-018 (unverified-static-analysis-fix) in docs/harness/failure-registry.md",
+      "Correct the .harness/STATUS.md Release Gate section so the #463 TenantList claim is marked as falsified and points at this packet"
+    ],
+    "out": [
+      "Reverting or altering can(perm), which was merged by #463 and remains a valid de-duplication",
+      "Any visible behaviour change: predicates, returned elements, class names, i18n keys and onRetry semantics stay identical",
+      "Adding eslint-plugin-sonarjs or any other dependency to the repository; the measurement runs in a scratch directory outside the repo",
+      "Touching backend, workflows, Sonar configuration or gate thresholds"
+    ]
+  },
+  "dependencyLayers": [
+    "platform"
+  ],
+  "implementationNotes": [
+    "renderBody is a nested arrow inside the component, closing over tenantModeEnabled, loading, error, tableData, t, navigate, loadData, query and tableContent; it adds no props, types or imports.",
+    "Order of the four states is preserved: compat guide first (it wins even while loading), then first-load PageLoading, then PageRequestError, then the table.",
+    "Measurement used eslint-plugin-sonarjs@3's sonarjs/cognitive-complexity in /d/tmp/sonarcheck (outside the repository) against the same file, at the rule's configured threshold 15 and again at threshold 4 to read the true values.",
+    "The guide change is scoped to the rule that was missed: static-analysis fixes must be re-measured with the same rule and the before/after readings recorded before commit."
+  ],
+  "contractAnchors": [
+    "docs/harness/AI_QUALITY_GOVERNANCE.md",
+    ".harness/evidence/2026-10-28-release-gate-green/review.md"
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "ui-runtime",
+    "portableFailureClass": "unverified-static-analysis-fix",
+    "ownerLayer": "foundation-source",
+    "ratchetDecision": "guide-updated",
+    "coverageDimensions": [
+      "maintainability",
+      "runtime-quality"
+    ]
+  },
+  "expectedFiles": {
+    "create": [
+      "docs/harness/tasks/2026-10-28-tenantlist-s3776-followup.task.md",
+      ".harness/tasks/2026-10-28-tenantlist-s3776-followup/manifest.json",
+      ".harness/evidence/2026-10-28-tenantlist-s3776-followup/commands.json",
+      ".harness/evidence/2026-10-28-tenantlist-s3776-followup/summary.md",
+      ".harness/evidence/2026-10-28-tenantlist-s3776-followup/review.md",
+      ".harness/evidence/2026-10-28-tenantlist-s3776-followup/pr-body.md"
+    ],
+    "modify": [
+      "frontend/src/modules/system/iam/tenant/TenantList.tsx",
+      "docs/harness/AI_QUALITY_GOVERNANCE.md",
+      "docs/harness/failure-registry.md",
+      ".harness/STATUS.md"
+    ],
+    "doNotTouch": [
+      "backend/**",
+      ".github/workflows/*",
+      "sonar-project.properties",
+      "frontend/package.json",
+      "package-lock.json",
+      "frontend/src/modules/** other than TenantList.tsx"
+    ]
+  },
+  "executionRoles": {
+    "implementerPosture": "Treat the previous claim as falsified. Reproduce the reading with the same rule before changing anything, change the smallest surface that lowers the measured value, and re-measure.",
+    "reviewerPosture": [
+      "Confirm the before/after readings come from the same rule and the same file, with the threshold-4 run exposing per-function values.",
+      "Diff the four states against the previous if/else-if/else chain: predicates, elements, class names, i18n keys and onRetry must be identical.",
+      "Confirm can(perm) is untouched and remains a plain boolean per flag.",
+      "Confirm no dependency, workflow, Sonar configuration or threshold changed.",
+      "Confirm the guide rule and FR-018 describe the same failure and the same remedy."
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "npx eslint --no-config-lookup -c eslint.config.mjs <TenantList.tsx> (scratch dir, threshold 15)",
+      "npx eslint --no-config-lookup -c eslint.config.mjs <TenantList.tsx> (scratch dir, threshold 4)",
+      "cd frontend && npm run lint",
+      "cd frontend && npm run type-check",
+      "cd frontend && npm run build",
+      "node scripts/harness/check-evidence.mjs --strict",
+      "node scripts/harness/check-review.mjs --strict",
+      "node scripts/harness/check-failure-registry.mjs --strict",
+      "npm run check:task-packet",
+      "npm run check:structure",
+      "npm run check:harness-encoding",
+      "npm run check:docs-frontmatter",
+      "npm run check:docs-links",
+      "node scripts/check-doc-inventory.mjs",
+      "npm run check:ui-quality-gate",
+      "git diff --stat"
+    ],
+    "runtimeEvidence": [
+      "Sonarjs readout at threshold 15: one error (16) before the change, none after",
+      "Sonarjs readout at threshold 4: component 116:33 = 10, renderBody 632:42 = 5",
+      "Frontend lint / type-check / build readouts after the change",
+      "Post-merge SonarCloud analysis of main as the authoritative reading (remote-only, recorded as a gap)"
+    ]
+  },
+  "runtimeSensitive": true,
+  "evidenceRequired": [
+    ".harness/evidence/2026-10-28-tenantlist-s3776-followup/commands.json",
+    ".harness/evidence/2026-10-28-tenantlist-s3776-followup/summary.md",
+    ".harness/evidence/2026-10-28-tenantlist-s3776-followup/review.md"
+  ],
+  "humanGates": [
+    "none — continuing the existing gate-red remediation; no rule, threshold or exemption changed, so maintainer touchpoint 2 was not triggered"
+  ],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed",
+    "Same-rule measurement: component 16 -> 10, new function 5",
+    "Four-state rendering equivalent predicate by predicate",
+    "No new dependency and no gate change"
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-28-tenantlist-s3776-followup/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-28-tenantlist-s3776-followup/",
+    "summaryFile": ".harness/evidence/2026-10-28-tenantlist-s3776-followup/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-28-tenantlist-s3776-followup/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/AI_QUALITY_GOVERNANCE.md",
+      ".harness/evidence/2026-10-28-release-gate-green/review.md"
+    ]
+  }
+}

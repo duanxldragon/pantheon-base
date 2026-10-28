@@ -18,6 +18,12 @@
   `go:S3776`×2（`tenant_isolation_smoke_test.go` 53、`scope_helper_test.go` 22）、
   `godre:S8209`（`TranslateNotFound` 连续同类型参数）、`typescript:S3776`
   （`TenantList.tsx` 16）。全部靠重写代码解决，无 `NOSONAR`、无规则排除、无测试删除。
+- **勘误（2026-10-28 合并后复核）**：上述第 5 条当时只有“读起来更简单”的判断、没有复测。
+  `main` 在 `1ae6481c`（#463）上的最新分析仍报 `TenantList.tsx:116` 复杂度 16；用同一套
+  `sonarjs/cognitive-complexity` 规则复测确认 `can(perm)` 对分值无影响（改前改后都是 16），
+  真实贡献项是四态分支链。后续任务包 `2026-10-28-tenantlist-s3776-followup` 提取
+  `renderBody()` 后组件 16 → 10、新函数 5；失败模式登记为 `FR-018`，并在
+  `docs/harness/AI_QUALITY_GOVERNANCE.md` §5.2 加“静态分析类修复须同规则复测”的规则。
 - **验证读数**：`gofmt` 干净；`go vet`/`go build` 通过；`CGO_ENABLED=1 go test -race ./...`
   **47 包 ok / 0 FAIL / 6 包无测试文件**（本机需 `mingw64/bin` 在 `PATH`，否则 cgo.exe exit 2）；
   `govulncheck`：代码受影响 0 条（另有 3 条在 `x/net`/`x/crypto` 的非调用路径上，Dependabot
