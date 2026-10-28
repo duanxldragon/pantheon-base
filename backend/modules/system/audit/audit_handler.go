@@ -1,8 +1,6 @@
 package audit
 
 import (
-	"strconv"
-
 	"github.com/duanxldragon/pantheon-base/backend/pkg/common"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/impexp"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/tenant"
@@ -64,9 +62,8 @@ func (h *AuditHandler) GetOperationLogList(c *gin.Context) {
 }
 
 func (h *AuditHandler) GetOperationLog(c *gin.Context) {
-	logID, err := strconv.ParseUint(c.Param("id"), 10, 64)
-	if err != nil {
-		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
+	logID, ok := common.ParseUintParam(c, "id")
+	if !ok {
 		return
 	}
 
@@ -80,9 +77,8 @@ func (h *AuditHandler) GetOperationLog(c *gin.Context) {
 
 func (h *AuditHandler) DeleteOperationLog(c *gin.Context) {
 	common.SetAuditMetadata(c, "audit.operation_log.delete.title", common.BusinessDelete)
-	logID, err := strconv.ParseUint(c.Param("id"), 10, 64)
-	if err != nil {
-		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
+	logID, ok := common.ParseUintParam(c, "id")
+	if !ok {
 		return
 	}
 
