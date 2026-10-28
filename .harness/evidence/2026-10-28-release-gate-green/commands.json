@@ -1,0 +1,191 @@
+{
+  "taskId": "2026-10-28-release-gate-green",
+  "repo": "pantheon-base",
+  "executedAt": "2026-10-28T23:20:00+08:00",
+  "agent": {
+    "tool": "other",
+    "adapter": "qoder-agent"
+  },
+  "commands": [
+    {
+      "command": "gh api '/repos/duanxldragon/pantheon-base/dependabot/alerts?state=open&per_page=50'",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Baseline reading before the fix: exactly one open alert — GHSA-mgcc-cww5-fp2q | high | github.com/go-jose/go-jose/v3 | backend/go.mod. The Release Gate dependabot job blocks only high/critical, so this single row is what kept it red."
+    },
+    {
+      "command": "curl -sf 'https://sonarcloud.io/api/issues/search?componentKeys=duanxldragon_pantheon-base&branch=main&resolved=false&types=BUG,VULNERABILITY,CODE_SMELL&ps=50'",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Baseline reading before the fix: total 5 — go:S1135 backend/modules/auth/oidc/handler.go:70 (TODO); go:S3776 backend/modules/system/iam/tenant_isolation_smoke_test.go:85 (53 → 15); go:S3776 backend/pkg/tenant/scope_helper_test.go:14 (22 → 15); godre:S8209 backend/pkg/database/notfound.go:16; typescript:S3776 frontend/src/modules/system/iam/tenant/TenantList.tsx:116 (16 → 15)."
+    },
+    {
+      "command": "go get github.com/coreos/go-oidc/v3@v3.21.0 && go mod tidy",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "go-oidc moved from v3.9.0 to v3.21.0 (same v3 module path, oidc package API unchanged; the module's own call sites compiled without edits). go mod tidy replaced the go-jose/v3 requirement with go-jose/v4 v4.1.6."
+    },
+    {
+      "command": "grep -n 'go-jose' go.mod go.sum",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "go.mod:44 `github.com/go-jose/go-jose/v4 v4.1.6 // indirect` and nothing else. go.sum:56-57 the two v4.1.6 lines (h1 + /go.mod). No go-jose/v3 line remains in either file."
+    },
+    {
+      "command": "go mod graph | grep go-jose",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "Three edges, all /v4: 'github.com/duanxldragon/pantheon-base/backend github.com/go-jose/go-jose/v4@v4.1.6', 'github.com/coreos/go-oidc/v3@v3.21.0 github.com/go-jose/go-jose/v4@v4.1.4', 'google.golang.org/grpc@v1.83.2 github.com/go-jose/go-jose/v4@v4.1.4'. MVS selects 4.1.6 for the main module. No v3 edge exists any more."
+    },
+    {
+      "command": "go run golang.org/x/vuln/cmd/govulncheck@latest ./...",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "Exit 0. 'No vulnerabilities found. Your code is affected by 0 vulnerabilities. This scan also found 0 vulnerabilities in packages you import and 3 vulnerabilities in modules you require, but your code doesn't appear to call these vulnerabilities.' The three module-level entries under -show verbose are GO-2026-6866 and GO-2026-6860 (golang.org/x/net@v0.60.0, html rendering paths never imported by base) and GO-2026-5932 (openpgp, marked unfixed-by-design); none is reachable, and Dependabot carries no open alert for either module."
+    },
+    {
+      "command": "gofmt -l modules/system/iam/tenant_isolation_smoke_test.go pkg/tenant/scope_helper_test.go pkg/database/notfound.go modules/auth/oidc/handler.go",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "No output: all four edited Go files are gofmt-clean."
+    },
+    {
+      "command": "go vet ./modules/system/iam/ ./pkg/tenant ./pkg/database ./modules/auth/oidc/",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "Exit 0, no findings across the four touched packages."
+    },
+    {
+      "command": "go build ./...",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "BUILD OK (exit 0) with the upgraded dependency tree."
+    },
+    {
+      "command": "PATH=/d/msys64/mingw64/bin:$PATH CGO_ENABLED=1 go test -race -count=1 ./...",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "Exit 0. 47 packages ok, 0 FAIL, 6 packages without test files. The first attempt with the default environment reported '[build failed]' for every package because cgo.exe exited 2 with mingw64/bin off PATH; enabling cgo and putting the toolchain on PATH produced the real run, which includes the race-enabled pkg/tenant and pkg/database suites."
+    },
+    {
+      "command": "go test -count=1 -run TestTwoTenantIsolationSmoke -v ./modules/system/iam/",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "Compiles and links after the extraction. Output: '=== RUN TestTwoTenantIsolationSmoke / mysql.go:67: mysql test dsn is not configured (PANTHEON_TEST_DSN and PANTHEON_DSN unset) / --- SKIP ... PASS'. The case runs in CI where PANTHEON_TEST_DSN_REQUIRED=true makes a missing DSN fatal."
+    },
+    {
+      "command": "npx eslint src/modules/system/iam/tenant/TenantList.tsx",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "No output (clean) for the edited page."
+    },
+    {
+      "command": "npm run lint && npm run type-check && npm run build",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "eslint . clean; tsc -b clean; vite build '✓ built in 1.47s'. The TenantList chunk is emitted normally, so the can(perm) helper introduces no type or bundle regression."
+    },
+    {
+      "command": "npm run -s check:task-packet",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Exit 0 with [PASS] for 2026-10-28-release-gate-green after two corrections caught by the checker itself: coverage dimension 'security' is not in the allowed vocabulary (behaviour, maintainability, architecture-fitness, runtime-quality, method-health) and was replaced with 'runtime-quality'; the second warning about the missing review file clears once review.md exists."
+    },
+    {
+      "command": "node scripts/harness/check-doc-links.mjs --root . --strict",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Docs link check (strict): 0 finding(s)."
+    },
+    {
+      "command": "node scripts/harness/check-doc-inventory.mjs --root . --strict",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Docs inventory check (strict): 0 finding(s); the new packet is listed where the inventory requires it."
+    },
+    {
+      "command": "npm run -s check:structure",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Structure contract check (strict): 0 finding(s) across 2882 tracked file(s)."
+    },
+    {
+      "command": "npm run -s check:harness-encoding",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Encoding check (strict): 0 finding(s) across 2534 scanned file(s)."
+    },
+    {
+      "command": "npm run -s check:docs-frontmatter",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Frontmatter check passed. Checked 392 docs, 274 with frontmatter (386/270 before this packet and the release-notes packet landed)."
+    },
+    {
+      "command": "npm run -s check:generated",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Generated artifact check (strict): 0 finding(s) across 11 artifact(s)."
+    },
+    {
+      "command": "npm run -s check:ui-quality-gate",
+      "cwd": ".",
+      "status": "passed",
+      "details": "UI quality gate (strict): 0 finding(s), no findings. The one frontend edit is a permission-helper extraction with no markup change."
+    },
+    {
+      "command": "node scripts/harness/check-evidence.mjs --strict",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Evidence check (strict): 85 file(s), 0 error(s), 0 warning(s). This task's commands.json is among the 85 PASS lines."
+    },
+    {
+      "command": "node scripts/harness/check-review.mjs --strict",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Review check (strict): 85 file(s), 0 error(s). The linked commands.json resolves and both planRefs exist (release-gate.yml and the quality governance doc)."
+    },
+    {
+      "command": "node scripts/check-pr-governance.mjs --event .tmp-pr-event.json",
+      "cwd": ".",
+      "status": "passed",
+      "details": "The PR body was validated against the governance checker with a synthetic pull_request event. First run failed with two findings: 'invalid value for PR field: Ratchet Decision' (go-module-security-upgrade is not in the vocabulary) and 'Quality Profile must not be none for non-trivial changes'. Corrected to Ratchet Decision no-repeat-observed and Quality Profile ci-workflow in the packet, manifest and PR body; the rerun prints 'OK pantheon-base PR body governance fields are present' (exit 0). The synthetic event file was deleted afterwards."
+    },
+    {
+      "command": "npm run -s check:duplication",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Result: PASS. The reported candidates are pre-existing workflow-step clones; the two test extractions and the can(perm) helper introduce no new duplicate block."
+    },
+    {
+      "command": "node scripts/harness/check-boundaries.mjs --strict",
+      "cwd": ".",
+      "status": "passed",
+      "details": "pantheon-base: no findings. (The pantheon-ops section reports its pre-existing 'Frontend business root not found' warning, unrelated to this change.)"
+    },
+    {
+      "command": "git status --short && git diff --stat",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Measured surface: 8 tracked files changed, +330/−294 — go.mod/go.sum (dependency move), oidc/handler.go (7 lines, comment only), pkg/database/notfound.go (2 lines, signature), tenant_isolation_smoke_test.go (463 lines, same assertions reorganised), pkg/tenant/scope_helper_test.go (71 lines, extraction), TenantList.tsx (11 lines), .harness/STATUS.md (+22). No workflow, Sonar config, migration, VERSION or CHANGELOG file appears. Untracked: the packet and this evidence directory."
+    }
+  ],
+  "knownGaps": [
+    "SonarCloud resolution cannot be observed locally: the gate reads the analysis of branch main, so the five issues can only drop to zero after this branch merges and the next main analysis finishes. The local proof is structural — the flagged units no longer exceed the thresholds (largest extracted helper carries 9 if/loop/boolean-operator sites against a limit of 15; the component lost five boolean sequences) — plus compilation, race tests and frontend build.",
+    "The Dependabot alert likewise only closes on the next dependency-graph refresh after merge, although the module graph already shows go-jose/v3 gone and govulncheck reports no reachable vulnerability.",
+    "The two-tenant isolation smoke skips on this machine (no PANTHEON_TEST_DSN/PANTHEON_DSN), so its runtime readout is CI's; locally it is proven to compile, link and skip cleanly.",
+    "govulncheck lists three advisories in required-but-uncalled modules (golang.org/x/net html coalescing x2, x/crypto openpgp). They carry no Dependabot alert today and are outside this gate's blocking rule; recorded so a future advisory refresh is expected rather than surprising.",
+    "Local go test -race needs CGO_ENABLED=1 plus mingw64/bin on PATH; without both, cgo.exe exits 2 and every package reports [build failed] with no diagnostic."
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-28-release-gate-green/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-28-release-gate-green/",
+    "summaryFile": ".harness/evidence/2026-10-28-release-gate-green/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-28-release-gate-green/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".github/workflows/release-gate.yml",
+      "docs/harness/AI_QUALITY_GOVERNANCE.md"
+    ]
+  }
+}
