@@ -3,7 +3,7 @@
   "title": "Unify batch status/delete handlers and the tenant response envelope, and remove the redundant user scope wrapper",
   "goal": "Six modules implement batch status and batch delete handlers with the same five steps: parse the ID list, reject an empty list, call the service, collect per-item failures, respond. common.BatchDeleteResp and BatchDeleteFailure already exist as the shared return types, so the intent was already shared but the handler wrapper was not. Separately, the tenant handlers write raw c.JSON in nine places while the rest of the module uses common.Success and common.Fail, which forces the frontend to parse two envelope shapes. This wave extracts one batch helper, moves the tenant handlers onto the common envelope, and removes the double scope wrapper in user_service.go after confirming it is not a deliberate tenant-plus-dept composition.",
   "primaryLayer": "platform",
-  "status": "planned",
+  "status": "completed",
   "priority": "P2",
   "type": "refactor",
   "estimatedComplexity": "medium",
