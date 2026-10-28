@@ -77,19 +77,36 @@ Rule: every pre-existing validation must be accounted for before and after conve
 
 Note row is a single `#说明：…` string in cell 0 padded with empty cells to header length; example row's cell 0 is `#`-prefixed so `IsCSVRecordEmpty` skips it on re-import. After conversion `impexp.BuildImportTemplate(filename, note, columns)` reproduces the rows byte-for-byte; `template_test.go` golden-asserts every header, note row and example row against the pre-conversion literals.
 
-## 6. Conversion order (one module per commit, smoke after each)
+## 6. Conversion order (one module per commit, smoke after each) — AS EXECUTED
 
-1. Shared pipeline package (no callers yet) + tests
-2. dept → smoke
-3. post → smoke
-4. user → smoke
-5. role → smoke
-6. dict (type + item in one commit — same module/service file) → smoke
-7. permission (keeps `failPermissionServiceError` and operator-scope input) → smoke
-8. i18n (keeps `updatedBy` username input and `Applied` variant) → smoke
+1. `feat(impexp)` — pipeline.go (ReadImportCSV, NewImportResult, BuildHeaderIndex, RequireHeaders, ForEachDataRow) + template.go (BuildImportTemplate) + tests, no callers
+2. `refactor(dept)` — handler swap; composite buildImportHeaderIndex → BuildHeaderIndex + RequireHeaders; parseImportRows loop → ForEachDataRow; template
+3. `refactor(post)` — handler swap; inline header index → shared pair; **row loop kept local**: the skip lives inside `readImportRow` which returns `(row, err)` and hard-fails on lookup errors, a materially different shape from ForEachDataRow (packet rule: do not bend the pipeline)4. `refactor(user)` — handler swap; composite buildUserImportHeaderIndex → shared pair; parseUserImportRows loop → ForEachDataRow; template
+5. `refactor(role)` — handler swap; buildImportHeaderIndex + validateRequiredImportHeaders deleted → shared pair; row loop → ForEachDataRow; template
+6. `refactor(dict)` — both handlers; both service entries; both parse loops → ForEachDataRow; both templates; local buildImportHeaderIndex + reportMissingImportHeaders deleted
+7. `refactor(permission)` — handler swap (keeps `failPermissionServiceError` — the one custom error responder); validateImportHeader composite → shared pair (its internal `NewBadRequest("import.header.missing")` sentinel was discarded by the caller and never observable — dropped); validateImportRows loop → ForEachDataRow keeping the trailing hard-fail; template
+8. `refactor(i18n)` — handler swap (keeps `updatedBy` username input and the `Applied = Created>0 || Updated>0` variant); buildI18nImportHeaderIndex + validateI18nImportHeaders deleted → shared pair; buildI18nImportRows loop → ForEachDataRow — the old loop's `|| IsCSVRecordBlank(record)` was dead: all-blank rows already satisfy IsCSVRecordEmpty (its loop falls through to `return true`), so the shared skip is exactly equivalent; template with two unprefixed example rows passed through verbatim
 
-Smoke = `cd frontend && cmd /c npm run test:smoke:system:api` against a locally started backend (`.env.test` DSN), per docs/acceptances/SYSTEM_IMPORT_EXPORT_SMOKE_GUIDE.md.
+## 7. Additions — AS EXECUTED
 
-## 7. Additions (packet scope-in)
+- `TestReadImportCSVOversizedFileFailsInvalidCSV`: >10 MB upload is rejected with the same folded `import.file.invalid_csv` envelope the handlers emit today (no new error class).
+- `TestReadImportCSVAcceptsNonCSVExtension`: a `.txt` upload with parseable CSV content is **accepted**, locking the reality that no extension check exists (see §0) so the pipeline cannot silently add one.
+- `TestWriteCSVFormulaInjectionEscaping`: `=1+1`, `+cmd`, `-label`, `@x`, `\ttab` are `'`-prefixed on export while numeric `-5` passes through — sanitiseCSVCell untouched.
+- `TestRoleTemplateShapeMatchesPreExtractionLiteral` + `TestBuildImportTemplatePadsNoteAndKeepsExamples`: golden lock on template shape.
 
-- New test: oversized file (>10 MB), wrong extension and `=1+1` formula cell behaviour are asserted to match today's semantics (cap → `import.file.invalid_csv` envelope; formula cell escaped on export via `'` prefix and treated as data on import — no extension rejection exists to keep).
+## 8. Where every check lives after conversion (summary)
+
+| Inventory rows | After |
+| --- | --- |
+| R1–R5 | `impexp.ReadImportCSV` (pipeline.go) — verbatim |
+| R6 | pkg/impexp/csv.go — untouched |
+| R7 | handler top lines — untouched |
+| S1 | `impexp.NewImportResult()` |
+| S2, S3, S6, S8, S9, S10, S11 | module services — untouched (short, load-bearing or module-specific) |
+| S4 | `impexp.BuildHeaderIndex` |
+| S5 | `impexp.RequireHeaders` (required lists stay at call sites) |
+| S7 | `impexp.ForEachDataRow` — except post (skip inside readImportRow, see §6.3) |
+| E1–E4 | untouched |
+| A1–A3 | untouched (route middleware, operator-scope input, data-scope input) |
+
+Net code diff: modules −430/+40, pkg/impexp +118 new (pipeline 96 + template 22), tests +235.

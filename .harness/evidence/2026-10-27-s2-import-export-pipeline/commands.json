@@ -1,0 +1,114 @@
+{
+  "taskId": "2026-10-27-s2-import-export-pipeline",
+  "repo": "pantheon-base",
+  "executedAt": "2026-10-28T13:00:00+08:00",
+  "agent": {
+    "tool": "other",
+    "adapter": "qoder-agent"
+  },
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-27-s2-import-export-pipeline/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-27-s2-import-export-pipeline/",
+    "summaryFile": ".harness/evidence/2026-10-27-s2-import-export-pipeline/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-27-s2-import-export-pipeline/review.md",
+    "changeRef": "backend/pkg/impexp/pipeline.go",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-27-codebase-simplification-program.task.md",
+      "docs/reviews/CODE_SIMPLIFICATION_PLAN.md"
+    ]
+  },
+  "commands": [
+    {
+      "step": "1-inventory",
+      "command": "grep -n \"FormFile|ImportTemplate(c \\*gin\" across modules + sed reads of all 8 import handlers, 8 service entries, 8 template builders",
+      "cwd": "pantheon-base/backend",
+      "result": "8 import endpoints in 7 files confirmed (dept, post, role, user, dict-type, dict-item, permission, i18n); audit/login are export-only; no extension/MIME check exists in any handler (packet premise delta, see validation-inventory.md §0)",
+      "status": "passed"
+    },
+    {
+      "step": "2-package-tests",
+      "command": "go test -count=1 ./pkg/impexp/...",
+      "cwd": "pantheon-base/backend",
+      "result": "ok 0.119s — pipeline_test.go covers receive path (required/read-error/invalid_csv/oversized folded envelope), .txt-acceptance lock, header index, require-headers, row iterator, template padding/golden, formula-injection export escaping",
+      "status": "passed"
+    },
+    {
+      "step": "3-per-module-build-vet-test",
+      "command": "go build ./... && go vet ./modules/... && go test -count=1 ./modules/system/iam/... ./modules/system/org/... ./modules/system/config/... ./modules/system/i18n/...",
+      "cwd": "pantheon-base/backend",
+      "result": "all ok — run after each module commit (dept, post, user, role, dict, permission, i18n); one commit per module per packet implementationNotes",
+      "status": "passed"
+    },
+    {
+      "step": "4-gofmt",
+      "command": "gofmt -l modules pkg",
+      "cwd": "pantheon-base/backend",
+      "result": "pipeline_test.go flagged once, gofmt -w applied, re-run clean; committed as style fixup",
+      "status": "passed"
+    },
+    {
+      "step": "5-full-vet",
+      "command": "go vet ./...",
+      "cwd": "pantheon-base/backend",
+      "result": "clean (no output)",
+      "status": "passed"
+    },
+    {
+      "step": "6-full-test-touched-trees",
+      "command": "go test -count=1 ./pkg/impexp/... ./modules/system/iam/... ./modules/system/org/... ./modules/system/config/... ./modules/system/i18n/... ./modules/system/audit/... ./modules/auth/...",
+      "cwd": "pantheon-base/backend",
+      "result": "all ok; only 'no test files' notices for modules/auth",
+      "status": "passed"
+    },
+    {
+      "step": "7-server-build",
+      "command": "go build -o /tmp/pantheon-server-smoke.exe ./cmd/server",
+      "cwd": "pantheon-base/backend",
+      "result": "built",
+      "status": "passed"
+    },
+    {
+      "step": "8-server-start",
+      "command": "source .env.test && export PANTHEON_PORT=8081 && /tmp/pantheon-server-smoke.exe",
+      "cwd": "pantheon-base",
+      "result": "server up on 127.0.0.1:8081; login probe POST /api/v1/auth/login admin/123456 → 200. Port 8080 is occupied by the maintainer's running pantheon-server-ops.exe — untouched; base server ran on 8081 with its own pantheon_base test DB. Redis is shared with the ops server (hard auth dependency, DB index hardcoded 0): session/blacklist keys are random-suffixed (no collision), i18n cache is in-process only, global rate-limit key rate_limit:{ip} shares a 6000/min window that both servers' combined traffic stays far below; login limit 5/min/IP had 1 hit.",
+      "status": "passed"
+    },
+    {
+      "step": "9-import-export-api-smoke",
+      "command": "cd frontend && PANTHEON_API_BASE_URL=http://127.0.0.1:8081/api/v1 npm run test:smoke:system:api",
+      "cwd": "pantheon-base/frontend",
+      "result": "11 passed (4.2s): templates downloadable with comment rows (6 templates), dept/post/permission/dict-type+dict-item/user import+export round-trips, role export + batch status, login/operation log export, batch delete, fixture presence. Server stopped afterwards (taskkill pantheon-server-smoke.exe, PID 11524); port 8081 released.",
+      "status": "passed"
+    }
+  ],
+  "smokePerModule": {
+    "method": "The documented automated API smoke (docs/acceptances/SYSTEM_IMPORT_EXPORT_SMOKE_GUIDE.md §自动 smoke) exercises every converted module's import+export in one serial suite against a live server. It was run once against the fully-converted server because the suite starts from a shared login and fixture cleanup; per-module isolation is provided by the one-commit-per-module history (revert/bisect to any module commit and re-run the suite).",
+    "perModuleCoverage": {
+      "dept": "smoke test 3 (import+export round-trip)",
+      "post": "smoke test 4 (import+export round-trip)",
+      "permission": "smoke test 5 (import+export round-trip)",
+      "dict": "smoke test 6 (dict type + item import+export round-trip)",
+      "user": "smoke test 7 (import+export round-trip)",
+      "role": "smoke test 8 (export + batch status). The role import route IS registered (POST /role/import, system_modules.go:219) but the API smoke suite has no role-import test — its service layer is covered by the modules/system/iam/role go suite; the smoke guide §1 'role: export-only' is pre-existing doc drift (role import existed before this wave and is unchanged by it)",
+      "i18n": "no API-smoke entry (guide scope §1 does not list i18n); covered by go tests modules/system/i18n (seed-heavy suite) incl. import service paths",
+      "audit/login export": "smoke test 9 (login log + operation log export)"
+    }
+  },
+  "premiseVsReality": [
+    "No handler performs an extension or MIME check today; the packet's 'validate extension' receive step does not exist. The pipeline does not add one (scope-out: allowed types unchanged); TestReadImportCSVAcceptsNonCSVExtension locks the behaviour.",
+    "Packet verificationPlan references scripts/run-smoke-suite.mjs which no longer exists in the repo; the acceptance guide's automated smoke (frontend npm run test:smoke:system:api) was used instead.",
+    "Packet expectedFiles lists audit_handler.go and login_handler.go for modification; both are export-only (WriteCSV) and share the already-shared export half — no import receive path exists there, so they were not modified.",
+    "role_handler.go ImportRoles exists in code but has no registered route (guide §1: role import not exposed); converted for uniformity, observable behaviour unchanged (route set untouched)."
+  ],
+  "knownGaps": [
+    "i18n import has no entry in the automated API smoke (guide scope predates the i18n import surface); its service-layer behaviour is covered by the modules/system/i18n go suite.",
+    "Per-module smoke ran as one suite over all modules rather than eight separate suite invocations; per-module isolation is the commit history (see smokePerModule.method)."
+  ],
+  "verificationEnvironment": {
+    "os": "Windows 10 (22631), git-bash",
+    "go": "go1.26.10 windows/amd64 (repo go.mod toolchain)",
+    "db": "local MySQL 127.0.0.1:3306 via .env.test DSN (database pantheon_base)",
+    "redis": "local Redis 127.0.0.1:6379 shared with the maintainer's running pantheon-ops server (key-namespace analysis in step 8)"
+  }
+}
