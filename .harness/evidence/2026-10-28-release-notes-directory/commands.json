@@ -1,0 +1,112 @@
+{
+  "taskId": "2026-10-28-release-notes-directory",
+  "repo": "pantheon-base",
+  "executedAt": "2026-10-28T21:40:00+08:00",
+  "agent": {
+    "tool": "other",
+    "adapter": "qoder-agent"
+  },
+  "commands": [
+    {
+      "command": "git mv RELEASE_NOTES_v0.13.1.md ... RELEASE_NOTES_v0.17.8.md docs/release-notes/",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Exit 0. All 14 files moved with history preserved: git status lists fourteen 'R  RELEASE_NOTES_v*.md -> docs/release-notes/RELEASE_NOTES_v*.md' entries and 'ls RELEASE_NOTES_*.md' reports no such file at the root. 'ls docs/release-notes/RELEASE_NOTES_*.md | wc -l' returns 14."
+    },
+    {
+      "command": "node scripts/harness/check-doc-links.mjs --root . --strict",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Docs link check (strict): 0 finding(s), exit 0. Covers the new docs/release-notes indexes, the root/doc README repoints, the three 2026-10-07 review anchors and the five v0.14.0 documentation links rewritten from './docs/*' to '../*'."
+    },
+    {
+      "command": "node scripts/harness/check-doc-inventory.mjs --root . --strict",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Docs inventory check (strict): 0 finding(s), exit 0. The harness task packet for this task is listed where the inventory requires it."
+    },
+    {
+      "command": "npm run -s check:docs-frontmatter",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Frontmatter check passed. Checked 386 docs, 270 with frontmatter (385/269 before this task added docs/harness/tasks/2026-10-28-release-notes-directory.task.md)."
+    },
+    {
+      "command": "npm run -s check:harness-encoding",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Encoding check (strict): 0 finding(s) across 2507 scanned file(s), exit 0."
+    },
+    {
+      "command": "npm run -s check:structure",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Structure contract check (strict): 0 finding(s) across 2855 tracked file(s), exit 0. docs/release-notes/ is an allowed docs subdirectory and no root RELEASE_NOTES_*.md remains."
+    },
+    {
+      "command": "npm run -s check:task-packet-template",
+      "cwd": ".",
+      "status": "passed",
+      "details": "OK pantheon-base task-packet template is present and linked."
+    },
+    {
+      "command": "npm run -s check:task-packet",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Exit 0. [PASS] for 2026-10-27-v0178-dep-vuln-closure, 2026-10-28-plan-ladder-option-a-impl and the new 2026-10-28-release-notes-directory packet."
+    },
+    {
+      "command": "npm run -s check:generated",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Generated artifact check (strict): 0 finding(s) across 11 artifact(s), exit 0."
+    },
+    {
+      "command": "npm run -s check:ui-quality-gate",
+      "cwd": ".",
+      "status": "passed",
+      "details": "UI quality gate (strict): 0 finding(s), no findings, exit 0. No frontend file was touched."
+    },
+    {
+      "command": "node scripts/harness/check-evidence.mjs --strict",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Exit 0 after the four link-only planRefs repairs. Before the repair the strict run reported 2 errors, both 'root.linkage.planRefs[0] does not exist': 2026-10-23-iam-race-closeout/commands.json resolved RELEASE_NOTES_v0.17.4.md and 2026-10-23-iam-residual-closeout/commands.json resolved RELEASE_NOTES_v0.17.3.md. Those two paths and the matching review.md references now point into docs/release-notes/."
+    },
+    {
+      "command": "node scripts/harness/check-review.mjs --strict",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Exit 0 after the same planRefs repair. Before it the strict run reported 3 errors: linked plan missing RELEASE_NOTES_v0.17.4.md (iam-race-closeout/review.md), linked plan missing RELEASE_NOTES_v0.17.8.md (v0178-dep-vuln-closure/review.md) and this task's review linking a commands.json that did not exist yet."
+    },
+    {
+      "command": "grep -rn '](.\\{0,2\\}/RELEASE_NOTES_\\|](RELEASE_NOTES_' --include=*.md --include=*.json . | grep -v '^./docs/release-notes/'",
+      "cwd": ".",
+      "status": "passed",
+      "details": "The only tracked hit is .harness/archive/2026-10/RELEASE_STATUS_v0.14.0.md:132, whose relative link already resolved under .harness/archive/ before the move; it is an immutable status snapshot and stays as written. '.tmp/wt-v0178/**' hits are an untracked scratch worktree, not part of the change."
+    },
+    {
+      "command": "git status --short",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Measured change surface: 14 renames into docs/release-notes/, 8 documentation edits (two root READMEs, two docs READMEs, two REPOSITORY_LAYOUT files, the 2026-10-07 review, v0.14.0's link block), 4 link-only evidence/review planRefs edits, plus the new indexes, task packet, manifest and evidence files. No backend/, frontend/, workflow, script, CHANGELOG or VERSION file appears."
+    }
+  ],
+  "knownGaps": [
+    "The index is maintained by hand; adding a release note still requires appending a row to docs/release-notes/README.md and README.en.md. A generator is out of scope for a relocation task.",
+    "The .harness/archive/2026-10/RELEASE_STATUS_v0.14.0.md relative link stays stale on purpose: it was already broken before the move and the archive is a frozen snapshot.",
+    "Narrative filename mentions inside historical packets, evidence, CHANGELOG and the failure registry still say RELEASE_NOTES_v*.md without the docs/release-notes/ prefix; they are prose, not links, and were left untouched."
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-28-release-notes-directory/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-28-release-notes-directory/",
+    "summaryFile": ".harness/evidence/2026-10-28-release-notes-directory/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-28-release-notes-directory/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/designs/REPOSITORY_LAYOUT.md",
+      "docs/README.md",
+      "docs/VERSION_MANAGEMENT_GUIDE.md"
+    ]
+  }
+}

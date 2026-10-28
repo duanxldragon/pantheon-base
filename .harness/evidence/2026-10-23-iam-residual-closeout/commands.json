@@ -75,7 +75,7 @@
     "reviewFile": ".harness/evidence/2026-10-23-iam-residual-closeout/review.md",
     "changeRef": "none",
     "planRefs": [
-      "RELEASE_NOTES_v0.17.3.md",
+      "docs/release-notes/RELEASE_NOTES_v0.17.3.md",
       ".harness/evidence/2026-10-23-residual-closeout/review.md"
     ]
   }

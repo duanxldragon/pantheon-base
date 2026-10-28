@@ -116,6 +116,7 @@ Shared skills live in `../../pantheon-harness/skills/`; recommended shared skill
 - [部署指南](./DEPLOYMENT_GUIDE.md)
 - [开发库初始化指南](./DEV_DB_INIT_GUIDE.md)
 - [版本管理指南](./VERSION_MANAGEMENT_GUIDE.md)
+- [发布说明索引（v0.13.1 起）](./release-notes/README.md)
 - [系统导入导出 Smoke 指南](./acceptances/SYSTEM_IMPORT_EXPORT_SMOKE_GUIDE.md)
 - [gstack Windows 使用清单](./designs/GSTACK_WINDOWS_GUIDE.md)
 

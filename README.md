@@ -13,7 +13,7 @@ Pantheon Platform 是一个面向企业后台的模块化单体底座，沉淀�
 | 当前 foundation release | [`pantheon-base-v0.17.8`](https://github.com/duanxldragon/pantheon-base/releases/tag/pantheon-base-v0.17.8)（含四件可消费产物） |
 | Shell/Harness 基线版本 | `1.4.0`（见 [VERSION](./VERSION) / [SHELL_VERSION.json](./SHELL_VERSION.json)） |
 | 部署文档 | [docs/DEPLOYMENT_GUIDE.md](./docs/DEPLOYMENT_GUIDE.md)（MySQL 8、Redis 7、迁移 + runtime seed、健康检查、遥测、备份恢复与 schema-aware 回滚） |
-| 变更记录 | [CHANGELOG.md](./CHANGELOG.md) / [RELEASE_NOTES_v0.17.8.md](./RELEASE_NOTES_v0.17.8.md) |
+| 变更记录 | [CHANGELOG.md](./CHANGELOG.md) / [RELEASE_NOTES_v0.17.8.md](./docs/release-notes/RELEASE_NOTES_v0.17.8.md) |
 | **任务状态** | [.harness/STATUS.md](./.harness/STATUS.md) — 当前任务状态总览 |
 | **归档记录** | [.harness/ARCHIVE.md](./.harness/ARCHIVE.md) — 已完成任务归档索引 |
 

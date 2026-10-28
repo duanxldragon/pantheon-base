@@ -165,7 +165,7 @@ the verdict above describes the candidate and the manifest describes the shipped
     "planRefs": [
       "docs/harness/tasks/2026-10-27-v0178-dep-vuln-closure.task.md",
       "docs/reviews/PANTHEON_BASE_ISSUES_AND_REMEDIATION_2026-10-21.md",
-      "RELEASE_NOTES_v0.17.8.md"
+      "docs/release-notes/RELEASE_NOTES_v0.17.8.md"
     ]
   }
 }
