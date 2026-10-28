@@ -1,8 +1,6 @@
 package dept
 
 import (
-	"strconv"
-
 	"github.com/duanxldragon/pantheon-base/backend/pkg/common"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/impexp"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/tenant"
@@ -70,9 +68,8 @@ func (h *DeptHandler) GetGovernanceTasks(c *gin.Context) {
 }
 
 func (h *DeptHandler) GetDeptLeaderCandidates(c *gin.Context) {
-	deptID, err := strconv.ParseUint(c.Param("id"), 10, 64)
-	if err != nil {
-		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
+	deptID, ok := common.ParseUintParam(c, "id")
+	if !ok {
 		return
 	}
 
@@ -108,9 +105,8 @@ func (h *DeptHandler) UpdateDept(c *gin.Context) {
 		return
 	}
 
-	deptID, err := strconv.ParseUint(c.Param("id"), 10, 64)
-	if err != nil {
-		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
+	deptID, ok := common.ParseUintParam(c, "id")
+	if !ok {
 		return
 	}
 
@@ -158,9 +154,8 @@ func (h *DeptHandler) BatchUpdateDeptLeader(c *gin.Context) {
 
 func (h *DeptHandler) DeleteDept(c *gin.Context) {
 	common.SetAuditMetadata(c, "dept.delete.title", common.BusinessDelete)
-	deptID, err := strconv.ParseUint(c.Param("id"), 10, 64)
-	if err != nil {
-		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
+	deptID, ok := common.ParseUintParam(c, "id")
+	if !ok {
 		return
 	}
 
