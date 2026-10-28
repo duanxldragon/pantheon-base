@@ -1,0 +1,16 @@
+[smoke-suite] API base http://127.0.0.1:8081/api/v1
+[33m(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - `__dirname` (vite.config.ts:32:25). Use `import.meta.dirname` instead
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.[39m
+Smoke Vite ready at http://127.0.0.1:5177/
+
+Running 6 tests using 1 worker
+
+  ✓  1 tests\smoke-core\tenant-console.spec.ts:177:3 › Tenant console @priority:critical @smoke:tenant › list renders summary cards and the create entry (1.9s)
+  ✓  2 tests\smoke-core\tenant-console.spec.ts:186:3 › Tenant console @priority:critical @smoke:tenant › create a tenant with its initial administrator (3.0s)
+  ✓  3 tests\smoke-core\tenant-console.spec.ts:206:3 › Tenant console @priority:critical @smoke:tenant › edit renames the tenant and switches its plan (2.8s)
+  ✓  4 tests\smoke-core\tenant-console.spec.ts:217:3 › Tenant console @priority:critical @smoke:tenant › delete stays disabled until the tenant is archived, then succeeds (W1) (6.2s)
+  ✓  5 tests\smoke-core\tenant-console.spec.ts:242:3 › Tenant console @priority:critical @smoke:tenant › member dialog: last-owner removal refused, re-add through the selector (W2) (13.7s)
+  ✓  6 tests\smoke-core\tenant-console.spec.ts:344:3 › Tenant console @priority:critical @smoke:tenant › ops overview numbers and the plan editor lifecycle (19.0s)
+
+  6 passed (48.2s)

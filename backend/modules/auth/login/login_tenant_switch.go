@@ -38,7 +38,7 @@ type tenantSummary struct {
 //
 // This is the read half of the tenant switcher; it never widens scope, it only
 // reports what the membership table already grants. `tenant.ListActiveMemberships`
-// itself stays unfiltered — /auth/current uses it to report the caller's own
+// itself stays unfiltered — /auth/tenants/current uses it to report the caller's own
 // membership role honestly, even when that membership is not loginable.
 func (h *AuthHandler) ListSwitchableTenants(c *gin.Context) {
 	userID := common.GetUserID(c)
