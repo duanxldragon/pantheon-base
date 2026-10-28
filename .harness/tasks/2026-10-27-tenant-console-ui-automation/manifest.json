@@ -3,7 +3,7 @@
   "title": "Cover the platform tenant console with Playwright and make the picker spec assert usability",
   "goal": "The tenant console (TenantList, TenantOverview, TenantMemberList, TenantPlanEditor) has no automated UI coverage. The existing tenant specs cover the platform viewpoint header, cross-tenant isolation and the login picker, but not tenant CRUD, archive/delete, member add/remove, the ops overview or the plan editor. The login-picker spec is worse than uncovered: it builds a genuine multi-membership user, picks the tenant where the user has no roles, and asserts only that the app shell renders, which is exactly the failure mode (login succeeds, console is empty). This wave adds a console spec and strengthens the picker spec so it asserts a usable console or an explicit refusal, per the W3/W4 decision.",
   "primaryLayer": "system/iam",
-  "status": "planned",
+  "status": "completed",
   "priority": "P3",
   "type": "test",
   "estimatedComplexity": "medium",

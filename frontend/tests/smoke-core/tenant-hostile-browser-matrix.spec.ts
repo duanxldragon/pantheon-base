@@ -121,11 +121,11 @@ test.describe('Tenant login after W4 (live backend) @priority:critical @smoke:te
     expect(payload.data.user?.id).toBeGreaterThan(0);
     await expect(page.locator('.auth-login-tenant-picker')).toHaveCount(0);
 
-    // 3. The shell carries the owning tenant context: /auth/current resolves
-    // tenant A from the browser cookie jar, not platform scope.
+    // 3. The shell carries the owning tenant context: /auth/tenants/current
+    // resolves tenant A from the browser cookie jar, not platform scope.
     await page.goto('/dashboard', { waitUntil: 'domcontentloaded' });
     await expect(page.locator('.app-shell__header')).toBeVisible();
-    const current = await page.request.get(`${apiBaseUrl}/auth/current`);
+    const current = await page.request.get(`${apiBaseUrl}/auth/tenants/current`);
     expect(current.ok()).toBeTruthy();
     const currentPayload = (await current.json()) as ApiEnvelope<{
       mode: string;

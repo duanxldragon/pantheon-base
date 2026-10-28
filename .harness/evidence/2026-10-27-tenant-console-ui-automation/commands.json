@@ -1,0 +1,95 @@
+{
+  "taskId": "2026-10-27-tenant-console-ui-automation",
+  "repo": "pantheon-base",
+  "executedAt": "2026-10-28T15:54:00+08:00",
+  "agent": {
+    "tool": "other",
+    "adapter": "qoder-agent"
+  },
+  "knownGaps": [
+    "Isolated stack, not the maintainer's dev stack: every Playwright command below ran against a dedicated backend on 127.0.0.1:8081 (built from this working tree, credentials from the gitignored root .env.test) with a runner-spawned disposable Vite; the runner on port 5173 was never targeted and the maintainer's processes (pantheon-server-ops.exe on 8080, dev Vite PID 21328 on 5173) were never touched.",
+    "Residue disclosure — maintainer's ops database: earlier in the W6 work, before the isolated stack was stood up, spec and probe runs reused the already-running dev stack (Vite 5173 → ops backend 8080). That wrote clearly test-named rows into the ops database: tenants named `console-<run>` / `console-m-<run>` / `console-p-<run>` variants, custom plans `plan_console_<run>`, and member add/remove operations confined to those test tenants. The backend admin password for that deployment is not known to the agent, so those rows could not be cleaned from here; the run suffixes are unique timestamps, so they are greppable (`console-`, `plan_console_`). The pantheon_base test database residue was cleaned during the session (probe tenants 16/17 and probe user 16 deleted via API, all 200).",
+    "The two persisted logs (playwright.txt, viewpoint.txt) were captured through the suite runner WITHOUT the matrix fixture script, because the console and viewpoint specs provision their own disposable tenants and clean them in afterAll. The full `npm run test:smoke:tenant` two-leg run (leg 1 with --setup: 16 passed / 0 failed in 1.3m; leg 2: 5 passed / 0 failed in 32.9s) was validated green earlier in the session but its log was captured on the terminal, not persisted; a re-run was deliberately skipped because each --setup invocation provisions a NEW matrix pair into the test database (older pairs linger; CI's smoke-tenant down step owns that cleanup).",
+    "The console spec was run three times green standalone (46.6s / 43.8s earlier, 48.2s captured). playwright.txt and screenshots/ come from the same final run: the runner's post-run generated-module cleanup removes untracked files including test-results/, so the evidence capture passed --generated-cleanup-script pointing at a one-line no-op script (created for the run, deleted immediately after). The two earlier green runs used the runner default cleanup and their screenshots were wiped by it; the spec itself was byte-identical across all three runs.",
+    "expectedFiles.modify lists .github/workflows/smoke-core.yml; it was not touched because the smoke-tenant job already delegates to `npm run test:smoke:tenant` (smoke-core.yml:230), so frontend/package.json is the single wiring point and the new spec runs in the CI job without a workflow edit. The job stays report-only: the packet's human gate offered 'keep the job report-only' as the default, and that default was taken under the maintainer's standing delegation (2026-10-28), so the CI gate state is unchanged.",
+    "expectedFiles.modify lists auth-tenant-picker.spec.ts; it was not modified. The finding's 'picker spec' is tenant-hostile-browser-matrix.spec.ts, which W4 already rewrote to assert the refusal key, tenantSelectionRequired and the resolved tenant — but its assertion called `/auth/current`, a route that has never existed (the mounted route is `/auth/tenants/current`), so the strengthened test failed at that assertion in every run (CI never gated because the job is report-only). This wave repaired the endpoint in the spec and the stale comment in backend/modules/auth/login/login_tenant_switch.go; the strengthened assertions now actually run and pass.",
+    "backend/modules/auth/login/login_tenant_switch.go changes one line inside a doc comment (`/auth/current` → `/auth/tenants/current`). It is a comment-only change; scope.out's 'changing production source to make a test pass' is not implicated (verified via git diff — no code tokens changed).",
+    "frontend/tests/smoke-core/tenant-viewpoint-switcher.spec.ts test 4 had been red since W4: the user created in test 3 had a membership but no role binding, and W4's HasRoleBindingInTenant gate refuses such logins. The fix assigns the tenant's provisioned 租户成员 role in test 3's create flow. This repairs a pre-existing red spec; it does not weaken any assertion.",
+    "Premise delta — secure-action verification: DELETE /system/tenant/:id is wrapped in SecureActionMiddleware, so the first destructive request of a browser session is answered HTTP 403 auth.operation.verification_required and the frontend opens the SecondaryVerifyModal; the token is then cached. The spec handles this (waitForResponse registered before the confirm click; on 403 it fills the modal) — coverage the packet did not anticipate.",
+    "Premise delta — member add scenario is remove-then-re-add: ensureTenantMembership auto-provisions an active membership for every user created under tenant scope, so the member picker's candidate pool only contains users whose membership was previously removed, and a platform-pool user is refused by W4's tenant.member.user_not_in_tenant rule. The spec therefore seeds a tenant-owned user via API (X-Tenant-Id header), removes the non-owner member, then re-adds them through the selector.",
+    "Premise delta — plan lifecycle: plans cannot be deleted (retire is terminal) and accumulate across runs, so the plan drawer asserts the four builtin codes individually instead of a total count, the custom plan row is asserted by its raw code (planLabel falls back to the code for non-builtin plans), and afterAll retires leftover active plan_console_* plans."
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-27-tenant-console-ui-automation/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-27-tenant-console-ui-automation/",
+    "summaryFile": ".harness/evidence/2026-10-27-tenant-console-ui-automation/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-27-tenant-console-ui-automation/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-27-tenant-completeness-remediation.task.md",
+      "docs/reviews/TENANT_FUNCTIONAL_COMPLETENESS_REVIEW_2026-10-27.md"
+    ]
+  },
+  "commands": [
+    {
+      "command": "node scripts/run-smoke-suite.mjs --port 5177 --proxy-target http://127.0.0.1:8081 --api-base-url http://127.0.0.1:8081/api/v1 --generated-cleanup-script <one-line no-op, created and deleted for this run> --config playwright.config.ts -- tests/smoke-core/tenant-console.spec.ts --workers=1",
+      "cwd": "frontend",
+      "notes": "6 passed / 0 failed (48.2s) — playwright.txt. The same run produced screenshots/w1-before-delete.png and screenshots/w1-after-delete.png (the spec writes them inline via page.screenshot before and after the archived delete). Backend on 127.0.0.1:8081 from this working tree; disposable Vite spawned and stopped by the runner.",
+      "status": "passed"
+    },
+    {
+      "command": "node scripts/run-smoke-suite.mjs --port 5177 --proxy-target http://127.0.0.1:8081 --api-base-url http://127.0.0.1:8081/api/v1 --config playwright.config.ts -- tests/smoke-core/tenant-viewpoint-switcher.spec.ts --workers=1",
+      "cwd": "frontend",
+      "notes": "5 passed / 0 failed (31.8s) — viewpoint.txt. Includes the previously-red test 4 after the role-binding fix described in knownGaps.",
+      "status": "passed"
+    },
+    {
+      "command": "npm run test:smoke:tenant (leg 1 via run-smoke-suite.mjs --port 5175 --proxy-target http://127.0.0.1:8081 --api-base-url http://127.0.0.1:8081/api/v1 --setup scripts/tenant-matrix-fixture-setup.mjs with the four leg-1 specs; leg 2 the viewpoint spec)",
+      "cwd": "frontend",
+      "notes": "Session-recorded, log not persisted: leg 1 16 passed / 0 failed (1.3m), leg 2 5 passed / 0 failed (32.9s), run against the same isolated backend. A re-run purely to persist the log was skipped: each --setup run provisions a NEW matrix pair into the test database and older pairs linger until CI's down step.",
+      "status": "passed"
+    },
+    {
+      "command": "npx playwright test tests/smoke-core/tenant-console.spec.ts (standalone, external-server env, twice)",
+      "cwd": "frontend",
+      "notes": "6 passed / 0 failed both times (46.6s, 43.8s) — confirms the spec is repeatable against a stack it does not share state with.",
+      "status": "passed"
+    },
+    {
+      "command": "npx tsc -b",
+      "cwd": "frontend",
+      "notes": "exit 0.",
+      "status": "passed"
+    },
+    {
+      "command": "npm run lint",
+      "cwd": "frontend",
+      "notes": "exit 0 (eslint . --max-warnings 0).",
+      "status": "passed"
+    },
+    {
+      "command": "node scripts/harness/check-task-packet.mjs --root .",
+      "cwd": ".",
+      "notes": "exit 0, every packet including this one passes.",
+      "status": "passed"
+    },
+    {
+      "command": "node scripts/harness/check-evidence.mjs --strict",
+      "cwd": ".",
+      "notes": "exit 0; this evidence directory is listed [PASS].",
+      "status": "passed"
+    },
+    {
+      "command": "node scripts/harness/check-review.mjs --strict",
+      "cwd": ".",
+      "notes": "exit 0; this review.md is listed [PASS].",
+      "status": "passed"
+    },
+    {
+      "command": "node scripts/harness/check-doc-links.mjs --root . --strict && node scripts/harness/check-doc-inventory.mjs --root . --strict",
+      "cwd": ".",
+      "notes": "Both exit 0: 'Docs link check (strict): 0 finding(s)' and 'Docs inventory check (strict): 0 finding(s)'.",
+      "status": "passed"
+    }
+  ]
+}
