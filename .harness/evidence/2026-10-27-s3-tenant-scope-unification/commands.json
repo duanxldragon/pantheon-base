@@ -1,0 +1,82 @@
+{
+  "taskId": "2026-10-27-s3-tenant-scope-unification",
+  "repo": "pantheon-base",
+  "executedAt": "2026-10-28T19:50:00+08:00",
+  "agent": {
+    "tool": "other",
+    "adapter": "qoder-agent"
+  },
+  "runtimeSensitive": true,
+  "runtimeGap": "The two-tenant isolation smoke cannot execute on this machine: no MySQL DSN is configured (PANTHEON_TEST_DSN and PANTHEON_DSN unset) and local credentials were not available; searching for credentials was deliberately not attempted. CI runs the package with PANTHEON_TEST_DSN_REQUIRED=true (ci.yml:143,332; quality.yml:362) against provisioned MySQL, where the case executes instead of skipping.",
+  "knownGaps": [
+    "Schedule premise: the programme manifest's implementationNotes require batch S2 to be stable for one release cycle before batch S3 is scheduled. The maintainer's direct 2026-10-28 instruction to close the three remaining S3 waves overrides that schedule gate for this session; release cutting stays out of scope (do-not-touch).",
+    "Path correction: the manifest expects backend/modules/system/platform/dashboard_service.go, but the dashboard module lives at backend/modules/platform/dashboard_service.go. The conversion landed at the real path; no compatibility shim was created.",
+    "Path correction: dept and post live under backend/modules/system/org/{dept,post}/, not under system/iam as the manifest groups them.",
+    "Scope correction: backend/modules/auth/login/login_runtime.go was excluded. Runtime is the composition root and owns its own tenantCtx binding; only the request-path LoginService embeds tenant.Scoper.",
+    "Two intentional variants stay outside the shared helper: setting_service.go keeps its override-a/platform-global read scope (tenant_id IN (0, tenantID)) and its multi-only WithTenantContext clone; dashboard_service.go keeps its table whitelist (scopedTable) in front of the shared owner/read filter. Both were verified by their existing tests.",
+    "The two-tenant case is a service-layer isolation test (direct service calls plus row counts), not an HTTP round-trip. It proves read filtering and write-owner binding for eleven services against a real schema; handler/middleware wiring is covered by the existing handler tests.",
+    "go test -count=1 ./... reports 47 ok / 0 FAIL / 6 packages without test files. MySQL-backed tests (including the new smoke) skip locally because no DSN is configured; the same suite in CI executes them.",
+    "linkage.changeRef is `none` because check-evidence.mjs resolves changeRef as a repository path, not as a git ref. The change is uncommitted on the working tree when this evidence was written and is committed separately before the PR."
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-27-s3-tenant-scope-unification/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-27-s3-tenant-scope-unification/",
+    "summaryFile": ".harness/evidence/2026-10-27-s3-tenant-scope-unification/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-27-s3-tenant-scope-unification/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-27-codebase-simplification-program.task.md",
+      "docs/contracts/TENANT_CONTRACT_V1.md"
+    ]
+  },
+  "commands": [
+    {
+      "command": "gofmt -l modules pkg",
+      "cwd": "backend",
+      "notes": "exit 0, no output — every touched Go file is formatted.",
+      "status": "passed"
+    },
+    {
+      "command": "go build ./...",
+      "cwd": "backend",
+      "notes": "exit 0.",
+      "status": "passed"
+    },
+    {
+      "command": "go vet ./...",
+      "cwd": "backend",
+      "notes": "exit 0.",
+      "status": "passed"
+    },
+    {
+      "command": "go test -count=1 ./...",
+      "cwd": "backend",
+      "notes": "47 ok / 0 FAIL / 6 packages without test files. MySQL-backed tests report SKIP locally because no DSN is configured (see runtimeGap).",
+      "status": "passed"
+    },
+    {
+      "command": "grep -rn \"func.*tenantOwnerID\" --include=*.go . | wc -l",
+      "cwd": "backend",
+      "notes": "0 — every per-service tenantOwnerID copy is gone; ownership resolves through tenant.Scoper.TenantOwnerID / tenant.OwnerTenantID.",
+      "status": "passed"
+    },
+    {
+      "command": "grep -rn \"func.*scoped(db \\*gorm.DB)\" --include=*.go ./modules | wc -l",
+      "cwd": "backend",
+      "notes": "0 — every per-service scoped(db) copy is gone; queries go through tenant.Scoper.Scoped/Scope.",
+      "status": "passed"
+    },
+    {
+      "command": "PANTHEON_TEST_DSN_REQUIRED= go test -count=1 -run TestTwoTenantIsolationSmoke -v ./modules/system/iam/",
+      "cwd": "backend",
+      "notes": "SKIP: 'mysql test dsn is not configured (PANTHEON_TEST_DSN and PANTHEON_DSN unset)'. The case compiles and is wired into the package; CI executes it with PANTHEON_TEST_DSN_REQUIRED=true against provisioned MySQL. Verbatim output in two-tenant-run.log.",
+      "status": "not-run"
+    },
+    {
+      "command": "git diff --stat",
+      "cwd": "backend",
+      "notes": "Tracked: 29 files changed, +278/−373. Production-only (.go excluding _test.go): 25 files, +267/−364. New files: scope_helper.go 53 lines, scope_helper_test.go 84 lines, tenant_isolation_smoke_test.go 402 lines.",
+      "status": "passed"
+    }
+  ]
+}

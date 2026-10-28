@@ -35,10 +35,11 @@ type DictService struct {
 	// optionCache is shared by all tenant-bound views of this service; entries
 	// are namespaced per tenant (dictOptionCacheKey) so tenants never collide.
 	optionCache *dictOptionCache
-	// tenantCtx is the per-request tenant context (canary slice). Set from the
-	// Gin context by the handler layer via WithTenantContext; nil stays
-	// unfiltered for platform-internal paths, compat binds tenant_id=0.
-	tenantCtx *tenant.Context
+	// Scoper carries the per-request tenant context (canary slice) with the
+	// shared read filter and write owner. Bound from the Gin context by the
+	// handler layer via WithTenantContext; nil stays unfiltered for
+	// platform-internal paths, compat binds tenant_id=0.
+	tenant.Scoper
 }
 
 type dictOptionCache struct {
@@ -58,25 +59,8 @@ func (s *DictService) WithTenantContext(ctx *tenant.Context) *DictService {
 		return s
 	}
 	bound := *s
-	bound.tenantCtx = ctx
+	bound.TenantCtx = ctx
 	return &bound
-}
-
-// tenantScope applies the tenant read filter (contract §3.3): multi mode
-// restricts to the request tenant; compat restricts to the global tenant_id=0
-// population (pinning, not unfiltering, keeps multi-era rows invisible after
-// a downgrade).
-func (s *DictService) tenantScope() func(db *gorm.DB) *gorm.DB {
-	return tenant.WithTenantScope(s.tenantCtx)
-}
-
-// tenantTenantID is the tenant a new row belongs to (write path: from context,
-// never from the request body — contract §3.3). Compat => 0.
-func (s *DictService) tenantOwnerID() uint64 {
-	if s.tenantCtx == nil || !s.tenantCtx.IsMulti() {
-		return 0
-	}
-	return s.tenantCtx.TenantID
 }
 
 const (
@@ -233,7 +217,7 @@ func (s *DictService) ListDictTypes(query *DictTypeListQuery) ([]DictTypeResp, e
 }
 
 func (s *DictService) buildDictTypeListQuery(query *DictTypeListQuery) *gorm.DB {
-	db := s.db.Model(&SystemDictType{}).Scopes(s.tenantScope())
+	db := s.db.Model(&SystemDictType{}).Scopes(s.Scope())
 	if query == nil {
 		return db
 	}
@@ -264,7 +248,7 @@ func (s *DictService) loadDictTypeStatRows(rows []SystemDictType) (map[string]di
 		dictCodes = append(dictCodes, item.DictCode)
 	}
 	var statRows []dictTypeStatRow
-	if err := s.db.Model(&SystemDictItem{}).Scopes(s.tenantScope()).
+	if err := s.db.Model(&SystemDictItem{}).Scopes(s.Scope()).
 		Select(`
 			dict_code,
 			COUNT(*) AS item_count,
@@ -292,7 +276,7 @@ func (s *DictService) CreateDictType(req *DictTypeCreateReq) (*DictTypeResp, err
 	}
 
 	row := SystemDictType{
-		TenantID: s.tenantOwnerID(),
+		TenantID: s.TenantOwnerID(),
 		DictCode: strings.TrimSpace(req.DictCode),
 		DictName: strings.TrimSpace(req.DictName),
 		Module:   normalizeDictModule(req.Module),
@@ -420,7 +404,7 @@ func (s *DictService) appendParsedDictTypeImportRow(rows *[]dictTypeImportRow, s
 
 func (s *DictService) loadExistingDictTypesByCode() (map[string]SystemDictType, error) {
 	var existing []SystemDictType
-	if err := s.db.Scopes(s.tenantScope()).Find(&existing).Error; err != nil {
+	if err := s.db.Scopes(s.Scope()).Find(&existing).Error; err != nil {
 		return nil, err
 	}
 	existingByCode := make(map[string]SystemDictType, len(existing))
@@ -466,7 +450,7 @@ func (s *DictService) UpdateDictType(typeID uint64, req *DictTypeUpdateReq) (*Di
 	}
 
 	var row SystemDictType
-	if err := s.db.Scopes(s.tenantScope()).First(&row, typeID).Error; err != nil {
+	if err := s.db.Scopes(s.Scope()).First(&row, typeID).Error; err != nil {
 		return nil, err
 	}
 	if err := s.validateDictType(typeID, req.DictCode); err != nil {
@@ -504,12 +488,12 @@ func (s *DictService) DeleteDictType(typeID uint64) error {
 	}
 
 	var row SystemDictType
-	if err := s.db.Scopes(s.tenantScope()).First(&row, typeID).Error; err != nil {
+	if err := s.db.Scopes(s.Scope()).First(&row, typeID).Error; err != nil {
 		return err
 	}
 
 	var itemCount int64
-	if err := s.db.Model(&SystemDictItem{}).Scopes(s.tenantScope()).Where(condDictCodeEquals, row.DictCode).Count(&itemCount).Error; err != nil {
+	if err := s.db.Model(&SystemDictItem{}).Scopes(s.Scope()).Where(condDictCodeEquals, row.DictCode).Count(&itemCount).Error; err != nil {
 		return err
 	}
 	if itemCount > 0 {
@@ -544,7 +528,7 @@ func (s *DictService) BatchUpdateDictTypeStatus(typeIDs []uint64, status int) (i
 	}
 
 	var rows []SystemDictType
-	if err := s.db.Scopes(s.tenantScope()).Where(condIDIn, normalizedIDs).Find(&rows).Error; err != nil {
+	if err := s.db.Scopes(s.Scope()).Where(condIDIn, normalizedIDs).Find(&rows).Error; err != nil {
 		return 0, err
 	}
 	if len(rows) != len(normalizedIDs) {
@@ -581,7 +565,7 @@ func (s *DictService) listDictItems(query *DictItemListQuery, paginate bool) (*D
 	}
 
 	db := s.buildDictItemListQuery(query)
-	db = db.Scopes(s.tenantScope())
+	db = db.Scopes(s.Scope())
 	page, pageSize, offset := normalizeDictItemPageQuery(query)
 	var total int64
 	if err := db.Count(&total).Error; err != nil {
@@ -610,7 +594,7 @@ func (s *DictService) listDictItems(query *DictItemListQuery, paginate bool) (*D
 }
 
 func (s *DictService) buildDictItemListQuery(query *DictItemListQuery) *gorm.DB {
-	db := s.db.Model(&SystemDictItem{}).Where(condDictCodeEquals, strings.TrimSpace(query.DictCode)).Scopes(s.tenantScope())
+	db := s.db.Model(&SystemDictItem{}).Where(condDictCodeEquals, strings.TrimSpace(query.DictCode)).Scopes(s.Scope())
 	if strings.TrimSpace(query.Keyword) != "" {
 		keyword := "%" + common.EscapeLikePattern(strings.TrimSpace(query.Keyword)) + "%"
 		db = db.Where("item_label_key LIKE ? OR item_value LIKE ? OR remark LIKE ?", keyword, keyword, keyword)
@@ -641,7 +625,7 @@ func (s *DictService) CreateDictItem(req *DictItemCreateReq) (*DictItemResp, err
 	}
 
 	row := SystemDictItem{
-		TenantID:     s.tenantOwnerID(),
+		TenantID:     s.TenantOwnerID(),
 		DictCode:     strings.TrimSpace(req.DictCode),
 		ItemLabelKey: strings.TrimSpace(req.ItemLabelKey),
 		ItemValue:    strings.TrimSpace(req.ItemValue),
@@ -783,7 +767,7 @@ func appendDictItemImportRow(rows *[]dictItemImportRow, seenKeys map[string]int,
 
 func (s *DictService) loadExistingDictItemsByKey() (map[string]SystemDictItem, error) {
 	var existing []SystemDictItem
-	if err := s.db.Scopes(s.tenantScope()).Find(&existing).Error; err != nil {
+	if err := s.db.Scopes(s.Scope()).Find(&existing).Error; err != nil {
 		return nil, err
 	}
 	existingByKey := make(map[string]SystemDictItem, len(existing))
@@ -828,7 +812,7 @@ func (s *DictService) upsertDictItemImportRow(tx *gorm.DB, row dictItemImportRow
 
 func (s *DictService) createImportedDictItem(tx *gorm.DB, row dictItemImportRow, result *impexp.ImportResult) error {
 	item := SystemDictItem{
-		TenantID:     s.tenantOwnerID(),
+		TenantID:     s.TenantOwnerID(),
 		DictCode:     row.DictCode,
 		ItemLabelKey: row.ItemLabelKey,
 		ItemValue:    row.ItemValue,
@@ -851,7 +835,7 @@ func (s *DictService) UpdateDictItem(itemID uint64, req *DictItemUpdateReq) (*Di
 	}
 
 	var row SystemDictItem
-	if err := s.db.Scopes(s.tenantScope()).First(&row, itemID).Error; err != nil {
+	if err := s.db.Scopes(s.Scope()).First(&row, itemID).Error; err != nil {
 		return nil, err
 	}
 	originalDictCode := row.DictCode
@@ -881,7 +865,7 @@ func (s *DictService) DeleteDictItem(itemID uint64) error {
 	}
 
 	var row SystemDictItem
-	if err := s.db.Scopes(s.tenantScope()).First(&row, itemID).Error; err != nil {
+	if err := s.db.Scopes(s.Scope()).First(&row, itemID).Error; err != nil {
 		return err
 	}
 	originalDictCode := row.DictCode
@@ -914,7 +898,7 @@ func (s *DictService) BatchUpdateDictItemStatus(itemIDs []uint64, status int) (i
 	}
 
 	var rows []SystemDictItem
-	if err := s.db.Scopes(s.tenantScope()).Where(condIDIn, normalizedIDs).Find(&rows).Error; err != nil {
+	if err := s.db.Scopes(s.Scope()).Where(condIDIn, normalizedIDs).Find(&rows).Error; err != nil {
 		return 0, err
 	}
 	if len(rows) != len(normalizedIDs) {
@@ -947,7 +931,7 @@ func (s *DictService) ReorderDictItem(itemID uint64, direction string) (*DictIte
 	}
 
 	var current SystemDictItem
-	if err := s.db.Scopes(s.tenantScope()).First(&current, itemID).Error; err != nil {
+	if err := s.db.Scopes(s.Scope()).First(&current, itemID).Error; err != nil {
 		return nil, err
 	}
 
@@ -964,7 +948,7 @@ func (s *DictService) ReorderDictItem(itemID uint64, direction string) (*DictIte
 		return nil, err
 	}
 
-	if err := s.db.Scopes(s.tenantScope()).First(&current, current.ID).Error; err != nil {
+	if err := s.db.Scopes(s.Scope()).First(&current, current.ID).Error; err != nil {
 		return nil, err
 	}
 	s.invalidateDictOptionCache(current.DictCode)
@@ -974,7 +958,7 @@ func (s *DictService) ReorderDictItem(itemID uint64, direction string) (*DictIte
 
 func (s *DictService) findReorderNeighbor(current SystemDictItem, direction string) (SystemDictItem, error) {
 	var neighbor SystemDictItem
-	query := s.db.Model(&SystemDictItem{}).Scopes(s.tenantScope()).Where("dict_code = ? AND id <> ?", current.DictCode, current.ID)
+	query := s.db.Model(&SystemDictItem{}).Scopes(s.Scope()).Where("dict_code = ? AND id <> ?", current.DictCode, current.ID)
 	if direction == "up" {
 		query = query.Where("(sort < ? OR (sort = ? AND id < ?))", current.Sort, current.Sort, current.ID).
 			Order("sort desc, id desc")
@@ -993,11 +977,11 @@ func (s *DictService) swapDictItemSort(current, neighbor SystemDictItem) error {
 		currentSort := current.Sort
 		current.Sort = neighbor.Sort
 		neighbor.Sort = currentSort
-		if err := tx.Model(&SystemDictItem{}).Scopes(s.tenantScope()).Where(condIDEquals, current.ID).
+		if err := tx.Model(&SystemDictItem{}).Scopes(s.Scope()).Where(condIDEquals, current.ID).
 			Updates(map[string]any{"sort": current.Sort, "updated_at": time.Now()}).Error; err != nil {
 			return err
 		}
-		if err := tx.Model(&SystemDictItem{}).Scopes(s.tenantScope()).Where(condIDEquals, neighbor.ID).
+		if err := tx.Model(&SystemDictItem{}).Scopes(s.Scope()).Where(condIDEquals, neighbor.ID).
 			Updates(map[string]any{"sort": neighbor.Sort, "updated_at": time.Now()}).Error; err != nil {
 			return err
 		}
@@ -1037,11 +1021,11 @@ func (s *DictService) GetDictOptions(codes []string) (DictOptionMapResp, error) 
 // dictOptionCacheKey namespaces cache entries per tenant (multi mode) so two
 // tenants sharing a dict_code never collide through the process cache.
 func (s *DictService) dictOptionCacheKey(code string) string {
-	if s.tenantCtx == nil || !s.tenantCtx.IsMulti() {
+	if s.TenantCtx == nil || !s.TenantCtx.IsMulti() {
 		return code
 	}
 	// "t0" cannot occur here (multi mode excludes tenant 0).
-	return "t" + strconv.FormatUint(s.tenantCtx.TenantID, 10) + ":" + code
+	return "t" + strconv.FormatUint(s.TenantCtx.TenantID, 10) + ":" + code
 }
 
 func (s *DictService) collectCachedDictOptions(normalizedCodes []string, resp DictOptionMapResp) []string {
@@ -1226,7 +1210,7 @@ func (s *DictService) queryEnabledDictOptions(codes []string) (DictOptionMapResp
 	}
 
 	var rows []SystemDictItem
-	if err := s.db.Model(&SystemDictItem{}).Scopes(s.tenantScope()).
+	if err := s.db.Model(&SystemDictItem{}).Scopes(s.Scope()).
 		Where("dict_code IN ? AND status = ?", codes, common.StatusEnabled).
 		Order("dict_code asc, sort asc, id asc").
 		Find(&rows).Error; err != nil {
@@ -1251,7 +1235,7 @@ func (s *DictService) validateDictType(typeID uint64, dictCode string) error {
 	}
 
 	var count int64
-	db := s.db.Model(&SystemDictType{}).Scopes(s.tenantScope()).Where(condDictCodeEquals, trimmedCode)
+	db := s.db.Model(&SystemDictType{}).Scopes(s.Scope()).Where(condDictCodeEquals, trimmedCode)
 	if typeID > 0 {
 		db = db.Where("id <> ?", typeID)
 	}
@@ -1272,7 +1256,7 @@ func (s *DictService) validateDictItem(itemID uint64, dictCode string, itemValue
 	}
 
 	var typeCount int64
-	if err := s.db.Model(&SystemDictType{}).Scopes(s.tenantScope()).Where(condDictCodeEquals, trimmedCode).Count(&typeCount).Error; err != nil {
+	if err := s.db.Model(&SystemDictType{}).Scopes(s.Scope()).Where(condDictCodeEquals, trimmedCode).Count(&typeCount).Error; err != nil {
 		return err
 	}
 	if typeCount == 0 {
@@ -1280,7 +1264,7 @@ func (s *DictService) validateDictItem(itemID uint64, dictCode string, itemValue
 	}
 
 	var count int64
-	db := s.db.Model(&SystemDictItem{}).Scopes(s.tenantScope()).Where("dict_code = ? AND item_value = ?", trimmedCode, trimmedValue)
+	db := s.db.Model(&SystemDictItem{}).Scopes(s.Scope()).Where("dict_code = ? AND item_value = ?", trimmedCode, trimmedValue)
 	if itemID > 0 {
 		db = db.Where("id <> ?", itemID)
 	}

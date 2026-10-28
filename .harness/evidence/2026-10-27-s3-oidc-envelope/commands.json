@@ -1,0 +1,67 @@
+{
+  "taskId": "2026-10-27-s3-oidc-envelope",
+  "repo": "pantheon-base",
+  "executedAt": "2026-10-28T19:52:00+08:00",
+  "agent": {
+    "tool": "other",
+    "adapter": "qoder-agent"
+  },
+  "runtimeSensitive": true,
+  "runtimeGap": "No OIDC login round-trip was executed: the three handlers are not mounted on any router and no identity provider is configured, so there is no endpoint to call. This is consistent with the classification (dormant module); the gap is carried to the future SSO integration packet.",
+  "knownGaps": [
+    "No route registration and no frontend consumer: `grep -rn 'InitiateOIDCLogin|HandleOIDCCallback|GetOIDCConfig' backend --include=*.go` matches only files inside backend/modules/auth/oidc (0 matches outside the package). The module is dormant today, which is why keeping the raw responses carries no live compatibility risk.",
+    "Response #4 (callback success) is an interim business payload: the handler's own TODO says session creation is not wired yet. Moving it onto common.Success must happen together with session integration and the SPA consumer, not in this packet.",
+    "Responses #5/#6 (config discovery) are business-shaped but consumer-less; they are kept raw for the same reason and flagged for the SSO wave.",
+    "Runtime gap: no IdP is configured, so the packet's 'one OIDC login round-trip' runtime evidence cannot be produced. Recorded explicitly instead of simulated.",
+    "linkage.changeRef is `none` because check-evidence.mjs resolves changeRef as a repository path, not as a git ref; the diff is committed separately before the PR."
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-27-s3-oidc-envelope/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-27-s3-oidc-envelope/",
+    "summaryFile": ".harness/evidence/2026-10-27-s3-oidc-envelope/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-27-s3-oidc-envelope/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-27-codebase-simplification-program.task.md",
+      "docs/contracts/SYSTEM_AUTH_CONTRACT.md"
+    ]
+  },
+  "commands": [
+    {
+      "command": "go build ./...",
+      "cwd": "backend",
+      "notes": "exit 0.",
+      "status": "passed"
+    },
+    {
+      "command": "go test -count=1 ./modules/auth/...",
+      "cwd": "backend",
+      "notes": "6 ok / 0 FAIL / 2 packages without test files.",
+      "status": "passed"
+    },
+    {
+      "command": "grep -n \"c.JSON\" modules/auth/oidc/handler.go",
+      "cwd": "backend",
+      "notes": "6 sites remain: 31, 52, 62, 73, 100, 107. Each is preceded by a comment naming its contract; bodies, statuses and field names are unchanged.",
+      "status": "passed"
+    },
+    {
+      "command": "grep -rn \"InitiateOIDCLogin\\|HandleOIDCCallback\\|GetOIDCConfig\" --include=*.go . | grep -v \"^./modules/auth/oidc/\" | wc -l",
+      "cwd": "backend",
+      "notes": "0 — no router registration and no other Go consumer; the module is dormant.",
+      "status": "passed"
+    },
+    {
+      "command": "git diff --stat -- modules/auth/oidc/handler.go",
+      "cwd": "backend",
+      "notes": "1 file changed, 13 insertions(+), 0 deletions(-) — comments only; zero functional delta.",
+      "status": "passed"
+    },
+    {
+      "command": "OIDC login round-trip against the configured provider",
+      "cwd": "backend",
+      "notes": "Not executable: handlers are unmounted and no IdP is configured. See runtimeGap.",
+      "status": "not-run"
+    }
+  ]
+}

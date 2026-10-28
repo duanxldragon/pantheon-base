@@ -37,7 +37,7 @@ func (s *UserService) ExportUsers(ctx context.Context, query *UserListQuery, dat
 	if err != nil {
 		return nil, err
 	}
-	deptPathByID, _, err := impexp.BuildDeptPathMaps(s.scoped(s.db))
+	deptPathByID, _, err := impexp.BuildDeptPathMaps(s.Scoped(s.db))
 	if err != nil {
 		return nil, err
 	}
@@ -140,7 +140,7 @@ func (s *UserService) ImportUsers(records [][]string) (*impexp.ImportResult, err
 // would update that tenant's user, and a shared role key would resolve to
 // another tenant's role id.
 func (s *UserService) loadUserImportLookups() (*userImportLookups, error) {
-	_, deptPathToID, err := impexp.BuildDeptPathMaps(s.scoped(s.db))
+	_, deptPathToID, err := impexp.BuildDeptPathMaps(s.Scoped(s.db))
 	if err != nil {
 		return nil, err
 	}
@@ -353,7 +353,7 @@ func (s *UserService) applyUserImportCreate(tx *gorm.DB, row importRow, result *
 		// Tenant write path: ownership comes from the request context, never
 		// from the CSV. Without this the row landed in the platform namespace
 		// and the importing tenant could not see (or log in) the user.
-		TenantID: s.tenantOwnerID(),
+		TenantID: s.TenantOwnerID(),
 		Username: row.Create.Username,
 		Password: string(passwordHash),
 		Nickname: row.Create.Nickname,
@@ -380,7 +380,7 @@ func (s *UserService) applyUserImportCreate(tx *gorm.DB, row importRow, result *
 
 func (s *UserService) listUsersForExport(ctx context.Context, query *UserListQuery, dataScope *common.DataScopeReq) ([]SystemUser, error) {
 	var users []SystemUser
-	db := s.scoped(s.db.WithContext(ctx).Model(&SystemUser{})).Scopes(database.WithDataScope(dataScope))
+	db := s.Scoped(s.db.WithContext(ctx).Model(&SystemUser{})).Scopes(database.WithDataScope(dataScope))
 	db = applyUserListFilters(db, query)
 
 	sortColumn, sortDesc := normalizeUserSort(query)

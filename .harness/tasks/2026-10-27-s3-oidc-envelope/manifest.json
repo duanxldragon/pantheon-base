@@ -3,7 +3,7 @@
   "title": "Decide and document whether the OIDC handler may keep its non-standard response shape",
   "goal": "The OIDC handler writes six raw c.JSON responses instead of using common.Success and common.Fail, which looks like the same drift the tenant handler has. It may not be drift: OIDC endpoints are consumed by an identity provider and by standards-aware clients, and wrapping a token response in a business envelope would break them. This wave is an investigation with an evidence-backed decision as its deliverable: for each of the six responses, identify the protocol contract it belongs to, and either keep it raw with a comment naming the contract, or move it onto the common envelope if it is genuinely a business endpoint. No code change is required if every response turns out to be protocol-shaped.",
   "primaryLayer": "system/auth",
-  "status": "planned",
+  "status": "completed",
   "priority": "P3",
   "type": "investigation",
   "estimatedComplexity": "small",

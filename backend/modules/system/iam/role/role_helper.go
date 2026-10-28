@@ -102,13 +102,13 @@ func (s *RoleService) validateRoleCreate(req *RoleCreateReq) error {
 	if err := s.ensureMenuIDsExist(req.MenuIDs); err != nil {
 		return err
 	}
-	if err := s.ensureMenuIDsAssignable(s.tenantOwnerID(), req.MenuIDs); err != nil {
+	if err := s.ensureMenuIDsAssignable(s.TenantOwnerID(), req.MenuIDs); err != nil {
 		return err
 	}
 	if err := s.ensurePermissionKeysExist(req.PermissionKeys); err != nil {
 		return err
 	}
-	return ensurePermissionKeysAssignable(s.tenantOwnerID(), req.PermissionKeys)
+	return ensurePermissionKeysAssignable(s.TenantOwnerID(), req.PermissionKeys)
 }
 
 func (s *RoleService) validateRoleUpdate(role *SystemRole, req *RoleUpdateReq) error {
@@ -163,7 +163,7 @@ func (s *RoleService) ensureRoleKeyAllowed(roleKey string, excludeRoleID uint64)
 	if key == "" {
 		return nil
 	}
-	ownerID := s.tenantOwnerID()
+	ownerID := s.TenantOwnerID()
 	if ownerID != tenant.PlatformGlobalTenantID && key == "platform_ops" {
 		return common.NewConflict("role.key.reserved")
 	}
@@ -204,7 +204,7 @@ func (s *RoleService) ensureRoleKeyUnique(roleID uint64, roleKey string) error {
 	// Role keys are unique PER TENANT in multi mode (contract §4): the scope
 	// narrows the lookup to the request tenant, so each tenant can own its own
 	// `tenant_admin` without colliding with the platform's roles.
-	db := s.scoped(s.db.Model(&SystemRole{})).Where(condRoleKeyEquals, strings.TrimSpace(roleKey))
+	db := s.Scoped(s.db.Model(&SystemRole{})).Where(condRoleKeyEquals, strings.TrimSpace(roleKey))
 	if roleID > 0 {
 		db = db.Where("id <> ?", roleID)
 	}
@@ -300,7 +300,7 @@ func ensurePermissionKeysAssignable(ownerTenantID uint64, permissionKeys []strin
 
 func (s *RoleService) ensureUsersExist(userIDs []uint64) error {
 	var count int64
-	if err := s.scoped(s.db.Table("system_user")).Where("id IN ?", userIDs).Count(&count).Error; err != nil {
+	if err := s.Scoped(s.db.Table("system_user")).Where("id IN ?", userIDs).Count(&count).Error; err != nil {
 		return err
 	}
 	if count != int64(len(userIDs)) {

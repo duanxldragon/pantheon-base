@@ -162,7 +162,7 @@ func (s *UserService) validateUserCreate(req *UserCreateReq) error {
 	// scope narrows the lookup to the request tenant, so `acme` and `beta` may
 	// each own an `admin`. Compat keeps the historical global uniqueness.
 	var count int64
-	if err := s.scoped(s.db.Model(&SystemUser{})).
+	if err := s.Scoped(s.db.Model(&SystemUser{})).
 		Where("username = ?", req.Username).
 		Count(&count).Error; err != nil {
 		return err
@@ -222,7 +222,7 @@ func (s *UserService) ensureUserRoleIDs(roleIDs []uint64) error {
 	}
 
 	var count int64
-	if err := s.scoped(s.db.Table("system_role")).
+	if err := s.Scoped(s.db.Table("system_role")).
 		Where("id IN ? AND status = ?", normalized, common.StatusEnabled).Count(&count).Error; err != nil {
 		return err
 	}
@@ -277,7 +277,7 @@ func (s *UserService) ensureDeptID(deptID uint64) error {
 		return nil
 	}
 	var count int64
-	if err := s.scoped(s.db.Table("system_dept")).
+	if err := s.Scoped(s.db.Table("system_dept")).
 		Where(condDeletedAtMissing).
 		Where(condIDEquals, deptID).Count(&count).Error; err != nil {
 		return err
@@ -300,7 +300,7 @@ func (s *UserService) ensurePostForDept(deptID, postID uint64) error {
 		DeptID uint64 `gorm:"column:dept_id"`
 	}
 	var post postRow
-	if err := s.scoped(s.db.Table("system_post")).
+	if err := s.Scoped(s.db.Table("system_post")).
 		Where(condDeletedAtMissing).
 		Select("id, dept_id").Where(condIDEquals, postID).First(&post).Error; err != nil {
 		return database.TranslateNotFound(err, common.NewBadRequest("user.post.invalid"))
@@ -372,7 +372,7 @@ func (s *UserService) loadUserLastLoginAt(username string) (*string, error) {
 	// Login logs are tenant-scoped and usernames repeat across tenants, so the
 	// lookup must be pinned to the request tenant — otherwise tenant A's user
 	// detail would surface tenant B's login timestamp.
-	err := s.scoped(s.db.Table("system_log_login")).
+	err := s.Scoped(s.db.Table("system_log_login")).
 		Select("login_time").
 		Where("username = ? AND status = ?", trimmedUsername, common.LoginStatusSuccess).
 		Order("login_time desc, id desc").
@@ -411,7 +411,7 @@ func (s *UserService) loadDeptNames(users []SystemUser) (map[uint64]string, erro
 		DeptName string `gorm:"column:dept_name"`
 	}
 	var rows []deptNameRow
-	if err := s.scoped(s.db.Table("system_dept")).Select("id, dept_name").Where(condIDIn, deptIDs).Scan(&rows).Error; err != nil {
+	if err := s.Scoped(s.db.Table("system_dept")).Select("id, dept_name").Where(condIDIn, deptIDs).Scan(&rows).Error; err != nil {
 		return nil, err
 	}
 	for _, row := range rows {
@@ -443,7 +443,7 @@ func (s *UserService) loadPostNames(users []SystemUser) (map[uint64]string, erro
 		PostName string `gorm:"column:post_name"`
 	}
 	var rows []postNameRow
-	if err := s.scoped(s.db.Table("system_post")).Select("id, post_name").Where(condIDIn, postIDs).Scan(&rows).Error; err != nil {
+	if err := s.Scoped(s.db.Table("system_post")).Select("id, post_name").Where(condIDIn, postIDs).Scan(&rows).Error; err != nil {
 		return nil, err
 	}
 	for _, row := range rows {
@@ -492,7 +492,7 @@ func (s *UserService) loadPostIDsByCode() (map[string]uint64, error) {
 		PostCode string `gorm:"column:post_code"`
 	}
 	var rows []row
-	if err := s.scoped(s.db.Table("system_post")).Select("id, post_code").Find(&rows).Error; err != nil {
+	if err := s.Scoped(s.db.Table("system_post")).Select("id, post_code").Find(&rows).Error; err != nil {
 		return nil, err
 	}
 	result := make(map[string]uint64, len(rows))
@@ -512,7 +512,7 @@ func (s *UserService) loadRoleIDsByKey() (map[string]uint64, error) {
 		Status  int    `gorm:"column:status"`
 	}
 	var rows []row
-	if err := s.scoped(s.db.Table("system_role")).Select("id, role_key, status").Where(condDeletedAtMissing).Find(&rows).Error; err != nil {
+	if err := s.Scoped(s.db.Table("system_role")).Select("id, role_key, status").Where(condDeletedAtMissing).Find(&rows).Error; err != nil {
 		return nil, err
 	}
 	result := make(map[string]uint64, len(rows))
@@ -529,7 +529,7 @@ func (s *UserService) loadRoleIDsByKey() (map[string]uint64, error) {
 // update a same-named user owned by another tenant.
 func (s *UserService) loadUsersByUsername() (map[string]*SystemUser, error) {
 	var rows []SystemUser
-	if err := s.scoped(s.db).Find(&rows).Error; err != nil {
+	if err := s.Scoped(s.db).Find(&rows).Error; err != nil {
 		return nil, err
 	}
 	result := make(map[string]*SystemUser, len(rows))
