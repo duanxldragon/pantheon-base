@@ -23,7 +23,7 @@ func (h *MenuHandler) GetMenuTree(c *gin.Context) {
 		return
 	}
 
-	roleKeys := getRoleKeysFromContext(c)
+	roleKeys := common.GetRoleKeys(c)
 	if normalizeMenuScope(&query) == "manage" {
 		allowed, err := h.service.HasManageAccess(roleKeys)
 		if err != nil {
@@ -98,22 +98,6 @@ func (h *MenuHandler) DeleteMenu(c *gin.Context) {
 		return
 	}
 	common.Success(c, gin.H{"deleted": true})
-}
-
-func getRoleKeysFromContext(c *gin.Context) []string {
-	roleKeysValue, ok := c.Get("roleKeys")
-	if ok {
-		if roleKeys, ok := roleKeysValue.([]string); ok {
-			return roleKeys
-		}
-	}
-	roleKeyValue, ok := c.Get("roleKey")
-	if ok {
-		if roleKey, ok := roleKeyValue.(string); ok && roleKey != "" {
-			return []string{roleKey}
-		}
-	}
-	return nil
 }
 
 func menuErrorCode(err error) int {

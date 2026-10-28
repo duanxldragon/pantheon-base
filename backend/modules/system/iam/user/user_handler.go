@@ -263,11 +263,11 @@ func (h *UserHandler) DeleteUser(c *gin.Context) {
 	common.Success(c, gin.H{"deleted": true})
 }
 
+// getUserIDFromContext keeps the (uint64, bool) shape the handler call sites
+// expect while delegating the key lookup to the shared implementation; the
+// token middleware stores the id as uint64 under "userId" and real ids are
+// nonzero, so a zero result means absent or mistyped.
 func getUserIDFromContext(c *gin.Context) (uint64, bool) {
-	userIDValue, ok := c.Get("userId")
-	if !ok {
-		return 0, false
-	}
-	userID, ok := userIDValue.(uint64)
-	return userID, ok
+	userID := common.GetUserID(c)
+	return userID, userID != 0
 }
