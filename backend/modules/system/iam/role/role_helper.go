@@ -520,40 +520,38 @@ func normalizeRoleStatus(status int) int {
 	return common.NormalizeEnabledStatus(status)
 }
 
-func normalizeRolePageQuery(query *RoleListQuery) (int, int) {
-	page := 1
-	pageSize := 10
-	if query == nil {
-		return page, pageSize
+// normalizeRolePageQuery clamps the role list query through the shared
+// pagination helper with the role module's own cap. The nil-extract prelude
+// keeps the service's nil-tolerant contract; the shared helper decides the
+// defaults. normalizeRoleMemberPageQuery is the same adapter for the member
+// query type — generics cannot read struct fields, so the two types cannot
+// share one function body.
+func normalizeRolePageQuery(query *RoleListQuery) (int, int, int) {
+	var page, pageSize int
+	if query != nil {
+		page, pageSize = query.Page, query.PageSize
 	}
-	if query.Page > 0 {
-		page = query.Page
-	}
-	if query.PageSize > 0 {
-		pageSize = query.PageSize
-	}
-	if pageSize > 100 {
-		pageSize = 100
-	}
-	return page, pageSize
+	return common.NormalizePagination(page, pageSize, 100)
 }
 
-func normalizeRoleMemberPageQuery(query *RoleMemberQuery) (int, int) {
-	page := 1
-	pageSize := 10
-	if query == nil {
-		return page, pageSize
+func normalizeRoleMemberPageQuery(query *RoleMemberQuery) (int, int, int) {
+	var page, pageSize int
+	if query != nil {
+		page, pageSize = query.Page, query.PageSize
 	}
-	if query.Page > 0 {
-		page = query.Page
-	}
-	if query.PageSize > 0 {
-		pageSize = query.PageSize
-	}
-	if pageSize > 100 {
-		pageSize = 100
-	}
-	return page, pageSize
+	return common.NormalizePagination(page, pageSize, 100)
+}
+
+var roleSortColumns = map[string]string{
+	"id":         "id",
+	"roleName":   "role_name",
+	"role_name":  "role_name",
+	"roleKey":    "role_key",
+	"role_key":   "role_key",
+	"sort":       "sort",
+	"status":     "status",
+	"createdAt":  "created_at",
+	"created_at": "created_at",
 }
 
 func normalizeRoleSort(query *RoleListQuery) (string, bool) {
@@ -561,24 +559,8 @@ func normalizeRoleSort(query *RoleListQuery) (string, bool) {
 		return "id", true
 	}
 
-	sortWhitelist := map[string]string{
-		"id":         "id",
-		"roleName":   "role_name",
-		"role_name":  "role_name",
-		"roleKey":    "role_key",
-		"role_key":   "role_key",
-		"sort":       "sort",
-		"status":     "status",
-		"createdAt":  "created_at",
-		"created_at": "created_at",
-	}
-
-	column, ok := sortWhitelist[strings.TrimSpace(query.SortField)]
-	if !ok {
-		column = "id"
-	}
-
-	return column, strings.ToLower(strings.TrimSpace(query.SortOrder)) == "desc"
+	return common.NormalizeSort(query.SortField, roleSortColumns, "id"),
+		strings.ToLower(strings.TrimSpace(query.SortOrder)) == "desc"
 }
 
 func normalizeUint64IDs(ids []uint64) []uint64 {

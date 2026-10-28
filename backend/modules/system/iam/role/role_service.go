@@ -117,7 +117,7 @@ func (s *RoleService) ListRoles(query *RoleListQuery) (*RoleListPageResp, error)
 	}
 
 	var roles []SystemRole
-	page, pageSize := normalizeRolePageQuery(query)
+	page, pageSize, offset := normalizeRolePageQuery(query)
 	db := buildRoleListQuery(s.scoped(s.db), query)
 
 	var total int64
@@ -131,7 +131,7 @@ func (s *RoleService) ListRoles(query *RoleListQuery) (*RoleListPageResp, error)
 			Column: clause.Column{Name: sortColumn},
 			Desc:   sortDesc,
 		}).
-		Offset((page - 1) * pageSize).
+		Offset(offset).
 		Limit(pageSize).
 		Find(&roles).Error; err != nil {
 		return nil, err
@@ -713,7 +713,7 @@ func (s *RoleService) listUsersByRoleMembership(roleID uint64, query *RoleMember
 		CreatedAt time.Time `gorm:"column:created_at"`
 	}
 
-	page, pageSize := normalizeRoleMemberPageQuery(query)
+	page, pageSize, offset := normalizeRoleMemberPageQuery(query)
 	db := s.scoped(s.db.Table("system_user")).
 		Select(strings.Join([]string{
 			"system_user.id",
@@ -763,7 +763,7 @@ func (s *RoleService) listUsersByRoleMembership(roleID uint64, query *RoleMember
 	var rows []roleMemberRow
 	if err := db.
 		Order("system_user.created_at desc, system_user.id desc").
-		Offset((page - 1) * pageSize).
+		Offset(offset).
 		Limit(pageSize).
 		Scan(&rows).Error; err != nil {
 		return nil, err
