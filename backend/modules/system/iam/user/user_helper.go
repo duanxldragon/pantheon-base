@@ -26,25 +26,32 @@ func normalizeStatus(status int) int {
 
 const maxUserPageOffset = 100000
 
-func normalizeUserPageQuery(query *UserListQuery) (int, int, error) {
-	page := 1
-	pageSize := 10
-	if query == nil {
-		return page, pageSize, nil
+// normalizeUserPageQuery clamps the user list query through the shared
+// pagination helper with the user module's own cap, then keeps the module's
+// deep-offset rejection local: beyond maxUserPageOffset rows the list is
+// refused instead of served. The int64 multiply avoids overflowing before
+// the comparison.
+func normalizeUserPageQuery(query *UserListQuery) (int, int, int, error) {
+	var page, pageSize int
+	if query != nil {
+		page, pageSize = query.Page, query.PageSize
 	}
-	if query.Page > 0 {
-		page = query.Page
-	}
-	if query.PageSize > 0 {
-		pageSize = query.PageSize
-	}
-	if pageSize > 100 {
-		pageSize = 100
-	}
+	page, pageSize, offset := common.NormalizePagination(page, pageSize, 100)
 	if int64(page-1)*int64(pageSize) > maxUserPageOffset {
-		return 0, 0, common.NewBadRequest("param.page.too_large")
+		return 0, 0, 0, common.NewBadRequest("param.page.too_large")
 	}
-	return page, pageSize, nil
+	return page, pageSize, offset, nil
+}
+
+var userSortColumns = map[string]string{
+	"id":         "id",
+	"username":   "username",
+	"nickname":   "nickname",
+	"email":      "email",
+	"phone":      "phone",
+	"status":     "status",
+	"createdAt":  "created_at",
+	"created_at": "created_at",
 }
 
 func normalizeUserSort(query *UserListQuery) (string, bool) {
@@ -52,22 +59,10 @@ func normalizeUserSort(query *UserListQuery) (string, bool) {
 		return "id", true
 	}
 
-	sortWhitelist := map[string]string{
-		"id":         "id",
-		"username":   "username",
-		"nickname":   "nickname",
-		"email":      "email",
-		"phone":      "phone",
-		"status":     "status",
-		"createdAt":  "created_at",
-		"created_at": "created_at",
-	}
+	column := common.NormalizeSort(query.SortField, userSortColumns, "id")
 
-	column, ok := sortWhitelist[strings.TrimSpace(query.SortField)]
-	if !ok {
-		column = "id"
-	}
-
+	// The user module treats anything-but-"asc" as descending, which differs
+	// from the ==-"desc" grammar other modules use; that difference is kept.
 	order := strings.ToLower(strings.TrimSpace(query.SortOrder))
 	if order == "asc" {
 		return column, false

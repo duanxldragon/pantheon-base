@@ -247,7 +247,7 @@ func (s *UserService) ListUsers(query *UserListQuery, dataScope *common.DataScop
 	var users []SystemUser
 	db := s.scoped(s.db.Model(&SystemUser{})).Scopes(database.WithDataScope(dataScope))
 	db = applyUserListFilters(db, query)
-	page, pageSize, err := normalizeUserPageQuery(query)
+	page, pageSize, offset, err := normalizeUserPageQuery(query)
 	if err != nil {
 		return nil, err
 	}
@@ -263,7 +263,7 @@ func (s *UserService) ListUsers(query *UserListQuery, dataScope *common.DataScop
 			Column: clause.Column{Name: sortColumn},
 			Desc:   sortDesc,
 		}).
-		Offset((page - 1) * pageSize).
+		Offset(offset).
 		Limit(pageSize).
 		Find(&users).Error; err != nil {
 		return nil, err
