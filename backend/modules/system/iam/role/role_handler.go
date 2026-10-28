@@ -2,7 +2,6 @@ package role
 
 import (
 	"errors"
-	"strconv"
 
 	"github.com/duanxldragon/pantheon-base/backend/pkg/common"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/impexp"
@@ -154,9 +153,8 @@ func (h *RoleHandler) UpdateRole(c *gin.Context) {
 		return
 	}
 
-	roleID, err := strconv.ParseUint(c.Param("id"), 10, 64)
-	if err != nil {
-		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
+	roleID, ok := common.ParseUintParam(c, "id")
+	if !ok {
 		return
 	}
 
@@ -198,9 +196,8 @@ func (h *RoleHandler) BatchDeleteRoles(c *gin.Context) {
 }
 
 func (h *RoleHandler) GetRoleMembers(c *gin.Context) {
-	roleID, err := strconv.ParseUint(c.Param("id"), 10, 64)
-	if err != nil {
-		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
+	roleID, ok := common.ParseUintParam(c, "id")
+	if !ok {
 		return
 	}
 
@@ -219,9 +216,8 @@ func (h *RoleHandler) GetRoleMembers(c *gin.Context) {
 }
 
 func (h *RoleHandler) GetRoleMemberCandidates(c *gin.Context) {
-	roleID, err := strconv.ParseUint(c.Param("id"), 10, 64)
-	if err != nil {
-		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
+	roleID, ok := common.ParseUintParam(c, "id")
+	if !ok {
 		return
 	}
 
@@ -242,9 +238,8 @@ func (h *RoleHandler) GetRoleMemberCandidates(c *gin.Context) {
 func (h *RoleHandler) AddRoleMembers(c *gin.Context) {
 	common.SetAuditMetadata(c, "role.members.update.title", common.BusinessUpdate)
 
-	roleID, err := strconv.ParseUint(c.Param("id"), 10, 64)
-	if err != nil {
-		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
+	roleID, ok := common.ParseUintParam(c, "id")
+	if !ok {
 		return
 	}
 
@@ -265,9 +260,8 @@ func (h *RoleHandler) AddRoleMembers(c *gin.Context) {
 func (h *RoleHandler) RemoveRoleMembers(c *gin.Context) {
 	common.SetAuditMetadata(c, "role.members.remove.title", common.BusinessUpdate)
 
-	roleID, err := strconv.ParseUint(c.Param("id"), 10, 64)
-	if err != nil {
-		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
+	roleID, ok := common.ParseUintParam(c, "id")
+	if !ok {
 		return
 	}
 
@@ -289,9 +283,8 @@ func (h *RoleHandler) RemoveRoleMembers(c *gin.Context) {
 func (h *RoleHandler) DeleteRole(c *gin.Context) {
 	common.SetAuditMetadata(c, "role.delete.title", common.BusinessDelete)
 
-	roleID, err := strconv.ParseUint(c.Param("id"), 10, 64)
-	if err != nil {
-		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
+	roleID, ok := common.ParseUintParam(c, "id")
+	if !ok {
 		return
 	}
 
