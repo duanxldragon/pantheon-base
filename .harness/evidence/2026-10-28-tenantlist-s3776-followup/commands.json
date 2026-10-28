@@ -1,0 +1,173 @@
+{
+  "taskId": "2026-10-28-tenantlist-s3776-followup",
+  "repo": "pantheon-base",
+  "executedAt": "2026-10-28T22:45:00+08:00",
+  "agent": {
+    "tool": "other",
+    "adapter": "qoder-agent"
+  },
+  "commands": [
+    {
+      "command": "curl -sf 'https://sonarcloud.io/api/issues/search?componentKeys=duanxldragon_pantheon-base&branch=main&resolved=false&types=BUG,VULNERABILITY,CODE_SMELL&ps=50'",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Baseline reading for this packet: total 1 — typescript:S3776 | frontend/src/modules/system/iam/tenant/TenantList.tsx:116 | issue AaF89PoZ78TOH8UMk82y | 'Refactor this function to reduce its Cognitive Complexity from 16 to the 15 allowed' | updateDate 2026-10-27T10:41:22Z. This is the row the 2026-10-28-release-gate-green packet claimed to have cleared."
+    },
+    {
+      "command": "curl -sf 'https://sonarcloud.io/api/project_analyses/search?project=duanxldragon_pantheon-base&branch=main&ps=3'",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Latest main analyses: 504dc402 at 2026-10-28T14:19:19Z on revision 1ae6481c85ffed94505a2315d95b0285141b2775 (the merge of PR #463), preceded by fdebf3fd at 12:38:29Z on cbd37694. So the reading above is post-#463, not stale."
+    },
+    {
+      "command": "git show 1ae6481c:frontend/src/modules/system/iam/tenant/TenantList.tsx > /d/tmp/sonarcheck/TenantListMerged.tsx && npx eslint --no-config-lookup -c eslint.config.mjs TenantListMerged.tsx",
+      "cwd": "/d/tmp/sonarcheck",
+      "status": "passed",
+      "details": "Scratch directory outside the repository, eslint-plugin-sonarjs@3 with sonarjs/cognitive-complexity at threshold 15, measuring the exact file that main carries after #463. Readout: 116:33 error 'from 16 to the 15 allowed'. The can(perm) refactor merged by #463 therefore did not move the metric, matching SonarCloud's 16."
+    },
+    {
+      "command": "npx eslint --no-config-lookup -c eslint.config.mjs TenantListMerged.tsx (threshold 4)",
+      "cwd": "/d/tmp/sonarcheck",
+      "status": "passed",
+      "details": "Same file with the threshold lowered to 4 to expose the raw value: 116:33 = 16. One unit only, so the whole 16 sits in the component body; can(perm) contributed nothing either way."
+    },
+    {
+      "command": "npx eslint --no-config-lookup -c eslint.config.mjs TenantListBefore.tsx (threshold 15)",
+      "cwd": "/d/tmp/sonarcheck",
+      "status": "passed",
+      "details": "Control run: origin/main's pre-#463 file measures 116:33 = 16 at the same threshold, confirming that the earlier can(perm) change was metrically neutral rather than a partial step."
+    },
+    {
+      "command": "npx eslint --no-config-lookup -c eslint.config.mjs TenantList.tsx (threshold 15)",
+      "cwd": "/d/tmp/sonarcheck",
+      "status": "passed",
+      "details": "After extracting the four-state body chain into renderBody(): no output, exit 0. The file no longer violates typescript:S3776 at the rule's configured threshold."
+    },
+    {
+      "command": "npx eslint --no-config-lookup -c eslint.config.mjs TenantList.tsx (threshold 4)",
+      "cwd": "/d/tmp/sonarcheck",
+      "status": "passed",
+      "details": "Raw values after the change: component 116:33 = 10, renderBody 632:42 = 5. Both are under 15 with margin, and the 16 is not merely relocated into the new function."
+    },
+    {
+      "command": "cd frontend && npm run lint",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "`eslint .` completed with no findings on the changed file and the rest of the tree."
+    },
+    {
+      "command": "cd frontend && npm run type-check",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "`tsc -b` completed clean: renderBody returns React.ReactNode and closes over the same locals, so no type or dependency-array change was needed."
+    },
+    {
+      "command": "cd frontend && npm run build",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "`vite build` succeeded in 528ms with the normal asset table; the page's chunk set is unchanged."
+    },
+    {
+      "command": "npm run check:task-packet",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Packet parsed and passed. Run before review.md existed it warned 'Linked review file does not exist'; the re-run after this evidence directory was written printed only [PASS] for the packet."
+    },
+    {
+      "command": "npm run check:structure",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Structure contract check (strict): 0 findings across 2888 tracked files."
+    },
+    {
+      "command": "npm run check:harness-encoding",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Encoding check (strict): 0 findings across 2540 scanned files."
+    },
+    {
+      "command": "npm run check:docs-frontmatter",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Frontmatter check passed: 393 docs checked, 275 with frontmatter."
+    },
+    {
+      "command": "npm run check:harness-docs && npm run check:harness-inventory",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Docs link check (strict): 0 findings. Docs inventory check (strict): 0 findings — the new task packet is discovered by the inventory scan."
+    },
+    {
+      "command": "npm run check:ui-quality-gate",
+      "cwd": ".",
+      "status": "passed",
+      "details": "UI quality gate (strict): 0 findings."
+    },
+    {
+      "command": "node scripts/harness/check-failure-registry.mjs --strict",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Failure registry check: 1 file, 0 errors, 0 warnings. FR-018 parses against the required columns and uses values from the accepted vocabularies (maintainability / static-sensor-gap / consumer-repository / repo-quality-gate / guide / guide-updated / implemented)."
+    },
+    {
+      "command": "node scripts/harness/check-evidence.mjs --strict",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Evidence contract check over the whole tree: exit 0. This commands.json carries the required `knownGaps` and `linkage` blocks and boolean `runtimeSensitive`."
+    },
+    {
+      "command": "node scripts/harness/check-review.mjs --strict",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Review artifact check over the whole tree: exit 0. This packet's review.md carries a Machine Readable block with verdict approved and structuralReview.checks drawn from the accepted set."
+    },
+    {
+      "command": "node scripts/check-pr-governance.mjs --event <synthetic pull_request json>",
+      "cwd": ".",
+      "status": "passed",
+      "details": "PR body validated before opening the PR: every required section present, all non-explicit-none fields populated (Trivial change no, Quality Profile ui-runtime, Ratchet Decision guide-updated, GitHub Signal repo-quality-gate), and Quality Profile is not none for a non-trivial change. The synthetic event file was deleted afterwards."
+    },
+    {
+      "command": "node scripts/harness/check-adoption.mjs --root .",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Adoption check (report-only): 0 findings, 0 warnings. The PR body's marker block satisfies the mechanical adoption scan for this task id."
+    },
+    {
+      "command": "npm run -s check:duplication",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Result: PASS. The reported candidates are the same pre-existing workflow-step clones seen on the previous packet; the extraction reuses existing branch bodies and adds no duplicated block."
+    },
+    {
+      "command": "node scripts/harness/check-boundaries.mjs --strict",
+      "cwd": ".",
+      "status": "passed",
+      "details": "pantheon-base: no findings. The change stays inside one module file plus harness docs, so no boundary edge moved."
+    },
+    {
+      "command": "git status --short && git diff --stat",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Measured surface: 4 tracked files changed (+40/−26) — TenantList.tsx (27 insertions, 25 deletions; the extraction), AI_QUALITY_GOVERNANCE.md (+4: the re-measurement rule), failure-registry.md (+4/−1: FR-018 row, the FR-018 review note, and the Last reviewed date), .harness/STATUS.md (+6: the correction bullet under the Release Gate section). Untracked: the task packet, the manifest and this evidence directory. No backend, workflow, Sonar configuration or dependency file appears."
+    }
+  ],
+  "knownGaps": [
+    "SonarCloud will only re-read the finding after this branch merges and the next main analysis finishes; the issue AaF89PoZ78TOH8UMk82y stays open until then. Local proof is the same rule measured on the same file (16 on main's copy, no finding on the new copy at threshold 15), not a green remote gate.",
+    "The repository does not depend on eslint-plugin-sonarjs: the measurement runs in /d/tmp/sonarcheck outside the tree, so the pre-commit check is a manual step recorded by the new §5.2 rule rather than an automated gate. Adding the plugin to the repository would be a dependency and gate decision for the maintainer.",
+    "The tenant console UI was not re-driven in a browser for this packet: the change is a predicate-for-predicate extraction inside one render function, and the routing/visual surface is unchanged. CI `PR Smoke Modules` exercises the tenant console page.",
+    "Runtime evidence for the four states (compat guide, first load, request error, table) is structural: each branch's predicate, returned element, class name, i18n key and onRetry body is byte-identical in the diff; no state was added, removed or reordered."
+  ],
+  "runtimeSensitive": true,
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-28-tenantlist-s3776-followup/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-28-tenantlist-s3776-followup/",
+    "summaryFile": ".harness/evidence/2026-10-28-tenantlist-s3776-followup/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-28-tenantlist-s3776-followup/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/AI_QUALITY_GOVERNANCE.md",
+      ".harness/evidence/2026-10-28-release-gate-green/review.md"
+    ]
+  }
+}
