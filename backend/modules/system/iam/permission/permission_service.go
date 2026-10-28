@@ -372,14 +372,12 @@ func (s *PermissionService) ExportPolicies(query *PermissionPolicyQuery) (*impex
 }
 
 func (s *PermissionService) BuildImportTemplate() *impexp.CSVFile {
-	return &impexp.CSVFile{
-		Filename: "system-permission-import-template.csv",
-		Headers:  []string{"roleKey", "path", "method"},
-		Rows: [][]string{
-			{"#说明：保留第一行表头；roleKey 必须是已存在角色标识；method 支持 GET/POST/PUT/PATCH/DELETE；该模板只导入 Casbin 接口策略，不导入菜单/按钮授权。", "", ""},
-			{"#admin", "/api/v1/system/user/list", "GET"},
-		},
-	}
+	return impexp.BuildImportTemplate(
+		"system-permission-import-template.csv",
+		"#说明：保留第一行表头；roleKey 必须是已存在角色标识；method 支持 GET/POST/PUT/PATCH/DELETE；该模板只导入 Casbin 接口策略，不导入菜单/按钮授权。",
+		[]string{"roleKey", "path", "method"},
+		[]string{"#admin", "/api/v1/system/user/list", "GET"},
+	)
 }
 
 func (s *PermissionService) ExportWorkbench(query *PermissionWorkbenchQuery) (*impexp.CSVFile, error) {
@@ -613,10 +611,7 @@ func joinWorkbenchPolicyKeys(policies []PermissionWorkbenchAPIPolicyResp) string
 }
 
 func (s *PermissionService) ImportPolicies(operatorRoleKeys []string, records [][]string) (*impexp.ImportResult, error) {
-	result := &impexp.ImportResult{
-		Applied: false,
-		Errors:  []impexp.ImportError{},
-	}
+	result := impexp.NewImportResult()
 	if s.db == nil {
 		return nil, common.ErrDatabaseNotInitialized
 	}
@@ -625,9 +620,12 @@ func (s *PermissionService) ImportPolicies(operatorRoleKeys []string, records []
 		return result, nil
 	}
 
-	// Step 1: Validate header
-	headerIndex, err := validateImportHeader(records, result)
-	if err != nil {
+	// Step 1: Validate header. A missing header only ever produced a soft
+	// result, so the intermediate BadRequest sentinel from the old composite
+	// validator was never observable and is dropped with it.
+	headerIndex := impexp.BuildHeaderIndex(records)
+	impexp.RequireHeaders(result, headerIndex, "roleKey", "path", "method")
+	if result.Failed > 0 {
 		return result, nil
 	}
 
@@ -684,34 +682,11 @@ type policyImportRow struct {
 }
 
 // validateImportHeader checks that required headers are present.
-func validateImportHeader(records [][]string, result *impexp.ImportResult) (map[string]int, error) {
-	headerIndex := make(map[string]int, len(records[0]))
-	for index, header := range records[0] {
-		headerIndex[strings.TrimSpace(header)] = index
-	}
-	requiredHeaders := []string{"roleKey", "path", "method"}
-	for _, header := range requiredHeaders {
-		if _, ok := headerIndex[header]; !ok {
-			impexp.AppendImportError(result, 0, header, "import.header.missing")
-		}
-	}
-	if result.Failed > 0 {
-		return nil, common.NewBadRequest("import.header.missing")
-	}
-	return headerIndex, nil
-}
-
 // validateImportRows parses, validates, and deduplicates CSV rows.
 func validateImportRows(records [][]string, headerIndex map[string]int, result *impexp.ImportResult) ([]policyImportRow, error) {
 	rows := make([]policyImportRow, 0, len(records)-1)
 	seenKeys := make(map[string]int, len(records)-1)
-	for rowIndex := 1; rowIndex < len(records); rowIndex++ {
-		record := records[rowIndex]
-		if impexp.IsCSVRecordEmpty(record) {
-			continue
-		}
-
-		rowNumber := rowIndex + 1
+	impexp.ForEachDataRow(records, func(rowNumber int, record []string) {
 		roleKey := strings.TrimSpace(impexp.ReadCSVField(record, headerIndex, "roleKey"))
 		path := strings.TrimSpace(impexp.ReadCSVField(record, headerIndex, "path"))
 		method := normalizePolicyMethod(impexp.ReadCSVField(record, headerIndex, "method"))
@@ -737,7 +712,7 @@ func validateImportRows(records [][]string, headerIndex map[string]int, result *
 			Path:      path,
 			Method:    method,
 		})
-	}
+	})
 	if result.Failed > 0 {
 		return nil, common.NewBadRequest("import.row.invalid")
 	}

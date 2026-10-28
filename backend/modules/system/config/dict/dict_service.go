@@ -336,18 +336,16 @@ func (s *DictService) ExportDictTypes(query *DictTypeListQuery) (*impexp.CSVFile
 }
 
 func (s *DictService) BuildDictTypeImportTemplate() *impexp.CSVFile {
-	return &impexp.CSVFile{
-		Filename: "system-dict-type-import-template.csv",
-		Headers:  []string{"dictCode", "dictName", "module", "status", "remark"},
-		Rows: [][]string{
-			{"#说明：保留第一行表头；dictCode 是稳定唯一编码；module 建议填写 system 或 business.xxx；status 使用 1=启用、2=禁用。", "", "", "", ""},
-			{"#biz_status", "业务状态", "business", "1", "业务通用状态字典"},
-		},
-	}
+	return impexp.BuildImportTemplate(
+		"system-dict-type-import-template.csv",
+		"#说明：保留第一行表头；dictCode 是稳定唯一编码；module 建议填写 system 或 business.xxx；status 使用 1=启用、2=禁用。",
+		[]string{"dictCode", "dictName", "module", "status", "remark"},
+		[]string{"#biz_status", "业务状态", "business", "1", "业务通用状态字典"},
+	)
 }
 
 func (s *DictService) ImportDictTypes(records [][]string) (*impexp.ImportResult, error) {
-	result := &impexp.ImportResult{Applied: false, Errors: []impexp.ImportError{}}
+	result := impexp.NewImportResult()
 	if s.db == nil {
 		return nil, common.ErrDatabaseNotInitialized
 	}
@@ -356,9 +354,8 @@ func (s *DictService) ImportDictTypes(records [][]string) (*impexp.ImportResult,
 		return result, nil
 	}
 
-	headerIndex := buildImportHeaderIndex(records)
-	requiredHeaders := []string{"dictCode", "dictName", "module", "status", "remark"}
-	reportMissingImportHeaders(result, headerIndex, requiredHeaders)
+	headerIndex := impexp.BuildHeaderIndex(records)
+	impexp.RequireHeaders(result, headerIndex, "dictCode", "dictName", "module", "status", "remark")
 	if result.Failed > 0 {
 		return result, nil
 	}
@@ -392,13 +389,9 @@ type dictTypeImportRow struct {
 func (s *DictService) parseDictTypeImportRows(records [][]string, headerIndex map[string]int, result *impexp.ImportResult) []dictTypeImportRow {
 	rows := make([]dictTypeImportRow, 0, len(records)-1)
 	seenCodes := make(map[string]int, len(records)-1)
-	for rowIndex := 1; rowIndex < len(records); rowIndex++ {
-		record := records[rowIndex]
-		if impexp.IsCSVRecordEmpty(record) {
-			continue
-		}
-		s.appendParsedDictTypeImportRow(&rows, seenCodes, record, headerIndex, rowIndex+1, result)
-	}
+	impexp.ForEachDataRow(records, func(rowNumber int, record []string) {
+		s.appendParsedDictTypeImportRow(&rows, seenCodes, record, headerIndex, rowNumber, result)
+	})
 	return rows
 }
 
@@ -690,18 +683,16 @@ func (s *DictService) ExportDictItems(query *DictItemListQuery) (*impexp.CSVFile
 }
 
 func (s *DictService) BuildDictItemImportTemplate() *impexp.CSVFile {
-	return &impexp.CSVFile{
-		Filename: "system-dict-item-import-template.csv",
-		Headers:  []string{"dictCode", "itemLabelKey", "itemValue", "itemColor", "sort", "status", "remark"},
-		Rows: [][]string{
-			{"#说明：保留第一行表头；dictCode 必须已存在；itemLabelKey 使用 i18n key；itemValue 在同一 dictCode 下唯一；status 使用 1=启用、2=禁用。", "", "", "", "", "", ""},
-			{"#biz_status", "dict.biz_status.enabled", "enabled", "green", "10", "1", "启用"},
-		},
-	}
+	return impexp.BuildImportTemplate(
+		"system-dict-item-import-template.csv",
+		"#说明：保留第一行表头；dictCode 必须已存在；itemLabelKey 使用 i18n key；itemValue 在同一 dictCode 下唯一；status 使用 1=启用、2=禁用。",
+		[]string{"dictCode", "itemLabelKey", "itemValue", "itemColor", "sort", "status", "remark"},
+		[]string{"#biz_status", "dict.biz_status.enabled", "enabled", "green", "10", "1", "启用"},
+	)
 }
 
 func (s *DictService) ImportDictItems(records [][]string) (*impexp.ImportResult, error) {
-	result := &impexp.ImportResult{Applied: false, Errors: []impexp.ImportError{}}
+	result := impexp.NewImportResult()
 	if s.db == nil {
 		return nil, common.ErrDatabaseNotInitialized
 	}
@@ -710,9 +701,8 @@ func (s *DictService) ImportDictItems(records [][]string) (*impexp.ImportResult,
 		return result, nil
 	}
 
-	headerIndex := buildImportHeaderIndex(records)
-	requiredHeaders := []string{"dictCode", "itemLabelKey", "itemValue", "itemColor", "sort", "status", "remark"}
-	reportMissingImportHeaders(result, headerIndex, requiredHeaders)
+	headerIndex := impexp.BuildHeaderIndex(records)
+	impexp.RequireHeaders(result, headerIndex, "dictCode", "itemLabelKey", "itemValue", "itemColor", "sort", "status", "remark")
 	if result.Failed > 0 {
 		return result, nil
 	}
@@ -745,32 +735,12 @@ type dictItemImportRow struct {
 	Remark       string
 }
 
-func buildImportHeaderIndex(records [][]string) map[string]int {
-	headerIndex := make(map[string]int, len(records[0]))
-	for index, header := range records[0] {
-		headerIndex[strings.TrimSpace(header)] = index
-	}
-	return headerIndex
-}
-
-func reportMissingImportHeaders(result *impexp.ImportResult, headerIndex map[string]int, required []string) {
-	for _, header := range required {
-		if _, ok := headerIndex[header]; !ok {
-			impexp.AppendImportError(result, 0, header, "import.header.missing")
-		}
-	}
-}
-
 func parseDictItemImportRows(records [][]string, headerIndex map[string]int, result *impexp.ImportResult) []dictItemImportRow {
 	rows := make([]dictItemImportRow, 0, len(records)-1)
 	seenKeys := make(map[string]int, len(records)-1)
-	for rowIndex := 1; rowIndex < len(records); rowIndex++ {
-		record := records[rowIndex]
-		if impexp.IsCSVRecordEmpty(record) {
-			continue
-		}
-		appendDictItemImportRow(&rows, seenKeys, record, headerIndex, rowIndex+1, result)
-	}
+	impexp.ForEachDataRow(records, func(rowNumber int, record []string) {
+		appendDictItemImportRow(&rows, seenKeys, record, headerIndex, rowNumber, result)
+	})
 	return rows
 }
 

@@ -33,10 +33,7 @@ var deptImportRollbackSentinel = common.NewInternal("dept.import.validation_fail
 
 // ImportDepts imports departments from CSV records.
 func (s *DeptService) ImportDepts(records [][]string) (*impexp.ImportResult, error) {
-	result := &impexp.ImportResult{
-		Applied: false,
-		Errors:  []impexp.ImportError{},
-	}
+	result := impexp.NewImportResult()
 	if s.db == nil {
 		return nil, common.ErrDatabaseNotInitialized
 	}
@@ -45,8 +42,10 @@ func (s *DeptService) ImportDepts(records [][]string) (*impexp.ImportResult, err
 		return result, nil
 	}
 
-	headerIndex, ok := s.buildImportHeaderIndex(records, result)
-	if !ok {
+	headerIndex := impexp.BuildHeaderIndex(records)
+	impexp.RequireHeaders(result, headerIndex,
+		"parentDeptPath", "deptName", "sort", "leader", "phone", "email", "status")
+	if result.Failed > 0 {
 		return result, nil
 	}
 
@@ -73,34 +72,12 @@ func (s *DeptService) ImportDepts(records [][]string) (*impexp.ImportResult, err
 	return result, nil
 }
 
-// buildImportHeaderIndex parses the CSV header row into a column index map and
-// validates that all required headers are present. It returns the index map and
-// reports whether header validation passed (no missing headers).
-func (s *DeptService) buildImportHeaderIndex(records [][]string, result *impexp.ImportResult) (map[string]int, bool) {
-	headerIndex := make(map[string]int, len(records[0]))
-	for index, header := range records[0] {
-		headerIndex[strings.TrimSpace(header)] = index
-	}
-	requiredHeaders := []string{"parentDeptPath", "deptName", "sort", "leader", "phone", "email", "status"}
-	for _, header := range requiredHeaders {
-		if _, ok := headerIndex[header]; !ok {
-			impexp.AppendImportError(result, 0, header, "import.header.missing")
-		}
-	}
-	return headerIndex, result.Failed == 0
-}
-
 // parseImportRows parses and validates each data row from the CSV records.
 // It returns the parsed rows and reports whether every row passed validation.
 func (s *DeptService) parseImportRows(records [][]string, headerIndex map[string]int, result *impexp.ImportResult) ([]deptImportRow, bool) {
 	rows := make([]deptImportRow, 0, len(records)-1)
 	seenPaths := make(map[string]int, len(records)-1)
-	for rowIndex := 1; rowIndex < len(records); rowIndex++ {
-		record := records[rowIndex]
-		if impexp.IsCSVRecordEmpty(record) {
-			continue
-		}
-		rowNumber := rowIndex + 1
+	impexp.ForEachDataRow(records, func(rowNumber int, record []string) {
 		parentPath := strings.TrimSpace(impexp.ReadCSVField(record, headerIndex, "parentDeptPath"))
 		deptName := strings.TrimSpace(impexp.ReadCSVField(record, headerIndex, "deptName"))
 		sortValue, sortErr := impexp.ParseCSVInt(impexp.ReadCSVField(record, headerIndex, "sort"))
@@ -133,7 +110,7 @@ func (s *DeptService) parseImportRows(records [][]string, headerIndex map[string
 			Email:          email,
 			Status:         impexp.ParseEnabledStatus(impexp.ReadCSVField(record, headerIndex, "status")),
 		})
-	}
+	})
 	return rows, result.Failed == 0
 }
 

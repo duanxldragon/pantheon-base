@@ -3,7 +3,7 @@
   "title": "Extract one import/export pipeline from the eight module copies while keeping every validation",
   "goal": "Eight modules repeat the same import pipeline: receive a file, validate extension and size, parse, validate row by row, aggregate successes and failures, and emit a result; six of them also build their own import template. The duplication is real, but so is the risk: this path carries file-type validation, size caps, CSV formula-injection protection, encoding handling, row-level error aggregation and authorization. This wave extracts the pipeline into one package where each module supplies only its row mapper and its error wording, and it treats any lost validation as a failed wave. It ships as its own packet and its own PR so a regression can be bisected to the import path alone, and it runs the documented import/export smoke before closing.",
   "primaryLayer": "platform",
-  "status": "planned",
+  "status": "completed",
   "priority": "P1",
   "type": "refactor",
   "estimatedComplexity": "large",
