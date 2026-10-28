@@ -11,7 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func newImportContext(t *testing.T, fieldName, filename, content string, omitFile bool) *gin.Context {
+func newImportContext(t *testing.T, fieldName, filename, content string, omitFile bool) (*gin.Context, *httptest.ResponseRecorder) {
 	t.Helper()
 	gin.SetMode(gin.TestMode)
 
@@ -34,19 +34,18 @@ func newImportContext(t *testing.T, fieldName, filename, content string, omitFil
 	c, _ := gin.CreateTestContext(recorder)
 	c.Request = httptest.NewRequest(http.MethodPost, "/import", &body)
 	c.Request.Header.Set("Content-Type", writer.FormDataContentType())
-	return c
+	return c, recorder
 }
 
-func assertFailEnvelope(t *testing.T, c *gin.Context, wantKey string) {
+func assertFailEnvelope(t *testing.T, recorder *httptest.ResponseRecorder, wantKey string) {
 	t.Helper()
-	recorder := c.Writer.(gin.ResponseWriter)
 	if !strings.Contains(recorder.Body.String(), wantKey) {
 		t.Fatalf("expected envelope to contain %q, got %q", wantKey, recorder.Body.String())
 	}
 }
 
 func TestReadImportCSVWithoutFileFailsRequired(t *testing.T) {
-	c := newImportContext(t, ImportFileField, "a.csv", "x,y\n", true)
+	c, recorder := newImportContext(t, ImportFileField, "a.csv", "x,y\n", true)
 	records, ok := ReadImportCSV(c)
 	if ok {
 		t.Fatal("expected ok=false when the multipart file is absent")
@@ -54,14 +53,14 @@ func TestReadImportCSVWithoutFileFailsRequired(t *testing.T) {
 	if records != nil {
 		t.Fatalf("expected nil records, got %v", records)
 	}
-	assertFailEnvelope(t, c, MsgImportFileRequired)
+	assertFailEnvelope(t, recorder, MsgImportFileRequired)
 }
 
 func TestReadImportCSVWithValidFileReturnsRecords(t *testing.T) {
-	c := newImportContext(t, ImportFileField, "a.csv", "col1,col2\nv1,v2\n")
+	c, recorder := newImportContext(t, ImportFileField, "a.csv", "col1,col2\nv1,v2\n", false)
 	records, ok := ReadImportCSV(c)
 	if !ok {
-		t.Fatalf("expected ok=true, envelope: %s", c.Writer.(gin.ResponseWriter).Body.String())
+		t.Fatalf("expected ok=true, envelope: %s", recorder.Body.String())
 	}
 	if len(records) != 2 || records[0][0] != "col1" || records[1][0] != "v1" {
 		t.Fatalf("unexpected records: %v", records)
@@ -72,31 +71,30 @@ func TestReadImportCSVWithValidFileReturnsRecords(t *testing.T) {
 // extension, so a .txt file whose content parses as CSV imports. This test
 // locks that behaviour so the pipeline does not silently add a check.
 func TestReadImportCSVAcceptsNonCSVExtension(t *testing.T) {
-	c := newImportContext(t, ImportFileField, "a.txt", "col1,col2\nv1,v2\n")
+	c, recorder := newImportContext(t, ImportFileField, "a.txt", "col1,col2\nv1,v2\n", false)
 	_, ok := ReadImportCSV(c)
 	if !ok {
-		t.Fatalf("expected ok=true for a .txt upload with parseable content, envelope: %s",
-			c.Writer.(gin.ResponseWriter).Body.String())
+		t.Fatalf("expected ok=true for a .txt upload with parseable content, envelope: %s", recorder.Body.String())
 	}
 }
 
-func TestReadImportCSVMalformedCSFFailsInvalidCSV(t *testing.T) {
-	c := newImportContext(t, ImportFileField, "a.csv", "col1,col2\n\"unterminated\n")
+func TestReadImportCSVMalformedCSVFailsInvalidCSV(t *testing.T) {
+	c, recorder := newImportContext(t, ImportFileField, "a.csv", "col1,col2\n\"unterminated\n", false)
 	_, ok := ReadImportCSV(c)
 	if ok {
 		t.Fatal("expected ok=false for malformed CSV")
 	}
-	assertFailEnvelope(t, c, MsgImportFileInvalidCSV)
+	assertFailEnvelope(t, recorder, MsgImportFileInvalidCSV)
 }
 
 func TestReadImportCSVOversizedFileFailsInvalidCSV(t *testing.T) {
 	big := strings.Repeat("a,b,c\n", (MaxImportBytes()/6)+10)
-	c := newImportContext(t, ImportFileField, "a.csv", big)
+	c, recorder := newImportContext(t, ImportFileField, "a.csv", big, false)
 	_, ok := ReadImportCSV(c)
 	if ok {
 		t.Fatal("expected ok=false for an oversized file")
 	}
-	assertFailEnvelope(t, c, MsgImportFileInvalidCSV)
+	assertFailEnvelope(t, recorder, MsgImportFileInvalidCSV)
 }
 
 func TestBuildHeaderIndexTrimsAndLaterWins(t *testing.T) {
