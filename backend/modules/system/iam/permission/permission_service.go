@@ -53,13 +53,14 @@ const (
 
 type PermissionService struct {
 	db *gorm.DB
-	// tenantCtx is the per-request tenant context (contract §2.3/§3.3). Set from
-	// the Gin context by the handler layer via WithTenantContext; nil keeps the
-	// historical global behaviour for platform-internal callers, compat binds
-	// the platform-global scope. Without it the data-scope console reads and
-	// writes every tenant's policy rows, which is how a tenant administrator
-	// could list and overwrite another tenant's role data scope (F7/F8/F9).
-	tenantCtx *tenant.Context
+	// Scoper carries the per-request tenant context (contract §2.3/§3.3) with
+	// the shared write owner. Bound from the Gin context by the handler layer
+	// via WithTenantContext; nil keeps the historical global behaviour for
+	// platform-internal callers, compat binds the platform-global scope.
+	// Without it the data-scope console reads and writes every tenant's policy
+	// rows, which is how a tenant administrator could list and overwrite
+	// another tenant's role data scope (F7/F8/F9).
+	tenant.Scoper
 }
 
 // WithTenantContext returns a shallow view of the service bound to a request
@@ -69,25 +70,15 @@ func (s *PermissionService) WithTenantContext(ctx *tenant.Context) *PermissionSe
 		return s
 	}
 	bound := *s
-	bound.tenantCtx = ctx
+	bound.TenantCtx = ctx
 	return &bound
-}
-
-// tenantOwnerID is the tenant a policy row belongs to (write path: from the
-// resolved request context, never from the request body — contract §3.3).
-// Compat/platform => 0, which is the platform/global scope.
-func (s *PermissionService) tenantOwnerID() uint64 {
-	if s.tenantCtx == nil || !s.tenantCtx.IsMulti() {
-		return 0
-	}
-	return s.tenantCtx.TenantID
 }
 
 // isPlatformScope reports whether the caller operates on the platform/global
 // population (tenant 0) rather than inside a tenant. Platform scope is the only
 // scope allowed to read or write rows that are not pinned to a tenant.
 func (s *PermissionService) isPlatformScope() bool {
-	return s.tenantOwnerID() == tenant.PlatformGlobalTenantID
+	return s.TenantOwnerID() == tenant.PlatformGlobalTenantID
 }
 
 // policySubjectForWrite resolves the stored Casbin subject for a policy write
@@ -99,10 +90,10 @@ func (s *PermissionService) isPlatformScope() bool {
 func (s *PermissionService) policySubjectForWrite(roleKey string, requestedTenantID uint64) (string, error) {
 	targetTenant := requestedTenantID
 	if !s.isPlatformScope() {
-		if targetTenant != tenant.PlatformGlobalTenantID && targetTenant != s.tenantOwnerID() {
+		if targetTenant != tenant.PlatformGlobalTenantID && targetTenant != s.TenantOwnerID() {
 			return "", common.NewForbidden("tenant.forbidden")
 		}
-		targetTenant = s.tenantOwnerID()
+		targetTenant = s.TenantOwnerID()
 	}
 	return s.resolvePolicySubject(roleKey, targetTenant)
 }
@@ -114,7 +105,7 @@ func (s *PermissionService) policyInTenantScope(policy *database.CasbinRule) boo
 	if s.isPlatformScope() {
 		return true
 	}
-	suffix := fmt.Sprintf("@tenant:%d", s.tenantOwnerID())
+	suffix := fmt.Sprintf("@tenant:%d", s.TenantOwnerID())
 	subject := strings.TrimSpace(policy.V0)
 	return strings.HasPrefix(subject, "role:") && strings.HasSuffix(subject, suffix)
 }
@@ -126,7 +117,7 @@ func (s *PermissionService) applyPolicyTenantScope(db *gorm.DB) *gorm.DB {
 	if s.isPlatformScope() {
 		return db
 	}
-	return db.Where(permissionRoleKeyLikeClause, "%@tenant:"+strconv.FormatUint(s.tenantOwnerID(), 10))
+	return db.Where(permissionRoleKeyLikeClause, "%@tenant:"+strconv.FormatUint(s.TenantOwnerID(), 10))
 }
 
 type workbenchRemediationRecord struct {
@@ -552,7 +543,7 @@ func (s *PermissionService) ListWorkbenchRemediationEvents(query *PermissionWork
 	var events []PermissionWorkbenchRemediationEvent
 	db := s.db.Model(&PermissionWorkbenchRemediationEvent{})
 	if !s.isPlatformScope() {
-		db = db.Where(permissionTenantClause, s.tenantOwnerID())
+		db = db.Where(permissionTenantClause, s.TenantOwnerID())
 	}
 	if query != nil && strings.TrimSpace(query.RoleKey) != "" {
 		db = db.Where("role_key = ?", strings.TrimSpace(query.RoleKey))
@@ -584,7 +575,7 @@ func (s *PermissionService) recordWorkbenchRemediation(record workbenchRemediati
 		return nil
 	}
 	return s.db.Create(&PermissionWorkbenchRemediationEvent{
-		TenantID:     s.tenantOwnerID(),
+		TenantID:     s.TenantOwnerID(),
 		RoleKey:      strings.TrimSpace(record.roleKey),
 		IssueType:    strings.TrimSpace(record.issueType),
 		IssueKey:     strings.TrimSpace(record.issueKey),
@@ -652,7 +643,7 @@ func (s *PermissionService) ImportPolicies(operatorRoleKeys []string, records []
 	if err != nil {
 		return nil, err
 	}
-	existingByKey, err := loadExistingPolicyMap(s.db, subjects, s.isPlatformScope(), s.tenantOwnerID())
+	existingByKey, err := loadExistingPolicyMap(s.db, subjects, s.isPlatformScope(), s.TenantOwnerID())
 	if err != nil {
 		return nil, err
 	}
@@ -748,7 +739,7 @@ func (s *PermissionService) validateImportRoleKeys(rows []policyImportRow, resul
 	}
 	db := s.db.Table("system_role").Where("role_key IN ? AND deleted_at IS NULL", roleKeys)
 	if !s.isPlatformScope() {
-		db = db.Where(permissionTenantClause, s.tenantOwnerID())
+		db = db.Where(permissionTenantClause, s.TenantOwnerID())
 	} else {
 		db = db.Where(permissionTenantClause, tenant.PlatformGlobalTenantID)
 	}
@@ -762,7 +753,7 @@ func (s *PermissionService) validateImportRoleKeys(rows []policyImportRow, resul
 			var count int64
 			rowDB := s.db.Table("system_role").Where("role_key = ? AND deleted_at IS NULL", row.RoleKey)
 			if !s.isPlatformScope() {
-				rowDB = rowDB.Where(permissionTenantClause, s.tenantOwnerID())
+				rowDB = rowDB.Where(permissionTenantClause, s.TenantOwnerID())
 			} else {
 				rowDB = rowDB.Where(permissionTenantClause, tenant.PlatformGlobalTenantID)
 			}
@@ -909,7 +900,7 @@ func (s *PermissionService) ensureRoleKeyExists(roleKey string) error {
 	var count int64
 	db := s.db.Table("system_role").Where("role_key = ? AND deleted_at IS NULL", roleKey)
 	if !s.isPlatformScope() {
-		db = db.Where(permissionTenantClause, s.tenantOwnerID())
+		db = db.Where(permissionTenantClause, s.TenantOwnerID())
 	}
 	if err := db.Count(&count).Error; err != nil {
 		return err
