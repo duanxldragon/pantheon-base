@@ -1,0 +1,56 @@
+{
+  "taskId": "2026-10-27-s2-batch-and-envelope",
+  "repo": "pantheon-base",
+  "executedAt": "2026-10-28T00:00:00+08:00",
+  "agent": {
+    "tool": "other",
+    "adapter": "qoder-agent"
+  },
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-27-s2-batch-and-envelope/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-27-s2-batch-and-envelope/",
+    "summaryFile": ".harness/evidence/2026-10-27-s2-batch-and-envelope/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-27-s2-batch-and-envelope/review.md",
+    "changeRef": "backend/pkg/common/batch.go",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-27-codebase-simplification-program.task.md",
+      "docs/reviews/CODE_SIMPLIFICATION_PLAN.md"
+    ]
+  },
+  "commands": [
+    {
+      "command": "grep -rln 'common.BatchDelete' modules | grep -v _test",
+      "cwd": "backend",
+      "notes": "all six handler families already call the shared helper: dict_handler, permission_handler, role_handler, user_handler, dept_handler, post_handler — RC-023 already converged",
+      "status": "passed"
+    },
+    {
+      "command": "git log --oneline --all -- pkg/common/batch.go | head -3",
+      "cwd": "backend",
+      "notes": "shared helper predates the audit (landed with #59/#181 consolidation and was hardened in #181); pkg/common/batch_test.go exists and covers the tally semantics",
+      "status": "passed"
+    },
+    {
+      "command": "grep -rn 'c.JSON(' modules/system/iam/tenant/ | grep -v _test",
+      "cwd": "backend",
+      "notes": "zero matches — RC-025's nine raw c.JSON sites no longer exist: tenant_handler.go was deleted and its surface rewritten onto the common envelope by the tenant remediation waves (W8 #443 et al.); tenant_ops_handler/tenant_platform_handler use common.Success/common.Fail",
+      "status": "passed"
+    },
+    {
+      "command": "sed -n '240,252p' modules/system/iam/user/user_service.go && sed -n '405,410p' modules/system/iam/user/user_export.go && grep -n 'func WithDataScope' pkg/database/scope.go",
+      "cwd": "backend",
+      "notes": "RC-030 proof: the second wrapper is database.WithDataScope(dataScope) (pkg/database/scope.go:12) — a dept/data-scope predicate composed on top of the tenant scope in both ListUsers and listUsersForExport; per the packet's own rule this is a false positive and the item is dropped",
+      "status": "passed"
+    },
+    {
+      "command": "node scripts/harness/check-task-packet.mjs --root .",
+      "cwd": ".",
+      "notes": "66 file(s), 0 error(s), 41 warning(s) — baseline unchanged",
+      "status": "passed"
+    }
+  ],
+  "knownGaps": [
+    "No code diff in this wave: all three RC findings were already resolved before dispatch (RC-023 by the pre-audit shared helper plus its existing adoption, RC-025 by the tenant handler rewrite, RC-030 by proof of a deliberate tenant x data-scope composition)",
+    "Frontend raw-shape check (packet implementationNotes) is moot: no raw c.JSON remains in the tenant package, so no frontend parser can key off a shape that no longer exists"
+  ]
+}
