@@ -464,7 +464,7 @@ func (s *Service) ListAllSessions(query *AdminSessionQuery) (*AdminSessionPageRe
 	now := time.Now()
 	policy := s.policy.GetSessionPolicy()
 
-	page, pageSize := normalizePageQuery(queryPageFromAdminSession(query), queryPageSizeFromAdminSession(query))
+	page, pageSize, offset := normalizePageQuery(queryPageFromAdminSession(query), queryPageSizeFromAdminSession(query))
 
 	base := func() *gorm.DB {
 		db := s.db.Table("system_user_session").
@@ -508,7 +508,7 @@ func (s *Service) ListAllSessions(query *AdminSessionQuery) (*AdminSessionPageRe
 	if err := base().Session(&gorm.Session{}).
 		Select("system_user_session.session_id, system_user_session.user_id, system_user.username, system_user.nickname, system_user_session.last_ip, system_user_session.user_agent, system_user_session.refresh_expires_at, system_user_session.last_refresh_at, system_user_session.last_activity_at, system_user_session.revoked_at, system_user_session.created_at").
 		Order("system_user_session.created_at desc").
-		Offset((page - 1) * pageSize).Limit(pageSize).
+		Offset(offset).Limit(pageSize).
 		Scan(&rows).Error; err != nil {
 		return nil, err
 	}
