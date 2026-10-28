@@ -7,7 +7,7 @@ Task: 2026-10-27-s2-error-mapping-dedup · Branch: `refactor/s2-error-mapping` (
 | Commit | Pattern | Content |
 |---|---|---|
 | `43856299` | shared error values | `common.MessageParamInvalid` / `common.MessageRequestFailed` added; 20 per-handler declarations across 10 files deleted (incl. const blocks in setting/i18n/tenant/role that keep their module keys); same-package referencers (dict_service, role_*, tenant_ops_handler, role_handler_notfound_test.go) migrated |
-| `bdbe5c73` | not-found translation | `database.NotFoundIfMissing` (0 callers) → `database.TranslateNotFound(err, replacement)`; 11 translation-shaped sites migrated (6× NewNotFound/404, 4× NewBadRequest/400, 1× plain error/500); 24 remaining `gorm.ErrRecordNotFound` references are control-flow/domain-sentinel/handler-mapping and stay local |
+| `bdbe5c73` | not-found translation | `database.NotFoundIfMissing` (0 callers) → `database.TranslateNotFound(err, replacement)`; 11 translation-shaped sites migrated (6× NewNotFound/404, 4× NewBadRequest/400, 1× plain error/500); the non-translation `gorm.ErrRecordNotFound` references (37 errors.Is-shaped remain of 55 on base) are control-flow/domain-sentinel/handler-mapping and stay local |
 | `77cea558` | context helpers | `menu.getRoleKeysFromContext` deleted → `common.GetRoleKeys`; `user.getUserIDFromContext` → adapter over `common.GetUserID` (keeps `(uint64, bool)` shape); zero-caller `http.GetUserID` deleted |
 
 Measured diff: 31 files changed, +208 / −290 (net −82).
@@ -15,7 +15,7 @@ Measured diff: 31 files changed, +208 / −290 (net −82).
 ## Packet premise vs measured reality
 
 - "eleven handler files declare the two error values" → measured **20 declarations across 10 files** (some in shared const blocks the audit's grep missed; #451 had already removed i18n/setting/tenant standalone copies that later returned as block members — see capture-before/declarations.txt).
-- "gorm.ErrRecordNotFound translated in more than thirty places" → measured **35 references**, of which only **11 are translation-shaped**; the other 24 are control-flow branches, the `ErrTenantNotFound` domain sentinel family, or handler-side mapping. Only identical shapes were replaced (packet implementationNotes), the rest documented in response-diff.md §2.
+- "gorm.ErrRecordNotFound translated in more than thirty places" → measured **72 raw / 55 errors.Is-shaped references**, of which only **11 are translation-shaped**; the rest are control-flow branches, the `ErrTenantNotFound` domain sentinel family, or handler-side mapping (43 raw / 37 shaped remain after the wave). Only identical shapes were replaced (packet implementationNotes), the rest documented in response-diff.md §2.
 - "five context/message helpers exist in two or three copies" → menu/user local copies now point at the common implementations; the `http`-vs-`common` i18n copy is **structurally blocked** (re_export.go cycle) and stays with a documented collapse condition (response-diff.md §5).
 
 ## Equivalence argument (per changed call site)
@@ -49,4 +49,4 @@ Full per-site tables: `response-diff.md`. In short:
 ## Follow-ups recorded
 
 - `pkg/common/http` ⇄ `pkg/common` helper collapse: blocked by the re_export cycle; needs either the envelope moving into `pkg/common` or a shared leaf package — architecture decision, out of this wave's scope.
-- The 24 non-translation `ErrRecordNotFound` sites: intentional keeps, no action proposed.
+- The non-translation `ErrRecordNotFound` sites: intentional keeps, no action proposed.

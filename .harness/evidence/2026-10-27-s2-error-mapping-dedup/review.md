@@ -21,7 +21,7 @@ Reviewer posture: equivalence-focused. Every changed call site was checked for o
 
 ## Human gates
 
-None for this packet. Three non-equivalent-shaped site families were kept local per the packet's own rule and reported in the known gaps (http i18n privates, role/menu wrappers, 24 control-flow sites).
+None for this packet. Three non-equivalent-shaped site families were kept local per the packet's own rule and reported in the known gaps (http i18n privates, role/menu wrappers, the non-translation not-found sites).
 
 ## Verdict
 
@@ -55,7 +55,7 @@ Approved. Three commits, each independently revertable; behavior preserved by co
   "knownGaps": [
     "pkg/common/http i18n-key privates stay (re_export import cycle); collapse condition documented",
     "role/menu mapping wrappers kept with existing why-comments per packet fallback",
-    "24 gorm.ErrRecordNotFound references intentionally not migrated (control-flow / domain sentinel / handler mapping)"
+    "non-translation gorm.ErrRecordNotFound sites intentionally kept (37 errors.Is-shaped remain of 55 on base; control-flow / domain sentinel / handler mapping)"
   ],
   "commits": ["43856299", "bdbe5c73", "77cea558"]
 }

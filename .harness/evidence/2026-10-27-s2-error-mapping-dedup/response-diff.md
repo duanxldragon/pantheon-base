@@ -1,6 +1,6 @@
 # Response diff — S2-error-mapping-dedup
 
-All changes are identifier-level refactors. The observable envelope (HTTP status, business code, message key) is unchanged at every site. Before-state captured on the pristine branch point (`origin/main` = `04aa64b1`): `capture-before/declarations.txt` (20 declarations / 10 files), `capture-before/notfound-sites.txt` (35 `gorm.ErrRecordNotFound` references).
+All changes are identifier-level refactors. The observable envelope (HTTP status, business code, message key) is unchanged at every site. Before-state captured on the pristine branch point (`origin/main` = `04aa64b1`): `capture-before/declarations.txt` (20 declarations / 10 files), `capture-before/notfound-sites.txt` (72 raw `gorm.ErrRecordNotFound` references in module code, 55 `errors.Is`-shaped).
 
 ## 1. Shared error message keys (commit 1)
 
@@ -45,7 +45,7 @@ Value equivalence: all 20 declarations carried exactly `"param.invalid"` / `"req
 
 `TranslateNotFound` semantics: `errors.Is(err, gorm.ErrRecordNotFound)` → replacement; every other error passed through by `require.Same`-grade identity (tested, incl. wrapped not-found via `fmt.Errorf("%w")`, nil, and plain errors).
 
-Sites intentionally NOT migrated (measured against the packet's "30+" estimate; full list in `capture-before/notfound-sites.txt`):
+Sites intentionally NOT migrated (measured against the packet's "30+" estimate; full list in `capture-before/notfound-sites.txt`; after the wave 43 raw / 37 errors.Is-shaped references remain in module code):
 
 - Control-flow branches (return nil/false/create/continue): login_service.go:124,163,524,564; login_runtime.go:828; mfa_service.go:101,274; session_service.go:366; dynamic_module_sync.go:106,384; dynamic_module_service.go:216,311; setting_seed.go:159,180; i18n_export.go:184; i18n_seed.go:238,476; dict_service.go:986; role_helper.go:28; dept_import.go:164,168; dept_service.go:530,533; tenant_service.go:254,1028,1094,1215; login_tenant_switch.go:208,224; role_handler.go:46.
 - Domain sentinels: tenant_provision.go:233 / tenant_service.go:343,358,609 return `ErrTenantNotFound` (module sentinel, not an i18n translation).
