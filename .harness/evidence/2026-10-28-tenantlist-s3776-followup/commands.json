@@ -164,6 +164,30 @@
       "details": "Created https://github.com/duanxldragon/pantheon-base/pull/464 with the same body file that passed check-pr-governance. The --head flag stands in for the wrapper's inferred branch; no governance step was skipped, because the governed artifact is the body and that was validated directly."
     },
     {
+      "command": "gh pr view 464 --json state,mergedAt,mergeCommit",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Post-merge reading: state MERGED at 2026-10-28T15:01:04Z with merge commit 7ceee6247bf73252686a59fc4656359dc33b5454 (squash). All 35 PR checks had passed, 2 skipped; SonarCloud Code Analysis on the PR had already passed in 34s."
+    },
+    {
+      "command": "gh run view 40711689652 --json status,conclusion,jobs",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Release Gate on main @ 7ceee624: conclusion success. Jobs all success — Open PRs, Dependabot Alerts, CodeQL Alerts, Candidate Checks, SonarCloud Gate, Release Gate Summary. This is the remote reading the earlier gap said could not be obtained locally."
+    },
+    {
+      "command": "curl -sf 'https://sonarcloud.io/api/issues/search?componentKeys=duanxldragon_pantheon-base&branch=main&resolved=false&types=BUG,VULNERABILITY,CODE_SMELL&ps=10'",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Post-merge reading on main (analysis revision 7ceee624): open issues total 0. The typescript:S3776 row AaF89PoZ78TOH8UMk82y that this packet targeted is gone; so are the four rows cleared by the previous packet."
+    },
+    {
+      "command": "gh api repos/duanxldragon/pantheon-base/dependabot/alerts?state=open --jq '[...]'",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Post-merge reading: empty array — 0 open Dependabot alerts, confirming the go-jose/v4 move from the previous packet also settled on the dependency graph."
+    },
+    {
       "command": "git status --short && git diff --stat",
       "cwd": ".",
       "status": "passed",
@@ -171,7 +195,7 @@
     }
   ],
   "knownGaps": [
-    "SonarCloud will only re-read the finding after this branch merges and the next main analysis finishes; the issue AaF89PoZ78TOH8UMk82y stays open until then. Local proof is the same rule measured on the same file (16 on main's copy, no finding on the new copy at threshold 15), not a green remote gate.",
+    "SonarCloud will only re-read the finding after this branch merges and the next main analysis finishes; the issue AaF89PoZ78TOH8UMk82y stays open until then. Local proof is the same rule measured on the same file (16 on main's copy, no finding on the new copy at threshold 15), not a green remote gate. Resolved post-merge: analysis 7ceee624 reports 0 open issues and Release Gate run 40711689652 is green on every job.",
     "The repository does not depend on eslint-plugin-sonarjs: the measurement runs in /d/tmp/sonarcheck outside the tree, so the pre-commit check is a manual step recorded by the new §5.2 rule rather than an automated gate. Adding the plugin to the repository would be a dependency and gate decision for the maintainer.",
     "The tenant console UI was not re-driven in a browser for this packet: the change is a predicate-for-predicate extraction inside one render function, and the routing/visual surface is unchanged. CI `PR Smoke Modules` exercises the tenant console page.",
     "Runtime evidence for the four states (compat guide, first load, request error, table) is structural: each branch's predicate, returned element, class name, i18n key and onRetry body is byte-identical in the diff; no state was added, removed or reordered."

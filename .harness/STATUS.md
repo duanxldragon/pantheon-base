@@ -24,6 +24,11 @@
   真实贡献项是四态分支链。后续任务包 `2026-10-28-tenantlist-s3776-followup` 提取
   `renderBody()` 后组件 16 → 10、新函数 5；失败模式登记为 `FR-018`，并在
   `docs/harness/AI_QUALITY_GOVERNANCE.md` §5.2 加“静态分析类修复须同规则复测”的规则。
+- **终态（2026-10-28 15:0xZ 观测）**：`fix/tenantlist-cognitive-complexity` 以 PR #464 压缩合并为
+  `7ceee624`，`main` 上 `Release Gate` run `40711689652` **全部 success**（Open PRs / Dependabot
+  Alerts / CodeQL Alerts / Candidate Checks / SonarCloud Gate / Release Gate Summary）；
+  SonarCloud `main` 未解决 issue **0**，Dependabot open alerts **0**。此前 #463 之后的
+  run `40704728582` 仍是 failure（Dependabot 竞态 + TenantList 16），现已由下一次 push 覆盖。
 - **验证读数**：`gofmt` 干净；`go vet`/`go build` 通过；`CGO_ENABLED=1 go test -race ./...`
   **47 包 ok / 0 FAIL / 6 包无测试文件**（本机需 `mingw64/bin` 在 `PATH`，否则 cgo.exe exit 2）；
   `govulncheck`：代码受影响 0 条（另有 3 条在 `x/net`/`x/crypto` 的非调用路径上，Dependabot
@@ -385,6 +390,7 @@ GitHub Release 于 `2026-10-22T00:17:53Z` 发布，四件产物齐备（tgz 19,9
 | ✅ 已完成 | v0.17.7 发布收口（`2026-10-27-v0177-lint-codeql-closure`，三条 base 自有 lint/CodeQL 发现回流修复，tag→`2091a2d8`，四件资产） |
 | ✅ 已完成 | v0.17.8 发布收口（`2026-10-27-v0178-dep-vuln-closure`，依赖漏洞关闭 + Sonar 归属勘误，tag→`e256d1fb`，四件资产 + Verify run 40472462712） |
 | ✅ 已完成 | 主干 Release Gate 转绿（`2026-10-28-release-gate-green`，go-jose/v3 经 go-oidc v3.21.0 迁到 v4.1.6，5 条 Sonar 未处理项整改；本地 `-race` 47 包绿、前端三命令绿；Sonar/Dependabot 放行待合并后观测） |
+| ✅ 已完成 | TenantList S3776 复测修正（`2026-10-28-tenantlist-s3776-followup`，#463 关于 `can(perm)` 清除该发现的结论被复测推翻；四态分支链提取为 `renderBody()`，同规则 16 → 10、新函数 5；PR #464 → `7ceee624`，`Release Gate` run 40711689652 全绿、Sonar `main` 未解决 0、Dependabot open 0；`FR-018` + 治理指南 §5.2 复测规则） |
 | 🚧 进行中 | 代码精简与横向重复收敛（`2026-10-27-codebase-simplification-program`：**S1×2 已完成**（#438 #439，其中 dead-code 波实测 **19 文件 +0/−1923** 纯删除）、**S4 已完成**（#441，五项治理面决策落档 `docs/reviews/GOVERNANCE_SURFACE_DECISIONS_2026-10-27.md`；follow-up 别名删除波 #447 实测 **re_export.go 112→52 行**，删十个零消费别名、全量 46 包绿）；**S2 已完成 6/6**（#450 共享 helper 五件、#451 id-parse 27 站点迁移、#452 pagination-sort 13 分页 + 8 sort normalizer 迁移，实测内联白名单 8→0、钳制 11→1、内联 Offset 14→4、#454 error-mapping dedup（20 重复错误声明收敛到共享常量、gorm not-found 翻译收敛到 `database.TranslateNotFound`、context helper 三重复制归一，净 −82 行）、#455 batch-and-envelope 零代码差收口（RC-023 已由前波收敛、RC-025 表面已随租户波删除、RC-030 证伪为 WithDataScope 谓词）、#456 import-export pipeline（8 导入端点 7 模块收敛到 `impexp.ReadImportCSV` + 四个服务原语 + `BuildImportTemplate`，逐模块 commit 阶梯，validation inventory 全量记账，CSV 公式注入行为 golden 锁定，活体 API smoke 11/11）；原三项维护者门禁（RC-016 standalone-PR、error-mapping 批准、batch 收口确认）按维护者 2026-10-28 全权委托执行，全部以 evidence + strict 校验落档；smoke 指南 §1 role「仅导出」文档漂移随本条一并修正）；S3×3 已完成（2026-10-28，见下节「代码精简 S3 收口」）——programme 规则要求 S2 稳定一个发布周期（foundation release）后才可开工，该排期门禁由维护者 2026-10-28 直接指令覆盖，release 切割仍属 do-not-touch、待维护者决定；setting_audit 钳制语义分歧与 tenant member 分页（W9）仍为显式维护者决策；双语 checker 接 CI 待批准。登记债务②（三份存量 review.md 缺 Machine Readable 块）已随 #448 关闭，全量 `.harness/evidence/*/review.md` strict 0 error） |
 | ✅ 已完成 | 租户功能完整性复核（2026-10-27，只读，前后端 + 租户运营；结论：单租户路径可用，**"租户开发已完成"不成立**；1 P1 / 2 P2 / 6 P3；产出 `docs/reviews/TENANT_FUNCTIONAL_COMPLETENESS_REVIEW_2026-10-27.md`） |
 | ✅ 已完成 | 租户完整性整改（`2026-10-27-tenant-completeness-remediation`，8 个波次 **W1–W8 全部完成**（#436 / #434 / #440 / #442 / #443 / W6 控制台 spec #459 / W7 决策包 / #445）；W3 决策 A、W7 决策 A、W6 的 report-only 门禁默认均按 maintainer-delegated 记录，详见下节各收口段） |

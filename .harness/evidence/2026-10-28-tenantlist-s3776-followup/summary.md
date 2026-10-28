@@ -97,9 +97,26 @@ authoritative reading; what was missing was the pre-commit measurement.
 
 - The SonarCloud issue only closes after this branch merges and the next `main`
   analysis finishes; local proof is the same rule on the same file.
+  **Resolved:** see "Post-merge verification" below.
 - The measurement plugin is not a repository dependency, so the §5.2 rule is
   honoured by hand. Making it a gate would be a dependency and CI-policy
   decision for the maintainer.
 - No browser run was made for this packet: the change is a predicate-for-predicate
   extraction with an unchanged rendered surface, and CI `PR Smoke Modules`
   exercises the tenant console page.
+
+## Post-merge verification (2026-10-28T15:0xZ)
+
+| Reading | Value |
+| --- | --- |
+| PR | #464, merged 15:01:04Z as squash commit `7ceee624` |
+| PR checks | 35 passed, 2 skipped; `SonarCloud Code Analysis` passed on the PR in 34s |
+| `Release Gate` on `main` @ `7ceee624` | run `40711689652` — **success**, every job green (Open PRs, Dependabot Alerts, CodeQL Alerts, Candidate Checks, SonarCloud Gate, Release Gate Summary) |
+| SonarCloud open issues on `main` (analysis `7ceee624`) | **0** — `AaF89PoZ78TOH8UMk82y` is gone |
+| Dependabot open alerts | **0** |
+
+The earlier `main` run `40704728582` (on `1ae6481c`) stays recorded as a failure:
+it carried both the Sonar row this packet fixes and the Dependabot-refresh race
+from the previous packet. The next push superseded it, which is why the green
+reading above is on `7ceee624`.
+
