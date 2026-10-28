@@ -60,7 +60,7 @@
   "harnessProfile": {
     "template": "admin-platform",
     "overlay": "pantheon-base",
-    "qualityProfile": "none",
+    "qualityProfile": "ui-runtime",
     "portableFailureClass": "test-coverage-gap",
     "ownerLayer": "consumer-repository",
     "ratchetDecision": "sensor-added",
