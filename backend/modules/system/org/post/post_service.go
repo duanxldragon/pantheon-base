@@ -10,6 +10,7 @@ import (
 	"github.com/duanxldragon/pantheon-base/backend/pkg/impexp"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/tenant"
 
+	"github.com/duanxldragon/pantheon-base/backend/pkg/database"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -606,10 +607,7 @@ func (s *PostService) ensurePostDeptID(deptID uint64) error {
 	}
 	var dept row
 	if err := s.scoped(s.db.Table("system_dept")).Select("id, is_root").Where("id = ?", deptID).First(&dept).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return common.NewBadRequest("post.dept.invalid")
-		}
-		return err
+		return database.TranslateNotFound(err, common.NewBadRequest("post.dept.invalid"))
 	}
 	if dept.IsRoot == common.StatusFlagYes {
 		return common.NewForbidden("post.dept.root_forbidden")

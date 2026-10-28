@@ -10,9 +10,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-const errRequestFailed = "request.failed"
-const errParamInvalid = "param.invalid"
-
 type DictHandler struct {
 	service *DictService
 }
@@ -31,7 +28,7 @@ func (h *DictHandler) boundService(c *gin.Context) *DictService {
 func (h *DictHandler) GetDictTypeList(c *gin.Context) {
 	var query DictTypeListQuery
 	if err := c.ShouldBindQuery(&query); err != nil {
-		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
+		common.Fail(c, common.CodeParamInvalid, common.MessageParamInvalid)
 		return
 	}
 	rows, err := h.boundService(c).ListDictTypes(&query)
@@ -46,12 +43,12 @@ func (h *DictHandler) CreateDictType(c *gin.Context) {
 	common.SetAuditMetadata(c, "dict.type.create.title", common.BusinessInsert)
 	var req DictTypeCreateReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
+		common.Fail(c, common.CodeParamInvalid, common.MessageParamInvalid)
 		return
 	}
 	row, err := h.boundService(c).CreateDictType(&req)
 	if err != nil {
-		common.FailWithError(c, common.CodeError, err, errRequestFailed)
+		common.FailWithError(c, common.CodeError, err, common.MessageRequestFailed)
 		return
 	}
 	common.Success(c, row)
@@ -61,7 +58,7 @@ func (h *DictHandler) UpdateDictType(c *gin.Context) {
 	common.SetAuditMetadata(c, "dict.type.update.title", common.BusinessUpdate)
 	var req DictTypeUpdateReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
+		common.Fail(c, common.CodeParamInvalid, common.MessageParamInvalid)
 		return
 	}
 	typeID, ok := common.ParseUintParam(c, "id")
@@ -70,7 +67,7 @@ func (h *DictHandler) UpdateDictType(c *gin.Context) {
 	}
 	row, err := h.boundService(c).UpdateDictType(typeID, &req)
 	if err != nil {
-		common.FailWithError(c, common.CodeError, err, errRequestFailed)
+		common.FailWithError(c, common.CodeError, err, common.MessageRequestFailed)
 		return
 	}
 	common.Success(c, row)
@@ -83,7 +80,7 @@ func (h *DictHandler) DeleteDictType(c *gin.Context) {
 		return
 	}
 	if err := h.boundService(c).DeleteDictType(typeID); err != nil {
-		common.FailWithError(c, common.CodeError, err, errRequestFailed)
+		common.FailWithError(c, common.CodeError, err, common.MessageRequestFailed)
 		return
 	}
 	common.Success(c, gin.H{"deleted": true})
@@ -93,12 +90,12 @@ func (h *DictHandler) BatchUpdateDictTypeStatus(c *gin.Context) {
 	common.SetAuditMetadata(c, "dict.type.batch_status.title", common.BusinessUpdate)
 	var req DictTypeBatchStatusReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
+		common.Fail(c, common.CodeParamInvalid, common.MessageParamInvalid)
 		return
 	}
 	updatedCount, err := h.boundService(c).BatchUpdateDictTypeStatus(req.TypeIDs, req.Status)
 	if err != nil {
-		common.FailWithError(c, common.CodeError, err, errRequestFailed)
+		common.FailWithError(c, common.CodeError, err, common.MessageRequestFailed)
 		return
 	}
 	common.Success(c, gin.H{"updatedCount": updatedCount})
@@ -108,7 +105,7 @@ func (h *DictHandler) BatchDeleteDictTypes(c *gin.Context) {
 	common.SetAuditMetadata(c, "dict.type.batch_delete.title", common.BusinessDelete)
 	var req common.BatchDeleteReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
+		common.Fail(c, common.CodeParamInvalid, common.MessageParamInvalid)
 		return
 	}
 	resp := common.BatchDelete(req.IDs, h.boundService(c).DeleteDictType)
@@ -118,7 +115,7 @@ func (h *DictHandler) BatchDeleteDictTypes(c *gin.Context) {
 func (h *DictHandler) GetDictItemList(c *gin.Context) {
 	var query DictItemListQuery
 	if err := c.ShouldBindQuery(&query); err != nil {
-		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
+		common.Fail(c, common.CodeParamInvalid, common.MessageParamInvalid)
 		return
 	}
 	rows, err := h.boundService(c).ListDictItems(&query)
@@ -132,7 +129,7 @@ func (h *DictHandler) GetDictItemList(c *gin.Context) {
 func (h *DictHandler) AnalyzeDictUsage(c *gin.Context) {
 	dictCode := strings.TrimSpace(c.Query("dictCode"))
 	if dictCode == "" {
-		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
+		common.Fail(c, common.CodeParamInvalid, common.MessageParamInvalid)
 		return
 	}
 	resp, err := h.boundService(c).AnalyzeDictUsage(dictCode)
@@ -147,12 +144,12 @@ func (h *DictHandler) CreateDictItem(c *gin.Context) {
 	common.SetAuditMetadata(c, "dict.item.create.title", common.BusinessInsert)
 	var req DictItemCreateReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
+		common.Fail(c, common.CodeParamInvalid, common.MessageParamInvalid)
 		return
 	}
 	row, err := h.boundService(c).CreateDictItem(&req)
 	if err != nil {
-		common.FailWithError(c, common.CodeError, err, errRequestFailed)
+		common.FailWithError(c, common.CodeError, err, common.MessageRequestFailed)
 		return
 	}
 	common.Success(c, row)
@@ -162,7 +159,7 @@ func (h *DictHandler) UpdateDictItem(c *gin.Context) {
 	common.SetAuditMetadata(c, "dict.item.update.title", common.BusinessUpdate)
 	var req DictItemUpdateReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
+		common.Fail(c, common.CodeParamInvalid, common.MessageParamInvalid)
 		return
 	}
 	itemID, ok := common.ParseUintParam(c, "id")
@@ -171,7 +168,7 @@ func (h *DictHandler) UpdateDictItem(c *gin.Context) {
 	}
 	row, err := h.boundService(c).UpdateDictItem(itemID, &req)
 	if err != nil {
-		common.FailWithError(c, common.CodeError, err, errRequestFailed)
+		common.FailWithError(c, common.CodeError, err, common.MessageRequestFailed)
 		return
 	}
 	common.Success(c, row)
@@ -184,7 +181,7 @@ func (h *DictHandler) DeleteDictItem(c *gin.Context) {
 		return
 	}
 	if err := h.boundService(c).DeleteDictItem(itemID); err != nil {
-		common.FailWithError(c, common.CodeError, err, errRequestFailed)
+		common.FailWithError(c, common.CodeError, err, common.MessageRequestFailed)
 		return
 	}
 	common.Success(c, gin.H{"deleted": true})
@@ -194,12 +191,12 @@ func (h *DictHandler) BatchUpdateDictItemStatus(c *gin.Context) {
 	common.SetAuditMetadata(c, "dict.item.batch_status.title", common.BusinessUpdate)
 	var req DictItemBatchStatusReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
+		common.Fail(c, common.CodeParamInvalid, common.MessageParamInvalid)
 		return
 	}
 	updatedCount, err := h.boundService(c).BatchUpdateDictItemStatus(req.ItemIDs, req.Status)
 	if err != nil {
-		common.FailWithError(c, common.CodeError, err, errRequestFailed)
+		common.FailWithError(c, common.CodeError, err, common.MessageRequestFailed)
 		return
 	}
 	common.Success(c, gin.H{"updatedCount": updatedCount})
@@ -209,7 +206,7 @@ func (h *DictHandler) BatchDeleteDictItems(c *gin.Context) {
 	common.SetAuditMetadata(c, "dict.item.batch_delete.title", common.BusinessDelete)
 	var req common.BatchDeleteReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
+		common.Fail(c, common.CodeParamInvalid, common.MessageParamInvalid)
 		return
 	}
 	resp := common.BatchDelete(req.IDs, h.boundService(c).DeleteDictItem)
@@ -224,12 +221,12 @@ func (h *DictHandler) ReorderDictItem(c *gin.Context) {
 	}
 	var req DictItemReorderReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
+		common.Fail(c, common.CodeParamInvalid, common.MessageParamInvalid)
 		return
 	}
 	row, err := h.boundService(c).ReorderDictItem(itemID, req.Direction)
 	if err != nil {
-		common.FailWithError(c, common.CodeError, err, errRequestFailed)
+		common.FailWithError(c, common.CodeError, err, common.MessageRequestFailed)
 		return
 	}
 	common.Success(c, row)
@@ -253,7 +250,7 @@ func (h *DictHandler) RefreshDictOptionsCache(c *gin.Context) {
 	common.SetAuditMetadata(c, "dict.cache.refresh.title", common.BusinessUpdate)
 	var req DictCacheRefreshReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
+		common.Fail(c, common.CodeParamInvalid, common.MessageParamInvalid)
 		return
 	}
 	resp, err := h.boundService(c).RefreshDictOptionsCache(req.Codes)
@@ -269,7 +266,7 @@ func (h *DictHandler) ExportDictTypes(c *gin.Context) {
 
 	var query DictTypeListQuery
 	if err := c.ShouldBindJSON(&query); err != nil {
-		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
+		common.Fail(c, common.CodeParamInvalid, common.MessageParamInvalid)
 		return
 	}
 	file, err := h.boundService(c).ExportDictTypes(&query)
@@ -323,7 +320,7 @@ func (h *DictHandler) ExportDictItems(c *gin.Context) {
 
 	var query DictItemListQuery
 	if err := c.ShouldBindJSON(&query); err != nil {
-		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
+		common.Fail(c, common.CodeParamInvalid, common.MessageParamInvalid)
 		return
 	}
 	file, err := h.boundService(c).ExportDictItems(&query)

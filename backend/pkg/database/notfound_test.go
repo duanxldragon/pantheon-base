@@ -9,25 +9,25 @@ import (
 	"gorm.io/gorm"
 )
 
-func TestNotFoundIfMissingTranslatesRecordNotFound(t *testing.T) {
-	got := NotFoundIfMissing(gorm.ErrRecordNotFound, "user.not_found")
+func TestTranslateNotFoundTranslatesRecordNotFound(t *testing.T) {
+	got := TranslateNotFound(gorm.ErrRecordNotFound, errors.New("user.not_found"))
 	require.EqualError(t, got, "user.not_found")
 }
 
-func TestNotFoundIfMissingTranslatesWrappedRecordNotFound(t *testing.T) {
+func TestTranslateNotFoundTranslatesWrappedRecordNotFound(t *testing.T) {
 	wrapped := fmt.Errorf("query users: %w", gorm.ErrRecordNotFound)
-	got := NotFoundIfMissing(wrapped, "tenant.not_found")
+	got := TranslateNotFound(wrapped, errors.New("tenant.not_found"))
 	require.EqualError(t, got, "tenant.not_found")
 }
 
-func TestNotFoundIfMissingPassesOtherErrorsThroughUnchanged(t *testing.T) {
+func TestTranslateNotFoundPassesOtherErrorsThroughUnchanged(t *testing.T) {
 	other := errors.New("connection refused")
-	require.Same(t, other, NotFoundIfMissing(other, "user.not_found"))
+	require.Same(t, other, TranslateNotFound(other, errors.New("user.not_found")))
 
 	plainNotFound := errors.New("user not found")
-	require.Same(t, plainNotFound, NotFoundIfMissing(plainNotFound, "user.not_found"))
+	require.Same(t, plainNotFound, TranslateNotFound(plainNotFound, errors.New("user.not_found")))
 }
 
-func TestNotFoundIfMissingNilStaysNil(t *testing.T) {
-	require.NoError(t, NotFoundIfMissing(nil, "user.not_found"))
+func TestTranslateNotFoundNilStaysNil(t *testing.T) {
+	require.NoError(t, TranslateNotFound(nil, errors.New("user.not_found")))
 }

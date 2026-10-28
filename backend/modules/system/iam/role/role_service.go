@@ -636,7 +636,7 @@ func (s *RoleService) BatchUpdateRoleStatus(roleIDs []uint64, status int) (int, 
 		return 0, common.NewBadRequest("role.batch.empty")
 	}
 	if !common.IsEnabledStatus(status) {
-		return 0, common.NewBadRequest(errParamInvalid)
+		return 0, common.NewBadRequest(common.MessageParamInvalid)
 	}
 
 	var roles []SystemRole

@@ -11,11 +11,7 @@ import (
 	"gorm.io/gorm"
 )
 
-const (
-	errParamInvalid  = "param.invalid"
-	errRequestFailed = "request.failed"
-	errRoleNotFound  = "role.not_found"
-)
+const errRoleNotFound = "role.not_found"
 
 type RoleHandler struct {
 	service *RoleService
@@ -50,14 +46,14 @@ func roleErrorResponse(c *gin.Context, err error) {
 	// A rejected role key is the caller's input to fix, not a server fault:
 	// CodeForError maps ErrConflict/ErrBadRequest to the parameter-invalid code so
 	// the console can surface the message instead of a generic 500.
-	common.FailWithError(c, common.CodeForError(err), err, errRequestFailed)
+	common.FailWithError(c, common.CodeForError(err), err, common.MessageRequestFailed)
 }
 
 // GetRoleList 获取角色列表。
 func (h *RoleHandler) GetRoleList(c *gin.Context) {
 	var query RoleListQuery
 	if err := c.ShouldBindQuery(&query); err != nil {
-		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
+		common.Fail(c, common.CodeParamInvalid, common.MessageParamInvalid)
 		return
 	}
 
@@ -75,7 +71,7 @@ func (h *RoleHandler) CreateRole(c *gin.Context) {
 
 	var req RoleCreateReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
+		common.Fail(c, common.CodeParamInvalid, common.MessageParamInvalid)
 		return
 	}
 
@@ -92,7 +88,7 @@ func (h *RoleHandler) ExportRoles(c *gin.Context) {
 
 	var query RoleListQuery
 	if err := c.ShouldBindJSON(&query); err != nil {
-		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
+		common.Fail(c, common.CodeParamInvalid, common.MessageParamInvalid)
 		return
 	}
 
@@ -149,7 +145,7 @@ func (h *RoleHandler) UpdateRole(c *gin.Context) {
 
 	var req RoleUpdateReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
+		common.Fail(c, common.CodeParamInvalid, common.MessageParamInvalid)
 		return
 	}
 
@@ -171,7 +167,7 @@ func (h *RoleHandler) BatchUpdateRoleStatus(c *gin.Context) {
 
 	var req RoleBatchStatusReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
+		common.Fail(c, common.CodeParamInvalid, common.MessageParamInvalid)
 		return
 	}
 
@@ -188,7 +184,7 @@ func (h *RoleHandler) BatchDeleteRoles(c *gin.Context) {
 
 	var req common.BatchDeleteReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
+		common.Fail(c, common.CodeParamInvalid, common.MessageParamInvalid)
 		return
 	}
 	resp := common.BatchDelete(req.IDs, h.svc(c).DeleteRole)
@@ -203,7 +199,7 @@ func (h *RoleHandler) GetRoleMembers(c *gin.Context) {
 
 	var query RoleMemberQuery
 	if err := c.ShouldBindQuery(&query); err != nil {
-		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
+		common.Fail(c, common.CodeParamInvalid, common.MessageParamInvalid)
 		return
 	}
 
@@ -223,7 +219,7 @@ func (h *RoleHandler) GetRoleMemberCandidates(c *gin.Context) {
 
 	var query RoleMemberQuery
 	if err := c.ShouldBindQuery(&query); err != nil {
-		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
+		common.Fail(c, common.CodeParamInvalid, common.MessageParamInvalid)
 		return
 	}
 
@@ -245,7 +241,7 @@ func (h *RoleHandler) AddRoleMembers(c *gin.Context) {
 
 	var req RoleMemberAssignReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
+		common.Fail(c, common.CodeParamInvalid, common.MessageParamInvalid)
 		return
 	}
 
@@ -267,7 +263,7 @@ func (h *RoleHandler) RemoveRoleMembers(c *gin.Context) {
 
 	var req RoleMemberAssignReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
+		common.Fail(c, common.CodeParamInvalid, common.MessageParamInvalid)
 		return
 	}
 

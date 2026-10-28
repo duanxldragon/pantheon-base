@@ -271,7 +271,7 @@ func parseImportSort(rowNumber int, sortStr string, result *impexp.ImportResult)
 	}
 	parsed, err := strconv.Atoi(sortStr)
 	if err != nil {
-		impexp.AppendImportError(result, rowNumber, "sort", errParamInvalid)
+		impexp.AppendImportError(result, rowNumber, "sort", common.MessageParamInvalid)
 		return sortValue
 	}
 	return parsed
@@ -285,7 +285,7 @@ func parseImportStatus(rowNumber int, statusStr string, result *impexp.ImportRes
 	}
 	parsed, err := strconv.Atoi(statusStr)
 	if err != nil || !common.IsEnabledStatus(parsed) {
-		impexp.AppendImportError(result, rowNumber, "status", errParamInvalid)
+		impexp.AppendImportError(result, rowNumber, "status", common.MessageParamInvalid)
 		return statusValue
 	}
 	return parsed
@@ -304,7 +304,7 @@ func parseImportMenuIDs(rowNumber int, menuIdsStr string, menuIDSet map[uint64]s
 		}
 		id, err := strconv.ParseUint(idStr, 10, 64)
 		if err != nil {
-			impexp.AppendImportError(result, rowNumber, "menuIds", errParamInvalid)
+			impexp.AppendImportError(result, rowNumber, "menuIds", common.MessageParamInvalid)
 			continue
 		}
 		if _, ok := menuIDSet[id]; !ok {

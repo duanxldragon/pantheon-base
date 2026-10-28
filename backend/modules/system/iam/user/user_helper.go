@@ -2,13 +2,13 @@ package user
 
 import (
 	"encoding/json"
-	"errors"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/common"
 	"net/mail"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/duanxldragon/pantheon-base/backend/pkg/database"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -303,10 +303,7 @@ func (s *UserService) ensurePostForDept(deptID, postID uint64) error {
 	if err := s.scoped(s.db.Table("system_post")).
 		Where(condDeletedAtMissing).
 		Select("id, dept_id").Where(condIDEquals, postID).First(&post).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return common.NewBadRequest("user.post.invalid")
-		}
-		return err
+		return database.TranslateNotFound(err, common.NewBadRequest("user.post.invalid"))
 	}
 	if post.ID == 0 {
 		return common.NewBadRequest("user.post.invalid")

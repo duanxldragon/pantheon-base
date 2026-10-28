@@ -8,9 +8,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-const errRequestFailed = "request.failed"
-const errParamInvalid = "param.invalid"
-
 type PostHandler struct {
 	service *PostService
 }
@@ -31,7 +28,7 @@ func (h *PostHandler) svc(c *gin.Context) *PostService {
 func (h *PostHandler) GetPostList(c *gin.Context) {
 	var query PostListQuery
 	if err := c.ShouldBindQuery(&query); err != nil {
-		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
+		common.Fail(c, common.CodeParamInvalid, common.MessageParamInvalid)
 		return
 	}
 
@@ -47,13 +44,13 @@ func (h *PostHandler) CreatePost(c *gin.Context) {
 	common.SetAuditMetadata(c, "post.create.title", common.BusinessInsert)
 	var req PostCreateReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
+		common.Fail(c, common.CodeParamInvalid, common.MessageParamInvalid)
 		return
 	}
 
 	post, err := h.svc(c).CreatePost(&req)
 	if err != nil {
-		common.FailWithError(c, common.CodeForError(err), err, errRequestFailed)
+		common.FailWithError(c, common.CodeForError(err), err, common.MessageRequestFailed)
 		return
 	}
 	common.Success(c, post)
@@ -63,7 +60,7 @@ func (h *PostHandler) UpdatePost(c *gin.Context) {
 	common.SetAuditMetadata(c, "post.update.title", common.BusinessUpdate)
 	var req PostUpdateReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
+		common.Fail(c, common.CodeParamInvalid, common.MessageParamInvalid)
 		return
 	}
 
@@ -74,7 +71,7 @@ func (h *PostHandler) UpdatePost(c *gin.Context) {
 
 	post, err := h.svc(c).UpdatePost(postID, &req)
 	if err != nil {
-		common.FailWithError(c, common.CodeForError(err), err, errRequestFailed)
+		common.FailWithError(c, common.CodeForError(err), err, common.MessageRequestFailed)
 		return
 	}
 	common.Success(c, post)
@@ -85,13 +82,13 @@ func (h *PostHandler) BatchUpdatePostStatus(c *gin.Context) {
 
 	var req PostBatchStatusReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
+		common.Fail(c, common.CodeParamInvalid, common.MessageParamInvalid)
 		return
 	}
 
 	updatedCount, err := h.svc(c).BatchUpdatePostStatus(req.PostIDs, req.Status)
 	if err != nil {
-		common.FailWithError(c, common.CodeForError(err), err, errRequestFailed)
+		common.FailWithError(c, common.CodeForError(err), err, common.MessageRequestFailed)
 		return
 	}
 	common.Success(c, gin.H{"updatedCount": updatedCount})
@@ -105,7 +102,7 @@ func (h *PostHandler) DeletePost(c *gin.Context) {
 	}
 
 	if err := h.svc(c).DeletePost(postID); err != nil {
-		common.FailWithError(c, common.CodeForError(err), err, errRequestFailed)
+		common.FailWithError(c, common.CodeForError(err), err, common.MessageRequestFailed)
 		return
 	}
 	common.Success(c, gin.H{"deleted": true})
@@ -116,7 +113,7 @@ func (h *PostHandler) BatchDeletePosts(c *gin.Context) {
 
 	var req common.BatchDeleteReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
+		common.Fail(c, common.CodeParamInvalid, common.MessageParamInvalid)
 		return
 	}
 	resp := common.BatchDelete(req.IDs, h.svc(c).DeletePost)
@@ -128,7 +125,7 @@ func (h *PostHandler) ExportPosts(c *gin.Context) {
 
 	var query PostListQuery
 	if err := c.ShouldBindJSON(&query); err != nil {
-		common.Fail(c, common.CodeParamInvalid, errParamInvalid)
+		common.Fail(c, common.CodeParamInvalid, common.MessageParamInvalid)
 		return
 	}
 

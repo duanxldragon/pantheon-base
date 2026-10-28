@@ -1,0 +1,81 @@
+{
+  "taskId": "2026-10-27-s2-error-mapping-dedup",
+  "repo": "pantheon-base",
+  "executedAt": "2026-10-28T00:00:00+08:00",
+  "agent": {
+    "tool": "other",
+    "adapter": "qoder-agent"
+  },
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-27-s2-error-mapping-dedup/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-27-s2-error-mapping-dedup/",
+    "summaryFile": ".harness/evidence/2026-10-27-s2-error-mapping-dedup/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-27-s2-error-mapping-dedup/review.md",
+    "changeRef": "backend/pkg/database/notfound.go",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-27-codebase-simplification-program.task.md",
+      "docs/reviews/CODE_SIMPLIFICATION_PLAN.md"
+    ]
+  },
+  "commands": [
+    {
+      "command": "grep -rn 'errParamInvalid.*=|errRequestFailed.*=' modules --include=*.go | grep -v _test",
+      "cwd": "backend",
+      "notes": "before-state capture (via git stash roundtrip on pristine origin/main 04aa64b1): 20 declarations across 10 files; archived at capture-before/declarations.txt",
+      "status": "passed"
+    },
+    {
+      "command": "grep -rn -B1 -A1 'errors.Is(err, gorm.ErrRecordNotFound)' modules --include=*.go | grep -v _test",
+      "cwd": "backend",
+      "notes": "before-state capture: 72 raw gorm.ErrRecordNotFound references (55 errors.Is-shaped) classified into 11 translation-shaped sites and the remainder control-flow/domain-sentinel/handler-mapping sites; archived at capture-before/notfound-sites.txt",
+      "status": "passed"
+    },
+    {
+      "command": "go build ./... && gofmt -l modules pkg",
+      "cwd": "backend",
+      "notes": "commit 1 (43856299) and commit 2 (bdbe5c73) checkpoints: build clean, gofmt clean",
+      "status": "passed"
+    },
+    {
+      "command": "go vet ./... && go test -count=1 ./pkg/... ./modules/... ./internal/...",
+      "cwd": "backend",
+      "notes": "after commit 2 (bdbe5c73): vet clean, full DB-backed suite green (PANTHEON_TEST_DSN from .env.test), zero failures",
+      "status": "passed"
+    },
+    {
+      "command": "go build ./... && go vet ./... && go test -count=1 ./modules/system/iam/menu/... ./modules/system/iam/user/... ./pkg/common/...",
+      "cwd": "backend",
+      "notes": "after commit 3 (77cea558): menu, user, common, http, security packages green",
+      "status": "passed"
+    },
+    {
+      "command": "go test -count=1 ./...",
+      "cwd": "backend",
+      "notes": "final full suite on the completed branch (incl. role_handler_notfound_test.go retargeted to common.MessageRequestFailed): all packages ok, zero FAIL",
+      "status": "passed"
+    },
+    {
+      "command": "grep -rn 'errParamInvalid.*=|errRequestFailed.*=' modules pkg --include=*.go | grep -v _test | wc -l",
+      "cwd": "backend",
+      "notes": "after: 0 declarations outside common.Message* constants (packet target: 11 declarations -> 1; measured reality: 20 declarations -> 0, single source pkg/common/error.go)",
+      "status": "passed"
+    },
+    {
+      "command": "grep -rn 'gorm.ErrRecordNotFound' modules --include=*.go | grep -v _test | wc -l",
+      "cwd": "backend",
+      "notes": "after: 43 raw gorm.ErrRecordNotFound references remain (37 errors.Is-shaped, vs 72 raw / 55 shaped on base 04aa64b1); 11 translation-shaped sites migrated to database.TranslateNotFound, all remaining ones are control-flow branches, domain sentinels or handler-side mapping per response-diff.md section 2; the final full-suite run in one command hit a 600s package timeout on modules/system/i18n from two consecutive DB-backed runs (flake, no assertion failure) — the package passes standalone at 135.8s",
+      "status": "passed"
+    },
+    {
+      "command": "node scripts/harness/check-task-packet.mjs --root .",
+      "cwd": ".",
+      "notes": "66 file(s), 0 error(s), 41 warning(s) — baseline unchanged",
+      "status": "passed"
+    }
+  ],
+  "knownGaps": [
+    "pkg/common/http private i18n-key helpers (isI18nMessageKey/lastMessageSegment/resolveErrorMessageKey) remain duplicated with pkg/common: pkg/common/re_export.go re-exports the http envelope, so http cannot import common without an import cycle; collapse condition documented in a NOTE in response.go and in response-diff.md section 5",
+    "roleErrorResponse and the menu mapping wrappers were kept (not deleted): they encode real module-specific branches (404 not-found, validation whitelist) and already carry why-comments, as the packet's own fallback prescribes",
+    "packet expectedFiles listed system/iam/dept and system/iam/post; the modules actually live under system/org/dept and system/org/post; i18n_handler.go and tenant_platform_handler.go still appear in modify scope for their const blocks"
+  ]
+}

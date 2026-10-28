@@ -1,7 +1,6 @@
 package permission
 
 import (
-	"errors"
 	"sort"
 	"strings"
 	"time"
@@ -11,7 +10,6 @@ import (
 	"github.com/duanxldragon/pantheon-base/backend/pkg/database"
 	tenantctx "github.com/duanxldragon/pantheon-base/backend/pkg/tenant"
 
-	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
 
@@ -694,10 +692,7 @@ func (s *PermissionService) getRoleMissingAPIPolicies(roleKey string) (*Permissi
 		Where("role_key = ? AND deleted_at IS NULL", roleKey).
 		Where(permissionTenantClause, s.tenantOwnerID()).
 		First(&role).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, common.NewBadRequest(errPermissionRoleInvalid)
-		}
-		return nil, err
+		return nil, database.TranslateNotFound(err, common.NewBadRequest(errPermissionRoleInvalid))
 	}
 
 	result := &PermissionWorkbenchRoleResp{
