@@ -134,12 +134,12 @@ func TestRequireHeadersReportsOnlyMissing(t *testing.T) {
 
 func TestForEachDataRowSkipsHeaderBlankAndCommentRows(t *testing.T) {
 	records := [][]string{
-		{"col1", "col2"},   // header, skipped
-		{"#comment", ""},   // comment row, skipped
-		{"", ""},           // blank row, skipped
-		{"a", "b"},         // row 4
-		{"#another", "x"},  // comment row, skipped
-		{"c", "d"},         // row 6
+		{"col1", "col2"},  // header, skipped
+		{"#comment", ""},  // comment row, skipped
+		{"", ""},          // blank row, skipped
+		{"a", "b"},        // row 4
+		{"#another", "x"}, // comment row, skipped
+		{"c", "d"},        // row 6
 	}
 	var seen []int
 	ForEachDataRow(records, func(rowNumber int, record []string) {
