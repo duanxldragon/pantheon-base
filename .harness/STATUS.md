@@ -357,7 +357,7 @@ GitHub Release 于 `2026-10-22T00:17:53Z` 发布，四件产物齐备（tgz 19,9
 | ✅ 已完成 | v0.17.8 发布收口（`2026-10-27-v0178-dep-vuln-closure`，依赖漏洞关闭 + Sonar 归属勘误，tag→`e256d1fb`，四件资产 + Verify run 40472462712） |
 | 🚧 进行中 | 代码精简与横向重复收敛（`2026-10-27-codebase-simplification-program`：**S1×2 已完成**（#438 #439，其中 dead-code 波实测 **19 文件 +0/−1923** 纯删除）、**S4 已完成**（#441，五项治理面决策落档 `docs/reviews/GOVERNANCE_SURFACE_DECISIONS_2026-10-27.md`；follow-up 别名删除波 #447 实测 **re_export.go 112→52 行**，删十个零消费别名、全量 46 包绿）；**S2 已完成 6/6**（#450 共享 helper 五件、#451 id-parse 27 站点迁移、#452 pagination-sort 13 分页 + 8 sort normalizer 迁移，实测内联白名单 8→0、钳制 11→1、内联 Offset 14→4、#454 error-mapping dedup（20 重复错误声明收敛到共享常量、gorm not-found 翻译收敛到 `database.TranslateNotFound`、context helper 三重复制归一，净 −82 行）、#455 batch-and-envelope 零代码差收口（RC-023 已由前波收敛、RC-025 表面已随租户波删除、RC-030 证伪为 WithDataScope 谓词）、#456 import-export pipeline（8 导入端点 7 模块收敛到 `impexp.ReadImportCSV` + 四个服务原语 + `BuildImportTemplate`，逐模块 commit 阶梯，validation inventory 全量记账，CSV 公式注入行为 golden 锁定，活体 API smoke 11/11）；原三项维护者门禁（RC-016 standalone-PR、error-mapping 批准、batch 收口确认）按维护者 2026-10-28 全权委托执行，全部以 evidence + strict 校验落档；smoke 指南 §1 role「仅导出」文档漂移随本条一并修正）；S3×3 待排期——programme 规则要求 S2 稳定一个发布周期（foundation release）后才可开工，release 切割属 do-not-touch，待维护者决定；setting_audit 钳制语义分歧与 tenant member 分页（W9）仍为显式维护者决策；双语 checker 接 CI 待批准。登记债务②（三份存量 review.md 缺 Machine Readable 块）已随 #448 关闭，全量 `.harness/evidence/*/review.md` strict 0 error） |
 | ✅ 已完成 | 租户功能完整性复核（2026-10-27，只读，前后端 + 租户运营；结论：单租户路径可用，**"租户开发已完成"不成立**；1 P1 / 2 P2 / 6 P3；产出 `docs/reviews/TENANT_FUNCTIONAL_COMPLETENESS_REVIEW_2026-10-27.md`） |
-| 🚧 进行中 | 租户完整性整改（`2026-10-27-tenant-completeness-remediation`，8 个波次；**W1–W5、W8 已完成**（#436 / #434 / #440 / #442 / #443 / #445），W6/W7 planned（维护者门禁待签）；W3 决策 A 已按 maintainer-delegated 记录于签字文档） |
+| 🚧 进行中 | 租户完整性整改（`2026-10-27-tenant-completeness-remediation`，8 个波次；**W1–W5、W7、W8 已完成**（#436 / #434 / #440 / #442 / #443 / W7 决策包 / #445），W6 planned；W3 决策 A 已按 maintainer-delegated 记录于签字文档，**W7 决策 A 已按 maintainer-delegated 签字**（`docs/reviews/TENANT_PLAN_LADDER_DECISION_2026-10-28.md`：套餐阶梯只管能力矩阵、自定义 code = 配额桶 + free 能力档；B 登记 V2 商业化工作流，C 否决；A 的落地为后续 L1 小 PR）） |
 | ⏸️ 暂停 | 无 |
 
 ## 租户权限隔离整改（2026-10-19，已收口）
@@ -465,12 +465,13 @@ GitHub Release 于 `2026-10-22T00:17:53Z` 发布，四件产物齐备（tgz 19,9
 平台作用域仍会列出全部租户角色、无策略角色仍 fail-closed 500、部门表改为扁平行——三项都是显式剩余项，
 分别需要产品决策或独立交互设计。
 
-## 租户完整性整改（2026-10-27，进行中：W1–W5、W8 已完成，W6/W7 待维护者门禁）
+## 租户完整性整改（2026-10-27，进行中：W1–W5、W7、W8 已完成，W6 待维护者门禁）
 
 2026-10-27 的租户功能完整性复核（前后端 + 租户运营，只读）结论：**单租户部署路径功能完整可用**，
 原生租户用户端到端有 e2e 证据；但**"租户开发已完成"不成立**——跨租户 membership 可登录不可用，
-删除租户可绕过归档校验，成员写入不校验用户存在。8 个波次如下；**W1–W5、W8 已完成**，
-W6/W7 仍 `status=planned`（各有一项维护者决策未签，见文末门禁段）。
+删除租户可绕过归档校验，成员写入不校验用户存在。8 个波次如下；**W1–W5、W7、W8 已完成**，
+W6 仍 `status=planned`（维护者决策未签，见文末门禁段）；W7 决策 A 已签字（2026-10-28，
+maintainer-delegated，见下）。
 
 - **父任务**：`.harness/tasks/2026-10-27-tenant-completeness-remediation/`（`status: in_progress`）
 - **计划文档**：`docs/harness/tasks/2026-10-27-tenant-completeness-remediation.task.md`
@@ -495,7 +496,7 @@ W6/W7 仍 `status=planned`（各有一项维护者决策未签，见文末门禁
 | W4 | `2026-10-27-tenant-multi-membership-authorization` | P1 | **completed**（PR #442） | W2、W3 签字 |
 | W5 | `2026-10-27-tenant-contract-docs-alignment` | P3 | **completed**（PR #443） | W1、W2、W4 |
 | W6 | `2026-10-27-tenant-console-ui-automation` | P3 | planned | W1、W2、W4 |
-| W7 | `2026-10-27-tenant-plan-ladder-decision` | P3 | planned | W5 |
+| W7 | `2026-10-27-tenant-plan-ladder-decision` | P3 | **completed**（决策 A 签字，2026-10-28） | W5 |
 | W8 | `2026-10-27-tenant-dead-surface-removal` | P3 | **completed**（PR #445） | W5 |
 
 **W2 收口（2026-10-27，PR #434）**：`AddMember` 现在要求 `user_id` 指向未软删除的 `system_user`，
@@ -558,8 +559,18 @@ strict 检查 0 error；随小 PR 合入。
 **维护者门禁**：W3 的 A/B/C 决策已按选项 A 签字（maintainer-delegated 记录）；
 W1 的契约表述按「修订契约承认实现」处置（V1.6）；W4 的 UI 移除作为决策 A 推论按
 maintainer-delegated 记录。**剩余待签**：W6 需决定 `smoke-tenant` 是否转为阻断式
-检查（且需 live 冒烟环境）；W7 需在 A/B/C 中选一。W2、W8 无门禁；W6/W7 签字前
+检查（且需 live 冒烟环境）。W2、W8 无门禁；W6 签字前
 不派发。
+
+**W7 收口（2026-10-28，决策波）**：套餐能力阶梯语义按**选项 A** 签字（maintainer-delegated，
+`docs/reviews/TENANT_PLAN_LADDER_DECISION_2026-10-28.md`）——能力矩阵只覆盖内建四档
+（`plans.ts` rank 0-3、`normalizeTenantPlan` fail-closed 归 free），自定义 plan code 就是
+配额桶（配额权威本就在 `tenant_plans` 表，`tenant_plan_model.go` quota 字段），要修的只是
+后果未告知：A 的实现 = `outsideLadder` 警告补后果一句（五语言）+ 设计文档/合同 §2.4 相邻处
+写明边界，随后续 L1 小 PR 落地，不计入 V1 完成度；B（服务端 entitlements）登记为 V2
+商业化工作流（唯一保留自定义 code 完整能力的方案，唯一需迁移的方案，立项时新建包）；
+C（移除门控）否决（把付费 lowcode 面开放给所有持页面权限租户，是产品能力回退）。
+证据：`.harness/evidence/2026-10-27-tenant-plan-ladder-decision/`。
 
 **显式不在范围内**：表结构/迁移/数据回填、计费、独立 schema、membership 角色到 IAM 角色的隐式映射、
 删除历史跨租户 membership 行、`pantheon-ops` 业务改动、降低测试强度。

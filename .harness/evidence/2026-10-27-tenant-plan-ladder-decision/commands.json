@@ -1,0 +1,87 @@
+{
+  "taskId": "2026-10-27-tenant-plan-ladder-decision",
+  "repo": "pantheon-base",
+  "executedAt": "2026-10-28T15:30:00+08:00",
+  "agent": {
+    "tool": "other",
+    "adapter": "qoder-agent"
+  },
+  "knownGaps": [
+    "Option A's implementation (outsideLadder warning copy in five i18n files + design-doc/contract wording) is deliberately NOT in this packet: W7 is a decision packet. It ships as a follow-up L1 PR.",
+    "The decision is maintainer-delegated, open for maintainer review; overriding to B requires a new migration packet, overriding to C requires revising the rejection reasoning first."
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-27-tenant-plan-ladder-decision/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-27-tenant-plan-ladder-decision/",
+    "summaryFile": ".harness/evidence/2026-10-27-tenant-plan-ladder-decision/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-27-tenant-plan-ladder-decision/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-27-tenant-completeness-remediation.task.md",
+      "docs/reviews/TENANT_FUNCTIONAL_COMPLETENESS_REVIEW_2026-10-27.md",
+      "docs/reviews/TENANT_PLAN_LADDER_DECISION_2026-10-28.md"
+    ]
+  },
+  "commands": [
+    {
+      "command": "git log --oneline -2",
+      "cwd": ".",
+      "notes": "Base verified: 3e7fe8ff (S2 bookkeeping PR #457 merged) on top of 547add28 (S2 import-export pipeline). Decision verified against the current main.",
+      "status": "passed"
+    },
+    {
+      "command": "grep -n \"TENANT_PLANS\\b\\|PLAN_RANK\\|normalizeTenantPlan\" frontend/src/core/entitlements/plans.ts",
+      "cwd": ".",
+      "notes": "Capability union closed to four codes: TENANT_PLANS at :18, PLAN_RANK 0-3 at :58, normalizeTenantPlan fail-closed to free at :70-75. All cited line numbers confirmed.",
+      "status": "passed"
+    },
+    {
+      "command": "sed -n '240,280p' frontend/src/modules/system/iam/tenant/TenantList.tsx && grep -rn \"outsideLadder\" frontend/src",
+      "cwd": ".",
+      "notes": "planOutsideLadder at :272-273; warning rendered at :890-893 via system.tenant.plan.outsideLadder; the code comment at :265-267 already self-documents 'operator-defined code resolves to free'. Warning key present in all five i18n resource files (zh-CN, en-US, fr-FR, ja-JP, ko-KR).",
+      "status": "passed"
+    },
+    {
+      "command": "grep -n \"Quota\\|quota\" backend/modules/system/iam/tenant/tenant_plan_model.go | head -8",
+      "cwd": ".",
+      "notes": "Quota authority is data-driven: model doc at :11 ('carries the quota thresholds a tenant's plan code resolves to'), UnlimitedQuota=-1 at :70, AsQuota() projection at :93. Custom plan codes are already full quota buckets — option A changes nothing here.",
+      "status": "passed"
+    },
+    {
+      "command": "grep -rln \"usePlanEntitlements\" frontend/src --include=*.tsx --include=*.ts",
+      "cwd": ".",
+      "notes": "Gate consumers confirmed: core/layout/AppLayout.tsx (route gating), modules/lowcode/generator/pages/ModuleWizard.tsx (the trial-tenant-cannot-see-generator consequence), modules/platform/Dashboard.tsx (widgets). Platform scope bypasses the gate per plans.ts:12-14.",
+      "status": "passed"
+    },
+    {
+      "command": "node scripts/harness/check-doc-links.mjs",
+      "cwd": ".",
+      "notes": "0 findings — decision document's relative links (contract, review, task doc) all resolve.",
+      "status": "passed"
+    },
+    {
+      "command": "node scripts/harness/check-doc-frontmatter.mjs",
+      "cwd": ".",
+      "notes": "0 errors, 0 warnings. Decision doc follows the W3 precedent of starting at the H1 without a frontmatter block.",
+      "status": "passed"
+    },
+    {
+      "command": "node scripts/harness/check-task-packet.mjs --root .",
+      "cwd": ".",
+      "notes": "66 file(s), 0 error(s), 41 warning(s) — identical to the recorded baseline; the new evidence directory and manifest flip introduce no new findings.",
+      "status": "passed"
+    },
+    {
+      "command": "node scripts/harness/check-evidence.mjs --strict .harness/evidence/2026-10-27-tenant-plan-ladder-decision/commands.json",
+      "cwd": ".",
+      "notes": "Strict evidence validation passed (all commands carry non-empty passed status; root linkage complete).",
+      "status": "passed"
+    },
+    {
+      "command": "node scripts/harness/check-review.mjs --strict .harness/evidence/2026-10-27-tenant-plan-ladder-decision/review.md",
+      "cwd": ".",
+      "notes": "Strict review validation passed (Machine Readable block: verdict approved, linkage complete with changeRef none per decision-packet precedent).",
+      "status": "passed"
+    }
+  ]
+}
