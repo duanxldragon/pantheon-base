@@ -289,22 +289,8 @@ func (h *DictHandler) DownloadDictTypeImportTemplate(c *gin.Context) {
 func (h *DictHandler) ImportDictTypes(c *gin.Context) {
 	common.SetAuditMetadata(c, "dict.type.import.title", common.BusinessImport)
 
-	fileHeader, err := c.FormFile("file")
-	if err != nil {
-		common.Fail(c, common.CodeParamInvalid, "import.file.required")
-		return
-	}
-	file, err := fileHeader.Open()
-	if err != nil {
-		common.Fail(c, common.CodeError, "import.file.read.error")
-		return
-	}
-	// 显式接管 multipart part 的生命周期：ReadCSV 内部也会关闭，
-	// 这里 defer 保证所有权清晰，且覆盖未来提前 return 的路径。
-	defer func() { _ = file.Close() }()
-	records, err := impexp.ReadCSV(file)
-	if err != nil {
-		common.Fail(c, common.CodeParamInvalid, "import.file.invalid_csv")
+	records, ok := impexp.ReadImportCSV(c)
+	if !ok {
 		return
 	}
 	result, err := h.boundService(c).ImportDictTypes(records)
@@ -343,22 +329,8 @@ func (h *DictHandler) DownloadDictItemImportTemplate(c *gin.Context) {
 func (h *DictHandler) ImportDictItems(c *gin.Context) {
 	common.SetAuditMetadata(c, "dict.item.import.title", common.BusinessImport)
 
-	fileHeader, err := c.FormFile("file")
-	if err != nil {
-		common.Fail(c, common.CodeParamInvalid, "import.file.required")
-		return
-	}
-	file, err := fileHeader.Open()
-	if err != nil {
-		common.Fail(c, common.CodeError, "import.file.read.error")
-		return
-	}
-	// 显式接管 multipart part 的生命周期：ReadCSV 内部也会关闭，
-	// 这里 defer 保证所有权清晰，且覆盖未来提前 return 的路径。
-	defer func() { _ = file.Close() }()
-	records, err := impexp.ReadCSV(file)
-	if err != nil {
-		common.Fail(c, common.CodeParamInvalid, "import.file.invalid_csv")
+	records, ok := impexp.ReadImportCSV(c)
+	if !ok {
 		return
 	}
 	result, err := h.boundService(c).ImportDictItems(records)
