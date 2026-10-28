@@ -98,8 +98,10 @@ func TestTwoTenantIsolationSmoke(t *testing.T) {
 			t.Fatalf("tenant A must see only its own role, got total=%d items=%+v", page.Total, page.Items)
 		}
 
-		// Same update shape succeeds on A's row and fails on B's row.
-		aUpdate := &role.RoleUpdateReq{RoleName: "A 运营改", RoleKey: "ops-a", MenuIDs: []uint64{1}}
+		// Same update shape succeeds on A's row and fails on B's row. The
+		// request must carry A's own data scope: a role update rewrites the
+		// policy row, and an omitted scope falls back to "all".
+		aUpdate := &role.RoleUpdateReq{RoleName: "A 运营改", RoleKey: "ops-a", MenuIDs: []uint64{1}, DataScope: common.DataScopeModeSelf}
 		if _, err := svc.UpdateRole(page.Items[0].ID, aUpdate); err != nil {
 			t.Fatalf("tenant A updates its own role: %v", err)
 		}
@@ -125,7 +127,7 @@ func TestTwoTenantIsolationSmoke(t *testing.T) {
 			t.Fatalf("tenant A must see only its own post, got total=%d items=%+v", page.Total, page.Items)
 		}
 
-		aUpdate := &post.PostUpdateReq{DeptID: smokeDeptAID, PostCode: "p-a", PostName: "A 岗位", Sort: 1, Status: 1}
+		aUpdate := &post.PostUpdateReq{DeptID: smokeDeptAChildID, PostCode: "p-a", PostName: "A 岗位", Sort: 1, Status: 1}
 		if _, err := svc.UpdatePost(page.Items[0].ID, aUpdate); err != nil {
 			t.Fatalf("tenant A updates its own post: %v", err)
 		}
@@ -158,11 +160,11 @@ func TestTwoTenantIsolationSmoke(t *testing.T) {
 		if _, err := svc.UpdateDept(smokeDeptBID, aUpdate); err == nil {
 			t.Fatalf("tenant A must not update tenant B's dept")
 		}
-		if err := svc.DeleteDept(smokeDeptBID); err == nil {
+		if err := svc.DeleteDept(smokeDeptBChildID); err == nil {
 			t.Fatalf("tenant A must not delete tenant B's dept")
 		}
-		if countSmokeRows(t, db, "system_dept", smokeTenantB) != 1 {
-			t.Fatalf("tenant B's dept must be untouched")
+		if countSmokeRows(t, db, "system_dept", smokeTenantB) != 2 {
+			t.Fatalf("tenant B's dept tree must be untouched")
 		}
 	})
 
@@ -341,16 +343,20 @@ func (sessionPolicyStub) GetSessionPolicy() authsession.AuthRuntimePolicy {
 
 // Fixed seed ids so mutation subtests can address tenant B's rows explicitly.
 const (
-	smokeDeptAID     = uint64(1101)
-	smokeDeptBID     = uint64(2202)
-	smokeUserAID     = uint64(1101)
-	smokeUserBID     = uint64(2202)
-	smokePostAID     = uint64(1101)
-	smokePostBID     = uint64(2202)
-	smokeRoleAID     = uint64(1101)
-	smokeRoleBID     = uint64(2202)
-	smokeDictBID     = uint64(2202)
-	smokeLoginLogBID = uint64(2202)
+	smokeDeptAID = uint64(1101)
+	smokeDeptBID = uint64(2202)
+	// Posts may not hang off a root department (post.dept.root_forbidden), so
+	// each tenant gets one child department and the seeded posts use it.
+	smokeDeptAChildID = uint64(1102)
+	smokeDeptBChildID = uint64(2203)
+	smokeUserAID      = uint64(1101)
+	smokeUserBID      = uint64(2202)
+	smokePostAID      = uint64(1101)
+	smokePostBID      = uint64(2202)
+	smokeRoleAID      = uint64(1101)
+	smokeRoleBID      = uint64(2202)
+	smokeDictBID      = uint64(2202)
+	smokeLoginLogBID  = uint64(2202)
 )
 
 // seedSmokeData plants one row per tenant for every converted module. The
@@ -362,10 +368,12 @@ func seedSmokeData(t *testing.T, db *gorm.DB) {
 	rows := []any{
 		&role.SystemRole{ID: smokeRoleAID, TenantID: smokeTenantA, RoleName: "A 运营", RoleKey: "ops-a", Status: 1, Sort: 1},
 		&role.SystemRole{ID: smokeRoleBID, TenantID: smokeTenantB, RoleName: "B 运营", RoleKey: "ops-b", Status: 1, Sort: 1},
-		&post.SystemPost{ID: smokePostAID, TenantID: smokeTenantA, DeptID: smokeDeptAID, PostCode: "p-a", PostName: "A 岗位", Sort: 1, Status: 1},
-		&post.SystemPost{ID: smokePostBID, TenantID: smokeTenantB, DeptID: smokeDeptBID, PostCode: "p-b", PostName: "B 岗位", Sort: 1, Status: 1},
+		&post.SystemPost{ID: smokePostAID, TenantID: smokeTenantA, DeptID: smokeDeptAChildID, PostCode: "p-a", PostName: "A 岗位", Sort: 1, Status: 1},
+		&post.SystemPost{ID: smokePostBID, TenantID: smokeTenantB, DeptID: smokeDeptBChildID, PostCode: "p-b", PostName: "B 岗位", Sort: 1, Status: 1},
 		&dept.SystemDept{ID: smokeDeptAID, TenantID: smokeTenantA, DeptName: "A 部门", ParentID: 0, IsRoot: common.StatusFlagYes, Sort: 1, Status: 1},
 		&dept.SystemDept{ID: smokeDeptBID, TenantID: smokeTenantB, DeptName: "B 部门", ParentID: 0, IsRoot: common.StatusFlagYes, Sort: 1, Status: 1},
+		&dept.SystemDept{ID: smokeDeptAChildID, TenantID: smokeTenantA, DeptName: "A 子部门", ParentID: smokeDeptAID, Sort: 2, Status: 1},
+		&dept.SystemDept{ID: smokeDeptBChildID, TenantID: smokeTenantB, DeptName: "B 子部门", ParentID: smokeDeptBID, Sort: 2, Status: 1},
 		&user.SystemUser{ID: smokeUserAID, TenantID: smokeTenantA, Username: "user-a", Password: "seed-hash", Nickname: "A 用户", Status: 1},
 		&user.SystemUser{ID: smokeUserBID, TenantID: smokeTenantB, Username: "user-b", Password: "seed-hash", Nickname: "B 用户", Status: 1},
 		&dict.SystemDictType{ID: 1101, TenantID: smokeTenantA, DictCode: "smoke-a", DictName: "A 字典", Module: "system", Status: 1},
