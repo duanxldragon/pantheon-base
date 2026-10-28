@@ -1,139 +1,139 @@
 {
-  "taskId": "2026-10-27-s2-shared-handler-helpers",
-  "title": "Add the shared request helpers that the S2 migration waves will consume, with tests, before any call site changes",
-  "goal": "The S2 migration waves need one implementation each of five primitives that are currently copy-pasted across the handler and service layers: path-ID parsing with a 400 response, page/pageSize normalization with a per-module cap, sort whitelist normalization, gorm.ErrRecordNotFound to not-found translation, and the two shared error values errParamInvalid and errRequestFailed that 11 handler files redeclare. This wave adds those five helpers and their tests and changes no call site, so the helper can be reviewed for correctness on its own before any module starts depending on it. Every helper takes the module's own values (whitelist, i18n key, page-size cap) as parameters; none of those values is decided here.",
-  "primaryLayer": "platform",
-  "status": "planned",
-  "priority": "P1",
-  "type": "refactor",
-  "estimatedComplexity": "medium",
-  "parentTaskId": "2026-10-27-codebase-simplification-program",
-  "dependsOn": [
-    "2026-10-27-s1-dead-code-removal",
-    "2026-10-27-s1-api-surface-narrowing"
+ "taskId": "2026-10-27-s2-shared-handler-helpers",
+ "title": "Add the shared request helpers that the S2 migration waves will consume, with tests, before any call site changes",
+ "goal": "The S2 migration waves need one implementation each of five primitives that are currently copy-pasted across the handler and service layers: path-ID parsing with a 400 response, page/pageSize normalization with a per-module cap, sort whitelist normalization, gorm.ErrRecordNotFound to not-found translation, and the two shared error values errParamInvalid and errRequestFailed that 11 handler files redeclare. This wave adds those five helpers and their tests and changes no call site, so the helper can be reviewed for correctness on its own before any module starts depending on it. Every helper takes the module's own values (whitelist, i18n key, page-size cap) as parameters; none of those values is decided here.",
+ "primaryLayer": "platform",
+ "status": "completed",
+ "priority": "P1",
+ "type": "refactor",
+ "estimatedComplexity": "medium",
+ "parentTaskId": "2026-10-27-codebase-simplification-program",
+ "dependsOn": [
+  "2026-10-27-s1-dead-code-removal",
+  "2026-10-27-s1-api-surface-narrowing"
+ ],
+ "findings": [
+  "RC-014 (P1): about 35 inline copies of strconv.ParseUint(c.Param(\"id\"), 10, 64) plus a six-line 400 response; only user_handler.go:283-286 extracted parseUintParam.",
+  "RC-013 (P1): about 13 pagination normalizers with divergent defaults and caps, including two in role_helper.go alone (:523-539 and :541-557).",
+  "RC-015 (P1): 6-8 sort whitelist helpers that all do map lookup plus default column, differing only in their allowed columns.",
+  "RC-024 (P2): 30+ repetitions of errors.Is(err, gorm.ErrRecordNotFound) followed by a not-found error construction.",
+  "RC-017 (P2): errParamInvalid and errRequestFailed are declared in 11 handler files.",
+  "RC-019 (P1): common.GetUserID, common.IsI18nMessageKey, common.ResolveErrorMessageKey and common.GetRoleKeys each have a second or third copy in another package or module."
+ ],
+ "scope": {
+  "in": [
+   "Add ParseUintParam(c *gin.Context, name string) (uint64, bool) that writes the existing 400 response shape on failure",
+   "Add NormalizePagination(page, pageSize, max int) (page, pageSize, offset int) preserving current defaults and per-module caps",
+   "Add NormalizeSort(input string, allowed map[string]string, fallback string) string",
+   "Add NotFoundIfMissing(err error, key string) error, or keep it in a package that already depends on gorm if pkg/common must stay gorm-free",
+   "Define exported ErrParamInvalid and ErrRequestFailed once, preserving the exact constructor arguments used today",
+   "Unit tests for every helper: zero, negative, oversized, unknown-symbol and not-found inputs",
+   "Record the package placement decision in the summary"
   ],
-  "findings": [
-    "RC-014 (P1): about 35 inline copies of strconv.ParseUint(c.Param(\"id\"), 10, 64) plus a six-line 400 response; only user_handler.go:283-286 extracted parseUintParam.",
-    "RC-013 (P1): about 13 pagination normalizers with divergent defaults and caps, including two in role_helper.go alone (:523-539 and :541-557).",
-    "RC-015 (P1): 6-8 sort whitelist helpers that all do map lookup plus default column, differing only in their allowed columns.",
-    "RC-024 (P2): 30+ repetitions of errors.Is(err, gorm.ErrRecordNotFound) followed by a not-found error construction.",
-    "RC-017 (P2): errParamInvalid and errRequestFailed are declared in 11 handler files.",
-    "RC-019 (P1): common.GetUserID, common.IsI18nMessageKey, common.ResolveErrorMessageKey and common.GetRoleKeys each have a second or third copy in another package or module."
+  "out": [
+   "Changing any existing call site; that is the following waves",
+   "Choosing a single page-size cap or a single sort whitelist for all modules",
+   "Changing any HTTP status, error code or i18n key",
+   "Introducing a new dependency",
+   "Merging the pkg/common and pkg/common/http duplicates yet; that needs the call-site audit in a later wave"
+  ]
+ },
+ "dependencyLayers": [
+  "platform",
+  "system/auth",
+  "system/iam",
+  "system/org",
+  "system/config"
+ ],
+ "implementationNotes": [
+  "Default placement is backend/pkg/common. If NotFoundIfMissing would force a gorm import into a package that otherwise has none, keep it in backend/pkg/database and note the split; do not create a new package just to host one function.",
+  "The helpers are behaviour-preserving by construction: they must reproduce the exact response body, status and error code the 35 inline blocks already produce. Capture one real 400 response before writing the helper.",
+  "NormalizePagination takes the cap as a parameter because modules do not agree on it. Unifying the cap would be a behaviour change and is out of scope.",
+  "NormalizeSort takes the allowed map as a parameter for the same reason; column names are business data, not infrastructure.",
+  "This wave must be mergeable on its own with no call-site change, so a later regression can be bisected to the migration that introduced it rather than to the helper."
+ ],
+ "contractAnchors": [
+  "AGENTS.md",
+  "docs/reviews/REDUNDANT_CODE_CANDIDATES.md",
+  "docs/reviews/CODE_SIMPLIFICATION_PLAN.md",
+  "docs/acceptances/CODE_REVIEW_STANDARD.md"
+ ],
+ "harnessProfile": {
+  "template": "admin-platform",
+  "overlay": "pantheon-base",
+  "qualityProfile": "auth-security",
+  "portableFailureClass": "duplication-drift",
+  "ownerLayer": "consumer-repository",
+  "ratchetDecision": "sensor-added",
+  "coverageDimensions": [
+   "behaviour",
+   "maintainability",
+   "architecture-fitness"
+  ]
+ },
+ "expectedFiles": {
+  "create": [
+   "backend/pkg/common/handler.go",
+   "backend/pkg/common/handler_test.go"
   ],
-  "scope": {
-    "in": [
-      "Add ParseUintParam(c *gin.Context, name string) (uint64, bool) that writes the existing 400 response shape on failure",
-      "Add NormalizePagination(page, pageSize, max int) (page, pageSize, offset int) preserving current defaults and per-module caps",
-      "Add NormalizeSort(input string, allowed map[string]string, fallback string) string",
-      "Add NotFoundIfMissing(err error, key string) error, or keep it in a package that already depends on gorm if pkg/common must stay gorm-free",
-      "Define exported ErrParamInvalid and ErrRequestFailed once, preserving the exact constructor arguments used today",
-      "Unit tests for every helper: zero, negative, oversized, unknown-symbol and not-found inputs",
-      "Record the package placement decision in the summary"
-    ],
-    "out": [
-      "Changing any existing call site; that is the following waves",
-      "Choosing a single page-size cap or a single sort whitelist for all modules",
-      "Changing any HTTP status, error code or i18n key",
-      "Introducing a new dependency",
-      "Merging the pkg/common and pkg/common/http duplicates yet; that needs the call-site audit in a later wave"
-    ]
-  },
-  "dependencyLayers": [
-    "platform",
-    "system/auth",
-    "system/iam",
-    "system/org",
-    "system/config"
+  "modify": [],
+  "doNotTouch": [
+   "backend/modules/**",
+   "backend/pkg/common/http/response.go",
+   "backend/pkg/common/error.go",
+   "backend/pkg/database/migrations/**"
+  ]
+ },
+ "executionRoles": {
+  "implementerPosture": "Add only. If a helper needs a new parameter to fit another module, stop and record the exception instead of adding the parameter.",
+  "reviewerPosture": [
+   "Confirm no call site changed in this wave.",
+   "Confirm each helper's defaults and response shape match the inline blocks it will replace.",
+   "Confirm module-specific values arrive as parameters.",
+   "Confirm tests cover zero, negative, oversized and unknown inputs."
+  ]
+ },
+ "verificationPlan": {
+  "commands": [
+   "cd backend && gofmt -l pkg/common",
+   "cd backend && go build ./...",
+   "cd backend && go vet ./pkg/common/...",
+   "cd backend && go test -count=1 ./pkg/common/...",
+   "cd backend && go test -count=1 ./..."
   ],
-  "implementationNotes": [
-    "Default placement is backend/pkg/common. If NotFoundIfMissing would force a gorm import into a package that otherwise has none, keep it in backend/pkg/database and note the split; do not create a new package just to host one function.",
-    "The helpers are behaviour-preserving by construction: they must reproduce the exact response body, status and error code the 35 inline blocks already produce. Capture one real 400 response before writing the helper.",
-    "NormalizePagination takes the cap as a parameter because modules do not agree on it. Unifying the cap would be a behaviour change and is out of scope.",
-    "NormalizeSort takes the allowed map as a parameter for the same reason; column names are business data, not infrastructure.",
-    "This wave must be mergeable on its own with no call-site change, so a later regression can be bisected to the migration that introduced it rather than to the helper."
-  ],
-  "contractAnchors": [
-    "AGENTS.md",
-    "docs/reviews/REDUNDANT_CODE_CANDIDATES.md",
-    "docs/reviews/CODE_SIMPLIFICATION_PLAN.md",
-    "docs/acceptances/CODE_REVIEW_STANDARD.md"
-  ],
-  "harnessProfile": {
-    "template": "admin-platform",
-    "overlay": "pantheon-base",
-    "qualityProfile": "none",
-    "portableFailureClass": "duplication-drift",
-    "ownerLayer": "consumer-repository",
-    "ratchetDecision": "sensor-added",
-    "coverageDimensions": [
-      "behaviour",
-      "maintainability",
-      "architecture-fitness"
-    ]
-  },
-  "expectedFiles": {
-    "create": [
-      "backend/pkg/common/handler.go",
-      "backend/pkg/common/handler_test.go"
-    ],
-    "modify": [],
-    "doNotTouch": [
-      "backend/modules/**",
-      "backend/pkg/common/http/response.go",
-      "backend/pkg/common/error.go",
-      "backend/pkg/database/migrations/**"
-    ]
-  },
-  "executionRoles": {
-    "implementerPosture": "Add only. If a helper needs a new parameter to fit another module, stop and record the exception instead of adding the parameter.",
-    "reviewerPosture": [
-      "Confirm no call site changed in this wave.",
-      "Confirm each helper's defaults and response shape match the inline blocks it will replace.",
-      "Confirm module-specific values arrive as parameters.",
-      "Confirm tests cover zero, negative, oversized and unknown inputs."
-    ]
-  },
-  "verificationPlan": {
-    "commands": [
-      "cd backend && gofmt -l pkg/common",
-      "cd backend && go build ./...",
-      "cd backend && go vet ./pkg/common/...",
-      "cd backend && go test -count=1 ./pkg/common/...",
-      "cd backend && go test -count=1 ./..."
-    ],
-    "runtimeEvidence": [
-      "one captured 400 response body from an existing handler, stored next to the helper test, proving the replacement target",
-      "test names listing each edge case covered"
-    ]
-  },
-  "runtimeSensitive": false,
-  "evidenceRequired": [
-    ".harness/evidence/2026-10-27-s2-shared-handler-helpers/commands.json",
-    ".harness/evidence/2026-10-27-s2-shared-handler-helpers/summary.md with the package placement decision and the captured 400 response",
-    ".harness/evidence/2026-10-27-s2-shared-handler-helpers/review.md"
-  ],
-  "humanGates": [
-    "None. This wave adds unreferenced helpers and changes no behaviour."
-  ],
-  "completionChecklist": [
-    "Layer and boundary declared",
-    "Contract anchors read",
-    "Verification run or exception recorded",
-    "Evidence saved or summarized",
-    "Review completed",
-    "Five helpers exist with tests and zero call-site changes",
-    "The captured 400 response matches what the helper produces",
-    "No module-specific value was baked into a helper"
-  ],
-  "linkage": {
-    "taskManifest": ".harness/tasks/2026-10-27-s2-shared-handler-helpers/manifest.json",
-    "evidenceDir": ".harness/evidence/2026-10-27-s2-shared-handler-helpers/",
-    "summaryFile": ".harness/evidence/2026-10-27-s2-shared-handler-helpers/summary.md",
-    "reviewFile": ".harness/evidence/2026-10-27-s2-shared-handler-helpers/review.md",
-    "changeRef": "none",
-    "planRefs": [
-      "docs/harness/tasks/2026-10-27-codebase-simplification-program.task.md",
-      "docs/reviews/CODE_SIMPLIFICATION_PLAN.md"
-    ]
-  }
+  "runtimeEvidence": [
+   "one captured 400 response body from an existing handler, stored next to the helper test, proving the replacement target",
+   "test names listing each edge case covered"
+  ]
+ },
+ "runtimeSensitive": false,
+ "evidenceRequired": [
+  ".harness/evidence/2026-10-27-s2-shared-handler-helpers/commands.json",
+  ".harness/evidence/2026-10-27-s2-shared-handler-helpers/summary.md with the package placement decision and the captured 400 response",
+  ".harness/evidence/2026-10-27-s2-shared-handler-helpers/review.md"
+ ],
+ "humanGates": [
+  "None. This wave adds unreferenced helpers and changes no behaviour."
+ ],
+ "completionChecklist": [
+  "Layer and boundary declared",
+  "Contract anchors read",
+  "Verification run or exception recorded",
+  "Evidence saved or summarized",
+  "Review completed",
+  "Five helpers exist with tests and zero call-site changes",
+  "The captured 400 response matches what the helper produces",
+  "No module-specific value was baked into a helper"
+ ],
+ "linkage": {
+  "taskManifest": ".harness/tasks/2026-10-27-s2-shared-handler-helpers/manifest.json",
+  "evidenceDir": ".harness/evidence/2026-10-27-s2-shared-handler-helpers/",
+  "summaryFile": ".harness/evidence/2026-10-27-s2-shared-handler-helpers/summary.md",
+  "reviewFile": ".harness/evidence/2026-10-27-s2-shared-handler-helpers/review.md",
+  "changeRef": "none",
+  "planRefs": [
+   "docs/harness/tasks/2026-10-27-codebase-simplification-program.task.md",
+   "docs/reviews/CODE_SIMPLIFICATION_PLAN.md"
+  ]
+ }
 }
