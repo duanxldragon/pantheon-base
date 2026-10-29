@@ -3,7 +3,7 @@
 **制定日期**：2026-10-27
 **基线**：`main` @ `96ef1d66767cc418447422c6a9d56942935b2b73`（v0.17.6）
 **配套**：[CODEBASE_SIMPLIFICATION_AUDIT.md](./CODEBASE_SIMPLIFICATION_AUDIT.md)、[REDUNDANT_CODE_CANDIDATES.md](./REDUNDANT_CODE_CANDIDATES.md)
-**状态**：**未执行**。本文件只做方案与验收设计。
+**状态**：**已执行**（2026-10-29 收口）。13 个波次全部合并，实测与覆盖率见 §11；仍未关闭的两项维护者门也在 §11.6 列出。
 
 ---
 
@@ -299,4 +299,110 @@ grep -rln "var errParamInvalid" backend | wc -l              # 目标：11 → 1
 
 ---
 
-**再次声明**：本文件是计划，不是执行记录。截至 2026-10-27，未修改任何业务源码、未删除任何文件、未更新依赖、未执行数据库变更、未提交代码。
+**声明勘误**：本文件的 §0–§F3 保持为**制定时的方案文本**（含当时的估算与风险判断），不随后续执行回写；
+真正的执行结果在 **§11**。2026-10-27 写作时的"未修改任何业务源码"只描述当时状态，
+2026-10-29 起该描述已失效——13 个波次均已合并，实际读数见 §11。
+
+---
+
+## 11. 执行记录（2026-10-29 收口）
+
+本节是**执行事实**，与 §0–§F3 的方案文本并列保存：方案里的估算、风险等级和"预期结果"
+不回写，实测值统一写在这里，便于对照"当初怎么估的 / 实际做到什么"。
+
+- 任务包：`2026-10-27-codebase-simplification-program`（状态 `in-progress`，见 §11.6）
+- 证据：`.harness/evidence/2026-10-27-codebase-simplification-program/`（程序级汇总）
+  与 `.harness/archive/2026-10/evidence/2026-10-27-s{1,2,3,4}-*/`（13 个波次原始证据）
+- 收口包：`2026-10-29-simplification-program-closeout`
+
+### 11.1 结论
+
+1. **13 个波次全部合并**（S1×2、S2×6、S3×3、S4×2），14 个任务清单项里只有 1 项未完成：
+   `pantheon-ops` 对同步后 foundation release 的构建验证——依赖维护者切发布，见 §11.6。
+2. **六个横向重复族各收敛到一份实现**：路径 ID 解析、分页归一化、排序白名单、
+   `ErrRecordNotFound` 转换、批量操作、导入导出管线。例外 3 处（`setting_audit` 分页回退、
+   tenant member 分页、i18n 的两处 ID 解析），每处都在对应波次证据里写明"为什么不能合"。
+3. **两次"假阳性"被记录而非强改**：RC-029（`permissionServiceErrorCode` 有测试直接调用）
+   与 RC-030（`user_service` 双层包装不是重复作用域）。按 §0.1 的禁令，宁可保留也不改测试迁就重构。
+4. **S3 的两项高风险改造都做了**：租户作用域三件套（RC-012/027）改走 `pkg/tenant.Scoper`，
+   `tenantOwnerID` 定义数从 11 降到 **0**；角色数据范围镜像模型（RC-022）删除镜像结构。
+5. **相对方案的最大偏差是"行数"**：净减少没有达到 −1,500～−2,100 的估算区间，
+   原因是 S2 的共享助手与配套测试是**新增**代码（+507、+262 净增），删除集中在 S1。
+
+### 11.2 波次实测
+
+每行取该波证据里记录的 `git diff --stat`（不是合并提交的 `--shortstat`——
+本仓的 squash 会把相邻波次的证据文件一并带入，提交级数字不可比）。
+
+| 波次 | 合并 | 实测 diff | 处置的 RC |
+|---|---|---|---|
+| S1 dead-code | #438 `321a6384` | 19 files, +0 / −1,923 | RC-001/002/003/005/009/010/011 |
+| S1 api-surface | #439 `b0a1952a` | 3 files, +11 / −9 | RC-004/007；RC-006/008/029 记录为保留 |
+| S2 shared-helpers | #450 `958bc6ba` | 9 files, +641 / −134（纯新增，0 调用点改动） | RC-013/014/015/017/019/024 的共享落点 |
+| S2 id-parse | #451 `2decc4b4` | 11 files, +66 / −134 | RC-014（35 → 2 处） |
+| S2 pagination-sort | #452 `73126586` | 29 files, +685 / −423 | RC-013/015/028 |
+| S2 error-mapping | #454 `9b22b36b` | 31 files, +208 / −290 | RC-017/019/020/024 |
+| S2 batch-and-envelope | #455 `92520d75` | 0 代码（5 文件 +180 / −1，仅证据与状态） | RC-023/025/030（复核后属已消解或假阳性） |
+| S2 import-export | #456 `547add28` | 19 files, +578 / −404（含 95 行清单文档） | RC-016 |
+| S3 tenant-scope | #461 `cbd37694` | 29 files, +278 / −373（生产代码 25 files +267 / −364） | RC-012/027 |
+| S3 role-data-scope | #461 `cbd37694` | 7 files, +54 / −75 | RC-022 |
+| S3 oidc-envelope | #461 `cbd37694` | 1 file, +13 / −0（仅注释，零功能差异） | RC-026 |
+| S4 governance | #441 `bf0711e9` | 0 代码（8 files +411 / −1，决策文档 + 索引） | RC-031/036/037/038/043 的决策与逐符号计量 |
+| S4 alias-removal | #447 `54151d54` | `re_export.go` 112 → 52 行；6 files +202 / −45（含证据） | RC-043（10 个零消费别名） |
+
+### 11.3 结构指标（§0.4 的度量命令，2026-10-29 复测）
+
+| 指标 | 方案目标 | 基线（2026-10-27） | 实测（2026-10-29） | 判读 |
+|---|---|---|---|---|
+| `ParseUint(c.Param("id")` 内联 | 35 → ≤2 | 35 | **2** | 达标；残留 = i18n 两处（文案是 `id.invalid`，与共享的 `param.invalid` 不同） |
+| 分页归一化实现 | 13 → 1 | 13 | **1 + 字段适配器** | 达标；模块里保留的同名函数只做 nil 安全取字段，不含钳制/回退逻辑 |
+| `pageSize > cap` 钳制行 | — | 11 | **1** | 残留 = `setting_audit`（oversize 回退 10，与共享 clamp 语义相反） |
+| `Offset((page-1)*pageSize)` 内联 | 14 → 1 | 14 | **4** | 残留 = `setting_audit` ×1 + tenant ×3（随 W9 租户域重写收敛） |
+| `func ... tenantOwnerID` 定义 | 11 → 1 | 11 | **0** | 超额达标：全部走 `pkg/tenant.Scoper` / `OwnerTenantID` |
+| `var errParamInvalid` 声明 | 11 → 1 | 11 | **0** | 达标：唯一来源 `pkg/common.ErrParamInvalid` |
+| 排序白名单 helper | 8 → 1 | 8 | **0 内联 + 8 适配器** | 达标：`common.NormalizeSort` + 各模块包级 var |
+| 后端测试包 | ≥46 ok / 0 FAIL | 46 ok | **47 ok / 0 FAIL / 6 无测试文件** | 达标（多出的包是 `modules/system/iam` 根包，来自 S3 的双租户隔离冒烟） |
+
+### 11.4 行数窗口
+
+| 范围 | 2026-10-27 基线 `96ef1d66` | 2026-10-29 `HEAD` | 差 |
+|---|---|---|---|
+| `backend/**/*.go`（不含 `_test.go`） | 53,179 | 52,332 | **−847** |
+| `frontend/src/**/*.{ts,tsx}` | 68,169 | 67,828 | **−341** |
+| 合计 | 121,348 | 120,160 | **−1,188** |
+
+**口径警告**：该窗口同时包含**净增**的非精简工作——租户 W6 控制台 UI、W7 计划阶梯、
+W9 租户域重写、发布说明目录化、`TenantList` 的 S3776 修复。因此 −1,188 是**下界**，
+既不能当作"精简收益"引用，也无法据此判定是否达到方案的 −1,500～−2,100 区间。
+可比的只有波次级实测（§11.2）与结构指标（§11.3）。
+
+### 11.5 RC 覆盖率
+
+`REDUNDANT_CODE_CANDIDATES.md` 共 45 条（RC-001…RC-045）：
+
+- **33 条有明确处置记录**（关闭、保留并说明、或定义为假阳性）：
+  001–017、019、020、022–031、036、037、038、043。
+- **12 条无波次处置，全部落在本文"暂不处理"表**，属显式遗留而非常规遗漏：
+  RC-018、RC-021、RC-032、RC-033、RC-034、RC-035、RC-039、RC-040、RC-041、RC-042、RC-044、RC-045。
+- RC-038（归档文件体积）同时在"暂不处理"表与 S4 决策里，结论是 **keep**：
+  文件数从 659 涨到 1,193，涨幅来自当日新增证据，不是代码重复。
+
+### 11.6 验证读数与仍未关闭的项
+
+2026-10-29 在 `main` @ `3b73c7a4` 复测：
+
+- `cd backend && go build ./... && go vet ./...` → 0 错误
+- `cd backend && go test -count=1 ./...` → 47 ok / 0 FAIL / 6 个无测试文件的包
+- `npm run check:task-packet` → 13 warning（0 error）；其中"程序包 review 缺失"一条由本轮收口消除
+- `check:harness-docs`、`check:structure`、`check:harness-encoding`、`check:docs-frontmatter`、
+  `check:harness-inventory`、`check:harness-adoption`、`check:harness-visual`、
+  `check:ui-quality-gate`、`check:failure-registry`、`check:duplication` → 0 finding
+
+**仍未关闭（维护者决策，不属于本程序遗漏）**：
+
+1. `pantheon-ops` 对同步后 foundation release 的 `go build ./... && npm run build`——
+   需要一个覆盖 13 个波次的 foundation release。当前 `pantheon-ops` 只随已发布版本同步，
+   而波次都以常规 PR 合入 `main`。这是程序清单里唯一未勾的项。
+2. 是否在 S2/S3 之后冻结功能进入维护期（方案 §C 的排期问题）。
+3. RC-036/037/038 的最终去留：S4 已定 keep / keep-and-check（含
+   `scripts/harness/check-doc-bilingual.mjs` 规格），若维护者改判需另立波次。

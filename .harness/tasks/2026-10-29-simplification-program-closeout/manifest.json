@@ -1,0 +1,171 @@
+{
+  "taskId": "2026-10-29-simplification-program-closeout",
+  "taskDoc": "docs/harness/tasks/2026-10-29-simplification-program-closeout.task.md",
+  "title": "Close out the 2026-10-27 codebase simplification programme: measured per-wave reduction, plan status correction, RC coverage",
+  "goal": "All thirteen simplification waves (S1 x2, S2 x6, S3 x3, S4 x2) merged between 2026-10-27 and 2026-10-28, but the programme was never closed out: docs/reviews/CODE_SIMPLIFICATION_PLAN.md still declared itself unexecuted at line 6 and asserted at line 302 that no production source had been touched, the programme packet's completion checklist was entirely unchecked, and the programme manifest's linkage pointed at an evidence directory that had never existed. This package removes that contradiction: it rewrites the plan's status into an execution record, aggregates the thirteen waves' measured diff stats into programme evidence, re-measures the four structural metrics the plan defined, enumerates RC coverage (32 of 45 covered, 13 explicitly deferred), and states the one remaining programme item - the pantheon-ops build against a foundation release - as a maintainer-gated gap instead of an omission. No source code, workflow, dependency, route, permission code or migration changes.",
+  "primaryLayer": "platform",
+  "status": "completed",
+  "priority": "P2",
+  "type": "docs",
+  "estimatedComplexity": "small",
+  "findings": [
+    "CODE_SIMPLIFICATION_PLAN.md:6 and :302 described the programme as unexecuted after all thirteen waves had merged, so the plan document contradicted both the wave evidence and the repository itself.",
+    "The programme packet's Completion Checklist had no boxes ticked and its runtimeGap still read 'No wave has started', even though every wave manifest was completed.",
+    ".harness/evidence/2026-10-27-codebase-simplification-program/ did not exist although the programme manifest's linkage.reviewFile and linkage.summaryFile pointed into it, leaving a permanent 'Linked review file does not exist' warning from check:task-packet.",
+    "No programme-level measured net reduction existed; each wave recorded its own git diff --stat but nothing summed them or compared them against the audit's -1,500 to -2,100 line estimate."
+  ],
+  "scope": {
+    "in": [
+      "Rewrite the plan status line and closing disclaimer, and add an execution-record section with the thirteen-wave measured table",
+      "Create .harness/evidence/2026-10-27-codebase-simplification-program/ with commands.json, summary.md and review.md so the programme linkage resolves",
+      "Re-measure the plan's four structural metrics and the two LOC windows against HEAD",
+      "Enumerate RC coverage and the deferred set",
+      "Tick the programme packet checklist items that are verifiable and keep the pantheon-ops build item open with its reason",
+      "Register the doc-status-drift failure mode as FR-020 and add the matching ratchet rule to AI_QUALITY_GOVERNANCE.md section 5.3",
+      "Record the closeout readings in .harness/STATUS.md"
+    ],
+    "out": [
+      "Any backend or frontend source change",
+      "Marking the programme manifest completed before the pantheon-ops build item is verified",
+      "Cutting a foundation release or touching pantheon-ops",
+      "Changing gate thresholds, workflows or checker behaviour",
+      "Deciding the final disposition of RC-036, RC-037 or RC-038 against the S4 keep decisions"
+    ]
+  },
+  "dependencyLayers": [
+    "platform"
+  ],
+  "implementationNotes": [
+    "Per-wave numbers come from the wave evidence's recorded git diff --stat, not from the audit estimate and not from squashed commit stats, because several squash commits bundle adjacent waves' evidence files.",
+    "The LOC window from 96ef1d66 to HEAD also contains tenant feature waves, the plan-ladder change, the release-notes move and the S3776 fix, so it understates the simplification drop; the summary states this instead of presenting the window as the programme's gain.",
+    "Coverage is counted by RC id: a wave summary or docs/reviews/GOVERNANCE_SURFACE_DECISIONS_2026-10-27.md naming the id counts as covered; the plan's explicit 'not in this round' table counts as deferred, and the two sets must not be merged.",
+    "The programme manifest stays in-progress: its checklist item 'pantheon-ops builds against the synced foundation release' cannot be satisfied without a maintainer release cut."
+  ],
+  "contractAnchors": [
+    "docs/reviews/CODE_SIMPLIFICATION_PLAN.md",
+    "docs/reviews/REDUNDANT_CODE_CANDIDATES.md",
+    "docs/harness/AI_QUALITY_GOVERNANCE.md",
+    "docs/harness/failure-registry.md",
+    ".harness/tasks/2026-10-27-codebase-simplification-program/manifest.json"
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "none",
+    "portableFailureClass": "doc-status-drift",
+    "ownerLayer": "consumer-repository",
+    "ratchetDecision": "guide-updated",
+    "coverageDimensions": [
+      "maintainability",
+      "method-health"
+    ]
+  },
+  "expectedFiles": {
+    "create": [
+      "docs/harness/tasks/2026-10-29-simplification-program-closeout.task.md",
+      ".harness/tasks/2026-10-29-simplification-program-closeout/manifest.json",
+      ".harness/evidence/2026-10-29-simplification-program-closeout/commands.json",
+      ".harness/evidence/2026-10-29-simplification-program-closeout/summary.md",
+      ".harness/evidence/2026-10-29-simplification-program-closeout/review.md",
+      ".harness/evidence/2026-10-29-simplification-program-closeout/pr-body.md",
+      ".harness/evidence/2026-10-27-codebase-simplification-program/commands.json",
+      ".harness/evidence/2026-10-27-codebase-simplification-program/summary.md",
+      ".harness/evidence/2026-10-27-codebase-simplification-program/review.md"
+    ],
+    "modify": [
+      "docs/reviews/CODE_SIMPLIFICATION_PLAN.md",
+      "docs/harness/tasks/2026-10-27-codebase-simplification-program.task.md",
+      ".harness/tasks/2026-10-27-codebase-simplification-program/manifest.json",
+      "docs/harness/failure-registry.md",
+      "docs/harness/AI_QUALITY_GOVERNANCE.md",
+      ".harness/STATUS.md"
+    ],
+    "doNotTouch": [
+      "backend/**",
+      "frontend/**",
+      ".github/workflows/**",
+      "sonar-project.properties",
+      "package.json",
+      "package-lock.json",
+      "pantheon-ops/**",
+      "the archived 2026-10-27 wave evidence"
+    ]
+  },
+  "executionRoles": {
+    "implementerPosture": "Documentation-only closeout: every claim must trace to a wave evidence file or a re-run command, and no source file may appear in the diff.",
+    "reviewerPosture": [
+      "Confirm the plan status line matches the merged wave set.",
+      "Confirm each per-wave figure comes from that wave's recorded git diff --stat.",
+      "Confirm the LOC window caveat is present and that the window is not presented as the programme's measured gain.",
+      "Confirm the deferred RC ids are listed and are not counted as covered.",
+      "Confirm the programme manifest is still in-progress with the pantheon-ops item open."
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "cd backend && go build ./...",
+      "cd backend && go vet ./...",
+      "cd backend && go test -count=1 ./...",
+      "git ls-files 'backend/**/*.go' | grep -v _test | xargs wc -l | tail -1",
+      "git ls-files 'frontend/src/**/*.ts' 'frontend/src/**/*.tsx' | xargs wc -l | tail -1",
+      "grep -rn 'ParseUint(c.Param(\"id\")' backend --include=*.go | grep -v _test.go | wc -l",
+      "grep -rn 'Offset((page' backend --include=*.go | wc -l",
+      "grep -rln 'func.*tenantOwnerID' backend --include=*.go | wc -l",
+      "grep -rln 'var errParamInvalid' backend --include=*.go | wc -l",
+      "npm run check:task-packet",
+      "npm run check:harness-docs",
+      "npm run check:structure",
+      "npm run check:harness-encoding",
+      "npm run check:docs-frontmatter",
+      "npm run check:harness-inventory",
+      "npm run check:harness-adoption",
+      "npm run check:harness-visual",
+      "npm run check:ui-quality-gate",
+      "npm run check:failure-registry",
+      "npm run check:duplication",
+      "node scripts/harness/check-evidence.mjs --root . --strict",
+      "node scripts/harness/check-review.mjs --root . --strict"
+    ],
+    "runtimeEvidence": [
+      "backend test package counts (47 ok / 0 FAIL / 6 without test files)",
+      "the four structural metric counts versus the plan's targets",
+      "the two LOC window readings with the mixed-window caveat"
+    ]
+  },
+  "runtimeSensitive": false,
+  "runtimeGap": "No runtime or UI evidence: the package touches only docs and harness evidence, and the code it describes was already verified by the per-wave evidence archived under .harness/archive/2026-10/evidence/.",
+  "evidenceRequired": [
+    ".harness/evidence/2026-10-29-simplification-program-closeout/commands.json with the re-measured readings and the gate results",
+    ".harness/evidence/2026-10-29-simplification-program-closeout/summary.md with the thirteen-wave table, the structural metrics and the RC coverage split",
+    ".harness/evidence/2026-10-29-simplification-program-closeout/review.md arguing that each claim traces to a source",
+    ".harness/evidence/2026-10-27-codebase-simplification-program/ so the programme manifest linkage resolves"
+  ],
+  "humanGates": [
+    "pantheon-ops build against the synced foundation release: requires a maintainer release cut; left open on the programme checklist.",
+    "Whether to freeze feature work after S2/S3: maintainer strategy decision, restated but not decided here.",
+    "RC-036 / RC-037 / RC-038 final disposition: S4 recorded keep and keep-and-check; a reversal would need its own wave."
+  ],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed",
+    "Plan status line and closing disclaimer no longer contradict the repository",
+    "Thirteen-wave measured table and programme summary exist under .harness/evidence/",
+    "RC coverage and the deferred ids are enumerated",
+    "Programme manifest still in-progress with the maintainer-gated items written down"
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-29-simplification-program-closeout/manifest.json",
+    "taskDoc": "docs/harness/tasks/2026-10-29-simplification-program-closeout.task.md",
+    "evidenceDir": ".harness/evidence/2026-10-29-simplification-program-closeout/",
+    "summaryFile": ".harness/evidence/2026-10-29-simplification-program-closeout/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-29-simplification-program-closeout/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/reviews/CODE_SIMPLIFICATION_PLAN.md",
+      "docs/reviews/REDUNDANT_CODE_CANDIDATES.md"
+    ]
+  }
+}
