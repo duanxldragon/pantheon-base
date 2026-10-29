@@ -26,7 +26,7 @@
 - Review Artifact：`.harness/evidence/2026-10-29-harness-task-archive/review.md`
 - OpenSpec change：none
 - Trivial change：no
-- Quality Profile：docs-governance
+- Quality Profile：ci-workflow
 - Ratchet Decision：sensor-added
 - GitHub Signal：repo-quality-gate
 

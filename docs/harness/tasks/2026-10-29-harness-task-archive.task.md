@@ -49,7 +49,7 @@ platform
 
 - Template: `admin-platform`
 - Overlay: `pantheon-base`
-- Quality Profile: `docs-governance`
+- Quality Profile: `ci-workflow`
 - Portable Failure Class: `archive-reference-rot`
 - Owner Layer: `foundation-source`
 - Ratchet Decision: `sensor-added`
