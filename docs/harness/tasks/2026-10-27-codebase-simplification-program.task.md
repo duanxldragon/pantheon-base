@@ -7,7 +7,7 @@ depends_on_layers:
   - system/iam
   - system/org
   - system/config
-status: Active
+status: Archived
 linked_contracts:
   - docs/reviews/CODEBASE_SIMPLIFICATION_AUDIT.md
   - docs/reviews/REDUNDANT_CODE_CANDIDATES.md
@@ -188,10 +188,13 @@ platform
 - [x] 每个波次的实测净减少已记录并汇总，替换审计估算
       （`.harness/evidence/2026-10-27-codebase-simplification-program/summary.md`；
       计划文档 §11 同步）
-- [ ] `pantheon-ops` 能对同步后的 foundation release 构建通过
-      — 未关闭：需要一个覆盖 13 个波次的 foundation release，属维护者发布决策；
-      波次全部以常规 PR 合入 `main`，没有对应的发布。读数为 `not-run`，不是 pass。
+- [x] `pantheon-ops` 能对同步后的 foundation release 构建通过
+      — 2026-10-29 关闭：`pantheon-base-v0.18.0`（`b4bb2392`）发布后消费仓前端红在 `TS2614`，
+      `pantheon-base-v0.18.1`（`93505225`）恢复 `isForbiddenRequestError` 导出；重建后后端
+      `go build ./...` 0、前端 `npm run build` `✓ built in 725ms`（staging 树读数，见
+      `.harness/evidence/2026-10-29-v0181-restore-request-guard/`）。
 - [x] 全程未改动任何路由、权限码、菜单、i18n key、错误码、schema 或迁移
 
-> 收口：2026-10-29 `2026-10-29-simplification-program-closeout`。本包状态保持 `in-progress`，
-> 唯一未勾项是上面的 `pantheon-ops` 构建验证。
+> 收口：2026-10-29 `2026-10-29-simplification-program-closeout`；同日 `pantheon-base-v0.18.0`
+> 发布，`pantheon-base-v0.18.1` 修复消费仓发现的前端导出回归并完成 `pantheon-ops` 构建验证。
+> 全部清单项已勾，本包状态转为 `completed`；`pantheon-ops` live 树替换仍属消费仓自身评审。

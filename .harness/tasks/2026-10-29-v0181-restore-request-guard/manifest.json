@@ -4,7 +4,7 @@
   "title": "Restore the isForbiddenRequestError export and cut pantheon-base-v0.18.1 as a consumer build fix",
   "goal": "Rebuilding pantheon-ops against pantheon-base-v0.18.0 failed in the consumer's own frontend code with TS2614: module ../../../../api/request has no exported member isForbiddenRequestError. The S1 unexport wave (#439, b0a1952a) removed that predicate on a zero-caller reading that covered only this repository, but api/request is a foundation surface that pantheon-ops imports (business/deploy/task/DeployTaskDetail.tsx:29, used at line 182). This package restores the two-line export, registers FR-021 and the section 5.4 rule about workspace-wide consumer reference searches, and cuts pantheon-base-v0.18.1 (patch, release/0.18) so the consumer can move off v0.18.0 and build both backend and frontend against the release that carries the thirteen simplification waves.",
   "primaryLayer": "platform",
-  "status": "in-progress",
+  "status": "completed",
   "priority": "P1",
   "type": "release",
   "estimatedComplexity": "small",
@@ -156,9 +156,9 @@
     "Review completed",
     "Version level recorded as patch 0.18.1 with the section 2.3 reasoning",
     "VERSION / CHANGELOG / RELEASE_NOTES / STATUS version references consistent",
-    "Required checks and Release Gate Summary green on the release commit",
-    "Tag and GitHub release published with the four assets",
-    "pantheon-ops rebuilt against pantheon-base-v0.18.1 with backend and frontend builds green"
+    "Required checks and Release Gate Summary green on the release commit (Release Gate Summary success at 93505225)",
+    "Tag and GitHub release published with the four assets (published 2026-10-29T04:19:38Z; Foundation Release Verify run 40817118092 success)",
+    "pantheon-ops rebuilt against pantheon-base-v0.18.1 with backend and frontend builds green (go build ./... 0; npm run build 725ms in the staging tree)"
   ],
   "linkage": {
     "taskManifest": ".harness/tasks/2026-10-29-v0181-restore-request-guard/manifest.json",

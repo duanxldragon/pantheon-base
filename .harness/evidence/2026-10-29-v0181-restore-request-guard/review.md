@@ -73,3 +73,18 @@ did not verify.
   }
 }
 ```
+
+## Post-publication addendum (2026-10-29T04:2x Z)
+
+The post-merge steps the review listed as outstanding have executed:
+
+- `Release Gate Summary` on the merge commit `93505225` completed `success`.
+- Tag `pantheon-base-v0.18.1` points at `93505225`; the GitHub release published 2026-10-29T04:19:38Z
+  with four assets (`tgz` 2fe49d70…, `repo.tar` 37ae7a08…), `check-release-assets.mjs` clean and
+  `Foundation Release Verify` run 40817118092 success.
+- `pantheon-ops` advanced its lock to 0.18.1, `rebuild:from-base` assembled 756 files, the staging
+  backend `go build ./...` returned 0 and the staging frontend `npm run build` returned
+  `✓ built in 725ms`. The TS2614 break is gone.
+- Still open, unchanged: the live `pantheon-ops` tree replacement and commit (consumer repository L2
+  gate), and `check:shared-drift` against the live tree, which reports 81 modified / 7 missing until
+  that replacement happens.

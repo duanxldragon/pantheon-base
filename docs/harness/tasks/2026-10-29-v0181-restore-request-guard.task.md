@@ -4,7 +4,7 @@ doc_type: Remediation
 layer: platform
 depends_on_layers:
   - platform
-status: Active
+status: Archived
 linked_contracts:
   - docs/contracts/PLATFORM_CONTRACT.md
   - docs/VERSION_MANAGEMENT_GUIDE.md
@@ -186,6 +186,6 @@ platform
 - [x] Review completed
 - [x] 版本判定为 patch（0.18.1）并记录依据
 - [x] VERSION / CHANGELOG / RELEASE_NOTES / STATUS 版本引用一致
-- [ ] 目标 commit 上必需检查与 Release Gate 全绿
-- [ ] tag 与 GitHub Release（含四件产物）已发布
-- [ ] `pantheon-ops` 对 `pantheon-base-v0.18.1` 重建且后端与前端构建均通过
+- [x] 目标 commit 上必需检查与 Release Gate 全绿（`93505225` 上 `Release Gate Summary` success）
+- [x] tag 与 GitHub Release（含四件产物）已发布（2026-10-29T04:19:38Z，`Foundation Release Verify` run 40817118092 success）
+- [x] `pantheon-ops` 对 `pantheon-base-v0.18.1` 重建且后端与前端构建均通过（staging 树：`go build ./...` 0、`npm run build` 725ms；live 替换属消费仓 L2 门禁）

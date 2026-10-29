@@ -4,7 +4,7 @@
   "title": "Program-level cleanup of horizontal duplication and orphan code found by the 2026-10-27 codebase simplification audit",
   "goal": "The 2026-10-27 read-only audit (docs/reviews/CODEBASE_SIMPLIFICATION_AUDIT.md) found the repository architecturally healthy but carrying horizontal duplication debt: the same tenant-scope trio is re-implemented in about 11 services, pagination normalization exists in about 13 copies, path-ID parsing is inlined about 35 times, import/export boilerplate is repeated across 8 modules, and 11 handler files redeclare the same two error values. It also found a small set of genuinely dead code, the largest being the 129-line zero-caller pkg/common/token.go pass-through layer. This program converts the audit's three-batch plan into thirteen independently reviewable waves: batch S1 removes dead code and narrows over-exported symbols, batch S2 converges the shared handler and service helpers behind tests, and batch S3 touches tenant scoping, the role data-scope model, the OIDC response envelope and maintainer-only governance decisions. No wave changes routes, permission codes, menus, i18n keys, error envelopes, database schema or migrations; every wave must keep go test ./backend/... at 46 ok / 0 FAIL and keep the existing gates green.",
   "primaryLayer": "platform",
-  "status": "in-progress",
+  "status": "completed",
   "priority": "P1",
   "type": "refactor",
   "estimatedComplexity": "large",
@@ -151,7 +151,7 @@
     "S2 waves merged: ID parsing, pagination, sorting, error mapping, batch actions and import/export each have one implementation, with three documented exceptions (setting_audit pagination, tenant member pagination, two i18n path-ID sites)",
     "S3 waves decided: tenant-scope unification merged (tenantOwnerID 11 to 0), role mirrored model deleted, OIDC envelope closed as comments-only; none abandoned",
     "Measured net reduction recorded per wave and summed in .harness/evidence/2026-10-27-codebase-simplification-program/summary.md and section 11 of the plan, replacing the audit estimate",
-    "pantheon-ops builds against the synced foundation release (OPEN: needs a maintainer release cut covering the thirteen waves; reading is not-run, not pass)",
+    "pantheon-ops builds against the synced foundation release: pantheon-base-v0.18.0 (b4bb2392) was published on 2026-10-29 and the rebuild exposed a TS2614 frontend break; pantheon-base-v0.18.1 (93505225) restores isForbiddenRequestError and the rebuilt consumer passes go build ./... (0) and npm run build (725ms) in the staging tree. FR-021 and AI_QUALITY_GOVERNANCE section 5.4 record the class.",
     "No route, permission code, menu, i18n key, error code, schema or migration changed anywhere in the program"
   ],
   "linkage": {

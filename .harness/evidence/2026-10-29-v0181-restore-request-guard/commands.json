@@ -137,32 +137,32 @@
     {
       "command": "node scripts/foundation-release/cut-foundation-release.mjs --release-version pantheon-base-v0.18.1 --release-line release/0.18 --base-commit <merge-commit> --release-notes ... --upgrade-notes ... --consumer-impact ...",
       "cwd": ".",
-      "status": "not-run",
-      "details": "Runs after this package merges to main, because the manifest must name the merge commit."
+      "status": "passed",
+      "details": "Bundle cut for pantheon-base-v0.18.1 on release/0.18 at 93505225; dist/foundation-releases/pantheon-base-v0.18.1/ contains manifest.json, bundle/, the tgz and its .sha256, and the three notes files. No output on success."
     },
     {
       "command": "node scripts/foundation-release/check-release-secrets.mjs --release-version pantheon-base-v0.18.1 --root . && node scripts/foundation-release/publish-foundation-release.mjs --release-version pantheon-base-v0.18.1 --release-line release/0.18 --base-commit <merge-commit> --repo duanxldragon/pantheon-base",
       "cwd": ".",
-      "status": "not-run",
-      "details": "Publication requires a clean worktree and a successful Release Gate Summary on the target commit; it creates the immutable tag and release."
+      "status": "passed",
+      "details": "Secret scan clean: 3447 files scanned across bundle/ and repo.tar. Then publish-foundation-release.mjs created annotated tag pantheon-base-v0.18.1 at 93505225 and the GitHub release (published 2026-10-29T04:19:38Z) with the four assets."
     },
     {
       "command": "node scripts/foundation-release/check-release-assets.mjs --release-version pantheon-base-v0.18.1 --repo duanxldragon/pantheon-base && gh run list --workflow foundation-release-verify.yml --limit 1",
       "cwd": ".",
-      "status": "not-run",
-      "details": "Runs on release: published, after publication."
+      "status": "passed",
+      "details": "check-release-assets: local bundle and release both carry the four required assets. Asset digests: tgz 2fe49d70f8ac628351fc51076026cecb9c35cfa76180f7cdf3fdb5092ac77f03 (29,888,926 bytes), repo.tar 37ae7a0873f9e49a076f21fdaa53651cbce1b72160d98e04a4a04cfc132303d9 (47,411,200 bytes). Foundation Release Verify run 40817118092 on release: published completed success."
     },
     {
       "command": "cd ../pantheon-ops && npm run rebuild:from-base && cd backend && go build ./... && cd ../frontend && npm run build",
       "cwd": "../pantheon-ops",
-      "status": "not-run",
-      "details": "Acceptance reading for this patch: the lock moves from 0.18.0 to 0.18.1 and both consumer builds must pass. This is the step that closes the programme checklist item."
+      "status": "passed",
+      "details": "Lock advanced to pantheon-base-v0.18.1 (release/0.18, baseCommit 93505225) after seeding the verified local assets; rebuild assembled the staging tree with 756 declared/generated files. Staging backend: GOFLAGS=-mod=mod go mod tidy then go build ./... exit 0. Staging frontend (node_modules junction to the ops install): npm run build -> ✓ built in 725ms. The TS2614 break is gone. The live ops tree is not replaced; that replacement is the consumer repository L2 gate."
     }
   ],
   "knownGaps": [
-    "Publication, asset verification and the pantheon-ops rebuild against v0.18.1 run after this package merges; their command records are appended to this file once they execute.",
-    "The consumer frontend failure was reproduced in the pantheon-ops staging tree, not by a base-repository gate: no CI check compiles a consumer tree, which is what FR-021 and AI_QUALITY_GOVERNANCE section 5.4 record.",
-    "pantheon-ops changes (lock bump, rebuild) are recorded as a consumer-side diff and are not committed from this repository.",
-    "This workstation intermittently times out on github.com:443 while api.github.com answers; git fetch/push and publication may need retries."
+    "The consumer build reading is from the staging tree .tmp/business-overlay-rebuild; replacing the live pantheon-ops tree and committing the lock bump belong to that repository's review (L2 human gate).",
+    "npm run check:shared-drift against the live ops tree still reports 81 modified / 7 missing because the live tree has not been replaced yet; it is expected to pass after the consumer applies the staged tree.",
+    "No base-repository gate compiles a consumer tree, which is the sensor gap FR-021 and AI_QUALITY_GOVERNANCE section 5.4 record.",
+    "This workstation intermittently times out on github.com:443 while api.github.com answers; git fetch, push and the release asset checks needed retries."
   ]
 }
