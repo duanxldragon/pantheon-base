@@ -74,7 +74,7 @@ platform
 
 ### In
 
-- 12 个波次 packet：S1 两个、S2 六个、S3 三个、治理决策一个，全部登记在 `.harness/tasks/2026-10-27-*`
+- 13 个波次 packet：S1 两个、S2 六个、S3 三个、S4 两个，全部登记在 `.harness/tasks/2026-10-27-*`
 - 每个波次独立的 task packet、evidence 目录与 review
 - 每波合并后的 foundation release 与 `base -> ops` 同步验证
 - 程序级收口：把估算收益替换为实测 `git diff --stat`，并汇总到 `.harness/evidence/2026-10-27-codebase-simplification-program/summary.md`
@@ -159,7 +159,7 @@ platform
 - 每个波次的 `commands.json`：cwd、status、真实输出摘要；未执行的标注 `not-run` 和原因
 - 每个波次的 `summary.md`：实测 diff stat、关闭的 RC 编号
 - 每个波次的 `review.md`：逐调用点的等价性论证
-- 程序收口 `summary.md`：12 个波次的实测净减少汇总
+- 程序收口 `summary.md`：13 个波次的实测净减少汇总
 - 任何触碰 HTTP 响应路径的波次：改造前后一次真实响应体快照
 
 ## Human Gates
@@ -174,14 +174,24 @@ platform
 
 ## Completion Checklist
 
-- [ ] Layer and boundary declared
-- [ ] Contract anchors read
-- [ ] Verification run or exception recorded
-- [ ] Evidence saved or summarized
-- [ ] Review completed
-- [ ] S1 波次合并：死码删除后 `go test ./backend/...` 仍为 46 ok / 0 FAIL
-- [ ] S2 波次合并：ID 解析、分页、排序、错误映射、批量操作、导入导出各只剩一份实现且有测试
-- [ ] S3 波次有结论：租户作用域与 OIDC 要么合并，要么写明理由按 abandoned 关闭
-- [ ] 每个波次的实测净减少已记录并汇总，替换审计估算
+- [x] Layer and boundary declared
+- [x] Contract anchors read
+- [x] Verification run or exception recorded
+- [x] Evidence saved or summarized
+- [x] Review completed
+- [x] S1 波次合并：死码删除后 `go test ./backend/...` 仍为 46 ok / 0 FAIL（2026-10-29 复测 47 ok：
+      多出的包是 S3 新增的 `modules/system/iam` 双租户冒烟，无包减少）
+- [x] S2 波次合并：ID 解析、分页、排序、错误映射、批量操作、导入导出各只剩一份实现且有测试
+      （3 处例外已逐条记录：`setting_audit` 分页、tenant member 分页、i18n 的两处 ID 解析）
+- [x] S3 波次有结论：租户作用域收敛（`tenantOwnerID` 11 → 0）、角色镜像模型删除、OIDC 仅补注释；
+      三项均按 completed 关闭，无 abandoned
+- [x] 每个波次的实测净减少已记录并汇总，替换审计估算
+      （`.harness/evidence/2026-10-27-codebase-simplification-program/summary.md`；
+      计划文档 §11 同步）
 - [ ] `pantheon-ops` 能对同步后的 foundation release 构建通过
-- [ ] 全程未改动任何路由、权限码、菜单、i18n key、错误码、schema 或迁移
+      — 未关闭：需要一个覆盖 13 个波次的 foundation release，属维护者发布决策；
+      波次全部以常规 PR 合入 `main`，没有对应的发布。读数为 `not-run`，不是 pass。
+- [x] 全程未改动任何路由、权限码、菜单、i18n key、错误码、schema 或迁移
+
+> 收口：2026-10-29 `2026-10-29-simplification-program-closeout`。本包状态保持 `in-progress`，
+> 唯一未勾项是上面的 `pantheon-ops` 构建验证。

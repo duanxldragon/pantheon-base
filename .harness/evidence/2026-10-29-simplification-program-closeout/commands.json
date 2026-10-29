@@ -1,0 +1,106 @@
+{
+  "taskId": "2026-10-29-simplification-program-closeout",
+  "repo": "pantheon-base",
+  "executedAt": "2026-10-29T15:05:00+08:00",
+  "agent": {
+    "tool": "other",
+    "adapter": "qoder-agent"
+  },
+  "commands": [
+    {
+      "command": "for f in .harness/archive/2026-10/tasks/2026-10-27-s{1,2,3,4}-*/manifest.json; do printf '%s ' \"$(basename $(dirname $f))\"; python -c \"import json,sys;print(json.load(open(sys.argv[1],encoding='utf-8'))['status'])\" \"$f\"; done",
+      "cwd": ".",
+      "status": "passed",
+      "details": "13 of 13 wave manifests report completed. The count is thirteen, not the twelve the programme packet, its manifest goal and the plan scope all said: batch S4 has two waves (governance decisions, re-export alias removal). Corrected in four places."
+    },
+    {
+      "command": "cd backend && go build ./... && go vet ./...",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Both exit 0 with no output at main 3b73c7a4, the base this docs-only package branches from."
+    },
+    {
+      "command": "cd backend && go test -count=1 ./...",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "exit 0: 47 packages ok / 0 FAIL / 6 packages without test files / 0 SKIP (log at /d/tmp/closeout-gotest.log)."
+    },
+    {
+      "command": "find backend -name '*_test.go' -printf '%h\\n' | sort -u  (HEAD vs the 96ef1d66 extraction at /d/tmp/pb-baseline)",
+      "cwd": ".",
+      "status": "passed",
+      "details": "46 -> 47 packages with test files; comm -13 shows exactly one addition (backend/modules/system/iam, the S3 two-tenant isolation smoke) and comm -23 shows no removals, so the '47 ok' is not a quiet substitute for a dropped package."
+    },
+    {
+      "command": "git ls-files 'backend/**/*.go' | grep -v _test | xargs wc -l | tail -1 && git ls-files 'frontend/src/**/*.ts' 'frontend/src/**/*.tsx' | xargs wc -l | tail -1",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Backend non-test 52332 (baseline 53179, delta -847); frontend src 67828 (baseline 68169, delta -341). Recorded as a lower bound only: the same window carries net-additive tenant waves (W6/W7/W9), the release-notes move and the TenantList S3776 fix, so the plan's -1,500 to -2,100 band is neither confirmed nor refuted by it."
+    },
+    {
+      "command": "grep -rn 'ParseUint(c.Param(\"id\")' backend --include=*.go | grep -v _test.go | wc -l; grep -rn 'Offset((page' backend --include=*.go | wc -l; grep -rn 'Limit(pageSize' backend --include=*.go | wc -l; grep -rln 'func.*tenantOwnerID' backend --include=*.go | wc -l; grep -rln 'var errParamInvalid' backend --include=*.go | wc -l",
+      "cwd": ".",
+      "status": "passed",
+      "details": "2 / 4 / 14 / 0 / 0. Plan §0.4 targets were 35-><=2 for the inline parse (met, residue is i18n with the id.invalid key), 14->1 for the inline offset arithmetic (4 left: setting_audit x1 plus tenant x3 deferred to W9), 11->1 for tenantOwnerID (beaten: 0, all through pkg/tenant.Scoper) and 11->1 for errParamInvalid (beaten: 0, single source pkg/common.ErrParamInvalid)."
+    },
+    {
+      "command": "npm run check:task-packet",
+      "cwd": ".",
+      "status": "passed",
+      "details": "75 packets, 0 errors, 13 warnings. Mid-round reading before this package's and the programme's review files existed was 15; the two removed warnings are exactly the ones this package exists to close. The remaining 13 are unrelated and pre-date the round: a RELEASE_NOTES_v0.14.0.md anchor moved into the release-notes directory, a permission_workbench.go:624-654 line-range anchor, one packet without a Linkage key list, and packets missing OpenSpec Change / Superpowers Plan."
+    },
+    {
+      "command": "npm run check:task-packet-template",
+      "cwd": ".",
+      "status": "passed",
+      "details": "OK pantheon-base task-packet template is present and linked."
+    },
+    {
+      "command": "npm run check:harness-docs",
+      "cwd": ".",
+      "status": "passed",
+      "details": "0 findings in strict mode, including the new links from the plan's §11 to the programme evidence."
+    },
+    {
+      "command": "npm run check:structure && npm run check:harness-encoding && npm run check:docs-frontmatter && npm run check:harness-inventory && npm run check:harness-adoption && npm run check:harness-visual && npm run check:ui-quality-gate && npm run check:failure-registry && npm run check:duplication",
+      "cwd": ".",
+      "status": "passed",
+      "details": "structure 0 findings across 2909 tracked files; encoding 0 across 2561 scanned; frontmatter passed (395 docs, 277 with frontmatter); inventory 0; adoption 0 findings / 0 warnings; visual 0; UI quality 0; failure registry 0 errors / 0 warnings with the new FR-020 row; duplication PASS."
+    },
+    {
+      "command": "node scripts/harness/check-evidence.mjs --root . --strict",
+      "cwd": ".",
+      "status": "passed",
+      "details": "2 files, 0 errors, 0 warnings. The programme's commands.json passes strict validation, which also proves its linkage.taskManifest resolves to the live programme manifest."
+    },
+    {
+      "command": "node scripts/harness/check-review.mjs --root . --strict",
+      "cwd": ".",
+      "status": "passed",
+      "details": "3 files, 0 errors. The earlier run in this session failed with 'linked evidence missing: .harness/evidence/2026-10-29-simplification-program-closeout/commands.json' because this file did not exist yet - recorded here because it is the same class of warning the programme packet had been carrying."
+    },
+    {
+      "command": "cross-check the 45 RC ids against the 13 wave manifests, the wave summaries and docs/reviews/GOVERNANCE_SURFACE_DECISIONS_2026-10-27.md",
+      "cwd": ".",
+      "status": "passed",
+      "details": "33 of 45 ids have a disposition: RC-001..017, 019, 020, 022..031, 036, 037, 038, 043. The 12 without one (018, 021, 032, 033, 034, 035, 039, 040, 041, 042, 044, 045) are all listed in the plan's explicit 'not in this round' table. RC-038 is in both sets because S4 decided to keep the archive."
+    }
+  ],
+  "knownGaps": [
+    "pantheon-ops build against a foundation release covering the thirteen waves: not run. No release was cut for the programme, so this is a maintainer decision and the programme checklist keeps it open.",
+    "The LOC window is mixed with net-additive tenant work and therefore cannot be compared with the plan's estimate; only the per-wave stats and the structural greps are traceable to this programme.",
+    "Twelve RC ids remain in the plan's 'not in this round' table; they are enumerated rather than closed.",
+    "Thirteen task-packet warnings remain for other packets (moved release-notes anchor, line-range anchor, missing Linkage keys, missing OpenSpec/Superpowers entries); none is caused by this package."
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-29-simplification-program-closeout/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-29-simplification-program-closeout/",
+    "reviewFile": ".harness/evidence/2026-10-29-simplification-program-closeout/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/reviews/CODE_SIMPLIFICATION_PLAN.md",
+      "docs/reviews/REDUNDANT_CODE_CANDIDATES.md",
+      "docs/harness/AI_QUALITY_GOVERNANCE.md"
+    ]
+  }
+}

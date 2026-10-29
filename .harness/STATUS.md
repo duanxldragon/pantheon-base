@@ -3,6 +3,28 @@
 **最后更新**: 2026-10-29
 **当前版本**: v0.17.8 已发布（tag `pantheon-base-v0.17.8`，目标提交 `e256d1fb`，四件资产与 `Foundation Release Verify` 已核验）
 
+## 代码精简程序收口（2026-10-29）
+
+任务包 `2026-10-29-simplification-program-closeout`，证据在
+`.harness/evidence/2026-10-29-simplification-program-closeout/`；程序级汇总在
+`.harness/evidence/2026-10-27-codebase-simplification-program/`。
+
+- **背景**：`2026-10-27-codebase-simplification-program` 的 13 个波次（S1×2、S2×6、S3×3、S4×2）
+  在 10-27/28 全部合并，但计划文档 `docs/reviews/CODE_SIMPLIFICATION_PLAN.md:6` 仍写"未执行"、
+  `:302` 仍声明"未修改任何业务源码"，程序清单一项未勾，manifest 的 review 链路指向一个
+  从未创建的证据目录。
+- **收口内容**：计划文档状态行与结尾声明改正，新增 §11 执行记录（13 波实测表、结构指标复测、
+  行数窗口口径、RC 覆盖率、未关闭项）；程序证据目录补齐；清单 11 项里勾 10 项。
+- **读数**：波次 13/13 `completed`；后端 `go test` **47 ok / 0 FAIL / 6 无测试文件**；
+  `ParseUint(c.Param("id")` 35 → 2、分页归一化 13 → 1 + 适配器、`tenantOwnerID` 11 → 0、
+  `errParamInvalid` 11 → 0；RC 覆盖 **33/45**（12 条仍属计划里显式的"暂不处理"）；
+  `check:task-packet` 警告 15 → **13**（0 error）。行数窗口 backend −847 / frontend −341，
+  但窗口含租户功能等净增项，不作为精简收益引用。
+- **登记**：`FR-020`（`method-health` / `method-health-gap`，`guide-updated`），
+  `docs/harness/AI_QUALITY_GOVERNANCE.md` 新增 §5.3（多波次程序必须独立收口，不能由波次收口代替）。
+- **仍未关闭**：程序包保持 `in-progress`——`pantheon-ops` 构建需要维护者切一个覆盖 13 个波次的
+  foundation release；功能冻结决策与 RC-036/037/038 最终去留同样属维护者。
+
 ## 已完成任务归档（2026-10-29）
 
 任务包 `2026-10-29-harness-task-archive`，证据在

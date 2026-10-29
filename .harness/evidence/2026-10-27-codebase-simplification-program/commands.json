@@ -1,0 +1,100 @@
+{
+  "taskId": "2026-10-27-codebase-simplification-program",
+  "repo": "pantheon-base",
+  "executedAt": "2026-10-29T14:20:00+08:00",
+  "agent": {
+    "tool": "other",
+    "adapter": "qoder-agent"
+  },
+  "commands": [
+    {
+      "command": "for f in .harness/archive/2026-10/tasks/2026-10-27-s{1,2,3,4}-*/manifest.json; do printf '%s ' \"$(basename $(dirname $f))\"; python -c \"import json,sys;print(json.load(open(sys.argv[1],encoding='utf-8'))['status'])\" \"$f\"; done",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Wave census at closeout: 13 of 13 manifests report status=completed (S1 dead-code, S1 api-surface, S2 shared-helpers, S2 id-parse, S2 pagination-sort, S2 error-mapping, S2 batch-and-envelope, S2 import-export, S3 tenant-scope, S3 role-data-scope, S3 oidc-envelope, S4 governance, S4 alias-removal). The manifests live under .harness/archive/2026-10/tasks/ because the 2026-10-29 archiving round moved them."
+    },
+    {
+      "command": "aggregate the git diff --stat recorded in each wave's evidence (.harness/archive/2026-10/evidence/2026-10-27-s*/{summary.md,commands.json})",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Per-wave measured readings, taken from each wave rather than from the squashed merge commits (several squashes bundle adjacent waves' evidence files, so git show --shortstat is not comparable across waves): S1 dead-code 19 files +0/-1923; S1 api-surface 3 files +11/-9; S2 shared-helpers 9 files +641/-134 (add-only); S2 id-parse 11 files +66/-134; S2 pagination-sort 29 files +685/-423; S2 error-mapping 31 files +208/-290; S2 batch-and-envelope 0 code (5 files, docs only); S2 import-export 19 files +578/-404; S3 tenant-scope 29 files +278/-373 (production-only 25 files +267/-364); S3 role-data-scope 7 files +54/-75; S3 oidc-envelope 1 file +13/-0 (comments only); S4 governance 0 code (docs only); S4 alias-removal re_export.go 112->52 lines."
+    },
+    {
+      "command": "git ls-files 'backend/**/*.go' | grep -v _test | xargs wc -l | tail -1",
+      "cwd": ".",
+      "status": "passed",
+      "details": "HEAD: 52332 lines. Baseline 96ef1d66 (measured in the extracted copy at /d/tmp/pb-baseline): 53179. Delta -847. The window also contains net-additive tenant work (W6 console UI, W7 plan ladder, W9 tenant-domain rewrite), the release-notes move and the TenantList S3776 fix, so this figure is a lower bound for the simplification drop and is not used as the programme's gain."
+    },
+    {
+      "command": "git ls-files 'frontend/src/**/*.ts' 'frontend/src/**/*.tsx' | xargs wc -l | tail -1",
+      "cwd": ".",
+      "status": "passed",
+      "details": "HEAD: 67828 lines. Baseline 96ef1d66: 68169. Delta -341, same mixed-window caveat as the backend figure. Combined window delta: -1188."
+    },
+    {
+      "command": "grep -rn 'ParseUint(c.Param(\"id\")' backend --include=*.go | grep -v _test.go | wc -l",
+      "cwd": ".",
+      "status": "passed",
+      "details": "2. Plan target was <=2; baseline was 35. The two remaining sites are i18n, whose failure branch emits id.invalid rather than the shared param.invalid, so the wave kept them local and recorded the exception."
+    },
+    {
+      "command": "grep -rn 'Offset((page' backend --include=*.go | wc -l && grep -rn 'Limit(pageSize' backend --include=*.go | wc -l",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Offset((page 4 (baseline 14): one setting_audit site plus three tenant sites deferred to the W9 tenant-domain rewrite. Limit(pageSize 14: the remaining call sites now receive pageSize from common.NormalizePagination instead of computing it. Page-size clamps went 11 -> 1 (the setting_audit oversize fallback to 10, which intentionally disagrees with the shared clamp)."
+    },
+    {
+      "command": "grep -rln 'func.*tenantOwnerID' backend --include=*.go | wc -l && grep -rln 'var errParamInvalid' backend --include=*.go | wc -l",
+      "cwd": ".",
+      "status": "passed",
+      "details": "tenantOwnerID definitions: 0 (baseline 11; plan target was 1) - ownership now resolves through pkg/tenant.Scoper.TenantOwnerID / tenant.OwnerTenantID. errParamInvalid declarations: 0 (baseline 11) - the single source is pkg/common.ErrParamInvalid."
+    },
+    {
+      "command": "cd backend && go build ./... && go vet ./...",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Both exit 0 with no output at HEAD 3b73c7a4."
+    },
+    {
+      "command": "cd backend && go test -count=1 ./...",
+      "cwd": "backend",
+      "status": "passed",
+      "details": "exit 0: 47 packages ok, 0 FAIL, 6 packages without test files, 0 SKIP. Baseline was 46 ok; the extra package is modules/system/iam, whose root package gained the two-tenant isolation smoke in the S3 tenant-scope wave."
+    },
+    {
+      "command": "find backend -name '*_test.go' -printf '%h\\n' | sort -u | wc -l  (HEAD vs the 96ef1d66 extraction)",
+      "cwd": ".",
+      "status": "passed",
+      "details": "HEAD 47 packages with test files, baseline 46; comm -13 shows exactly one addition, backend/modules/system/iam, and no removals. No test package was dropped to make a refactor pass."
+    },
+    {
+      "command": "cross-check every RC id against the wave summaries and docs/reviews/GOVERNANCE_SURFACE_DECISIONS_2026-10-27.md",
+      "cwd": ".",
+      "status": "passed",
+      "details": "33 of 45 RC ids have a recorded disposition (closed, kept with a reason, or proven false positive): RC-001..017, 019, 020, 022..031, 036, 037, 038, 043. The remaining 12 have no wave record and all sit in the plan's explicit 'not in this round' table: RC-018, 021, 032, 033, 034, 035, 039, 040, 041, 042, 044, 045. RC-038 appears in both sets because the S4 decision was to keep the archive as-is."
+    },
+    {
+      "command": "cd ../pantheon-ops && go build ./... && npm run build",
+      "cwd": "../pantheon-ops",
+      "status": "not-run",
+      "details": "Maintainer gate: this needs a foundation release that covers the 13 waves. Every wave merged as an ordinary PR to main; no release was cut for them during the programme. The programme checklist item stays unchecked until the maintainer cuts that release and the ops build is verified against it."
+    }
+  ],
+  "knownGaps": [
+    "pantheon-ops build against the synced foundation release: not run, because it requires a maintainer release cut covering the 13 waves.",
+    "The LOC window (-847 backend non-test, -341 frontend src) also contains net-additive tenant feature work, so it understates the simplification drop and cannot be compared directly with the plan's -1,500 to -2,100 estimate.",
+    "Three explicit convergence exceptions remain by design: setting_audit pagination (oversize falls back to 10), the tenant member pagination (default 20 plus maxPage clamp, deferred to the W9 tenant-domain rewrite), and the two i18n path-ID parse sites (id.invalid key).",
+    "Twelve RC ids have no disposition beyond the plan's 'not in this round' table; resolving them is future work, not an omission of this programme."
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-27-codebase-simplification-program/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-27-codebase-simplification-program/",
+    "reviewFile": ".harness/evidence/2026-10-27-codebase-simplification-program/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/reviews/CODE_SIMPLIFICATION_PLAN.md",
+      "docs/reviews/REDUNDANT_CODE_CANDIDATES.md",
+      "docs/reviews/CODEBASE_SIMPLIFICATION_AUDIT.md"
+    ]
+  }
+}

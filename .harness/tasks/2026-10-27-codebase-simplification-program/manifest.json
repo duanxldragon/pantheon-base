@@ -2,7 +2,7 @@
   "taskId": "2026-10-27-codebase-simplification-program",
   "taskDoc": "docs/harness/tasks/2026-10-27-codebase-simplification-program.task.md",
   "title": "Program-level cleanup of horizontal duplication and orphan code found by the 2026-10-27 codebase simplification audit",
-  "goal": "The 2026-10-27 read-only audit (docs/reviews/CODEBASE_SIMPLIFICATION_AUDIT.md) found the repository architecturally healthy but carrying horizontal duplication debt: the same tenant-scope trio is re-implemented in about 11 services, pagination normalization exists in about 13 copies, path-ID parsing is inlined about 35 times, import/export boilerplate is repeated across 8 modules, and 11 handler files redeclare the same two error values. It also found a small set of genuinely dead code, the largest being the 129-line zero-caller pkg/common/token.go pass-through layer. This program converts the audit's three-batch plan into twelve independently reviewable waves: batch S1 removes dead code and narrows over-exported symbols, batch S2 converges the shared handler and service helpers behind tests, and batch S3 touches tenant scoping, the role data-scope model, the OIDC response envelope and maintainer-only governance decisions. No wave changes routes, permission codes, menus, i18n keys, error envelopes, database schema or migrations; every wave must keep go test ./backend/... at 46 ok / 0 FAIL and keep the existing gates green.",
+  "goal": "The 2026-10-27 read-only audit (docs/reviews/CODEBASE_SIMPLIFICATION_AUDIT.md) found the repository architecturally healthy but carrying horizontal duplication debt: the same tenant-scope trio is re-implemented in about 11 services, pagination normalization exists in about 13 copies, path-ID parsing is inlined about 35 times, import/export boilerplate is repeated across 8 modules, and 11 handler files redeclare the same two error values. It also found a small set of genuinely dead code, the largest being the 129-line zero-caller pkg/common/token.go pass-through layer. This program converts the audit's three-batch plan into thirteen independently reviewable waves: batch S1 removes dead code and narrows over-exported symbols, batch S2 converges the shared handler and service helpers behind tests, and batch S3 touches tenant scoping, the role data-scope model, the OIDC response envelope and maintainer-only governance decisions. No wave changes routes, permission codes, menus, i18n keys, error envelopes, database schema or migrations; every wave must keep go test ./backend/... at 46 ok / 0 FAIL and keep the existing gates green.",
   "primaryLayer": "platform",
   "status": "in-progress",
   "priority": "P1",
@@ -125,12 +125,12 @@
     ]
   },
   "runtimeSensitive": false,
-  "runtimeGap": "No wave has started. This packet records the plan; all twelve wave manifests are status=planned and no modified tree has been built or tested.",
+  "runtimeGap": "All thirteen waves merged between 2026-10-27 and 2026-10-28 and the programme was closed out on 2026-10-29 (.harness/evidence/2026-10-27-codebase-simplification-program/). The manifest stays in-progress for one item only: pantheon-ops has not been built against a foundation release covering the waves, because no such release has been cut - that is a maintainer decision, not outstanding engineering work.",
   "evidenceRequired": [
     ".harness/evidence/<wave-task-id>/commands.json with cwd, status and real output summary; anything not executed marked not-run with the reason",
     ".harness/evidence/<wave-task-id>/summary.md with the measured diff stat and the closed RC ids",
     ".harness/evidence/<wave-task-id>/review.md with the equivalence argument for every changed call site",
-    "program closeout: .harness/evidence/2026-10-27-codebase-simplification-program/summary.md aggregating the twelve waves"
+    "program closeout: .harness/evidence/2026-10-27-codebase-simplification-program/summary.md aggregating the thirteen waves"
   ],
   "humanGates": [
     "Batch S1 deletion of the 10 capture-*.mjs scripts: confirm whether they are still used for manual visual walkthroughs.",
@@ -147,11 +147,11 @@
     "Verification run or exception recorded",
     "Evidence saved or summarized",
     "Review completed",
-    "S1 waves merged: zero-caller code deleted and go test ./backend/... still 46 ok / 0 FAIL",
-    "S2 waves merged: ID parsing, pagination, sorting, error mapping, batch actions and import/export each have one implementation, with tests",
-    "S3 waves decided: tenant-scope unification and OIDC envelope either merged or explicitly abandoned with a written reason",
-    "Measured net reduction recorded per wave and summed, replacing the audit estimate",
-    "pantheon-ops builds against the synced foundation release",
+    "S1 waves merged: zero-caller code deleted; go test ./backend/... holds at 46 ok / 0 FAIL (re-measured 47 ok on 2026-10-29, the extra package being the S3 iam two-tenant smoke, with no package removed)",
+    "S2 waves merged: ID parsing, pagination, sorting, error mapping, batch actions and import/export each have one implementation, with three documented exceptions (setting_audit pagination, tenant member pagination, two i18n path-ID sites)",
+    "S3 waves decided: tenant-scope unification merged (tenantOwnerID 11 to 0), role mirrored model deleted, OIDC envelope closed as comments-only; none abandoned",
+    "Measured net reduction recorded per wave and summed in .harness/evidence/2026-10-27-codebase-simplification-program/summary.md and section 11 of the plan, replacing the audit estimate",
+    "pantheon-ops builds against the synced foundation release (OPEN: needs a maintainer release cut covering the thirteen waves; reading is not-run, not pass)",
     "No route, permission code, menu, i18n key, error code, schema or migration changed anywhere in the program"
   ],
   "linkage": {
