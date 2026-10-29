@@ -1,6 +1,6 @@
 # 任务归档索引
 
-**最后更新**: 2026-09-25
+**最后更新**: 2026-10-29
 
 ## 归档说明
 
@@ -15,10 +15,14 @@
 
 | 月份 | 任务数 | Evidence 数 | 关键轮次 |
 |------|--------|-------------|----------|
-| 2026-07 | 27 | 30 | V1.0 冻结与发布、Sonar 清零轮、安全审计 |
+| 2026-07 | 26 | 31 | V1.0 冻结与发布、Sonar 清零轮、安全审计 |
 | 2026-08 | 23 | 23 | Foundation Release 体系建立、v0.10.x 系列发布 |
-| 2026-09 | 66 | 23 | 命名与边界整改、企业级整改、治理收口 |
-| **合计** | **116** | **76** | - |
+| 2026-09 | 72 | 70 | 命名与边界整改、企业级整改、治理收口、租户核心 |
+| 2026-10 | 82 | 85 | 租户交付、v0.14.0–v0.17.8 发布、代码简化 S1–S4 |
+| **合计** | **203** | **209** | - |
+
+统计口径：`archive/<YYYY-MM>/tasks/` 与 `archive/<YYYY-MM>/evidence/` 下的目录数。
+月份取任务 ID 的 `YYYY-MM` 前缀，因此个别跨月任务按其开工月份归档。
 
 ## 2026-07：V1.0 发布与质量清零
 
@@ -102,12 +106,13 @@
 
 ## 当前活跃任务 (未归档)
 
-`.harness/tasks/` 下仅保留两个已完成但用于追踪当前 release gate 的 manifest：
+`.harness/tasks/` 下只保留状态不是 `completed` 的 manifest：
 
-- `2026-09-24-production-readiness-audit`
-- `2026-09-25-task-archiving-and-v0130-prep`
+- `2026-10-27-codebase-simplification-program`（`in-progress`，剩余波次与发布切分属维护者决策）
 
-它们的状态均为 `completed`；正式归档或发布动作受对应 release gate 约束。
+归档后 `.harness/tasks/` 为空也属正常状态；`readTaskManifest` 会回退到
+`archive/<YYYY-MM>/tasks/<task-id>/`，所以任务包、`Linkage` 与文档链接继续使用规范路径
+`.harness/tasks/...` 与 `.harness/evidence/...`，不需要在归档后改写。
 
 ## 查看归档内容
 
@@ -236,3 +241,45 @@ cp -r .harness/archive/2026-07/evidence/2026-07-21-v1-release-readiness .harness
 - **9月归档**: 66 个 (24 + 42)
 
 **状态**: 所有已完成任务已归档，活跃任务清零 ✅
+
+---
+
+## 2026-10-29 归档更新
+
+**新增归档**: 87 个 `completed` 任务（2026-09 月 5 个 + 2026-10 月 82 个），
+同步移动 89 份证据（87 份任务证据中的 86 份 + 3 个无任务包的孤儿证据目录）。
+
+### 本轮归档明细
+
+| 月份 | 任务 | 证据 |
+|------|------|------|
+| 2026-09 | 5 | 4 |
+| 2026-10 | 82 | 85（82 任务 + 3 孤儿） |
+
+- 移动方式：`git mv`，保留全部历史；按月落到 `archive/<YYYY-MM>/{tasks,evidence}/<task-id>/`。
+- `2026-09-29-ops-ssrf-protection-integration` 没有独立证据目录，其证据留在
+  `pantheon-ops` 侧，本次只移动 manifest。
+- 孤儿证据（无对应 manifest）：`2026-10-24-session-device-style`、
+  `2026-10-24-tenant-login-recovery`、`2026-10-25-dual-mode-e2e-smoke`。
+
+### 配套的门禁改动
+
+归档把"规范路径"与"物理路径"彻底分开，因此三个消费方补上了档案回退：
+
+- `scripts/task-manifest.mjs`：新增 `findArchivedReferencePath` / `resolveArchiveAwarePath`，
+  同时覆盖 `tasks/` 与 `evidence/` 两类引用。
+- `scripts/harness/check-task-packet.mjs`：`Review File` 与 `Contract Anchors` 的存在性
+  检查改用上述解析器。`check:task-packet` 的警告从 42 条降到 14 条——降下来的 28 条是
+  更早归档轮次遗留的假警告（指向已归档证据），剩下 14 条是真实缺口。
+- `scripts/harness/check-doc-links.mjs`：文档里指向 `.harness/evidence/...` 的链接在目标
+  已归档时仍然有效。
+
+### 已知残余（刻意保留，未删除也未覆盖）
+
+- `.harness/evidence/2026-09-10-tenant-verification-and-gray/artifacts/browser/` 两份
+  png 是归档后才被 #427 重新写入旧路径的重复产物，与 `archive/2026-09/` 下的同名文件
+  内容不同（尺寸 62609/39527 对 60379/39304）。覆盖会改写历史证据，删除会丢数据，
+  因此原地保留待维护者决定。
+- `.harness/evidence/2026-09-25-pr347-governance-body.md` 与
+  `.harness/evidence/2026-09-27-v0130-pr-body.md` 是两份没有任务归属的散落 PR 正文，
+  未被任何文档引用，同轮保留。
