@@ -6,6 +6,75 @@ Pantheon Base 方法追踪记录。方法论本体位于 `pantheon-harness`。
 
 ---
 
+## [pantheon-base-v0.18.0] — 2026-10-29 (13-wave simplification programme and tenant lifecycle closure)
+
+> Thirteen independently reviewed simplification waves land on `main` for the first time in a
+> release, together with the tenant lifecycle, membership and console waves merged after v0.17.8.
+> **No schema change (still 30), no route, permission code, menu key or i18n key is removed**, and
+> `sharedPaths` is unchanged at 52 entries. The visible change is internal structure: six duplicated
+> backend families collapse to one implementation each, and a membership without a role binding no
+> longer opens a login or a tenant switch.
+
+### Changed — architecture (13 waves)
+
+- **Dead code and API surface (S1, 2 waves).** Zero-caller backend symbols and thirteen orphan
+  frontend scripts deleted (`19 files, +0 / −1,923`); internal-only helpers unexported
+  (`3 files, +11 / −9`). Four symbols stay exported because a test calls them, recorded rather than
+  forced: RC-006, RC-008 and RC-029 were closed as false positives.
+- **Shared request helpers (S2, 6 waves).** One path-ID parser (`common.ParseUintParam`, inline
+  `ParseUint(c.Param("id"))` blocks 35 → 2), one pagination/sort normalizer (13 → 1 plus adapters),
+  one not-found translation, one error-message key map, one batch-operation path and one
+  import/export pipeline replacing eight module copies.
+- **Tenant scope unification (S3, 3 waves).** The tenant-scope trio runs through
+  `pkg/tenant.Scoper`; `tenantOwnerID` definitions 11 → 0 and `errParamInvalid` 11 → 0. The role
+  data-scope mirror struct is deleted and the OIDC envelope comparison documents its single
+  difference instead of duplicating it.
+- **Governance surface (S4, 2 waves).** Five decisions recorded with per-symbol accounting, and ten
+  zero-consumer re-export aliases removed (`re_export.go` 112 → 52 lines).
+
+### Changed — tenant lifecycle and membership
+
+- **A tenant is only deleted when it is archived (W1).** Delete now refuses any tenant that is not
+  in the archived state instead of purging live data.
+- **Member integrity (W2).** Unknown users are rejected on add, and only live owners count toward
+  the owner minimum.
+- **A membership without a role binding grants no login or switch (W4).** One predicate
+  (`tenant.HasRoleBindingInTenant`) gates discovery, the candidate list and the switchable list;
+  `AddMember` narrows to users owned by the target tenant with the new
+  `tenant.member.user_not_in_tenant` (400). The unreachable login picker and shell `TenantSwitcher`
+  are removed; the endpoints stay as compatibility surfaces returning at most one entry.
+- **Legacy tenant handler, routes and bootstrap service deleted (W8).** They were never mounted.
+- **Console UI smoke (W6)** covers the tenant console; **contract and API docs (W5)** align with the
+  shipped surface (tenant contract V1.9, plan-ladder decision A).
+
+### Dependencies
+
+- `github.com/coreos/go-oidc/v3` 3.9.0 → 3.21.0, and the indirect `go-jose` moves from v3 to v4
+  (the v3 module no longer receives fixes).
+- Frontend `test:smoke:tenant` includes the new `tenant-console.spec.ts`.
+
+### Harness and repository layout
+
+- `.harness/` completed-task directories are archived by month under `.harness/archive/<YYYY-MM>/`,
+  with `resolveArchiveAwarePath` keeping canonical references resolvable in both trees.
+- Release notes move to `docs/release-notes/` with bilingual indexes.
+- FR-018 through FR-020 registered in the failure registry; `AI_QUALITY_GOVERNANCE.md` §5.2/§5.3
+  add the static-analysis re-test rule and the multi-wave programme closeout rule.
+
+### Verification
+
+- `go build ./...`, `go vet ./...` clean; `go test -count=1 ./...` → 47 packages ok, 0 FAIL.
+- Structural re-measurement against the plan's targets: 2 / 1+adapters / 1 clamp / 4 inline
+  `Offset` / 0 / 0. RC coverage 33 of 45, the remaining twelve explicitly deferred.
+- LOC window `53,179 → 52,332` backend production Go and `68,169 → 67,828` frontend sources. The
+  window also carries net-additive tenant work, so it is a lower bound on the reduction, not the
+  programme's gain.
+- All repository checkers green: task packet (0 errors), harness docs, structure, encoding,
+  frontmatter, inventory, adoption, visual, UI quality gate, duplication, failure registry,
+  evidence and review strict.
+
+---
+
 ## [pantheon-base-v0.17.8] — 2026-10-27 (base-owned dependency vulnerability closure)
 
 > Two files move: `backend/go.mod` gains one line-changed directive, `frontend/package-lock.json`

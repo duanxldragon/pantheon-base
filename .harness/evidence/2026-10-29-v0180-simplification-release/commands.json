@@ -1,0 +1,137 @@
+{
+  "taskId": "2026-10-29-v0180-simplification-release",
+  "repo": "pantheon-base",
+  "executedAt": "2026-10-29T00:00:00+08:00",
+  "agent": {
+    "tool": "other",
+    "adapter": "qoder-agent"
+  },
+  "runtimeSensitive": true,
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-29-v0180-simplification-release/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-29-v0180-simplification-release/",
+    "reviewFile": ".harness/evidence/2026-10-29-v0180-simplification-release/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/VERSION_MANAGEMENT_GUIDE.md",
+      "docs/designs/FOUNDATION_RELEASE_MODEL.md",
+      "docs/reviews/CODE_SIMPLIFICATION_PLAN.md"
+    ]
+  },
+  "commands": [
+    {
+      "command": "git log --oneline e256d1fb..f6bbc1cd",
+      "cwd": ".",
+      "status": "passed",
+      "details": "34 commits since v0.17.8 (e256d1fb): the 13 simplification waves, tenant waves W1/W2/W3/W4/W5/W6/W7/W8, plan-ladder decision A (#460), TenantList S3776 (#464), go-jose v4 (#463), release-notes directory (#462), harness archive (#466) and the programme closeout (#467). This is the batch the release must cover."
+    },
+    {
+      "command": "git diff --name-only e256d1fb f6bbc1cd -- backend/pkg/database/migrations | sort",
+      "cwd": ".",
+      "status": "passed",
+      "details": "No output: no migration changed since v0.17.8. The chain still ends at 000030_tenant_plan_definitions (schema 30)."
+    },
+    {
+      "command": "git diff --name-only e256d1fb f6bbc1cd -- backend frontend | wc -l",
+      "cwd": ".",
+      "status": "passed",
+      "details": "129 backend and frontend files differ between v0.17.8 and the release commit; none of them is a new migration or a removed route. The release notes group them by wave instead of by file."
+    },
+    {
+      "command": "cat VERSION",
+      "cwd": ".",
+      "status": "passed",
+      "details": "0.18.0"
+    },
+    {
+      "command": "grep -c 'pantheon-base-v0.18.0' CHANGELOG.md docs/release-notes/RELEASE_NOTES_v0.18.0.md .harness/STATUS.md",
+      "cwd": ".",
+      "status": "passed",
+      "details": "CHANGELOG.md 1 occurrence, docs/release-notes/RELEASE_NOTES_v0.18.0.md 1 occurrence, .harness/STATUS.md 1 occurrence; both release-note indexes carry the row and the latest pointer."
+    },
+    {
+      "command": "grep -rn 'ParseUint(c.Param(\"id\")' backend --include=*.go | grep -v _test.go | wc -l",
+      "cwd": ".",
+      "status": "passed",
+      "details": "2 remaining inline parse blocks, matching the plan's target of at most 3."
+    },
+    {
+      "command": "grep -rn 'Offset((page' backend --include=*.go | wc -l",
+      "cwd": ".",
+      "status": "passed",
+      "details": "4 remaining inline Offset calls, matching the plan's target of at most 5."
+    },
+    {
+      "command": "grep -rln 'func.*tenantOwnerID' backend --include=*.go | wc -l && grep -rln 'var errParamInvalid' backend --include=*.go | wc -l",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Both 0, matching the plan's structural targets."
+    },
+    {
+      "command": "git ls-files 'backend/**/*.go' | grep -v _test | xargs wc -l | tail -1",
+      "cwd": ".",
+      "status": "passed",
+      "details": "52,332 lines of backend production Go, the lower end of the plan's LOC window (53,179 → 52,332). The window also carries net-additive tenant work, so it understates the reduction."
+    },
+    {
+      "command": "node scripts/harness/check-task-packet.mjs --root .",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Exit 0, 0 errors. The new packet's only warning before its review file existed was 'Linked review file does not exist'; after review.md is written the remaining count is baseline plus none."
+    },
+    {
+      "command": "npm run --silent check:task-packet-template",
+      "cwd": ".",
+      "status": "passed",
+      "details": "OK pantheon-base task-packet template is present and linked."
+    },
+    {
+      "command": "npm run --silent check:harness-docs",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Docs link check (strict): 0 finding(s). The two release-note index files resolve to the new RELEASE_NOTES_v0.18.0.md through the archive-aware link resolver."
+    },
+    {
+      "command": "npm run --silent check:structure",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Structure contract check (strict): 0 finding(s) across 2911 tracked file(s)."
+    },
+    {
+      "command": "npm run --silent check:harness-encoding",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Encoding check (strict): 0 finding(s) across 2563 scanned file(s)."
+    },
+    {
+      "command": "npm run --silent check:docs-frontmatter",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Frontmatter check passed. 397 docs checked, 278 with frontmatter."
+    },
+    {
+      "command": "npm run --silent check:harness-inventory",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Docs inventory check (strict): 0 finding(s)."
+    },
+    {
+      "command": "npm run --silent check:harness-adoption && npm run --silent check:harness-visual && npm run --silent check:ui-quality-gate && npm run --silent check:duplication",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Adoption: no findings. Visual: no findings. UI quality gate: no findings. Duplication: Result: PASS."
+    },
+    {
+      "command": "node scripts/harness/check-failure-registry.mjs --root . --strict",
+      "cwd": ".",
+      "status": "passed",
+      "details": "[PASS] docs/harness/failure-registry.md."
+    }
+  ],
+  "knownGaps": [
+    "Release cut, publication, asset verification and the pantheon-ops build run after this package merges; their command records are appended to this file once they execute.",
+    "The LOC window used in the release notes contains net-additive tenant work and is a lower bound, not the programme's measured gain.",
+    "The three maintainer items in CODE_SIMPLIFICATION_PLAN.md section 11.6 stay open by design.",
+    "This workstation intermittently times out on github.com:443 while api.github.com answers; git fetch/push needed retries and the release scripts must not be restarted blindly after a network failure."
+  ]
+}

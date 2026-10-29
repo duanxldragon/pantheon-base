@@ -1,0 +1,168 @@
+{
+  "taskId": "2026-10-29-v0180-simplification-release",
+  "taskDoc": "docs/harness/tasks/2026-10-29-v0180-simplification-release.task.md",
+  "title": "Cut pantheon-base-v0.18.0 covering the thirteen simplification waves and the post-v0.17.8 tenant waves, then build pantheon-ops against it",
+  "goal": "The 13-wave simplification programme merged between 2026-10-27 and 2026-10-28, but no foundation release has been cut since v0.17.8 (2026-10-27, commit e256d1fb). pantheon-ops therefore cannot build against a release that contains the waves, which is the one unfinished item on the programme manifest. This package prepares and cuts pantheon-base-v0.18.0 on release/0.18: a minor bump because the waves are an architecture optimisation with governance enhancements per docs/VERSION_MANAGEMENT_GUIDE.md section 2.3, and because the release also carries the tenant lifecycle waves W1/W2/W4/W8 merged after v0.17.8. It ships the four consumable assets, verifies them with Foundation Release Verify, then advances the pantheon-ops lock to 0.18.0 and records a real go build plus frontend build against the synced tree. No product source is modified by this package.",
+  "primaryLayer": "platform",
+  "status": "in-progress",
+  "priority": "P2",
+  "type": "release",
+  "estimatedComplexity": "medium",
+  "findings": [
+    "The last foundation release, pantheon-base-v0.17.8, sits at e256d1fb; every one of the thirteen simplification waves plus the tenant lifecycle waves W1/W2/W4/W8 merged after it, so no published release contains them.",
+    "docs/reviews/CODE_SIMPLIFICATION_PLAN.md section 11.6 and the programme manifest both leave the pantheon-ops build item open for exactly this reason; the item cannot be closed by documentation.",
+    "The batch cannot be a patch: VERSION_MANAGEMENT_GUIDE section 2.3 classifies architecture optimisation and governance enhancement as minor, and W4 changes a login/switch gate plus adds tenant.member.user_not_in_tenant, so 0.18.0 on release/0.18 is the honest level.",
+    "No migration moves in this release: the chain still ends at 000030_tenant_plan_definitions (schema 30), which keeps the consumer rebuild a tree swap plus go mod download.",
+    "This workstation intermittently times out on github.com:443 while api.github.com answers normally, so clone/fetch/push steps need retries and the local release scripts must not be restarted blindly after a network failure."
+  ],
+  "scope": {
+    "in": [
+      "VERSION 0.18.0, CHANGELOG entry, docs/release-notes/RELEASE_NOTES_v0.18.0.md and both indexes",
+      "Task packet, manifest and evidence with notes/release-notes.md, notes/upgrade-notes.md, notes/consumer-impact.md",
+      ".harness/STATUS.md release section",
+      "Cut, publish and verify pantheon-base-v0.18.0 with the four consumable assets",
+      "Advance pantheon-ops foundation-release.lock.json to 0.18.0, run rebuild:from-base, go build ./... and the frontend build"
+    ],
+    "out": [
+      "Any backend or frontend source change in pantheon-base",
+      "Changing release-gate.yml, foundation-release-verify.yml or any required check",
+      "Rewriting an existing immutable tag or release",
+      "Deciding the three open maintainer items in CODE_SIMPLIFICATION_PLAN.md section 11.6",
+      "Committing pantheon-ops changes without the maintainer's review of that repository's diff"
+    ]
+  },
+  "dependencyLayers": [
+    "platform",
+    "system/iam"
+  ],
+  "implementationNotes": [
+    "Version level is a judgement recorded in the packet: 0.18.0/release/0.18 rather than 0.17.9, because the simplification waves are an architecture optimisation and the batch also contains tenant behaviour changes. The maintainer can re-level it at acceptance.",
+    "The three notes files are authored under .harness/evidence/2026-10-29-v0180-simplification-release/notes/ so both the workflow path (notes_dir) and the local scripts consume the same text.",
+    "Publish preconditions are enforced by publish-foundation-release.mjs: clean worktree and a successful Release Gate Summary check on the target commit. The release commit therefore has to reach main and pass CI before the tag is created.",
+    "The release body must not present the LOC window as the programme's gain; the window includes net-additive tenant work and is a lower bound.",
+    "pantheon-ops already carries an uncommitted 0.17.8 sync in its worktree; the 0.18.0 bump builds on that state and the diff is recorded, not silently rewritten."
+  ],
+  "contractAnchors": [
+    "docs/VERSION_MANAGEMENT_GUIDE.md",
+    "docs/designs/FOUNDATION_RELEASE_MODEL.md",
+    "docs/reviews/CODE_SIMPLIFICATION_PLAN.md",
+    ".harness/tasks/2026-10-27-codebase-simplification-program/manifest.json"
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "ci-workflow",
+    "portableFailureClass": "release-artifact-gap",
+    "ownerLayer": "consumer-repository",
+    "ratchetDecision": "no-repeat-observed",
+    "coverageDimensions": [
+      "behaviour",
+      "maintainability",
+      "runtime-quality"
+    ]
+  },
+  "expectedFiles": {
+    "create": [
+      "docs/release-notes/RELEASE_NOTES_v0.18.0.md",
+      "docs/harness/tasks/2026-10-29-v0180-simplification-release.task.md",
+      ".harness/tasks/2026-10-29-v0180-simplification-release/manifest.json",
+      ".harness/evidence/2026-10-29-v0180-simplification-release/commands.json",
+      ".harness/evidence/2026-10-29-v0180-simplification-release/summary.md",
+      ".harness/evidence/2026-10-29-v0180-simplification-release/review.md",
+      ".harness/evidence/2026-10-29-v0180-simplification-release/pr-body.md",
+      ".harness/evidence/2026-10-29-v0180-simplification-release/notes/release-notes.md",
+      ".harness/evidence/2026-10-29-v0180-simplification-release/notes/upgrade-notes.md",
+      ".harness/evidence/2026-10-29-v0180-simplification-release/notes/consumer-impact.md"
+    ],
+    "modify": [
+      "VERSION",
+      "CHANGELOG.md",
+      "docs/release-notes/README.md",
+      "docs/release-notes/README.en.md",
+      ".harness/STATUS.md"
+    ],
+    "doNotTouch": [
+      "backend/**",
+      "frontend/**",
+      ".github/workflows/**",
+      "sonar-project.properties",
+      "package.json",
+      "package-lock.json",
+      ".harness/archive/**"
+    ]
+  },
+  "executionRoles": {
+    "implementerPosture": "Release bookkeeping only: the diff must contain no product source, and every claim about the waves must trace to a wave evidence file or the plan's execution record.",
+    "reviewerPosture": [
+      "Confirm the version level matches section 2.3 and that the reasoning is recorded.",
+      "Confirm the release notes do not claim the LOC window as the programme's gain.",
+      "Confirm no product source, workflow or gate file appears in the diff.",
+      "Confirm the notes files are non-placeholder and name the two tenant behaviour changes.",
+      "Confirm the target commit is the merge commit on main and that the tag was cut from it."
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "cat VERSION",
+      "grep -n 'pantheon-base-v0.18.0' CHANGELOG.md docs/release-notes/RELEASE_NOTES_v0.18.0.md .harness/STATUS.md",
+      "npm run check:task-packet",
+      "npm run check:harness-docs",
+      "npm run check:task-packet-template",
+      "npm run check:structure",
+      "npm run check:harness-encoding",
+      "npm run check:docs-frontmatter",
+      "node scripts/harness/check-evidence.mjs --root . --strict",
+      "node scripts/harness/check-review.mjs --root . --strict",
+      "node scripts/foundation-release/cut-foundation-release.mjs --root . --release-version pantheon-base-v0.18.0 --release-line release/0.18 --base-commit <release-commit> --release-notes ... --upgrade-notes ... --consumer-impact ...",
+      "node scripts/foundation-release/check-release-secrets.mjs --release-version pantheon-base-v0.18.0 --root .",
+      "node scripts/foundation-release/publish-foundation-release.mjs --release-version pantheon-base-v0.18.0 --release-line release/0.18 --base-commit <release-commit> --repo duanxldragon/pantheon-base",
+      "node scripts/foundation-release/check-release-assets.mjs --release-version pantheon-base-v0.18.0 --repo duanxldragon/pantheon-base",
+      "cd ../pantheon-ops && npm run rebuild:from-base",
+      "cd ../pantheon-ops/backend && go build ./...",
+      "cd ../pantheon-ops/frontend && npm run build"
+    ],
+    "runtimeEvidence": [
+      "the four asset names, sizes and SHA-256 digests on the GitHub release",
+      "Foundation Release Verify conclusion on release: published",
+      "pantheon-ops go build and frontend build output against the synced 0.18.0 tree"
+    ]
+  },
+  "runtimeSensitive": true,
+  "runtimeGap": "The release itself is runtime evidence: a tag plus four assets consumed by pantheon-ops. Nothing in this package changes runtime behaviour, so no new UI or API evidence is produced beyond the release artefact checks and the consumer build.",
+  "evidenceRequired": [
+    ".harness/evidence/2026-10-29-v0180-simplification-release/commands.json with the version consistency reads, the gate results, the release script output and the ops build output",
+    ".harness/evidence/2026-10-29-v0180-simplification-release/summary.md with the wave census and the asset facts",
+    ".harness/evidence/2026-10-29-v0180-simplification-release/review.md with the Machine Readable block",
+    ".harness/evidence/2026-10-29-v0180-simplification-release/notes/ with the three non-placeholder release texts"
+  ],
+  "humanGates": [
+    "Version level 0.18.0 (minor) is a judgement the maintainer can re-level at acceptance.",
+    "Publication uses the logged-in maintainer gh session because default_workflow_permissions is read; the tag and release are immutable once created.",
+    "pantheon-ops lock advancement is a change in the consumer repository and is left for that repository's own review."
+  ],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed",
+    "Version level recorded as minor 0.18.0 with the section 2.3 reasoning",
+    "VERSION / CHANGELOG / RELEASE_NOTES / STATUS version references consistent",
+    "Required checks and Release Gate Summary green on the release commit",
+    "Tag and GitHub release published with the four assets",
+    "pantheon-ops rebuilt against pantheon-base-v0.18.0 and builds"
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-29-v0180-simplification-release/manifest.json",
+    "taskDoc": "docs/harness/tasks/2026-10-29-v0180-simplification-release.task.md",
+    "evidenceDir": ".harness/evidence/2026-10-29-v0180-simplification-release/",
+    "summaryFile": ".harness/evidence/2026-10-29-v0180-simplification-release/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-29-v0180-simplification-release/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/VERSION_MANAGEMENT_GUIDE.md",
+      "docs/designs/FOUNDATION_RELEASE_MODEL.md",
+      "docs/reviews/CODE_SIMPLIFICATION_PLAN.md"
+    ]
+  }
+}
