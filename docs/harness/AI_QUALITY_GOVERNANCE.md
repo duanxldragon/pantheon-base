@@ -128,6 +128,23 @@ Deferred Code Issues:
 程序包的状态由清单决定：只要还有一项未满足，程序就保持 `in-progress`，
 即使所有波次都是 `completed`（FR-020）。
 
+### 5.4 共享导出删除前的消费仓检索
+
+`platform` 层的共享导出面（如 `frontend/src/api/request.ts`、`src/index.ts` 的再导出）是
+foundation release 的消费接口，调用方不只存在于本仓。因此：
+
+1. **删除或去导出前，检索范围是 workspace，不是本仓。** 至少检查
+   `pantheon-ops/frontend/src`、`pantheon-ops/backend` 与生成器模板里对同一符号的引用；
+   只在本仓得到"零调用方"时，结论只能是"本仓零调用方"。
+2. **删除共享导出属于 small-surface 变更，但验证要求不降级。** 证据里要写出检索命令与命中文件，
+   而不是只写"zero caller"，并说明该符号是否属于某个成组契约（如四个 `is*RequestError` 谓词）。
+3. **foundation release 的验收读数包含消费仓构建。** 发布说明与发布证据必须给出
+   `pantheon-ops` 对目标版本 `rebuild:from-base` 后的后端与前端构建结果；只有 base 自身
+   `go test` / `npm run build` 通过，不算该版本已被验证。
+
+违反该规则的实例见 FR-021：`v0.18.0` 删除了 `pantheon-ops` 仍在使用的
+`isForbiddenRequestError`，消费仓前端构建红在 `TS2614`，只能由 `v0.18.1` 以 patch 恢复。
+
 ## 6. CI Signal Placement
 
 Use fast and deterministic signals in PR required checks.
