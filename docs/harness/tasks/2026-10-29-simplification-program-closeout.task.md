@@ -53,7 +53,7 @@ platform
 
 - Template: `admin-platform`
 - Overlay: `pantheon-base`
-- Quality Profile: `none`
+- Quality Profile: `ci-workflow`
 - Portable Failure Class: `doc-status-drift`
 - Owner Layer: `consumer-repository`
 - Ratchet Decision: `guide-updated`

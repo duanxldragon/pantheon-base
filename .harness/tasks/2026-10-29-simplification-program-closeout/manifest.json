@@ -51,7 +51,7 @@
   "harnessProfile": {
     "template": "admin-platform",
     "overlay": "pantheon-base",
-    "qualityProfile": "none",
+    "qualityProfile": "ci-workflow",
     "portableFailureClass": "doc-status-drift",
     "ownerLayer": "consumer-repository",
     "ratchetDecision": "guide-updated",

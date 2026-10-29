@@ -26,7 +26,7 @@
 - Review Artifact：`.harness/evidence/2026-10-29-simplification-program-closeout/review.md`
 - OpenSpec change：none
 - Trivial change：no
-- Quality Profile：none
+- Quality Profile：ci-workflow
 - Ratchet Decision：guide-updated
 - GitHub Signal：method-gate
 
