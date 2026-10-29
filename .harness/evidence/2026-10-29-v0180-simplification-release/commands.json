@@ -126,10 +126,47 @@
       "cwd": ".",
       "status": "passed",
       "details": "[PASS] docs/harness/failure-registry.md."
+    },
+    {
+      "command": "git rev-list -n 1 pantheon-base-v0.18.0 && gh release view pantheon-base-v0.18.0 --json publishedAt,assets",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Annotated tag points at b4bb2392 (PR #468 merge commit). Release published 2026-10-29T03:04:26Z with the four assets: foundation-release-pantheon-base-v0.18.0.tgz, its .sha256, repo.tar, repo.tar.sha256."
+    },
+    {
+      "command": "node scripts/foundation-release/check-release-assets.mjs --release-version pantheon-base-v0.18.0 --repo duanxldragon/pantheon-base",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Asset set and checksums match the manifest; exit 0."
+    },
+    {
+      "command": "gh run list --workflow foundation-release-verify.yml --limit 1",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Foundation Release Verify run 40810043123 on release: published completed with conclusion success."
+    },
+    {
+      "command": "cd ../pantheon-ops && npm run rebuild:from-base",
+      "cwd": "../pantheon-ops",
+      "status": "passed",
+      "details": "Lock advanced to pantheon-base-v0.18.0 (release/0.18, baseCommit b4bb2392) after seeding the verified local assets; rebuild assembled the staging tree at .tmp/business-overlay-rebuild (53 declared paths, 756 generated files)."
+    },
+    {
+      "command": "cd ../pantheon-ops/.tmp/business-overlay-rebuild/backend && GOFLAGS=-mod=mod go mod tidy && go build ./...",
+      "cwd": "../pantheon-ops",
+      "status": "passed",
+      "details": "The staging go.mod needed indirect requirements for business modules (k8s.io/api, k8s.io/client-go, go-restful and others); go mod tidy added them and go build ./... then exited 0. The live ops backend was not modified."
+    },
+    {
+      "command": "cd ../pantheon-ops/.tmp/business-overlay-rebuild/frontend && npm run build",
+      "cwd": "../pantheon-ops",
+      "status": "failed",
+      "details": "src/modules/business/deploy/task/DeployTaskDetail.tsx(29,10): error TS2614: Module '\"../../../../api/request\"' has no exported member 'isForbiddenRequestError'. The S1 unexport wave (#439) removed the export while the consumer still imports it. Restoring the export in the staging tree made the same build pass (751ms); the base-first fix ships as pantheon-base-v0.18.1 under FR-021."
     }
   ],
   "knownGaps": [
-    "Release cut, publication, asset verification and the pantheon-ops build run after this package merges; their command records are appended to this file once they execute.",
+    "Release cut and publication completed for pantheon-base-v0.18.0 (tag b4bb2392, release 2026-10-29T03:04:26Z, four assets, Foundation Release Verify success).",
+    "The pantheon-ops backend build passed in the staging tree, but the frontend build failed with TS2614: the release dropped isForbiddenRequestError while pantheon-ops imports it. The gap is tracked as FR-021 and closed by pantheon-base-v0.18.1; until the consumer moves to 0.18.1, the programme checklist item stays open.",
     "The LOC window used in the release notes contains net-additive tenant work and is a lower bound, not the programme's measured gain.",
     "The three maintainer items in CODE_SIMPLIFICATION_PLAN.md section 11.6 stay open by design.",
     "This workstation intermittently times out on github.com:443 while api.github.com answers; git fetch/push needed retries and the release scripts must not be restarted blindly after a network failure."

@@ -6,6 +6,35 @@ Pantheon Base 方法追踪记录。方法论本体位于 `pantheon-harness`。
 
 ---
 
+## [pantheon-base-v0.18.1] — 2026-10-29 (restore the shared request-error predicate)
+
+> A patch that adds two lines and deletes none. `pantheon-base-v0.18.0` shipped `frontend/src/api/request.ts`
+> without `isForbiddenRequestError`, and `pantheon-ops` imports it. **No schema change (still 30), no
+> route, permission code, menu key or i18n key change, no backend change.**
+
+### Fixed
+
+- **`isForbiddenRequestError` is exported again.** The S1 unexport wave (#439, `b0a1952a`) removed the
+  predicate on a "zero caller" reading, but that reading was repository-local: `pantheon-ops`
+  `frontend/src/modules/business/deploy/task/DeployTaskDetail.tsx:29` imports it and branches on it at
+  line 182. Rebuilding the consumer against v0.18.0 failed with
+  `TS2614: Module '"../../../../api/request"' has no exported member 'isForbiddenRequestError'`. The
+  predicate joins the other three (`isTimeoutRequestError`, `isNetworkRequestError`,
+  `isServerRequestError`) as the four-member request-error family a consumer can rely on.
+
+### Verification
+
+- The consumer staging tree failed `npm run build` with TS2614 against v0.18.0; restoring the export in
+  that tree built clean (`✓ built in 751ms`), and the same build is re-run against v0.18.1 as the
+  release acceptance reading.
+- Base frontend `npm run lint`, `npm run type-check` and `npm run build` are green after the restore;
+  backend untouched.
+- `FR-021` registers the class in the failure registry, and `docs/harness/AI_QUALITY_GOVERNANCE.md` §5.4
+  adds the rule: removing a shared export requires a workspace-wide consumer reference search, and a
+  foundation release is not verified until the consumer builds against it.
+
+---
+
 ## [pantheon-base-v0.18.0] — 2026-10-29 (13-wave simplification programme and tenant lifecycle closure)
 
 > Thirteen independently reviewed simplification waves land on `main` for the first time in a

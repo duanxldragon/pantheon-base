@@ -1,9 +1,27 @@
 # Pantheon Base - Harness 任务状态
 
 **最后更新**: 2026-10-29
-**当前版本**: v0.17.8 已发布（tag `pantheon-base-v0.17.8`，目标提交 `e256d1fb`，四件资产与 `Foundation Release Verify` 已核验）；`pantheon-base-v0.18.0` 准备中（见下）
+**当前版本**: v0.18.0 已发布（tag `pantheon-base-v0.18.0`，目标提交 `b4bb2392`，四件资产与 `Foundation Release Verify` 已核验）；`pantheon-base-v0.18.1`（patch）准备中（见下）
 
-## v0.18.0 发布（2026-10-29）
+## v0.18.1 发布（2026-10-29）
+
+任务包 `2026-10-29-v0181-restore-request-guard`，证据在
+`.harness/evidence/2026-10-29-v0181-restore-request-guard/`（含 `notes/` 三份发布文本）。
+
+- **为什么是 patch**：只恢复一行共享导出，不改 API、schema、路由、权限、菜单或 i18n，
+  符合 `docs/VERSION_MANAGEMENT_GUIDE.md` §2.3 的 bug fix 定义。
+- **问题**：S1 去导出波次（#439，`b0a1952a`）以“零调用方”为由删掉了
+  `frontend/src/api/request.ts` 的 `isForbiddenRequestError`，但检索只覆盖本仓；
+  `pantheon-ops` 的 `business/deploy/task/DeployTaskDetail.tsx:29` 仍在导入并在 :182 分支。
+  对 v0.18.0 重建消费仓时前端构建红在 `TS2614`。
+- **修复**：恢复两行导出的谓词，使请求错误谓词族恢复为四成员。
+- **登记**：`FR-021`（`maintainability` / `static-sensor-gap`，`guide-updated`），
+  `docs/harness/AI_QUALITY_GOVERNANCE.md` 新增 §5.4（删除共享导出前必须做 workspace 级消费引用检索，
+  foundation release 必须在消费仓构建通过后才算验证完成）。
+- **产物**：四件资产 + `Foundation Release Verify`；随后把 `pantheon-ops` 锁从 0.18.0 推进到 0.18.1，
+  重跑 `rebuild:from-base`、`go build ./...` 与 `npm run build`。
+
+## v0.18.0 发布（2026-10-29·已发布）
 
 任务包 `2026-10-29-v0180-simplification-release`，证据在
 `.harness/evidence/2026-10-29-v0180-simplification-release/`（含 `notes/` 三份发布文本）。
@@ -16,8 +34,10 @@
 - **范围**：`main` 自 `e256d1fb`（v0.17.8）以来的全部已合并提交——13 个精简波次、W1–W8 租户波次、
   计划阶梯决策 A、S3776 收敛、`go-jose` v3→v4 与 `go-oidc` 3.21.0、发布说明目录化、任务归档。
 - **无迁移**：迁移链仍止于 `000030_tenant_plan_definitions`（schema 30）；`sharedPaths` 仍 52 项。
-- **产物**：四件资产 + `Foundation Release Verify`（发布后核验）；随后推进 `pantheon-ops` 锁到
-  0.18.0，跑 `rebuild:from-base`、`go build ./...` 与前端构建，关闭精简程序清单的最后一项。
+- **产物**：四件资产已发布（release 2026-10-29T03:04:26Z，tag 指向 `b4bb2392`），
+  `check-release-assets` 与 `Foundation Release Verify`（run 40810043123）均通过。
+- **消费验证**：`pantheon-ops` 锁推进到 0.18.0 后 `rebuild:from-base` 与后端 `go build ./...` 通过，
+  但前端构建红在 `TS2614`（`api/request` 缺 `isForbiddenRequestError`），由 `0.18.1` 修复。
 - **仍未关闭**：`CODE_SIMPLIFICATION_PLAN.md` §11.6 的三项维护者决策（RC-036/037/038 去留、
   功能冻结、最终验收）。
 

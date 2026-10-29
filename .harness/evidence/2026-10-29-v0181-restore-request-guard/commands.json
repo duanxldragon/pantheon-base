@@ -1,0 +1,168 @@
+{
+  "taskId": "2026-10-29-v0181-restore-request-guard",
+  "repo": "pantheon-base",
+  "executedAt": "2026-10-29T05:00:00+08:00",
+  "agent": {
+    "tool": "other",
+    "adapter": "qoder-agent"
+  },
+  "runtimeSensitive": true,
+  "runtimeGap": "The contract under repair is a compile-time export; the runtime reading is the consumer build pair recorded in commands (TS2614 against v0.18.0, clean build after the restore) plus the release asset set, not a UI or API flow.",
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-29-v0181-restore-request-guard/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-29-v0181-restore-request-guard/",
+    "reviewFile": ".harness/evidence/2026-10-29-v0181-restore-request-guard/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/VERSION_MANAGEMENT_GUIDE.md",
+      "docs/designs/FOUNDATION_RELEASE_MODEL.md",
+      "docs/harness/AI_QUALITY_GOVERNANCE.md"
+    ]
+  },
+  "commands": [
+    {
+      "command": "git status --short && git diff -- frontend/src/api/request.ts",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Only frontend/src/api/request.ts is modified: two added lines exporting isForbiddenRequestError between isNetworkRequestError and isServerRequestError; no deletions and no other source file."
+    },
+    {
+      "command": "python scan of pantheon-ops frontend/src for named imports from api/request",
+      "cwd": "../pantheon-ops",
+      "status": "passed",
+      "details": "Imported names: RequestConfig, apiRequest, beginLogoutTransition, clearOperationToken, endLogoutTransition, ensureOperationVerified, isForbiddenRequestError, isLogoutTransitionActive, isNetworkRequestError, isRequestError, isServerRequestError, isTimeoutRequestError. After the restore every one of them is exported by pantheon-base frontend/src/api/request.ts."
+    },
+    {
+      "command": "cd ../pantheon-ops/.tmp/business-overlay-rebuild/frontend && npm run build",
+      "cwd": "../pantheon-ops",
+      "status": "failed",
+      "details": "Reproduction against the v0.18.0 tree: src/modules/business/deploy/task/DeployTaskDetail.tsx(29,10): error TS2614: Module '\"../../../../api/request\"' has no exported member 'isForbiddenRequestError'. The consumer imports the predicate at line 29 and branches on it at line 182."
+    },
+    {
+      "command": "cd ../pantheon-ops/.tmp/business-overlay-rebuild/frontend && npm run build   # after restoring the export in the staging tree",
+      "cwd": "../pantheon-ops",
+      "status": "passed",
+      "details": "vite v7.1.12 building for production... ✓ 3758 modules transformed ... ✓ built in 751ms. This is the reading that located the fix on the base side."
+    },
+    {
+      "command": "cd ../pantheon-ops/.tmp/business-overlay-rebuild/backend && go build ./...",
+      "cwd": "../pantheon-ops",
+      "status": "passed",
+      "details": "Exit 0 after go mod tidy added the indirect requirements for the business modules. The backend half of the consumer already built against the 0.18 line, so the defect was confined to the shared frontend surface."
+    },
+    {
+      "command": "cd frontend && npm run lint",
+      "cwd": ".",
+      "status": "passed",
+      "details": "eslint . completed with no findings at this diff."
+    },
+    {
+      "command": "cd frontend && npm run type-check",
+      "cwd": ".",
+      "status": "passed",
+      "details": "tsc -b completed with no diagnostics at this diff."
+    },
+    {
+      "command": "cd frontend && npm run build",
+      "cwd": ".",
+      "status": "passed",
+      "details": "vite v7.1.12 production build completed: ✓ built in 1.16s."
+    },
+    {
+      "command": "cat VERSION && grep -c 'pantheon-base-v0.18.1' CHANGELOG.md docs/release-notes/RELEASE_NOTES_v0.18.1.md .harness/STATUS.md",
+      "cwd": ".",
+      "status": "passed",
+      "details": "VERSION is 0.18.1; the tag string appears once each in CHANGELOG.md, the release notes and STATUS.md, and both release-note indexes carry the v0.18.1 row as the latest pointer."
+    },
+    {
+      "command": "npm run --silent check:task-packet",
+      "cwd": ".",
+      "status": "passed",
+      "details": "All three active packets pass, including 2026-10-29-v0181-restore-request-guard; no errors."
+    },
+    {
+      "command": "npm run --silent check:task-packet-template",
+      "cwd": ".",
+      "status": "passed",
+      "details": "OK pantheon-base task-packet template is present and linked."
+    },
+    {
+      "command": "npm run --silent check:harness-docs",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Docs link check (strict): 0 finding(s)."
+    },
+    {
+      "command": "npm run --silent check:structure",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Structure contract check (strict): 0 finding(s) across 2921 tracked file(s)."
+    },
+    {
+      "command": "npm run --silent check:harness-encoding",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Encoding check (strict): 0 finding(s) across 2573 scanned file(s)."
+    },
+    {
+      "command": "npm run --silent check:docs-frontmatter",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Frontmatter check passed: 399 docs checked, 279 with frontmatter."
+    },
+    {
+      "command": "npm run --silent check:harness-inventory",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Docs inventory check (strict): 0 finding(s)."
+    },
+    {
+      "command": "npm run --silent check:harness-adoption",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Adoption check (strict): 0 finding(s), 0 warning(s) once this commands.json is part of the change."
+    },
+    {
+      "command": "node scripts/harness/check-failure-registry.mjs --root . --strict",
+      "cwd": ".",
+      "status": "passed",
+      "details": "1 file, 0 errors, 0 warnings; FR-021 parses in the 17-column schema."
+    },
+    {
+      "command": "node scripts/harness/check-evidence.mjs --root . --strict && node scripts/harness/check-review.mjs --root . --strict",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Both strict checkers exit 0 with this evidence directory present."
+    },
+    {
+      "command": "node scripts/foundation-release/cut-foundation-release.mjs --release-version pantheon-base-v0.18.1 --release-line release/0.18 --base-commit <merge-commit> --release-notes ... --upgrade-notes ... --consumer-impact ...",
+      "cwd": ".",
+      "status": "not-run",
+      "details": "Runs after this package merges to main, because the manifest must name the merge commit."
+    },
+    {
+      "command": "node scripts/foundation-release/check-release-secrets.mjs --release-version pantheon-base-v0.18.1 --root . && node scripts/foundation-release/publish-foundation-release.mjs --release-version pantheon-base-v0.18.1 --release-line release/0.18 --base-commit <merge-commit> --repo duanxldragon/pantheon-base",
+      "cwd": ".",
+      "status": "not-run",
+      "details": "Publication requires a clean worktree and a successful Release Gate Summary on the target commit; it creates the immutable tag and release."
+    },
+    {
+      "command": "node scripts/foundation-release/check-release-assets.mjs --release-version pantheon-base-v0.18.1 --repo duanxldragon/pantheon-base && gh run list --workflow foundation-release-verify.yml --limit 1",
+      "cwd": ".",
+      "status": "not-run",
+      "details": "Runs on release: published, after publication."
+    },
+    {
+      "command": "cd ../pantheon-ops && npm run rebuild:from-base && cd backend && go build ./... && cd ../frontend && npm run build",
+      "cwd": "../pantheon-ops",
+      "status": "not-run",
+      "details": "Acceptance reading for this patch: the lock moves from 0.18.0 to 0.18.1 and both consumer builds must pass. This is the step that closes the programme checklist item."
+    }
+  ],
+  "knownGaps": [
+    "Publication, asset verification and the pantheon-ops rebuild against v0.18.1 run after this package merges; their command records are appended to this file once they execute.",
+    "The consumer frontend failure was reproduced in the pantheon-ops staging tree, not by a base-repository gate: no CI check compiles a consumer tree, which is what FR-021 and AI_QUALITY_GOVERNANCE section 5.4 record.",
+    "pantheon-ops changes (lock bump, rebuild) are recorded as a consumer-side diff and are not committed from this repository.",
+    "This workstation intermittently times out on github.com:443 while api.github.com answers; git fetch/push and publication may need retries."
+  ]
+}
