@@ -1,9 +1,9 @@
 # Pantheon Base - Harness 任务状态
 
 **最后更新**: 2026-10-29
-**当前版本**: v0.18.0 已发布（tag `pantheon-base-v0.18.0`，目标提交 `b4bb2392`，四件资产与 `Foundation Release Verify` 已核验）；`pantheon-base-v0.18.1`（patch）准备中（见下）
+**当前版本**: v0.18.1 已发布（tag `pantheon-base-v0.18.1`，目标提交 `93505225`，四件资产与 `Foundation Release Verify` run 40817118092 已核验）；`pantheon-ops` 已对 0.18.1 重建并通过后端与前端构建
 
-## v0.18.1 发布（2026-10-29）
+## v0.18.1 发布（2026-10-29·已发布）
 
 任务包 `2026-10-29-v0181-restore-request-guard`，证据在
 `.harness/evidence/2026-10-29-v0181-restore-request-guard/`（含 `notes/` 三份发布文本）。
@@ -18,8 +18,10 @@
 - **登记**：`FR-021`（`maintainability` / `static-sensor-gap`，`guide-updated`），
   `docs/harness/AI_QUALITY_GOVERNANCE.md` 新增 §5.4（删除共享导出前必须做 workspace 级消费引用检索，
   foundation release 必须在消费仓构建通过后才算验证完成）。
-- **产物**：四件资产 + `Foundation Release Verify`；随后把 `pantheon-ops` 锁从 0.18.0 推进到 0.18.1，
-  重跑 `rebuild:from-base`、`go build ./...` 与 `npm run build`。
+- **产物**：四件资产已发布（release 2026-10-29T04:19:38Z），`check-release-assets` 与
+  `Foundation Release Verify`（run 40817118092）均通过。
+- **消费验证**：`pantheon-ops` 锁推进到 0.18.1，`rebuild:from-base` 组装 756 个文件，staging 后端
+  `go build ./...` 为 0、前端 `npm run build` `✓ built in 725ms`。live 树替换与提交属消费仓 L2 门禁。
 
 ## v0.18.0 发布（2026-10-29·已发布）
 
@@ -60,8 +62,11 @@
   但窗口含租户功能等净增项，不作为精简收益引用。
 - **登记**：`FR-020`（`method-health` / `method-health-gap`，`guide-updated`），
   `docs/harness/AI_QUALITY_GOVERNANCE.md` 新增 §5.3（多波次程序必须独立收口，不能由波次收口代替）。
-- **仍未关闭**：程序包保持 `in-progress`——`pantheon-ops` 构建需要维护者切一个覆盖 13 个波次的
-  foundation release；功能冻结决策与 RC-036/037/038 最终去留同样属维护者。
+- **已关闭（2026-10-29）**：`pantheon-ops` 构建验证——`v0.18.0` 发布后暴露 `TS2614`（S1 误删
+  `isForbiddenRequestError`），由 `v0.18.1` 以 patch 恢复，消费仓重建后后端与前端构建均通过；
+  程序包转为 `completed`，登记 `FR-021` 并新增 `AI_QUALITY_GOVERNANCE.md` §5.4。
+- **仍未关闭**：功能冻结决策与 RC-036/037/038 最终去留属维护者；`pantheon-ops` live 树替换属
+  消费仓自身评审。
 
 ## 已完成任务归档（2026-10-29）
 

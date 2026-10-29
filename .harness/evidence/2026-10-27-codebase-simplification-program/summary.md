@@ -69,8 +69,22 @@ schema or migration changed anywhere in the programme: the only files touched un
 `modules/**` are handlers and services, and every migration/router/locale file is
 untouched across the 13 waves.
 
+## Consumer build (closed 2026-10-29)
+
+1. `pantheon-base-v0.18.0` (tag `b4bb2392`, `release/0.18`) was published on 2026-10-29 with the four
+   assets and a green `Foundation Release Verify` (run 40810043123).
+2. Rebuilding `pantheon-ops` against it built the backend (`go build ./...` 0) but failed the frontend
+   with `TS2614`: `api/request` no longer exported `isForbiddenRequestError`, which
+   `business/deploy/task/DeployTaskDetail.tsx:29` imports. That was an S1 regression (FR-021).
+3. `pantheon-base-v0.18.1` (tag `93505225`, published 2026-10-29T04:19:38Z, four assets,
+   `Foundation Release Verify` run 40817118092 success) restores the export.
+4. `pantheon-ops` rebuilt against 0.18.1: `rebuild:from-base` assembled 756 files, backend
+   `go build ./...` exit 0, frontend `npm run build` → `✓ built in 725ms`. The live-tree replacement
+   remains the consumer repository's own L2 gate.
+
 ## Open items
 
-1. `pantheon-ops` build against a foundation release covering the 13 waves — maintainer.
+1. `pantheon-ops` live-tree replacement and commit — consumer repository review (build reading above
+   is from the staging tree).
 2. Freeze-vs-continue decision after S2/S3 — maintainer strategy call.
 3. RC-036/037/038 final disposition — S4 recorded keep and keep-and-check; reversal needs its own wave.
