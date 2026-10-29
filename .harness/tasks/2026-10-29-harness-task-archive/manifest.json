@@ -1,0 +1,163 @@
+{
+  "taskId": "2026-10-29-harness-task-archive",
+  "title": "Archive every completed task packet and make canonical references survive the move",
+  "goal": "Move every .harness/tasks manifest whose status is completed (87 of them) plus its evidence into .harness/archive/<YYYY-MM>/, so the live trees only hold work that is still open, and make the canonical .harness/tasks/<task-id>/ and .harness/evidence/<task-id>/ references resolve against the archive the way readTaskManifest already does for manifests. Without that resolution the round would have taken check:task-packet from 42 to 86 warnings and turned check:harness-docs red on three docs/reviews links, which is the same failure class that left 28 permanent false warnings behind the 2026-09-25 round.",
+  "primaryLayer": "platform",
+  "status": "completed",
+  "priority": "P2",
+  "type": "chore",
+  "estimatedComplexity": "medium",
+  "findings": [
+    "87 manifests carried status completed and 1 carried in-progress (2026-10-27-codebase-simplification-program), so the live .harness/tasks tree was 99% closed work.",
+    "Moving the manifests was already safe: readTaskManifest falls back to .harness/archive/<month>/tasks/<task-id>/manifest.json, and check-task-packet resolves Linkage Task Manifest through it.",
+    "Moving the evidence was not safe: check-task-packet tested Review File and Contract Anchors with a plain fs.existsSync, so the round took its warning count from 42 to 86 and check-doc-links reported 3 missing targets in docs/reviews/*.md.",
+    "28 of the 42 warnings that existed before the round were the same false positive for tasks archived on 2026-09-25, so the pre-round baseline was itself contaminated by the absent resolver.",
+    "Two evidence artifacts were deliberately left in place: .harness/evidence/2026-09-10-tenant-verification-and-gray/artifacts/browser/ holds two pngs that PR #427 rewrote at the old path after that task was archived (62609/39527 bytes against 60379/39304 in the archive), and .harness/evidence/2026-09-25-pr347-governance-body.md plus 2026-09-27-v0130-pr-body.md are unattached PR bodies referenced by nothing."
+  ],
+  "scope": {
+    "in": [
+      "git mv 87 completed task directories into .harness/archive/<YYYY-MM>/tasks/ and 86 matching evidence directories into .harness/archive/<YYYY-MM>/evidence/",
+      "git mv three orphan evidence directories (2026-10-24-session-device-style, 2026-10-24-tenant-login-recovery, 2026-10-25-dual-mode-e2e-smoke) into .harness/archive/2026-10/evidence/",
+      "Add findArchivedReferencePath and resolveArchiveAwarePath to scripts/task-manifest.mjs, sharing the archive-month enumeration with findArchivedTaskManifestPath",
+      "Use the resolver for Review File and Contract Anchors in scripts/harness/check-task-packet.mjs",
+      "Let scripts/harness/check-doc-links.mjs accept links whose canonical .harness/{tasks,evidence} target moved into the archive",
+      "Extend tests/scripts/task-manifest-archive.test.mjs and tests/scripts/harness-check-task-packet-context.test.mjs, add tests/scripts/harness-check-doc-links-archive.test.mjs",
+      "Rewrite .harness/ARCHIVE.md statistics from measured directory counts and add the 2026-10-29 round with its residuals",
+      "Register FR-019 and record the round in .harness/STATUS.md"
+    ],
+    "out": [
+      "Moving docs/harness/tasks/*.task.md: earlier rounds kept the packet docs in place so the structural checks keep applying to historical packets",
+      "Archiving or editing 2026-10-27-codebase-simplification-program, which is still in-progress",
+      "Deleting or overwriting any artifact, including the two diverged pngs and the two unattached PR bodies",
+      "Changing the no-artifacts-is-an-error semantics of check-evidence and check-review, which is gate policy",
+      "Any backend, frontend, workflow, Sonar or dependency change"
+    ]
+  },
+  "dependencyLayers": [
+    "platform"
+  ],
+  "implementationNotes": [
+    "Selection is by manifest status === completed, not by directory name; the archive month is the task id's YYYY-MM prefix so a cross-month task lands in its start month and the counts stay recomputable.",
+    "Every move was checked for target collisions before running: 176 moves, 0 collisions.",
+    "resolveArchiveAwarePath tries the live path first and then walks archive months newest-first over one table (ARCHIVABLE_TREES) because tasks/ and evidence/ share the same <task-id>/<remainder> layout.",
+    "check-doc-links only applies the fallback to targets that resolve inside the repository root; links pointing elsewhere keep their previous verdict.",
+    "The invariant being asserted is that a reference stays resolvable, not that a file is in the live tree, so an empty .harness/tasks after a future round still passes."
+  ],
+  "contractAnchors": [
+    "docs/harness/AI_QUALITY_GOVERNANCE.md",
+    "docs/harness/failure-registry.md",
+    ".harness/ARCHIVE.md",
+    "scripts/task-manifest.mjs"
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "docs-governance",
+    "portableFailureClass": "archive-reference-rot",
+    "ownerLayer": "foundation-source",
+    "ratchetDecision": "sensor-added",
+    "coverageDimensions": [
+      "maintainability",
+      "method-health"
+    ]
+  },
+  "expectedFiles": {
+    "create": [
+      "docs/harness/tasks/2026-10-29-harness-task-archive.task.md",
+      ".harness/tasks/2026-10-29-harness-task-archive/manifest.json",
+      ".harness/evidence/2026-10-29-harness-task-archive/commands.json",
+      ".harness/evidence/2026-10-29-harness-task-archive/summary.md",
+      ".harness/evidence/2026-10-29-harness-task-archive/review.md",
+      ".harness/evidence/2026-10-29-harness-task-archive/pr-body.md",
+      "tests/scripts/harness-check-doc-links-archive.test.mjs"
+    ],
+    "modify": [
+      "scripts/task-manifest.mjs",
+      "scripts/harness/check-task-packet.mjs",
+      "scripts/harness/check-doc-links.mjs",
+      "tests/scripts/task-manifest-archive.test.mjs",
+      "tests/scripts/harness-check-task-packet-context.test.mjs",
+      ".harness/ARCHIVE.md",
+      "docs/harness/failure-registry.md",
+      ".harness/STATUS.md",
+      ".harness/tasks/**",
+      ".harness/evidence/**"
+    ],
+    "doNotTouch": [
+      "backend/**",
+      "frontend/**",
+      ".github/workflows/*",
+      "sonar-project.properties",
+      "package.json",
+      "package-lock.json",
+      ".harness/evidence/2026-09-10-tenant-verification-and-gray/"
+    ]
+  },
+  "executionRoles": {
+    "implementerPosture": "Move first, measure the damage, then close only the class of damage the move created. Never delete or overwrite to make a check green.",
+    "reviewerPosture": [
+      "Recompute the per-month counts from the directory tree and compare them with .harness/ARCHIVE.md.",
+      "Confirm every move is a git mv, so no file content changed and history is preserved.",
+      "Confirm the resolver tries the live path first and that a reference missing from both trees still warns.",
+      "Confirm no artifact was deleted or overwritten, in particular the diverged pngs and the unattached PR bodies.",
+      "Confirm the no-artifacts-is-an-error behaviour of check-evidence and check-review is unchanged."
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "node scripts/harness/check-task-packet.mjs --root .",
+      "npm run check:harness-docs",
+      "node --test tests/scripts/task-manifest-archive.test.mjs",
+      "node --test tests/scripts/harness-check-task-packet-context.test.mjs",
+      "node --test tests/scripts/harness-check-doc-links-archive.test.mjs",
+      "npm run check:structure",
+      "npm run check:harness-encoding",
+      "npm run check:docs-frontmatter",
+      "npm run check:harness-inventory",
+      "npm run check:harness-adoption",
+      "npm run check:harness-visual",
+      "npm run check:ui-quality-gate",
+      "npm run check:failure-registry",
+      "npm run check:duplication",
+      "node scripts/harness/check-evidence.mjs --root . --strict",
+      "node scripts/harness/check-review.mjs --root . --strict",
+      "node scripts/harness/check-boundaries.mjs --root . --strict",
+      "node scripts/harness/check-runtime-evidence.mjs --root . --strict"
+    ],
+    "runtimeEvidence": [
+      "check:task-packet warning count before the round (42), after the moves without a resolver (86) and with it (14)",
+      "check:harness-docs: 3 findings after the moves, 0 after the fallback",
+      "Per-month archived task and evidence counts after the moves"
+    ]
+  },
+  "runtimeSensitive": false,
+  "evidenceRequired": [
+    ".harness/evidence/2026-10-29-harness-task-archive/commands.json",
+    ".harness/evidence/2026-10-29-harness-task-archive/summary.md",
+    ".harness/evidence/2026-10-29-harness-task-archive/review.md"
+  ],
+  "humanGates": [
+    "none — reversible git mv plus reference resolution; no rule, threshold, exemption or gate policy changed"
+  ],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed",
+    "87 completed tasks and 89 evidence directories archived with 0 collisions",
+    "check:task-packet warnings not higher than before the round",
+    "Nothing deleted or overwritten"
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-29-harness-task-archive/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-29-harness-task-archive/",
+    "summaryFile": ".harness/evidence/2026-10-29-harness-task-archive/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-29-harness-task-archive/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".harness/ARCHIVE.md",
+      "docs/harness/AI_QUALITY_GOVERNANCE.md"
+    ]
+  }
+}

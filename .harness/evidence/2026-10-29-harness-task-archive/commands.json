@@ -1,0 +1,119 @@
+{
+  "taskId": "2026-10-29-harness-task-archive",
+  "repo": "pantheon-base",
+  "executedAt": "2026-10-29T09:10:00+08:00",
+  "agent": {
+    "tool": "other",
+    "adapter": "qoder-agent"
+  },
+  "commands": [
+    {
+      "command": "for m in 2026-07 2026-08 2026-09 2026-10; do git ls-tree -d --name-only HEAD:.harness/archive/$m/tasks | wc -l; done && git ls-tree -d --name-only HEAD:.harness/tasks | wc -l && git ls-tree -d --name-only HEAD:.harness/evidence | wc -l",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Baseline before any move: archive 2026-07 26 tasks / 31 evidence, 2026-08 23 / 23, 2026-09 67 / 66, 2026-10 0 / 0; live .harness/tasks 88 directories, live .harness/evidence 90. The 88 live manifests break down as 87 with status completed and 1 in-progress (2026-10-27-codebase-simplification-program)."
+    },
+    {
+      "command": "node scripts/harness/check-task-packet.mjs --root . | grep -c 'warning:'",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Pre-round baseline: 42 warnings across 86 packets. 28 of the 42 are false positives for tasks archived by the 2026-09-25 round, whose canonical .harness/evidence/<task-id>/review.md references no longer resolved anywhere."
+    },
+    {
+      "command": "node /d/tmp/archive-tasks.cjs --dry-run",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Dry run: 176 planned moves — 87 task directories and 86 evidence directories for completed tasks, plus 3 orphan evidence directories (2026-10-24-session-device-style, 2026-10-24-tenant-login-recovery, 2026-10-25-dual-mode-e2e-smoke). Every target path was checked for existence before the real run: 176 moves, 0 collisions."
+    },
+    {
+      "command": "node /d/tmp/archive-tasks.cjs",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Executed with git mv, so history follows the files. Result: 2026-09 +5 tasks / +4 evidence, 2026-10 +82 tasks / +85 evidence, 87 completed tasks total. 2026-09-29-ops-ssrf-protection-integration has no evidence directory of its own (its evidence lives in pantheon-ops), so only its manifest moved."
+    },
+    {
+      "command": "node scripts/harness/check-task-packet.mjs --root . | grep -c 'warning:'",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Immediately after the moves, before any resolver change: 86 warnings. The move added 44 warnings of exactly the class the round was supposed to close — the packet and review references still name the canonical address, and nothing resolved it against the archive."
+    },
+    {
+      "command": "npm run check:harness-docs",
+      "cwd": ".",
+      "status": "failed",
+      "details": "3 findings: docs/reviews/PANTHEON_BASE_FINAL_ACCEPTANCE_REVIEW_2026-10-21.md, PANTHEON_BASE_ISSUES_AND_REMEDIATION_2026-10-21.md and PANTHEON_BASE_TEST_AND_ACCEPTANCE_REPORT_2026-10-21.md each link ../../.harness/evidence/2026-10-22-release-and-residual-closeout/summary.md, which moved into the archive. Recorded as the failing reading that justified the doc-link fallback."
+    },
+    {
+      "command": "npm run check:harness-docs",
+      "cwd": ".",
+      "status": "passed",
+      "details": "After teaching check-doc-links.mjs the fallback: 'Docs link check (strict): 0 finding(s)'. The three review documents were not edited; their links keep the canonical address."
+    },
+    {
+      "command": "node scripts/harness/check-task-packet.mjs --root .",
+      "cwd": ".",
+      "status": "passed",
+      "details": "After the resolver: 14 warnings, down from the 42 that existed before the round. 28 of the removed warnings are the 2026-09-25 false positives; the remaining 14 are all real gaps (one packet with a keyless ## Linkage list, two packets missing OpenSpec Change / Superpowers Plan, a RELEASE_NOTES_v0.14.0.md anchor that moved into the release-notes directory, a file.go:624-654 line-range anchor, and the in-progress programme packet's own review file)."
+    },
+    {
+      "command": "node --test tests/scripts/task-manifest-archive.test.mjs tests/scripts/harness-check-task-packet-context.test.mjs tests/scripts/harness-check-doc-links-archive.test.mjs",
+      "cwd": ".",
+      "status": "passed",
+      "details": "19 cases pass. New coverage: findArchivedReferencePath resolves evidence files, archived manifests and the empty-remainder directory form, leaves non-archive paths alone; resolveArchiveAwarePath prefers the live path and falls back; the task-packet checker accepts an archived manifest + review file and still warns when the file is in neither tree; the doc-link checker accepts an archived evidence target and still reports a genuinely missing one."
+    },
+    {
+      "command": "npm run test:scripts",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Full scripts suite: 171 tests, 171 pass, 0 fail, 0 skipped. This is the set that would catch a resolver that stops warning on genuinely missing artifacts."
+    },
+    {
+      "command": "for s in check:structure check:harness-encoding check:docs-frontmatter check:harness-inventory check:harness-adoption check:harness-visual check:ui-quality-gate check:failure-registry; do npm run -s $s; done",
+      "cwd": ".",
+      "status": "passed",
+      "details": "All exit 0 after the moves: structure 0 findings across 2895 tracked files, encoding 0 findings across 2547 scanned files, frontmatter passed (393 docs, 275 with frontmatter), docs inventory 0 findings, adoption no findings, visual evidence no findings, UI quality gate no findings, failure registry 1 file 0 errors 0 warnings with the new FR-019 row."
+    },
+    {
+      "command": "npm run check:duplication",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Result: PASS. The resolver adds a small amount of near-duplicate path walking in task-manifest.mjs, which is shared through listArchiveMonths and ARCHIVABLE_TREES rather than copied."
+    },
+    {
+      "command": "node scripts/harness/check-boundaries.mjs --root . --strict && node scripts/harness/check-runtime-evidence.mjs --root . --strict",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Boundaries: exit 0, only the standing 'Frontend business root not found' warning. Runtime evidence: 0 files, 0 errors, 0 warnings."
+    },
+    {
+      "command": "node scripts/harness/check-evidence.mjs --root . --strict && node scripts/harness/check-review.mjs --root . --strict",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Both exit 0 with this packet's evidence in place. Before it existed they reported 'No evidence command files found' and 'No review artifacts found', because the scan set had just been emptied by the round — a deliberate non-vacuity guard, left unchanged and recorded as a known gap."
+    },
+    {
+      "command": "git status --short | awk '{print $1}' | sort | uniq -c",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Measured surface: 562 renames (all git mv), 7 modified files (scripts/task-manifest.mjs, scripts/harness/check-task-packet.mjs, scripts/harness/check-doc-links.mjs, tests/scripts/task-manifest-archive.test.mjs, tests/scripts/harness-check-task-packet-context.test.mjs, .harness/ARCHIVE.md, docs/harness/failure-registry.md), and 3 untracked paths (the new doc-link test, the task packet, the manifest). No backend, frontend, workflow, Sonar or dependency file appears in the diff."
+    }
+  ],
+  "knownGaps": [
+    "check-evidence --strict and check-review --strict scan only the live trees, so a round that archives everything leaves them with an empty set and they exit 1 with 'No evidence command files found' / 'No review artifacts found'. That non-vacuity guard was deliberately left alone because changing it is gate policy; this packet keeps one live evidence directory so the current reading is green, and the next all-archive round will hit it again.",
+    "docs/harness/tasks/*.task.md were not moved. Earlier rounds kept packet documents in place so check-task-packet keeps applying its structural rules to historical packets; archiving the documents as well would be a separate decision with a much larger doc-link blast radius.",
+    "Two evidence artifacts were left untouched by design. .harness/evidence/2026-09-10-tenant-verification-and-gray/artifacts/browser/ holds tenant-picker-desktop.png (62609 bytes) and tenant-picker-mobile.png (39527 bytes) that PR #427 rewrote at the old path on 2026-10-25/26, after the 2026-09-24 archive copy (60379 / 39304 bytes) — overwriting would rewrite historical evidence and deleting would lose data, so the maintenance decision is left to the maintainer. .harness/evidence/2026-09-25-pr347-governance-body.md and .harness/evidence/2026-09-27-v0130-pr-body.md are unattached PR bodies referenced by no document.",
+    "The archive index keeps the historical 2026-09-25 appendix as a log; only the statistics table and the active-task section were rewritten to the measured counts, so a reader comparing the two will see 2026-09 counted as 67 before this round where the old table said 66 (it was already stale by one)."
+  ],
+  "runtimeSensitive": false,
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-29-harness-task-archive/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-29-harness-task-archive/",
+    "summaryFile": ".harness/evidence/2026-10-29-harness-task-archive/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-29-harness-task-archive/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".harness/ARCHIVE.md",
+      "docs/harness/AI_QUALITY_GOVERNANCE.md"
+    ]
+  }
+}

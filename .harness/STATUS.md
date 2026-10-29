@@ -1,7 +1,26 @@
 # Pantheon Base - Harness 任务状态
 
-**最后更新**: 2026-10-28
+**最后更新**: 2026-10-29
 **当前版本**: v0.17.8 已发布（tag `pantheon-base-v0.17.8`，目标提交 `e256d1fb`，四件资产与 `Foundation Release Verify` 已核验）
+
+## 已完成任务归档（2026-10-29）
+
+任务包 `2026-10-29-harness-task-archive`，证据在
+`.harness/evidence/2026-10-29-harness-task-archive/`。
+
+- **归档读数**：`status: completed` 的 87 个 manifest 与 89 份证据用 `git mv` 落到
+  `.harness/archive/<YYYY-MM>/`（176 次移动、0 冲突）。归档总量 116 → 203 个任务、
+  120 → 209 份证据；活跃 `.harness/tasks` 只剩 `2026-10-27-codebase-simplification-program`
+  （`in-progress`）。
+- **引用解析**：移动把 `check:task-packet` 的警告从 42 抬到 86，并让 `check:harness-docs`
+  红在三条 `docs/reviews` 链接上。`scripts/task-manifest.mjs` 新增
+  `findArchivedReferencePath` / `resolveArchiveAwarePath`，被 `check-task-packet`（`Review File`、
+  `Contract Anchors`）与 `check-doc-links` 复用；终态 **14 条警告**（全部真实）与 **0 findings**。
+  42 条里有 28 条是 2026-09-25 轮次留下的假警告，因此真实基线是 14 而不是 42。
+- **登记**：`FR-019`（`method-health` / `static-sensor-gap`，`sensor-added`）。
+- **残余**：`2026-09-10-tenant-verification-and-gray` 的两份 png 是归档后被 #427 写到旧路径的
+  重复产物，与归档副本内容不同；两份无归属的 PR 正文同样保留。`check-evidence` /
+  `check-review` 的"空集合即报错"语义未改，下一轮全归档会再次触发。
 
 ## 主干 Release Gate 转绿（2026-10-28）
 

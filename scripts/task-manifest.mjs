@@ -5,6 +5,8 @@ export const TASK_MANIFEST_ROOT = '.harness/tasks';
 export const TASK_MANIFEST_FILE = 'manifest.json';
 export const TASK_ARCHIVE_ROOT = '.harness/archive';
 const ARCHIVE_TASKS_DIRNAME = 'tasks';
+const ARCHIVE_EVIDENCE_DIRNAME = 'evidence';
+const EVIDENCE_ROOT = '.harness/evidence';
 
 // Canonical lifecycle vocabulary for the optional `status` field on
 // .harness/tasks/<task-id>/manifest.json. The field is metadata, not a
@@ -99,6 +101,20 @@ export function extractTaskIdFromManifestPath(value) {
   return match ? match[1] : null;
 }
 
+function listArchiveMonths(rootDir) {
+  const archiveRoot = path.join(rootDir, TASK_ARCHIVE_ROOT);
+  if (!fs.existsSync(archiveRoot)) {
+    return [];
+  }
+
+  return fs
+    .readdirSync(archiveRoot, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => entry.name)
+    .filter((month) => /^\d{4}-\d{2}$/.test(month))
+    .sort((left, right) => right.localeCompare(left));
+}
+
 // Task archives keep manifests under `.harness/archive/<YYYY-MM>/tasks/...`.
 // Docs and evidence reference the canonical `.harness/tasks/<task-id>` address,
 // so once a task is archived the physical manifest moves while the reference
@@ -109,21 +125,10 @@ export function findArchivedTaskManifestPath(rootDir, taskId) {
     return null;
   }
 
-  const archiveRoot = path.join(rootDir, TASK_ARCHIVE_ROOT);
-  if (!fs.existsSync(archiveRoot)) {
-    return null;
-  }
-
-  const archiveMonths = fs
-    .readdirSync(archiveRoot, { withFileTypes: true })
-    .filter((entry) => entry.isDirectory())
-    .map((entry) => entry.name)
-    .filter((month) => /^\d{4}-\d{2}$/.test(month))
-    .sort((left, right) => right.localeCompare(left));
-
-  for (const month of archiveMonths) {
+  for (const month of listArchiveMonths(rootDir)) {
     const candidate = path.join(
-      archiveRoot,
+      rootDir,
+      TASK_ARCHIVE_ROOT,
       month,
       ARCHIVE_TASKS_DIRNAME,
       taskId,
@@ -135,6 +140,49 @@ export function findArchivedTaskManifestPath(rootDir, taskId) {
   }
 
   return null;
+}
+
+// Live trees that move wholesale into `.harness/archive/<YYYY-MM>/`, keyed by
+// the live root a reference points at and the archive directory it lands in.
+const ARCHIVABLE_TREES = [
+  { liveRoot: `${TASK_MANIFEST_ROOT}/`, archiveDirname: ARCHIVE_TASKS_DIRNAME },
+  { liveRoot: `${EVIDENCE_ROOT}/`, archiveDirname: ARCHIVE_EVIDENCE_DIRNAME },
+];
+
+export function findArchivedReferencePath(rootDir, relativePath) {
+  const normalized = normalizeRepoRelativePath(relativePath);
+  const tree = ARCHIVABLE_TREES.find((entry) => normalized.startsWith(entry.liveRoot));
+  if (!tree) {
+    return null;
+  }
+
+  const suffix = normalized.slice(tree.liveRoot.length);
+  const separator = suffix.indexOf('/');
+  const taskId = separator === -1 ? suffix : suffix.slice(0, separator);
+  if (!taskId) {
+    return null;
+  }
+  const remainder = separator === -1 ? '' : suffix.slice(separator + 1);
+
+  for (const month of listArchiveMonths(rootDir)) {
+    const candidate = `${TASK_ARCHIVE_ROOT}/${month}/${tree.archiveDirname}/${taskId}/${remainder}`;
+    const absolutePath = resolveRepoPath(rootDir, candidate);
+    if (absolutePath && fs.existsSync(absolutePath)) {
+      return candidate;
+    }
+  }
+
+  return null;
+}
+
+// Returns the spelling of a task/evidence reference that actually exists, so
+// callers can report the resolved location instead of a false "missing" warning.
+export function resolveArchiveAwarePath(rootDir, relativePath) {
+  const direct = resolveRepoPath(rootDir, relativePath);
+  if (direct && fs.existsSync(direct)) {
+    return normalizeRepoRelativePath(relativePath);
+  }
+  return findArchivedReferencePath(rootDir, relativePath);
 }
 
 export function resolveRepoPath(rootDir, relativePath) {
