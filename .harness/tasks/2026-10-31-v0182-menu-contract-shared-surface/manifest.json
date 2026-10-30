@@ -1,0 +1,178 @@
+{
+  "taskId": "2026-10-31-v0182-menu-contract-shared-surface",
+  "taskDoc": "docs/harness/tasks/2026-10-31-v0182-menu-contract-shared-surface.task.md",
+  "title": "Register the menu-contract sensor as a shared path and cut pantheon-base-v0.18.2",
+  "goal": "Package the nine commits merged since pantheon-base-v0.18.1 (93505225) as a patch foundation release on release/0.18, and repair the release-surface gap that blocks the menu-contract repair from ever reaching the consumer: frontend/scripts/check-menu-contract.mjs is byte-identical to the copy pantheon-ops runs in its frontend prebuild, yet it is absent from the release manifest's sharedPaths, so the #471 parser fix can never arrive through a release. The package (1) declares the file shared (sharedPaths 52 -> 53) and required in scripts/foundation-release/frontend-ownership.mjs, with the manifest and cut test expectations updated, (2) writes VERSION 0.18.2, the CHANGELOG entry, docs/release-notes/RELEASE_NOTES_v0.18.2.md and both indexes, plus the .harness/STATUS.md section, and (3) publishes the four assets and advances pantheon-ops onto the release with rebuild:from-base, check:business-overlay, check:shared-drift at 0 modified, go build ./... and npm run build. No backend source, frontend source, schema, route, permission, menu key or i18n key changes.",
+  "primaryLayer": "platform",
+  "status": "in-progress",
+  "priority": "P1",
+  "type": "release",
+  "estimatedComplexity": "small",
+  "findings": [
+    "frontend/scripts/check-menu-contract.mjs is byte-identical between pantheon-base v0.18.1 and pantheon-ops; the consumer runs it from frontend/package.json prebuild, but the file is absent from sharedPaths, so #471's parser repair cannot reach the consumer through any release.",
+    "scripts/foundation-release/frontend-ownership.mjs guards required frontend entries at manifest-build time, but the menu-contract script was never added to that list either, which is why the omission went unnoticed.",
+    "Only two files changed in the consumer-visible surface since v0.18.1: frontend/scripts/check-menu-contract.mjs (#471) and backend/modules/business/retired_modules.go (#477). Everything else merged in the window is harness, workflow or documentation.",
+    "All nine commits since v0.18.1 are repairs: a sensor gap, six githubactions findings, a gate polling failure, an archive fallback and a SQL-literal cohesion fix. By VERSION_MANAGEMENT_GUIDE section 2.4 this is a patch, not a minor.",
+    "Growing sharedPaths from 52 to 53 changes the lock shape. rebuild-from-base.mjs and check-shared-drift.mjs both read the list from the lock, so no consumer script changes; check:shared-drift will report two modified files until the rebuild lands, which is the expected transition reading.",
+    "The release gate now tolerates a transiently failed check-list read (#478), so the cut no longer depends on a momentary api.github.com failure; the terminal timeout still fails closed."
+  ],
+  "scope": {
+    "in": [
+      "Declare frontend/scripts/check-menu-contract.mjs shared in build-release-manifest.mjs and required in frontend-ownership.mjs",
+      "Update the manifest test expectation and the cut-foundation-release fixture for the 53-entry list",
+      "VERSION 0.18.2, CHANGELOG entry, docs/release-notes/RELEASE_NOTES_v0.18.2.md and both indexes",
+      ".harness/STATUS.md version line and v0.18.2 section",
+      "Task packet, manifest and evidence including notes/release-notes.md, notes/upgrade-notes.md, notes/consumer-impact.md",
+      "Cut, publish and verify pantheon-base-v0.18.2 with the four consumable assets",
+      "Advance pantheon-ops foundation-release.lock.json to 0.18.2, run rebuild:from-base, check:business-overlay, check:shared-drift, go build ./... and npm run build"
+    ],
+    "out": [
+      "Any backend source, frontend source, migration, route, permission, menu key or i18n key change",
+      "Editing .github/workflows/**, gate thresholds or the required check set",
+      "Rewriting or withdrawing the published pantheon-base-v0.18.1 tag or release",
+      "Committing pantheon-ops changes without that repository's own review",
+      "Re-landing the #471 parser change into frontend/src/**: it is already on main, this package only publishes it"
+    ]
+  },
+  "dependencyLayers": [
+    "platform"
+  ],
+  "implementationNotes": [
+    "The registration gap is proven by comparison, not judgment: the ops copy and the base v0.18.1 copy differ by nothing, and the only delta against base main is #471 itself.",
+    "Adding the entry to requiredFrontendEntries turns a silent omission into a manifest-build failure, which is the ratchet for this class; no new sensor is introduced.",
+    "The 52 -> 53 change is documented in all three release texts because a consumer that pins the count must accept it, even though both consumer scripts read the list dynamically.",
+    "Publication preconditions are enforced by publish-foundation-release.mjs: clean worktree, successful Release Gate Summary on the target commit, manifest baseCommit equal to the target commit, four checksum-valid assets, non-placeholder notes.",
+    "The archive of this packet is a separate closeout commit after the release and consumption readings are recorded; the manifest status and paths are not rewritten here."
+  ],
+  "contractAnchors": [
+    "docs/VERSION_MANAGEMENT_GUIDE.md",
+    "docs/designs/FOUNDATION_RELEASE_MODEL.md",
+    "docs/contracts/PLATFORM_CONTRACT.md",
+    ".harness/ARCHIVE.md"
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "ci-workflow",
+    "portableFailureClass": "static-sensor-gap",
+    "ownerLayer": "foundation-source",
+    "ratchetDecision": "registry-only",
+    "coverageDimensions": [
+      "behaviour",
+      "maintainability",
+      "architecture-fitness"
+    ]
+  },
+  "expectedFiles": {
+    "create": [
+      "docs/release-notes/RELEASE_NOTES_v0.18.2.md",
+      "docs/harness/tasks/2026-10-31-v0182-menu-contract-shared-surface.task.md",
+      ".harness/tasks/2026-10-31-v0182-menu-contract-shared-surface/manifest.json",
+      ".harness/evidence/2026-10-31-v0182-menu-contract-shared-surface/commands.json",
+      ".harness/evidence/2026-10-31-v0182-menu-contract-shared-surface/summary.md",
+      ".harness/evidence/2026-10-31-v0182-menu-contract-shared-surface/review.md",
+      ".harness/evidence/2026-10-31-v0182-menu-contract-shared-surface/pr-body.md",
+      ".harness/evidence/2026-10-31-v0182-menu-contract-shared-surface/notes/release-notes.md",
+      ".harness/evidence/2026-10-31-v0182-menu-contract-shared-surface/notes/upgrade-notes.md",
+      ".harness/evidence/2026-10-31-v0182-menu-contract-shared-surface/notes/consumer-impact.md"
+    ],
+    "modify": [
+      "VERSION",
+      "CHANGELOG.md",
+      "docs/release-notes/README.md",
+      "docs/release-notes/README.en.md",
+      ".harness/STATUS.md",
+      "scripts/foundation-release/build-release-manifest.mjs",
+      "scripts/foundation-release/frontend-ownership.mjs",
+      "tests/scripts/foundation-release/build-release-manifest.test.mjs",
+      "tests/scripts/foundation-release/cut-foundation-release.test.mjs"
+    ],
+    "doNotTouch": [
+      "backend/**",
+      "frontend/src/**",
+      "frontend/scripts/**",
+      ".github/workflows/**",
+      "sonar-project.properties",
+      "package.json",
+      "package-lock.json",
+      ".foundation/**",
+      ".harness/archive/**"
+    ]
+  },
+  "executionRoles": {
+    "implementerPosture": "Publish what main already carries and close the enumeration gap that would otherwise strand the menu-contract fix; no product-source change, no gate relaxation, no consumer-side workaround.",
+    "reviewerPosture": [
+      "Confirm the shared-path addition is an enumeration repair: the ops copy and the base copy are byte-identical apart from #471.",
+      "Confirm no product source, workflow, gate threshold or required check appears in the diff.",
+      "Confirm sharedPaths is 53 and both the manifest test and the cut fixture agree.",
+      "Confirm the release level is patch and the reasoning cites VERSION_MANAGEMENT_GUIDE section 2.4.",
+      "Confirm the consumer transition reading (2 modified before rebuild, 0 after) is recorded rather than hidden."
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "cat VERSION",
+      "grep -n 'pantheon-base-v0.18.2' CHANGELOG.md docs/release-notes/RELEASE_NOTES_v0.18.2.md .harness/STATUS.md",
+      "node frontend/scripts/check-menu-contract.mjs",
+      "npm run test:menu-contract",
+      "node --test tests/scripts/foundation-release/*.test.mjs",
+      "npm run check:task-packet",
+      "npm run check:task-packet-template",
+      "npm run check:structure",
+      "npm run check:harness-encoding",
+      "npm run check:docs-frontmatter",
+      "npm run check:harness-inventory",
+      "node scripts/harness/check-evidence.mjs --root . --strict",
+      "node scripts/harness/check-review.mjs --root . --strict",
+      "node scripts/harness/check-failure-registry.mjs --root . --strict",
+      "node scripts/foundation-release/check-release-assets.mjs --release-version pantheon-base-v0.18.2 --repo duanxldragon/pantheon-base",
+      "cd ../pantheon-ops && npm run rebuild:from-base && npm run check:business-overlay && npm run check:shared-drift",
+      "cd ../pantheon-ops/backend && go build ./...",
+      "cd ../pantheon-ops/frontend && npm run build"
+    ],
+    "runtimeEvidence": [
+      "the four asset names, sizes and SHA-256 digests on the GitHub release",
+      "Foundation Release Verify conclusion on release: published",
+      "pantheon-ops check:shared-drift before and after rebuild:from-base",
+      "pantheon-ops go build and npm run build output against the synced 0.18.2 tree"
+    ]
+  },
+  "runtimeSensitive": false,
+  "runtimeGap": "The diff is release metadata, a shared-path enumeration and its tests. The only executable surface touched is the manifest builder, covered by node --test tests/scripts/foundation-release/*.test.mjs; the runtime reading that matters is the consumer side (drift before/after rebuild plus its builds), recorded in this package's evidence.",
+  "evidenceRequired": [
+    ".harness/evidence/2026-10-31-v0182-menu-contract-shared-surface/commands.json with the byte comparison, the sharedPaths readings, the test runs, the gate results and the consumer builds",
+    ".harness/evidence/2026-10-31-v0182-menu-contract-shared-surface/summary.md with the enumeration gap and the release facts",
+    ".harness/evidence/2026-10-31-v0182-menu-contract-shared-surface/review.md with the Machine Readable block",
+    ".harness/evidence/2026-10-31-v0182-menu-contract-shared-surface/notes/ with the three non-placeholder release texts"
+  ],
+  "humanGates": [
+    "Publication uses the logged-in maintainer gh session; the tag and release are immutable once created.",
+    "Growing sharedPaths from 52 to 53 changes the consumer contract shape and needs non-author review before merge.",
+    "pantheon-ops lock advancement and live-tree replacement belong to that repository's own L2 gate; the readings are recorded here, the commit there."
+  ],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed",
+    "sharedPaths registered and 53 entries with matching tests",
+    "Version level recorded as patch 0.18.2 with the section 2.4 reasoning",
+    "VERSION / CHANGELOG / RELEASE_NOTES / STATUS version references consistent",
+    "Required checks and Release Gate Summary green on the release commit",
+    "Tag and GitHub release published with the four assets",
+    "pantheon-ops rebuilt against pantheon-base-v0.18.2 with drift, backend and frontend builds green"
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-31-v0182-menu-contract-shared-surface/manifest.json",
+    "taskDoc": "docs/harness/tasks/2026-10-31-v0182-menu-contract-shared-surface.task.md",
+    "evidenceDir": ".harness/evidence/2026-10-31-v0182-menu-contract-shared-surface/",
+    "summaryFile": ".harness/evidence/2026-10-31-v0182-menu-contract-shared-surface/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-31-v0182-menu-contract-shared-surface/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/VERSION_MANAGEMENT_GUIDE.md",
+      "docs/designs/FOUNDATION_RELEASE_MODEL.md"
+    ]
+  }
+}
