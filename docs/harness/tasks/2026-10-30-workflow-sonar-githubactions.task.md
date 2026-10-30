@@ -3,7 +3,7 @@ title: 修掉 main 上 6 条 githubactions Sonar 缺陷（Release Gate 红灯根
 doc_type: Remediation
 layer: platform
 depends_on_layers: []
-status: Active
+status: Archived
 linked_contracts:
   - docs/harness/VERIFICATION_EVIDENCE_SPEC.md
   - docs/harness/AI_QUALITY_GOVERNANCE.md
@@ -190,4 +190,4 @@ platform
 - [x] Review completed
 - [x] 6 条 Sonar 缺陷全部在工作流本体修复，未使用任何抑制手段
 - [x] 门禁判定语义、阈值、needs、必需检查集合零变化（由守护测试等强度断言证明）
-- [ ] 合并后 `main` 的 `Release Gate` 读数回到 0（终局闭环，需 push 分析）
+- [x] 合并后 `main` 的 `Release Gate` 读数回到 0（终局闭环，需 push 分析）：PR #473 squash 到 `c1f0b1dd`，Release Gate run `41077154410` completed success，`SonarCloud Gate` 日志记录 `Unprocessed SonarCloud issues: 0` 与 `quality gate … OK`

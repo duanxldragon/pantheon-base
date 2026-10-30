@@ -1,0 +1,146 @@
+{
+  "taskId": "2026-10-31-archive-closure-pr-governance",
+  "repo": "pantheon-base",
+  "executedAt": "2026-10-31",
+  "agent": {
+    "tool": "other",
+    "adapter": "qoder-agent"
+  },
+  "runtimeSensitive": false,
+  "runtimeGap": "本包只移动治理档案树并修改一个 PR 正文校验器的路径解析；没有运行时路径、组件或接口变化。运行侧证据是收口 PR 本身通过 node scripts/create-pr.mjs（内部先跑 check-pr-governance 校验正文对已归档链路的引用）以及 GitHub 门禁读数，浏览器或后端 smoke 与本改动无对应面。",
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-31-archive-closure-pr-governance/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-31-archive-closure-pr-governance/",
+    "reviewFile": ".harness/evidence/2026-10-31-archive-closure-pr-governance/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/failure-registry.md",
+      ".harness/ARCHIVE.md",
+      "docs/harness/VERIFICATION_EVIDENCE_SPEC.md"
+    ]
+  },
+  "commands": [
+    {
+      "command": "node -e '...for each .harness/tasks/*/manifest.json print status...'",
+      "cwd": ".",
+      "status": "passed",
+      "details": "归档前扫描 live 树：7 个 manifest，6 个 completed（2026-10-27-codebase-simplification-program, 2026-10-29-harness-task-archive, 2026-10-29-simplification-program-closeout, 2026-10-29-v0181-restore-request-guard, 2026-10-30-menu-contract-inline-const, 2026-10-30-workflow-sonar-githubactions）与 1 个 in-progress（2026-10-29-v0180-simplification-release）。ARCHIVE.md 规定 live 树只留非 completed 项，故移动集合唯一确定。"
+    },
+    {
+      "command": "for id in <6 ids>; do git mv .harness/tasks/$id/manifest.json .harness/archive/2026-10/tasks/$id/manifest.json; git mv .harness/evidence/$id/* .harness/archive/2026-10/evidence/$id/; done",
+      "cwd": ".",
+      "status": "passed",
+      "details": "34 个文件以 git mv 移动（git status --short 显示 34 条 R），包含 2026-10-29-v0181-restore-request-guard/notes/ 子目录的 3 个文件；.harness/tasks/ 与 .harness/evidence/ 各只剩 2026-10-29-v0180-simplification-release 一个任务目录（evidence 侧另有 2 个散落 PR 正文与 1 个 2026-09 重复产物目录，按上轮决定保留）。"
+    },
+    {
+      "command": "ls .harness/archive/2026-10/tasks | wc -l; ls .harness/archive/2026-10/evidence | wc -l",
+      "cwd": ".",
+      "status": "passed",
+      "details": "移动后计数 88 / 91（上轮记录 82 / 85），与 ARCHIVE.md 更新后的月度统计一致；合计 209 任务 / 215 evidence 由 26+23+72+88 与 31+23+70+91 重算得出。"
+    },
+    {
+      "command": "grep -n 'hasExistingRepoFile' -A 14 scripts/check-pr-governance.mjs（修复前）",
+      "cwd": ".",
+      "status": "passed",
+      "details": "根因确认：hasExistingRepoFile 只做 fs.existsSync(path.join(rootDir, normalized))，被 validateFileReference 用于 Task Manifest / Evidence / Verification evidence / Review Artifact 四个链路字段；对 non-trivial PR 显式 none 也不允许，所以归档后的任务无法被自己的收口 PR 引用。"
+    },
+    {
+      "command": "node -e 'resolveArchiveAwarePath 行为探查：对 .harness/evidence/<archived-id>/commands.json 与不存在 task-id 分别求值'",
+      "cwd": ".",
+      "status": "passed",
+      "details": "确认既有解析器语义足够：先直查、失败后仅在 .harness/tasks/ 或 .harness/evidence/ 前缀上按已存在的月份目录回退，返回仓库相对路径或 null。因此修复是接进该函数，而不是新写一份路径拼接。"
+    },
+    {
+      "command": "Edit scripts/check-pr-governance.mjs: import { resolveArchiveAwarePath } + hasExistingRepoFile 直查失败后 return resolveArchiveAwarePath(rootDir, normalized) !== null",
+      "cwd": ".",
+      "status": "passed",
+      "details": "改动 +8/-1，含一行注释说明归档约定。直查仍在前，URL/绝对路径/越界路径的既有拒绝逻辑未动。"
+    },
+    {
+      "command": "npm run test:pr-governance",
+      "cwd": ".",
+      "status": "passed",
+      "details": "tests 8 / pass 8 / fail 0（修复前该文件 6 条）。新增两条：validatePrBody resolves archived task and evidence paths through the monthly archive（归档 manifest 与 evidence 后，用规范路径引用的正文得 0 findings）；validatePrBody still rejects harness references that exist neither live nor archived（task-id 写成 2026-06-17-missing 时仍报 does not exist in repository）。为支持前者，writeTaskManifest 增加可选基目录参数，既有用例调用方式不变。"
+    },
+    {
+      "command": "npm run test:scripts",
+      "cwd": ".",
+      "status": "passed",
+      "details": "tests 183 / pass 183 / fail 0（移动前基线 181，加本包 2 条用例）。glob 覆盖 tests/scripts/*.test.mjs，故新用例自动进入 CI 的 Unit Tests / Fast Checks。"
+    },
+    {
+      "command": "npm run check:task-packet; check:task-packet-template; check:docs-frontmatter; check:harness-docs; check:harness-inventory; check:harness-encoding; check:structure; check:failure-registry; check:generated; check:generated-modules; check:ui-quality-gate; check:duplication",
+      "cwd": ".",
+      "status": "passed",
+      "details": "12 项治理检查在移动与代码改动之后全部 exit 0。其中 check:task-packet 会解析任务包 Linkage 里指向已归档 manifest/evidence 的规范路径，check:harness-docs 会校验 ARCHIVE.md 与其链接，因此这两项是本轮移动的直接影响面。"
+    },
+    {
+      "command": "node scripts/harness/check-evidence.mjs --root . --strict; node scripts/harness/check-review.mjs --root . --strict",
+      "cwd": ".",
+      "status": "passed",
+      "details": "默认扫描（live 树）各 1 文件、0 error：即 2026-10-29-v0180-simplification-release 与本包新增 evidence。移动后没有把任何在查的 evidence 弄丢。"
+    },
+    {
+      "command": "node scripts/harness/check-evidence.mjs --root . --strict .harness/archive/2026-10/evidence/2026-10-30-workflow-sonar-githubactions/commands.json",
+      "cwd": ".",
+      "status": "passed",
+      "details": "残余实测（预期内的失败，作为证据记录而非待修门禁）：3 error —— root.linkage.taskManifest does not exist: .harness/tasks/2026-10-30-workflow-sonar-githubactions/manifest.json；root.linkage.reviewFile does not exist；root.linkage.evidenceDir must match the commands.json directory。三个目标文件在 archive/2026-10/ 下都实际存在。结论：check-evidence 仍用裸 existsSync，但因默认 glob 只扫 live 树，今天没有门禁会因此变红；补齐需自带 fixture，另包处理并记入 FR-024 残余。"
+    },
+    {
+      "command": "node scripts/probe-old-pr-gov.mjs --event .harness/tmp/probe-event.json 与 node scripts/check-pr-governance.mjs --event .harness/tmp/probe-event.json（同一份已归档正文的前后对照，探针文件随后删除）",
+      "cwd": ".",
+      "status": "passed",
+      "details": "正文取自已归档的 .harness/archive/2026-10/evidence/2026-10-30-workflow-sonar-githubactions/pr-body.md，其 4 条链路仍按约定写规范路径。HEAD 版传感器：exit 1 与 4 条 finding —— Task Manifest / Evidence / Verification evidence / Review Artifact 全部 'file does not exist in repository'。修复版对同一输入：exit 0 与 'OK pantheon-base PR body governance fields are present'。这就是 FR-024 的终局对照：归档约定要求规范路径继续有效，修复前它在 PR 面不成立，修复后成立；两个探针文件（git show 出来的旧版脚本与合成的 event JSON）已删除，git status 只剩本包新建的 3 个未跟踪路径。"
+    },
+    {
+      "command": "node -e 'JSON.parse(archive manifest/status) + grep status 两份 2026-10-30 任务包正文'",
+      "cwd": ".",
+      "status": "passed",
+      "details": "2026-10-30-workflow-sonar-githubactions：manifest.status=completed、任务包 status: Archived、终局勾选项填入 PR #473 / c1f0b1dd / run 41077154410 / Unprocessed SonarCloud issues: 0。2026-10-30-menu-contract-inline-const 已在前一轮收口（manifest completed、正文 Archived），本轮只移动不重复改写。"
+    },
+    {
+      "command": "gh pr view 473 --json state,mergedAt,mergeCommit; gh run view 41077154410 --json status,conclusion,jobs; gh run view --job=124148288173 --log",
+      "cwd": ".",
+      "status": "passed",
+      "details": "被归档两个包的终局读数（写进各自 evidence 的 Post-merge 段）：PR #473 MERGED、mergedAt 2026-10-30T15:03:21Z、mergeCommit c1f0b1dd；main Release Gate run 41077154410 completed success，6 个 job 全绿；SonarCloud Gate 日志 'SonarCloud quality gate for c1f0b1dd…: OK' 与 'Unprocessed SonarCloud issues: 0'。"
+    },
+    {
+      "command": "curl -u \"$T:\" https://sonarcloud.io/api/issues/search?componentKeys=duanxldragon_pantheon-base&branch=main&resolved=false&types=BUG,VULNERABILITY,CODE_SMELL&ps=50（token 仅走 shell 变量）",
+      "cwd": ".",
+      "status": "passed",
+      "details": "工作流之外独立复核 main：total 0。合并前同一查询在 03e13d48 报 6 条并逐条列出（2 x githubactions:S1192 quality.yml、1 x githubactions:S1192 ci.yml、2 x githubactions:S7677 release-gate.yml、1 x githubactions:S7677 security.yml），因此 6→0 归因于该 diff。"
+    },
+    {
+      "command": "git status --short",
+      "cwd": ".",
+      "status": "passed",
+      "details": "34 条 R（含 notes 子目录）+ M：.harness/ARCHIVE.md、docs/harness/failure-registry.md、scripts/check-pr-governance.mjs、tests/scripts/check-pr-governance.test.mjs、docs/harness/tasks/2026-10-30-workflow-sonar-githubactions.task.md，新增本包任务包与 evidence；backend/modules/system/i18n/builtin_locale_resources.json 与 frontend/src/i18n/resources/*.ts 共 6 个既有未提交 i18n 文件保持未 stage。"
+    },
+    {
+      "command": "git diff --numstat -- . ':!backend/modules/system/i18n' ':!frontend/src/i18n'",
+      "cwd": ".",
+      "status": "passed",
+      "details": "排除既有未提交 i18n 后的精确边界：9 个 tracked 文件 +267/-13 —— scripts/check-pr-governance.mjs +7/-1、tests/scripts/check-pr-governance.test.mjs +91/-2、docs/harness/failure-registry.md +28/-0、.harness/ARCHIVE.md +32/-4、2026-10-30-workflow-sonar-githubactions 的 manifest +1/-1 / 任务包 +2/-2 / commands.json +62/-1 / summary +21/-2 / review +23/-0，另有本包 4 个新建 evidence 与 2 个新建文档；34 个 git mv 移动不计入。未出现 .github/workflows/**、backend/**（除被排除的 i18n）、frontend/src/**（除被排除的 i18n）改动。"
+    },
+    {
+      "command": "node scripts/create-pr.mjs --title 'chore(harness): archive six completed tasks and teach PR governance the monthly-archive fallback' --body-file .harness/evidence/2026-10-31-archive-closure-pr-governance/pr-body.md",
+      "cwd": ".",
+      "status": "not-run",
+      "details": "PR 正文已就绪，包装器内部会先对本正文跑 check-pr-governance（本包自己的 4 条链路指向 live 路径，因此这次调用验证的是「修复没有把 live 路径的校验弄坏」；「归档路径同样通过」由上一条前后对照实测与 test:pr-governance 的归档 fixture 用例承担）。执行后把 PR 编号、检查回读与合并后的 main 读数追加到本文件。"
+    },
+    {
+      "command": "npm run check:harness-adoption -- --strict",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Adoption check (strict): 0 finding(s), 0 warning(s)。对照读数：本包创建前同一命令报 2 条 finding，都指向 backend/modules/system/i18n/builtin_locale_resources.json（implementation change detected without a matching task manifest change / without matching verification evidence）。变化不是 i18n 被动过——六个 i18n 文件仍未 stage、内容与对照时一致——而是该检查器在 worktree 层面把「有实现改动」与「有任务 manifest 改动」配对，本包新增的 manifest 满足了配对条件。因此 i18n 的排除靠 stage 纪律与 scope 声明保证，而非门禁拦截；这一点作为传感器特性记录，不在本包改造它。"
+    }
+  ],
+  "knownGaps": [
+    "check-evidence / check-review / generate-pr-body 仍用裸 fs.existsSync 校验 canonical 链路，本轮只实测并登记（FR-024 残余），没有顺手改造：三者的默认扫描面是 live 树，因此不构成红灯；补齐需要各自的归档 fixture，应独立成包。",
+    "归档证据不在默认门禁扫描面内——这既解释了残余为何不显，也是一个未被解决的问题：一旦任务归档，其 commands.json / review.md 就不再被 --strict 检查读到，本包只在收口轮手工跑了一次显式路径。是否新增「归档同样可查」的门禁归维护者。",
+    "67 个历史任务包正文仍标 status: Active，本轮不改写：除两个有终局读数的 2026-10-30 包之外，没有逐条完成证据，批量翻状态是在制造读数。",
+    "ops 的 runtime-acceptance（需要本机 MySQL 与不在账密面的凭证）与本包无关，属消费仓 ledger；本包不动 pantheon-ops。",
+    "v0.18.1 之后的 base 修复（菜单合同传感器、工作流缺陷）要进入 ops 仍需一次 foundation release；tag 与 release 不可回收，时点归维护者，本包不切版。",
+    "工作树中既有的 6 个未提交 i18n 文件（backend/modules/system/i18n/builtin_locale_resources.json 与 frontend/src/i18n/resources/*.ts，+1050/-50）由本包显式排除在 stage 之外。附带实测：check:harness-adoption --strict 的 pairing 是 worktree 级的——本包新增 manifest 后它从 2 findings 变 0 findings，说明该门禁不能保证「实现改动与其任务包一一对应」，排除仍靠 scope 声明与 stage 纪律；把 pairing 收紧到 diff 归属是另一个传感器议题，本包只记录不改。"
+  ]
+}

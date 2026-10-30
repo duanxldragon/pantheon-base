@@ -121,6 +121,66 @@
       "cwd": ".",
       "status": "passed",
       "details": "Both exit 0 for this package's evidence and review artefacts (readings recorded immediately after the strict runs)."
+    },
+    {
+      "command": "git push -u origin fix/workflow-sonar-githubactions-smells",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Branch 8bb2d140 published. Two transient TLS failures preceded it (Failed to connect to github.com port 443 / Recv failure: Connection was reset); the fifth retry in the looped push attempt succeeded. No retry changed content."
+    },
+    {
+      "command": "node scripts/create-pr.mjs --title \"fix(ci): clear the six githubactions findings that block the release gate\" --body-file .harness/evidence/2026-10-30-workflow-sonar-githubactions/pr-body.md",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Wrapper ran check-pr-governance against the exact body and opened https://github.com/duanxldragon/pantheon-base/pull/473. It printed the expected warning about the 6 uncommitted i18n files, which stay outside the diff."
+    },
+    {
+      "command": "gh pr view 473 --json state,mergeable,reviewDecision,autoMergeRequest",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Before checks finished: state OPEN, mergeable MERGEABLE, reviewDecision empty (solo repo), autoMergeRequest enabledBy duanxldragon. Auto-merge was deliberately NOT disabled: the classifier denied the disable on the previous record PR, so this package lets pr-automation complete the squash."
+    },
+    {
+      "command": "curl -u \"$T:\" https://sonarcloud.io/api/issues/search?componentKeys=duanxldragon_pantheon-base&pullRequest=473&resolved=false&types=BUG,VULNERABILITY,CODE_SMELL (token from shell variable only)",
+      "cwd": ".",
+      "status": "passed",
+      "details": "PR-473 analysis: total 0. The pre-merge main reading taken minutes earlier in the same session was total 6 (2 x githubactions:S1192 quality.yml, 1 x githubactions:S1192 ci.yml, 2 x githubactions:S7677 release-gate.yml, 1 x githubactions:S7677 security.yml), so the 6 -> 0 delta is attributable to this diff alone."
+    },
+    {
+      "command": "gh pr view 473 --json state,mergedAt,mergeCommit",
+      "cwd": ".",
+      "status": "passed",
+      "details": "state MERGED, mergedAt 2026-10-30T15:03:21Z, mergeCommit c1f0b1dd26f3d2051db7e43e428d928786fab45a. Full check rollup before merge: every completed check success except the expected skipped PR-only jobs; Actionlint, Quality Gates, Docs Governance, Duplication Gate, SonarCloud Code Analysis, Secret Scan, Dependency Vulnerabilities, Workflow Security, CodeQL, Automated tests and unit tests all pass."
+    },
+    {
+      "command": "gh run list --branch main --limit 12",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Post-merge push workflows on c1f0b1dd: CI success, Code Quality Gates success, Security Gates success, Lint Workflows success, Core Smoke Tests success, Full Smoke Suite success, Release Gate in_progress at capture time."
+    },
+    {
+      "command": "gh run view 41077154410 --json status,conclusion,jobs",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Release Gate run on c1f0b1dd completed:success. Jobs CodeQL Alerts, Open PRs, Candidate Checks, Dependabot Alerts, SonarCloud Gate and Release Gate Summary are all success. Candidate Checks had to wait for Full Smoke Suite, which is why this read-back is taken ~22 minutes after the merge."
+    },
+    {
+      "command": "gh run view --job=124148288173 --log | grep -E \"quality gate|Unprocessed SonarCloud issues\"",
+      "cwd": ".",
+      "status": "passed",
+      "details": "The two lines that close this package: \"SonarCloud quality gate for c1f0b1dd26f3d2051db7e43e428d928786fab45a: OK\" and \"Unprocessed SonarCloud issues: 0\". Both are read from the main-branch gate against the merged commit, not from the PR context."
+    },
+    {
+      "command": "curl -u \"$T:\" https://sonarcloud.io/api/issues/search?componentKeys=duanxldragon_pantheon-base&branch=main&resolved=false&types=BUG,VULNERABILITY,CODE_SMELL (token from shell variable only)",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Independent re-read of main outside the workflow: total 0. api/measures/component for branch main reports bugs 0, vulnerabilities 0, code_smells 0, security_hotspots 0 over ncloc 163314, so the zero is a full-repo reading rather than a narrowed filter."
+    },
+    {
+      "command": "curl -u \"$T:\" https://sonarcloud.io/api/project_branches/list?project=duanxldragon_pantheon-base",
+      "cwd": ".",
+      "status": "passed",
+      "details": "The call itself succeeded; the finding is that only main is registered as a Sonar branch (count 1). Consequence recorded: querying issues with branch=fix/workflow-sonar-githubactions-smells returns 0 for an unknown branch and proves nothing, so the branch-side evidence uses pullRequest=473 instead."
     }
   ],
   "knownGaps": [
@@ -128,6 +188,7 @@
     "The trigger of the re-detection itself is not explained by the Sonar web API: the same query returned 0 on the previous main analysis and the six issues have empty changelogs with July-to-October creation dates. The repair does not depend on that explanation, and no Sonar-side setting was changed to force the number.",
     "Sub-threshold \"success\" literals stay in the workflows: release-gate.yml:281-284 has 4 in one step and security.yml:108-110 has 3, alongside several single-occurrence steps in quality.yml, security.yml and release-gate.yml. The smallest repetition Sonar actually reported is 5 (ci.yml), so these sit under the rule's threshold today; hoisting them now would widen a release-blocking diff without closing a finding. The trade-off is explicit: adding a fifth gate to the release-gate summary step would create a new finding at the next analysis.",
     "There is still no local sensor that reads workflow YAML style, which is why this class can only surface through Sonar at the release checkpoint. FR-023 records the gap with 'no-repeat-observed' rather than adding a checker inside a debt-closure package; whether to build one is a maintainer decision.",
-    "The pantheon-ops copy of these workflow patterns is not touched here: workflows are each repository's own CI asset and not a foundation contract surface, so no release or consumer sync is required for this package."
+    "The pantheon-ops copy of these workflow patterns is not touched here: workflows are each repository's own CI asset and not a foundation contract surface, so no release or consumer sync is required for this package.",
+    "SonarCloud registers only main as a branch for this project, so a fix branch cannot be read with branch=<name> (an unknown branch returns total 0, which would look like success). PR-context reads (pullRequest=<n>) and the post-merge main analysis are the only meaningful pre-merge and post-merge probes; this package uses both."
   ]
 }
