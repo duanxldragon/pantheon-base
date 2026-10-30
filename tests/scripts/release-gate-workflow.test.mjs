@@ -95,6 +95,7 @@ test('CI Summary fails closed for required jobs and reports advisory full-repo l
   assert.match(goLintSource, /continue-on-error:\s*true/);
   assert.match(goLintSource, /Full-repo lint is advisory/);
 
+  assert.match(summarySource, /GATE_OK:\s*success/);
   for (const resultVariable of [
     'FAST_CHECKS',
     'UNIT_TESTS',
@@ -104,10 +105,10 @@ test('CI Summary fails closed for required jobs and reports advisory full-repo l
   ]) {
     assert.match(
       summarySource,
-      new RegExp(`\\[ "\\$${resultVariable}" != "success" \\]`),
+      new RegExp(`\\[ "\\$${resultVariable}" != "\\$GATE_OK" \\]`),
       `CI Summary must reject non-success result for ${resultVariable}`,
     );
   }
 
-  assert.doesNotMatch(summarySource, /\[ "\$GO_LINT" != "success" \]/);
+  assert.doesNotMatch(summarySource, /\[ "\$GO_LINT" != "\$GATE_OK" \]/);
 });

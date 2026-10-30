@@ -133,14 +133,14 @@ jobs:
         run: |
           count=$(gh api "repos/$REPO/code-scanning/alerts?state=open&tool_name=CodeQL&per_page=100" \
             --jq '[.[] | select(.rule.severity == "error" or .rule.severity == "critical")] | length')
-          echo "CodeQL error/critical open alerts: $count"
+          echo "Open blocking CodeQL alerts: $count"
           if [ "$count" -gt 0 ]; then
             gh api "repos/$REPO/code-scanning/alerts?state=open&tool_name=CodeQL&per_page=100" \
               --jq '.[] | select(.rule.severity == "error" or .rule.severity == "critical") | "  [\(.rule.severity)] \(.rule.id): \(.most_recent_instance.location.path):\(.most_recent_instance.location.start_line)"' || true
             echo "::error::Release blocked: $count open CodeQL error/critical alert(s). Fix before releasing."
             exit 1
           fi
-          echo "✓ No open CodeQL error/critical alerts"
+          echo "✓ No open blocking CodeQL alerts"
 
   # ============================================================
   # Gate 2: Dependabot — zero high/critical open alerts
@@ -160,13 +160,13 @@ jobs:
         run: |
           alerts_json=$(gh api "repos/$REPO/dependabot/alerts?state=open&per_page=100")
           count=$(echo "$alerts_json" | jq '[.[] | select(.security_advisory.severity == "high" or .security_advisory.severity == "critical")] | length')
-          echo "Dependabot high/critical open alerts: $count"
+          echo "Open blocking Dependabot alerts: $count"
           if [ "$count" -gt 0 ]; then
             echo "$alerts_json" | jq -r '.[] | select(.security_advisory.severity == "high" or .security_advisory.severity == "critical") | "  [\(.security_advisory.severity)] \(.security_advisory.cve_id // .security_advisory.ghsa_id): \(.dependency.package.name)"'
             echo "::error::Release blocked: $count open Dependabot high/critical alert(s)."
             exit 1
           fi
-          echo "✓ No open Dependabot high/critical alerts"
+          echo "✓ No open blocking Dependabot alerts"
 
   # ============================================================
   # Gate 3: SonarCloud — quality gate green + zero open issues
