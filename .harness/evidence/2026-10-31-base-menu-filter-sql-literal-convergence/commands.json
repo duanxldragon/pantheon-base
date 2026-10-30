@@ -1,0 +1,127 @@
+{
+  "taskId": "2026-10-31-base-menu-filter-sql-literal-convergence",
+  "repo": "pantheon-base",
+  "executedAt": "2026-10-31",
+  "agent": {
+    "tool": "other",
+    "adapter": "qoder-agent"
+  },
+  "runtimeSensitive": false,
+  "runtimeGap": "改动只重写查询条件的构造形式（列名拼接 → 整句子句常量），不动路由、权限、schema、响应结构或任何前后端契约。断言面由构建期与单测读数覆盖：go build/test（47 包 ok、0 FAIL）、ops 检查器成对探针（2 条违规 → 0 条）、消费者 shared-drift（FAIL 1 modified → OK 812 identical / 10 allowlisted / 0 modified）。端到端行为等价由底座既有菜单查询测试与消费者既有 smoke 承担，本包不新造运行时驱动。",
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-31-base-menu-filter-sql-literal-convergence/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-31-base-menu-filter-sql-literal-convergence/",
+    "reviewFile": ".harness/evidence/2026-10-31-base-menu-filter-sql-literal-convergence/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/VERIFICATION_EVIDENCE_SPEC.md",
+      "docs/contracts/PLATFORM_CONTRACT.md"
+    ]
+  },
+  "commands": [
+    {
+      "command": "git -C ../pantheon-base rev-parse --short HEAD && git -C ../pantheon-base diff --stat 93505225 HEAD -- backend/modules/business/retired_modules.go",
+      "cwd": "pantheon-ops",
+      "status": "passed",
+      "details": "定位 drift 归属：底座该文件自锁定提交 93505225 起零变化（diff 空），说明 DRIFT_MODIFIED 不是底座移动造成的，而是消费者侧的改动未回流。ops 侧 git log 显示改动来自 ops PR #156（fix(security): close the SonarCloud vulnerability and bug findings on business scope）。"
+    },
+    {
+      "command": "node scripts/business-overlay/check-shared-drift.mjs --base ../pantheon-base   (收敛前，底座 HEAD 仍是拼接形式)",
+      "cwd": "pantheon-ops",
+      "status": "failed",
+      "details": "FAIL shared drift check: 1 modified, 0 missing in base, 0 stale allowlist (812 shared files compared, 161 business-overlay files skipped)；唯一一条 DRIFT_MODIFIED 是 backend/modules/business/retired_modules.go。10 条既有 ALLOWED_DRIFT 原样保留，本包未增删任何一条。这一步同时确认检查器读的是 git -C base show HEAD:<path>，不看工作树——所以底座改动必须提交后读数才会变。"
+    },
+    {
+      "command": "git show origin/main:backend/modules/business/retired_modules.go > /tmp/base_rm.go && diff /tmp/base_rm.go ../pantheon-ops/backend/modules/business/retired_modules.go",
+      "cwd": ".",
+      "status": "passed",
+      "details": "两仓该文件的完整差异只有六个 hunk：新增三条整句子句常量、三个调用点由列名字符串改传常量、注释一行、形参 column string → inClause string、Or/Where 两处去掉 column+\" IN ?\" 拼接（各带一行 gorm-sql-literal:allow 标记）。没有 ops 专有标识符、没有 import 变化、没有函数可见签名之外的调用方改动。"
+    },
+    {
+      "command": "cp ../pantheon-ops/backend/modules/business/retired_modules.go backend/modules/business/retired_modules.go && cmp backend/modules/business/retired_modules.go ../pantheon-ops/backend/modules/business/retired_modules.go",
+      "cwd": ".",
+      "status": "passed",
+      "details": "底座副本与消费者副本逐字节相同（cmp 无输出、退出 0）。字节相同是硬要求，因为 shared-drift 用 SHA-256 比对 git 内容。"
+    },
+    {
+      "command": "mkdir -p .tmp/sqlprobe-{old,new}/backend/modules/business && cp /tmp/base_rm.go .tmp/sqlprobe-old/backend/modules/business/retired_modules.go && cp backend/modules/business/retired_modules.go .tmp/sqlprobe-new/backend/modules/business/retired_modules.go && node ../pantheon-ops/scripts/check-gorm-sql-literal.mjs --root $PWD/.tmp/sqlprobe-old",
+      "cwd": ".",
+      "status": "failed",
+      "details": "收敛前对照（预期的失败读数）：backend/modules/business/retired_modules.go:172: Or() SQL text or column name must be a literal or package constant, got column+\" IN ?\"；:174: Where() 同。合计 2 GORM SQL-literal violation(s)。这解释了 ops 当初为什么必须改这个文件才能过它自己的门禁。"
+    },
+    {
+      "command": "node ../pantheon-ops/scripts/check-gorm-sql-literal.mjs --root \"$PWD/.tmp/sqlprobe-new\"",
+      "cwd": ".",
+      "status": "passed",
+      "details": "收敛后对照：GORM SQL text and column names are literals or package constants across business modules，0 条违规。输出两行 waived（:181/:184）是检查器自身的标记机制对既有 gorm-sql-literal:allow 行的正常豁免声明，不是本包新增的豁免。"
+    },
+    {
+      "command": "cd backend && go vet ./... && go build ./...",
+      "cwd": ".",
+      "status": "passed",
+      "details": "vet 全量无输出、build 退出 0。另外单独跑过 go vet ./modules/business/ 与 go build ./...（更早一轮）同为干净。"
+    },
+    {
+      "command": "cd backend && go test -count=1 ./...",
+      "cwd": ".",
+      "status": "passed",
+      "details": "47 个包 ok，0 个 FAIL，其余为 no test files。含 backend/modules/business 包自身的既有测试。"
+    },
+    {
+      "command": "cd backend && CGO_ENABLED=1 go test -race -count=1 ./...",
+      "cwd": ".",
+      "status": "failed",
+      "details": "本机环境缺口，非代码失败：多个包报 ==NNNN==ERROR: ThreadSanitizer failed to allocate 0x…… bytes at 0x100e… (error code: 87)，随后 FAIL 列表全是该初始化错误的连带（cmd/server、internal/middleware、modules/auth/login 等），改动前后一致。gcc 与 CGO_ENABLED=1 go build -race ./modules/business/ 本身可用，失败发生在 TSan 运行时启动。据此本包以无 -race 全量测试 + CI 的 race 作业覆盖，不声称跑过本地 -race。"
+    },
+    {
+      "command": "gofmt -l backend/modules/business/retired_modules.go",
+      "cwd": ".",
+      "status": "passed",
+      "details": "空输出——文件已按 gofmt 规范排列。"
+    },
+    {
+      "command": "git add backend/modules/business/retired_modules.go && git commit -m \"fix(business): build menu IN clauses from whole-clause constants\"",
+      "cwd": ".",
+      "status": "passed",
+      "details": "提交 c335e5b9，1 file changed, 17 insertions(+), 7 deletions(-)。只 stage 该文件；工作树中既有的六个未提交 i18n 文件未被 stage、未被背书。"
+    },
+    {
+      "command": "node scripts/business-overlay/check-shared-drift.mjs --base ../pantheon-base   (收敛后，底座 HEAD = c335e5b9)",
+      "cwd": "pantheon-ops",
+      "status": "passed",
+      "details": "OK shared drift check: 812 shared files identical to base, 10 allowlisted drift, 161 business-overlay files skipped。DRIFT_MODIFIED 计数从 1 降为 0，白名单未动一行——这条 drift 是在源头消除的，不是被登记的。"
+    },
+    {
+      "command": "rm -rf .tmp/sqlprobe-old .tmp/sqlprobe-new && git status --short",
+      "cwd": ".",
+      "status": "passed",
+      "details": "临时探针目录删除；工作树除本包文件与既有未提交 i18n 改动外无其它残留。"
+    },
+    {
+      "command": "npm run check:docs-frontmatter && npm run check:task-packet-template && npm run check:structure && npm run check:harness-encoding && npm run check:duplication",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Frontmatter check passed（403 docs / 283 with frontmatter；第一遍曾报本包 task.md 缺 status 字段，补齐后通过）；task-packet template OK；structure contract strict 0 finding(s) across 2954 tracked files；encoding strict 0 finding(s) across 2606 files；duplication Result: PASS。"
+    },
+    {
+      "command": "npm run check:task-packet",
+      "cwd": ".",
+      "status": "passed",
+      "details": "本包 [PASS] docs/harness/tasks/2026-10-31-base-menu-filter-sql-literal-convergence.task.md；同批在包任务包全部 PASS。首轮带一条 warning：Contract anchor does not exist: pantheon-ops/scripts/check-gorm-sql-literal.mjs——跨仓路径不是本仓可解析的锚点，已把它从 Contract Anchors 移到正文引用，锚点只保留本仓存在的两份。"
+    },
+    {
+      "command": "node scripts/harness/check-evidence.mjs --root . --strict && node scripts/harness/check-review.mjs --root . --strict",
+      "cwd": ".",
+      "status": "passed",
+      "details": "首轮 evidence 报 root.commands[13].status must be one of: passed, failed, not-run（占位条目的 status: pending），按实际门禁读数改写后复跑：Evidence check (strict) 2 file(s) 0 error 0 warning，Review check (strict) 2 file(s) 0 error，本包 review 与既有的 2026-10-29-v0180 包均 PASS。"
+    }
+  ],
+  "knownGaps": [
+    "本机无法运行 -race：ThreadSanitizer 在 Windows/cygwin 上初始化失败（error code 87）。以无 -race 全量测试（47 包 ok）加 CI 的 race 作业覆盖；见 commands[8]。",
+    "底座没有 scripts/check-gorm-sql-literal.mjs 这条门禁。本包只把不变式的代码形态搬到底座，把检查器引入底座 CI 需动 package.json 与 .github/workflows/*（高风险范围、需两位批准），留维护者决定；在那之前底座的这条不变式靠评审与本 evidence 维持。",
+    "底座该文件保留了指向 ops 独有脚本的注释（scripts/check-gorm-sql-literal.mjs 断言这一不变式），在底座仓内暂时是悬空引用。刻意保留的原因是 shared-drift 按字节比对，任何注释差异都会重新产生 DRIFT_MODIFIED；消解路径与上一条相同——检查器进底座后注释即自洽。",
+    "本包不切 foundation release、不动 VERSION/CHANGELOG：底座 main 前进后，消费者按既有 lock 继续工作（该文件两侧已字节相同，无需 bump）。下一次发布切版时本改动自然随包流向消费者，切版时点归维护者。",
+    "weekly Base Compatibility Rebuild 的最近两次 schedule 触发（2026-10-19、2026-10-26）失败在 Compile rebuilt backend 一步，属收敛前 ops 树未对齐 v0.18.1 时期的问题；本包不声称该作业已转绿，下一次周一 08:57 的 schedule 读数需回读。",
+    "工作树中既有的未提交 i18n 改动（backend/modules/system/i18n/builtin_locale_resources.json 与 frontend/src/i18n/resources/*.ts）属别的在途工作，本 PR 不 stage、不提交、不背书。"
+  ]
+}

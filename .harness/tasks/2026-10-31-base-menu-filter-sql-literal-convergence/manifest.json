@@ -1,0 +1,156 @@
+{
+  "taskId": "2026-10-31-base-menu-filter-sql-literal-convergence",
+  "taskDoc": "docs/harness/tasks/2026-10-31-base-menu-filter-sql-literal-convergence.task.md",
+  "title": "菜单过滤 IN 子句常量化回流底座，消除 ops shared-drift（Base-first）",
+  "goal": "ops 在关闭 SonarCloud 漏洞/缺陷（ops PR #156）时把它继承的 backend/modules/business/retired_modules.go 的菜单过滤条件改成三条整句子句常量，以通过 ops 独有的 scripts/check-gorm-sql-literal.mjs（断言 GORM 的 SQL 文本与列名必须是字面量或包级常量）。底座没有这条断言、文件仍是 query.Where(column + \" IN ?\", values) 的列名拼接形式，于是 ops 的 npm run check:shared-drift 与每周 Base Compatibility Rebuild 的「Check shared-file drift against base HEAD」一步报 DRIFT_MODIFIED 并 FAIL。本包按 Base-first 把这条安全收紧回流到底座，采用与消费者逐字节相同的形式：shared-drift 转绿、底座自身也满足「SQL 文本不来自运行期列名拼接」、且不用 .foundation/allowed-drift.json 给偏差记豁免。行为零变化——三个调用点传入的常量展开后与原拼接结果一致（module IN ? / path IN ? / component IN ?），取值仍只经 ? 绑定。",
+  "primaryLayer": "inheritance-sync",
+  "status": "in-progress",
+  "priority": "P2",
+  "type": "inheritance-drift-convergence",
+  "estimatedComplexity": "small",
+  "findings": [
+    "根因是两仓门禁不对称而非谁写错：ops 有 scripts/check-gorm-sql-literal.mjs，底座没有。消费者为满足更严门禁而改动逐字节继承的底座文件，必然产生 shared-drift；只要门禁不对称还在，同类 drift 会反复出现。",
+    "check-shared-drift.mjs 用 git -C <base> show HEAD:<path> 取字节哈希比对，不看工作树：底座改动必须提交后消费者的读数才会变——这解释了同一份工作树副本在提交前仍报 1 modified。",
+    "成对探针实测：收敛前形式在 ops 检查器下报 2 条违规（retired_modules.go:172 Or()、:174 Where()，SQL text got column+\" IN ?\"），收敛后形式 0 条（两条 allow 标记行由检查器自身的标记机制豁免，非本次新增）。",
+    "整句子句常量优于列名常量：前者让整条 SQL 文本来自字面量，检查器不需要做「列名是否为常量」的数据流推断。",
+    "形参 column string 改为 inClause string 是把「传的是整条子句、不是列名」写进签名，防止后来者把 + \" IN ?\" 拼回去。",
+    "底座文件保留了指向 ops 独有脚本的注释引用，是字节对齐的刻意代价：任何注释差异都会重新产生 DRIFT_MODIFIED。"
+  ],
+  "scope": {
+    "in": [
+      "backend/modules/business/retired_modules.go：三条包级整句子句常量 menuModuleInClause / menuPathInClause / menuComponentInClause",
+      "backend/modules/business/retired_modules.go：applyMenuFieldFilter 形参 column string → inClause string，Or/Where 两处不再拼接列名",
+      "backend/modules/business/retired_modules.go：三个调用点传常量而非列名字符串",
+      "与 ops 现有文件逐字节相同（含注释与 gorm-sql-literal:allow 标记行）",
+      "任务包、manifest 与 evidence"
+    ],
+    "out": [
+      "修改 .foundation/allowed-drift.json（不把安全收紧登记成允许的偏差）",
+      "把 check-gorm-sql-literal.mjs 作为新门禁引入底座（需动 package.json 与 .github/workflows/*，高风险范围，记为显式缺口）",
+      "任何行为、接口、权限、schema、seed、路由、i18n 资源变化",
+      "VERSION / CHANGELOG.md / docs/release-notes/** 与 foundation release 切版发布",
+      "修改 pantheon-ops 的任何文件",
+      "用 NOSONAR / //nolint / eslint-disable / 降阈值 / 改白名单让读数变绿",
+      "stage 工作树中既有的未提交 i18n 改动（builtin_locale_resources.json 与 frontend/src/i18n/resources/*.ts）"
+    ]
+  },
+  "dependencyLayers": [
+    "business/*"
+  ],
+  "implementationNotes": [
+    "收敛方向是 ops→base：消费者已有的更严形式回流底座，落地后两侧该文件逐字节相同，ops 无需为吸收本改动再改一次，因此 Release Requirement 记 none 而非等待下一次发布。",
+    "不用白名单收敛是刻意的：allowed-drift.json 的语义是「这里允许与底座不同」，把一条安全收紧记成偏差，等于让下一次真正的偏差也有先例可引。",
+    "改动前用 diff 逐块确认两仓该文件只差这条收紧（15a16,23 / 148,150c156,158 / 164c172 / 167c175 / 172c180,181 / 174c183,184 六个 hunk），没有夹带 ops 专有的标识符或 import。",
+    "本机 -race 跑不起来：CGO_ENABLED=1 go test -race 在多个包上报 ThreadSanitizer failed to allocate … (error code 87)，是 Windows/cygwin 下 TSan 运行时限制，与被改代码无关；用无 -race 全量测试 + CI 的 race 作业覆盖，并把原始错误记入 evidence。"
+  ],
+  "contractAnchors": [
+    "docs/contracts/PLATFORM_CONTRACT.md",
+    "docs/harness/VERIFICATION_EVIDENCE_SPEC.md"
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "permission-policy",
+    "portableFailureClass": "inheritance-drift",
+    "ownerLayer": "foundation-source",
+    "ratchetDecision": "drift-converged-at-source",
+    "coverageDimensions": [
+      "behaviour",
+      "architecture-fitness"
+    ]
+  },
+  "expectedFiles": {
+    "create": [
+      "docs/harness/tasks/2026-10-31-base-menu-filter-sql-literal-convergence.task.md",
+      ".harness/tasks/2026-10-31-base-menu-filter-sql-literal-convergence/manifest.json",
+      ".harness/evidence/2026-10-31-base-menu-filter-sql-literal-convergence/commands.json",
+      ".harness/evidence/2026-10-31-base-menu-filter-sql-literal-convergence/summary.md",
+      ".harness/evidence/2026-10-31-base-menu-filter-sql-literal-convergence/review.md",
+      ".harness/evidence/2026-10-31-base-menu-filter-sql-literal-convergence/pr-body.md"
+    ],
+    "modify": [
+      "backend/modules/business/retired_modules.go"
+    ],
+    "doNotTouch": [
+      ".foundation/allowed-drift.json",
+      "scripts/business-overlay/",
+      "backend/modules/business/",
+      ".github/workflows/",
+      "sonar-project.properties",
+      "package.json",
+      "VERSION",
+      "CHANGELOG.md",
+      "docs/release-notes/",
+      "backend/modules/system/i18n/builtin_locale_resources.json",
+      "frontend/src/i18n/resources/"
+    ]
+  },
+  "executionRoles": {
+    "implementerPosture": "只把消费者已验证的 SQL 子句常量化形式回流到底座，保持行为与接口不变，用成对探针和两侧门禁的实测读数代替断言；不碰白名单、不碰 CI 面、不夹带工作树里既有的未提交 i18n 改动。",
+    "reviewerPosture": [
+      "确认 git diff --stat 的业务面只有 backend/modules/business/retired_modules.go 一个文件，六个 hunk 与两仓 diff 一致，没有新增 import、没有改动函数可见签名之外的调用方。",
+      "确认 SQL 文本逐条等价：module IN ? / path IN ? / component IN ? 与原 column+\" IN ?\" 在三个字段上的展开结果一致，values 仍走 ? 绑定。",
+      "确认成对探针读数记录在 commands.json：收敛前 2 条违规（:172/:174）、收敛后 0 条，且临时探针目录已删除。",
+      "确认 ops 侧 node scripts/business-overlay/check-shared-drift.mjs --base ../pantheon-base 在底座提交后由 FAIL 1 modified 变 OK，且 10 条既有 ALLOWED_DRIFT 未被增删。",
+      "确认 .foundation/allowed-drift.json 未被修改——本包的立场是不用白名单静音这条 drift。",
+      "确认没有把 check-gorm-sql-literal.mjs 塞进底座 CI（那是动 workflow 的高风险范围），而是作为显式缺口留下。",
+      "确认 -race 的环境缺口以原始 ThreadSanitizer 错误记录，而不是声称已跑过 race 全量。",
+      "确认未 stage 工作树中既有的未提交 i18n 改动，未动 VERSION / CHANGELOG / release notes。"
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "cd backend && go vet ./... && go build ./...",
+      "cd backend && go test -count=1 ./...",
+      "CGO_ENABLED=1 go test -race -count=1 ./...（本机环境不支持，读数记录为缺口）",
+      "gofmt -l backend/modules/business/retired_modules.go",
+      "node ../pantheon-ops/scripts/check-gorm-sql-literal.mjs --root .tmp/sqlprobe-old（收敛前对照）",
+      "node ../pantheon-ops/scripts/check-gorm-sql-literal.mjs --root .tmp/sqlprobe-new（收敛后对照）",
+      "cd ../pantheon-ops && node scripts/business-overlay/check-shared-drift.mjs --base ../pantheon-base",
+      "npm run check:task-packet && npm run check:task-packet-template && npm run check:docs-frontmatter",
+      "npm run check:structure && npm run check:harness-encoding && npm run check:duplication",
+      "node scripts/harness/check-evidence.mjs --root . --strict",
+      "node scripts/harness/check-review.mjs --root . --strict",
+      "node scripts/create-pr.mjs --title ... --body-file .harness/evidence/2026-10-31-base-menu-filter-sql-literal-convergence/pr-body.md",
+      "git diff --stat"
+    ],
+    "runtimeEvidence": [
+      "无运行面变化：三处 GORM 条件构造出的 SQL 字符串与绑定方式与改动前逐条一致；证据是 ops 检查器的成对读数（2 条违规 → 0 条）与底座全量单元测试 47 包 ok"
+    ]
+  },
+  "runtimeSensitive": false,
+  "runtimeGap": "改动只重写查询条件的构造形式（列名拼接 → 整句子句常量），不动路由、权限、schema、响应结构或任何前后端契约；构建期与单测证据（go build/test 47 包 ok、ops 检查器 2 → 0、shared-drift FAIL → OK（812 identical / 10 allowlisted / 0 modified））覆盖本改动的全部断言面。端到端行为等价由底座既有菜单查询测试与消费者既有 smoke 承担，本包不新造运行时驱动。",
+  "evidenceRequired": [
+    ".harness/evidence/2026-10-31-base-menu-filter-sql-literal-convergence/commands.json：vet/build/test 读数、成对探针读数、ops shared-drift 前后读数、治理门禁读数、-race 环境缺口原始错误",
+    ".harness/evidence/2026-10-31-base-menu-filter-sql-literal-convergence/summary.md：drift 成因、为何回流源头而非白名单、行为等价论证",
+    ".harness/evidence/2026-10-31-base-menu-filter-sql-literal-convergence/review.md：逐条 reviewer posture 读数 + Machine Readable 块",
+    ".harness/evidence/2026-10-31-base-menu-filter-sql-literal-convergence/pr-body.md：经 check-pr-governance 校验的 PR 正文"
+  ],
+  "humanGates": [
+    "合并归维护者批准（L2，继承边界 + 查询安全面）；本包不切 foundation release、不动 VERSION / CHANGELOG。",
+    "是否把 check-gorm-sql-literal.mjs 引入底座 CI 由维护者决定：那要动 package.json 与 .github/workflows/*，属需两位批准的高风险范围。",
+    "工作树中既有的未提交 i18n 改动由本 PR 显式排除在 stage 之外；若与别的在途任务冲突，由维护者裁决。"
+  ],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed",
+    "底座该文件与消费者逐字节相同，check:shared-drift 不再报 DRIFT_MODIFIED",
+    "成对探针读数（收敛前 2 条违规 / 收敛后 0 条）实测并写入 evidence",
+    "未使用白名单、豁免或降阈值让任何读数变绿"
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-31-base-menu-filter-sql-literal-convergence/manifest.json",
+    "taskDoc": "docs/harness/tasks/2026-10-31-base-menu-filter-sql-literal-convergence.task.md",
+    "evidenceDir": ".harness/evidence/2026-10-31-base-menu-filter-sql-literal-convergence/",
+    "summaryFile": ".harness/evidence/2026-10-31-base-menu-filter-sql-literal-convergence/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-31-base-menu-filter-sql-literal-convergence/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/VERIFICATION_EVIDENCE_SPEC.md",
+      "docs/contracts/PLATFORM_CONTRACT.md"
+    ]
+  }
+}
