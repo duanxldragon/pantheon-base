@@ -58,7 +58,7 @@ inheritance-sync
 - Quality Profile: `permission-policy`
 - Portable Failure Class: `inheritance-drift`
 - Owner Layer: `foundation-source`
-- Ratchet Decision: `drift-converged-at-source`
+- Ratchet Decision: `no-repeat-observed`
 - Coverage Dimensions:
   - behaviour
   - architecture-fitness

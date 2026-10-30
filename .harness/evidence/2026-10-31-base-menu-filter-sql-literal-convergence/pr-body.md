@@ -15,7 +15,7 @@
 - OpenSpec change：none
 - Trivial change：no
 - Quality Profile：permission-policy
-- Ratchet Decision：drift-converged-at-source
+- Ratchet Decision：no-repeat-observed
 - GitHub Signal：repo-quality-gate
 
 > Quality Profile 选 `permission-policy`：改动对象是菜单查询条件的构造方式，属权限/菜单
@@ -80,7 +80,9 @@
 - Duplication Gate 结果：ran（`npm run check:duplication` → PASS）
 - 是否高风险改动：borderline-no。理由：触碰的是继承边界（消费者逐字节继承的底座文件）+ 查询 SQL 构造，按 workspace 规则升 L2；但行为等价有机器读数、无 schema/权限/接口/workflow 变化，故不需两位领域批准。若维护者判为高风险，需按 `repo-pr-gate` 补第二位（域或安全）评审。
 - 白名单路线被明确放弃：`.foundation/allowed-drift.json` 是共享配置，把这条 drift 记成「允许的偏差」会给后续真实偏差提供先例；本次一次写入尝试被拦下后未重试，改走源头收敛。**规则变更类动作仍归维护者。**
-- Ratchet 说明：不加门禁规则、不加豁免。同类问题的根因是「ops 有 `check-gorm-sql-literal.mjs`，底座没有」这一门禁不对称；本包搬的是代码形态，把检查器引入底座 CI 需动 `package.json` 与 `.github/workflows/*`（高风险范围），作为显式缺口留给维护者决定，避免在本 PR 夹带 CI 变更。
+- Ratchet 说明：`no-repeat-observed` —— 本包不新增传感器、不加门禁规则、不加豁免（把检查器
+  引入底座属维护者决定的高风险范围），但把不变式的代码形态搬到源头，消掉了这条 drift 的复发
+  条件：同类问题的根因是「ops 有 `check-gorm-sql-literal.mjs`，底座没有」这一门禁不对称；本包搬的是代码形态，把检查器引入底座 CI 需动 `package.json` 与 `.github/workflows/*`（高风险范围），作为显式缺口留给维护者决定，避免在本 PR 夹带 CI 变更。
 - Residual risk / follow-up：① 底座暂无这条检查器，不变式在底座侧由评审 + 本 evidence 维持；② 收敛后的文件保留了一句指向 ops 独有脚本的注释，在本仓是悬空引用——刻意保留是因为 shared-drift 按字节比对，注释差异会重新产生 FAIL，④ 与 ① 同一消解路径；③ weekly `Base Compatibility Rebuild` 未由本包声称转绿（最近两次 schedule 失败于 `Compile rebuilt backend`，属 ops 未对齐 v0.18.1 时期），需下一次周一 08:57 实跑回读；④ 本机 `-race` 不可用，见验证记录；⑤ 不切 foundation release、不动版本与发布文件；⑥ 工作树既有的未提交 i18n 改动不在本 PR 范围也不背书。
 
 ## 检查清单

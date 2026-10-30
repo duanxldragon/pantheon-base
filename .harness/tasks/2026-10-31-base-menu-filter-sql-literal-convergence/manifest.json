@@ -53,7 +53,7 @@
     "qualityProfile": "permission-policy",
     "portableFailureClass": "inheritance-drift",
     "ownerLayer": "foundation-source",
-    "ratchetDecision": "drift-converged-at-source",
+    "ratchetDecision": "no-repeat-observed",
     "coverageDimensions": [
       "behaviour",
       "architecture-fitness"
