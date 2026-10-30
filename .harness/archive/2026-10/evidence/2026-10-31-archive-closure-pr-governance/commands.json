@@ -175,6 +175,24 @@
       "cwd": ".",
       "status": "passed",
       "details": "收口分支基线 05ee0ec1（含 #474 本体）。本包的 evidence 追加、manifest 转 completed、任务包转 Archived 并归档到 .harness/archive/2026-10/，正是由 #474 修复的 check-pr-governance 归档回退路径所支持的形态：归档后 PR body 仍引用 canonical .harness/tasks|evidence 路径，传感器经 resolveArchiveAwarePath 解析。"
+    },
+    {
+      "command": "gh pr checks 475 --json name,bucket,state",
+      "cwd": ".",
+      "status": "passed",
+      "details": "归档收口 PR #475（本包的归档提交）读数：23 pass / 7 skipping、0 failure。关键一项是 PR Governance Prereq：它的 PR 正文继续引用 canonical 的 .harness/tasks/2026-10-31-archive-closure-pr-governance/manifest.json 与 .harness/evidence/.../commands.json，而这两个目录在该提交里已被 git mv 到 .harness/archive/2026-10/ 下。该作业通过，即 #474 新增的 resolveArchiveAwarePath 回退分支在生产门禁路径上生效——这是单测之外的独立证据。"
+    },
+    {
+      "command": "gh pr view 475 --json state,mergedAt,mergeCommit + gh run list --branch main",
+      "cwd": ".",
+      "status": "passed",
+      "details": "合并读数：state MERGED，mergedAt 2026-10-30T16:52:32Z，main 提交 e99440bc338469c0863e245634d70487ab45e1fd（auto-merge squash，enabledAt 16:48:25Z）。合并后 main 的 7 个工作流全部 completed/success：CI、Code Quality Gates、Core Smoke Tests、Full Smoke Suite、Lint Workflows、Security Gates、Release Gate。"
+    },
+    {
+      "command": "gh run view --job=124204878813 --log",
+      "cwd": ".",
+      "status": "passed",
+      "details": "e99440bc 上 Release Gate run 41093843150 的 6 个作业全 success（Candidate Checks / Open PRs / CodeQL Alerts / Dependabot Alerts / SonarCloud Gate / Release Gate Summary）；SonarCloud Gate 步骤读数（2026-10-30T17:13:22Z）：Unprocessed SonarCloud issues: 0、✓ No unresolved SonarCloud issues。连续三个 main 提交（c1f0b1dd、05ee0ec1、e99440bc）该读数保持 0，说明 #473 的工作流修复没有回弹。"
     }
   ],
   "knownGaps": [
@@ -184,6 +202,7 @@
     "ops 的 runtime-acceptance（需要本机 MySQL 与不在账密面的凭证）与本包无关，属消费仓 ledger；本包不动 pantheon-ops。",
     "v0.18.1 之后的 base 修复（菜单合同传感器、工作流缺陷）要进入 ops 仍需一次 foundation release；tag 与 release 不可回收，时点归维护者，本包不切版。",
     "工作树中既有的 6 个未提交 i18n 文件（backend/modules/system/i18n/builtin_locale_resources.json 与 frontend/src/i18n/resources/*.ts，+1050/-50）由本包显式排除在 stage 之外。附带实测：check:harness-adoption --strict 的 pairing 是 worktree 级的——本包新增 manifest 后它从 2 findings 变 0 findings，说明该门禁不能保证「实现改动与其任务包一一对应」，排除仍靠 scope 声明与 stage 纪律；把 pairing 收紧到 diff 归属是另一个传感器议题，本包只记录不改。",
-    "归档后 check-evidence.mjs --strict 不再扫描该任务的 evidence（默认 glob 只覆盖 live 树）：这是 FR-024 已登记的残差，本包按范围不扩到该传感器。"
+    "归档后 check-evidence.mjs --strict 不再扫描该任务的 evidence（默认 glob 只覆盖 live 树）：这是 FR-024 已登记的残差，本包按范围不扩到该传感器。",
+    "本包的收口记录（#475 合并后的 main 读数）需要再一次治理提交才能入档，因此归档树出现了 append-only 的二次修改。若这种「收口记录也要收口」的循环成为常态，应在下一轮考虑把终局读数改为合并前声明 + 合并后一次性补记的单次提交形态；本轮按最小 diff 处理。"
   ]
 }

@@ -95,3 +95,14 @@ staging discipline, not by that gate; tightening the pairing is a separate senso
   `2026-10-31-archive-closure-pr-governance` 的 manifest 与 evidence 迁入
   `.harness/archive/2026-10/`，而 PR body 继续引用 canonical `.harness/tasks|evidence` 路径——
   即 #474 新增的归档回退分支在真实 PR 上被 `PR Governance Prereq` 判定通过，而不只是被单测覆盖。
+
+## Closeout record (PR #475, 2026-10-31)
+
+- 本包的归档提交经 PR #475 落地：23 pass / 7 skipping、0 failure，
+  `mergedAt 2026-10-30T16:52:32Z`，main = `e99440bc`。
+- 生产侧验证：#475 的 PR 正文引用 canonical 的 `.harness/tasks|evidence` 路径，而这两个目录
+  在同一提交里已被 `git mv` 进 `.harness/archive/2026-10/`。`PR Governance Prereq` 通过，
+  等于用真实门禁为 #474 的归档回退分支背书，而不只靠 `check-pr-governance.test.mjs` 的两个用例。
+- 合并后 main 的 7 个工作流全部 success；`Release Gate` run `41093843150` 的 6 个作业全 success，
+  `SonarCloud Gate` 在 `e99440bc` 上读数 `Unprocessed SonarCloud issues: 0`。
+  至此连续三个 main 提交（`c1f0b1dd` → `05ee0ec1` → `e99440bc`）该读数保持 0。
