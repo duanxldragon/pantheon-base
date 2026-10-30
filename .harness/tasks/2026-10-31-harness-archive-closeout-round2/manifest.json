@@ -1,0 +1,155 @@
+{
+  "taskId": "2026-10-31-harness-archive-closeout-round2",
+  "title": "归档两个已完成任务包并更新档案索引",
+  "repo": "pantheon-base",
+  "primaryLayer": "platform",
+  "dependencyLayers": [
+    "platform"
+  ],
+  "status": "in-progress",
+  "priority": "P2",
+  "type": "harness-archive-closeout",
+  "created_at": "2026-10-31",
+  "workspaceContext": {
+    "targetRepository": "pantheon-base",
+    "repositoryRole": "foundation-source",
+    "contextSyncExpectation": "deferred",
+    "releaseRequirement": "none"
+  },
+  "goal": "把两个实质工作已经结束的 2026-10 任务包按 .harness/ARCHIVE.md 的月度归档约定收口：2026-10-31-base-menu-filter-sql-literal-convergence（PR #477 squash 进 main e17eaaa1，消费者 shared-drift 由 FAIL 1 modified 变 OK 812 identical / 10 allowlisted / 0 modified）与 2026-10-29-v0180-simplification-release（tag pantheon-base-v0.18.0 与 pantheon-base-v0.18.1 均已发布、各带 4 个 release 资产，VERSION=0.18.1，最后一项消费仓 runtime-acceptance 由 ops PR #164 关闭并在 #165 落到 ops main 9afabc2a 复核）。动作限于：两份 manifest 的 status 改 completed、两份 .task.md 的 frontmatter 改 status: Archived、manifest 与 evidence 目录用 git mv 落到 archive/2026-10/{tasks,evidence}/、ARCHIVE.md 的月度统计与活跃清单与本轮收口记录更新。零运行时代码、零门禁阈值、零 schema、零 .foundation/**。",
+  "findings": [
+    "维护者已明确要求「把 .harness 下的已完成任务做归档处理」，而 .harness/tasks/ 仍留着两个 status=in-progress 的 manifest，与 ARCHIVE.md 约定不一致。",
+    "两条收口判据都是主机读数而非叙述：底座 tag/资产计数（2 个 tag × 4 个资产）、VERSION=0.18.1、消费者 check:shared-drift 的 0 modified、ops PR #164（4e69224f）与 #165（ops main 9afabc2a）。",
+    "归档一律 git mv，diff 呈 rename（R100/R0xx）而不是删除+新增，保持与前三轮归档一致的可追溯性。",
+    "归档后继续用规范路径引用：本包实测 check:task-packet 在移动后对两份已归档 .task.md 仍给 [PASS]，证明 readTaskManifest / resolveArchiveAwarePath 的回退分支成立。",
+    "新登记一个工具边缘（不修）：check-evidence.mjs / check-review.mjs 的 --strict 只扫 live 树（FR-024 已记录该口径），当 .harness/evidence/ 只剩无 commands.json 的历史目录时会报 No evidence command files found. / No review artifacts found.。这两条不在 npm check:* 面与任何 CI 作业里，本包含自己的 evidence 目录故移动后可用性不变；是否接入档案回退归维护者。"
+  ],
+  "scope": {
+    "in": [
+      "docs/harness/tasks/2026-10-31-harness-archive-closeout-round2.task.md（新建）",
+      ".harness/tasks/2026-10-31-harness-archive-closeout-round2/manifest.json（新建）",
+      ".harness/evidence/2026-10-31-harness-archive-closeout-round2/{commands.json,summary.md,review.md,pr-body.md}（新建）",
+      ".harness/ARCHIVE.md（统计、活跃清单、本轮收口记录）",
+      "两份被归档任务的 manifest（status 一处变化）与 .task.md（frontmatter status: Archived）",
+      "git mv：.harness/tasks/<id> → archive/2026-10/tasks/<id>；.harness/evidence/<id> → archive/2026-10/evidence/<id>"
+    ],
+    "out": [
+      "任何产品代码、.github/workflows/**、门禁阈值与必需检查集合",
+      "docs/harness/failure-registry.md（本轮不新增 FR 条目）",
+      ".harness/evidence/2026-09-10-tenant-verification-and-gray/ 重复产物与两份无归属的散落 PR 正文",
+      "67 个无 manifest 的历史 Active 任务包正文",
+      ".foundation/**、VERSION、CHANGELOG.md、docs/release-notes/**、pantheon-ops 任何文件"
+    ]
+  },
+  "implementationNotes": [
+    "收口依据写成可核对的读数：tag 列表、每个 release 的资产数、VERSION、消费者 drift 比对终局、ops 落地提交号；避免用「应该已经好了」这类叙述关闭任务。",
+    "统计口径按实测目录数重写而不是在旧数字上加减：26/31、23/23、72/70、91/94 → 合计 212/218；与「旧值 +2」恰好一致本身就是核对结果。",
+    "manifest 的 linkage 字段（taskManifest/evidenceDir/reviewFile）一字不改：ARCHIVE.md 规定归档后继续用规范路径引用，靠回退解析；改路径会让历史 PR 正文的引用失效。",
+    "本包自己的 evidence 目录留在 live 树，因此归档动作不会让 check-evidence/check-review 失去覆盖对象。",
+    "工具边缘如实登记在任务包 Implementation Notes 第 5 条与 PR 正文 residual，不在本包修治理脚本——那是另一类变更面。"
+  ],
+  "contractAnchors": [
+    "docs/harness/VERIFICATION_EVIDENCE_SPEC.md",
+    ".harness/ARCHIVE.md",
+    "docs/designs/REPOSITORY_LAYOUT.md"
+  ],
+  "harnessProfile": {
+    "qualityProfile": "ci-workflow",
+    "portableFailureClass": "harness-governance",
+    "ratchetDecision": "registry-only",
+    "coverageDimensions": [
+      "method-health",
+      "architecture-fitness"
+    ]
+  },
+  "expectedFiles": {
+    "create": [
+      "docs/harness/tasks/2026-10-31-harness-archive-closeout-round2.task.md",
+      ".harness/tasks/2026-10-31-harness-archive-closeout-round2/manifest.json",
+      ".harness/evidence/2026-10-31-harness-archive-closeout-round2/commands.json",
+      ".harness/evidence/2026-10-31-harness-archive-closeout-round2/summary.md",
+      ".harness/evidence/2026-10-31-harness-archive-closeout-round2/review.md",
+      ".harness/evidence/2026-10-31-harness-archive-closeout-round2/pr-body.md"
+    ],
+    "modify": [
+      ".harness/ARCHIVE.md",
+      "docs/harness/tasks/2026-10-31-base-menu-filter-sql-literal-convergence.task.md",
+      "docs/harness/tasks/2026-10-29-v0180-simplification-release.task.md"
+    ],
+    "doNotTouch": [
+      "backend/**",
+      "frontend/**",
+      "pkg/**",
+      ".github/workflows/**",
+      "scripts/**",
+      ".foundation/**",
+      "VERSION",
+      "CHANGELOG.md",
+      "docs/release-notes/**"
+    ]
+  },
+  "executionRoles": {
+    "implementer": "qoder-agent",
+    "reviewers": [
+      "档案一致性：archive/2026-10/{tasks,evidence} 的目录数与 ARCHIVE.md 表格逐项对得上",
+      "可追溯性：diff 是否全部呈 rename，没有出现内容重写",
+      "回退有效性：归档后 check:task-packet 是否仍解析规范路径",
+      "完成判据：tag/资产/VERSION/ops 提交号是否为实测读数",
+      "边界：是否动了产品代码、CI 作业、门禁阈值或发布资产",
+      "延期项：重复产物与散落 PR 正文是否保持原地并注明"
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "node scripts/harness/check-task-packet.mjs --root .",
+      "node scripts/harness/check-evidence.mjs --root . --strict",
+      "node scripts/harness/check-review.mjs --root . --strict",
+      "node scripts/harness/check-failure-registry.mjs --root . --strict",
+      "node scripts/harness/check-structure-contract.mjs --root . --strict",
+      "node scripts/harness/check-encoding.mjs --root . --strict",
+      "node scripts/harness/check-doc-inventory.mjs --root . --strict",
+      "git show --stat",
+      "ls archive 目录计数"
+    ],
+    "runtimeEvidence": [
+      "本包无产品运行面：归档与索引更新只影响仓库治理档案，不触碰任何被构建或被运行的代码。",
+      "主机侧完成判据为实测读数：底座 tag 列表（pantheon-base-v0.18.0、pantheon-base-v0.18.1）、两个 release 各 4 个资产、VERSION=0.18.1、消费者 check:shared-drift 终局 0 modified、ops PR #164（4e69224f）与 #165（ops main 9afabc2a）落地。",
+      "PR 侧回读 Docs Governance / PR Governance Prereq 等作业结论，作为档案面变更被 hosted 接受的证据。"
+    ]
+  },
+  "runtimeSensitive": false,
+  "runtimeGap": "改动全部落在 .harness/ 档案目录、docs/harness/tasks/ 的 frontmatter 与 .harness/ARCHIVE.md 索引，不触碰任何被构建或被运行的代码，也不改变任何门禁判定。因此本包的证据面是静态与治理读数（git rename 呈现、目录计数、检查器 PASS）加上主机的历史完成判据（tag/资产/提交号），不需要、也不新造运行时驱动。",
+  "evidenceRequired": [
+    "commands.json：完成判据读数、git mv 与 rename 呈现、目录计数、归档后检查器读数、check-evidence 边缘复现读数",
+    "summary.md：为什么这两条现在可以关闭、归档约定的一致性保持方式、live-tree-only 口径的影响面",
+    "review.md：逐条 posture 读数 + Machine Readable 块"
+  ],
+  "humanGates": [
+    "低风险文档/档案移动：一位非作者批准即可；不属 .github/workflows/* 等高风险范围。",
+    "不切 foundation release，不动 VERSION/CHANGELOG/docs/release-notes/**。",
+    "是否把档案回退接进 check-evidence / check-review 属治理脚本变更，归维护者决定。"
+  ],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed",
+    "两份 manifest status=completed、两份 .task.md status: Archived",
+    "git mv 呈 rename，目录计数与 ARCHIVE.md 统计一致（91/94、212/218）",
+    "归档后 check:task-packet 等治理门禁仍通过",
+    "未动产品代码、CI 作业、门禁阈值、发布资产与消费者仓库"
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-31-harness-archive-closeout-round2/manifest.json",
+    "taskDoc": "docs/harness/tasks/2026-10-31-harness-archive-closeout-round2.task.md",
+    "evidenceDir": ".harness/evidence/2026-10-31-harness-archive-closeout-round2/",
+    "summaryFile": ".harness/evidence/2026-10-31-harness-archive-closeout-round2/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-31-harness-archive-closeout-round2/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".harness/ARCHIVE.md",
+      "docs/harness/VERIFICATION_EVIDENCE_SPEC.md"
+    ]
+  }
+}

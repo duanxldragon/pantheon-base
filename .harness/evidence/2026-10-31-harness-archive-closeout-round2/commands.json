@@ -1,0 +1,125 @@
+{
+  "taskId": "2026-10-31-harness-archive-closeout-round2",
+  "repo": "pantheon-base",
+  "executedAt": "2026-10-31",
+  "agent": { "tool": "other", "adapter": "qoder-agent" },
+  "runtimeSensitive": false,
+  "workingDirectory": "pantheon-base/.tmp/ledger (git worktree branched from main e17eaaa1)",
+  "runtimeGap": "本包无产品运行面：改动全部落在 .harness/ 档案目录、docs/harness/tasks/ 的 frontmatter 与 .harness/ARCHIVE.md 索引，不触碰任何被构建或被运行的代码，也不改变任何门禁判定。因此证据面是静态与治理读数（git rename 呈现、归档目录计数、检查器输出）加上主机的历史完成判据实测（tag / release 资产 / VERSION / ops 落地提交号），不新造运行时驱动。",
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-31-harness-archive-closeout-round2/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-31-harness-archive-closeout-round2/",
+    "reviewFile": ".harness/evidence/2026-10-31-harness-archive-closeout-round2/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/VERIFICATION_EVIDENCE_SPEC.md",
+      ".harness/ARCHIVE.md"
+    ]
+  },
+  "commands": [
+    {
+      "command": "git mv .harness/tasks/2026-10-31-base-menu-filter-sql-literal-convergence .harness/archive/2026-10/tasks/ && git mv .harness/evidence/2026-10-31-base-menu-filter-sql-literal-convergence .harness/archive/2026-10/evidence/ && git mv .harness/tasks/2026-10-29-v0180-simplification-release .harness/archive/2026-10/tasks/ && git mv .harness/evidence/2026-10-29-v0180-simplification-release .harness/archive/2026-10/evidence/",
+      "cwd": "pantheon-base/.tmp/ledger",
+      "status": "passed",
+      "details": "四个目录整体移动，归档约定按 .harness/ARCHIVE.md 的 archive/<YYYY-MM>/{tasks,evidence}/<task-id>/。任务包正文 .task.md 不移动，留在 docs/harness/tasks/。"
+    },
+    {
+      "command": "git -c diff.renameLimit=2000 diff --cached -M --summary | grep rename",
+      "cwd": "pantheon-base/.tmp/ledger",
+      "status": "passed",
+      "details": "13 条全部呈 rename(100%)：v0180 evidence 7 个文件（commands.json、pr-body.md、review.md、summary.md、notes/consumer-impact.md、notes/release-notes.md、notes/upgrade-notes.md）、sql-literal evidence 4 个文件、两个 tasks/<id>/manifest.json。零内容重写、零删除+新增，与前几轮归档的可追溯性口径一致。git diff --cached --stat -M → 13 files changed, 0 insertions(+), 0 deletions(-)。"
+    },
+    {
+      "command": "for m in 2026-07 2026-08 2026-09 2026-10; do ls .harness/archive/$m/tasks | wc -l; ls .harness/archive/$m/evidence | wc -l; done",
+      "cwd": "pantheon-base/.tmp/ledger",
+      "status": "passed",
+      "details": "实测目录计数：2026-07 26/31、2026-08 23/23、2026-09 72/70、2026-10 91/94 → 合计 212/218。ARCHIVE.md 表格按此重写（不是在旧数上加减），与本轮 +2/+2 恰好吻合，吻合本身即核对结果。"
+    },
+    {
+      "command": "node -e \"读取两份已归档 manifest 的 status 字段\"",
+      "cwd": "pantheon-base/.tmp/ledger",
+      "status": "passed",
+      "details": "2026-10-29-v0180-simplification-release status=completed；2026-10-31-base-menu-filter-sql-literal-convergence status=completed。两份 .task.md frontmatter 均为 status: Archived。"
+    },
+    {
+      "command": "git tag -l \"pantheon-base-v0.18*\" && cat VERSION && gh release view pantheon-base-v0.18.0 --json tagName,assets && gh release view pantheon-base-v0.18.1 --json tagName,assets",
+      "cwd": "pantheon-base/.tmp/ledger",
+      "status": "passed",
+      "details": "关闭 v0180 发布包的完成判据（主机实测，不是叙述）：tag = pantheon-base-v0.18.0 与 pantheon-base-v0.18.1；VERSION = 0.18.1；两个 release 各带 4 个资产。该任务包最后一项「消费仓 runtime-acceptance」由 ops PR #164 关闭、#165 复核。"
+    },
+    {
+      "command": "gh pr view 165|164|161 --json number,title,mergedAt,mergeCommit && git rev-parse --short origin/main && git branch -r | wc -l",
+      "cwd": "pantheon-ops",
+      "status": "passed",
+      "details": "#161 fix(business): keep one inline SQL literal per file that declares the constant merged=2026-10-30T06:37:05Z sha=430a9f0c；#164 docs(inheritance): close the v0.18.1 runtime-acceptance ledger item with fresh-schema evidence merged=2026-10-30T17:01:47Z sha=4e69224f；#165 docs(inheritance): confirm the v0.18.1 runtime-acceptance landing on ops main merged=2026-10-30T17:42:45Z sha=9afabc2a。ops origin/main=9afabc2，远端分支计数 2（origin/HEAD + origin/main）。这两个读数分别是两个被归档任务的外仓终局。"
+    },
+    {
+      "command": "npm run check:task-packet-template && node scripts/harness/check-failure-registry.mjs --root . --strict && node scripts/harness/check-structure-contract.mjs --root . --strict && node scripts/harness/check-encoding.mjs --root . --strict && node scripts/harness/check-doc-inventory.mjs --root . --strict",
+      "cwd": "pantheon-base/.tmp/ledger",
+      "status": "passed",
+      "details": "task-packet-template → [OK] pantheon-base task-packet template is present and linked；failure-registry strict → 1 file(s), 0 error(s), 0 warning(s) [PASS]（本轮不新增 FR 条目）；structure contract strict → 0 finding(s) across 2960 tracked file(s)；encoding strict → 0 finding(s) across 2612 scanned file(s)；docs inventory strict → 0 finding(s)。"
+    },
+    {
+      "command": "npm run check:task-packet  （本包任务包首轮）",
+      "cwd": "pantheon-base/.tmp/ledger",
+      "status": "failed",
+      "details": "首轮对新写的 2026-10-31-harness-archive-closeout-round2.task.md 报 10 error + 1 warning：缺 Upstream Dependencies / Downstream Consumers / Sync Expectation（我把标签写成了 Workspace Context Sync Expectation）、缺 Harness Profile 的 Template / Overlay / 嵌套 Coverage Dimensions，Repository Role 与 Release Requirement 的枚举值被后续续行粘连成非枚举字符串，manifest 的 verificationPlan.runtimeEvidence 是字符串而检查器要求字符串数组。两份已归档任务的 .task.md 在移动后仍 [PASS]。"
+    },
+    {
+      "command": "npm run check:task-packet  （按检查器契约重写两个段落 + runtimeEvidence 改数组后）",
+      "cwd": "pantheon-base/.tmp/ledger",
+      "status": "passed",
+      "details": "修法是服从检查器已有契约，不放宽检查器、不删内容：Workspace Context 补齐六个必需标签、枚举行改为单行纯 token，跨仓事实改为带 ASCII 冒号的非枚举标签 Cross Repository Facts 承载续行说明（第一次改成全角冒号仍被粘连，第二次才通过——parseLinkageItems 只认 ASCII 冒号后的标签）；Harness Profile 补 Template: admin-platform / Overlay: pantheon-base，Coverage Dimensions 改嵌套列表；manifest runtimeEvidence 拆成 3 条字符串。终局读数：Task packet check: 82 file(s), 0 error(s), 13 warning(s)，两份已归档任务包正文与新包正文全部 [PASS]；主仓同一检查也是 82/0/13（主仓多出 release-gate 包、本 worktree 多出本收口包，数量恰好相抵），13 条 warning 全部落在既有历史包上，本包新增 0 条。"
+    },
+    {
+      "command": "node scripts/harness/check-evidence.mjs --root . --strict && node scripts/harness/check-review.mjs --root . --strict  （归档动作后、本包 evidence 落盘前）",
+      "cwd": "pantheon-base/.tmp/ledger",
+      "status": "failed",
+      "details": "边缘复现读数：Evidence check (strict): 1 file(s), 1 error(s) → [FAIL] .harness/evidence / error: No evidence command files found.；Review check (strict): 1 file(s), 1 error(s) → [FAIL] .harness/evidence / error: No review artifacts found.。原因不是档案损坏：两个 strict 检查器只扫 live 树 .harness/evidence/，不接 archive/<YYYY-MM>/evidence/ 回退；本轮把最后两个带 commands.json 的证据目录归档后，live 树只剩历史遗留的 2026-09-10-tenant-verification-and-gray/ 与两份散落 PR 正文。"
+    },
+    {
+      "command": "node scripts/harness/check-evidence.mjs --root . --strict && node scripts/harness/check-review.mjs --root . --strict  （本包 evidence 落盘后）",
+      "cwd": "pantheon-base/.tmp/ledger",
+      "status": "passed",
+      "details": "实测终局读数：Evidence check (strict): 1 file(s), 0 error(s), 0 warning(s) → [PASS] .harness/evidence/2026-10-31-harness-archive-closeout-round2/commands.json；Review check (strict): 1 file(s), 0 error(s) → [PASS] .harness/evidence/2026-10-31-harness-archive-closeout-round2/review.md。处置方式是在本包自己的 live evidence 目录写出 commands.json / summary.md / review.md，使归档动作不剥夺两个 strict 检查器的覆盖对象；不改治理脚本、不加豁免。中间态（本包 evidence 落盘前）的两条 failed 读数保留在上一条记录里，没有被改写。是否把 archive/ 回退接进这两个传感器属治理脚本变更，归维护者决定，本包只在任务包 Implementation Notes 第 5 条与 PR residual 如实登记该口径。"
+    },
+    {
+      "command": "npm run check:docs-frontmatter  （worktree） 与 node scripts/frontmatter-check.mjs  （主仓）",
+      "cwd": "pantheon-base/.tmp/ledger 与 pantheon-base",
+      "status": "passed",
+      "details": "对照读数证明一处环境差异而非回归：worktree 内 Frontmatter check failed. Checked 404 docs, 284 with frontmatter.，8 条全部是 docs/README.md: link target does not exist: ../../pantheon-harness/patterns/*.md；主仓同一批 404 docs 报 Frontmatter check passed.。根因是 worktree 落在 pantheon-base/.tmp/ledger，检查器把 ../../pantheon-harness 相对仓库根解析成 pantheon-base/.tmp/pantheon-harness（不存在），而 ../pantheon-harness/patterns/ 在主仓相对层级真实存在。嵌套根导致的同类噪声同样出现在 check:harness-method（worktree 报 patterns/METHOD_VERSION.json required file is missing，主仓只剩既有的 openspec warning）。结论：以 hosted Docs Governance 作业为权威，本地不为消除该噪声改动 docs/README.md 的链接写法。"
+    },
+    {
+      "command": "node scripts/harness/check-task-packet.mjs --root .  （归档后对已归档任务包正文的解析）",
+      "cwd": "pantheon-base/.tmp/ledger",
+      "status": "passed",
+      "details": "两份 .task.md 在 manifest/evidence 已移入 archive/2026-10/ 后仍被检查器按规范路径解析并给出 [PASS]（docs/harness/tasks/2026-10-31-base-menu-filter-sql-literal-convergence.task.md、docs/harness/tasks/2026-10-29-v0180-simplification-release.task.md）。这是 ARCHIVE.md「归档后继续用规范路径引用、靠 readTaskManifest / resolveArchiveAwarePath 回退」这条规则的机器证据，因此本包不重写任何 linkage 字段。"
+    },
+    {
+      "command": "npm run check:duplication",
+      "cwd": "pantheon-base/.tmp/ledger",
+      "status": "passed",
+      "details": "Result: PASS（既有报告块仍指向 .github/workflows/{quality,smoke-core,smoke-full}.yml 的已知重复段，属既有 report-only 记录，本包未新增重复段）。归档面是 JSON/Markdown 目录移动，不引入新的重复文本。hosted Duplication Gate 为权威读数。"
+    },
+    {
+      "command": "node scripts/harness/check-adoption.mjs --root . --strict && node scripts/harness/check-doc-links.mjs --root . --strict",
+      "cwd": "pantheon-base/.tmp/ledger",
+      "status": "failed",
+      "details": "两条都在 worktree 内报同一类嵌套根 finding：adoption → finding: ../pantheon-harness/patterns/{harness-template-taxonomy,tool-adapter-matrix}.md / required upstream Harness method file is missing；doc-links → finding: docs/README.md / missing internal link target: ../../pantheon-harness/patterns/{method-playbook,execution-guardrails,context-engineering-protocol}.md。与 check:docs-frontmatter、check:harness-method 同因（worktree 落在 .tmp/ledger，sibling 仓解析到 pantheon-base/.tmp/pantheon-harness），且都不指向本包改动的文件；本包如实记为 failed 的环境噪声读数，主仓与 hosted Docs Governance 是权威。"
+    },
+    {
+      "command": "node scripts/create-pr.mjs --title \"chore(harness): archive the two closed 2026-10 task packets and refresh the archive index\" --body-file .harness/evidence/2026-10-31-harness-archive-closeout-round2/pr-body.md",
+      "cwd": "pantheon-base/.tmp/ledger",
+      "status": "not-run",
+      "details": "收口 PR 经治理包装器提交（包装器先对正文跑 check-pr-governance 再调用 GitHub，且不创建分支/不 stage/不 commit/不 push）。执行结果与 PR 编号、hosted 作业回读在本包提交后补记，不预先写成已完成。"
+    }
+  ],
+  "knownGaps": [
+    "收口 PR 的 hosted 回读（Docs Governance / PR Governance Prereq / harness 各 strict 作业）在本包提交后单独记录，本地 worktree 读数不能替代。",
+    "check-evidence.mjs / check-review.mjs 的 --strict 只扫 live 树这一口径未接档案回退；本包用「自带 live evidence 目录」规避，接进回退属治理脚本变更，归维护者。",
+    "worktree 内 check:docs-frontmatter 与 check:harness-method 的报错是嵌套根导致的 sibling 解析噪声，未在主仓复现；不在本包改动链接写法或检查器。",
+    ".harness/evidence/2026-09-10-tenant-verification-and-gray/ 的重复产物与两份无归属的散落 PR 正文（2026-09-25-pr347-governance-body.md、2026-09-27-v0130-pr-body.md）保持原地，属显式延期项，不在本包清理。",
+    "docs/harness/tasks/ 下 67 个无 manifest 的历史 Active 任务包正文未批量翻档，仍按 ARCHIVE.md 既有记录处理。",
+    "仍在途的 PR #478（2026-10-31-release-gate-checks-poll-resilience）的 manifest 随该 PR 进入 main 后再按同一入口收口，本包不代为归档。"
+  ]
+}

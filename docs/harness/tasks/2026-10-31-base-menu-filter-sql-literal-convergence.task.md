@@ -3,7 +3,7 @@ title: 菜单过滤 IN 子句常量化回流底座，消除 ops shared-drift（B
 doc_type: Remediation
 layer: platform
 depends_on_layers: []
-status: Active
+status: Archived
 linked_contracts:
   - docs/contracts/PLATFORM_CONTRACT.md
   - docs/harness/VERIFICATION_EVIDENCE_SPEC.md

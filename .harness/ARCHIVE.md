@@ -18,8 +18,8 @@
 | 2026-07 | 26 | 31 | V1.0 冻结与发布、Sonar 清零轮、安全审计 |
 | 2026-08 | 23 | 23 | Foundation Release 体系建立、v0.10.x 系列发布 |
 | 2026-09 | 72 | 70 | 命名与边界整改、企业级整改、治理收口、租户核心 |
-| 2026-10 | 89 | 92 | 租户交付、v0.14.0–v0.18.1 发布、代码简化 S1–S4、传感器与工作流缺陷收口 |
-| **合计** | **210** | **216** | - |
+| 2026-10 | 91 | 94 | 租户交付、v0.14.0–v0.18.1 发布、代码简化 S1–S4、传感器与工作流缺陷收口、SQL 字面量收敛与消费仓 runtime-acceptance 闭环 |
+| **合计** | **212** | **218** | - |
 
 统计口径：`archive/<YYYY-MM>/tasks/` 与 `archive/<YYYY-MM>/evidence/` 下的目录数。
 月份取任务 ID 的 `YYYY-MM` 前缀，因此个别跨月任务按其开工月份归档。
@@ -108,8 +108,9 @@
 
 `.harness/tasks/` 下只保留状态不是 `completed` 的 manifest：
 
-- `2026-10-29-v0180-simplification-release`（`in-progress`，v0.18.0/v0.18.1 已发布、
-  ops 已锁定 v0.18.1，剩余项是消费仓的 `runtime-acceptance`）
+本轮之后 `.harness/tasks/` 只剩本收口包自己（`2026-10-31-harness-archive-closeout-round2`），
+它在收口 PR 合并后按同一入口归档。仍在途的还有评审中的 PR #478
+（`2026-10-31-release-gate-checks-poll-resilience`），其 manifest 随该 PR 进入 `main` 后再收口。
 
 归档后 `.harness/tasks/` 为空也属正常状态；`readTaskManifest` 会回退到
 `archive/<YYYY-MM>/tasks/<task-id>/`，所以任务包、`Linkage` 与文档链接继续使用规范路径
@@ -329,3 +330,30 @@ cp -r .harness/archive/2026-07/evidence/2026-07-21-v1-release-readiness .harness
   `docs/harness/tasks/`，只在 frontmatter 标 `status: Archived`。
 - 残差（已登记 FR-024，本轮不扩面）：`check-evidence.mjs --strict` 的默认 glob 只扫 live 树，
   归档后的 evidence 不再被它覆盖；消费方审计读数见 FR-024 的 Review Notes。
+
+## 2026-10-31 收口更新（第二轮）
+
+同一天内的第八、第九个归档对象（均为 `completed`，`git mv` 到 `archive/2026-10/{tasks,evidence}/`，
+任务包正文仍留在 `docs/harness/tasks/` 并把 frontmatter 改为 `status: Archived`）：
+
+| task-id | 收口依据 |
+|---------|----------|
+| `2026-10-31-base-menu-filter-sql-literal-convergence` | PR #477 squash 到 main `e17eaaa1`；底座该文件自锁定点起零变化，消费者 `check:shared-drift` 由 `FAIL 1 modified` 变 `OK 812 identical / 10 allowlisted / 0 modified`，ops 侧 `430a9f0c` 的同形修复已随之收敛 |
+| `2026-10-29-v0180-simplification-release` | `pantheon-base-v0.18.0` 与 `pantheon-base-v0.18.1` 两个 tag 均已发布、各带 4 个 release 资产；`VERSION` = 0.18.1；最后一项「消费仓 runtime-acceptance」由 ops PR #164（`4e69224f`）关闭并由 #165（`9afabc2a`）在 ops main 复核，因此该 manifest 的 completionChecklist 全部为已完成事实 |
+
+- 两条都是**由读数关闭**而非由叙述关闭：前者的判据是 drift 比对器在两侧仓库的同一份文件上给出
+  0 modified，后者的判据是 tag/资产计数与消费者 main 的落地提交。
+- 归档后继续用规范路径引用（`readTaskManifest` / `resolveArchiveAwarePath` 回退），因此
+  `check:task-packet` 在移动后对两份已归档任务包正文仍给 `[PASS]`；manifest 的 `status`
+  改为 `completed`，`linkage` 里的 `taskManifest` / `evidenceDir` 一字不改。
+- 口径差异要点出来：`check-evidence.mjs --strict` 与 `check-review.mjs --strict` 只扫 live 树，
+  本轮把最后两个带 `commands.json` 的证据目录归档后，它们当场报
+  `No evidence command files found.` / `No review artifacts found.`（两条 `failed` 读数已记入
+  本包 commands.json）。二者都不在 `check:*` 面与 CI 作业里，故不影响发布；本轮的处置是让
+  收口包自带 live evidence 目录，使覆盖对象不归零，而不是改传感器或加豁免。是否给这两个
+  传感器接 `archive/` 回退属治理脚本变更，归维护者判断。
+- 在途的 PR #478（`2026-10-31-release-gate-checks-poll-resilience`）未被本轮代为归档：
+  它尚未合并，提前判 `completed` 会让档案与事实脱钩；合并进 `main` 后按同一入口收口。
+- 统计口径不变；`2026-10` 由 89/92 增至 91/94，合计由 210/216 增至 212/218。
+- 仍未动的两项遗留（沿用上一轮的显式延期，不扩面）：`.harness/evidence/2026-09-10-tenant-verification-and-gray/`
+  的重复产物归属，以及两份无任务归属的散落 PR 正文。
