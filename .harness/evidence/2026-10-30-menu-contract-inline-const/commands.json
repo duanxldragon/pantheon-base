@@ -127,6 +127,48 @@
       "cwd": ".",
       "status": "passed",
       "details": "git diff --numstat: frontend/scripts/check-menu-contract.mjs +94/-22, package.json +1/-0 (the test:menu-contract alias), docs/harness/failure-registry.md +2/-1 (the FR-022 row and the Last reviewed date); tests/scripts/check-menu-contract.test.mjs is a new 130-line file. No backend, frontend/src, workflow, VERSION, CHANGELOG or release-notes file is in the diff."
+    },
+    {
+      "command": "git push -u origin fix/menu-contract-inline-const",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Branch created from main @ 1eabf455 with commit e253757d (10 files, +1029/-23) pushed to origin."
+    },
+    {
+      "command": "node scripts/create-pr.mjs --title \"fix(menu-contract): parse inline Go consts and fail loudly on unresolvable seed refs\" --body-file .harness/evidence/2026-10-30-menu-contract-inline-const/pr-body.md",
+      "cwd": ".",
+      "status": "passed",
+      "details": "check-pr-governance validated the exact body before GitHub was called; PR #471 opened against main. The wrapper warned about the 6 uncommitted i18n files, which stayed unstaged and out of the PR."
+    },
+    {
+      "command": "gh pr view 471 --json autoMergeRequest / GraphQL disablePullRequestAutoMerge",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Pull Request Automation run 41031011659 enabled squash auto-merge at 09:07:01Z; it was disabled through GraphQL (autoMergeRequest -> null) so the merge stays an explicit, post-readback decision rather than an automatic one."
+    },
+    {
+      "command": "gh pr checks 471 (read back after the last commit)",
+      "cwd": ".",
+      "status": "passed",
+      "details": "37 checks: 36 success, 2 skipped (Draft PR Handler, PR Smoke Core (Optional) - no smoke-required label). In scope for this change: Unit Tests, Fast Checks, Frontend Unit Tests, Frontend Contract, Quality Gates, Docs Governance, Duplication Gate, Coverage Gate, CodeQL Security, Security Gates, SonarCloud Code Analysis, Gitar, CI Summary - all success. No failure, no neutral, no exemption, no threshold change."
+    },
+    {
+      "command": "gh pr merge 471 --squash --delete-branch",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Merged as squash commit 03e13d4825525a468a4f93de3b7df3e7d654d482 at 2026-10-30T09:25:01Z; remote and local branch deleted (git fetch --prune shows the remote ref gone). The first invocation printed a transient GitHub connect error only for the post-merge local branch cleanup - the merge itself is confirmed by mergedAt/mergeCommit."
+    },
+    {
+      "command": "gh run list --branch main (push-triggered runs for 03e13d48)",
+      "cwd": ".",
+      "status": "passed",
+      "details": "CI success (5m32s), Security Gates success (2m28s), Lint Workflows success (9s), Core Smoke Tests success (3m42s), Code Quality Gates success (16m19s), Full Smoke Suite success (18m45s). Release Gate failed and is recorded as a separate finding below."
+    },
+    {
+      "command": "gh run view 41033269295 --log-failed (Release Gate on 03e13d48)",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Candidate Checks / CodeQL Alerts / Dependabot Alerts / Open PRs success; SonarCloud Gate failure with \"Unprocessed SonarCloud issues: 6\". The 6 are githubactions:S1192 (quality.yml x2, ci.yml x1) and githubactions:S7677 (release-gate.yml x2, security.yml x1) in workflow YAML, none in this package's diff: the previous main analysis (2026-10-29T04:50Z, run 40818421372) reported 0 on the identical query, so today's main analysis re-detected them. Tracked as a follow-up package, not silenced here."
     }
   ],
   "knownGaps": [
@@ -134,6 +176,7 @@
     "ops' existing workaround (seed constants declared inside a `const ( … )` block, e.g. serviceModuleKey) is not rolled back here. Both declaration shapes are now collected, so the workaround stays legal and simply stops being necessary; whether to normalize it is the consumer repository's own review.",
     "The sensor is still a regex-over-source parser, not a Go AST consumer: a constant declared with an initializer that is not a plain quoted string (iota, fmt.Sprintf, a cross-package qualified constant) remains unresolvable. The difference after this change is that such a reference now produces a named finding instead of an empty value, which is the fail-loud half of the fix.",
     "The six uncommitted i18n files in the working tree are not staged, verified or endorsed by this package; check:harness-adoption's two remaining findings belong to them.",
-    "Local check:shared-drift and the ops-side matrices were not run: no consumer file is touched from base, and per the Base-first rule the repair reaches ops only through a release."
+    "Local check:shared-drift and the ops-side matrices were not run: no consumer file is touched from base, and per the Base-first rule the repair reaches ops only through a release.",
+    "Release Gate on the merge commit 03e13d48 is red for 6 pre-existing githubactions findings in .github/workflows (S1192 duplicated \"success\" literal, S7677 error text on stdout). They are outside this package's diff and were re-detected by the 2026-10-30 main analysis; the repair is a separate Base package that fixes the workflows, not the gate."
   ]
 }

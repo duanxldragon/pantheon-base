@@ -35,6 +35,24 @@ and whether anything was silenced to get green.
 - **P3, `pantheon-ops`' `const ( … )` workaround is not normalized here.** It stays legal (both
   shapes are collected) and rolling it back is the consumer repository's own review.
 
+## Post-merge record
+
+- PR #471 opened from `fix/menu-contract-inline-const` (commit `e253757d`) through
+  `node scripts/create-pr.mjs`, so `check-pr-governance` validated the exact body before GitHub saw it.
+- `Pull Request Automation` enabled squash auto-merge seconds after the PR opened; it was disabled through
+  GraphQL so the merge stays an explicit decision taken after the check read-back, not an automatic one.
+- Check read-back on the final commit: 37 checks — 36 success, 2 skipped (`Draft PR Handler`,
+  `PR Smoke Core (Optional)` without the `smoke-required` label). `Unit Tests`, `Fast Checks`,
+  `Quality Gates`, `Docs Governance`, `CodeQL Security`, `SonarCloud Code Analysis`, `Coverage Gate`
+  and `Duplication Gate` are all green; nothing was exempted, relabelled or re-thresholded.
+- Merged as squash commit `03e13d4825525a468a4f93de3b7df3e7d654d482` (2026-10-30T09:25:01Z); the branch is
+  gone both remotely and locally. Push-triggered runs on `main`: CI, Security Gates, Lint Workflows,
+  Core Smoke Tests, Code Quality Gates and Full Smoke Suite all success.
+- `Release Gate` on `03e13d48` is red for 6 unresolved SonarCloud `githubactions:` findings that live in
+  `.github/workflows/{ci,quality,release-gate,security}.yml` — outside this package's diff, and reported as 0
+  by the identical query on the previous main analysis (2026-10-29T04:50Z). It is repaired in its own Base
+  package; this package did not silence, mark-false-positive or baseline-move it.
+
 ## Machine Readable
 
 ```json
