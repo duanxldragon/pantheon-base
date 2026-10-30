@@ -1,6 +1,6 @@
 # 任务归档索引
 
-**最后更新**: 2026-10-30
+**最后更新**: 2026-10-31
 
 ## 归档说明
 
@@ -18,8 +18,8 @@
 | 2026-07 | 26 | 31 | V1.0 冻结与发布、Sonar 清零轮、安全审计 |
 | 2026-08 | 23 | 23 | Foundation Release 体系建立、v0.10.x 系列发布 |
 | 2026-09 | 72 | 70 | 命名与边界整改、企业级整改、治理收口、租户核心 |
-| 2026-10 | 88 | 91 | 租户交付、v0.14.0–v0.18.1 发布、代码简化 S1–S4、传感器与工作流缺陷收口 |
-| **合计** | **209** | **215** | - |
+| 2026-10 | 89 | 92 | 租户交付、v0.14.0–v0.18.1 发布、代码简化 S1–S4、传感器与工作流缺陷收口 |
+| **合计** | **210** | **216** | - |
 
 统计口径：`archive/<YYYY-MM>/tasks/` 与 `archive/<YYYY-MM>/evidence/` 下的目录数。
 月份取任务 ID 的 `YYYY-MM` 前缀，因此个别跨月任务按其开工月份归档。
@@ -311,3 +311,21 @@ cp -r .harness/archive/2026-07/evidence/2026-07-21-v1-release-readiness .harness
   `.harness/evidence/2026-09-10-tenant-verification-and-gray/` 是归档后被 #427 重写进
   旧路径的重复产物；两份散落 PR 正文没有任务归属。三者与上一轮同样原地保留，
   等维护者决定。
+
+## 2026-10-31 收口更新
+
+上一轮（`2026-10-30-workflow-sonar-githubactions`）之后的第七个归档对象：
+
+| task-id | 收口依据 |
+|---------|----------|
+| `2026-10-31-archive-closure-pr-governance` | PR #474 squash 到 `05ee0ec1`；main 七个作业全 success，`SonarCloud Gate` 读数 `Unprocessed SonarCloud issues: 0`，独立 API 复核 total 0 且 gate OK |
+
+- 这一轮是**自我指涉**的：被归档的任务修的正是「PR 治理传感器不认识月度归档路径」这条缺陷，
+  而它的归档提交（`chore/harness-closeout-archive-closure`）继续用 canonical
+  `.harness/tasks/<id>` 与 `.harness/evidence/<id>` 路径引用已移动的产物。
+  `PR Governance Prereq` 检查通过即证明 `resolveArchiveAwarePath` 回退分支在生产门禁路径上生效，
+  而不只是被 `tests/scripts/check-pr-governance.test.mjs` 的两个新用例覆盖。
+- 统计口径不变：`archive/<YYYY-MM>/{tasks,evidence}/` 的目录数。任务包正文仍留在
+  `docs/harness/tasks/`，只在 frontmatter 标 `status: Archived`。
+- 残差（已登记 FR-024，本轮不扩面）：`check-evidence.mjs --strict` 的默认 glob 只扫 live 树，
+  归档后的 evidence 不再被它覆盖；消费方审计读数见 FR-024 的 Review Notes。

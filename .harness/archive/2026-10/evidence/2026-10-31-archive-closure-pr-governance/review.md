@@ -53,6 +53,18 @@ the two new tests; every reading below is quoted from `commands.json`, not from 
   the monthly sweep stays a manual round. Whether to add a liveness check is a governance-surface
   decision for the maintainer.
 
+## Post-merge record
+
+- 合并后复看了 `05ee0ec1` 相对 `c1f0b1dd` 的 diff 边界：改动仍然是「传感器 + 守护测试 +
+  归档树移动 + 治理文档」四类，没有触碰门禁语义、阈值、workflow 判定或 Sonar 查询。
+- 三个 P2/P3 finding 的处置结论不变：P2（残差消费者未修）已在 FR-024 的 Review Notes 里以实测
+  读数登记；两个 P3（归档月份目录依赖人工纪律、67 个历史包未批量翻转 status）留作维护者判断。
+- 新增判定：本包的归档提交本身构成对 #474 修复的运行时验证——PR body 引用 canonical 路径、
+  manifest 位于月度归档目录，`PR Governance Prereq` 通过即证明回退分支在生产门禁路径上生效，
+  而不仅仅是 `tests/scripts/check-pr-governance.test.mjs` 的两个新用例。
+- 残留风险：本地会话输出中曾出现过一次 ops 开发库的 DSN 串（shell source `.env` 失败时的回显），
+  未进入任何提交或仓库文件；建议轮换该本地开发 MySQL 口令。该项属会话卫生，不影响本包结论。
+
 ## Machine Readable
 
 ```json

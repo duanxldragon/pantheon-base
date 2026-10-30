@@ -133,6 +133,48 @@
       "cwd": ".",
       "status": "passed",
       "details": "Adoption check (strict): 0 finding(s), 0 warning(s)。对照读数：本包创建前同一命令报 2 条 finding，都指向 backend/modules/system/i18n/builtin_locale_resources.json（implementation change detected without a matching task manifest change / without matching verification evidence）。变化不是 i18n 被动过——六个 i18n 文件仍未 stage、内容与对照时一致——而是该检查器在 worktree 层面把「有实现改动」与「有任务 manifest 改动」配对，本包新增的 manifest 满足了配对条件。因此 i18n 的排除靠 stage 纪律与 scope 声明保证，而非门禁拦截；这一点作为传感器特性记录，不在本包改造它。"
+    },
+    {
+      "command": "gh pr checks 474 --json name,state,bucket",
+      "cwd": ".",
+      "status": "passed",
+      "details": "PR #474 的 30 项检查读数：pass 20 项（含 CodeQL、CodeQL Security、Docs Governance、Duplication Gate、PR Governance Prereq、Workflow Security、Boundary Gate、Secret Scan、Dependency Vulnerabilities、Quality Gates、Unit Tests、Frontend Unit Tests、Gitar、Automate Solo PR），skipping 10 项（backend/frontend 源码未变，Go Lint、Backend Tests、Frontend Contract、PR Smoke Core/Modules、Smoke Sanity 由改动范围门控跳过）。0 项失败。CodeQL 覆盖 .mjs：本包改动 scripts/check-pr-governance.mjs 与 tests/scripts/*.mjs 均在抽取范围内且无新增 alert。"
+    },
+    {
+      "command": "gh pr view 474 --json state,mergedAt,mergeCommit,autoMergeRequest",
+      "cwd": ".",
+      "status": "passed",
+      "details": "合并前读数：state OPEN，autoMergeRequest.enabledAt 2026-10-30T16:14:30Z、mergeMethod SQUASH、enabledBy duanxldragon。合并后读数：state MERGED，mergedAt 2026-10-30T16:19:37Z，main 提交 05ee0ec1b30abbbcf86d0d228ec1be1951ed87a0。与 #473 相同：Auto Mode 下不尝试关闭 auto-merge，由既有 PR Automation 落地。"
+    },
+    {
+      "command": "gh run list --branch main --limit 12 --json databaseId,name,status,conclusion,createdAt",
+      "cwd": ".",
+      "status": "passed",
+      "details": "05ee0ec1 触发的 main 全套工作流：CI 41088861679、Code Quality Gates 41088861609、Core Smoke Tests 41088861570、Full Smoke Suite 41088861897、Lint Workflows 41088861596、Release Gate 41088861582、Security Gates 41088861591 全部 completed/success。createdAt 2026-10-30T16:19:40Z。"
+    },
+    {
+      "command": "gh run view 41088861582 --json jobs",
+      "cwd": ".",
+      "status": "passed",
+      "details": "合并后 Release Gate 的 6 个作业结论全部 success：Candidate Checks 124177095818、Open PRs 124177096110、CodeQL Alerts 124177096111、Dependabot Alerts 124177096273、SonarCloud Gate 124186127947、Release Gate Summary 124186208084。"
+    },
+    {
+      "command": "gh run view --job=124186127947 --log",
+      "cwd": ".",
+      "status": "passed",
+      "details": "SonarCloud Gate 步骤读数（2026-10-30T16:36:48Z）：\"Unprocessed SonarCloud issues: 0\"、\"✓ No unresolved SonarCloud issues\"。这是本包所修传感器对应的门禁面在 05ee0ec1 上的终局读数，同时证明 #473 的修复在后续 push 分析上仍然成立（未回弹）。"
+    },
+    {
+      "command": "curl -s -u \"$SONAR_TOKEN:\" https://sonarcloud.io/api/issues/search?componentKeys=duanxldragon_pantheon-base&branch=main&resolved=false&types=BUG,VULNERABILITY,CODE_SMELL",
+      "cwd": ".",
+      "status": "passed",
+      "details": "独立 API 复核（不依赖工作流日志）：total 0、effortTotal 0、debtTotal 0、issues 空数组；api/qualitygates/project_status?projectKey=duanxldragon_pantheon-base 返回 projectStatus.status=OK。token 仅作 shell 变量用于只读 GET，未写入仓库。"
+    },
+    {
+      "command": "git checkout -b chore/harness-closeout-archive-closure origin/main",
+      "cwd": ".",
+      "status": "passed",
+      "details": "收口分支基线 05ee0ec1（含 #474 本体）。本包的 evidence 追加、manifest 转 completed、任务包转 Archived 并归档到 .harness/archive/2026-10/，正是由 #474 修复的 check-pr-governance 归档回退路径所支持的形态：归档后 PR body 仍引用 canonical .harness/tasks|evidence 路径，传感器经 resolveArchiveAwarePath 解析。"
     }
   ],
   "knownGaps": [
@@ -141,6 +183,7 @@
     "67 个历史任务包正文仍标 status: Active，本轮不改写：除两个有终局读数的 2026-10-30 包之外，没有逐条完成证据，批量翻状态是在制造读数。",
     "ops 的 runtime-acceptance（需要本机 MySQL 与不在账密面的凭证）与本包无关，属消费仓 ledger；本包不动 pantheon-ops。",
     "v0.18.1 之后的 base 修复（菜单合同传感器、工作流缺陷）要进入 ops 仍需一次 foundation release；tag 与 release 不可回收，时点归维护者，本包不切版。",
-    "工作树中既有的 6 个未提交 i18n 文件（backend/modules/system/i18n/builtin_locale_resources.json 与 frontend/src/i18n/resources/*.ts，+1050/-50）由本包显式排除在 stage 之外。附带实测：check:harness-adoption --strict 的 pairing 是 worktree 级的——本包新增 manifest 后它从 2 findings 变 0 findings，说明该门禁不能保证「实现改动与其任务包一一对应」，排除仍靠 scope 声明与 stage 纪律；把 pairing 收紧到 diff 归属是另一个传感器议题，本包只记录不改。"
+    "工作树中既有的 6 个未提交 i18n 文件（backend/modules/system/i18n/builtin_locale_resources.json 与 frontend/src/i18n/resources/*.ts，+1050/-50）由本包显式排除在 stage 之外。附带实测：check:harness-adoption --strict 的 pairing 是 worktree 级的——本包新增 manifest 后它从 2 findings 变 0 findings，说明该门禁不能保证「实现改动与其任务包一一对应」，排除仍靠 scope 声明与 stage 纪律；把 pairing 收紧到 diff 归属是另一个传感器议题，本包只记录不改。",
+    "归档后 check-evidence.mjs --strict 不再扫描该任务的 evidence（默认 glob 只覆盖 live 树）：这是 FR-024 已登记的残差，本包按范围不扩到该传感器。"
   ]
 }

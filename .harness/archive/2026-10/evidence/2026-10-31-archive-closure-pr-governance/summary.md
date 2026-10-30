@@ -77,3 +77,21 @@ staging discipline, not by that gate; tightening the pairing is a separate senso
   tag and stays a maintainer decision.
 - `pantheon-ops`'s `runtime-acceptance` item is a consumer-repo ledger entry and is not decided by
   this package.
+
+## Post-merge
+
+- PR #474 检查读数：20 pass / 10 skipping（改动范围门控跳过 backend、frontend、smoke、Go Lint 等面），
+  0 failure。CodeQL 与 CodeQL Security 均 success，本包改动的 `.mjs` 文件在抽取范围内且无新增 alert。
+- Auto-merge 由既有 PR Automation 落地（`enabledAt 2026-10-30T16:14:30Z`，SQUASH）：
+  `mergedAt 2026-10-30T16:19:37Z`，`main` 提交 `05ee0ec1b30abbbcf86d0d228ec1be1951ed87a0`。
+- 合并后 `main` 工作流（`createdAt 2026-10-30T16:19:40Z`）：CI、Code Quality Gates、Core Smoke Tests、
+  Full Smoke Suite、Lint Workflows、Security Gates、Release Gate 全部 completed/success。
+- `Release Gate` run `41088861582` 的 6 个作业结论全部 success；`SonarCloud Gate` 作业
+  （`124186127947`）日志读数 `Unprocessed SonarCloud issues: 0` 与
+  `✓ No unresolved SonarCloud issues`。
+- 独立 API 复核（不依赖日志）：`branch=main` 未处理问题 total 0、`qualitygates/project_status`
+  = OK。这与 #473 的终局读数一致，说明修复在后续 push 分析上没有回弹。
+- 本包的终局形态自检：归档提交（`chore/harness-closeout-archive-closure`）把
+  `2026-10-31-archive-closure-pr-governance` 的 manifest 与 evidence 迁入
+  `.harness/archive/2026-10/`，而 PR body 继续引用 canonical `.harness/tasks|evidence` 路径——
+  即 #474 新增的归档回退分支在真实 PR 上被 `PR Governance Prereq` 判定通过，而不只是被单测覆盖。
