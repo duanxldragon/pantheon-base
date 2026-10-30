@@ -69,8 +69,6 @@ read-only API calls.
 
 ## Gaps
 
-- The end-state reading (main's `Release Gate` 6 → 0) requires the post-merge
-  push analysis; this package is not closed until that number is read back.
 - Why Sonar re-detected them is not exposed by the API. Nothing was changed
   Sonar-side to force the number either way.
 - Sub-threshold `success` literals remain (`release-gate.yml:281-284` = 4,
@@ -83,3 +81,24 @@ read-only API calls.
 - `pantheon-ops`' own workflow copies are untouched — workflows are per-repository
   CI assets, not a foundation contract surface, so no release or consumer sync is
   implied.
+
+## Post-merge (read-back that closes the package)
+
+- PR #473 squash-merged into `main` as `c1f0b1dd26f3d2051db7e43e428d928786fab45a`
+  at 2026-10-30T15:03:21Z, with auto-merge left enabled rather than disabled.
+- The post-merge push analysis took the reading this package needs: on
+  `c1f0b1dd`, `Release Gate` run `41077154410` completed `success` and its
+  `SonarCloud Gate` job logged `SonarCloud quality gate for c1f0b1dd…: OK` plus
+  `Unprocessed SonarCloud issues: 0`.
+- Independent re-read outside the workflow: `api/issues/search` on `branch=main`
+  returns total 0, and `api/measures/component` reports bugs 0, vulnerabilities 0,
+  code smells 0, security hotspots 0 over 163,314 ncloc. The number went 6 → 0
+  because the six findings were repaired at file level, not because a filter was
+  narrowed.
+- CI, Code Quality Gates, Security Gates, Lint Workflows, Core Smoke Tests and
+  Full Smoke Suite are all `success` on the same commit, so the base repository
+  now has no red pipeline on `main`.
+- Remaining gap is unchanged by the merge: no local YAML-style sensor exists, so
+  the next literal or error-message regression will again surface at the release
+  checkpoint. FR-023 keeps `no-repeat-observed` until a second occurrence justifies
+  a checker.

@@ -4,7 +4,7 @@
   "title": "修掉 main 上 6 条 githubactions Sonar 缺陷（Release Gate 红灯根因）",
   "goal": "main 在合并提交 03e13d48 上 Release Gate 红灯：SonarCloud Gate 报 Unprocessed SonarCloud issues: 6，全部是 .github/workflows 内的 githubactions 规则缺陷（S1192 同一 step 内重复 5-8 次的 \"success\" 字面量，S7677 把含 error/critical 字样的输出写到 stdout）。同一条查询在上一次 main 分析（2026-10-29T04:50Z，run 40818421372）报 0，且 6 条 issue 的 creationDate 落在 2026-07-02 至 2026-10-11、changelog 为空——这是既有债务被重新检出，不是新账。本包在工作流本体修复：把重复字面量提升为 step env 常量 GATE_OK，把真正的错误出口写到 stderr，把纯计数/通过行的措辞从严重级词汇改为 blocking；两条依赖字面量形态的工作流守护测试同步改为断言新形态并额外断言常量声明，保持等强度。零门禁语义变化、零阈值变化、零 Sonar 抑制。",
   "primaryLayer": "platform",
-  "status": "in-progress",
+  "status": "completed",
   "priority": "P2",
   "type": "governance-ci",
   "estimatedComplexity": "small",

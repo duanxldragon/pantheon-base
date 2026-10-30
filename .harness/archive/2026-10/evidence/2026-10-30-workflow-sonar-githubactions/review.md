@@ -33,6 +33,29 @@ on the way, and whether the two guard tests were weakened to accommodate the edi
   old creation dates, previous query returned 0). The repair does not depend on it, and no
   Sonar-side setting was altered to change the number in either direction.
 
+## Post-merge record
+
+- The deferred P2 end-state proof is now taken and recorded: PR #473 merged as `c1f0b1dd`
+  (2026-10-30T15:03:21Z), and the post-merge `main` Release Gate run `41077154410`
+  completed `success` with `Unprocessed SonarCloud issues: 0` and
+  `SonarCloud quality gate for c1f0b1dd…: OK` in the `SonarCloud Gate` job log.
+- Cross-checked outside the workflow: `api/issues/search` on `branch=main` returns 0 and
+  `api/measures/component` reports 0 bugs / 0 vulnerabilities / 0 code smells / 0 hotspots
+  over 163,314 ncloc, so the zero is a full-repo reading rather than a narrowed query.
+- Every other `main` workflow on the same commit is `success` (CI, Code Quality Gates,
+  Security Gates, Lint Workflows, Core Smoke Tests, Full Smoke Suite), which is the
+  condition this package was opened for.
+- Reviewer check after merge: the diff that produced the reading touched only the four
+  workflows, the two guard tests, `docs/harness/failure-registry.md` and this package's own
+  documents. No `needs`, `if`, threshold, permission or Sonar query line moved, and no
+  suppression marker (`NOSONAR`, `nolint`, false-positive transition, baseline change) was
+  used at any point.
+- The two sub-threshold literal clusters (`release-gate.yml:281-284`,
+  `security.yml:108-110`) intentionally keep the literal and stay open as P3.
+- Sonar registers only `main` as a branch for this project, so a pre-merge fix branch cannot
+  be probed with `branch=<name>`: an unknown branch returns 0 and would read as success. The
+  PR-context query (`pullRequest=473`, total 0) is the meaningful pre-merge probe.
+
 ## Machine Readable
 
 ```json

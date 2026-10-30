@@ -1,0 +1,194 @@
+{
+  "taskId": "2026-10-31-archive-closure-pr-governance",
+  "taskDoc": "docs/harness/tasks/2026-10-31-archive-closure-pr-governance.task.md",
+  "title": "归档 6 个已完成任务包并给 PR 治理传感器补上档案回退（FR-024）",
+  "goal": "两个 2026-10-30 治理包已合并并在 main 上取到终局读数，但 .harness/tasks/ 仍留 6 个 completed manifest，违反 .harness/ARCHIVE.md 的月度归档约定。本包按约定把 6 个任务的 manifest 与 evidence 用 git mv 落到 archive/2026-10/（.task.md 留在文档面，只把已实测收口的两个包标 Archived），更新归档索引统计与活跃清单，并在准备收口 PR 时撞上 FR-019 那一类的另一半：scripts/check-pr-governance.mjs 用裸 fs.existsSync 校验 Task Manifest / Evidence / Verification evidence / Review Artifact 四个链路字段，任务一旦归档、引用规范路径的 PR 正文即被判「file does not exist in repository」——即归档约定要求的「路径保持不变」在 PR 面不成立。本包让该传感器在直查失败后走 resolveArchiveAwarePath 回退，并补两条相反方向用例（归档路径必须通过；既不 live 也不归档必须仍报缺失），登记 FR-024（occurrence=2，指向 FR-019）并把 check-evidence / check-review / generate-pr-body 的残余用实测读数记录而非推断。零运行时代码、零阈值与门禁语义变化、零 schema 变化。",
+  "primaryLayer": "platform",
+  "status": "in-progress",
+  "priority": "P2",
+  "type": "governance-sensor",
+  "estimatedComplexity": "small",
+  "findings": [
+    "6 个 completed manifest 滞留 live 树：2026-10-27-codebase-simplification-program、2026-10-29-harness-task-archive、2026-10-29-simplification-program-closeout、2026-10-29-v0181-restore-request-guard、2026-10-30-menu-contract-inline-const、2026-10-30-workflow-sonar-githubactions；ARCHIVE.md 明文规定 live 树只保留非 completed 项。",
+    "scripts/check-pr-governance.mjs:115 hasExistingRepoFile 只 fs.existsSync(规范路径)，对非 trivial PR 的 4 个链路字段强制「文件必须存在于该字面路径」，与 ARCHIVE.md「归档后继续用规范路径引用」直接冲突。",
+    "FR-019 已登记同类（archive 轮需要档案回退），但当时只补了变红的 check-task-packet 与 check-doc-links，没有枚举全部消费方——PR 正文校验器是漏网的第四个，因此本次记 occurrence=2 而不是新类。",
+    "实测残余：对已归档的 2026-10-30-workflow-sonar-githubactions/commands.json 跑 check-evidence --strict 得 3 条错误（taskManifest does not exist、reviewFile does not exist、evidenceDir must match the commands.json directory），三个目标在 archive/2026-10/ 下均存在；默认 glob 只扫 live 树，所以这条错误今天不会被任何门禁触发，属latent。",
+    "负向对照：task-id 写成既不 live 也不归档的 2026-06-17-missing 时，修复后的校验仍报 does not exist in repository——回退只补全解析，不放松要求。",
+    "归档前后治理矩阵读数完全一致（12 个 check:* 加 check-evidence/check-review --strict 全部 exit 0），test:pr-governance 由 6 条增至 8 条全绿，test:scripts 183/183。"
+  ],
+  "scope": {
+    "in": [
+      ".harness/archive/2026-10/{tasks,evidence}/<id>/：6 个 completed 任务的 git mv 归档（含 2026-10-29-v0181-restore-request-guard 的 notes 子目录）",
+      ".harness/ARCHIVE.md：月度统计 2026-10 88/91 与合计 209/215、最后更新日期、当前活跃任务清单、本轮归档说明",
+      "scripts/check-pr-governance.mjs：hasExistingRepoFile 直查优先、失败后走 resolveArchiveAwarePath",
+      "tests/scripts/check-pr-governance.test.mjs：writeTaskManifest 支持基目录参数 + 归档通过用例 + 仍缺失负向用例",
+      "docs/harness/failure-registry.md：FR-024 行与 Review Notes 条目（含残余消费方实测）",
+      "docs/harness/tasks/2026-10-30-workflow-sonar-githubactions.task.md：终局勾选项与 Archived 状态",
+      ".harness/evidence/2026-10-30-workflow-sonar-githubactions/：合并后 27 条命令读数、summary 的 Post-merge、review 的 Post-merge record",
+      "本任务包、manifest 与 evidence"
+    ],
+    "out": [
+      "把档案回退补进 check-evidence / check-review / generate-pr-body（本轮只实测记录，补齐需自带 fixture，另包处理）",
+      "新增「归档证据纳入扫描面」的门禁（治理面扩容，归维护者裁决）",
+      "批量改写 67 个仍标 status: Active 的历史任务包正文状态（除本轮两个有实测收口证据的包）",
+      "任何门禁阈值、workflow 判定语义、Sonar 查询条件变化",
+      "VERSION / CHANGELOG.md / docs/release-notes/** 与 foundation release 切版发布",
+      "删除 .harness/evidence/2026-09-10-tenant-verification-and-gray/ 重复产物与两份散落 PR 正文（保留并记录）",
+      "修改 pantheon-ops（其 PR 治理副本按消费者评审演进，不回抄 base 文件）",
+      "用豁免、降阈值或改写断言让读数变绿",
+      "stage 工作树中既有的未提交 i18n 改动"
+    ]
+  },
+  "dependencyLayers": [
+    "platform"
+  ],
+  "implementationNotes": [
+    "顺序是被动决定的：归档移动已经发生，才暴露 PR 校验器不认归档路径，所以传感器修复与归档必须同一 PR 落地；分开做会得到一个 CI 红的收口 PR。",
+    "回退必须在直查之后：让规范路径先解析到字面位置，解析不到才按月回退，避免同名任务在历史月份目录里被优先命中。",
+    "两条新用例方向相反是刻意的：只加正向用例会把「引用不存在的链路」也一并放宽成通过，那正是 FR-024 要防的伪造留痕路径。",
+    "残余消费方用实测记录而不是推断：check-evidence 对已归档 commands.json 的 3 条错误同时说明两件事——回退缺失是真的，以及默认 glob 不扫归档所以今天无人受害。",
+    ".task.md 不随 manifest 移动：归档约定移动的是 manifest 与 evidence，正文留在文档面，只有本轮两个包有终局读数才标 Archived，其余 Active 不动。"
+  ],
+  "contractAnchors": [
+    "docs/harness/VERIFICATION_EVIDENCE_SPEC.md",
+    "docs/harness/AI_QUALITY_GOVERNANCE.md",
+    "docs/harness/failure-registry.md",
+    ".harness/ARCHIVE.md"
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "ci-workflow",
+    "portableFailureClass": "static-sensor-gap",
+    "ownerLayer": "consumer-repository",
+    "ratchetDecision": "sensor-added",
+    "coverageDimensions": [
+      "maintainability",
+      "method-health"
+    ]
+  },
+  "expectedFiles": {
+    "create": [
+      "docs/harness/tasks/2026-10-31-archive-closure-pr-governance.task.md",
+      ".harness/tasks/2026-10-31-archive-closure-pr-governance/manifest.json",
+      ".harness/evidence/2026-10-31-archive-closure-pr-governance/commands.json",
+      ".harness/evidence/2026-10-31-archive-closure-pr-governance/summary.md",
+      ".harness/evidence/2026-10-31-archive-closure-pr-governance/review.md",
+      ".harness/evidence/2026-10-31-archive-closure-pr-governance/pr-body.md"
+    ],
+    "modify": [
+      "scripts/check-pr-governance.mjs",
+      "tests/scripts/check-pr-governance.test.mjs",
+      "docs/harness/failure-registry.md",
+      ".harness/ARCHIVE.md",
+      "docs/harness/tasks/2026-10-30-workflow-sonar-githubactions.task.md",
+      ".harness/tasks/2026-10-30-workflow-sonar-githubactions/manifest.json",
+      ".harness/evidence/2026-10-30-workflow-sonar-githubactions/commands.json",
+      ".harness/evidence/2026-10-30-workflow-sonar-githubactions/summary.md",
+      ".harness/evidence/2026-10-30-workflow-sonar-githubactions/review.md",
+      ".harness/tasks/2026-10-30-menu-contract-inline-const/manifest.json",
+      ".harness/evidence/2026-10-30-menu-contract-inline-const/",
+      ".harness/tasks/2026-10-27-codebase-simplification-program/manifest.json",
+      ".harness/evidence/2026-10-27-codebase-simplification-program/",
+      ".harness/tasks/2026-10-29-harness-task-archive/manifest.json",
+      ".harness/evidence/2026-10-29-harness-task-archive/",
+      ".harness/tasks/2026-10-29-simplification-program-closeout/manifest.json",
+      ".harness/evidence/2026-10-29-simplification-program-closeout/",
+      ".harness/tasks/2026-10-29-v0181-restore-request-guard/manifest.json",
+      ".harness/evidence/2026-10-29-v0181-restore-request-guard/"
+    ],
+    "doNotTouch": [
+      "backend/**",
+      "frontend/src/**",
+      ".github/workflows/**",
+      "sonar-project.properties",
+      "config/**",
+      "VERSION",
+      "CHANGELOG.md",
+      "docs/release-notes/**",
+      ".harness/archive/2026-07/",
+      ".harness/archive/2026-08/",
+      ".harness/archive/2026-09/",
+      "backend/modules/system/i18n/builtin_locale_resources.json",
+      "frontend/src/i18n/resources/"
+    ]
+  },
+  "executionRoles": {
+    "implementerPosture": "只做两件事：按既有约定移动文件，以及给一个校验器补上与同族检查器一致的解析回退；不改判定语义、不动阈值、不批量改写无法逐条验证的历史状态。残余用实测读数记录，推断的部分明确标为待另包处理。",
+    "reviewerPosture": [
+      "确认 diff 只含：传感器与其测试、failure-registry 的 FR-024 行与条目、ARCHIVE.md、两个 2026-10-30 包的收口记录、6 组 git mv 移动与本包文档；.github/workflows/**、backend/**、frontend/src/** 零变化。",
+      "确认 hasExistingRepoFile 仍是「直查优先、失败才回退」，且回退复用 scripts/task-manifest.mjs 的既有解析器而非新写一份路径拼接。",
+      "确认两条新用例方向相反：归档路径 0 findings，缺失 task-id 仍报 does not exist in repository；没有任何既有用例被删除或放宽。",
+      "确认归档只用 git mv 保留历史，notes 子目录一并移动，且移动后 12 项 check:* 与两个 --strict 检查全部 exit 0（不是移动前读数）。",
+      "确认 FR-024 occurrence=2 与 FR-019 的指向关系成立，残余 3 条 check-evidence 错误是实测而非推测，且没有被顺手「修好」成超出本包范围的第二处传感器改造。",
+      "确认没有批量把 67 个历史 Active 任务包正文改为 Archived，只动本轮有两个实测收口读数的包。",
+      "确认本包不动 VERSION / CHANGELOG / workflow，release 时点仍归维护者。"
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "npm run test:pr-governance",
+      "npm run test:scripts",
+      "npm run check:task-packet",
+      "npm run check:task-packet-template",
+      "npm run check:docs-frontmatter",
+      "npm run check:harness-docs",
+      "npm run check:harness-inventory",
+      "npm run check:harness-encoding",
+      "npm run check:structure",
+      "npm run check:failure-registry",
+      "npm run check:generated",
+      "npm run check:generated-modules",
+      "npm run check:ui-quality-gate",
+      "npm run check:duplication",
+      "node scripts/harness/check-evidence.mjs --root . --strict",
+      "node scripts/harness/check-review.mjs --root . --strict",
+      "node scripts/harness/check-evidence.mjs --root . --strict .harness/archive/2026-10/evidence/2026-10-30-workflow-sonar-githubactions/commands.json（残余实测，预期 3 条错误）",
+      "git status --short（确认 i18n 六文件仍未被 stage，移动全部以 R 出现）",
+      "node scripts/create-pr.mjs --title ... --body-file .harness/evidence/2026-10-31-archive-closure-pr-governance/pr-body.md",
+      "gh pr checks <n>；合并后 gh run list --branch main 与 Release Gate 读数回读"
+    ],
+    "runtimeEvidence": [
+      "改动面是构建期治理脚本与任务档案树，其运行侧证据是「归档后 PR 正文引用已归档任务能否通过 check-pr-governance」——由 create-pr 包装器在本 PR 上真实执行同一校验替代口头断言"
+    ]
+  },
+  "runtimeSensitive": false,
+  "runtimeGap": "本包只移动治理档案树并修改一个 PR 正文校验器的路径解析，不触碰任何运行时路径、组件或接口，也不改变任何门禁判定；运行侧证据是收口 PR 本身经由 node scripts/create-pr.mjs（内部调用 check-pr-governance）提交并通过 GitHub 门禁，浏览器或后端 smoke 与本改动无对应面。",
+  "evidenceRequired": [
+    ".harness/evidence/2026-10-31-archive-closure-pr-governance/commands.json：test:pr-governance 8/8、test:scripts 全量、治理矩阵、归档前后目录计数、残余 3 条错误实测、PR 检查与合并后读数",
+    ".harness/evidence/2026-10-31-archive-closure-pr-governance/summary.md：根因（约定与传感器冲突）、回退方向性、残余消费方清单与未纳入项",
+    ".harness/evidence/2026-10-31-archive-closure-pr-governance/review.md：逐条 reviewer posture 读数 + Machine Readable 块",
+    ".harness/evidence/2026-10-31-archive-closure-pr-governance/pr-body.md：经 check-pr-governance 校验的 PR 正文"
+  ],
+  "humanGates": [
+    "合并按维护者「继续完成未完成的任务」在途指令执行；main 无分支保护，auto-merge 由 pr-automation 完成（上一轮尝试关闭 auto-merge 被权限分类器拒绝，因此本包不再尝试）。",
+    "是否把档案回退继续补进 check-evidence / check-review / generate-pr-body，以及是否新增「归档证据纳入扫描面」的门禁，属治理面扩容，归维护者裁决；本包只记录实测，不代为实现。",
+    ".harness/evidence/2026-09-10-tenant-verification-and-gray/ 的重复产物与两份无归属散落 PR 正文保持原地，删除与否归维护者。",
+    "pantheon-ops 的 runtime-acceptance（需要本机 MySQL 与不在账密的凭证）属消费仓自己的 ledger，不在本包决定。"
+  ],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed",
+    "6 个 completed 任务按月归档且 ARCHIVE.md 统计/清单同步",
+    "PR 治理传感器具备档案回退（直查优先 + 仍缺失负向用例钉住）",
+    "FR-024 登记 occurrence=2 并用实测记录残余消费方",
+    "治理矩阵与全量脚本测试在移动后仍全部通过",
+    "维护者批准合并（L2）；合并后 main 读数回读"
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-31-archive-closure-pr-governance/manifest.json",
+    "taskDoc": "docs/harness/tasks/2026-10-31-archive-closure-pr-governance.task.md",
+    "evidenceDir": ".harness/evidence/2026-10-31-archive-closure-pr-governance/",
+    "summaryFile": ".harness/evidence/2026-10-31-archive-closure-pr-governance/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-31-archive-closure-pr-governance/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/failure-registry.md",
+      ".harness/ARCHIVE.md",
+      "docs/harness/VERIFICATION_EVIDENCE_SPEC.md"
+    ]
+  }
+}

@@ -1,6 +1,6 @@
 # 任务归档索引
 
-**最后更新**: 2026-10-29
+**最后更新**: 2026-10-30
 
 ## 归档说明
 
@@ -18,8 +18,8 @@
 | 2026-07 | 26 | 31 | V1.0 冻结与发布、Sonar 清零轮、安全审计 |
 | 2026-08 | 23 | 23 | Foundation Release 体系建立、v0.10.x 系列发布 |
 | 2026-09 | 72 | 70 | 命名与边界整改、企业级整改、治理收口、租户核心 |
-| 2026-10 | 82 | 85 | 租户交付、v0.14.0–v0.17.8 发布、代码简化 S1–S4 |
-| **合计** | **203** | **209** | - |
+| 2026-10 | 88 | 91 | 租户交付、v0.14.0–v0.18.1 发布、代码简化 S1–S4、传感器与工作流缺陷收口 |
+| **合计** | **209** | **215** | - |
 
 统计口径：`archive/<YYYY-MM>/tasks/` 与 `archive/<YYYY-MM>/evidence/` 下的目录数。
 月份取任务 ID 的 `YYYY-MM` 前缀，因此个别跨月任务按其开工月份归档。
@@ -108,7 +108,8 @@
 
 `.harness/tasks/` 下只保留状态不是 `completed` 的 manifest：
 
-- `2026-10-27-codebase-simplification-program`（`in-progress`，剩余波次与发布切分属维护者决策）
+- `2026-10-29-v0180-simplification-release`（`in-progress`，v0.18.0/v0.18.1 已发布、
+  ops 已锁定 v0.18.1，剩余项是消费仓的 `runtime-acceptance`）
 
 归档后 `.harness/tasks/` 为空也属正常状态；`readTaskManifest` 会回退到
 `archive/<YYYY-MM>/tasks/<task-id>/`，所以任务包、`Linkage` 与文档链接继续使用规范路径
@@ -283,3 +284,30 @@ cp -r .harness/archive/2026-07/evidence/2026-07-21-v1-release-readiness .harness
 - `.harness/evidence/2026-09-25-pr347-governance-body.md` 与
   `.harness/evidence/2026-09-27-v0130-pr-body.md` 是两份没有任务归属的散落 PR 正文，
   未被任何文档引用，同轮保留。
+
+## 2026-10-30 归档更新
+
+**新增归档**: 6 个 `completed` 任务（全部属 2026-10 月）。`.harness/tasks/` 现在只剩
+`2026-10-29-v0180-simplification-release` 一个 `in-progress` manifest。
+
+| task-id | 收口依据 |
+|---------|----------|
+| `2026-10-27-codebase-simplification-program` | 13 个波次全部合并，程序清单收口 |
+| `2026-10-29-harness-task-archive` | 上一轮 87 个任务的 `git mv` 归档与档案回退门禁 |
+| `2026-10-29-simplification-program-closeout` | 简化程序收尾评审与 residual risk 记录 |
+| `2026-10-29-v0181-restore-request-guard` | PR #469 → v0.18.1 发布，消费者构建恢复 |
+| `2026-10-30-menu-contract-inline-const` | PR #471（`03e13d48`）+ 记录 PR #472 |
+| `2026-10-30-workflow-sonar-githubactions` | PR #473（`c1f0b1dd`），main Release Gate 回到 0 |
+
+- 移动方式：`git mv`。manifest 落到 `archive/2026-10/tasks/<task-id>/`，证据落到
+  `archive/2026-10/evidence/<task-id>/`（含
+  `2026-10-29-v0181-restore-request-guard/notes/` 子目录），历史保留。
+- 任务包正文仍在 `docs/harness/tasks/`：归档约定移动的是 manifest 与 evidence，
+  `.task.md` 留在文档面，只在 frontmatter `status` 上标 `Archived`。
+- 归档后继续用规范路径引用：`readTaskManifest` / `resolveArchiveAwarePath` 会回退到
+  `archive/<YYYY-MM>/{tasks,evidence}/<task-id>/`，因此 `check:task-packet`、
+  `check-evidence --strict`、`check-review --strict` 与文档链接在移动后仍全部通过。
+- 刻意未移动的三项：`2026-10-29-v0180-simplification-release` 仍 `in-progress`；
+  `.harness/evidence/2026-09-10-tenant-verification-and-gray/` 是归档后被 #427 重写进
+  旧路径的重复产物；两份散落 PR 正文没有任务归属。三者与上一轮同样原地保留，
+  等维护者决定。
