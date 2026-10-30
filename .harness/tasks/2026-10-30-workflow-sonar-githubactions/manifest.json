@@ -1,0 +1,176 @@
+{
+  "taskId": "2026-10-30-workflow-sonar-githubactions",
+  "taskDoc": "docs/harness/tasks/2026-10-30-workflow-sonar-githubactions.task.md",
+  "title": "修掉 main 上 6 条 githubactions Sonar 缺陷（Release Gate 红灯根因）",
+  "goal": "main 在合并提交 03e13d48 上 Release Gate 红灯：SonarCloud Gate 报 Unprocessed SonarCloud issues: 6，全部是 .github/workflows 内的 githubactions 规则缺陷（S1192 同一 step 内重复 5-8 次的 \"success\" 字面量，S7677 把含 error/critical 字样的输出写到 stdout）。同一条查询在上一次 main 分析（2026-10-29T04:50Z，run 40818421372）报 0，且 6 条 issue 的 creationDate 落在 2026-07-02 至 2026-10-11、changelog 为空——这是既有债务被重新检出，不是新账。本包在工作流本体修复：把重复字面量提升为 step env 常量 GATE_OK，把真正的错误出口写到 stderr，把纯计数/通过行的措辞从严重级词汇改为 blocking；两条依赖字面量形态的工作流守护测试同步改为断言新形态并额外断言常量声明，保持等强度。零门禁语义变化、零阈值变化、零 Sonar 抑制。",
+  "primaryLayer": "platform",
+  "status": "in-progress",
+  "priority": "P2",
+  "type": "governance-ci",
+  "estimatedComplexity": "small",
+  "findings": [
+    "Release Gate 的 SonarCloud Gate 查询是 componentKeys + branch=main + resolved=false + types=BUG,VULNERABILITY,CODE_SMELL，任何非零都阻断发布检查点，与触发它的那次合并是否碰过这些文件无关。",
+    "6 条分两类：S1192 在 quality.yml 两个 step（8 次与 7 次 success 字面量）和 ci.yml ci-summary step（5 次）；S7677 在 release-gate.yml 的 CodeQL 计数行与通过行、security.yml 的 CodeQL 计数行。",
+    "S1192 的计数作用域是单个 step 的 run 脚本，因此常量必须声明在 step env；声明在 workflow 顶层会把这个名字扩散到无关 job。",
+    "S7677 判的是「错误文本进 stdout」。::error:: 前缀行是 GitHub 的正确写法、并未触发规则；exit 1 之前的人类可读行应改 stderr；纯计数与通过行含 error/critical 字样属措辞问题，应改措辞而不是改流向，否则正常日志会变成噪声。",
+    "ci.yml 原错误行 echo \"Critical check did not complete successfully\" 同时踩中两类问题（stdout + Critical 字样），改为 echo \"Blocking check did not complete successfully\" >&2 一次解决。",
+    "quality.yml 与 release-gate.yml、security.yml 里其余 \"success\" 字面量（单步 1-2 次）未达重复阈值，按最小 diff 原则不动。",
+    "tests/scripts/quality-workflow.test.mjs 与 release-gate-workflow.test.mjs 原本按字面量形态断言；改为断言 != \"$GATE_OK\" 并新增 GATE_OK: success 声明断言后，常量改名或改值同样会红，保护强度不降。"
+  ],
+  "scope": {
+    "in": [
+      ".github/workflows/quality.yml：两个 step 增加 GATE_OK: success，8 + 7 处 != \"success\" 改为 != \"$GATE_OK\"",
+      ".github/workflows/ci.yml：ci-summary step 增加 GATE_OK: success，5 处字面量改常量，错误出口行改 stderr 并去掉 Critical 字样",
+      ".github/workflows/release-gate.yml：CodeQL 与 Dependabot 的计数行/通过行改为 blocking 措辞",
+      ".github/workflows/security.yml：zizmor 阻断分支错误行改 stderr；CodeQL 计数行改 blocking 措辞",
+      "tests/scripts/quality-workflow.test.mjs、tests/scripts/release-gate-workflow.test.mjs：等强度重指向新形态并新增常量声明断言",
+      "docs/harness/failure-registry.md：FR-023 行与 review note",
+      "任务包、manifest 与 evidence"
+    ],
+    "out": [
+      "任何门禁判定语义、阈值、needs 关系、continue-on-error、必需检查集合的变化",
+      "NOSONAR、//nolint、Sonar False Positive 标记、new-code baseline 移动、Release Gate 查询条件放宽",
+      "未触发规则的其它 success 字面量（单步 1-2 次）",
+      "VERSION、CHANGELOG.md、docs/release-notes/** 与 foundation release 切版发布",
+      "修改 pantheon-ops（其工作流副本属消费者仓库评审）",
+      "stage 工作树中既有的未提交 i18n 改动（builtin_locale_resources.json 与 frontend/src/i18n/resources/*.ts）"
+    ]
+  },
+  "dependencyLayers": [
+    "platform"
+  ],
+  "implementationNotes": [
+    "重新检出的债务不会因为合并而自愈：下一次 main 分析仍会给同一条查询非零读数，所以唯一收敛路径是改文件本体。",
+    "step env 常量而不是 shell 变量：shell 变量只在单个 run 脚本里存在，而 GitHub 的 outcome 值本身就来自平台，常量化只是将重复的读法归一。",
+    "改措辞的行都是信息行（计数、通过提示），它们留在 stdout 是正确行为；规则触发只是因为句子里带了 error/critical。把它们塞进 stderr 会污染错误流，属于用噪声换绿灯。",
+    "守护测试是等强度替换而非放宽：新增的 GATE_OK: success 断言让常量本身也被守护，改名或改值同样失败。",
+    "本包不动 VERSION/CHANGELOG：工作流是各仓自有 CI 资产，不构成 foundation 契约面，消费者无需为此升级。"
+  ],
+  "contractAnchors": [
+    "docs/harness/AI_QUALITY_GOVERNANCE.md",
+    "docs/harness/VERIFICATION_EVIDENCE_SPEC.md",
+    "docs/harness/failure-registry.md",
+    ".github/workflows/release-gate.yml"
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "ci-workflow",
+    "portableFailureClass": "static-sensor-gap",
+    "ownerLayer": "consumer-repository",
+    "ratchetDecision": "no-repeat-observed",
+    "coverageDimensions": [
+      "maintainability",
+      "method-health"
+    ]
+  },
+  "expectedFiles": {
+    "create": [
+      "docs/harness/tasks/2026-10-30-workflow-sonar-githubactions.task.md",
+      ".harness/tasks/2026-10-30-workflow-sonar-githubactions/manifest.json",
+      ".harness/evidence/2026-10-30-workflow-sonar-githubactions/commands.json",
+      ".harness/evidence/2026-10-30-workflow-sonar-githubactions/summary.md",
+      ".harness/evidence/2026-10-30-workflow-sonar-githubactions/review.md",
+      ".harness/evidence/2026-10-30-workflow-sonar-githubactions/pr-body.md"
+    ],
+    "modify": [
+      ".github/workflows/quality.yml",
+      ".github/workflows/ci.yml",
+      ".github/workflows/release-gate.yml",
+      ".github/workflows/security.yml",
+      "tests/scripts/quality-workflow.test.mjs",
+      "tests/scripts/release-gate-workflow.test.mjs",
+      "docs/harness/failure-registry.md"
+    ],
+    "doNotTouch": [
+      "backend/**",
+      "frontend/**",
+      "sonar-project.properties",
+      "config/**",
+      "VERSION",
+      "CHANGELOG.md",
+      "docs/release-notes/**",
+      ".github/workflows/pr-automation.yml",
+      "backend/modules/system/i18n/builtin_locale_resources.json",
+      "frontend/src/i18n/resources/"
+    ]
+  },
+  "executionRoles": {
+    "implementerPosture": "只改工作流里的字面量形态与输出流向，不改任何判定语义；用等强度断言的守护测试和 bash -n + 行为模拟代替口头断言。",
+    "reviewerPosture": [
+      "确认 diff 只含 4 个工作流文件、2 个守护测试、failure-registry 两行与本包文档。",
+      "确认每条门禁的判定条件没有被改变：needs、continue-on-error、exit 条件、必需检查集合逐项对照。",
+      "确认 6 条 Sonar findings 都有对应的本体修复，且没有使用 NOSONAR、False Positive、baseline 移动或查询条件放宽。",
+      "确认守护测试的改动是等强度替换：新的 GATE_OK: success 断言让常量改名或改值同样会红。",
+      "确认未达阈值的其它 success 字面量被有意保留，并在 evidence 中记录理由。",
+      "确认合并后 main 的 Release Gate 读数被回读；红灯未消不得声称闭环。"
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "npm run test:quality-workflow",
+      "npm run test:security-workflow",
+      "npm run test:release-gate-workflow",
+      "npm run test:ci-bench-perf-smoke-workflow",
+      "npm run test:pr-automation-workflow",
+      "npm run test:scripts",
+      "bash -n（对被改的 ci.yml / quality.yml run 块）",
+      "等价 shell 片段模拟 ci-summary 判定（全 success → pass；含 failure → 阻断）",
+      "npm run check:failure-registry",
+      "npm run check:task-packet",
+      "npm run check:task-packet-template",
+      "npm run check:docs-frontmatter",
+      "npm run check:harness-docs",
+      "npm run check:harness-inventory",
+      "npm run check:harness-encoding",
+      "npm run check:structure",
+      "npm run check:generated",
+      "npm run check:ui-quality-gate",
+      "npm run check:duplication",
+      "node scripts/harness/check-evidence.mjs --root . --strict",
+      "node scripts/harness/check-review.mjs --root . --strict",
+      "node scripts/create-pr.mjs --title ... --body-file .harness/evidence/2026-10-30-workflow-sonar-githubactions/pr-body.md",
+      "gh pr checks <n>（合并前回读）",
+      "gh run list --branch main（合并后 Release Gate 读数）"
+    ],
+    "runtimeEvidence": [
+      "工作流是 CI 侧脚本，其运行侧证据是合并后 main 上 Release Gate 的 Unprocessed SonarCloud issues 读数从 6 变 0；本包不改任何运行时路径、组件或接口。"
+    ]
+  },
+  "runtimeSensitive": false,
+  "runtimeGap": "改动只影响 GitHub Actions 的 gate 脚本可读性与 Sonar 检出结果，不触碰产品运行时路径、接口、权限或 UI；运行侧证据是合并后 main 的 Release Gate 读数（6 → 0），浏览器或后端 smoke 与本改动无对应面。",
+  "evidenceRequired": [
+    ".harness/evidence/2026-10-30-workflow-sonar-githubactions/commands.json：五条工作流守护测试、test:scripts 全量、bash -n、行为模拟、治理矩阵读数",
+    ".harness/evidence/2026-10-30-workflow-sonar-githubactions/summary.md：6 条 findings 的逐条处置、等强度测试论证、未修字面量的理由",
+    ".harness/evidence/2026-10-30-workflow-sonar-githubactions/review.md：逐条 reviewer posture 读数 + Machine Readable 块",
+    ".harness/evidence/2026-10-30-workflow-sonar-githubactions/pr-body.md：经 check-pr-governance 校验的 PR 正文"
+  ],
+  "humanGates": [
+    "合并按维护者在途指令执行；本包的终局读数（main Release Gate 6 → 0）只有合并后的 push 分析才能取得，因此闭环声明必须等到该读数出现。",
+    "若合并后 Sonar 在其它工作流文件重新检出同类缺陷，继续修文件还是调整 Sonar 扫描范围，归维护者裁决；本包不预先放宽查询条件或扫描范围。",
+    "本地 YAML 风格检查器（把这类缺陷在合并前挡住的持久控制）被有意留作缺口登记在 FR-023，是否补建由维护者决定。"
+  ],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed",
+    "6 条 Sonar 缺陷在工作流本体修复，未使用任何抑制手段",
+    "门禁判定语义、阈值、needs、必需检查集合零变化（守护测试等强度断言证明）",
+    "合并后 main 的 Release Gate 读数回到 0（终局闭环，需 push 分析）"
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-30-workflow-sonar-githubactions/manifest.json",
+    "taskDoc": "docs/harness/tasks/2026-10-30-workflow-sonar-githubactions.task.md",
+    "evidenceDir": ".harness/evidence/2026-10-30-workflow-sonar-githubactions/",
+    "summaryFile": ".harness/evidence/2026-10-30-workflow-sonar-githubactions/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-30-workflow-sonar-githubactions/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/failure-registry.md",
+      "docs/harness/AI_QUALITY_GOVERNANCE.md",
+      "docs/harness/VERIFICATION_EVIDENCE_SPEC.md"
+    ]
+  }
+}

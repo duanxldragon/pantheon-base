@@ -1,0 +1,133 @@
+{
+  "taskId": "2026-10-30-workflow-sonar-githubactions",
+  "repo": "pantheon-base",
+  "executedAt": "2026-10-30",
+  "agent": {
+    "tool": "other",
+    "adapter": "qoder-agent"
+  },
+  "runtimeSensitive": false,
+  "runtimeGap": "改动只影响 GitHub Actions 的 gate 脚本形态与 Sonar 检出结果，不触碰产品运行时路径、接口、权限或 UI；运行侧证据是合并后 main 上 Release Gate 的 Unprocessed SonarCloud issues 读数（6 → 0）。",
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-30-workflow-sonar-githubactions/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-30-workflow-sonar-githubactions/",
+    "reviewFile": ".harness/evidence/2026-10-30-workflow-sonar-githubactions/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/failure-registry.md",
+      "docs/harness/AI_QUALITY_GOVERNANCE.md",
+      "docs/harness/VERIFICATION_EVIDENCE_SPEC.md"
+    ]
+  },
+  "commands": [
+    {
+      "command": "gh run view 41033269295 --log-failed | grep -E 'Unprocessed SonarCloud issues|Candidate quality gate'",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Release Gate on main commit 03e13d48: SonarCloud quality gate for the candidate is OK, but 'Unprocessed SonarCloud issues: 6' -> 'Release blocked: 6 unresolved SonarCloud issue(s).' Job conclusions: Candidate Checks / CodeQL Alerts / Dependabot Alerts / Open PRs success, SonarCloud Gate failure, Release Gate Summary failure. This is the red being closed, and it is not produced by the merged menu-contract change."
+    },
+    {
+      "command": "curl -u \"$T:\" 'https://sonarcloud.io/api/issues/search?componentKeys=duanxldragon_pantheon-base&branch=main&resolved=false&types=BUG,VULNERABILITY,CODE_SMELL&ps=50'",
+      "cwd": ".",
+      "status": "passed",
+      "details": "total=6, all CODE_SMELL (per-type breakdown: BUG 0, VULNERABILITY 0, CODE_SMELL 6), all issueStatus OPEN. The six: githubactions:S1192 MINOR quality.yml:983 ('success' 7 times), S1192 MINOR ci.yml:483 ('success' 5 times), S1192 MINOR quality.yml:285 ('success' 8 times), githubactions:S7677 MAJOR release-gate.yml:136, S7677 MAJOR release-gate.yml:143, S7677 MAJOR security.yml:301. Every file lives in .github/workflows — none in the merged diff of PR #471."
+    },
+    {
+      "command": "gh run view 40818421372 --log | grep 'Unprocessed SonarCloud issues'",
+      "cwd": ".",
+      "status": "passed",
+      "details": "2026-10-29T04:50:09Z, byte-identical query against branch=main: 'Unprocessed SonarCloud issues: 0'. So the six are re-detected debt, not debt created in between — established by reading the same gate on the previous main analysis rather than assuming it."
+    },
+    {
+      "command": "curl -u \"$T:\" 'https://sonarcloud.io/api/issues/changelog?issue=<key>' and the issue list creationDate fields",
+      "cwd": ".",
+      "status": "passed",
+      "details": "changelog is empty ({\"changelog\":[]}) and the six creationDates are 2026-07-02, 2026-07-23 x3, 2026-08-05, 2026-10-11 — the findings predate the last week of work. The API does not expose the re-detection event itself; recorded as an external Sonar-side behaviour, not explained away."
+    },
+    {
+      "command": "curl -u \"$T:\" 'https://sonarcloud.io/api/measures/component?component=duanxldragon_pantheon-base%3A.github%2Fworkflows%2Fquality.yml&branch=main&metricKeys=ncloc'",
+      "cwd": ".",
+      "status": "passed",
+      "details": "language=yaml, ncloc=828 — the workflow file IS in main's analysed scope, so the only converging repair is in the file itself. This is what rules out 'wait for it to disappear' and rules out any suppression path."
+    },
+    {
+      "command": "grep -rn 'echo .*\\(error\\|critical\\|warning\\|fatal\\)' .github/workflows/ | grep -v '::error::|::warning::|>&2|GITHUB_STEP_SUMMARY|GITHUB_OUTPUT'",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Before the fix this listed release-gate.yml:136/143/163/169 and security.yml:242/301 plus two $GITHUB_STEP_SUMMARY table rows. Sonar flagged only 136/143/301; 163/169/242 are the same pattern with different words and were fixed together so the next re-analysis cannot add reds one file at a time. Step-summary table rows were left alone — they write to a file, not to stdout."
+    },
+    {
+      "command": "edit: .github/workflows/quality.yml (2 step env GATE_OK: success + 15 literal comparisons -> \"$GATE_OK\")",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Enforce harness governance gate: 8 comparisons hoisted; quality-gates summary: 7 comparisons hoisted (including the PR Smoke Modules line that Sonar cited at 983). Remaining \"success\" literals in the file are two single-occurrence steps (lines 467, 518) and were deliberately not touched to keep the diff minimal."
+    },
+    {
+      "command": "edit: .github/workflows/ci.yml (ci-summary GATE_OK + 5 comparisons + error exit to stderr)",
+      "cwd": ".",
+      "status": "passed",
+      "details": "GATE_OK: success added to the ci-summary step env, the 5 '!= \"success\"' comparisons now read '!= \"$GATE_OK\"', and the message before 'exit 1' changed from echo \"Critical check did not complete successfully\" to echo \"Blocking check did not complete successfully\" >&2 — one edit that both routes an error exit to stderr and stops embedding a severity word in stdout."
+    },
+    {
+      "command": "edit: .github/workflows/release-gate.yml + .github/workflows/security.yml (stdout wording, one stderr redirect)",
+      "cwd": ".",
+      "status": "passed",
+      "details": "release-gate.yml 136 'CodeQL error/critical open alerts' -> 'Open blocking CodeQL alerts', 143 'No open CodeQL error/critical alerts' -> 'No open blocking CodeQL alerts', and the matching Dependabot pair 163/169 reworded the same way. security.yml 301 reworded identically; 242 (the zizmor branch that immediately exits 1) now writes to stderr. No '::error::' line was changed — those are the GitHub command form and were never flagged."
+    },
+    {
+      "command": "npm run test:quality-workflow",
+      "cwd": ".",
+      "status": "passed",
+      "details": "5 pass / 0 fail. The assertion 'quality gates should enforce go-lint as a runtime gate' was re-pointed from /GO_LINT_RESULT.*!=.*\"success\"/ to /GO_LINT_RESULT.*!=.*\\$GATE_OK/ and a new assertion requires 'GATE_OK: success' to be declared — renaming or re-valuing the constant now fails the guard too."
+    },
+    {
+      "command": "npm run test:release-gate-workflow",
+      "cwd": ".",
+      "status": "passed",
+      "details": "7 pass / 0 fail. The CI Summary loop that proves each result variable is rejected when it is not the passing outcome now matches the \"$GATE_OK\" form, keeps the doesNotMatch guard that GO_LINT must stay advisory, and additionally asserts the constant declaration, so the enforcement semantics stay pinned."
+    },
+    {
+      "command": "npm run test:security-workflow; npm run test:ci-bench-perf-smoke-workflow; npm run test:pr-automation-workflow",
+      "cwd": ".",
+      "status": "passed",
+      "details": "1 / 2 / 4 tests pass, 0 fail. These cover the other two workflow files touched (security.yml) and the jobs whose literal wording or automation depends on unchanged gate semantics."
+    },
+    {
+      "command": "npm run test:scripts",
+      "cwd": ".",
+      "status": "passed",
+      "details": "181 tests, 181 pass, 0 fail — the whole scripts suite including the menu-contract sensor tests added by the previous package."
+    },
+    {
+      "command": "bash -n (extracted run blocks) && behavioural simulation of the ci-summary guard",
+      "cwd": ".",
+      "status": "passed",
+      "details": "The modified ci.yml summary block and the modified quality.yml summary block both pass bash -n. A standalone simulation with GATE_OK=success returned 'pass' for five success values and 'blocking-fail' with exit 1 when FRONTEND_UNIT_TESTS=failure, i.e. the hoisted constant preserves the rejection semantics it replaced."
+    },
+    {
+      "command": "npm run check:failure-registry; check:task-packet; check:task-packet-template; check:docs-frontmatter; check:harness-docs; check:harness-inventory; check:harness-encoding; check:structure; check:generated; check:generated-modules; check:ui-quality-gate; check:duplication",
+      "cwd": ".",
+      "status": "passed",
+      "details": "All exit 0. Failure registry: 1 file, 0 errors, 0 warnings with FR-023 added. Docs frontmatter 400 docs / 280 with frontmatter. Encoding 0 findings across 2591 files. Structure 0 findings across 2939 tracked files."
+    },
+    {
+      "command": "git diff --numstat -- .github/workflows tests/scripts docs/harness/failure-registry.md",
+      "cwd": ".",
+      "status": "passed",
+      "details": "ci.yml +7/-6, quality.yml +17/-15, release-gate.yml +4/-4, security.yml +2/-2, failure-registry.md +2/-0, quality-workflow.test.mjs +6/-1, release-gate-workflow.test.mjs +3/-2. No backend, frontend/src, config, sonar-project.properties, VERSION, CHANGELOG or release-notes file is in the diff, and no .github/workflows file outside the four named."
+    },
+    {
+      "command": "node scripts/harness/check-evidence.mjs --root . --strict; node scripts/harness/check-review.mjs --root . --strict",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Both exit 0 for this package's evidence and review artefacts (readings recorded immediately after the strict runs)."
+    }
+  ],
+  "knownGaps": [
+    "The end-state reading — main's Release Gate going from 'Unprocessed SonarCloud issues: 6' to 0 — can only be taken from the push analysis that follows the merge, so this package is not closed until that number is read back and recorded.",
+    "The trigger of the re-detection itself is not explained by the Sonar web API: the same query returned 0 on the previous main analysis and the six issues have empty changelogs with July-to-October creation dates. The repair does not depend on that explanation, and no Sonar-side setting was changed to force the number.",
+    "Sub-threshold \"success\" literals stay in the workflows: release-gate.yml:281-284 has 4 in one step and security.yml:108-110 has 3, alongside several single-occurrence steps in quality.yml, security.yml and release-gate.yml. The smallest repetition Sonar actually reported is 5 (ci.yml), so these sit under the rule's threshold today; hoisting them now would widen a release-blocking diff without closing a finding. The trade-off is explicit: adding a fifth gate to the release-gate summary step would create a new finding at the next analysis.",
+    "There is still no local sensor that reads workflow YAML style, which is why this class can only surface through Sonar at the release checkpoint. FR-023 records the gap with 'no-repeat-observed' rather than adding a checker inside a debt-closure package; whether to build one is a maintainer decision.",
+    "The pantheon-ops copy of these workflow patterns is not touched here: workflows are each repository's own CI asset and not a foundation contract surface, so no release or consumer sync is required for this package."
+  ]
+}

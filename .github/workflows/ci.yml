@@ -464,6 +464,7 @@ jobs:
           GO_LINT: ${{ needs.go-lint.outputs.lint-result }}
           BOUNDARY_GATE: ${{ needs.boundary-gate.result }}
           COVERAGE_GATE: ${{ needs.coverage-gate.result }}
+          GATE_OK: success
         run: |
           echo "## CI Summary" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
@@ -476,11 +477,11 @@ jobs:
           echo "| Boundary Gate | $BOUNDARY_GATE |" >> "$GITHUB_STEP_SUMMARY"
           echo "| Coverage Gate | $COVERAGE_GATE |" >> "$GITHUB_STEP_SUMMARY"
 
-          if [ "$FAST_CHECKS" != "success" ] || \
-             [ "$UNIT_TESTS" != "success" ] || \
-             [ "$FRONTEND_UNIT_TESTS" != "success" ] || \
-             [ "$BOUNDARY_GATE" != "success" ] || \
-             [ "$COVERAGE_GATE" != "success" ]; then
-            echo "Critical check did not complete successfully"
+          if [ "$FAST_CHECKS" != "$GATE_OK" ] || \
+             [ "$UNIT_TESTS" != "$GATE_OK" ] || \
+             [ "$FRONTEND_UNIT_TESTS" != "$GATE_OK" ] || \
+             [ "$BOUNDARY_GATE" != "$GATE_OK" ] || \
+             [ "$COVERAGE_GATE" != "$GATE_OK" ]; then
+            echo "Blocking check did not complete successfully" >&2
             exit 1
           fi

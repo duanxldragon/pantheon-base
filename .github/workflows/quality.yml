@@ -237,6 +237,7 @@ jobs:
           HARNESS_SYNC_RESULT: ${{ steps.harness-sync.outcome }}
           HARNESS_VISUAL_RESULT: ${{ steps.harness-visual.outcome }}
           GENERATED_MODULES_RESULT: ${{ steps.generated-modules.outcome }}
+          GATE_OK: success
         run: |
           # Report harness check results
           echo "## Harness Governance Results" >> "$GITHUB_STEP_SUMMARY"
@@ -275,14 +276,14 @@ jobs:
           fi
 
           # Enforce strict gate for main/release pushes
-          if [ "${FAILURE_REGISTRY_RESULT}" != "success" ] || \
-             [ "${HARNESS_METHOD_RESULT}" != "success" ] || \
-             [ "${HARNESS_ADOPTION_RESULT}" != "success" ] || \
-             [ "${HARNESS_TEMPLATE_RESULT}" != "success" ] || \
-             [ "${HARNESS_DOCS_RESULT}" != "success" ] || \
-             [ "${HARNESS_INVENTORY_RESULT}" != "success" ] || \
-             [ "${HARNESS_SYNC_RESULT}" != "success" ] || \
-             [ "${GENERATED_MODULES_RESULT}" != "success" ]; then
+          if [ "${FAILURE_REGISTRY_RESULT}" != "$GATE_OK" ] || \
+             [ "${HARNESS_METHOD_RESULT}" != "$GATE_OK" ] || \
+             [ "${HARNESS_ADOPTION_RESULT}" != "$GATE_OK" ] || \
+             [ "${HARNESS_TEMPLATE_RESULT}" != "$GATE_OK" ] || \
+             [ "${HARNESS_DOCS_RESULT}" != "$GATE_OK" ] || \
+             [ "${HARNESS_INVENTORY_RESULT}" != "$GATE_OK" ] || \
+             [ "${HARNESS_SYNC_RESULT}" != "$GATE_OK" ] || \
+             [ "${GENERATED_MODULES_RESULT}" != "$GATE_OK" ]; then
             exit 1
           fi
 
@@ -924,6 +925,7 @@ jobs:
           PR_SMOKE_MODULES_RESULT: ${{ needs.pr-smoke-modules.result }}
           PR_SMOKE_CORE_RESULT: ${{ needs.pr-smoke-core.result }}
           SOLO_OVERRIDE: ${{ contains(github.event.pull_request.labels.*.name, 'solo-override') }}
+          GATE_OK: success
         run: |
           # Maintainer escape hatch: a PR labelled `solo-override` treats every gate
           # as advisory so the solo human is never blocked. Agents must not self-apply
@@ -965,22 +967,22 @@ jobs:
           echo "PR Smoke Modules: ${PR_SMOKE_MODULES_RESULT}"
           echo "PR Smoke Core: ${PR_SMOKE_CORE_RESULT}"
           echo "Runtime Gates Required: ${RUNTIME_GATES_REQUIRED}"
-          if [ "${DOCS_GOVERNANCE_RESULT}" != "success" ] || \
-             [ "${DUPLICATION_RESULT}" != "success" ]; then
+          if [ "${DOCS_GOVERNANCE_RESULT}" != "$GATE_OK" ] || \
+             [ "${DUPLICATION_RESULT}" != "$GATE_OK" ]; then
             exit 1
           fi
           if [ "${RUNTIME_GATES_REQUIRED}" = "true" ] && \
-             { [ "${FRONTEND_CONTRACT_RESULT}" != "success" ] || \
-               [ "${BACKEND_TESTS_RESULT}" != "success" ] || \
-               [ "${GO_LINT_RESULT}" != "success" ] || \
-               [ "${SMOKE_SANITY_RESULT}" != "success" ]; }; then
+             { [ "${FRONTEND_CONTRACT_RESULT}" != "$GATE_OK" ] || \
+               [ "${BACKEND_TESTS_RESULT}" != "$GATE_OK" ] || \
+               [ "${GO_LINT_RESULT}" != "$GATE_OK" ] || \
+               [ "${SMOKE_SANITY_RESULT}" != "$GATE_OK" ]; }; then
             exit 1
           fi
           # PR Smoke Modules is path-driven: it is skipped when no module is touched
           # (docs/governance-only, or a change with no runtime surface). When it does
           # run, it is blocking.
           if [ "${RUNTIME_GATES_REQUIRED}" = "true" ] && \
-             [ "${PR_SMOKE_MODULES_RESULT}" != "success" ] && \
+             [ "${PR_SMOKE_MODULES_RESULT}" != "$GATE_OK" ] && \
              [ "${PR_SMOKE_MODULES_RESULT}" != "skipped" ]; then
             echo "PR Smoke Modules did not succeed: ${PR_SMOKE_MODULES_RESULT}"
             exit 1
