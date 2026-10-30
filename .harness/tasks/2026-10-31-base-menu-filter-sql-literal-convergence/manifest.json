@@ -38,7 +38,7 @@
     "business/*"
   ],
   "implementationNotes": [
-    "收敛方向是 ops→base：消费者已有的更严形式回流底座，落地后两侧该文件逐字节相同，ops 无需为吸收本改动再改一次，因此 Release Requirement 记 none 而非等待下一次发布。",
+    "收敛方向是 ops→base：消费者已有的更严形式回流底座，落地后 base main 与 ops main 该文件逐字节相同，ops 无需为吸收本改动再改一次，因此 Release Requirement 记 none——drift 门禁比对 base HEAD，不依赖新发布。发布资产是另一回事：ops 锁定的 v0.18.1（baseCommit 93505225）里该文件仍是拼接形式，按 lock 重放的干净树会重现旧形式（evidence commands[15] 实测），要等下一次 foundation release 才进入发布资产。",
     "不用白名单收敛是刻意的：allowed-drift.json 的语义是「这里允许与底座不同」，把一条安全收紧记成偏差，等于让下一次真正的偏差也有先例可引。",
     "改动前用 diff 逐块确认两仓该文件只差这条收紧（15a16,23 / 148,150c156,158 / 164c172 / 167c175 / 172c180,181 / 174c183,184 六个 hunk），没有夹带 ops 专有的标识符或 import。",
     "本机 -race 跑不起来：CGO_ENABLED=1 go test -race 在多个包上报 ThreadSanitizer failed to allocate … (error code 87)，是 Windows/cygwin 下 TSan 运行时限制，与被改代码无关；用无 -race 全量测试 + CI 的 race 作业覆盖，并把原始错误记入 evidence。"

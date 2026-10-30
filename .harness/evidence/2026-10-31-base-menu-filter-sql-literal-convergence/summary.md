@@ -68,7 +68,7 @@ ops 为满足自家 `check-gorm-sql-literal.mjs` 而把继承文件里的 GORM �
   不变式由评审与本 evidence 维持。
 - 因此底座文件里那句「`scripts/check-gorm-sql-literal.mjs` 断言这一不变式」在本仓暂时是
   悬空引用。它是字节对齐的刻意代价，不是笔误。
-- 不切 foundation release、不动 `VERSION`/`CHANGELOG`：发布不可逆，时点归维护者。
+- 不切 foundation release、不动 `VERSION`/`CHANGELOG`：发布不可逆，时点归维护者。注意区分：drift 门禁比对的是 base HEAD，所以不依赖新发布即转绿；而 ops 锁定的 release 资产 v0.18.1 里该文件仍是旧形式，按 lock 重放的干净树会重现旧形式（实测），要等下一次 release 才带进发布资产。
 - weekly `Base Compatibility Rebuild` 最近两次 schedule（10-19、10-26）失败在
   `Compile rebuilt backend`，属收敛前 ops 树未对齐 v0.18.1 时期的问题；本包不声称该作业
   已转绿，下一次周一 08:57 的 schedule 读数需回读。

@@ -44,7 +44,7 @@ inheritance-sync
 - Release Requirement: none
 - Downstream Sync Note: 收敛方向是 ops→base（消费者已有的形式回流底座），落地后两侧
   该文件逐字节相同，ops 无需为吸收本改动而再改一次；`Sync Expectation: completed`
-  指的就是这一步已经以字节对齐的方式完成，不依赖新的 foundation release。
+  指这一步已以字节对齐的方式完成、不依赖新发布——但要区分发布资产：ops 锁定的 v0.18.1 里该文件仍是旧形式，按 lock 重放的干净树会重现旧形式，需下一次 foundation release 才把本改动带进发布资产。
 
 ## Dependency Layers
 

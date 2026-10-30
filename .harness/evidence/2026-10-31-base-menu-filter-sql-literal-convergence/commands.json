@@ -114,13 +114,31 @@
       "cwd": ".",
       "status": "passed",
       "details": "首轮 evidence 报 root.commands[13].status must be one of: passed, failed, not-run（占位条目的 status: pending），按实际门禁读数改写后复跑：Evidence check (strict) 2 file(s) 0 error 0 warning，Review check (strict) 2 file(s) 0 error，本包 review 与既有的 2026-10-29-v0180 包均 PASS。"
+    },
+    {
+      "command": "node scripts/create-pr.mjs --title \"fix(business): build menu IN clauses from whole-clause constants (base-first drift convergence)\" --body-file .harness/evidence/2026-10-31-base-menu-filter-sql-literal-convergence/pr-body.md",
+      "cwd": ".",
+      "status": "passed",
+      "details": "首轮被治理层拦下：invalid value for PR field: Ratchet Decision——drift-converged-at-source 不在 RATCHET_DECISIONS 词表内，改为 no-repeat-observed（本包确实不新增传感器或门禁），并同步 task.md 与 manifest 后复跑通过，创建 https://github.com/duanxldragon/pantheon-base/pull/477。包装器同时打印 Warning: 6 uncommitted changes，指工作树里既有的 i18n 改动，本 PR 未 stage 它们。"
+    },
+    {
+      "command": "node scripts/business-overlay/rebuild-from-base.mjs && grep -n 'IN ?\"' .tmp/business-overlay-rebuild/backend/modules/business/retired_modules.go",
+      "cwd": "pantheon-ops",
+      "status": "passed",
+      "details": "按 lock（Base commit: 93505225 = v0.18.1）重放的干净消费者树里，该文件仍是收敛前的拼接形式（:172 Or(column+\" IN ?\")、:174 Where(…)）。这是锁定快照的正确行为——release 资产冻结在切版时刻，不是本改动的漏点。临时树读完即删。"
+    },
+    {
+      "command": "node scripts/business-overlay/rebuild-from-base.mjs --base ../pantheon-base --target .tmp/base-compatibility && node scripts/business-overlay/check-shared-drift.mjs --root .tmp/base-compatibility --base ../pantheon-base && node scripts/check-gorm-sql-literal.mjs --root .tmp/base-compatibility",
+      "cwd": "pantheon-ops",
+      "status": "passed",
+      "details": "复现 weekly Base Compatibility Rebuild 的 CI 组合（两步都用 current base，不用 lock）：重放树 Base commit = 9cd6c6b5（含本改动），该文件不再有 DRIFT_MODIFIED，check-gorm-sql-literal 在本包文件上 0 条违规。重放树唯一的 DRIFT_MODIFIED 是 backend/modules/system/i18n/builtin_locale_resources.json——原因是底座工作树带着未提交的 i18n 改动而重建读的是工作树、drift 比对读的是 HEAD，属本地脏树噪声，CI 检出的是干净 base main，不成立该条件。临时树读完即删，ops 工作树恢复 clean。"
     }
   ],
   "knownGaps": [
     "本机无法运行 -race：ThreadSanitizer 在 Windows/cygwin 上初始化失败（error code 87）。以无 -race 全量测试（47 包 ok）加 CI 的 race 作业覆盖；见 commands[8]。",
     "底座没有 scripts/check-gorm-sql-literal.mjs 这条门禁。本包只把不变式的代码形态搬到底座，把检查器引入底座 CI 需动 package.json 与 .github/workflows/*（高风险范围、需两位批准），留维护者决定；在那之前底座的这条不变式靠评审与本 evidence 维持。",
     "底座该文件保留了指向 ops 独有脚本的注释（scripts/check-gorm-sql-literal.mjs 断言这一不变式），在底座仓内暂时是悬空引用。刻意保留的原因是 shared-drift 按字节比对，任何注释差异都会重新产生 DRIFT_MODIFIED；消解路径与上一条相同——检查器进底座后注释即自洽。",
-    "本包不切 foundation release、不动 VERSION/CHANGELOG：底座 main 前进后，消费者按既有 lock 继续工作（该文件两侧已字节相同，无需 bump）。下一次发布切版时本改动自然随包流向消费者，切版时点归维护者。",
+    "本包不切 foundation release、不动 VERSION/CHANGELOG。需要区分两件事：base main 与 ops main 的该文件已逐字节相同，因此消费者的 shared-drift 门禁（比对 base HEAD）与 weekly CI 组合都不需要新发布；但 ops 锁定的 release 资产 v0.18.1（baseCommit 93505225）里该文件仍是拼接形式——按 lock 重放的干净树会重现旧形式，直到下一次 foundation release 把本改动带过去。切版时点归维护者。",
     "weekly Base Compatibility Rebuild 的最近两次 schedule 触发（2026-10-19、2026-10-26）失败在 Compile rebuilt backend 一步，属收敛前 ops 树未对齐 v0.18.1 时期的问题；本包不声称该作业已转绿，下一次周一 08:57 的 schedule 读数需回读。",
     "工作树中既有的未提交 i18n 改动（backend/modules/system/i18n/builtin_locale_resources.json 与 frontend/src/i18n/resources/*.ts）属别的在途工作，本 PR 不 stage、不提交、不背书。"
   ]

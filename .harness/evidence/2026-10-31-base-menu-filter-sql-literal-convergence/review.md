@@ -27,7 +27,11 @@
    收敛前：`FAIL shared drift check: 1 modified … DRIFT_MODIFIED backend/modules/business/retired_modules.go`。
    收敛后（底座提交 `c335e5b9` 之后）：`OK shared drift check: 812 shared files identical to base,
    10 allowlisted drift, 161 business-overlay files skipped`。两次输出的 10 条
-   `ALLOWED_DRIFT` 是同一批条目，本包既没新增也没删除。→ **通过**
+   `ALLOWED_DRIFT` 是同一批条目，本包既没新增也没删除。另按 weekly
+   `Base Compatibility Rebuild` 的 CI 组合复现：`rebuild-from-base.mjs --base ../pantheon-base`
+   产出的干净消费者树里该文件已是新形式，`check-shared-drift --root <rebuilt>` 与
+   `check-gorm-sql-literal --root <rebuilt>` 双双通过（commands[16]）；按 lock 重放时该文件仍是
+   旧形式（commands[15]），这是发布资产冻结在切版时刻的正确行为，不是本包的漏点。→ **通过**
 
 5. **没有动 `.foundation/allowed-drift.json`。**
    本包的立场就是不用白名单静音这条 drift；该文件在本分支零改动，且此前一次尝试写入它的
@@ -78,7 +82,7 @@
       "P2: the converged file keeps a comment naming scripts/check-gorm-sql-literal.mjs, which does not exist in base; byte-identity is the unit the drift checker compares, so divergent comments would re-create DRIFT_MODIFIED. Recorded as a known gap, not silently rewritten.",
       "P2: the weekly Base Compatibility Rebuild is not claimed green by this package - its last two scheduled runs failed at Compile rebuilt backend before ops aligned to v0.18.1; the next Monday 08:57 schedule reading still has to be collected.",
       "P3: local -race cannot run on this host (ThreadSanitizer allocation error 87 under Windows/cygwin); coverage is the uncached full go test ./... (47 packages ok) plus the CI race job.",
-      "P3: no foundation release is cut here; ops needs none for this file because both copies are already byte-identical, and the change rides into the next release naturally.",
+      "P3: no foundation release is cut here. The consumer drift gate compares against base HEAD, so green needs no release - base main and ops main now hold identical bytes. The locked release asset is a different matter: v0.18.1 (baseCommit 93505225) still carries the concatenation form, so a lock-resolved rebuild reproduces the old file until the next release carries this change.",
       "P3: the six pre-existing uncommitted i18n files in the base working tree belong to other in-flight work and are neither staged nor endorsed."
     ],
     "notes": "Inheritance drift converged at its source instead of being allowlisted. pantheon-ops had restructured two GORM menu-filter clauses in a base-owned shared file into whole-clause package constants, because an ops-only checker asserts that SQL text and column names are literals or package constants; base kept the column-name concatenation, so the consumer's drift gate reported DRIFT_MODIFIED on exactly that file. This package ports the consumer form into base, byte-identical to the consumer copy, which removes the drift at the shared source, gives base the same SQL-construction invariant, and leaves .foundation/allowed-drift.json untouched. Behaviour is unchanged: module IN ?, path IN ? and component IN ? are what the concatenation produced, values still bind only through ?, and the rewritten helper is package-private with no other callers. Readings: consumer gate FAIL 1 modified before / OK 812 identical + 10 pre-existing allowlisted after; ops checker 2 violations before / 0 after on the same file; base go vet + build clean, uncached go test ./... 47 packages ok, gofmt clean, single-file diff 17 insertions / 7 deletions. No suppression marker, no threshold change, no workflow or release file touched."

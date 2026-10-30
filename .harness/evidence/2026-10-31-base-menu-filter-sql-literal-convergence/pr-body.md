@@ -35,9 +35,9 @@
 - permission contract: 未新增/未修改任何权限键；菜单过滤条件的取值集合与绑定方式逐条不变
 - audit coverage: not-applicable（无审计链路改动）
 - visual evidence: not-applicable（无 UI 面；改动文件是后端查询构造，前端与本改动无对应面）
-- inheritance contract: Base-first——消费者的更严形式回流底座，不在消费者长期持有私有偏差；回流后两侧字节相同，故本包不依赖新 foundation release 即完成同步（Release Requirement：none）
+- inheritance contract: Base-first——消费者的更严形式回流底座，不在消费者长期持有私有偏差；回流后 base main 与 ops main 该文件字节相同，drift 门禁（比对 base HEAD）不依赖新发布即转绿（Release Requirement：none）
 - base drift: generic-drift-at-source（drift 的成因是两仓门禁不对称：ops 有 `check-gorm-sql-literal.mjs`，底座没有；修法是搬不变式，不是记豁免）
-- Base/ops inheritance: 本 PR 修的是底座侧；消费者已持有相同字节，`check:shared-drift` 提交后即绿。下一次 foundation release 自然包含本改动，切版时点归维护者——本包不动 `VERSION`/`CHANGELOG`/`docs/release-notes/**`
+- Base/ops inheritance: 本 PR 修的是底座侧；消费者 main 已持有相同字节，`check:shared-drift` 提交后即绿。但 ops 锁定的 release 资产 v0.18.1（`baseCommit 93505225`）里该文件仍是拼接形式——按 lock 重放的干净树会重现旧形式（实测见 evidence commands[15]），需下一次 foundation release 才把本改动带进发布资产；切版时点归维护者，本包不动 `VERSION`/`CHANGELOG`/`docs/release-notes/**`
 
 ## 边界说明
 
