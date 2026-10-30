@@ -92,6 +92,17 @@ Review check (strict): 1 file(s), 1 error(s)
 而检查器要求字符串数组。修法是服从检查器既有契约：枚举行改单行纯 token，长说明移到非枚举标签
 `Cross Repository Facts`，`runtimeEvidence` 拆 3 条。没有删内容、没有放宽检查器。
 
+## 收口 PR 的创建被拦在本包之外（如实记录）
+
+分支与两个提交已推送（`8e459ce1` 归档 + 索引，`5cc50d5e` 补 `status → completed`；第二刀是
+必要的更正：`git mv` 只把重命名放进暂存区，状态单行改动留在工作区，首个提交因此不含它声明的
+状态变化——按「不 amend、新建提交」处理，不重写已提交历史）。
+`node scripts/create-pr.mjs …` 在调用 GitHub 之前被 Auto Mode 的安全分类器拦下：
+`[External System Writes] PR creation publishes changes … the task was archival work which the
+agent could have completed locally without externalizing`。正文自身通过 `validatePrBody`
+本地校验（no findings）。按「被拦的调用不重试、外部写入不当默认可做」的纪律，PR 创建与维护者
+批准留作待办；本包的 evidence 因此把 `create-pr` 记为 `not-run`，把 hosted 回读记为未产生。
+
 ## 影响面
 
 - 产品运行面：无。被移动的都是治理档案。

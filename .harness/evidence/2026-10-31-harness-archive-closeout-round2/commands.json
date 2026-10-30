@@ -108,10 +108,16 @@
       "details": "两条都在 worktree 内报同一类嵌套根 finding：adoption → finding: ../pantheon-harness/patterns/{harness-template-taxonomy,tool-adapter-matrix}.md / required upstream Harness method file is missing；doc-links → finding: docs/README.md / missing internal link target: ../../pantheon-harness/patterns/{method-playbook,execution-guardrails,context-engineering-protocol}.md。与 check:docs-frontmatter、check:harness-method 同因（worktree 落在 .tmp/ledger，sibling 仓解析到 pantheon-base/.tmp/pantheon-harness），且都不指向本包改动的文件；本包如实记为 failed 的环境噪声读数，主仓与 hosted Docs Governance 是权威。"
     },
     {
+      "command": "git push -u origin chore/harness-archive-closeout-round2",
+      "cwd": "pantheon-base/.tmp/ledger",
+      "status": "passed",
+      "details": "分支自 main e17eaaa1 切出，两个提交：8e459ce1（git mv 归档 + ARCHIVE.md 索引 + 本包任务包与 evidence）、5cc50d5e（两份已归档 manifest 的 status → completed）。第二个提交是必要的更正：git mv 只把重命名放入暂存区，status 单行改动留在未暂存，首个提交因此只含移动而不含它所声明的状态变化；按「不做 amend、新建提交」的纪律单独补一刀，而不是改写已提交的历史。推送后 git status --short → 0 行。"
+    },
+    {
       "command": "node scripts/create-pr.mjs --title \"chore(harness): archive the two closed 2026-10 task packets and refresh the archive index\" --body-file .harness/evidence/2026-10-31-harness-archive-closeout-round2/pr-body.md",
       "cwd": "pantheon-base/.tmp/ledger",
       "status": "not-run",
-      "details": "收口 PR 经治理包装器提交（包装器先对正文跑 check-pr-governance 再调用 GitHub，且不创建分支/不 stage/不 commit/不 push）。执行结果与 PR 编号、hosted 作业回读在本包提交后补记，不预先写成已完成。"
+      "details": "实际尝试结果：被 Auto Mode 的安全分类器拦下 —— Error: Auto mode: action blocked by classifier — [External System Writes] PR creation publishes changes to a connected GitHub account when the user didn't explicitly ask for PR submission; the task was archival work which the agent could have completed locally without externalizing.（拦在包装器调用 GitHub 之前，包装器本身不做分支/stage/commit/push；正文已通过 check-pr-governance 的本地校验：validatePrBody → no findings）。按不重复被拦调用、不把外部写入当作默认可做的纪律，本包不重试。因此收口 PR 的创建与维护者批准属待办：分支与两个提交已在 origin 上，PR 需维护者一句授权后用同一条包装器命令创建。hosted 回读（Docs Governance / PR Governance Prereq / harness 各 strict 作业）在本包记为未产生，不预先写成 passed。"
     }
   ],
   "knownGaps": [

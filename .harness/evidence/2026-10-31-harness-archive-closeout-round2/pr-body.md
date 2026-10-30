@@ -87,6 +87,7 @@ Review check (strict): 1 file(s), 1 error(s)
 - [x] `check-evidence --strict` / `check-review --strict`：归档后即时 `1 error(s)` ×2（已如实记录），本包证据落盘后 → `1 file(s), 0 error(s), 0 warning(s)` 与 `1 file(s), 0 error(s)`
 - [x] 本包任务包被检查器纠正 2 轮：首轮 `check:task-packet` 报 10 error（缺 `Upstream Dependencies` / `Downstream Consumers` / `Sync Expectation` 标签、缺 `Template` / `Overlay` / 嵌套 `Coverage Dimensions`、枚举值被续行粘连、`runtimeEvidence` 需为字符串数组）；补齐后仍报 `Release Requirement` 粘连——根因是续行标签写了**全角冒号**，`parseLinkageItems` 只认 ASCII 冒号。修法是服从既有契约（枚举行单行纯 token、长说明移到带 ASCII 冒号的非枚举标签），没有删段落、没有改 `check-task-packet.mjs`
 - [x] 环境噪声与被排除的假回归：worktree 内 `check:docs-frontmatter` 报 8 条（全部 `docs/README.md → ../../pantheon-harness/patterns/*`）、`check:harness-method` 多一条 `patterns/METHOD_VERSION.json required file is missing`、`check-adoption` / `check-doc-links` 报同类 sibling finding；**主仓对同一批 404 docs 报 `Frontmatter check passed.`、`check:harness-method` 只剩既有 `openspec` warning**。根因是 worktree 落在 `pantheon-base/.tmp/ledger`，sibling 仓被解析到 `pantheon-base/.tmp/pantheon-harness`。本包以对照读数说明这一点，不改 `docs/README.md` 的链接写法去迎合 worktree
+- [ ] 收口 PR 的创建：`node scripts/create-pr.mjs …` 已被 Auto Mode 安全分类器拦下（`[External System Writes]`，理由是归档任务可在本地完成、用户未显式要求提交 PR）。正文本身通过 `validatePrBody` 本地校验（no findings）。分支 `chore/harness-archive-closeout-round2` 与两个提交已推送，PR 创建与维护者批准属待办，本包不重试被拦的外部写入
 - [ ] hosted 回读（Docs Governance / PR Governance Prereq / harness 各 strict 作业）：待本 PR 打开后回填；本地 worktree 读数不能替代
 
 ## 审核留痕
@@ -98,7 +99,7 @@ Review check (strict): 1 file(s), 1 error(s)
 - Duplication Gate 结果：本地 `npm run check:duplication` → `Result: PASS`（既有 report-only 重复段仍指向 `.github/workflows/*`，本包未新增重复文本）；hosted 判定为准
 - 是否高风险改动：no（纯治理档案移动与索引更新，无源码、无 workflow、无权限/审计链路、无依赖变化；`git diff --stat` 的 13 条 rename 即证明）
 - 本包自审立场：实现者为本包写的 4 个证据文件由「逐条 posture 读数」形式的 review.md 独立复核，每条给实测读数与判定，不给结论式形容词
-- Residual risk / follow-up：①`check-evidence` / `check-review` 的 live-tree-only 口径未接档案回退——本轮之后只要活跃 evidence 目录清空就会重现 `No … found.`，接回退或接 CI 前需先定口径（归维护者）；②本 PR 的 hosted 回读尚未产生，`create-pr.mjs` 记录当前为 `not-run`，不预先写成 passed；③`.tmp/ledger` worktree 的 sibling 解析噪声是本地执行环境产物，收口 PR 提交后移除 worktree；④PR #478 的 manifest 待其合并进 `main` 后按同一入口收口；⑤历史残留（重复产物目录、两份散落 PR 正文、67 个无 manifest 的 `Active` 正文）显式延期，不静默清理
+- Residual risk / follow-up：⓪本 PR 是**两个**提交：`8e459ce1` 做归档与索引，`5cc50d5e` 补两份已归档 manifest 的 `status → completed`——`git mv` 只暂存重命名、状态单行留在未暂存，首个提交因此不含它声明的状态变化；按「不 amend、新建提交」补第二刀，不重写已提交历史。①`check-evidence` / `check-review` 的 live-tree-only 口径未接档案回退——本轮之后只要活跃 evidence 目录清空就会重现 `No … found.`，接回退或接 CI 前需先定口径（归维护者）；②本 PR 的 hosted 回读尚未产生，`create-pr.mjs` 记录当前为 `not-run`，不预先写成 passed；③`.tmp/ledger` worktree 的 sibling 解析噪声是本地执行环境产物，收口 PR 提交后移除 worktree；④PR #478 的 manifest 待其合并进 `main` 后按同一入口收口；⑤历史残留（重复产物目录、两份散落 PR 正文、67 个无 manifest 的 `Active` 正文）显式延期，不静默清理
 
 ## 检查清单
 
