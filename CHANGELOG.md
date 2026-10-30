@@ -6,6 +6,50 @@ Pantheon Base 方法追踪记录。方法论本体位于 `pantheon-harness`。
 
 ---
 
+## [pantheon-base-v0.18.2] — 2026-10-31 (sensor and gate fixes reach the consumer)
+
+> A patch on `release/0.18`. Two consumer-visible shared files change, both without behaviour change on
+> the platform plane: the menu-contract sensor now resolves inline Go constants and fails loudly on
+> unresolvable seed references, and the retired-module menu filter binds whole-clause constants.
+> **No schema change (still 30), no route, permission code, menu key or i18n key change.**
+
+### Fixed
+
+- **The menu-contract sensor can no longer pass a seed it cannot read.** #471 (`03e13d48`) resolves
+  inline `const` blocks and single-line `const` declarations, requires a bare identifier to be a
+  reference (so `item.Key`, `strings.ToLower(x)` and `menuKey(i)` are no longer mistaken for one), and
+  records unresolved bare references as a failure instead of collapsing them to `''` and reporting a
+  bogus mismatch.
+- **The sensor reaches the consumer at all.** `frontend/scripts/check-menu-contract.mjs` was missing
+  from `sharedPaths`, so the #471 fix could not propagate: `pantheon-ops` runs a byte-identical copy in
+  its frontend `prebuild` and would have kept the pre-#471 parser indefinitely. The file is now a
+  declared shared path (52 → 53 entries) and a required entry in
+  `scripts/foundation-release/frontend-ownership.mjs`, so it cannot silently drop out again.
+- **The retired-module menu filter builds its SQL from whole-clause constants.** #477 (`e17eaaa1`)
+  moves `"module IN ?"`, `"path IN ?"` and `"component IN ?"` into package-level constants, so the
+  clause is a literal and the values still bind through `?`. This is the base-first half of the
+  `pantheon-ops` shared-drift convergence; the consumer's own overlay follows in its rebuild.
+
+### Governance
+
+- **Six githubactions findings cleared** (#473, `c1f0b1dd`) across `ci.yml`, `quality.yml`,
+  `release-gate.yml` and `security.yml`; the release gate now reads a transiently failed check-list
+  API call as "no verdict yet" inside its existing 240 × 30s budget instead of failing on the read
+  (#478, `beace427`), with the terminal timeout still failing closed.
+- **Task archive fallback** (#474, `05ee0ec1`): completed task manifests move to
+  `.harness/archive/<YYYY-MM>/` as renames, and `check-pr-governance` resolves archived manifests and
+  packets by the documented fallback, so archive moves no longer break PR governance.
+
+### Verification
+
+- `npm run test:menu-contract` and `node frontend/scripts/check-menu-contract.mjs` green on the
+  release commit; `node --test tests/scripts/foundation-release/` green after the shared-path addition.
+- Consumer acceptance reading for this release: `pantheon-ops` rebuilds against `pantheon-base-v0.18.2`,
+  `check:shared-drift` reports the two shared deltas before the rebuild and 0 modified after it, and
+  `check:menu-contract` runs the post-#471 parser against the ops seeds.
+
+---
+
 ## [pantheon-base-v0.18.1] — 2026-10-29 (restore the shared request-error predicate)
 
 > A patch that adds two lines and deletes none. `pantheon-base-v0.18.0` shipped `frontend/src/api/request.ts`

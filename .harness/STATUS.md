@@ -1,7 +1,26 @@
 # Pantheon Base - Harness 任务状态
 
-**最后更新**: 2026-10-29
-**当前版本**: v0.18.1 已发布（tag `pantheon-base-v0.18.1`，目标提交 `93505225`，四件资产与 `Foundation Release Verify` run 40817118092 已核验）；`pantheon-ops` 已对 0.18.1 重建并通过后端与前端构建
+**最后更新**: 2026-10-31
+**当前版本**: v0.18.1 已发布（tag `pantheon-base-v0.18.1`，目标提交 `93505225`，四件资产与 `Foundation Release Verify` run 40817118092 已核验）；`pantheon-ops` 已对 0.18.1 重建并通过后端与前端构建；`pantheon-base-v0.18.2`（patch）准备中（见下）
+
+## v0.18.2 发布（2026-10-31·准备中）
+
+任务包 `2026-10-31-v0182-menu-contract-shared-surface`，证据在
+`.harness/evidence/2026-10-31-v0182-menu-contract-shared-surface/`（含 `notes/` 三份发布文本）。
+
+- **为什么是 patch**：菜单契约传感器与发布门禁的修复属于 bug fix，退役模块菜单过滤改写为整条
+  子句常量属于不改变行为的内聚修复，符合 `docs/VERSION_MANAGEMENT_GUIDE.md` §2.4。
+- **范围**：`main` 自 `93505225`（v0.18.1）以来的 9 个已合并提交——菜单契约解析修复（#471）、
+  六个 githubactions 告警清零（#473）、任务归档回退（#474）、两轮合并回读（#472/#475/#476）、
+  退役模块 SQL 整条子句常量（#477）、发布门禁轮询韧性（#478）。
+- **共享面登记缺口**：`frontend/scripts/check-menu-contract.mjs` 与 `pantheon-ops`
+  的副本逐字节相同、且由消费仓前端 `prebuild` 执行，却不在 `sharedPaths` 里，导致 #471 的修复
+  无法随 release 到达消费仓。本包把它加入 `sharedPaths.frontend` 与
+  `scripts/foundation-release/frontend-ownership.mjs` 的必需清单，`sharedPaths` 52 → 53。
+- **无迁移**：迁移链仍止于 `000030_tenant_plan_definitions`（schema 30）；无路由、权限、菜单键、
+  i18n 键变化。
+- **消费仓可见增量**：`frontend/scripts/check-menu-contract.mjs` 与
+  `backend/modules/business/retired_modules.go` 两个文件；其余 51 项共享路径与 v0.18.1 相同。
 
 ## v0.18.1 发布（2026-10-29·已发布）
 

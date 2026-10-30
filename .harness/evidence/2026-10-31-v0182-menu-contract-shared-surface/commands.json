@@ -1,0 +1,125 @@
+{
+  "taskId": "2026-10-31-v0182-menu-contract-shared-surface",
+  "repo": "pantheon-base",
+  "agent": {
+    "tool": "other",
+    "adapter": "qoder-agent"
+  },
+  "runtimeSensitive": false,
+  "runtimeGap": "No product runtime is involved: the diff is release metadata, the shared-path enumeration and its tests. The consumer-side readings (shared drift before and after rebuild, backend and frontend builds) are recorded here as the runtime evidence that matters for a foundation release.",
+  "commands": [
+    {
+      "command": "git log --oneline pantheon-base-v0.18.1..origin/main",
+      "cwd": "pantheon-base/.tmp/rel-0182",
+      "status": "passed",
+      "notes": "9 commits since v0.18.1 (93505225): 1eabf455, 03e13d48 (#471), ada0f854, c1f0b1dd (#473), 05ee0ec1 (#474), e99440bc (#475), 2bc77797 (#476), e17eaaa1 (#477), beace427 (#478)."
+    },
+    {
+      "command": "git diff --name-status pantheon-base-v0.18.1..origin/main | filter backend/ frontend/ pkg/",
+      "cwd": "pantheon-base/.tmp/rel-0182",
+      "status": "passed",
+      "notes": "Only two product-tree files changed in the window: backend/modules/business/retired_modules.go (#477) and frontend/scripts/check-menu-contract.mjs (#471). No frontend/src change."
+    },
+    {
+      "command": "diff pantheon-ops/frontend/scripts/check-menu-contract.mjs <(git show pantheon-base-v0.18.1:frontend/scripts/check-menu-contract.mjs)",
+      "cwd": "pantheon-platform",
+      "status": "passed",
+      "notes": "Empty diff: the consumer copy is byte-identical to the v0.18.1 copy the consumer runs in its frontend prebuild. Against origin/main the same comparison differs, and the only difference is #471."
+    },
+    {
+      "command": "diff pantheon-ops/frontend/scripts/check-menu-contract.mjs <(git show origin/main:frontend/scripts/check-menu-contract.mjs)",
+      "cwd": "pantheon-platform",
+      "status": "passed",
+      "notes": "Differs: the base main copy carries the #471 parser repair (inline const resolution, bare-identifier tightening, unresolved-reference reporting). This is the delta the consumer never receives while the file is outside sharedPaths."
+    },
+    {
+      "command": "python3 - <<'PY' (count sharedPaths groups in scripts/foundation-release/build-release-manifest.mjs)",
+      "cwd": "pantheon-base/.tmp/rel-0182",
+      "status": "passed",
+      "notes": "backend 4, frontend 47, docs 2, total 53; 'frontend/scripts/check-menu-contract.mjs' declared true. Was 52 before this package."
+    },
+    {
+      "command": "cat VERSION",
+      "cwd": "pantheon-base/.tmp/rel-0182",
+      "status": "passed",
+      "notes": "0.18.2"
+    },
+    {
+      "command": "grep -c 'pantheon-base-v0.18.2' CHANGELOG.md docs/release-notes/RELEASE_NOTES_v0.18.2.md .harness/STATUS.md",
+      "cwd": "pantheon-base/.tmp/rel-0182",
+      "status": "passed",
+      "notes": "CHANGELOG.md:2, docs/release-notes/RELEASE_NOTES_v0.18.2.md:2, .harness/STATUS.md:1 — all three carry the version."
+    },
+    {
+      "command": "node frontend/scripts/check-menu-contract.mjs",
+      "cwd": "pantheon-base/.tmp/rel-0182",
+      "status": "passed",
+      "notes": "✅ manifest / menu seed 一致性检查通过（19 个菜单，23 条路由，102 个权限，23 个组件键）"
+    },
+    {
+      "command": "npm run test:menu-contract",
+      "cwd": "pantheon-base/.tmp/rel-0182",
+      "status": "passed",
+      "notes": "10 tests / 10 pass / 0 fail, including extractField inline-const resolution, recordUnresolvedConstRefs expression filtering and goConstTable package scanning."
+    },
+    {
+      "command": "node --test tests/scripts/foundation-release/*.test.mjs",
+      "cwd": "pantheon-base/.tmp/rel-0182",
+      "status": "passed",
+      "notes": "57 tests / 57 pass / 0 fail with the 53-entry shared list. The first run failed with 'shared path is missing: frontend/scripts/check-menu-contract.mjs' from cut-foundation-release.test.mjs, which is the fixture guarding the manifest; the fixture was updated rather than the assertion relaxed."
+    },
+    {
+      "command": "node scripts/harness/check-task-packet.mjs --root .",
+      "cwd": "pantheon-base/.tmp/rel-0182",
+      "status": "passed",
+      "notes": "The v0.18.2 packet passes; the only remaining nit was the missing 'Superpowers Plan' recommended linkage item, added afterward."
+    },
+    {
+      "command": "npm run check:task-packet-template",
+      "cwd": "pantheon-base/.tmp/rel-0182",
+      "status": "passed",
+      "notes": "OK pantheon-base task-packet template is present and linked"
+    },
+    {
+      "command": "node scripts/harness/check-failure-registry.mjs --root . --strict",
+      "cwd": "pantheon-base/.tmp/rel-0182",
+      "status": "passed",
+      "notes": "1 file(s), 0 error(s), 0 warning(s)."
+    },
+    {
+      "command": "node scripts/harness/check-structure-contract.mjs --root . --strict",
+      "cwd": "pantheon-base/.tmp/rel-0182",
+      "status": "passed",
+      "notes": "0 finding(s) across 2966 tracked file(s)."
+    },
+    {
+      "command": "node scripts/harness/check-encoding.mjs --root . --strict",
+      "cwd": "pantheon-base/.tmp/rel-0182",
+      "status": "passed",
+      "notes": "0 finding(s) across 2618 scanned file(s)."
+    },
+    {
+      "command": "node scripts/harness/check-doc-inventory.mjs --root . --strict",
+      "cwd": "pantheon-base/.tmp/rel-0182",
+      "status": "passed",
+      "notes": "0 finding(s)."
+    }
+  ],
+  "knownGaps": [
+    "The release cut, the hosted gate readings and the pantheon-ops consumption are recorded by appending to this file after the prep PR merges; the release cannot be dispatched from an unmerged branch because publish-foundation-release.mjs requires a successful Release Gate Summary on the target commit.",
+    "check:docs-frontmatter and the harness-docs family resolve ../../pantheon-harness relative to the checkout root; inside .tmp/rel-0182 that path does not exist, so those checks are read from the main checkout and from the hosted PR run instead of from this worktree.",
+    "The menu-contract repair (#471) and the retired-module rewrite (#477) are re-published here, not re-implemented; reviewers should compare against those commits rather than read this diff as a new sensor change."
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-31-v0182-menu-contract-shared-surface/manifest.json",
+    "taskDoc": "docs/harness/tasks/2026-10-31-v0182-menu-contract-shared-surface.task.md",
+    "evidenceDir": ".harness/evidence/2026-10-31-v0182-menu-contract-shared-surface/",
+    "summaryFile": ".harness/evidence/2026-10-31-v0182-menu-contract-shared-surface/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-31-v0182-menu-contract-shared-surface/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/VERSION_MANAGEMENT_GUIDE.md",
+      "docs/designs/FOUNDATION_RELEASE_MODEL.md"
+    ]
+  }
+}
