@@ -3,7 +3,7 @@ title: 归档收口两个已完成任务包并补 PR 治理传感器的档案回
 doc_type: Remediation
 layer: platform
 depends_on_layers: []
-status: Active
+status: Archived
 linked_contracts:
   - docs/harness/VERIFICATION_EVIDENCE_SPEC.md
   - docs/harness/AI_QUALITY_GOVERNANCE.md
@@ -210,4 +210,4 @@ platform
 - [x] 6 个 `completed` 任务按月归档，`ARCHIVE.md` 统计与清单同步
 - [x] PR 治理传感器具备档案回退，且直查优先、负向用例仍报缺失
 - [x] FR-024 登记 occurrence=2 并实测记录残余消费方
-- [ ] 合并后 `main` 的 `Release Gate` 与全量检查保持绿（终局读数，合并后回读）
+- [x] 合并后 `main` 的 `Release Gate` 与全量检查保持绿（终局读数，合并后回读）：PR #474 squash 到 `05ee0ec1`，main 七个作业（CI / Code Quality Gates / Core Smoke / Full Smoke / Lint Workflows / Security Gates / Release Gate）全部 success，`SonarCloud Gate` 读数 `Unprocessed SonarCloud issues: 0`，独立 API 复核 total 0 且 gate OK

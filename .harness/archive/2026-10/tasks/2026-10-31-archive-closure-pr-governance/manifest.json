@@ -4,7 +4,7 @@
   "title": "归档 6 个已完成任务包并给 PR 治理传感器补上档案回退（FR-024）",
   "goal": "两个 2026-10-30 治理包已合并并在 main 上取到终局读数，但 .harness/tasks/ 仍留 6 个 completed manifest，违反 .harness/ARCHIVE.md 的月度归档约定。本包按约定把 6 个任务的 manifest 与 evidence 用 git mv 落到 archive/2026-10/（.task.md 留在文档面，只把已实测收口的两个包标 Archived），更新归档索引统计与活跃清单，并在准备收口 PR 时撞上 FR-019 那一类的另一半：scripts/check-pr-governance.mjs 用裸 fs.existsSync 校验 Task Manifest / Evidence / Verification evidence / Review Artifact 四个链路字段，任务一旦归档、引用规范路径的 PR 正文即被判「file does not exist in repository」——即归档约定要求的「路径保持不变」在 PR 面不成立。本包让该传感器在直查失败后走 resolveArchiveAwarePath 回退，并补两条相反方向用例（归档路径必须通过；既不 live 也不归档必须仍报缺失），登记 FR-024（occurrence=2，指向 FR-019）并把 check-evidence / check-review / generate-pr-body 的残余用实测读数记录而非推断。零运行时代码、零阈值与门禁语义变化、零 schema 变化。",
   "primaryLayer": "platform",
-  "status": "in-progress",
+  "status": "completed",
   "priority": "P2",
   "type": "governance-sensor",
   "estimatedComplexity": "small",
