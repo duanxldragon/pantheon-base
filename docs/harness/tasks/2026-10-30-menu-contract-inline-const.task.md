@@ -3,7 +3,7 @@ title: 菜单合同传感器解析内联 const 与显式报错（Base-first）
 doc_type: Remediation
 layer: platform
 depends_on_layers: []
-status: Active
+status: Archived
 linked_contracts:
   - docs/contracts/PLATFORM_CONTRACT.md
   - docs/harness/VERIFICATION_EVIDENCE_SPEC.md
@@ -201,4 +201,5 @@ platform
 - [x] 未解析的裸引用成为第一批具名错误，不再静默返回空串
 - [x] 修复前/修复后对照读数实测并写入 evidence（含 HEAD 版误判为「后端缺少菜单 seed」的证据）
 - [x] 传感器接缝导出 + 直接执行守卫，单元测试进 `test:scripts` glob 与 CI
-- [ ] 维护者批准合并（L2）；foundation release 时点由维护者决定
+- [x] 合并已执行（PR #471 squash 到 `03e13d48`，36/37 检查绿、2 项预期跳过，分支已删）；foundation
+      release 时点仍由维护者决定（本包 scope out，见 evidence knownGaps）

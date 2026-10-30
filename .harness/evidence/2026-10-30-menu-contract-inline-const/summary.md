@@ -101,3 +101,13 @@ green: the gate went from "1 misattributed red" to "green" by resolving the refe
   cross-package qualified constants remain unresolvable — but now fail loudly instead of silently.
 - The pre-existing uncommitted i18n files in the working tree are outside this package and were not
   staged; `check:harness-adoption`'s two remaining findings belong to them.
+
+## Post-merge
+
+Merged into `main` as `03e13d48` (PR #471, squash, branch deleted) after 36/37 checks green with the two
+expected skips. The repaired sensor reaches CI without any workflow change — `ci.yml` runs
+`npm run test:scripts` (which globs `tests/scripts/check-menu-contract.test.mjs`) and `quality.yml` runs the
+sensor itself. `Release Gate` is red on that commit for 6 pre-existing `githubactions:` findings in the
+workflow YAML; see `review.md` → Post-merge record. Consumer absorption still waits on a patch foundation
+release, which this package deliberately did not cut.
+

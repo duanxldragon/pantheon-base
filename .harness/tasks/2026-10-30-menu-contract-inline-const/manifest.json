@@ -4,7 +4,7 @@
   "title": "菜单合同传感器解析行内 const 并把解析失败变成具名错误（Base-first）",
   "goal": "pantheon-ops 在 SonarCloud S1192 去重时把菜单/权限/i18n seed 的值改成引用包级常量，而 base 的 frontend/scripts/check-menu-contract.mjs 只从 const ( name = \"value\" ) 块形式建表：行内 const name = \"value\" 不被收集，extractField 随后对该字段静默返回空串，与「字段不存在」不可区分，整条 seed 因保留条件落空而从核验集合消失。消费者当时只能把常量塞回 const 块（ops 侧 serviceModuleKey 的绕行，记录在其任务包 residual risk）才能过门禁。本包在底座修根因：常量表同时收集两种声明形式，被保留的 seed 块中出现无法解析的裸标识符引用时输出带文件、字段与标识符的具名错误并排在错误列表最前，导出可测接缝并加直接执行守卫，配 10 条单元测试。零 schema、零路由、零权限键、零 i18n 资源变化。",
   "primaryLayer": "platform",
-  "status": "in-progress",
+  "status": "completed",
   "priority": "P2",
   "type": "governance-sensor",
   "estimatedComplexity": "small",
