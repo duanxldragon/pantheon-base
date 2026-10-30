@@ -1,0 +1,172 @@
+{
+  "taskId": "2026-10-30-menu-contract-inline-const",
+  "taskDoc": "docs/harness/tasks/2026-10-30-menu-contract-inline-const.task.md",
+  "title": "菜单合同传感器解析行内 const 并把解析失败变成具名错误（Base-first）",
+  "goal": "pantheon-ops 在 SonarCloud S1192 去重时把菜单/权限/i18n seed 的值改成引用包级常量，而 base 的 frontend/scripts/check-menu-contract.mjs 只从 const ( name = \"value\" ) 块形式建表：行内 const name = \"value\" 不被收集，extractField 随后对该字段静默返回空串，与「字段不存在」不可区分，整条 seed 因保留条件落空而从核验集合消失。消费者当时只能把常量塞回 const 块（ops 侧 serviceModuleKey 的绕行，记录在其任务包 residual risk）才能过门禁。本包在底座修根因：常量表同时收集两种声明形式，被保留的 seed 块中出现无法解析的裸标识符引用时输出带文件、字段与标识符的具名错误并排在错误列表最前，导出可测接缝并加直接执行守卫，配 10 条单元测试。零 schema、零路由、零权限键、零 i18n 资源变化。",
+  "primaryLayer": "platform",
+  "status": "in-progress",
+  "priority": "P2",
+  "type": "governance-sensor",
+  "estimatedComplexity": "small",
+  "findings": [
+    "goConstTable 的正则 /^\\s*(\\w+)\\s*(?:string\\s*)?=\\s*\"…\"\\s*$/gm 只能命中 const 块条目；行内 const name = \"value\" 因 const 关键字占据第一个捕获组而不匹配，常量整条缺席。",
+    "extractField 对未命中标识符返回 ''，调用方无法区分「字段不存在」与「传感器解析失败」，parseBackendSeeds 的保留条件 path || pagePerm || perms 因此落空，seed 静默消失。",
+    "实测对照：把 auth/login 菜单 seed 的 Path 改成引用同包行内常量后，HEAD 版传感器输出「后端缺少菜单 seed: /system/login-log」——把传感器缺陷误判成后端缺 seed；修复版对同一 seed 输出 19 个菜单 / 23 条路由 / 102 个权限 / 23 个组件键通过。",
+    "把引用改成未声明标识符时，修复版第一条错误即「后端 seed 引用了无法解析的常量: Path: probeUndeclaredConst (…login_menu.go)」，随后才是下游后果错误。",
+    "ops 的常量块绕行在修复后仍然合法（两种形式都被收集），消费者无需为吸收本修复改动业务 seed 文件。",
+    "第一版实现把 Go 代码里长成 { Key: item.Key } 的片段也当 seed 报，在 system/i18n/i18n_seed.go:94 产生 4 条噪声；用「裸标识符」判定（排除 . / ( / [ 后继）+「被保留块」判定双重收敛。"
+  ],
+  "scope": {
+    "in": [
+      "frontend/scripts/check-menu-contract.mjs：collectGoConsts 收集块条目与行内 const 两种形式（含可选显式类型与行尾注释）",
+      "frontend/scripts/check-menu-contract.mjs：constReference 只把裸标识符视为常量引用",
+      "frontend/scripts/check-menu-contract.mjs：recordUnresolvedConstRefs / takeUnresolvedGoConstRefs，未解析引用作为 main() 的第一批错误",
+      "frontend/scripts/check-menu-contract.mjs：三个 seed 解析循环只在被保留的 seed 块（i18n 循环为 locale/group 命中块）上登记",
+      "frontend/scripts/check-menu-contract.mjs：导出接缝 + pathToFileURL 直接执行守卫",
+      "tests/scripts/check-menu-contract.test.mjs：10 条单元测试（含 var / := 不被当作常量的显式断言）",
+      "package.json：test:menu-contract 别名",
+      "docs/harness/failure-registry.md：FR-022",
+      "任务包、manifest 与 evidence"
+    ],
+    "out": [
+      "任何 backend/** seed、菜单 manifest、路由、权限键、i18n 资源变化",
+      ".github/workflows/*、sonar-project.properties、门禁规则增删",
+      "VERSION / CHANGELOG.md / docs/release-notes/** 与 foundation release 切版发布",
+      "修改 pantheon-ops（消费者绕行不回滚，等下一次 foundation release 吸收）",
+      "用 NOSONAR / //nolint / eslint-disable / 降阈值让读数变绿",
+      "stage 工作树中既有的未提交 i18n 改动（builtin_locale_resources.json 与 frontend/src/i18n/resources/*.ts）"
+    ]
+  },
+  "dependencyLayers": [
+    "platform"
+  ],
+  "implementationNotes": [
+    "漏收的直接后果不是报错而是假象：常量表少一个条目时 extractField 返回空串，整条 seed 从核验集合消失，门禁要么误报「后端缺少菜单 seed」，要么对该菜单永久失明。",
+    "具名错误排在错误列表最前是刻意的：解析失败是原因，后端缺少 seed 是后果；顺序颠倒会把读者引向补 seed 而不是修传感器。",
+    "登记范围限定在被保留的 seed 块，i18n 两个循环例外地放宽到 locale/group 命中即登记——因为 key 已被解析失败清空时，&& key 条件本身就会跳过该块，用缺陷的存在去决定是否报告缺陷会自消解。",
+    "行内常量收集不引入 var 污染：显式类型仅在 const 关键字之后才被接受，单元测试对 var label = \"runtime\" 与 k := \"short\" 断言不收录。",
+    "本包不切 foundation release：ops 吸收该传感器修复需要一次 patch 发布，发布不可逆，时点归维护者。"
+  ],
+  "contractAnchors": [
+    "docs/contracts/PLATFORM_CONTRACT.md",
+    "docs/harness/VERIFICATION_EVIDENCE_SPEC.md",
+    "docs/harness/failure-registry.md",
+    "docs/designs/REPOSITORY_LAYOUT.md"
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "permission-policy",
+    "portableFailureClass": "static-sensor-gap",
+    "ownerLayer": "foundation-source",
+    "ratchetDecision": "sensor-added",
+    "coverageDimensions": [
+      "behaviour",
+      "maintainability"
+    ]
+  },
+  "expectedFiles": {
+    "create": [
+      "docs/harness/tasks/2026-10-30-menu-contract-inline-const.task.md",
+      ".harness/tasks/2026-10-30-menu-contract-inline-const/manifest.json",
+      ".harness/evidence/2026-10-30-menu-contract-inline-const/commands.json",
+      ".harness/evidence/2026-10-30-menu-contract-inline-const/summary.md",
+      ".harness/evidence/2026-10-30-menu-contract-inline-const/review.md",
+      ".harness/evidence/2026-10-30-menu-contract-inline-const/pr-body.md",
+      "tests/scripts/check-menu-contract.test.mjs"
+    ],
+    "modify": [
+      "frontend/scripts/check-menu-contract.mjs",
+      "package.json",
+      "docs/harness/failure-registry.md"
+    ],
+    "doNotTouch": [
+      "backend/**",
+      "frontend/src/**",
+      ".github/workflows/**",
+      "sonar-project.properties",
+      "VERSION",
+      "CHANGELOG.md",
+      "docs/release-notes/**",
+      "backend/modules/system/i18n/builtin_locale_resources.json",
+      "frontend/src/i18n/resources/"
+    ]
+  },
+  "executionRoles": {
+    "implementerPosture": "只改传感器的解析与报错语义，加最小可测接缝与单元测试；被核验对象（seed、菜单、权限、i18n）一律不动，用修复前后的实测对照替代口头断言。",
+    "reviewerPosture": [
+      "确认 diff 只含 frontend/scripts/check-menu-contract.mjs、tests/scripts/check-menu-contract.test.mjs、package.json 一行别名、failure-registry 一行与本包文档。",
+      "确认 HEAD 版传感器对行内常量 seed 报「后端缺少菜单 seed」而修复版报「引用了无法解析的常量」两条读数都记录在 commands.json，且临时改动已还原。",
+      "确认 var / := 不被收录有显式用例，且登记只发生在被保留的 seed 块上（i18n 循环的放宽有自消解论证）。",
+      "确认 cd frontend && npm run check:menu-contract 在修复后仍为 19 菜单 / 23 路由 / 102 权限 / 23 组件键，即没有靠放宽判定变绿。",
+      "确认没有新增豁免、没有降阈值、没有 stage 工作树中既有的未提交 i18n 改动。",
+      "确认本包不动 VERSION / CHANGELOG / workflow，release 时点留给维护者。"
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "npm run test:menu-contract",
+      "npm run test:scripts",
+      "cd frontend && npm run check:menu-contract",
+      "git show HEAD:frontend/scripts/check-menu-contract.mjs > frontend/scripts/probe-old.mjs && cd frontend && node ./scripts/probe-old.mjs（行内常量 seed 的修复前对照，随后删除）",
+      "node ./scripts/check-menu-contract.mjs（同一 seed 的修复后对照 + 未声明标识符负对照，随后 cp 还原 seed 文件）",
+      "npm run check:harness-adoption -- --strict",
+      "npm run check:task-packet",
+      "npm run check:task-packet-template",
+      "npm run check:docs-frontmatter",
+      "npm run check:structure",
+      "npm run check:harness-encoding",
+      "npm run check:harness-docs",
+      "npm run check:failure-registry",
+      "npm run check:generated",
+      "npm run check:generated-modules",
+      "npm run check:ui-quality-gate",
+      "npm run check:duplication",
+      "node scripts/harness/check-evidence.mjs --root . --strict",
+      "node scripts/harness/check-review.mjs --root . --strict",
+      "node scripts/create-pr.mjs --title ... --body-file .harness/evidence/2026-10-30-menu-contract-inline-const/pr-body.md",
+      "git diff --stat"
+    ],
+    "runtimeEvidence": [
+      "传感器是构建期脚本，其运行侧证据是对同一份 seed 的 HEAD 版/修复版输出差异与未声明标识符的具名错误，无 UI 或 API 运行时面变化"
+    ]
+  },
+  "runtimeSensitive": false,
+  "runtimeGap": "改动只影响一个 CI/构建期治理脚本的解析与报错语义，不触碰任何运行时路径、组件或接口；运行侧证据是「HEAD 版误报后端缺少 seed / 修复版通过 / 未声明标识符报具名错误」这组对同一份 seed 的实测读数，浏览器或后端 smoke 与本改动无对应面。",
+  "evidenceRequired": [
+    ".harness/evidence/2026-10-30-menu-contract-inline-const/commands.json：单元测试、全量 test:scripts、门禁读数、修复前后对照实验、治理检查读数",
+    ".harness/evidence/2026-10-30-menu-contract-inline-const/summary.md：根因、两条判定规则、对消费者的影响与 release 缺口",
+    ".harness/evidence/2026-10-30-menu-contract-inline-const/review.md：逐条 reviewer posture 读数 + Machine Readable 块",
+    ".harness/evidence/2026-10-30-menu-contract-inline-const/pr-body.md：经 check-pr-governance 校验的 PR 正文"
+  ],
+  "humanGates": [
+    "合并与 foundation release 时点归维护者：ops 吸收本修复需要一次 patch 发布，tag 与 release 一旦创建不可回收，故本包不切版不发布。",
+    "工作树中既有的未提交 i18n 改动（builtin_locale_resources.json 与 frontend/src/i18n/resources/*.ts）由本包显式排除在 stage 之外；若与别的在途任务冲突，由维护者裁决。",
+    "ops 侧 serviceModuleKey 的常量块绕行是否回滚，属消费者仓库的评审，不在本包决定。"
+  ],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed",
+    "两种常量声明形式都被收集，var/:= 有显式不收集断言",
+    "未解析的裸引用成为第一批具名错误，不再静默返回空串",
+    "修复前/修复后对照读数实测并写入 evidence",
+    "传感器接缝导出 + 直接执行守卫，单元测试进 test:scripts glob 与 CI",
+    "维护者批准合并（L2）；foundation release 时点由维护者决定"
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-30-menu-contract-inline-const/manifest.json",
+    "taskDoc": "docs/harness/tasks/2026-10-30-menu-contract-inline-const.task.md",
+    "evidenceDir": ".harness/evidence/2026-10-30-menu-contract-inline-const/",
+    "summaryFile": ".harness/evidence/2026-10-30-menu-contract-inline-const/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-30-menu-contract-inline-const/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/failure-registry.md",
+      "docs/designs/REPOSITORY_LAYOUT.md",
+      "docs/harness/VERIFICATION_EVIDENCE_SPEC.md"
+    ]
+  }
+}

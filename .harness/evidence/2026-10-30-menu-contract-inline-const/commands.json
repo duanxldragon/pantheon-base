@@ -1,0 +1,139 @@
+{
+  "taskId": "2026-10-30-menu-contract-inline-const",
+  "repo": "pantheon-base",
+  "executedAt": "2026-10-30",
+  "agent": {
+    "tool": "other",
+    "adapter": "qoder-agent"
+  },
+  "runtimeSensitive": false,
+  "runtimeGap": "改动只影响一个 CI/构建期治理脚本的解析与报错语义，没有运行时路径、组件或接口面；运行侧证据是对同一份 seed 的 HEAD 版/修复版读数差与未声明标识符的具名错误读数（见 commands 5-8）。浏览器 smoke 与后端 smoke 对本改动无对应面。",
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-30-menu-contract-inline-const/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-30-menu-contract-inline-const/",
+    "reviewFile": ".harness/evidence/2026-10-30-menu-contract-inline-const/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/failure-registry.md",
+      "docs/designs/REPOSITORY_LAYOUT.md",
+      "docs/harness/VERIFICATION_EVIDENCE_SPEC.md"
+    ]
+  },
+  "commands": [
+    {
+      "command": "git log --oneline -1 && git status --short",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Branch fix/menu-contract-inline-const from main @ 1eabf455. Touched by this task: frontend/scripts/check-menu-contract.mjs, package.json, docs/harness/failure-registry.md, plus new tests/scripts/check-menu-contract.test.mjs and the packet. The six pre-existing uncommitted i18n files (backend/modules/system/i18n/builtin_locale_resources.json and frontend/src/i18n/resources/*.ts) belong to other in-flight work and are not staged by this PR."
+    },
+    {
+      "command": "node --test tests/scripts/check-menu-contract.test.mjs",
+      "cwd": ".",
+      "status": "passed",
+      "details": "10/10 pass, 0 fail. Cases: block-form const collected; inline const collected with and without an explicit type and with a trailing comment; var/:= assignments NOT collected; extractField resolves through both declaration shapes; literal field and unrelated field name stay silent; recordUnresolvedConstRefs reports a bare unresolvable reference and ignores expressions (item.Key, strings.ToLower(x), menuKey(i)) plus resolved references; the accumulator drains; goConstTable aggregates every non-test file of the package directory and skips _test.go."
+    },
+    {
+      "command": "npm run test:scripts",
+      "cwd": ".",
+      "status": "passed",
+      "details": "tests 181, pass 181, fail 0, duration 13.3s. The new file is inside the tests/scripts/*.test.mjs glob, so it runs in CI through ci.yml's npm run test:scripts step (Unit Tests / Fast Checks) without a workflow edit."
+    },
+    {
+      "command": "node ./scripts/check-menu-contract.mjs",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "exit 0 — ✅ manifest / menu seed 一致性检查通过（19 个菜单，23 条路由，102 个权限，23 个组件键）. Same counts as before the change, so the repair did not pass by dropping or relaxing checks."
+    },
+    {
+      "command": "python: add `const probeLoginLogPath = \"/system/login-log\" // inline form, not a const block` to backend/modules/auth/login/login_menu.go and change the login-log seed to `Path: probeLoginLogPath`",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Temporary in-tree control fixture. It exists to measure the sensor, not to change the contract: the seed value stays byte-identical, only its declaration shape moves to the inline form the HEAD sensor cannot read. The file was restored afterwards (command 9)."
+    },
+    {
+      "command": "git show HEAD:frontend/scripts/check-menu-contract.mjs > frontend/scripts/probe-old.mjs && node ./scripts/probe-old.mjs; rm -f frontend/scripts/probe-old.mjs",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "BEFORE reading (HEAD sensor, same inline-const seed): exit 1 — ❌ 后端缺少菜单 seed: /system/login-log (frontend/src/modules/auth/index.ts). The sensor lost the seed because it could not resolve the inline const, then blamed the backend for lacking a seed that is present and correct. This is the misattribution the task is about, measured rather than asserted."
+    },
+    {
+      "command": "node ./scripts/check-menu-contract.mjs",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "AFTER reading (repaired sensor, same inline-const seed): exit 0 with 19 菜单 / 23 路由 / 102 权限 / 23 组件键 — the seed resolves, is retained, and is cross-checked. The probe copy of the old sensor was deleted before this run, so only the repaired file is on disk afterwards."
+    },
+    {
+      "command": "python: change the same seed to `Path: probeUndeclaredConst` (no declaration anywhere in the package), then node ./scripts/check-menu-contract.mjs",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "NEGATIVE control for the fail-loud half: exit 1, and the FIRST finding is 后端 seed 引用了无法解析的常量: Path: probeUndeclaredConst (backend/modules/auth/login/login_menu.go) — file, field and identifier named. The downstream consequence (后端缺少菜单 seed: /system/login-log) follows it instead of replacing it, which is the ordering the implementation note describes."
+    },
+    {
+      "command": "cp /tmp/login_menu.bak backend/modules/auth/login/login_menu.go && git status --short backend/modules/auth/login/login_menu.go",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Control fixture restored: git reports the seed file clean, so no temporary edit is part of the diff. Both controls were run against the working tree only; nothing was committed from them."
+    },
+    {
+      "command": "node ./scripts/check-menu-contract.mjs  (first implementation iteration, before the two narrowing rules)",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "Recorded as a measurement of the design, not as a gate result: the first version emitted 4 findings from Go code that merely looks like a seed block — Key: item / Key: strings / Key: localeKey / Module: canonical, all from backend/modules/system/i18n/i18n_seed.go (e.g. line 94 `result[i18nLocaleKey{Locale: item.Locale, Key: item.Key}]`). That noise is why the final rule requires BOTH a bare identifier (no following ., ( or [) AND a block the parser actually retains as a seed."
+    },
+    {
+      "command": "npm run check:harness-adoption -- --strict",
+      "cwd": ".",
+      "status": "passed",
+      "details": "exit 0 after the packet was added: 0 findings on this package's files. The only two findings in the tree name backend/modules/system/i18n/builtin_locale_resources.json (implementation change without matching task manifest / verification evidence) — the pre-existing uncommitted i18n work, not this change. frontend/ is inside IMPLEMENTATION_ROOTS, which is why this package carries a manifest plus commands.json."
+    },
+    {
+      "command": "npm run check:task-packet && npm run check:task-packet-template",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Task packet check: 1 file, 0 errors for the new packet (earlier runs in the sequence reported the missing manifest and missing review file, then only the review file, before those artifacts existed); template check OK."
+    },
+    {
+      "command": "npm run check:docs-frontmatter && npm run check:harness-docs && npm run check:harness-inventory && npm run check:harness-encoding && npm run check:structure",
+      "cwd": ".",
+      "status": "passed",
+      "details": "frontmatter: passed, 400 docs / 280 with frontmatter; docs links (strict): 0 findings; docs inventory (strict): 0 findings; encoding (strict): 0 findings across 2584 scanned files; structure contract (strict): 0 findings across 2932 tracked files."
+    },
+    {
+      "command": "npm run check:failure-registry && npm run check:generated && npm run check:generated-modules && npm run check:ui-quality-gate && npm run check:duplication",
+      "cwd": ".",
+      "status": "passed",
+      "details": "failure registry: 0 errors / 0 warnings with FR-022 added; generated artifact check (strict): 0 findings across 11 artifacts; generated-modules: OK, none found; UI quality gate: no findings; duplication: PASS."
+    },
+    {
+      "command": "node scripts/harness/check-evidence.mjs --root . --strict && node scripts/harness/check-review.mjs --root . --strict",
+      "cwd": ".",
+      "status": "passed",
+      "details": "Evidence check (strict): 6 files, 0 errors, 0 warnings (the new commands.json included); review check (strict): 0 errors on the new review.md, including its Machine Readable block."
+    },
+    {
+      "command": "npm run test:smoke:l0",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "L0 static contract smoke: smoke-coverage-contract + check:smoke-web-base (98 files) + check:system-page-admission (16 entries), exit 0."
+    },
+    {
+      "command": "npm run lint && npm run build",
+      "cwd": "frontend",
+      "status": "passed",
+      "details": "eslint . → no findings (covers the edited frontend/scripts file); npm run build runs prebuild, which chains check:menu-contract, check:i18n-hardcode, check:i18n-generated-scope and the rest, then tsc -b && vite build → ✓ built in 1.34s. This is the end-to-end proof that the repaired sensor still satisfies the build pipeline that consumes it, and that dist artifacts did not enter the tree."
+    },
+    {
+      "command": "git diff --stat -- frontend/scripts/check-menu-contract.mjs package.json docs/harness/failure-registry.md",
+      "cwd": ".",
+      "status": "passed",
+      "details": "git diff --numstat: frontend/scripts/check-menu-contract.mjs +94/-22, package.json +1/-0 (the test:menu-contract alias), docs/harness/failure-registry.md +2/-1 (the FR-022 row and the Last reviewed date); tests/scripts/check-menu-contract.test.mjs is a new 130-line file. No backend, frontend/src, workflow, VERSION, CHANGELOG or release-notes file is in the diff."
+    }
+  ],
+  "knownGaps": [
+    "pantheon-ops cannot absorb the repaired sensor until a foundation release carries it; this package deliberately does not bump VERSION, does not write CHANGELOG or release notes, and does not cut or publish a release, because a tag and its release assets cannot be recalled. Release timing is a maintainer decision (manifest humanGates).",
+    "ops' existing workaround (seed constants declared inside a `const ( … )` block, e.g. serviceModuleKey) is not rolled back here. Both declaration shapes are now collected, so the workaround stays legal and simply stops being necessary; whether to normalize it is the consumer repository's own review.",
+    "The sensor is still a regex-over-source parser, not a Go AST consumer: a constant declared with an initializer that is not a plain quoted string (iota, fmt.Sprintf, a cross-package qualified constant) remains unresolvable. The difference after this change is that such a reference now produces a named finding instead of an empty value, which is the fail-loud half of the fix.",
+    "The six uncommitted i18n files in the working tree are not staged, verified or endorsed by this package; check:harness-adoption's two remaining findings belong to them.",
+    "Local check:shared-drift and the ops-side matrices were not run: no consumer file is touched from base, and per the Base-first rule the repair reaches ops only through a release."
+  ]
+}
