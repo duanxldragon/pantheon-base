@@ -40,6 +40,7 @@
 - visual evidence: not-applicable（无 UI 面；改动只存在于 Actions 脚本与其静态断言）
 - inheritance contract: Base-first——门控脚本在底座修，消费者的同名 workflow 概念经下一次发布或维护者显式同步吸收，不手抄（Release Requirement：foundation-release）
 - base drift: not-applicable（本包不动 `.foundation/allowed-drift.json`，两侧 workflow 不属 shared-drift 比对资产）
+- Base/ops inheritance: 本 PR 只动底座自己的 `.github/workflows/**`，不新增/不修改任何 foundation 发布资产，也不向消费者手抄文件（`.foundation/**` 零改动）；`pantheon-ops` 有继承自本仓的 workflow 概念，其吸收走仓库自身的 workflow 声明，时点归维护者（通常随下一次 foundation release 的发布节奏）。本包不切版、不动 `VERSION`/`CHANGELOG`/`docs/release-notes/**`，因此对 ops 的锁与共享字节零影响——`check:shared-drift` 的判定资产不在本 diff 面内
 - CI gate posture: fail-closed 保持不变——持续读不到 → 耗尽 240 次预算后 `Timed out` + `exit 1`；任一必需检查 `conclusion != success` → 立即 `A required check failed` + `exit 1`；无 `|| echo` 兜底常量、无 `continue-on-error`、无跳过检查
 
 ## 边界说明
@@ -94,7 +95,7 @@
 - GitHub checks 结果：pending（`main` 未设 required contexts，结论以 workflow 实跑为准）；本 PR 的 `Actionlint` 是这条脚本形状是否能被 hosted 接受的第一道读数。
 - Auto-merge：由 `pr-automation.yml` 在 PR 打开后自动开启（SQUASH + delete-branch），与本轮既有 PR 一致。已记录的机制事实：自动化 squash 合并会在底座 main 触发 7 个 push 型工作流，回读按 sha 查询即可。
 - Duplication Gate 结果：ran（`npm run check:duplication` → PASS）
-- **是否高风险改动：yes。** `.github/workflows/*` 在 `repo-pr-gate` 中被明确列为高风险范围——**需至少两位非作者批准，其中一位应为 CI/发布负责**。本包不自批、不改评审规则；`pr-automation.yml` 会自动打开 auto-merge，若维护者认为发布门控脚本必须人工把关，请在合并前关闭 auto-merge。
+- 是否高风险改动：yes。`.github/workflows/*` 在 `repo-pr-gate` 中被明确列为高风险范围——**需至少两位非作者批准，其中一位应为 CI/发布负责**。本包不自批、不改评审规则；`pr-automation.yml` 会自动打开 auto-merge，若维护者认为发布门控脚本必须人工把关，请在合并前关闭 auto-merge。
 - 三次自我更正（如实留痕，全部已回落到任务包 / summary / evidence）：
   - ① 初稿把根因写成「空响应喂给 `jq`、`-e` 放大 jq 的非零」，并据此认为「同一份无保护脚本在本地 Git Bash 下不会中止、差异属 runner 语义」。两处错误：日志里的报文属 `gh` 而非 `jq`；抽出脚本时漏掉了 `done` 之后的 `Timed out` + `exit 1` 两行终局，使无保护版看起来「只是跑满预算」。
   - ② 补齐抽取尾部后，又踩到替身退化：为跑得起 240 轮把 `jq` 从 Python 换成纯 bash 时丢了「输入不可解析 ⇒ 非零退出」这一支，于是空体与非 JSON 两支被混为一谈。按 jq 真实退出码补齐（0/1/2/4）并逐支探针后结论稳定：**`gh` 非零与不可解析 body 都在第 1 轮中止（exit 1 / 2、零判定行），空 body 不中止而是耗尽 240 轮变 `Timed out` 假红**——旧实现的假红有三种形状，这也是为什么 `[ -z ]` 或单独的 `|| true` 都盖不全，必须两支守卫一起上。
