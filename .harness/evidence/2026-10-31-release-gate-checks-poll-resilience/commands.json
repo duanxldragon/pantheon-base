@@ -1,0 +1,189 @@
+{
+  "taskId": "2026-10-31-release-gate-checks-poll-resilience",
+  "repo": "pantheon-base",
+  "executedAt": "2026-10-31",
+  "agent": {
+    "tool": "other",
+    "adapter": "qoder-agent"
+  },
+  "runtimeSensitive": false,
+  "runtimeGap": "本改动没有产品运行面：它只存在于 GitHub Actions 的门控脚本读取路径与对该脚本的静态断言里，构建产物与运行时行为均不变。运行证据只能来自 hosted CI，本包给三层读数：失败那次（run 41099026855 / job 124212224199）的原始 job 日志、同一 run 块（保留 {1..240} 真预算、仅归零 sleep）机械抽出后在本地 gh/jq 替身下的 15 组行为读数，每轮跑在独立状态目录且严格串行（无保护版：`gh` 非零与不可解析 body 两支都在第 1 轮中止 exit 1 / exit 2 且零判定行，空体支不中止而是跑满 240 轮变 `Timed out` 假红；修复版：全绿 exit 0 且 gh_calls=1、单项 failure 立即 exit 1、failure 与 in_progress 并存仍判 failure、瞬时无效恢复后 exit 0、持续读不到三种形态均耗尽 240 次真预算以 Timed out exit 1）、以及新 main e17eaaa1 的 Release Gate 实跑对照（completed/success，34 项 check 全绿）。本地替身不是 jq/gh 本体（jq 替身按真实退出码形状实现：合法含键 0 / 合法缺键 1 / 不可解析 2 / 无 JSON 值 4，JSON 合法性用首尾括号形状近似）且 sleep 被归零，真实 -e 传播组合仍由 CI 确认；若再红按同一入口继续收紧而非豁免。",
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-31-release-gate-checks-poll-resilience/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-31-release-gate-checks-poll-resilience/",
+    "reviewFile": ".harness/evidence/2026-10-31-release-gate-checks-poll-resilience/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/VERIFICATION_EVIDENCE_SPEC.md",
+      "docs/contracts/PLATFORM_CONTRACT.md",
+      "docs/harness/failure-registry.md"
+    ]
+  },
+  "commands": [
+    {
+      "command": "gh api repos/:owner/:repo/actions/jobs/124212224199 --jq '[.run_id,.name,.conclusion,.started_at,.completed_at] | @tsv'",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "读数 `41099026855  Candidate Checks  failure  2026-10-30T17:27:48Z  2026-10-30T17:42:51Z`——底座 main `2bc77797` 的 Release Gate 失败作业定位到这一步，非 Summary/Sonar 下游作业。"
+    },
+    {
+      "command": "gh api repos/:owner/:repo/actions/jobs/124212224199/logs（取末尾 12 行）",
+      "cwd": "pantheon-base",
+      "status": "failed",
+      "details": "17:41:18Z attempt 27 六项读数正常（CI Summary/Quality Gates/Security Gates/Actionlint/SonarCloud Code Analysis 全 completed/success，Full Smoke in_progress）→ `Waiting for candidate checks (attempt 27/240)...` → 17:41:52.840Z `unexpected end of JSON input` → 17:41:52.844Z `##[error]Process completed with exit code 1.`。中止与上一次正常读数之间**没有任何 check 输出行**，也没有 `jq: parse error`，说明死在读取响应这一步而非判定；该报文措辞来自 gh（Go encoding/json），jq 的对应措辞是 `parse error: Invalid JSON text`。"
+    },
+    {
+      "command": "gh api \"repos/:owner/:repo/commits/2bc77797/check-runs?per_page=100\" --jq '.check_runs[] | select(...) | [.name,.status,.conclusion,.completed_at] | @tsv'",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "同一候选上的六项必需 check 终局：`Quality Gates success 17:28:09Z`、`Actionlint success 17:27:57Z`、`SonarCloud Code Analysis success 17:29:09Z`、`Security Gates success 17:31:09Z`、`CI Summary success 17:32:34Z`、`Full Smoke completed/success 17:43:54Z`；门控自身 `Candidate Checks failure 17:42:51Z`、`SonarCloud Gate skipped 17:42:51Z`。即轮询在它等待的最后一项变绿前约 2 分钟自杀，候选无任何回归。"
+    },
+    {
+      "command": "python -c \"import yaml; yaml.safe_load(open('.github/workflows/release-gate.yml',encoding='utf-8'))\"",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "YAML OK, jobs: candidate-checks / codeql-alerts / dependabot-alerts / sonarcloud-gate / open-prs / release-gate-summary——改动后工作流仍可解析且作业集合未变。"
+    },
+    {
+      "command": "node -e \"…按 10 空格缩进边界从 YAML（修复版）与 git show HEAD:release-gate.yml（无保护版）机械抽出 for attempt 循环整块；仅把 sleep 30 改写为 sleep 0，循环范围 {1..240} 原样保留\"",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "产出 `.tmp/rgsim/poll.sh`（51 行，修复版）与 `.tmp/rgsim/poll-before.sh`（40 行，无保护版），两份都以 `echo \"::error::Timed out waiting for required checks on $CANDIDATE_SHA.\"` + `exit 1` 结尾，`wc -l` 差 11 行正对应新增的注释与门槛分支。第一版抽取把 `done` 之后的这两行终局漏掉了，导致无保护版在本地「看起来没中止」；补齐尾部后无保护版立刻复现出中止形态——本地差异是抽取缺陷，不是 runner 语义。sleep 归零只影响墙钟时长，不影响判定形状，因此 240 次预算本身也能在本地跑完（见后续记录）。"
+    },
+    {
+      "command": "bash -n .tmp/rgsim/poll.sh && bash -n .tmp/rgsim/poll-before.sh && bash -n .tmp/rgsim/poll-scaled.sh && bash -n .tmp/rgsim/poll-before-scaled.sh",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "四份抽出的 run 块均通过语法检查（修复版在加入 `jq -e` 门槛与 `continue` 分支之后仍闭合）。`*-scaled.sh` 是同一逻辑、把循环缩为 `{1..8}` 的对照版，用于快速确认「耗尽预算」的形状不随循环规模改变。"
+    },
+    {
+      "command": "bash .tmp/rgsim/run.sh poll-before.sh apifail",
+      "cwd": "pantheon-base",
+      "status": "failed",
+      "details": "无保护版 + `gh api` 非零退出（替身打一行 stderr 后 exit 1）→ 读数 `exit=1 gh_calls=1 判定行=0 等待行=0`，输出只有 `GH: could not fetch check runs: temporary failure` 一行。与 CI 日志形态一致：attempt 27 之后没有任何 check 读数，步骤直接中止。"
+    },
+    {
+      "command": "bash .tmp/rgsim/run.sh poll-before.sh garbage && bash .tmp/rgsim/run.sh poll-before.sh empty",
+      "cwd": "pantheon-base",
+      "status": "failed",
+      "details": "「读不到」的另外两支在旧实现里形状不同，各自实测：`garbage`（`gh` 返回 0、body 是非 JSON 文本）→ `exit=2 gh_calls=1 判定行=0 等待行=0`，只留一行 `jq: parse error: Invalid JSON text`，即 `-e` 放大下游 jq 的解析失败、第 1 轮就中止；`empty`（`gh` 返回 0、body 为空）→ 不会中止，jq 对「没有 JSON 值」的输入是零输出 + 退出 0，六项全读成 `Required check … is not present yet`，`exit=1 gh_calls=240 判定行=0 等待行=240`，跑满真预算后以 `Timed out` 假红收场。两条合起来说明：旧实现的假红有三种形状（中止 ×2 与耗尽 ×1），单靠判空或单靠 `|| true` 都盖不全。"
+    },
+    {
+      "command": "bash .tmp/rgsim/run.sh poll.sh allgreen",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "修复版 + 六项全 completed/success → `exit=0 gh_calls=1 判定行=6 等待行=0`，第一轮即 `All required checks passed on deadbeef.`（正常路径不引入任何额外延迟，也不新增轮询）。"
+    },
+    {
+      "command": "bash .tmp/rgsim/run.sh poll.sh onefail && bash .tmp/rgsim/run.sh poll.sh mixed",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "修复版 + `Full Smoke: completed/failure` → `exit=1 gh_calls=1 判定行=6 等待行=0`，第一轮即 `::error::A required check failed on deadbeef.`。再加 `mixed`（Full Smoke `completed/failure` 与 SonarCloud `in_progress/pending` 同轮并存）→ 同形读数 `exit=1 判定行=6 等待行=0`，终局仍是 `A required check failed`：证明 fail-closed 没被「读不到就重试」吞掉，也证明 `failed` 的优先级不被 `pending` 分支吃掉。无保护版对同一 `mixed` fixture 给出同样的 `exit=1 判定行=6`，两版在「有结论」的读数上完全等价。"
+    },
+    {
+      "command": "bash .tmp/rgsim/run.sh poll.sh transient",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "修复版 + 第 1-2 轮空体、第 3-4 轮截断 JSON、第 5 轮起全绿 → `exit=0 gh_calls=5 判定行=6 等待行=4`：前 4 轮各打一行 `Check-runs response unavailable or malformed (attempt N/240); waiting without a verdict.`，第 5 轮 `All required checks passed on deadbeef.`。这正是 `2bc77797` 那一次若脚本不过敏应有的结局（`Full Smoke` 在 17:43:54Z 变 success，门控只是没等到）。"
+    },
+    {
+      "command": "bash .tmp/rgsim/run.sh \"poll.sh {apifail,garbage,empty}\"（{1..240} 真预算，逐条串行）",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "修复版在三种持续读不到的形态下读数完全一致：`exit=1 gh_calls=240 判定行=0 等待行=240`，每轮 `waiting without a verdict`，终局 `::error::Timed out waiting for required checks on deadbeef.`。吸收失败只换来「继续等」，从不换来「绿」，也不会变成无限等待——预算与 fail-closed 语义原样保留。`{1..8}` 的 scaled 对照版给出同形读数（`gh_calls=8 等待行=8` → `Timed out`），说明该结论不依赖循环规模。"
+    },
+    {
+      "command": "bash -c \"for k in name status conclusion check_runs; do …; done\"（jq 替身的退出码形状校正）+ 逐形态探针",
+      "cwd": "pantheon-base/.tmp/rgsim",
+      "status": "passed",
+      "details": "一次必须记下的自我更正：把 `jq` 替身从 Python 换成纯 bash 时，丢掉了「输入不可解析就非零退出」这一支，导致无保护版在 `empty`/`garbage` 两种形态下的读数都被错记成「跑满 240 轮」。补齐 jq 的真实形状后（`jq -e 'has(\"check_runs\")'`：合法含键 → 0；合法缺键 → 1；不可解析 → 2 并打 `jq: parse error: Invalid JSON text`；无 JSON 值（空体）→ 4 且零输出）逐支探针复核，读数与文档一致。替身对「是否是 JSON」用的是首尾括号形状判断（`{…}` / `[…]`），不是完整解析器，这一点在仿真目录注释里写明。"
+    },
+    {
+      "command": "仿真状态隔离：run.sh 为每个 scenario 建立独立 mktemp 状态目录（RGSTATE），gh 替身在其中自增计数并写 gh.log",
+      "cwd": "pantheon-base/.tmp/rgsim",
+      "status": "passed",
+      "details": "第二次自我更正，起因是一份读数自相矛盾：同一 fixture 在全预算版与 scaled 版下等待轮数不同。定位到被 kill 的后台任务留下了仍在 `sleep` 的 `bash -eo pipefail poll.sh` 孤儿子进程，它与新运行共享同一个 `state/count`，把计数往前推。改为每轮独立状态目录 + 串行执行后，`gh_calls` 与等待轮数在两种循环规模下完全一致（transient 均为 `gh_calls=5 等待=4`）。这也说明：读不到的响应形态必须由脚本自己记录，而不是靠「跑一次看看」的口述。"
+    },
+    {
+      "command": "npm run test:release-gate-workflow",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "tests 8 / pass 8 / fail 0（含本包新增 `candidate polling keeps the gate verdict out of transport failures`）。该用例同时锁正形（`gh api … || true`、`jq -e 'has(\"check_runs\")'` 门槛、`waiting without a verdict`、循环内 `jq -c … || true`）与反形（无保护的 `check_runs=$(gh api \"…\")` 不得回归、`gh api` 行不得出现 `2>/dev/null`、`for attempt in {1..240}` 与 `Timed out waiting for required checks` 必须仍在）。"
+    },
+    {
+      "command": "npm run test:scripts",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "tests 184 / pass 184 / fail 0（6.76s）——全量脚本层测试未被本包破坏，既有 `security alert API failures block the release instead of using fallback proxies` 仍在通过，说明本包没有引入兜底常量。"
+    },
+    {
+      "command": "node scripts/harness/check-failure-registry.mjs --root . --strict",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "Failure registry check (strict): 1 file(s), 0 error(s), 0 warning(s) → `[PASS] docs/harness/failure-registry.md`。首轮曾因 FR-025 表格单元里写了字面 `||`（markdown 表格切列）而报错，改为文字描述后通过。"
+    },
+    {
+      "command": "npm run check:docs-frontmatter && npm run check:task-packet-template",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "Frontmatter check passed. Checked 404 docs, 284 with frontmatter；OK pantheon-base task-packet template is present and linked。"
+    },
+    {
+      "command": "npm run check:structure && npm run check:harness-encoding && npm run check:duplication",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "Structure contract check (strict): 0 finding(s) across 2960 tracked file(s)；Encoding check (strict): 0 finding(s) across 2612 scanned file(s)；Duplication Gate Result: PASS（`.github/workflows/smoke-full.yml:38-58` 为既有 advisory 提示，非本包引入）。"
+    },
+    {
+      "command": "npm run check:task-packet",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "回填：本包 `docs/harness/tasks/2026-10-31-release-gate-checks-poll-resilience.task.md` 与同批在包任务包全部 PASS。"
+    },
+    {
+      "command": "node scripts/harness/check-evidence.mjs --root . --strict && node scripts/harness/check-review.mjs --root . --strict",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "回填：Evidence check (strict) 与本包 review/commands 契约 0 error 0 warning，Review check (strict) 0 error。"
+    },
+    {
+      "command": "git diff --numstat",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "本包范围内三处：`.github/workflows/release-gate.yml 13/2`、`tests/scripts/release-gate-workflow.test.mjs 28/0`、`docs/harness/failure-registry.md 23/0`（+ 新建任务包/manifest/evidence）。删除的 2 行都落在同一个 `run` 块内（`check_runs=$(gh api …)` 与 `<<< \"$check_runs\"`），无跨 job 改动。工作树中既有的 6 个未提交 i18n 文件（`backend/modules/system/i18n/builtin_locale_resources.json` 1050/50、`frontend/src/i18n/resources/{en-US,fr-FR,ja-JP,ko-KR,zh-CN}.ts`）不属本包，未 stage、不提交、不背书。"
+    },
+    {
+      "command": "gh run list --workflow=\"Release Gate\" --limit 5 --json databaseId,headSha,status,conclusion,createdAt,updatedAt",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "对照回读：新 main `e17eaaa1`（PR #477 squash）的 Release Gate run 41107553430 = **completed/success**（18:30:43Z → 18:54:01Z），其中 `Candidate Checks` 18:30:46Z → 18:53:47Z 成功；同 sha 的 34 项 check 全绿（`PR Smoke Core (Optional)` skipped 为其既有口径）。`2bc77797` 的红未被本包之外修复，是同类抖动未在该 sha 复现——因此本包的价值是消除复发条件，不是声称已修好某次红。"
+    },
+    {
+      "command": "gh api \"repos/:owner/:repo/commits/e17eaaa1/check-runs?per_page=100\" --jq '.check_runs[] | [.name,.status,.conclusion] | @tsv'",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "底座 main `e17eaaa1` 共 34 项 check 全 `completed/success`，含 `Release Gate Summary` 与 `SonarCloud Gate`（后者在 `2bc77797` 上是被 skipped 的那一环，本轮正常执行并成功）。"
+    },
+    {
+      "command": "gh api repos/:owner/:repo/branches --jq '.[].name'（pantheon-ops 与 pantheon-base 各一次）+ git fetch --prune",
+      "cwd": "pantheon-ops / pantheon-base",
+      "status": "passed",
+      "details": "两仓远端分支均只剩 `main`；ops 的四次手工 dispatch（run 41101277482 Branch Hygiene、41101271073 SonarCloud Scan、41101265304 Security Gates、41101259341 Code Quality Gates）在 `9afabc2a` 上全部 completed/success，此前「仍 queued」的读数已被终局读数替换。ops `9afabc2a` 的 17 项 check 全 success。"
+    },
+    {
+      "command": "rm -rf .tmp/rgsim && git status --short",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "仿真目录（含 gh/jq 替身、抽取出的 run 块、响应 fixture 与 CI 日志副本）不入库；删除后 `git status --short` 只剩本包文件与既有未提交 i18n 改动。"
+    }
+  ],
+  "knownGaps": [
+    "本机没有 jq：仿真用的 `.tmp/rgsim/bin/jq` 是按该步骤实际用到的三个过滤器写的替身（`has(\"check_runs\")`、`[.check_runs[] | select(.name==$name)] | sort_by(.started_at) | last // empty`、`.status` / `.conclusion // \"pending\"`），并在非零退出与「无输出」两处对齐 jq 的语义；它不是 jq 本体，因此「真实 jq 在 ubuntu-latest 上的行为」仍只能由 hosted 回读确认。",
+    "仿真只改写 `sleep 30`→`sleep 0`（循环范围保持 `{1..240}`，另有 `{1..8}` 对照版），因此验证的是判定形状（是否产生结论、退出码、是否耗尽预算）而不是 2 小时墙钟时长；`jq` 为本地 bash 替身（按 jq 的退出码形状实现，JSON 合法性用首尾括号近似），`gh` 由脚本回放，hosted runner 的最终结论仍以 CI 实跑回读为准。",
+    "`gh api` 非零退出的那一轮在修复后仍会消耗一次预算：如果 checks API 长时间不可用，门控会以 `Timed out waiting for required checks` 失败而不是转绿——这是刻意的 fail-closed 取舍，本包不引入兜底常量。",
+    "本包不切 foundation release、不动 VERSION/CHANGELOG：ops 侧继承的同名 workflow 概念要经下一次发布或维护者显式同步才吸收本修复，在那之前消费者的同名作业仍带这条过敏。",
+    "`2bc77797` 的那次 SonarCloud Gate 被 skipped，未被本包重跑补齐；同一 sha 的 Sonar 读数由后续 main sha（`e17eaaa1`）的成功 gate 覆盖，历史 sha 仍缺一次 gate 结论。",
+    "`.github/workflows/*` 属本仓声明的高风险范围（需两位非作者批准，其一为 CI/发布负责）；本包不自批、不改评审规则，auto-merge 由 pr-automation.yml 打开，维护者可在合并前关闭。",
+    "工作树中既有的未提交 i18n 改动（`backend/modules/system/i18n/builtin_locale_resources.json` 与 `frontend/src/i18n/resources/*.ts` 共 6 个文件）属别的在途工作，本 PR 不 stage、不提交、不背书。"
+  ]
+}

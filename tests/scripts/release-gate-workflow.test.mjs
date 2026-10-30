@@ -42,6 +42,34 @@ test('release gate requires every aggregate check on the candidate SHA', () => {
   assert.match(workflowSource, /CANDIDATE_CHECKS.*!= "success"/);
 });
 
+test('candidate polling keeps the gate verdict out of transport failures', () => {
+  const candidateSource = workflowSource.slice(
+    workflowSource.indexOf('  candidate-checks:'),
+    workflowSource.indexOf('  codeql-alerts:'),
+  );
+
+  assert.match(
+    candidateSource,
+    /check_runs=\$\(gh api "repos\/\$REPO\/commits\/\$CANDIDATE_SHA\/check-runs\?per_page=100" \|\| true\)/,
+  );
+  assert.match(
+    candidateSource,
+    /if ! jq -e 'has\("check_runs"\)' <<< "\$check_runs" > \/dev\/null 2>&1; then/,
+  );
+  assert.match(candidateSource, /waiting without a verdict/);
+  assert.match(candidateSource, /last \/\/ empty' \\\n\s*<<< "\$check_runs" \|\| true\)/);
+
+  // The unguarded call is what aborted the job under bash -e; it must not come back.
+  assert.doesNotMatch(candidateSource, /check_runs=\$\(gh api "[^"]*"\)/);
+
+  // Absorbing the exit status must not discard the reason: gh's stderr is the only trace.
+  assert.doesNotMatch(candidateSource, /check_runs=\$\(gh api ".*2>\/dev\/null/);
+
+  // Waiting is bounded: an unreadable response can consume the budget but never green the gate.
+  assert.match(candidateSource, /for attempt in \{1\.\.240\}/);
+  assert.match(candidateSource, /Timed out waiting for required checks/);
+});
+
 test('release certification checks run on every main candidate', () => {
   assert.match(workflowSource, /push:\s*\n\s+branches:\s*\n\s+- main/);
   assert.match(lintWorkflowSource, /push:\s*\n\s+branches:\s*\n\s+- main/);

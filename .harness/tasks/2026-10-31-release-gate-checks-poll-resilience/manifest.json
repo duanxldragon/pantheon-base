@@ -1,0 +1,166 @@
+{
+  "taskId": "2026-10-31-release-gate-checks-poll-resilience",
+  "taskDoc": "docs/harness/tasks/2026-10-31-release-gate-checks-poll-resilience.task.md",
+  "title": "Release Gate 候选轮询把「读不到」与「判定」分离（fail-closed 保持）",
+  "goal": "底座 main 2bc77797 的 Release Gate 在 Candidate Checks 一步判红：run 41099026855 / job 124212224199 的日志在 attempt 27（17:41:18Z）还是正常等待（Full Smoke in_progress，其余五项 completed/success），17:41:52Z 直接打出 unexpected end of JSON input 加 ##[error]Process completed with exit code 1，中间没有任何 check 读数。这条报文来自 gh 自己（Go encoding/json），说明那一轮 gh api 非零退出；旧写法 check_runs=$(gh api \"…\") 在 bash -eo pipefail 下把命令替换的非零状态直接变成整步中止，于是 Release Gate Summary 记 failure、SonarCloud Gate 因 needs 未满足被 skipped。而 Full Smoke 的 check run 在 17:43:54Z 变 completed/success（对应 workflow run 41099026988 于 17:55:21Z 整体收尾），即门控在它等待的条件真正满足前约两分钟自杀，候选提交没有任何质量回归——红的是门控脚本对传输层瞬时故障的过敏。本包把「读不到」与「判定」分开：gh 失败不再中止步骤（|| true，且刻意不静音 stderr，那是唯一能定位哪一轮因何失败的线索），读到的一定要是含 check_runs 键的合法 JSON 才进入判定，否则打印 waiting without a verdict 并在原有 240×30s 预算内继续等；预算耗尽仍以 Timed out 失败，conclusion != success 仍以 A required check failed 失败。必需检查集合、轮询预算、fail-closed 语义与分页/取最新 check_run 的口径一字未改。",
+  "primaryLayer": "platform",
+  "status": "in-progress",
+  "priority": "P1",
+  "type": "ci-gate-resilience",
+  "estimatedComplexity": "small",
+  "findings": [
+    "红不是质量红而是门控过敏：日志里 attempt 27 的六项读数与 17:41:52Z 的 abort 之间没有第二次 check 输出，说明死在读响应这一步，而不是某项检查变红；它等的 Full Smoke 在 17:43:54Z 就 completed/success（abort 之后约两分钟），是这条判断的直接对照。",
+    "unexpected end of JSON input 是 gh（Go encoding/json）的报文，不是 jq 的（jq 会说 parse error: Invalid JSON text），因此触发路径是 gh api 非零退出被 bash -e 放大成步骤中止，而不是解析空体。「读不到」实测有三种形状：gh 非零、gh 返回 0 但 body 不可解析（截断/非 JSON）、gh 返回 0 且 body 为空。前两种在旧实现里都让整步在第 1 轮中止（exit 1 / exit 2、零行判定），第三种不中止而是把六项全读成 not present yet、耗尽 240 轮变成 Timed out 假红。因此两处守卫必须齐上：|| true 卸掉 gh 的状态码，jq -e has(\"check_runs\") 把不可解析与无值两支都挡在判定之外；只按字符串判空只能看见第三种。",
+    "吸收退出码不能顺带吸收证据：最初写法是 2>/dev/null || true，会让那一轮「为什么失败」在日志里彻底消失，把可诊断的瞬时故障变成只能靠重试次数猜的黑箱；最终写法保留 stderr，只用 || true 吸收状态码，并用测试断言 gh api 那一行不得出现 2>/dev/null。",
+    "既有测试已经反对兜底常量：release-gate-workflow.test.mjs 的 security alert API failures block the release instead of using fallback proxies 明令禁止 2>/dev/null || echo \"0\" 这类把失败读成 0 的写法。本包沿用同一立场——瞬时故障只换来「继续等」，从不换来「绿」，也没有新增 continue-on-error。",
+    "「读不到就不判定」必须由合法 JSON 门槛表达，而不是判空串：空串、截断体、非 JSON 文本三种形态都能让 gh 返回 0，只有 jq -e 'has(\"check_runs\")' 能把它们统一收敛成同一个「无判定」分支，避免逐个字符串比较。",
+    "预算与终局是这条修复的护栏，必须一起锁：本包测试除断言新形状外，还断言 for attempt in {1..240} 与 Timed out waiting for required checks 仍在，防止后来者把「重试」写成无限等待。",
+    "底座 main 每个 sha 有 7 个 push 作业，Release Gate 又是唯一需要轮询到 2 小时的作业，因此这条过敏会周期性地把好候选判红并连带 skipped 掉 SonarCloud Gate；它的成本不是「多跑一次」，而是发布证据链断一环。"
+  ],
+  "scope": {
+    "in": [
+      ".github/workflows/release-gate.yml：Require successful checks on candidate 步骤的三处守卫（gh api || true、jq -e has(\"check_runs\") 门槛 + continue、循环内 jq -c || true）",
+      "tests/scripts/release-gate-workflow.test.mjs：candidate polling keeps the gate verdict out of transport failures（含无保护形式回归断言、2>/dev/null 回归断言、预算与超时终局断言）",
+      "docs/harness/failure-registry.md：FR-025 表格行与散文条",
+      "任务包、manifest 与 evidence"
+    ],
+    "out": [
+      "必需检查集合（CI Summary / Quality Gates / Security Gates / Actionlint / Full Smoke / SonarCloud Code Analysis）的增删",
+      "轮询预算（240×30s）、超时终局与 A required check failed 的 fail-closed 语义",
+      "SonarCloud Gate / CodeQL Alerts / Dependabot Alerts 的判定口径与告警状态过滤",
+      "用 || echo 常量、continue-on-error、跳过必需检查或缩小预算让读数变绿",
+      "per_page=100 分页与 sort_by(.started_at) | last 取最新 check_run 的既有口径",
+      ".foundation/**、pantheon-ops 任何文件、VERSION / CHANGELOG.md / docs/release-notes/** 与 foundation release 切版",
+      "stage 工作树中既有的未提交 i18n 改动（builtin_locale_resources.json 与 frontend/src/i18n/resources/*.ts）"
+    ]
+  },
+  "dependencyLayers": [
+    "platform"
+  ],
+  "implementationNotes": [
+    "修复的判据不是「让步骤别报错」而是「报错的层级要对」：读不到 → 无判定 + 继续等；读到且某项 conclusion != success → 立即 exit 1；读到且全部 success → exit 0；读到但长期不全 → 预算耗尽 exit 1。四条出口都有本地仿真读数。",
+    "保留 gh 的 stderr 是刻意的取舍：|| true 只吸收退出状态，日志里仍能看到那一轮到底为什么失败；静音它虽然同样能止住红，但会把这条门控变成不可诊断的组件，测试里用一条 doesNotMatch 把它钉住。",
+    "本地仿真把 run 块从 YAML 里按 10 空格缩进边界机械抽出（修复版 51 行与 git show HEAD: 版 40 行各一份，另备同逻辑的 {1..8} 对照版），只把 sleep 30 改写为 sleep 0、{1..240} 原样保留，gh/jq 用 .tmp/rgsim/bin 下的替身回放响应形态；本机没有 jq，替身只实现本步骤用到的三个过滤器并按 jq 的退出码形状对齐（合法含键 0 / 合法缺键 1 / 不可解析 2 / 无 JSON 值 4）。每个 scenario 跑在独立 mktemp 状态目录、严格串行。仿真目录与日志不入库。",
+    "抽出整块而不是手写复本很重要，也因此暴露了三次自身缺陷并逐次更正：① 第一版抽取漏掉 done 之后的 Timed out/exit 1 两行，使无保护版看起来没有中止，据此写下的「runner 语义差异」是抽取缺陷造成的误读；② 把 jq 替身从 Python 换成纯 bash 时丢掉「不可解析 ⇒ 非零退出」这一支，导致空体与非 JSON 被混为一谈，补齐退出码后结论分裂为「中止两支 + 耗尽一支」；③ 全预算版与 {1..8} 版等待轮数一度不一致，定位到被 stop 的后台任务留下仍在 sleep 的孤儿 poll.sh 与新运行共享 state/count，改为每轮独立状态目录后两种规模读数一致。",
+    "本包不动 SonarCloud Gate 的 needs 关系：它被 skipped 是 candidate-checks 失败的下游结果，上游判据修对即自愈。"
+  ],
+  "contractAnchors": [
+    "docs/contracts/PLATFORM_CONTRACT.md",
+    "docs/harness/VERIFICATION_EVIDENCE_SPEC.md",
+    "docs/harness/failure-registry.md"
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "ci-workflow",
+    "portableFailureClass": "ci-signal-noise",
+    "ownerLayer": "foundation-source",
+    "ratchetDecision": "gate-updated",
+    "coverageDimensions": [
+      "behaviour",
+      "runtime-quality",
+      "architecture-fitness"
+    ]
+  },
+  "expectedFiles": {
+    "create": [
+      "docs/harness/tasks/2026-10-31-release-gate-checks-poll-resilience.task.md",
+      ".harness/tasks/2026-10-31-release-gate-checks-poll-resilience/manifest.json",
+      ".harness/evidence/2026-10-31-release-gate-checks-poll-resilience/commands.json",
+      ".harness/evidence/2026-10-31-release-gate-checks-poll-resilience/summary.md",
+      ".harness/evidence/2026-10-31-release-gate-checks-poll-resilience/review.md",
+      ".harness/evidence/2026-10-31-release-gate-checks-poll-resilience/pr-body.md"
+    ],
+    "modify": [
+      ".github/workflows/release-gate.yml",
+      "tests/scripts/release-gate-workflow.test.mjs",
+      "docs/harness/failure-registry.md"
+    ],
+    "doNotTouch": [
+      ".github/workflows/ 除 release-gate.yml 以外的文件",
+      "sonar-project.properties",
+      ".foundation/",
+      "package.json",
+      "VERSION",
+      "CHANGELOG.md",
+      "docs/release-notes/",
+      "backend/modules/system/i18n/builtin_locale_resources.json",
+      "frontend/src/i18n/resources/"
+    ]
+  },
+  "executionRoles": {
+    "implementerPosture": "只把「读不到」与「判定」在同一个 shell 块里分开，保留既有必需检查集合、240×30s 预算与 fail-closed 终局；不静音诊断、不加兜底常量、不动下游作业口径，并用机械抽取的 run 块做本地仿真，把四条出口的读数如实写进 evidence。",
+    "reviewerPosture": [
+      "确认 git diff --stat 的改动面只有 .github/workflows/release-gate.yml（一个步骤）、tests/scripts/release-gate-workflow.test.mjs（一条测试）、docs/harness/failure-registry.md（FR-025），没有夹带工作树里既有的未提交 i18n 改动。",
+      "确认必需检查集合六项一字未动，轮询预算仍是 for attempt in {1..240} 且 sleep 30 未改，超时仍打 ::error::Timed out waiting for required checks 并 exit 1。",
+      "确认 conclusion != success 仍然立即 exit 1（A required check failed），且 failed=1 的优先级没有被 pending 分支吃掉。",
+      "确认 gh api 那一行只有 || true、没有 2>/dev/null，也没有 || echo 之类的兜底常量；既有测试 security alert API failures block the release instead of using fallback proxies 仍然通过。",
+      "确认新增测试同时断言正形（三处守卫）与反形（无保护调用不得回归、2>/dev/null 不得回归、预算与终局必须仍在），而不是把旧断言改成宽松版本。",
+      "确认 15 组仿真读数记录在 commands.json 且逐条对应（每条含 exit / gh_calls / 判定行 / 等待行）：全绿 exit 0 且 gh_calls=1、单项 failure 第一轮即 exit 1、failure 与 in_progress 并存仍判 A required check failed、gh 非零/空体/非 JSON 三种持续形态均耗尽 240 真预算后 Timed out、瞬时无效后等待 4 轮恢复 exit 0。",
+      "确认无保护版在补齐抽取尾部与替身退出码后确实复现了 CI 的中止形态（gh 非零与不可解析两支都在第 1 轮中止），而空体那支是另一种假红（跑满 240 轮预算）；本地「没复现」的两套旧解释（runner 差异、三支皆中止）都已被更正而不是继续沿用。",
+      "确认 .tmp/rgsim/ 与仿真日志未进入 git 状态（.tmp 已 gitignore），未新增仓库依赖。",
+      "确认本包不切 foundation release、不动 VERSION/CHANGELOG；ops 侧同名 workflow 经下一次发布吸收，时点归维护者。"
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "npm run test:release-gate-workflow",
+      "npm run test:scripts",
+      "python -c \"import yaml; yaml.safe_load(open('.github/workflows/release-gate.yml'))\"",
+      "node -e \"…按 10 空格缩进边界机械抽出 run 块（修复版与 git show HEAD: 版）\"",
+      "bash -n .tmp/rgsim/poll.sh && bash -n .tmp/rgsim/poll-before.sh",
+      "bash .tmp/rgsim/run.sh poll-before.sh apifail / empty（无保护对照）",
+      "bash .tmp/rgsim/run.sh poll.sh allgreen / onefail / transient / apifail / empty / garbage（修复版）",
+      "node scripts/harness/check-failure-registry.mjs --root . --strict",
+      "npm run check:docs-frontmatter && npm run check:task-packet-template && npm run check:task-packet",
+      "npm run check:structure && npm run check:harness-encoding && npm run check:duplication",
+      "node scripts/harness/check-evidence.mjs --root . --strict",
+      "node scripts/harness/check-review.mjs --root . --strict",
+      "node scripts/create-pr.mjs --title ... --body-file .harness/evidence/2026-10-31-release-gate-checks-poll-resilience/pr-body.md",
+      "git diff --numstat"
+    ],
+    "runtimeEvidence": [
+      "CI 原始日志读数：job 124212224199（run 41099026855）17:41:18Z attempt 27 六项 check 读数正常、17:41:52Z unexpected end of JSON input 后 ##[error]Process completed with exit code 1；它等的 Full Smoke 于 17:43:54Z completed/success（workflow run 41099026988 整体 17:55:21Z 收尾），证明该红不是质量红",
+      "本地 run 块仿真读数（15 组，gh/jq 替身、每轮独立状态目录、严格串行）：修复版全绿 exit 0 且 gh_calls=1 判定行=6、单项 failure 第一轮 exit 1、failure 与 in_progress 并存仍 exit 1（failed 优先）、持续 gh 非零/空体/非 JSON 三组均 240 轮零判定后 Timed out exit 1、瞬时无效后等待 4 轮恢复 exit 0；无保护版在 gh 非零与不可解析两支第 1 轮即中止（exit 1 / exit 2、零判定行），空体支跑满 240 轮成 Timed out 假红",
+      "无运行面变化：改动只存在于 CI 门控脚本的读取路径，不改任何产品代码、路由、权限、schema 或前后端契约"
+    ]
+  },
+  "runtimeSensitive": false,
+  "runtimeGap": "本改动没有产品运行面：它只存在于 GitHub Actions 的门控脚本读取路径与对该脚本的静态断言里，构建产物与运行时行为均不变。真正的运行证据只能来自 hosted CI——本包给出的是 (a) 上一次红的原始 job 日志读数、(b) 机械抽出的同一 run 块在本地替身下的 15 组行为读数、(c) 新 main 上 Release Gate 的实跑回读（PR CI 与合并后 main 各一次）。本地仿真不能替代 hosted 结论：jq 是本地替身、sleep 被改写为 0、gh 由脚本回放，真实 runner 的 -e 传播与 API 抖动组合仍需在 CI 上确认，若新 main 仍红则按同一入口继续收紧而不是豁免。",
+  "evidenceRequired": [
+    ".harness/evidence/2026-10-31-release-gate-checks-poll-resilience/commands.json：CI 失败作业与日志读数、修复前后 run 块抽取与 bash -n、15 组仿真读数（含替身退出码校正与状态隔离两次自我更正）、test:release-gate-workflow 与 test:scripts 读数、治理门禁读数、新 main 提交回读",
+    ".harness/evidence/2026-10-31-release-gate-checks-poll-resilience/summary.md：中止机制（gh 非零 × bash -e）、为何保留 stderr、fail-closed 三处保持点、仿真与 hosted 的边界",
+    ".harness/evidence/2026-10-31-release-gate-checks-poll-resilience/review.md：逐条 reviewer posture 读数 + Machine Readable 块",
+    ".harness/evidence/2026-10-31-release-gate-checks-poll-resilience/pr-body.md：经 check-pr-governance 校验的 PR 正文"
+  ],
+  "humanGates": [
+    ".github/workflows/* 是本仓明确的高风险范围：需两位非作者批准，其中一位应为 CI/发布负责；本包不自批、不改评审规则。",
+    "若维护者认为发布门控脚本必须人工把关，可在合并前关闭 auto-merge（由 pr-automation.yml 打开）。",
+    "不切 foundation release、不动 VERSION/CHANGELOG：ops 吸收本修复需一次发布，时点归维护者。",
+    "工作树中既有的未提交 i18n 改动本 PR 显式不 stage。"
+  ],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed",
+    "必需检查集合、240×30s 预算与超时终局一字未改，且有断言锁住",
+    "仿真读数实测：非法响应只等待不判定、全绿仍 exit 0、失败仍 fail-closed",
+    "未使用兜底常量、continue-on-error、静音诊断、跳过检查或降阈值让读数变绿",
+    "FR-025 写入 failure-registry（表格行 + 散文条）并通过 check-failure-registry --strict"
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-31-release-gate-checks-poll-resilience/manifest.json",
+    "taskDoc": "docs/harness/tasks/2026-10-31-release-gate-checks-poll-resilience.task.md",
+    "evidenceDir": ".harness/evidence/2026-10-31-release-gate-checks-poll-resilience/",
+    "summaryFile": ".harness/evidence/2026-10-31-release-gate-checks-poll-resilience/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-31-release-gate-checks-poll-resilience/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/VERIFICATION_EVIDENCE_SPEC.md",
+      "docs/contracts/PLATFORM_CONTRACT.md",
+      "docs/harness/failure-registry.md"
+    ]
+  }
+}
