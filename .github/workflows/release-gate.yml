@@ -76,14 +76,25 @@ jobs:
         shell: bash
         run: |
           for attempt in {1..240}; do
-            check_runs=$(gh api "repos/$REPO/commits/$CANDIDATE_SHA/check-runs?per_page=100")
+            # While a commit's runs are still being registered the checks API can fail the call
+            # outright or answer with an empty/truncated body. Under bash -e a non-zero command
+            # substitution aborts this step, which would let a transient transport failure decide
+            # the gate, so an unreadable response is retried inside the existing budget instead of
+            # being read as a verdict. gh's own stderr stays visible: it is the only trace of why
+            # a read failed.
+            check_runs=$(gh api "repos/$REPO/commits/$CANDIDATE_SHA/check-runs?per_page=100" || true)
+            if ! jq -e 'has("check_runs")' <<< "$check_runs" > /dev/null 2>&1; then
+              echo "Check-runs response unavailable or malformed (attempt $attempt/240); waiting without a verdict."
+              sleep 30
+              continue
+            fi
             pending=0
             failed=0
 
             while IFS= read -r check_name; do
               check_result=$(jq -c --arg name "$check_name" \
                 '[.check_runs[] | select(.name == $name)] | sort_by(.started_at) | last // empty' \
-                <<< "$check_runs")
+                <<< "$check_runs" || true)
               if [ -z "$check_result" ]; then
                 echo "Required check $check_name is not present yet."
                 pending=1
