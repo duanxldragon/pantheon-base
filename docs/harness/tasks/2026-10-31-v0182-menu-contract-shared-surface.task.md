@@ -185,10 +185,10 @@ platform
 - [x] Contract anchors read
 - [x] Verification run or exception recorded
 - [x] Evidence saved or summarized
-- [ ] Review completed
-- [ ] 共享路径登记完成且 `sharedPaths` 为 53 项
-- [ ] 版本判定为 patch（0.18.2）并记录依据
-- [ ] VERSION / CHANGELOG / RELEASE_NOTES / STATUS 版本引用一致
-- [ ] 目标 commit 上必需检查与 Release Gate 全绿
-- [ ] tag 与 GitHub Release（含四件产物）已发布
+- [x] Review completed
+- [x] 共享路径登记完成且 `sharedPaths` 为 53 项
+- [x] 版本判定为 patch（0.18.2）并记录依据
+- [x] VERSION / CHANGELOG / RELEASE_NOTES / STATUS 版本引用一致
+- [x] 目标 commit 上必需检查与 Release Gate 全绿
+- [x] tag 与 GitHub Release（含四件产物）已发布
 - [ ] `pantheon-ops` 对 `pantheon-base-v0.18.2` 重建且 drift、后端与前端构建均通过
