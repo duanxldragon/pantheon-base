@@ -4,7 +4,7 @@
   "title": "Cut pantheon-base-v0.18.0 covering the thirteen simplification waves and the post-v0.17.8 tenant waves, then build pantheon-ops against it",
   "goal": "The 13-wave simplification programme merged between 2026-10-27 and 2026-10-28, but no foundation release has been cut since v0.17.8 (2026-10-27, commit e256d1fb). pantheon-ops therefore cannot build against a release that contains the waves, which is the one unfinished item on the programme manifest. This package prepares and cuts pantheon-base-v0.18.0 on release/0.18: a minor bump because the waves are an architecture optimisation with governance enhancements per docs/VERSION_MANAGEMENT_GUIDE.md section 2.3, and because the release also carries the tenant lifecycle waves W1/W2/W4/W8 merged after v0.17.8. It ships the four consumable assets, verifies them with Foundation Release Verify, then advances the pantheon-ops lock to 0.18.0 and records a real go build plus frontend build against the synced tree. No product source is modified by this package.",
   "primaryLayer": "platform",
-  "status": "in-progress",
+  "status": "completed",
   "priority": "P2",
   "type": "release",
   "estimatedComplexity": "medium",

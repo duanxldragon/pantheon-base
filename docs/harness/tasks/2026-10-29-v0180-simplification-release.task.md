@@ -4,7 +4,7 @@ doc_type: Remediation
 layer: platform
 depends_on_layers:
   - system/iam
-status: Active
+status: Archived
 linked_contracts:
   - docs/contracts/PLATFORM_CONTRACT.md
   - docs/VERSION_MANAGEMENT_GUIDE.md

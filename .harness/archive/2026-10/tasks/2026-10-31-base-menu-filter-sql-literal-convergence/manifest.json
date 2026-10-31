@@ -4,7 +4,7 @@
   "title": "菜单过滤 IN 子句常量化回流底座，消除 ops shared-drift（Base-first）",
   "goal": "ops 在关闭 SonarCloud 漏洞/缺陷（ops PR #156）时把它继承的 backend/modules/business/retired_modules.go 的菜单过滤条件改成三条整句子句常量，以通过 ops 独有的 scripts/check-gorm-sql-literal.mjs（断言 GORM 的 SQL 文本与列名必须是字面量或包级常量）。底座没有这条断言、文件仍是 query.Where(column + \" IN ?\", values) 的列名拼接形式，于是 ops 的 npm run check:shared-drift 与每周 Base Compatibility Rebuild 的「Check shared-file drift against base HEAD」一步报 DRIFT_MODIFIED 并 FAIL。本包按 Base-first 把这条安全收紧回流到底座，采用与消费者逐字节相同的形式：shared-drift 转绿、底座自身也满足「SQL 文本不来自运行期列名拼接」、且不用 .foundation/allowed-drift.json 给偏差记豁免。行为零变化——三个调用点传入的常量展开后与原拼接结果一致（module IN ? / path IN ? / component IN ?），取值仍只经 ? 绑定。",
   "primaryLayer": "inheritance-sync",
-  "status": "in-progress",
+  "status": "completed",
   "priority": "P2",
   "type": "inheritance-drift-convergence",
   "estimatedComplexity": "small",
