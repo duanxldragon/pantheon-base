@@ -49,11 +49,34 @@ base v0.18.1 的同名文件**逐字节相同**（diff 为空），与 base main
 - `node --test tests/scripts/foundation-release/*.test.mjs` → 57/57（fixture 首次因缺新条目失败，补的是 fixture 不是断言）
 - `check-task-packet` / `check-failure-registry` / `check-structure` / `check-encoding` / `check-doc-inventory` / `check-task-packet-template` 全 PASS
 
-## 还没做的部分（本文件后续追加）
+## 发布读数（2026-10-31 追加）
 
-发布（tag + 四件资产 + `Foundation Release Verify`）、PR 门禁回读、`pantheon-ops` 消费读数都依赖
-prep PR 先合入 `main`——`publish-foundation-release.mjs` 要求目标 commit 上 `Release Gate Summary`
-为 success。这些读数会以追加方式写进 `commands.json`，不在本包里预先宣称。
+- **prep PR**：#479 合入 `main`，`a44ae4e012fff20430b1b7f91cb7a9296f3ea843`；该 commit 上
+  `Release Gate Summary` 为 success（`publish-foundation-release.mjs` 的前置条件）。
+- **cut 运行**：`Foundation Release Cut` run 41152136695，`workflow_dispatch`，conclusion success，
+  headSha `a44ae4e0`。第一次 dispatch（41148458266）按设计失败在 “tag does not exist”，
+  因为 workflow 的 token 只有 `contents: read`；补建 annotated tag 后重跑通过。
+- **tag**：`pantheon-base-v0.18.2`，annotated tag object `2e32bd465678e7259604ac2a16f4c8cb0e53308e`，
+  peeled commit `a44ae4e0`。
+- **GitHub Release**：target `a44ae4e0`，`published_at` `2026-10-31T00:48:38Z`，发布者
+  `github-actions[bot]`，四件资产：
+  - `foundation-release-pantheon-base-v0.18.2.tgz` 30,051,238 B，sha256 `c01ebbc1…2fc356a`
+  - `foundation-release-pantheon-base-v0.18.2.tgz.sha256` sha256 `a87717ff…7ab01d779a3`
+  - `repo.tar` 47,923,200 B，sha256 `c1360fb1…c37ecfc5d51`
+  - `repo.tar.sha256` sha256 `32e0f32d…e7222f0d6f1f`
+  - 说明：`created_at`（00:09:21Z）等于 tagger 时间，`published_at`（00:48:38Z）是 Publish 步骤
+    运行时刻；两者由不同的写入口产生，此处只记录观测值。
+- **资产校验**：`check:release-assets --release-version pantheon-base-v0.18.2` →
+  `[ok] release pantheon-base-v0.18.2 carries all 4 required assets`。
+- **Foundation Release Verify**：run 41153048213，conclusion success。该次为手动
+  `workflow_dispatch`：release 由 `GITHUB_TOKEN` 发布，GitHub 不再为该 token 派发
+  `release: published` 下游事件，因此 verify 不会自动出现（v0.18.0/v0.18.1 的 verify 由维护者
+  发布触发）。同一 workflow、同一 tag，读数等价。
+
+## 消费仓读数
+
+`pantheon-ops` 的 v0.18.2 消费记录在 `pantheon-ops` 的任务包
+`2026-10-31-foundation-upgrade-base-v0-18-2`，不在本文件重复。
 
 ## 一个工作树口径说明
 

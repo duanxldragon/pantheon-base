@@ -103,12 +103,43 @@
       "cwd": "pantheon-base/.tmp/rel-0182",
       "status": "passed",
       "notes": "0 finding(s)."
+    },
+    {
+      "command": "gh api repos/duanxldragon/pantheon-base/releases/tags/pantheon-base-v0.18.2",
+      "cwd": "pantheon-base/.tmp/rel-0182",
+      "status": "passed",
+      "notes": "tag=pantheon-base-v0.18.2 target=a44ae4e012fff20430b1b7f91cb7a9296f3ea843 author=github-actions[bot] created_at=2026-10-31T00:09:21Z published_at=2026-10-31T00:48:38Z; assets: foundation-release-pantheon-base-v0.18.2.tgz 30051238 B sha256 c01ebbc1c515ae09ba097b421071800cc1e19fec516fea9b147b35b0b2fc356a, .tgz.sha256 111 B sha256 a87717ff1ee5aef831bce0e37b8cb978426332c890dedd662be7f2ab01d779a3, repo.tar 47923200 B sha256 c1360fb147610ff8629cc952d50491b993b04c07993d41f6c29eec37ecfc5d51, repo.tar.sha256 75 B sha256 32e0f32df1f77f871095ed713b0e2bc6c9f692ac3ba13bb6be1317222f0d6f1f. created_at equals the annotated tag tagger time; published_at is the moment the Publish step ran."
+    },
+    {
+      "command": "git ls-remote --tags origin refs/tags/pantheon-base-v0.18.2 'refs/tags/pantheon-base-v0.18.2^{}'",
+      "cwd": "pantheon-base/.tmp/rel-0182",
+      "status": "passed",
+      "notes": "tag object 2e32bd465678e7259604ac2a16f4c8cb0e53308e annotated; peeled commit a44ae4e012fff20430b1b7f91cb7a9296f3ea843 == lock target."
+    },
+    {
+      "command": "gh workflow run foundation-release-verify.yml -f release_version=pantheon-base-v0.18.2",
+      "cwd": "pantheon-base/.tmp/rel-0182",
+      "status": "passed",
+      "notes": "Dispatched manually because the release was published by github-actions[bot] with GITHUB_TOKEN and GitHub suppresses the downstream release:published trigger for that token; v0.18.0/v0.18.1 verify runs had fired on the release event from a maintainer-published release. Run 41153048213 conclusion=success."
+    },
+    {
+      "command": "node scripts/foundation-release/check-release-assets.mjs --release-version pantheon-base-v0.18.2",
+      "cwd": "pantheon-base/.tmp/rel-0182",
+      "status": "passed",
+      "notes": "[ok] release pantheon-base-v0.18.2 carries all 4 required assets; no local bundle directory, so the API path is the only source and it matched."
+    },
+    {
+      "command": "gh run view 41152136695 --json databaseId,event,status,conclusion,headSha",
+      "cwd": "pantheon-base/.tmp/rel-0182",
+      "status": "passed",
+      "notes": "Foundation release cut run for v0.18.2 completed success on headSha a44ae4e0; it produced the tag target, the four assets and the GitHub release."
     }
   ],
   "knownGaps": [
-    "The release cut, the hosted gate readings and the pantheon-ops consumption are recorded by appending to this file after the prep PR merges; the release cannot be dispatched from an unmerged branch because publish-foundation-release.mjs requires a successful Release Gate Summary on the target commit.",
     "check:docs-frontmatter and the harness-docs family resolve ../../pantheon-harness relative to the checkout root; inside .tmp/rel-0182 that path does not exist, so those checks are read from the main checkout and from the hosted PR run instead of from this worktree.",
-    "The menu-contract repair (#471) and the retired-module rewrite (#477) are re-published here, not re-implemented; reviewers should compare against those commits rather than read this diff as a new sensor change."
+    "The menu-contract repair (#471) and the retired-module rewrite (#477) are re-published here, not re-implemented; reviewers should compare against those commits rather than read this diff as a new sensor change.",
+    "The release:published event did not fan out to Foundation Release Verify because the release was published with GITHUB_TOKEN; the verify reading in this file comes from a manual workflow_dispatch of the same workflow against the same tag.",
+    "The pantheon-ops consumption of v0.18.2 is recorded in the pantheon-ops task packet 2026-10-31-foundation-upgrade-base-v0-18-2, not in this file."
   ],
   "linkage": {
     "taskManifest": ".harness/tasks/2026-10-31-v0182-menu-contract-shared-surface/manifest.json",

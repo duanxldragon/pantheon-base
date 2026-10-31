@@ -1,9 +1,9 @@
 # Pantheon Base - Harness 任务状态
 
 **最后更新**: 2026-10-31
-**当前版本**: v0.18.1 已发布（tag `pantheon-base-v0.18.1`，目标提交 `93505225`，四件资产与 `Foundation Release Verify` run 40817118092 已核验）；`pantheon-ops` 已对 0.18.1 重建并通过后端与前端构建；`pantheon-base-v0.18.2`（patch）准备中（见下）
+**当前版本**: v0.18.2 已发布（tag `pantheon-base-v0.18.2`，目标提交 `a44ae4e0`，四件资产与 `Foundation Release Verify` run 41153048213 已核验）；`pantheon-ops` 正在对 0.18.2 做消费重建
 
-## v0.18.2 发布（2026-10-31·准备中）
+## v0.18.2 发布（2026-10-31·已发布）
 
 任务包 `2026-10-31-v0182-menu-contract-shared-surface`，证据在
 `.harness/evidence/2026-10-31-v0182-menu-contract-shared-surface/`（含 `notes/` 三份发布文本）。
@@ -21,6 +21,11 @@
   i18n 键变化。
 - **消费仓可见增量**：`frontend/scripts/check-menu-contract.mjs` 与
   `backend/modules/business/retired_modules.go` 两个文件；其余 51 项共享路径与 v0.18.1 相同。
+- **发布读数**：#479 合入后 `Release Gate Summary` success；cut run 41152136695 success；annotated tag
+  `2e32bd46` → peeled `a44ae4e0`；GitHub Release `published_at` 2026-10-31T00:48:38Z，四件资产
+  （tgz `c01ebbc1` 30,051,238 B / `repo.tar` `c1360fb1` 47,923,200 B）由 `check:release-assets` 核验；
+  `Foundation Release Verify` run 41153048213 success（`GITHUB_TOKEN` 发布的 release 不派发
+  `release: published` 下游事件，故为手动 dispatch，同一 workflow、同一 tag）。
 
 ## v0.18.1 发布（2026-10-29·已发布）
 
