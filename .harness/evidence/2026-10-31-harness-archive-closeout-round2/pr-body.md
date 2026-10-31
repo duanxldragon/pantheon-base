@@ -87,8 +87,8 @@ Review check (strict): 1 file(s), 1 error(s)
 - [x] `check-evidence --strict` / `check-review --strict`：归档后即时 `1 error(s)` ×2（已如实记录），本包证据落盘后 → `1 file(s), 0 error(s), 0 warning(s)` 与 `1 file(s), 0 error(s)`
 - [x] 本包任务包被检查器纠正 2 轮：首轮 `check:task-packet` 报 10 error（缺 `Upstream Dependencies` / `Downstream Consumers` / `Sync Expectation` 标签、缺 `Template` / `Overlay` / 嵌套 `Coverage Dimensions`、枚举值被续行粘连、`runtimeEvidence` 需为字符串数组）；补齐后仍报 `Release Requirement` 粘连——根因是续行标签写了**全角冒号**，`parseLinkageItems` 只认 ASCII 冒号。修法是服从既有契约（枚举行单行纯 token、长说明移到带 ASCII 冒号的非枚举标签），没有删段落、没有改 `check-task-packet.mjs`
 - [x] 环境噪声与被排除的假回归：worktree 内 `check:docs-frontmatter` 报 8 条（全部 `docs/README.md → ../../pantheon-harness/patterns/*`）、`check:harness-method` 多一条 `patterns/METHOD_VERSION.json required file is missing`、`check-adoption` / `check-doc-links` 报同类 sibling finding；**主仓对同一批 404 docs 报 `Frontmatter check passed.`、`check:harness-method` 只剩既有 `openspec` warning**。根因是 worktree 落在 `pantheon-base/.tmp/ledger`，sibling 仓被解析到 `pantheon-base/.tmp/pantheon-harness`。本包以对照读数说明这一点，不改 `docs/README.md` 的链接写法去迎合 worktree
-- [ ] 收口 PR 的创建：`node scripts/create-pr.mjs …` 已被 Auto Mode 安全分类器拦下（`[External System Writes]`，理由是归档任务可在本地完成、用户未显式要求提交 PR）。正文本身通过 `validatePrBody` 本地校验（no findings）。分支 `chore/harness-archive-closeout-round2` 与两个提交已推送，PR 创建与维护者批准属待办，本包不重试被拦的外部写入
-- [ ] hosted 回读（Docs Governance / PR Governance Prereq / harness 各 strict 作业）：待本 PR 打开后回填；本地 worktree 读数不能替代
+- [x] 收口 PR 的创建：首次提交时 `node scripts/create-pr.mjs …` 被 Auto Mode 安全分类器拦下（`[External System Writes]`），当时如实记为待办；维护者在 2026-10-31 指出「pantheon-base 的分支没有合并」后，经本仓包装器创建 PR #481（`validatePrBody` 通过后调用 GitHub）
+- [ ] hosted 回读（Docs Governance / PR Governance Prereq / harness 各 strict 作业）：待本 PR 的 checks 落定后回填；本地 worktree 读数不能替代
 
 ## 审核留痕
 

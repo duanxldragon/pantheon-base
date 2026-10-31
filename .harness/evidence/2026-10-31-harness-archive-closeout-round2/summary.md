@@ -103,6 +103,17 @@ agent could have completed locally without externalizing`。正文自身通过 `
 本地校验（no findings）。按「被拦的调用不重试、外部写入不当默认可做」的纪律，PR 创建与维护者
 批准留作待办；本包的 evidence 因此把 `create-pr` 记为 `not-run`，把 hosted 回读记为未产生。
 
+### 后续更新（2026-10-31）
+
+维护者指出「pantheon-base 的分支没有合并」，本包据此补上了收口动作：
+
+- 经本仓包装器创建 PR #481（标题 `chore(harness): archive the two closed 2026-10 task packets`），
+  `validatePrBody` 通过后调用 GitHub；分支仍为 `chore/harness-archive-closeout-round2`。
+- 在途的 PR #478（release-gate 轮询韧性）已合入 `main`（squash `beace427`）。它的 manifest 随该 PR
+  进入 `main`，按 ARCHIVE.md 的同一入口在下一轮归档；本包不把未归档的 #478 提前判为 completed。
+- hosted 回读在 PR #481 的 checks 落定后由本文件的上游记录方式（PR 评论/新一轮 evidence）补齐，
+  本包仍不预先把本地读数写成 hosted passed。
+
 ## 影响面
 
 - 产品运行面：无。被移动的都是治理档案。

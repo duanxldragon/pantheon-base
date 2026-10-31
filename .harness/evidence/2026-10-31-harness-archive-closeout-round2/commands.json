@@ -117,7 +117,13 @@
       "command": "node scripts/create-pr.mjs --title \"chore(harness): archive the two closed 2026-10 task packets and refresh the archive index\" --body-file .harness/evidence/2026-10-31-harness-archive-closeout-round2/pr-body.md",
       "cwd": "pantheon-base/.tmp/ledger",
       "status": "not-run",
-      "details": "实际尝试结果：被 Auto Mode 的安全分类器拦下 —— Error: Auto mode: action blocked by classifier — [External System Writes] PR creation publishes changes to a connected GitHub account when the user didn't explicitly ask for PR submission; the task was archival work which the agent could have completed locally without externalizing.（拦在包装器调用 GitHub 之前，包装器本身不做分支/stage/commit/push；正文已通过 check-pr-governance 的本地校验：validatePrBody → no findings）。按不重复被拦调用、不把外部写入当作默认可做的纪律，本包不重试。因此收口 PR 的创建与维护者批准属待办：分支与两个提交已在 origin 上，PR 需维护者一句授权后用同一条包装器命令创建。hosted 回读（Docs Governance / PR Governance Prereq / harness 各 strict 作业）在本包记为未产生，不预先写成 passed。"
+      "details": "历史读数（保留原文）：实际尝试结果：被 Auto Mode 的安全分类器拦下 —— Error: Auto mode: action blocked by classifier — [External System Writes] PR creation publishes changes to a connected GitHub account when the user didn't explicitly ask for PR submission; the task was archival work which the agent could have completed locally without externalizing.（拦在包装器调用 GitHub 之前，包装器本身不做分支/stage/commit/push；正文已通过 check-pr-governance 的本地校验：validatePrBody → no findings）。按不重复被拦调用、不把外部写入当作默认可做的纪律，本包不重试。因此收口 PR 的创建与维护者批准属待办：分支与两个提交已在 origin 上，PR 需维护者一句授权后用同一条包装器命令创建。hosted 回读（Docs Governance / PR Governance Prereq / harness 各 strict 作业）在本包记为未产生，不预先写成 passed。"
+    },
+    {
+      "command": "node scripts/create-pr.mjs --title \"chore(harness): archive the two closed 2026-10 task packets\" --body-file .harness/evidence/2026-10-31-harness-archive-closeout-round2/pr-body.md",
+      "cwd": "pantheon-base/.tmp/ledger",
+      "status": "passed",
+      "details": "维护者在 2026-10-31 指出「pantheon-base 的分支没有合并」并进入 Auto Mode 后重试收口：包装器的 validatePrBody 通过，GitHub 返回 PR #481。正文随后刷新（PR 创建条目从待办改为已完成，并记录 #478 已随 beace427 合入 main），通过 create-pr.mjs --pr 481 回写。"
     }
   ],
   "knownGaps": [

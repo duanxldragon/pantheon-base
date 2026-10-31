@@ -85,11 +85,11 @@
   或直接接入 CI 前，需要先决定口径。归维护者。
 - **`.tmp/ledger` worktree 的 sibling 解析噪声**是本地执行环境产物，收口 PR 的权威读数是
   hosted 作业；worktree 在完成 PR 后移除。
-- **收口 PR 的创建被安全分类器拦下**：`create-pr.mjs` 在调用 GitHub 前返回
-  `[External System Writes] … the task was archival work which the agent could have completed
-  locally without externalizing`。正文已通过 `validatePrBody` 本地校验；分支与两个提交已推送，
-  PR 创建待维护者授权后用同一条包装器命令执行。commands.json 里该记录保持 `not-run`，
-  hosted 回读保持未产生，没有预先写成 passed。
+- **收口 PR 的创建曾被安全分类器拦下，后经维护者授权补上**：`create-pr.mjs` 最初在调用 GitHub
+  前返回 `[External System Writes] … the task was archival work which the agent could have
+  completed locally without externalizing`。正文当时已通过 `validatePrBody` 本地校验；维护者在
+  2026-10-31 指出分支未合并并在 Auto Mode 下重试后，同一包装器创建了 PR #481。commands.json 保留
+  被拦记录的原文（`not-run`）并追加随后成功的 `passed` 记录，hosted 回读仍不预先写成 passed。
 - **既有历史项保持原地**：`.harness/evidence/2026-09-10-tenant-verification-and-gray/`
   重复产物、两份无归属的散落 PR 正文、`docs/harness/tasks/` 下 67 个无 manifest 的历史
   `Active` 正文——都在本包 Out-of-scope 与 knownGaps 里显式登记，不做静默清理。
@@ -119,9 +119,9 @@
       "P2: check-evidence.mjs and check-review.mjs --strict scan only the live .harness/evidence tree; archiving the last directory holding a commands.json makes them report No evidence command files found. / No review artifacts found. Neither sensor is wired into any npm check:* script or CI job, so nothing goes red, but the scope gap is real and its resolution (archive-aware fallback vs. keeping live coverage) is a governance-script change owned by the maintainer.",
       "P2: the closeout PR itself must carry a live evidence directory, otherwise the archiving round removes the very coverage the two strict sensors assert on. This package does exactly that; the before/after readings are recorded as failed then passed rather than suppressed.",
       "P3: inside the .tmp/ledger worktree, check:docs-frontmatter reports 8 link-target errors on docs/README.md and check:harness-method reports patterns/METHOD_VERSION.json missing, while the main checkout passes both on the same 404 docs. Root cause is the nested root resolving ../../pantheon-harness to pantheon-base/.tmp/pantheon-harness; recorded as an environment artifact with the contrasting readings instead of editing links to satisfy a worktree.",
-      "P3: PR #478 (2026-10-31-release-gate-checks-poll-resilience) is still under review and is deliberately not archived by this round; archiving unmerged work would decouple the archive from the facts.",
+      "P3: PR #478 (2026-10-31-release-gate-checks-poll-resilience) was under review when this round was packaged and is deliberately not archived here; it merged into main as beace427 afterwards, so its manifest will be archived through the same ARCHIVE.md entry point in the next round rather than retroactively claimed as completed.",
       "P3: pre-existing historical residue stays in place and is listed as deferred - the duplicate .harness/evidence/2026-09-10-tenant-verification-and-gray/ directory, two unattributed loose PR bodies (2026-09-25-pr347-governance-body.md, 2026-09-27-v0130-pr-body.md), and 67 legacy Active task packets without manifests.",
-      "P3: the closeout PR is not opened. create-pr.mjs was stopped before any GitHub call by the Auto Mode classifier ([External System Writes] - archival work could be completed locally without externalizing), the body itself passes validatePrBody with no findings, and the branch plus two commits (8e459ce1 archive + index, 5cc50d5e the archived manifests' status -> completed) are already pushed. The create-pr record stays not-run and hosted read-back stays unproduced rather than being pre-claimed as passed; opening the PR is a maintainer-authorised step."
+      "P3: the closeout PR was initially not opened: create-pr.mjs was stopped before any GitHub call by the Auto Mode classifier ([External System Writes]). After the maintainer flagged the unmerged base branch on 2026-10-31, the same wrapper created PR #481 with a body that passes validatePrBody; the blocked attempt remains recorded as not-run and the successful call is appended as passed. Hosted read-back is still filled in only from real check results, not from local readings."
     ],
     "notes": "Governance-archive closeout only. Two 2026-10 task packets whose substantive work is finished by machine readings - SQL-literal convergence landed on base main e17eaaa1 via PR #477 and flipped the consumer drift gate from FAIL 1 modified to OK 812 identical / 10 allowlisted / 0 modified, and the v0.18.0 simplification release closed with tags pantheon-base-v0.18.0 plus pantheon-base-v0.18.1, VERSION 0.18.1, 4 assets per release, and its final consumer runtime-acceptance ledger item merged via ops PR #164 (4e69224f) and re-confirmed by #165 (ops main 9afabc2a) - are moved into archive/2026-10/{tasks,evidence}/ with git mv. All 13 changes present as rename(100%) with 0 insertions and 0 deletions, manifests are set to status completed, packets to frontmatter status Archived, and .harness/ARCHIVE.md is rewritten from measured directory counts (26/31, 23/23, 72/70, 91/94 totalling 212/218) rather than incrementing stale numbers. Linkage paths are untouched: the checker still resolves the two archived packets as [PASS] through the archive-aware fallback, which is the evidence for that documented rule. No product code, workflow, gate threshold, release asset, .foundation/** or consumer file is touched, and no foundation release is cut. One tooling scope gap is recorded rather than fixed: the two strict evidence/review sensors read only the live tree, reproduced as failed readings before this package's own live evidence made them pass again."
   },
