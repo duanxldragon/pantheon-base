@@ -1,7 +1,7 @@
 # Pantheon Base - Harness 任务状态
 
 **最后更新**: 2026-10-31
-**当前版本**: v0.18.2 已发布（tag `pantheon-base-v0.18.2`，目标提交 `a44ae4e0`，四件资产与 `Foundation Release Verify` run 41153048213 已核验）；`pantheon-ops` 正在对 0.18.2 做消费重建
+**当前版本**: v0.18.2 已发布（tag `pantheon-base-v0.18.2`，目标提交 `a44ae4e0`，四件资产与 `Foundation Release Verify` run 41153048213 已核验）；`pantheon-ops` 已完成 0.18.2 消费闭环（ops #166 `5676ffc` 重建 + #167 `81d2941` 修复回放）
 
 ## v0.18.2 发布（2026-10-31·已发布）
 

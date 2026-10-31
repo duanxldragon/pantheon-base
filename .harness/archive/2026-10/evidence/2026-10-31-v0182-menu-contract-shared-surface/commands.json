@@ -133,6 +133,12 @@
       "cwd": "pantheon-base/.tmp/rel-0182",
       "status": "passed",
       "notes": "Foundation release cut run for v0.18.2 completed success on headSha a44ae4e0; it produced the tag target, the four assets and the GitHub release."
+    },
+    {
+      "command": "gh pr view 166 --json mergedAt,mergeCommit; gh pr view 167 --json mergedAt,mergeCommit; gh pr checks 167",
+      "cwd": "pantheon-ops",
+      "status": "passed",
+      "notes": "Consumer close-out: #166 merged 2026-10-31T01:59:39Z as 5676ffc (lock to v0.18.2, rebuild 789 files, overlay 53, business-overlay tests 13/13, drift 813 identical / 10 allowlisted / 161 skipped, backend 64 packages, frontend lint/type-check/build 0), and #167 merged as 81d2941 carrying the Sonar new-code repair that missed #166's merge window (SonarCloud Code Analysis, Go Lint, Backend Tests, Smoke Sanity, CodeQL, Docs Governance all green)."
     }
   ],
   "knownGaps": [

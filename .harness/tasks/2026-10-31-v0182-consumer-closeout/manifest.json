@@ -1,0 +1,150 @@
+{
+  "taskId": "2026-10-31-v0182-consumer-closeout",
+  "title": "收口 v0.18.2 消费闭环的归档（v0182 发布包、发布门禁修复、第二轮归档包）",
+  "repo": "pantheon-base",
+  "primaryLayer": "platform",
+  "dependencyLayers": [
+    "platform"
+  ],
+  "status": "completed",
+  "priority": "P2",
+  "type": "harness-archive-closeout",
+  "created_at": "2026-10-31",
+  "workspaceContext": {
+    "targetRepository": "pantheon-base",
+    "repositoryRole": "foundation-source",
+    "contextSyncExpectation": "deferred",
+    "releaseRequirement": "none"
+  },
+  "goal": "把三个已由读数关闭的任务包从 live 树收口到 archive/2026-10：① 2026-10-31-v0182-menu-contract-shared-surface 的最后一项「pantheon-ops 对 v0.18.2 重建」由 ops PR #166（5676ffc）与 #167（81d2941）关闭；② 2026-10-31-harness-archive-closeout-round2 由自身 PR #481 合并关闭；③ 2026-10-31-release-gate-checks-poll-resilience 随 #478 的 Release Gate 修复进入 main（FR-025）。三份 manifest 的 status 改为 completed，三份 .task.md 的 frontmatter 改为 status: Archived，manifest 与 evidence 目录用 git mv 落到 archive/2026-10/{tasks,evidence}/，ARCHIVE.md 的月度统计、活跃清单与收口记录同步更新；本收口包自带 live evidence 目录，避免 check-evidence / check-review 的 --strict 扫描对象归零。",
+  "findings": [
+    "v0.18.2 发布包的消费闭环已由读数关闭：ops #166 合入 5676ffc（lock 推进到 0.18.2、重建 789 文件、overlay 53、business-overlay 13/13、drift 813 identical / 10 allowlisted / 161 skipped、后端 64 包、前端 lint/type-check/build 0），#167 合入 81d2941（SonarCloud Code Analysis 与 Go Lint 回到绿）。",
+    "第二轮归档包与发布门禁修复包都已完成，但 manifest 仍停在 in-progress；未归档的 completed 工作会让 .harness/tasks/ 的活跃清单与事实脱钩。",
+    "归档一律 git mv，diff 呈现 rename，保持与既有归档轮次一致的可追溯性；任务包正文留在 docs/harness/tasks/，只改 frontmatter 的 status。",
+    "三轮归档后 .harness/tasks/ 只剩本收口包自己，.harness/evidence/ 只剩散落的历史文件；本包保持 live evidence，使 --strict 传感器仍有扫描对象。"
+  ],
+  "scope": {
+    "in": [
+      "docs/harness/tasks/2026-10-31-v0182-menu-contract-shared-surface.task.md（勾选消费项并改 status）",
+      "docs/harness/tasks/2026-10-31-harness-archive-closeout-round2.task.md（status）",
+      "docs/harness/tasks/2026-10-31-release-gate-checks-poll-resilience.task.md（status）",
+      ".harness/ARCHIVE.md（统计、活跃清单、收口记录）",
+      ".harness/STATUS.md（v0.18.2 消费闭环的最新读数）",
+      "git mv .harness/{tasks,evidence}/<id> → .harness/archive/2026-10/{tasks,evidence}/<id>（三个任务）",
+      "本收口包的 task packet、manifest 与 live evidence"
+    ],
+    "out": [
+      "任何产品代码、.github/workflows/**、门禁阈值、测试集合",
+      ".foundation/**、releases/**、既有 tag 与 release 资产",
+      "pantheon-ops 仓库内的任何文件"
+    ]
+  },
+  "implementationNotes": [
+    "v0.18.2 包的消费项不是据叙述勾选，而是据 ops 两个 PR 的合并提交与 PR 检查回读：5676ffc 重建读数、81d2941 的 SonarCloud Code Analysis / Go Lint / Backend Tests / Smoke Sanity 全绿。",
+    "三个包的 Completion Checklist 在归档前已全部勾选，本轮只处理 status 与位置，不重写已完成的事实。",
+    "ARCHIVE.md 的 2026-10 行从 91/94 更新为 94/97，合计从 212/218 更新为 215/221，口径仍是 archive/<YYYY-MM>/{tasks,evidence}/ 的目录数。",
+    "归档后继续使用规范路径 .harness/tasks/<id> 与 .harness/evidence/<id> 引用，由 readTaskManifest / resolveArchiveAwarePath 回退到归档位置。",
+    "STATUS.md 只更新 v0.18.2 段落的消费状态，不新增版本叙述。"
+  ],
+  "contractAnchors": [
+    "docs/harness/VERIFICATION_EVIDENCE_SPEC.md",
+    ".harness/ARCHIVE.md",
+    "docs/designs/REPOSITORY_LAYOUT.md"
+  ],
+  "harnessProfile": {
+    "qualityProfile": "ci-workflow",
+    "portableFailureClass": "harness-governance",
+    "ratchetDecision": "registry-only",
+    "coverageDimensions": [
+      "method-health",
+      "architecture-fitness"
+    ]
+  },
+  "expectedFiles": {
+    "create": [
+      "docs/harness/tasks/2026-10-31-v0182-consumer-closeout.task.md",
+      ".harness/tasks/2026-10-31-v0182-consumer-closeout/manifest.json",
+      ".harness/evidence/2026-10-31-v0182-consumer-closeout/commands.json",
+      ".harness/evidence/2026-10-31-v0182-consumer-closeout/summary.md",
+      ".harness/evidence/2026-10-31-v0182-consumer-closeout/review.md",
+      ".harness/evidence/2026-10-31-v0182-consumer-closeout/pr-body.md"
+    ],
+    "modify": [
+      "docs/harness/tasks/2026-10-31-v0182-menu-contract-shared-surface.task.md",
+      "docs/harness/tasks/2026-10-31-harness-archive-closeout-round2.task.md",
+      "docs/harness/tasks/2026-10-31-release-gate-checks-poll-resilience.task.md",
+      ".harness/ARCHIVE.md",
+      ".harness/STATUS.md"
+    ],
+    "doNotTouch": [
+      "backend/**",
+      "frontend/**",
+      ".github/**",
+      ".foundation/**",
+      "releases/**",
+      "scripts/**",
+      "tests/**"
+    ]
+  },
+  "executionRoles": {
+    "implementer": "qoder-agent",
+    "reviewers": [
+      "统计一致性：archive/2026-10/{tasks,evidence} 的目录计数与 ARCHIVE.md 逐项对齐",
+      "可追溯性：diff 是否全部为 rename，没有内容被重写",
+      "引用有效性：归档后 check:task-packet 是否仍解析规范路径",
+      "收口判据：ops 提交号与 PR 检查读数是否与事实一致",
+      "边界：是否动了产品代码、CI 作业、门禁阈值或发布资产"
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "npm run check:task-packet",
+      "npm run check:docs-frontmatter && npm run check:structure && npm run check:harness-encoding",
+      "node scripts/harness/check-evidence.mjs --root . --strict",
+      "node scripts/harness/check-review.mjs --root . --strict",
+      "node scripts/harness/check-failure-registry.mjs --root . --strict",
+      "npm run check:harness-adoption",
+      "node scripts/check-pr-governance.mjs（经 create-pr.mjs 调用）"
+    ],
+    "runtimeEvidence": [
+      "无运行时改动；归档只移动 manifest/evidence 并改 status",
+      "--strict 传感器在归档后仍能扫描到本包的 live evidence",
+      "check:task-packet 对三份已归档任务包正文仍给 PASS"
+    ]
+  },
+  "runtimeSensitive": false,
+  "runtimeGap": "改动全部是 .harness/ 下的目录移动、docs/harness/tasks/ 的 frontmatter 与 .harness/ARCHIVE.md、.harness/STATUS.md 的叙述；不涉及任何产品代码，也不改变任何门禁判定，因此本轮验证以静态门禁、git rename 呈现、目录计数与归档后引用解析为准。",
+  "evidenceRequired": [
+    "三个任务包的收口依据（PR 号、合并提交、检查读数）",
+    "移动前后 archive/2026-10 的目录计数（91/94 → 94/97，合计 212/218 → 215/221）",
+    "归档后 check:task-packet、docs 门禁与 --strict 传感器的真实输出"
+  ],
+  "humanGates": [
+    "归档只移动 manifest/evidence 并改 status，不触碰 .github/workflows/* 等高风险范围",
+    "不发布 foundation release，不改 VERSION/CHANGELOG/docs/release-notes/**",
+    "是否把 check-evidence / check-review 接入 archive/ 回退属治理脚本变更，由维护者判断"
+  ],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed",
+    "三个 manifest status=completed，三份 .task.md status: Archived",
+    "git mv 呈 rename，目录计数与 ARCHIVE.md 统计一致（94/97、215/221）",
+    "归档后 check:task-packet 与治理门禁仍通过（规范路径回退成立）",
+    "未动产品代码、CI 作业、门禁阈值、发布资产与消费者仓库"
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-31-v0182-consumer-closeout/manifest.json",
+    "taskDoc": "docs/harness/tasks/2026-10-31-v0182-consumer-closeout.task.md",
+    "evidenceDir": ".harness/evidence/2026-10-31-v0182-consumer-closeout/",
+    "summaryFile": ".harness/evidence/2026-10-31-v0182-consumer-closeout/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-31-v0182-consumer-closeout/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".harness/ARCHIVE.md",
+      "docs/harness/VERIFICATION_EVIDENCE_SPEC.md"
+    ]
+  }
+}

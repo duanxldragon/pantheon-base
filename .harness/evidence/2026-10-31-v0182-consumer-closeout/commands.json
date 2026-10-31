@@ -1,0 +1,96 @@
+{
+  "taskId": "2026-10-31-v0182-consumer-closeout",
+  "repo": "pantheon-base",
+  "agent": {
+    "tool": "other",
+    "adapter": "qoder-agent"
+  },
+  "runtimeSensitive": false,
+  "runtimeGap": "改动全部是 .harness/ 下的目录移动、docs/harness/tasks/ 的 frontmatter、.harness/ARCHIVE.md 与 .harness/STATUS.md 的叙述；不涉及产品代码与门禁判定，验证以静态门禁、git rename 呈现与归档后引用解析为准。",
+  "commands": [
+    {
+      "command": "gh pr view 166 --json mergedAt,mergeCommit; gh pr view 167 --json mergedAt,mergeCommit; git -C ../pantheon-ops log --oneline origin/main -3",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "消费闭环的收口依据：ops #166 于 2026-10-31T01:59:39Z 合并为 5676ffc（lock 推进到 pantheon-base-v0.18.2），#167 合并为 81d2941（把错过合并窗口的 Sonar 修复重放到 main）。"
+    },
+    {
+      "command": "git -C ../pantheon-ops gh pr checks 167",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "#167 的 SonarCloud Code Analysis、Go Lint、Backend Tests、Smoke Sanity、CodeQL、Docs Governance 全部 pass；Vercel 因外部项目配置失败，非必需上下文。"
+    },
+    {
+      "command": "git ls-tree -d --name-only origin/main .harness/archive/2026-10/tasks/ | wc -l && git ls-tree -d --name-only origin/main .harness/archive/2026-10/evidence/ | wc -l",
+      "cwd": "pantheon-base/.tmp/closeout-0182",
+      "status": "passed",
+      "notes": "移动前的归档计数：2026-10 为 91 个任务、94 份证据，与 ARCHIVE.md 的统计行一致。"
+    },
+    {
+      "command": "ls .harness/archive/2026-10/tasks | wc -l && ls .harness/archive/2026-10/evidence | wc -l",
+      "cwd": "pantheon-base/.tmp/closeout-0182",
+      "status": "passed",
+      "notes": "移动后为 94 个任务、97 份证据；合计 215/221（26+23+72+94，31+23+70+97），与 ARCHIVE.md 更新后的统计逐项对上。"
+    },
+    {
+      "command": "git -c diff.renameLimit=3000 diff --cached -M --summary",
+      "cwd": "pantheon-base/.tmp/closeout-0182",
+      "status": "passed",
+      "notes": "19 条归档变更全部呈现为 rename（18 条 93–100% 的重命名，1 条 v0182 commands.json 93%），另有 2 条新建（本包 manifest 与 task.md）；没有删除+新增的重写。"
+    },
+    {
+      "command": "node scripts/harness/check-evidence.mjs --root . --strict",
+      "cwd": "pantheon-base/.tmp/closeout-0182",
+      "status": "failed",
+      "notes": "归档后的移动前读数：live 树里已没有任何 commands.json，报 1 error / No evidence command files found.。如实记录，不当作通过。"
+    },
+    {
+      "command": "node scripts/harness/check-review.mjs --root . --strict",
+      "cwd": "pantheon-base/.tmp/closeout-0182",
+      "status": "failed",
+      "notes": "同一时点的 review 读数：1 error / No review artifacts found.。处置是本包自带 live evidence，而不是改传感器或加豁免。"
+    },
+    {
+      "command": "node scripts/harness/check-task-packet.mjs",
+      "cwd": "pantheon-base/.tmp/closeout-0182",
+      "status": "passed",
+      "notes": "四份任务包正文全部 PASS：三份已归档包经 readTaskManifest / resolveArchiveAwarePath 回退后仍解析规范路径；当时本包仅因 review 文件尚未落盘有一条 warning。"
+    },
+    {
+      "command": "node scripts/harness/check-doc-frontmatter.mjs && node scripts/harness/check-structure-contract.mjs && node scripts/harness/check-encoding.mjs",
+      "cwd": "pantheon-base/.tmp/closeout-0182",
+      "status": "passed",
+      "notes": "frontmatter 0 error / 0 warning；structure 0 finding across 2983 tracked files；encoding 0 finding across 2635 scanned files。"
+    },
+    {
+      "command": "node scripts/harness/check-failure-registry.mjs --root . --strict",
+      "cwd": "pantheon-base/.tmp/closeout-0182",
+      "status": "passed",
+      "notes": "1 file(s), 0 error(s), 0 warning(s)。"
+    },
+    {
+      "command": "node scripts/harness/check-evidence.mjs --root . --strict && node scripts/harness/check-review.mjs --root . --strict",
+      "cwd": "pantheon-base/.tmp/closeout-0182",
+      "status": "passed",
+      "notes": "本包四个证据文件落盘后恢复：evidence 1 file / 0 error / 0 warning，review 1 file / 0 error。首版 commands.json 的 agent 写成字符串、linkage 缺 evidenceDir，首版 review 的机器块标题写成 ## Machine Readable JSON（传感器正则要求 ## Machine Readable 后直接跟 ```json）；都按既有契约修正，未改传感器。"
+    }
+  ],
+  "knownGaps": [
+    "check-evidence.mjs 与 check-review.mjs 的 --strict 只扫 live 树；本轮把最后一批 live evidence 归档后，它们在写入本包证据前各报一条 failed，读数已原样记录。两个传感器都不在 npm check:* 面与 CI 作业里；是否给它们加 archive/ 回退属治理脚本变更，由维护者判断。",
+    "worktree 里的 check-adoption 报 ../pantheon-harness/patterns/tool-adapter-matrix.md missing：嵌套根把 sibling 解析到 pantheon-base/.tmp/pantheon-harness。主仓同一命令只报已有的 openspec warning，以 hosted 结果为准。",
+    "pantheon-ops 的 chore/consume-base-v0.18.2 与 fix/sonar-k8s-new-code 两个已合并远端分支尚未删除：直接 git push --delete 被 Auto Mode 的 Git Destructive 分类器拦下（需要维护者点名目标）。Branch Hygiene 作业已按 main 调度，其内置脚本会在同一入口清理。",
+    "仍在途的遗留沿用前几轮的显式延期：.harness/evidence/2026-09-10-tenant-verification-and-gray/ 的重复产物归属、两份无任务归属的散落 PR 正文，以及 67 个没有 manifest 的旧 Active 任务包。"
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-31-v0182-consumer-closeout/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-31-v0182-consumer-closeout/",
+    "reviewFile": ".harness/evidence/2026-10-31-v0182-consumer-closeout/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/VERIFICATION_EVIDENCE_SPEC.md",
+      ".harness/ARCHIVE.md"
+    ]
+  },
+  "executedAt": "2026-10-31",
+  "workingDirectory": "pantheon-base/.tmp/closeout-0182"
+}

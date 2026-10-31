@@ -18,8 +18,8 @@
 | 2026-07 | 26 | 31 | V1.0 冻结与发布、Sonar 清零轮、安全审计 |
 | 2026-08 | 23 | 23 | Foundation Release 体系建立、v0.10.x 系列发布 |
 | 2026-09 | 72 | 70 | 命名与边界整改、企业级整改、治理收口、租户核心 |
-| 2026-10 | 91 | 94 | 租户交付、v0.14.0–v0.18.1 发布、代码简化 S1–S4、传感器与工作流缺陷收口、SQL 字面量收敛与消费仓 runtime-acceptance 闭环 |
-| **合计** | **212** | **218** | - |
+| 2026-10 | 94 | 97 | 租户交付、v0.14.0–v0.18.2 发布、代码简化 S1–S4、传感器与工作流缺陷收口、SQL 字面量收敛与消费仓 runtime-acceptance 闭环 |
+| **合计** | **215** | **221** | - |
 
 统计口径：`archive/<YYYY-MM>/tasks/` 与 `archive/<YYYY-MM>/evidence/` 下的目录数。
 月份取任务 ID 的 `YYYY-MM` 前缀，因此个别跨月任务按其开工月份归档。
@@ -108,9 +108,10 @@
 
 `.harness/tasks/` 下只保留状态不是 `completed` 的 manifest：
 
-本轮之后 `.harness/tasks/` 只剩本收口包自己（`2026-10-31-harness-archive-closeout-round2`），
-它在收口 PR 合并后按同一入口归档。仍在途的还有评审中的 PR #478
-（`2026-10-31-release-gate-checks-poll-resilience`），其 manifest 随该 PR 进入 `main` 后再收口。
+2026-10-31 收口轮（v0.18.2 消费闭环）之后，`.harness/tasks/` 与 `.harness/evidence/` 已无未归档条目：
+`2026-10-31-v0182-menu-contract-shared-surface` 在消费仓 #166/#167 合并后收口，
+`2026-10-31-harness-archive-closeout-round2` 在其自身 PR #481 合并后自归档，
+`2026-10-31-release-gate-checks-poll-resilience` 随 #478 的 `Release Gate` 修复进入 `main` 后收口。
 
 归档后 `.harness/tasks/` 为空也属正常状态；`readTaskManifest` 会回退到
 `archive/<YYYY-MM>/tasks/<task-id>/`，所以任务包、`Linkage` 与文档链接继续使用规范路径
