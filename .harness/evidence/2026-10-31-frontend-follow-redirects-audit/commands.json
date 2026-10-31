@@ -1,0 +1,71 @@
+{
+  "taskId": "2026-10-31-frontend-follow-redirects-audit",
+  "repo": "pantheon-base",
+  "agent": {
+    "tool": "other",
+    "adapter": "qoder-agent"
+  },
+  "executedAt": "2026-10-31",
+  "workingDirectory": "pantheon-base/.tmp/deps-fr",
+  "linkage": {
+    "taskDoc": "docs/harness/tasks/2026-10-31-frontend-follow-redirects-audit.task.md",
+    "taskManifest": ".harness/tasks/2026-10-31-frontend-follow-redirects-audit/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-31-frontend-follow-redirects-audit",
+    "reviewFile": ".harness/evidence/2026-10-31-frontend-follow-redirects-audit/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-31-frontend-follow-redirects-audit.task.md"
+    ]
+  },
+  "commands": [
+    {
+      "command": "gh run view 41169290115 -R duanxldragon/pantheon-ops --log-failed",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Same advisory first surfaced on the consumer's main run: Dependency Vulnerabilities reported NPM_AUDIT_FRONTEND_RESULT=failure and Security Gates exited 1. Base carries the identical follow-redirects@1.16.1 pin."
+    },
+    {
+      "command": "grep -n '^1.16.1' frontend/package-lock.json",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Before the fix: node_modules/follow-redirects is pinned to 1.16.1 at lines 3031-3033, reached through axios@1.20.0."
+    },
+    {
+      "command": "npm view follow-redirects versions --json --registry=https://registry.npmjs.org",
+      "cwd": "frontend",
+      "status": "passed",
+      "notes": "1.16.2 is published and is the smallest version outside the advisory range (>=1.16.0 <=1.16.1) that still satisfies axios's constraint."
+    },
+    {
+      "command": "edit frontend/package-lock.json: node_modules/follow-redirects version/resolved/integrity 1.16.1 -> 1.16.2",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Three lines in, three lines out, one entry. npm audit fix (also re-resolves @typescript-eslint/*, i18next, react-i18next) and npm update (rewrites unrelated libc fields) were both rejected."
+    },
+    {
+      "command": "cd frontend && npm ci --ignore-scripts --registry=https://registry.npmjs.org",
+      "cwd": "frontend",
+      "status": "passed",
+      "notes": "Installed from the edited lock; npm ci fails on any lock/resolver disagreement, so the edited entry is proven self-consistent."
+    },
+    {
+      "command": "cd frontend && npm ls follow-redirects",
+      "cwd": "frontend",
+      "status": "passed",
+      "notes": "axios@1.20.0 -> follow-redirects@1.16.2 resolves in the base frontend tree."
+    },
+    {
+      "command": "cd frontend && npm audit --registry=https://registry.npmjs.org --json",
+      "cwd": "frontend",
+      "status": "passed",
+      "notes": "After the fix: high 0, critical 0. The 19 moderate advisories are unchanged and below --audit-level=high."
+    },
+    {
+      "command": "cd frontend && npm run lint && npm run type-check && npm run build",
+      "cwd": "frontend",
+      "status": "passed",
+      "notes": "eslint clean, tsc -b clean, vite build OK in 716ms."
+    }
+  ],
+  "knownGaps": []
+}
