@@ -1,0 +1,137 @@
+{
+  "taskId": "2026-10-31-frontend-follow-redirects-audit",
+  "title": "Clear the frontend follow-redirects high advisory so the dependency gate is green again",
+  "repo": "pantheon-base",
+  "primaryLayer": "platform",
+  "dependencyLayers": [
+    "platform"
+  ],
+  "status": "completed",
+  "priority": "P1",
+  "type": "dependency-advisory-remediation",
+  "created_at": "2026-10-31",
+  "workspaceContext": {
+    "targetRepository": "pantheon-base",
+    "repositoryRole": "foundation-source",
+    "contextSyncExpectation": "none",
+    "releaseRequirement": "none"
+  },
+  "goal": "Refresh node_modules/follow-redirects in frontend/package-lock.json from 1.16.1 to 1.16.2 so GHSA-mrwp-f3q8-3g9p (high, range >=1.16.0 <=1.16.1, reached through axios@1.20.0) stops failing the hosted Dependency Vulnerabilities and Security Gates jobs, without changing any other dependency or source file and without cutting a foundation release.",
+  "findings": [
+    "The advisory landed under a pinned transitive dependency, so the gate goes red with no repository change: main run 41169290115 failed with NPM_AUDIT_FRONTEND_RESULT=failure.",
+    "1.16.2 is the only published version outside the advisory range that still satisfies the axios constraint, so the narrowest correct fix is a single lock entry refresh.",
+    "npm audit fix would also re-resolve @typescript-eslint/*, i18next and react-i18next; npm update rewrites unrelated libc fields on optional platform packages. Both were rejected and the version/resolved/integrity triple was edited directly, then proven with npm ci.",
+    "frontend/package*.json are not foundation sharedPaths, so this does not require a new tag; pantheon-ops carries the same pin and fixes it in its own repository in the same round."
+  ],
+  "scope": {
+    "in": [
+      "frontend/package-lock.json: node_modules/follow-redirects 1.16.1 -> 1.16.2",
+      "frontend audit high/critical back to zero",
+      "this task packet, manifest and evidence"
+    ],
+    "out": [
+      "any other frontend dependency re-resolution, including the 19 moderate advisories",
+      ".github/workflows/** and gate thresholds",
+      "frontend/package.json dependency ranges",
+      "backend/** and frontend/src/**",
+      ".foundation/**, release assets, VERSION and docs/release-notes/**"
+    ]
+  },
+  "implementationNotes": [
+    "The lock entry is edited in place (version, resolved URL, integrity) and installed with npm ci --ignore-scripts, which fails if the edited lock and the resolver disagree.",
+    "No overrides entry is added: 1.16.2 already satisfies axios's range.",
+    "The 19 moderate advisories are below --audit-level=high and need major lint/coverage toolchain upgrades, so they stay out of an unblocking patch."
+  ],
+  "contractAnchors": [
+    "frontend/package.json",
+    "frontend/package-lock.json",
+    ".github/workflows/security.yml"
+  ],
+  "harnessProfile": {
+    "qualityProfile": "ci-workflow",
+    "portableFailureClass": "dependency-advisory-drift",
+    "ratchetDecision": "no-repeat-observed",
+    "coverageDimensions": [
+      "method-health"
+    ]
+  },
+  "expectedFiles": {
+    "create": [
+      "docs/harness/tasks/2026-10-31-frontend-follow-redirects-audit.task.md",
+      ".harness/tasks/2026-10-31-frontend-follow-redirects-audit/manifest.json",
+      ".harness/evidence/2026-10-31-frontend-follow-redirects-audit/commands.json",
+      ".harness/evidence/2026-10-31-frontend-follow-redirects-audit/summary.md",
+      ".harness/evidence/2026-10-31-frontend-follow-redirects-audit/review.md",
+      ".harness/evidence/2026-10-31-frontend-follow-redirects-audit/pr-body.md"
+    ],
+    "modify": [
+      "frontend/package-lock.json"
+    ],
+    "doNotTouch": [
+      "frontend/package.json",
+      ".github/**",
+      "backend/**",
+      "frontend/src/**",
+      ".foundation/**",
+      "foundation-release.lock.json"
+    ]
+  },
+  "executionRoles": {
+    "implementer": "qoder-agent",
+    "reviewers": [
+      "最小性：diff 是否只有 follow-redirects 的 3 行",
+      "锁一致性：npm ci 是否从编辑后的 lock 安装成功",
+      "门禁完整性：是否通过豁免、overrides 或阈值调整绕过而不是修复",
+      "边界：是否越界到其他依赖、workflow 或源码"
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "cd frontend && npm ci --ignore-scripts && npm ls follow-redirects",
+      "cd frontend && npm audit --registry=https://registry.npmjs.org --json",
+      "cd frontend && npm run lint && npm run type-check && npm run build",
+      "npm run check:task-packet && npm run check:docs-frontmatter && npm run check:structure",
+      "node scripts/harness/check-evidence.mjs --root . --strict",
+      "node scripts/harness/check-review.mjs --root . --strict",
+      "node scripts/check-pr-governance.mjs（经 create-pr.mjs 调用）"
+    ],
+    "runtimeEvidence": [
+      "无运行时代码改动；lock 刷新不改变任何构建产物语义",
+      "以 npm ci 安装结果、npm ls 解析链与 audit 计数为准",
+      "托管 Dependency Vulnerabilities 与 Security Gates 在 PR 与 main 上的结论"
+    ]
+  },
+  "runtimeSensitive": false,
+  "runtimeGap": "本轮只改 lock 中的一个条目，不触碰任何运行时代码路径、接口、权限或 i18n；验证以安装一致性、audit 读数与前端 lint/type-check/build 为准，不额外启动服务。",
+  "evidenceRequired": [
+    "修复前后的 audit 计数（1 high -> 0 high）与 advisory 标识",
+    "npm ls 的解析链与 npm ci 安装结果",
+    "前端 lint / type-check / build 读数",
+    "托管 Dependency Vulnerabilities 与 Security Gates 运行标识与结论"
+  ],
+  "humanGates": [
+    "不调整门禁阈值、不添加豁免、不使用 overrides 掩盖 advisory",
+    "不发布 foundation release（package*.json 不在 sharedPaths）"
+  ],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed",
+    "diff 仅为 follow-redirects 单条目 3 行",
+    "audit high/critical 归零且 lint/type-check/build 通过",
+    "未改 workflow、未改 package.json、未新增豁免"
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-31-frontend-follow-redirects-audit/manifest.json",
+    "taskDoc": "docs/harness/tasks/2026-10-31-frontend-follow-redirects-audit.task.md",
+    "evidenceDir": ".harness/evidence/2026-10-31-frontend-follow-redirects-audit/",
+    "summaryFile": ".harness/evidence/2026-10-31-frontend-follow-redirects-audit/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-31-frontend-follow-redirects-audit/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-10-31-frontend-follow-redirects-audit.task.md"
+    ]
+  }
+}
