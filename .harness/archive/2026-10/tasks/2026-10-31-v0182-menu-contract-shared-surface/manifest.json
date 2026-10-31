@@ -4,7 +4,7 @@
   "title": "Register the menu-contract sensor as a shared path and cut pantheon-base-v0.18.2",
   "goal": "Package the nine commits merged since pantheon-base-v0.18.1 (93505225) as a patch foundation release on release/0.18, and repair the release-surface gap that blocks the menu-contract repair from ever reaching the consumer: frontend/scripts/check-menu-contract.mjs is byte-identical to the copy pantheon-ops runs in its frontend prebuild, yet it is absent from the release manifest's sharedPaths, so the #471 parser fix can never arrive through a release. The package (1) declares the file shared (sharedPaths 52 -> 53) and required in scripts/foundation-release/frontend-ownership.mjs, with the manifest and cut test expectations updated, (2) writes VERSION 0.18.2, the CHANGELOG entry, docs/release-notes/RELEASE_NOTES_v0.18.2.md and both indexes, plus the .harness/STATUS.md section, and (3) publishes the four assets and advances pantheon-ops onto the release with rebuild:from-base, check:business-overlay, check:shared-drift at 0 modified, go build ./... and npm run build. No backend source, frontend source, schema, route, permission, menu key or i18n key changes.",
   "primaryLayer": "platform",
-  "status": "in-progress",
+  "status": "completed",
   "priority": "P1",
   "type": "release",
   "estimatedComplexity": "small",

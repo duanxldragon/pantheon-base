@@ -4,7 +4,7 @@ doc_type: Remediation
 layer: platform
 depends_on_layers:
   - platform
-status: Active
+status: Archived
 linked_contracts:
   - docs/VERSION_MANAGEMENT_GUIDE.md
   - docs/designs/FOUNDATION_RELEASE_MODEL.md
@@ -169,6 +169,24 @@ platform
 - 共享面从 52 增到 53 属于消费契约的形态变化，合并前由非作者评审确认这是登记修复而不是扩大共享范围。
 - `pantheon-ops` 的锁推进与 live 树替换属该仓库 L2 门禁，记录在证据里、由该仓库自身评审。
 
+## Consumer verification（pantheon-ops）
+
+消费侧收口在 `pantheon-ops` 自身仓库完成，读数为：
+
+- `#166`（`5676ffc`，2026-10-31T01:59:39Z 合入）把 lock 推进到 `pantheon-base-v0.18.2`
+  （base commit `a44ae4e0`），从锁定发布包重建 789 个文件；`check:business-overlay` 53 项、
+  `test:business-overlay` 13/13、`check:shared-drift` 813 identical / 10 allowlisted / 161
+  skipped、后端 64 个包测试通过、前端 `lint` / `type-check` / `build` 均为 0。
+- 新共享传感器在消费仓的首次运行直接失败并暴露真实缺陷：k8s 模块 20 条权限菜单的 titleKey
+  由 `init()` 里 `strings.ReplaceAll` 拼出，既不可静态解析、也不在任何 i18n 词表里。消费仓按
+  业务归属改成静态常量 seed，并补齐前端 16 条权限声明；传感器现报 40 菜单 / 50 路由 /
+  237 权限 / 52 组件键。
+- 同一轮修掉两处会让确定性重建丢文件的隐患（`check-gorm-sql-literal` 未登记为 overlay、
+  两个只存在于生成文件里的 i18n key）。
+- `#166` 的 SonarCloud 新代码门槛红在修复提交到达前自动合并，修复以 `#167`（`81d2941`）
+  重放到合并后的 main：SonarCloud Code Analysis、Go Lint、Backend Tests、Smoke Sanity、
+  CodeQL、Docs Governance 全部通过，重复率回到 3% 以内且 6 条 `go:S1192` 清零。
+
 ## Linkage
 
 - Task ID: `2026-10-31-v0182-menu-contract-shared-surface`
@@ -191,4 +209,4 @@ platform
 - [x] VERSION / CHANGELOG / RELEASE_NOTES / STATUS 版本引用一致
 - [x] 目标 commit 上必需检查与 Release Gate 全绿
 - [x] tag 与 GitHub Release（含四件产物）已发布
-- [ ] `pantheon-ops` 对 `pantheon-base-v0.18.2` 重建且 drift、后端与前端构建均通过
+- [x] `pantheon-ops` 对 `pantheon-base-v0.18.2` 重建且 drift、后端与前端构建均通过（`#166` / `#167`）

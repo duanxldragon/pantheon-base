@@ -2,7 +2,7 @@
 title: Release Gate 的候选检查轮询不因瞬时空响应判定（fail-closed 保持）
 doc_type: Remediation
 layer: platform
-status: Active
+status: Archived
 depends_on_layers: []
 linked_contracts:
   - docs/harness/VERIFICATION_EVIDENCE_SPEC.md

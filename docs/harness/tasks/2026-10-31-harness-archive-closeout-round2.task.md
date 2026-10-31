@@ -3,7 +3,7 @@ title: 归档两个已完成任务包（菜单 SQL 字面量收敛、v0.18.0 简
 doc_type: Remediation
 layer: platform
 depends_on_layers: []
-status: Active
+status: Archived
 linked_contracts:
   - docs/harness/VERIFICATION_EVIDENCE_SPEC.md
   - docs/designs/REPOSITORY_LAYOUT.md

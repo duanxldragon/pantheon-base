@@ -4,7 +4,7 @@
   "title": "Release Gate 候选轮询把「读不到」与「判定」分离（fail-closed 保持）",
   "goal": "底座 main 2bc77797 的 Release Gate 在 Candidate Checks 一步判红：run 41099026855 / job 124212224199 的日志在 attempt 27（17:41:18Z）还是正常等待（Full Smoke in_progress，其余五项 completed/success），17:41:52Z 直接打出 unexpected end of JSON input 加 ##[error]Process completed with exit code 1，中间没有任何 check 读数。这条报文来自 gh 自己（Go encoding/json），说明那一轮 gh api 非零退出；旧写法 check_runs=$(gh api \"…\") 在 bash -eo pipefail 下把命令替换的非零状态直接变成整步中止，于是 Release Gate Summary 记 failure、SonarCloud Gate 因 needs 未满足被 skipped。而 Full Smoke 的 check run 在 17:43:54Z 变 completed/success（对应 workflow run 41099026988 于 17:55:21Z 整体收尾），即门控在它等待的条件真正满足前约两分钟自杀，候选提交没有任何质量回归——红的是门控脚本对传输层瞬时故障的过敏。本包把「读不到」与「判定」分开：gh 失败不再中止步骤（|| true，且刻意不静音 stderr，那是唯一能定位哪一轮因何失败的线索），读到的一定要是含 check_runs 键的合法 JSON 才进入判定，否则打印 waiting without a verdict 并在原有 240×30s 预算内继续等；预算耗尽仍以 Timed out 失败，conclusion != success 仍以 A required check failed 失败。必需检查集合、轮询预算、fail-closed 语义与分页/取最新 check_run 的口径一字未改。",
   "primaryLayer": "platform",
-  "status": "in-progress",
+  "status": "completed",
   "priority": "P1",
   "type": "ci-gate-resilience",
   "estimatedComplexity": "small",
