@@ -3,11 +3,11 @@ title: 收口 v0.18.2 消费闭环并归档三个已完成任务包（v0182 发�
 doc_type: Remediation
 layer: platform
 depends_on_layers: []
-status: Active
+status: Archived
 linked_contracts:
   - docs/harness/VERIFICATION_EVIDENCE_SPEC.md
   - docs/designs/REPOSITORY_LAYOUT.md
-updated_at: 2026-10-31
+updated_at: 2026-11-01
 ---
 
 # Task Packet: 2026-10-31-v0182-consumer-closeout
