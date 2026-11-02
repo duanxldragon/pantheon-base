@@ -170,5 +170,6 @@
     "The LOC window used in the release notes contains net-additive tenant work and is a lower bound, not the programme's measured gain.",
     "The three maintainer items in CODE_SIMPLIFICATION_PLAN.md section 11.6 stay open by design.",
     "This workstation intermittently times out on github.com:443 while api.github.com answers; git fetch/push needed retries and the release scripts must not be restarted blindly after a network failure."
-  ]
+  ],
+  "runtimeGap": "This bundle is marked runtimeSensitive because the release touches a published artifact, but the change is version metadata plus release notes: no runtime behaviour is altered, so there is no runtime log, metric, trace or performance signal to record. Consumption is verified by the foundation-release bundle assets and the ops rebuild recorded in notes/, not by a runtime probe."
 }
