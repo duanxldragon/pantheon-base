@@ -2,11 +2,11 @@
 title: Clear the frontend follow-redirects high advisory so the dependency gate is green again
 doc_type: Remediation
 layer: platform
-status: Active
+status: Archived
 linked_contracts:
   - frontend/package-lock.json
   - .github/workflows/security.yml
-updated_at: 2026-10-31
+updated_at: 2026-11-02
 ---
 
 # Task Packet: 2026-10-31-frontend-follow-redirects-audit
