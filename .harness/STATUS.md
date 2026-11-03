@@ -1,31 +1,191 @@
 # Pantheon Base - Harness 任务状态
 
-**最后更新**: 2026-10-31
-**当前版本**: v0.18.2 已发布（tag `pantheon-base-v0.18.2`，目标提交 `a44ae4e0`，四件资产与 `Foundation Release Verify` run 41153048213 已核验）；`pantheon-ops` 已完成 0.18.2 消费闭环（ops #166 `5676ffc` 重建 + #167 `81d2941` 修复回放）
+**最后更新**: 2026-11-01
+**当前版本**: v0.18.1 已发布（tag `pantheon-base-v0.18.1`，目标提交 `93505225`，四件资产与 `Foundation Release Verify` run 40817118092 已核验）；`pantheon-ops` 已对 0.18.1 重建并通过后端与前端构建
+**已知缺口**: 工作区 HEAD 为 `ef00738`（`VERSION` 仍是 0.18.1，属 v0.18.2 之前的分支快照，尚未同步 main）；v0.18.2 记录见下节“v0.18.2 发布”。
 
-## v0.18.2 发布（2026-10-31·已发布）
+## 全局审计整改 programme 登记（2026-10-31 起·2026-11-01 全部收口，9/9 + W10 + W11 + W12）
 
-任务包 `2026-10-31-v0182-menu-contract-shared-surface`，证据在
-`.harness/evidence/2026-10-31-v0182-menu-contract-shared-surface/`（含 `notes/` 三份发布文本）。
+审计报告：`docs/reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-10-31.md`（合并终版，唯一权威）。
+结论 **B：完成少量整改后进入维护冻结阶段**；问题面 **0 P0 / 3 P1 / 18 P2 / 7 P3（共 28 项）**。
 
-- **为什么是 patch**：菜单契约传感器与发布门禁的修复属于 bug fix，退役模块菜单过滤改写为整条
-  子句常量属于不改变行为的内聚修复，符合 `docs/VERSION_MANAGEMENT_GUIDE.md` §2.4。
-- **范围**：`main` 自 `93505225`（v0.18.1）以来的 9 个已合并提交——菜单契约解析修复（#471）、
-  六个 githubactions 告警清零（#473）、任务归档回退（#474）、两轮合并回读（#472/#475/#476）、
-  退役模块 SQL 整条子句常量（#477）、发布门禁轮询韧性（#478）。
-- **共享面登记缺口**：`frontend/scripts/check-menu-contract.mjs` 与 `pantheon-ops`
-  的副本逐字节相同、且由消费仓前端 `prebuild` 执行，却不在 `sharedPaths` 里，导致 #471 的修复
-  无法随 release 到达消费仓。本包把它加入 `sharedPaths.frontend` 与
-  `scripts/foundation-release/frontend-ownership.mjs` 的必需清单，`sharedPaths` 52 → 53。
-- **无迁移**：迁移链仍止于 `000030_tenant_plan_definitions`（schema 30）；无路由、权限、菜单键、
-  i18n 键变化。
-- **消费仓可见增量**：`frontend/scripts/check-menu-contract.mjs` 与
-  `backend/modules/business/retired_modules.go` 两个文件；其余 51 项共享路径与 v0.18.1 相同。
-- **发布读数**：#479 合入后 `Release Gate Summary` success；cut run 41152136695 success；annotated tag
-  `2e32bd46` → peeled `a44ae4e0`；GitHub Release `published_at` 2026-10-31T00:48:38Z，四件资产
-  （tgz `c01ebbc1` 30,051,238 B / `repo.tar` `c1360fb1` 47,923,200 B）由 `check:release-assets` 核验；
-  `Foundation Release Verify` run 41153048213 success（`GITHUB_TOKEN` 发布的 release 不派发
-  `release: published` 下游事件，故为手动 dispatch，同一 workflow、同一 tag）。
+### 已执行（9/9）
+
+| 包 | 决策 | 改动 | 证据 |
+|---|---|---|---|
+| W1 `2026-10-31-audit-p1-lowcode-generator-build` | **四处断裂一起闭合**：导入单一来源、路由组改走 contracts 助手、生成物设 `BootstrapFunc`、注册前置加 `go build` 闸门 | `backendGenerator.ts` 新增 `GO_MODULE_PATH` / `goImportPath()` / `buildGoImportBlock()`，`generateModule()` 不再自拼中间件链并补 `BootstrapFunc`；新增 `dynamic_module_build_check.go` + 测试；`dynamic_module_handler.go` 三处恒不命中的 `switch err.Error()` 改 `common.ErrMessage`；5 个前端语言包 + 后端快照新增 `module.register.source_uncompilable` | `.harness/evidence/2026-10-31-audit-p1-lowcode-generator-build/` |
+| W2 `2026-10-31-audit-p1-business-route-tenant-context` | **方案 C**：业务域在 V1 内不参与租户隔离 | 合同新增 §2.6 + §1 Out + §7 行 + V1.10；EN 同步；`route_groups.go` 注释改写；新增 `route_groups_test.go` 结构断言（负向验证过）；`MODULE_CONTRACT §10` 两条；`README.md:31` 整行改写 | `.harness/evidence/2026-10-31-audit-p1-business-route-tenant-context/` |
+| W9 `2026-10-31-audit-p2-oidc-scaffold-decision` | **方案 a 第一步**：删不可达实现，留迁移与列 | 删除 `backend/modules/auth/oidc/`（4 文件 / 587 行）；`000029` 与四个 `oidc_*` 列保留，drop 列登记为延后；`SYSTEM_AUTH_CONTRACT §7.3` 处置说明 + EN 同步 | `.harness/evidence/2026-10-31-audit-p2-oidc-scaffold-decision/` |
+| W3 `2026-10-31-audit-p1-entry-doc-truthfulness` | **只把已实现的说准**：版本号单源、配额改“度量展示”、community files 按实际列举、门禁状态不写入文档、DESIGN 增补租户章 | `README(.en)` 版本表删掉具体 release 号（指向 `VERSION` + release-notes 索引）、配额行改“配额度量与展示（超限不拒绝写入，合同 §2.4.1）”、community files 列全 `CONTRIBUTING.md`/`LICENSE`/三份 Issue 模板并只把 `CODE_OF_CONDUCT.md` 标为缺失、门禁段改“以 `main` 最近一次 required checks 的 run 为准”、`Go 1.26.6` 标注为当轮读数并指向 `go.mod`；`DESIGN(.en)` 新增 §3.4 租户章（compat/multi 双模、上下文优先级、Casbin domain、已交付面、明确未做面含业务域单租户）、§3.3 改逐项现状表带判据、§4.3 改历史背景、§9 第 10 条更正；`docs/README(.en)` 启动命令改 `cd backend && go run ./cmd/server` 并声明 `system_init.sql` 仅历史参考、8 份 `TENANT_*` 登记为非一线入口；`docs/designs/README(.en)` 索引补齐至 62/62 并如实声明 5 份缺 `.en.md` | `.harness/evidence/2026-10-31-audit-p1-entry-doc-truthfulness/` |
+| W4 `2026-10-31-audit-p2-doc-lifecycle-archive` | **判据先行**：证据存在 + `summary.md` + manifest `completed` 才允许改状态 | 新增 `scripts/harness/task-evidence-state.mjs`（archive-aware 判据，W8 接线）；92 份任务包文档中 **69 份 `Active`/`Draft` → `Archived`**，3 份保留 `Active`（manifest 仍 in-progress）、6 份保留 `Draft`（planned 无证据）；6 份未实现设计（alert/notice/report/scheduler/task/approval）改 `Draft` + 未实现声明（中英）；7 份 `docs/TENANT_*` 专题记录移入 `docs/reviews/`（指南不动），重算文件内链接 + 修正 5 处入链；`.harness/STATUS.md` 补 v0.18.2 | `.harness/evidence/2026-10-31-audit-p2-doc-lifecycle-archive/` |
+| W5 `2026-10-31-audit-p2-doc-metadata-and-index` | **只剩一处权威**：schema 管字段，metadata 管 `doc_type`/`status` 枚举，harness 版归档为指针；门禁选“声明边界 + 打印覆盖数” | `DOCUMENT_FRONTMATTER_SCHEMA.md` 成为唯一字段定义并新增 §11 覆盖范围（强制 4 个目录）；`DOCUMENT_METADATA_AND_STATUS`(zh/en) §2 改为指针；`docs/harness/DOCUMENT_FRONTMATTER_SPEC.md` 重写为指针 + `Archived`；`HARNESS_ENGINEERING_CONTRACT`(zh/en) 改引 schema；`frontmatter-check.mjs` 新增 `ENFORCED_DIR_PREFIXES` / `summarizeCoverage()`，输出“415 扫描 / 302 带元数据 / 113 不强制 + 强制目录清单”；scope 矩阵 `dept/post` 改 `tenant-owned` 附行号、§4 改“已实现 vs 未实现”、`biz_*` 标 V2 预留；7 份 legacy 任务包补 frontmatter（现 92/92 带 frontmatter）；单测 +1 用例（13/13） | `.harness/evidence/2026-10-31-audit-p2-doc-metadata-and-index/` |
+| W8 `2026-10-31-audit-p2-ci-checker-wiring` | **先判“会不会红”再判“要不要接线”**：9 个进 `Docs Governance`、1 个仅 workspace 根、1 个 mirror-only；每个接线都造违规验证过会红 | `quality.yml` 新增 9 个检查步骤；`package.json` 新增 10 个 `check:*`；`ci.yml` 的 coverage 步骤去掉 `-race`（race 每 PR 2→1，coverage 上传仍有输入）；`check-task-packet.mjs` 接入 `task-evidence-state` 判据（status 与证据不一致即 error）；补三份 review.md 的 `## Machine Readable` 块与 v0180 的 `runtimeGap`；`scripts/harness/README.md` 加接线表；`failure-registry` 加 `FR-026` | `.harness/evidence/2026-10-31-audit-p2-ci-checker-wiring/` |
+| W6 `2026-10-31-audit-p2-dead-code-legacy-surface` | **先做 workspace 级检索再删**：两个零消费 hook、`scaffold.Generate`、`readRoleKeysFromContext` 删除；死表 `permission_role_data_scope_policy` 由 `000031` drop；legacy 认证端点保留 + `Deprecation`/`Sunset: 2026-12-31` | `frontend/src/hooks/{usePagination,useRequest}.ts` 与 `hooks/index.ts` 4 行再导出删除（base 0 命中、ops 6 行全为自有副本）；`internal/scaffold/engine.go` 删除（`scaffold.Generate(` 0 命中）；`casbin_middleware.go` 包装删除、测试改 `common.GetRoleKeys`；`000031_drop_permission_role_data_scope_policy.{up,down}.sql` 新增 + `TestDropPolicyTableDownReconstructsVersion30Shape` 回归用例；`csrf_middleware.go` 新增 `LegacyDeprecationMiddleware`；`SYSTEM_AUTH_CONTRACT §7.7`(zh)/`§7.6`(en) 登记下线日。`pkg/security/ssrf` **未删**（ops 5 处 import） | `.harness/evidence/2026-10-31-audit-p2-dead-code-legacy-surface/` |
+| W7 `2026-10-31-audit-p2-token-cache-race` | **先红后绿**：同 token 并发用例先在旧实现上报 DATA RACE，再改实现 | `tokenSessionCache` 与 `tokenCachedSession.data` 由指针改值、新增 `cloneSessionData` 深拷贝 `RoleKeys`、`storeTokenSessionCache` 落库时也拷贝、新增 `touchTokenSessionCacheActivity` 在写锁内同步活跃时间（锁内无 Redis I/O）；`resolveTokenSession` 命中时交副本。黑名单/空闲超时/撤销/TTL/淘汰策略一行未改。修复前 **2 × DATA RACE**（`:182/:183/:186`）→ 修复后 **0** | `.harness/evidence/2026-10-31-audit-p2-token-cache-race/` |
+
+冻结门槛进度：**7/7 全部满足**（2026-11-01）。
+
+- 第 1 项（AUD-001）与第 2 项（AUD-002）——W1/W2，见 §16.1/§16.5。
+- 第 3 项（AUD-003/004/007/016/024）——W3 闭合：入口文档不再有可被一条 `grep` 推翻的陈述，
+  README 不再硬编码 release 号，designs 索引 62/62。
+- 第 4 项（AUD-006/011/017/018/019）——W4 闭合：任务包状态由证据而非作者自述决定，
+  `docs/` 根不再有未归位的专题记录。
+- 第 5 项（AUD-008/009/010）——W5 闭合：字段定义只剩一处、scope 矩阵与代码一致、
+  门禁能自报"检查了多少份"。
+- 第 6 项（AUD-012/013/014）——W6 闭合：死代码/死表已删，legacy 端点保留 + 弃用头；
+  **真正下线（2026-12-31）与 `000031` 的生产库执行属维护者 human gate**。
+- 第 7 项（AUD-026/015/027）——W7 闭合（2 × DATA RACE → 0）、W8 闭合（11 个空转 checker
+  各有归宿且新接线的都证明过会红，race 不再重复跑）。
+
+**「进入维护冻结」的宣告未执行**：按 programme `Human Gates` 该动作归维护者，
+programme manifest 以 `FREEZE-DECLARATION`（P2）显式登记。宣告**文本已就绪**（W12）：
+`docs/reviews/PANTHEON_BASE_MAINTENANCE_FREEZE_DECLARATION.md`，含 7 项门槛对应、实测读数、
+残留归属与签署块。签署前提是整改产物先进 `main`——当前 HEAD 是整改前快照，冻结对象尚不存在。
+
+**28 条不是 28/28**，且要分两个时点读：
+
+- **programme 收口时**：23 条着落到子包；AUD-022/023 按审计原判断"不建议处理"；
+  AUD-021/025/028 **仍为 open**（P3，不阻断冻结）。
+- **W10 之后（当前）**：23 条子包 + 3 条由 W10 收口 + 2 条按审计建议不处理。
+  三条 P3 是**另立一包**做的，不能读成 programme 本来就算了。
+
+着落表见 `.harness/evidence/2026-10-31-audit-remediation-programme/review.md` §2。
+
+### W10：三条 P3 残留收口（2026-11-01）
+
+| 包 | 做了什么 | 读数 |
+|---|---|---|
+| W10 `2026-10-31-audit-p3-residual-closeout` | **AUD-021**：成因不是那行 import，而是 `check-search-toolbar-contract.mjs` 对 `lowcode/templates` 的整目录豁免（该目录自 #120 起被 tsconfig exclude、全仓零 import，不参与构建）。删死 import + **撤销豁免** + 生成器侧第 14 条 + 门禁侧第 10 条两条锁。**AUD-025**：`frontmatter-check` 增加 90 天复核窗口计数与 `--report-overdue`，规则写入 `DOCUMENT_METADATA_AND_STATUS` §6.5 中英双版，**刻意不做成 error**。**AUD-028**：删除 `main.go` 空转的 `context.WithTimeout`，原地写明为何不设 timeout | 被检文件 **102 → 106**；塞回 `FilterPanel` → exit 1；恢复豁免 → 第 10 条红；拼进生成器 → 第 14 条红；逾期 **144 份**（71 `.en.md`、最老 198 天）且门禁 exit 0；把逾期计入 `ok` → docs 第 14 条红；`go build`/`vet`/`gofmt` 三清 |
+
+W10 自己又留了两条 P3 残留（收口不是把问题清成零）：**AUD-021b**（`templates/` 目录 1,894 行死代码仍在，
+删除属独立决策）、**AUD-025-review-round**（逾期文档需一次人工复核轮，不能脚本批量完成）。
+另有一处文案漂移（门禁指针指向已不存在的 `DESIGN.md §7.2`）在收口中就地修掉，未计入残留。
+
+### W11：生产 AutoMigrate 边界（2026-11-01，AUD-001c）
+
+W1 留下的 P2，审计要求"冻结前择一"。选**文档加例外**，并把例外写窄。
+
+| 做了什么 | 读数 |
+|---|---|
+| 先确认冲突真实可达：`PANTHEON_ENABLE_DYNAMIC_MODULES` 生产固定 `false`，但只挡 `/lowcode/dynamic-modules/*` 的 HTTP 路由；编译进 `generated_registry.go` 的模块不受约束，启动时仍走 `Bootstrap → AutoMigrate` | 三个命中点（`module.go:19/:70/:81`、`DEPLOYMENT_GUIDE:82`）+ `generated_registry.go` 静态注册 |
+| `DEPLOYMENT_GUIDE §3`：禁令限定为平台 schema，新增边界表 + 两点代价（需 DDL 权限、生成表列只增不减）+ 与动态模块开关的辨析 | 边界可逐表核对 |
+| `MODULE_CONTRACT §4.3`：接口补 `Migrate`、加"何时跑 Migrate / Bootstrap"判定表、说明 `BootstrapFunc` 用途 | 契约不再写"后续再扩展" |
+| 启动日志 `skipping module AutoMigrate` → `module Migrate() skipped, runtime bootstraps run instead` + note | 原句与行为相反，会误导排障 |
+| 新增 `TestRegisterBackendModules_DefaultModeRunsBootstrapForGeneratedModules` | 负向 A（收紧 `FuncModule`）只打红它；负向 B（删 bootstrap 阶段）与 `PhasedExecution` 同时红 → 初版注释被推翻并改正 |
+
+拒绝的两条：显式 `CREATE TABLE IF NOT EXISTS`（表已存在时不补列，把文档问题转成运行时问题）、
+生成器产出迁移文件（需手写 DDL 与 GORM 模型逐列一致，不一致即查询失败且失去兜底）。
+后者登记为 **AUD-001c-ddl**（P3）待重估，不是"不需要做"。
+
+### W12：三条 P2 的可验证前置条件（2026-11-01）
+
+三条 P2 的**动作**全部保留给维护者，W12 只补它们缺的前置条件——在此之前，"归维护者"等于
+"到那天现场发明流程"。
+
+| 做了什么 | 读数 |
+|---|---|
+| **AUD-013-prod**：新增只读预检 `migrations/preflight/000031_preflight.sql`（6 条 SELECT：版本/dirty、死表存在、将销毁行数、替换表存在、替换表行数、样例行）；`migrate_preflight_test.go` 在 schema-30 库造 2 行后逐条断言，再真的应用 000031 验证预测成立；配套 `docs/runbooks/MIGRATION_000031_PRODUCTION_DROP.md` | 用例 PASS；负向 A（第 3 条改 `WHERE 1=0`）红在 `rows_to_be_dropped=0, want 2`；负向 B（embed 模式放宽为 `migrations`）红在隔离断言；整包 `pkg/database` ok 59.7s |
+| **AUD-014-followup**：`docs/runbooks/DECOMMISSION_LEGACY_AUTH_ROUTES_2026-12-31.md`，清单精确到文件与行号 | 2 路由 group（`sys` 删完变空整体删 / `systemProtected` 保留 15 条当前接口）、1 中间件 3 符号 2 挂载点、2 CSRF 豁免、2 Casbin case、1 测试文件 3 处、6 文档 |
+| **FREEZE-DECLARATION**：`docs/reviews/PANTHEON_BASE_MAINTENANCE_FREEZE_DECLARATION.md`，7 项门槛逐项对应 + 今日实测读数 + 12 条残留归属 + 签署块，**未签署** | `go test -short ./...` EXIT=0 / ok=47 / FAIL=0；`tsc -b` exit 0；三份新增文档过 4 条文档门禁 |
+
+**W12 最关键的一条发现**：DROP 与部署不可分离。`PANTHEON_AUTO_MIGRATE=false` 在生产配置里
+恰恰是"走版本化迁移"的分支（`main.go:101 → RunMigrations → m.Up()`），而镜像只构建
+`./cmd/server`——服务启动那一刻 DROP 就发生，滚动更新时由最先取到 `GET_LOCK` 的 Pod 执行。
+所以预检必须在**部署之前**做，而 `k8s/README.md:52` 的 "run migrations manually" 是一个
+镜像内没有入口的指示（新登记 `AUD-013-ops-migrate-entry`，P3）。
+
+**W12 的自我更正**：预检解析器初版按字面 `"\n;\n"` 切分，负向验证时文件被写成 CRLF，
+解析器把整个文件当成一条语句、报 `parsed 1`。这不是负向验证生效，是解析器对行尾敏感
+（Windows 检出即触发）。改为按行锚定的正则后才真正红在行数断言上。
+
+**冻结宣告不能签的真实原因**：HEAD `ef00738` 是整改前快照（150 modified / 9 deleted /
+4 renamed / 3 renamed+modified / 49 untracked），9 个子包的整改全部未进 `main`。
+冻结的对象是提交，而包含整改的提交还不存在。
+
+### 当前仍 open 的残留（12 条，3 P2 + 9 P3，均不阻断冻结）
+
+| ID | 级别 | 内容 | 归属 |
+|---|---|---|---|
+| `FREEZE-DECLARATION` | P2 | 进入维护冻结的宣告未执行（**文本已就绪**，见下 W12） | 维护者 |
+| `AUD-013-prod` | P2 | `000031` 的 DROP TABLE 未在生产库执行（**预检与执行规程已就绪**） | 维护者 |
+| `AUD-014-followup` | P2 | legacy 认证端点真正下线（2026-12-31，**下线清单已就绪**） | 维护者 |
+| `AUD-001b` | P3 | 生成物 `gofmt` 不干净（模板写死对齐空格） | 待办 |
+| `AUD-001c-ddl` | P3 | 生成表 DDL 不在迁移链里，无 down 迁移 | 待重估 |
+| `AUD-013-ops-migrate-entry` | P3 | `k8s/README` 称可手工迁移，镜像内无该入口（W12 新登记） | 待决策 |
+| `AUD-021b` | P3 | `lowcode/templates` 1,894 行死代码 | 待决策 |
+| `AUD-025-review-round` | P3 | 143 份逾期 Active 文档需人工复核轮 | 待办 |
+| `AUD-026-race-only` / `AUD-026-stress` | P3 | 竞争仅 `-race` 可见；多实例压测未做 | 观察项 |
+| `AUD-012-ops` | P3 | ops 仍保留自有 `usePagination`/`useRequest` 副本 | 下游 |
+| `AUD-001c-ops-doc` | P3 | ops 部署手册可能抄了旧表述 | 下游 |
+
+### 收口复核推翻并修复的两处（2026-11-01）
+
+1. **W6 的 `000031.down` 重建形状错误（P2）**。初版以"up/down/up 三步 exit 0"为判据，
+   但回滚到 v30 的表多了一条 000024 **已删除**的 `idx_permission_role_data_scope_policy_role_key`
+   ——回滚后两个租户不能再用同一个 `role_key`。用 `SHOW CREATE TABLE` 逐字节对比
+   （"空库直接迁到 30" vs "迁到 31 再回滚到 30"）暴露；已修复并新增
+   `TestDropPolicyTableDownReconstructsVersion30Shape`，该用例在缺陷版本上验证过会红。
+   **教训：命令能跑通不等于结果是那个结果。**
+2. **W6 的 evidence 自述不实（P3）**。`commands.json` 把 `check-evidence --strict` 记为 `passed`，
+   实际因缺 `knownGaps` 为 FAIL。已改为如实记录，并写进 `review.md` 的「收口复核的自我更正」。
+
+W1 执行中新增两条未闭合项（已写入任务包 `residualFindings`，不阻断冻结）：
+
+- **AUD-001c（P2）**：`BootstrapFunc → AutoMigrate` 与 `docs/DEPLOYMENT_GUIDE.md:44`「生产环境不得启用
+  GORM AutoMigrate」冲突。当前是任务包预先批准的选项之一，但文档未豁免；冻结前择一（文档加例外 /
+  改为 Bootstrap 执行显式 `CREATE TABLE IF NOT EXISTS`，仓库先例 `internal/middleware/data_scope_middleware.go:68`）。
+- **AUD-001b（P3）**：生成物 `gofmt -l` 列出全部 5 个 Go 文件（模板写死字段对齐空格）。提交时
+  lint-staged 会归位，CI gofmt 对 PR 仅报告，不影响构建。
+
+### 本轮数字更正（勿再引用旧值）
+
+- `pantheon-ops` 对 `ProtectedGroup`/`DataScopedGroup` 的调用点 **25 → 14**（13 × `DataScopedGroup` + 1 × `ProtectedGroup`）。
+- 下游业务域 `tenant_id` 命中 **0 → 1**（`retired_modules_test.go:110` 的 DDL 测试夹具），`TenantID` 命中 0。
+- W9 任务包的 `.env.example` 路径应为仓库根（`backend/.env.example` 不存在）。
+- **全仓此前没有任何模块实现 `Bootstrap`**（`grep -rn "BootstrapFunc:\|) Bootstrap(" --include=*.go` 命中 0）：
+  AUD-001 的第四重不是“个别模块漏配”，而是生成器与容器契约整体错位。
+
+### 登记时的其余事实
+
+- **基线**：`origin/main` = `bb0498f5`（`VERSION` 0.18.2）。取证快照为工作区 HEAD `ef00738`
+  （`fix/release-gate-checks-poll-resilience`，与 main 分叉 5/3）。结构性计数锁定 main；
+  构建/测试/门禁读数标注为工作区快照——混用基线是前序两份报告大部分数字冲突的根因。
+- **3 项 P1**：AUD-001 生成器产物不可编译且在默认迁移模式下不建表；AUD-002 业务域零租户建模
+  而 `README.md:31` 宣称“完整数据隔离”（**已处置**）；AUD-016 `docs/README.md` 的建库与启动命令必然失败。
+- **programme**：`.harness/tasks/2026-10-31-audit-remediation-programme/`，含 9 个子包，
+  依赖 `W1→W6`、`W2→W3→W4→W5→W8`，W7/W9 独立。
+- **7 项冻结门槛**见报告 §13；OIDC（AUD-005）不阻断冻结，决策已落盘（报告 §16.2）。
+- **明确不处理**：删除 `pkg/security/ssrf`（base 内 0 引用，但 `pantheon-ops` 有 5 处引用）、
+  拆分大组件、为 dashboard 加缓存、合并 `docs/harness` 与 `.harness`、删除历史评审报告、
+  补齐全量 `.en.md`、把 7 项 P3 包装成任务。
+- **与上一条的字面冲突，说明**：W10 确实为其中 3 条 P3 另立了收口包，这看起来正是"把 P3 包装成任务"。
+  区分点是：这三条在 programme 收口时已被**显式登记为 open 的 gap**，收口包只做关闭动作
+  （删豁免、加计数、删死语句），不新增任何能力面；且收口后如实登记了三条**新的** P3 残留，
+  没有把数量洗成零。审计要防的是"以整改为名扩维护面"，不是"把已登记的 gap 关掉"。
+- **门禁读数（2026-11-01 W12 收口后实测）**：`check-task-packet` 95 文件 / 0 error / 14 warning
+  （warning 全为历史任务包既存项）；`frontmatter-check` 421 docs / 306 with frontmatter /
+  115 不强制 / **143 份 Active 超 90 天（只报告）**；`check-doc-links --strict` 0 findings；
+  `check-doc-inventory --strict` 0 findings；`check-evidence --strict` 16 文件 / 0 error；
+  `check-review --strict` 16 文件 / 0 error；`check-encoding --strict` 0 findings / 2609 文件；
+  `check:search-toolbar-contract` 0 findings / 106 文件；`go build ./...` / `go vet ./...` exit 0；
+  `go test -short ./...` EXIT=0 / ok=47 / FAIL=0 / 5 无测试文件；`tsc -b` exit 0。
+  `-race` 读数引自 W7 收口（`./internal/middleware/` ok / 0 DATA RACE），W12 未重跑
+  ——本机需把 `/d/msys64/mingw64/bin` 放进 `PATH`，这条不属于 W12 的验证范围，不在读数表里冒充。
+
+## v0.18.2 发布（2026-10-31·已发布，以 `origin/main` 为准）
+
+`release/0.18` 线上的补丁版本，tag `pantheon-base-v0.18.2`，目标提交 `bb0498f5`，
+`origin/main` 的 `VERSION` = `0.18.2`，发布说明为 `docs/release-notes/RELEASE_NOTES_v0.18.2.md`。
+
+- **为什么是 patch**：无 schema 变化（迁移链仍止于 `000030_tenant_plan_definitions`，schema 30），
+  无路由、权限码、菜单键或 i18n key 变化。
+- **改了什么**：修复菜单契约传感器与发布门禁；retired-module 菜单过滤改为整句常量匹配。
+  `sharedPaths` 由 52 增至 **53**——`frontend/scripts/check-menu-contract.mjs` 声明为共享，
+  消费仓在自己的 `prebuild` 里运行它。消费仓可见的变更文件只有两个：
+  `frontend/scripts/check-menu-contract.mjs`、`backend/modules/business/retired_modules.go`。
+- **为何补写在这里**：本文件此前停在 v0.18.1，而 main 已发 v0.18.2，属 AUD-006 同类的
+  “完成态未回写”。版本口径只认 `origin/main` 的 `VERSION`、tag 与发布说明；
+  本地工作区 `ef00738` 不含该次发布，不能拿它判断当前版本。
 
 ## v0.18.1 发布（2026-10-29·已发布）
 

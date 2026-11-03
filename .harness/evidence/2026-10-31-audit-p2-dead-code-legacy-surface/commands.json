@@ -1,0 +1,164 @@
+{
+  "taskId": "2026-10-31-audit-p2-dead-code-legacy-surface",
+  "repo": "pantheon-base",
+  "executedAt": "2026-10-31",
+  "agent": {
+    "tool": "other",
+    "adapter": "freebuff"
+  },
+  "runtimeSensitive": true,
+  "runtimeGap": "迁移 000031 的 up/down/up 往返在本地 DSN 上执行并记录退出码；未在生产库验证。down 只重建表结构，不恢复数据。",
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-31-audit-p2-dead-code-legacy-surface/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-31-audit-p2-dead-code-legacy-surface/",
+    "reviewFile": ".harness/evidence/2026-10-31-audit-p2-dead-code-legacy-surface/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-10-31.md",
+      "docs/harness/AI_QUALITY_GOVERNANCE.md",
+      "docs/contracts/SYSTEM_AUTH_CONTRACT.md"
+    ]
+  },
+  "commands": [
+    {
+      "command": "grep -rn \"usePagination\\|useRequest\" frontend/src ../pantheon-ops/frontend/src",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "base frontend/src 零命中（两 hook 及 index.ts 再导出已删除）。ops 侧命中全部是 ops 自有副本（../pantheon-ops/frontend/src/hooks/{index.ts,usePagination.ts,useRequest.ts}），不 import base 的文件——base 删除不破坏 ops 构建（FR-021 检索前置已满足）。"
+    },
+    {
+      "command": "grep -rn \"scaffold.Generate\" backend",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "零命中。engine.go 的 Generate 与 capitalize 已删；scaffold 包其余导出（GeneratedModuleRef、GenerateModuleFilesFromSchema、WriteGeneratedRegistries 等）仍被 dynamicmodule/generator 使用，包未删除。"
+    },
+    {
+      "command": "grep -rn \"readRoleKeysFromContext\" backend",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "零命中。casbin_middleware.go 与其测试中的包装函数已删，测试改用 common.GetRoleKeys，未改该函数语义。"
+    },
+    {
+      "command": "grep -rn \"permission_role_data_scope_policy\" backend --include=*.go",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "Go 代码零功能性引用。仅剩说明性注释：role_service.go 说明该死表由 000031 drop；cmd/tenantsizing/main.go 的 kept-global 注释已同步移除该表名并注明由 000031 drop。role_service.go 删除角色时对该表的防御性清理已删，dashboard_service.go 表白名单占位已删。"
+    },
+    {
+      "command": "ls backend/pkg/database/migrations/ | grep 000031",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "000031_drop_permission_role_data_scope_policy.{up,down}.sql 均存在。000001/000020/000024 历史迁移文件未被改写，drop 走新迁移。"
+    },
+    {
+      "command": "grep -rn \"security/ssrf\" ../pantheon-ops/backend --include=*.go | wc -l",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "ops 后端 5 处引用 pkg/security/ssrf——D 类下游保留，base 侧该包未删除（scope out 明确不处理）。"
+    },
+    {
+      "command": "grep -n \"LegacyDeprecation\\|legacySelfService\" backend/modules/auth/module.go",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "AUD-014 决策落地：/system/login|refresh 在公开组、/system/logout|user/info 在 casbin 保护组，两组均挂 LegacyDeprecationMiddleware（按 legacySelfServicePaths 匹配）；注释标明 2026-12-31 下线并回指 SYSTEM_AUTH_CONTRACT.md（zh §7.7 / en §7.6 新增 Legacy 双入口章节）。"
+    },
+    {
+      "command": "grep -n \"system/login\\|system/refresh\" backend/internal/middleware/csrf_middleware.go backend/internal/middleware/casbin_middleware.go",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "csrf_middleware.go 保留 4 行（两组路径列表各 2 条精确豁免）一一对应 /system/login 与 /system/refresh 两条现存路由；casbin_middleware.go 对 legacy 端点没有、也不需要有特例 case（两条自服务路由在公开组，logout/user/info 走常规 casbin 策略）。因此不存在“豁免无对应路由”或“case 无对应路由”的悬空状态。"
+    },
+    {
+      "command": "cd backend && go build ./... && go vet ./...",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "删除 scaffold.Generate、readRoleKeysFromContext、防御性清理与 legacy 中间件接线后，build 与 vet 均 exit 0。"
+    },
+    {
+      "command": "cd backend && go test -short ./internal/middleware/... ./modules/system/iam/role/... ./modules/platform/...",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "受影响包测试全绿（casbin_middleware_test 改用 common.GetRoleKeys 后通过）。"
+    },
+    {
+      "command": "迁移 000031 up/down/up 往返",
+      "cwd": "pantheon-base/backend",
+      "status": "passed",
+      "details": "up→表被 drop；down→表结构重建（仅结构，无数据回填）；再 up→再次 drop。三步全部 exit 0。"
+    },
+    {
+      "command": "cd frontend && node ./node_modules/typescript/bin/tsc -b && node ./node_modules/vite/bin/vite.js build",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "`npm run build` 的等价两步（脚本定义即 `tsc -b && vite build`）。tsc -b exit 0；vite build exit 0（✓ built in 718ms）——按 reviewer posture 跑的是完整 bundle 构建而非只跑 tsc。注：本机 `npx` / `npm run build` 的子进程 shell 被 WSL 包装劫持（`execvpe(/bin/bash) failed`），故直接以 node 调用同一二进制；prebuild 链中的 check:search-toolbar-contract 与 check:ui-contract 已单独执行，均 0 finding / exit 0。"
+    },
+    {
+      "command": "cd frontend && node ./scripts/check-search-toolbar-contract.mjs && node ./scripts/check-ui-contract.mjs",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "prebuild 链中与本次删除最相关的两条：SearchToolbar 0 finding（106 模块文件 + index.css）、UI contract 0 finding（274 文件），exit 0。删除 usePagination/useRequest 未让任何引用它们的合约检查变红。"
+    },
+    {
+      "command": "node scripts/frontmatter-check.mjs",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "Frontmatter check passed：415 docs，302 带 frontmatter，113 无（informational）。"
+    },
+    {
+      "command": "node scripts/harness/check-doc-links.mjs",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "0 finding(s)，exit 0——含新增合同章节与 runbook 改动。"
+    },
+    {
+      "command": "node scripts/harness/check-task-packet.mjs",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "全量 [PASS]，exit 0（其他任务 review.md 缺失为既存 warning，非本任务）。"
+    },
+    {
+      "command": "node scripts/harness/check-evidence.mjs --root . --strict",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "11 个 evidence 文件全部 [PASS]，0 error，本包三件套通过 strict 校验。"
+    }
+  ],
+  "knownGaps": [
+    "迁移 000031 的 up/down/up 往返在本地 DSN 执行并记录退出码，未在生产库验证；drop 不可逆，生产执行前需按 human gate 确认数据可丢弃并留一份导出。",
+    "legacy 认证端点只做到“保留 + Deprecated + 定 2026-12-31 下线”，真正下线（移除 /system 四条路由与 csrf_middleware.go 的两条精确豁免）需维护者确认无外部集成方后另行执行。",
+    "ops 仓仍保留自己的 usePagination/useRequest 副本（ops 自有文件，不 import base）。base 侧删除不破坏 ops 构建，但 ops 侧的清理属 ops 任务，按 doNotTouch 不在本包处理。",
+    "pkg/security/ssrf 按 D 类保留未删：base 内 0 引用而 ops 后端有 5 处引用，删除会重演 FR-021 的跨仓构建失败。"
+  ],
+  "gates": [
+    {
+      "gate": "go build ./...",
+      "status": "passed",
+      "details": "exit 0"
+    },
+    {
+      "gate": "go vet ./...",
+      "status": "passed",
+      "details": "exit 0"
+    },
+    {
+      "gate": "go test -short (middleware + iam/role + platform)",
+      "status": "passed",
+      "details": "全 ok"
+    },
+    {
+      "gate": "000031 迁移 up/down/up 往返",
+      "status": "passed",
+      "details": "三步 exit 0；down 仅重建结构"
+    },
+    {
+      "gate": "npx tsc -b && npm run build",
+      "status": "passed",
+      "details": "完整构建 exit 0（✓ built）"
+    },
+    {
+      "gate": "文档门禁（frontmatter / doc-links / task-packet / evidence --strict）",
+      "status": "passed",
+      "details": "均 exit 0"
+    }
+  ]
+}

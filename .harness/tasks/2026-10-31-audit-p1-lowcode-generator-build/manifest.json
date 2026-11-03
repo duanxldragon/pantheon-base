@@ -1,0 +1,197 @@
+{
+  "taskId": "2026-10-31-audit-p1-lowcode-generator-build",
+  "taskDoc": "docs/harness/tasks/2026-10-31-audit-p1-lowcode-generator-build.task.md",
+  "title": "低代码生成器的后端产物必须可编译且可建表（AUD-001）",
+  "goal": "修正生成器模板的导入路径、中间件调用签名与迁移产出，并把“生成包可编译”作为动态模块注册的前置条件，使生成→重启激活链路第一次真正成立（当前产物既不编译，在默认版本化迁移模式下也不建表）。",
+  "primaryLayer": "platform",
+  "status": "completed",
+  "priority": "P1",
+  "wave": "W1",
+  "programmeRef": {
+    "taskId": "2026-10-31-audit-remediation-programme",
+    "taskDoc": "docs/harness/tasks/2026-10-31-audit-remediation-programme.task.md",
+    "manifest": ".harness/tasks/2026-10-31-audit-remediation-programme/manifest.json"
+  },
+  "type": "codegen-contract",
+  "estimatedComplexity": "medium",
+  "findings": [
+    "实测生成 module.go 的导入为 pantheon-base/internal/middleware 与 pantheon-base/pkg/contracts（backendGenerator.ts:712-713），而模块名是 github.com/duanxldragon/pantheon-base/backend（backend/go.mod:1）；go list pantheon-base/internal/middleware 返回 is not in std。",
+    "模板调用 middleware.TokenAuthMiddleware() 不传参（backendGenerator.ts:761），真实签名需要 rdb *redis.Client（internal/middleware/token_middleware.go:214）。",
+    "同一生成器的注册器写入正确路径（internal/scaffold/workspace.go:394），证明模板与注册器不同源。",
+    "validateGeneratedModuleSource 只校验 backend/frontend 目录存在（dynamic_module_service.go:323-333），不校验编译；dynamicmodule 仍会把 registration 推进到 pending_activation。",
+    "exporter.ts、frontend/scripts/export-generated-module.mjs、scaffold.WriteGeneratedModuleSource 均无导入改写，三处补偿路径都不存在。",
+    "生成物不含任何 .sql 迁移（10 个生成文件中无 migrations 目录），建表只靠 service.Migrate() → AutoMigrate。",
+    "pkg/contracts/module.go 的 RegisterBackendModules 在 PANTHEON_AUTO_MIGRATE != true 时只调 Bootstrap、不调 Migrate；而生成的 contracts.FuncModule 只设 MigrateFunc、不设 BootstrapFunc，FuncModule.Bootstrap 在 BootstrapFunc == nil 时直接返回 nil —— 默认迁移模式下生成的业务表永远不会被创建。"
+  ],
+  "scope": {
+    "in": [
+      "backendGenerator.ts：导入路径改为真实模块路径并从单一常量派生；generateModule() 路由组改为 Token → 租户上下文 → Casbin（+可选 DataScope），TokenAuthMiddleware 传 database.RDB",
+      "迁移产出：生成的 FuncModule 必须设 BootstrapFunc（内部调 AutoMigrate），或生成一份可被版本化迁移链消费的 .sql；二者择一，不得依赖 PANTHEON_AUTO_MIGRATE 才建表",
+      "dynamic_module_service.go:323-333：把目录存在校验升级为生成包可编译校验，失败即拒绝注册且不推进状态",
+      "frontend/tests/generator/generator-quality-contract.test.ts：断言导入前缀、中间件链与传参",
+      "backend/modules/lowcode/dynamicmodule/dynamic_module_service_test.go：覆盖编译失败→注册拒绝",
+      "真实往返证据：生成→go build→撤销生成目录（产物不入库）"
+    ],
+    "out": [
+      "热插拔/免重启激活",
+      "前端生成模板的 FilterPanel/SearchToolbar 取舍（P3）",
+      "生成模块的租户隔离语义（由 business-route-tenant-context 包决定）",
+      "动态模块卸载/彻底删除语义",
+      "把生成物提交进仓库"
+    ]
+  },
+  "dependencyLayers": [
+    "platform"
+  ],
+  "implementationNotes": [
+    "根因是模板与注册器不同源：修复应让两者从同一个模块路径常量派生，而不是再手写一遍。",
+    "中间件顺序以 system_modules.go:162 为准（Token → 租户上下文 → Casbin → 可选 DataScope → 刷新），不得凭记忆。",
+    "编译校验必须位于写盘之后、registration 状态推进之前，否则会出现“页面已激活、重启编译失败”。",
+    "校验命令限定到生成包，避免把全仓历史 lint/构建债务带进注册路径。",
+    "建表路径必须与默认运行模式一致：RegisterBackendModules 在 PANTHEON_AUTO_MIGRATE 未开启时走 Bootstrap，所以生成物要么设 BootstrapFunc，要么产出真正进入版本化迁移链的 SQL；只在 Migrate() 里 AutoMigrate 等于默认模式下不建表。"
+  ],
+  "contractAnchors": [
+    "docs/designs/GENERATOR_MODULE_DESIGN.md",
+    "docs/contracts/PLATFORM_CONTRACT.md",
+    "docs/designs/MODULE_CONTRACT.md"
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "codegen-contract",
+    "portableFailureClass": "generated-artifact-unusable",
+    "ownerLayer": "foundation-source",
+    "ratchetDecision": "gate-updated",
+    "coverageDimensions": [
+      "behaviour",
+      "maintainability",
+      "runtime-quality"
+    ]
+  },
+  "expectedFiles": {
+    "create": [
+      "docs/harness/tasks/2026-10-31-audit-p1-lowcode-generator-build.task.md",
+      ".harness/tasks/2026-10-31-audit-p1-lowcode-generator-build/manifest.json",
+      ".harness/evidence/2026-10-31-audit-p1-lowcode-generator-build/commands.json",
+      ".harness/evidence/2026-10-31-audit-p1-lowcode-generator-build/summary.md",
+      ".harness/evidence/2026-10-31-audit-p1-lowcode-generator-build/review.md",
+      "backend/modules/lowcode/dynamicmodule/dynamic_module_build_check.go",
+      "backend/modules/lowcode/dynamicmodule/dynamic_module_build_check_test.go"
+    ],
+    "modify": [
+      "frontend/src/modules/lowcode/generator/backendGenerator.ts",
+      "frontend/tests/generator/generator-quality-contract.test.ts",
+      "backend/modules/lowcode/dynamicmodule/dynamic_module_service.go",
+      "backend/modules/lowcode/dynamicmodule/dynamic_module_handler.go",
+      "backend/modules/system/i18n/builtin_locale_resources.json",
+      "frontend/src/i18n/resources/zh-CN.ts",
+      "frontend/src/i18n/resources/en-US.ts",
+      "frontend/src/i18n/resources/ja-JP.ts",
+      "frontend/src/i18n/resources/ko-KR.ts",
+      "frontend/src/i18n/resources/fr-FR.ts"
+    ],
+    "doNotTouch": [
+      "backend/modules/business/**",
+      "backend/pkg/database/migrations/**",
+      "VERSION",
+      "CHANGELOG.md",
+      "docs/release-notes/**"
+    ],
+    "correctionsDuringExecution": [
+      "create 增加 dynamic_module_build_check.go / _test.go：闸门独立成文件，避免 dynamic_module_service.go 继续膨胀（该文件已 15k 字）。",
+      "modify 增加 dynamic_module_handler.go：三个 `switch err.Error()` 与裸键比较恒不命中，新闸门的错误会被映射成 500 类错误，必须改用 common.ErrMessage。",
+      "modify 增加 i18n 两处（后端快照 + 5 个前端语言包）：闸门引入新的用户可见错误键 module.register.source_uncompilable，原 doNotTouch 名单过严——不登记就会让前端显示裸键。",
+      "原 modify 里的 dynamic_module_service_test.go 实际未改动：新用例集中在新建的 dynamic_module_build_check_test.go。"
+    ]
+  },
+  "executionRoles": {
+    "implementerPosture": "先把模板与注册器的路径来源合一处，再改中间件链；把回编译作为注册前置而不是事后补救；生成物只做证据不入库。",
+    "reviewerPosture": [
+      "确认生成文件的导入前缀与 backend/go.mod 模块名一致，且来自单一常量而非第二处手写。",
+      "确认生成路由组的中间件顺序与 system_modules.go:162 同形，TokenAuthMiddleware 收到 database.RDB。",
+      "确认 validateGeneratedModuleSource 在写盘后、状态推进前执行，失败时 registration 不进入 pending_activation/active。",
+      "确认负向用例真实存在：写坏导入时注册被拒绝。",
+      "确认 git status 没有新增生成产物。"
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "npm run test:generator:quality",
+      "cd backend && go test -short ./modules/lowcode/...",
+      "node frontend/scripts/export-generated-module.mjs <schema> > /tmp/gen.json",
+      "cd backend && go build ./modules/business/<name>/...（临时落盘后撤销）",
+      "建表验证：在默认迁移模式（PANTHEON_AUTO_MIGRATE 未设）下启动，确认生成的表存在",
+      "npm run check:structure && npm run check:generated",
+      "node scripts/harness/check-evidence.mjs --root . --strict"
+    ],
+    "runtimeEvidence": [
+      "生成→go build→撤销的一次完整往返，含退出码与生成文件头 20 行",
+      "负向用例：编译失败时注册被拒绝且状态未推进"
+    ]
+  },
+  "runtimeSensitive": true,
+  "runtimeGap": "生成物激活需要后端重启；本包不引入热插拔，运行证据以“临时 workspace 生成 + go build”代替真实重启，重启后的加载行为由现有动态模块测试覆盖。",
+  "evidenceRequired": [
+    ".harness/evidence/2026-10-31-audit-p1-lowcode-generator-build/commands.json：修复前后生成文件头、go list/go build 退出码、测试读数",
+    ".harness/evidence/2026-10-31-audit-p1-lowcode-generator-build/summary.md：三处不匹配的根因与校验位置取舍",
+    ".harness/evidence/2026-10-31-audit-p1-lowcode-generator-build/review.md：逐条 reviewer posture"
+  ],
+  "humanGates": [
+    "生成器是消费者可见面：合并前确认 schema、菜单键与权限码命名规则未变。",
+    "若需要调整 sharedPaths 才能把修复送到 ops，必须走 foundation release 评审。"
+  ],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed",
+    "生成物在真实 workspace 下 go build 退出码为 0 且未入库",
+    "默认迁移模式下生成模块的表真实存在（不依赖 PANTHEON_AUTO_MIGRATE）",
+    "编译失败时注册前置拒绝推进状态",
+    "导入路径与中间件顺序从单一来源派生"
+  ],
+  "executionResult": {
+    "executedAt": "2026-10-31",
+    "headSha": "ef0073860ce03087d9cf05de6b5d7732687ef769",
+    "outcome": "completed",
+    "summary": "四项缺陷全部闭合：导入从单一常量派生、路由组改走 contracts 助手（不再自拼链）、生成物设 BootstrapFunc、注册前置增加 go build 闸门。生成物在临时 workspace 内 go build / go vet 退出码 0；默认迁移模式下 biz_order 真实建出（真实 MySQL），摘掉 BootstrapFunc 后同一测试失败。",
+    "deviations": [
+      "任务包原文要求路由组含租户上下文中间件（参照 system_modules.go:162）。W2 已按 TENANT_CONTRACT_V1 §2.6 确认业务域不参与租户隔离，照原文执行会让 multi 模式下所有业务请求变成 TENANT_CONTEXT_MISSING，故按 W2 结论执行（Token → Casbin[→ DataScope]）。",
+      "建表路径选 BootstrapFunc（任务包给的两个选项之一），未产出 .sql。"
+    ],
+    "residualFindings": [
+      {
+        "id": "AUD-001c",
+        "severity": "P2",
+        "title": "BootstrapFunc → AutoMigrate 与 DEPLOYMENT_GUIDE 的“生产不得启用 GORM AutoMigrate”冲突",
+        "detail": "由 2026-11-01-audit-p2-automigrate-boundary 收口，选“文档加例外”。先确认冲突真实可达：PANTHEON_ENABLE_DYNAMIC_MODULES 生产固定 false 只挡 /lowcode/dynamic-modules/* 的 HTTP 路由，编译进 generated_registry.go 的模块不受约束，启动时仍走 Bootstrap → AutoMigrate。DEPLOYMENT_GUIDE §3 把禁令限定为平台 schema，新增边界表与两点代价（需 DDL 权限、生成表列只增不减）；MODULE_CONTRACT §4.3 补齐接口并说明 BootstrapFunc 的用途；启动日志从 “skipping module AutoMigrate” 改为与行为一致的表述；新增装配用例钉住 FuncModule 形状。残留：生成表 DDL 仍不在迁移链里（AUD-001c-ddl）。",
+        "status": "closed",
+        "closedBy": {
+          "taskId": "2026-11-01-audit-p2-automigrate-boundary",
+          "manifest": ".harness/tasks/2026-11-01-audit-p2-automigrate-boundary/manifest.json",
+          "evidence": ".harness/evidence/2026-11-01-audit-p2-automigrate-boundary/commands.json"
+        }
+      },
+      {
+        "id": "AUD-001b",
+        "severity": "P3",
+        "title": "生成物 gofmt 不干净（5/5 文件）",
+        "detail": "根因是模板把结构体字段对齐与 import 分组写死；修复需按最长字段名计算列宽，属模板重构。提交时 lint-staged 的 gofmt -w 会归位，CI gofmt 对 PR 仅报告，不影响构建。",
+        "status": "open"
+      }
+    ]
+  },
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-31-audit-p1-lowcode-generator-build/manifest.json",
+    "taskDoc": "docs/harness/tasks/2026-10-31-audit-p1-lowcode-generator-build.task.md",
+    "evidenceDir": ".harness/evidence/2026-10-31-audit-p1-lowcode-generator-build/",
+    "summaryFile": ".harness/evidence/2026-10-31-audit-p1-lowcode-generator-build/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-31-audit-p1-lowcode-generator-build/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-10-31.md",
+      "docs/designs/GENERATOR_MODULE_DESIGN.md"
+    ]
+  }
+}

@@ -8,12 +8,12 @@ depends_on_layers:
   - system/config
   - system/audit
   - system/i18n
-status: Active
+status: Archived
 linked_contracts:
   - docs/contracts/PLATFORM_CONTRACT.md
   - docs/contracts/DOCUMENT_GOVERNANCE_CONTRACT.md
   - docs/VERSION_MANAGEMENT_GUIDE.md
-updated_at: 2026-10-12
+updated_at: 2026-10-31
 ---
 
 # Task Packet: 2026-10-12-v0160-release-closeout

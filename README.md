@@ -10,14 +10,14 @@ Pantheon Platform 是一个面向企业后台的模块化单体底座，沉淀�
 
 | 项 | 值 |
 | --- | --- |
-| 当前 foundation release | [`pantheon-base-v0.17.8`](https://github.com/duanxldragon/pantheon-base/releases/tag/pantheon-base-v0.17.8)（含四件可消费产物） |
-| Shell/Harness 基线版本 | `1.4.0`（见 [VERSION](./VERSION) / [SHELL_VERSION.json](./SHELL_VERSION.json)） |
+| 当前版本 | 以仓库根 [`VERSION`](./VERSION) 为准（本文件不抄写具体版本号，避免"正文手抄 + 无人复核"造成的漂移） |
+| 发布说明 | [docs/release-notes/README.md](./docs/release-notes/README.md) — 逐版本索引；变更全量记录见 [CHANGELOG.md](./CHANGELOG.md) |
+| Shell/Harness 基线版本 | `1.4.0`（见 [SHELL_VERSION.json](./SHELL_VERSION.json)） |
 | 部署文档 | [docs/DEPLOYMENT_GUIDE.md](./docs/DEPLOYMENT_GUIDE.md)（MySQL 8、Redis 7、迁移 + runtime seed、健康检查、遥测、备份恢复与 schema-aware 回滚） |
-| 变更记录 | [CHANGELOG.md](./CHANGELOG.md) / [RELEASE_NOTES_v0.17.8.md](./docs/release-notes/RELEASE_NOTES_v0.17.8.md) |
 | **任务状态** | [.harness/STATUS.md](./.harness/STATUS.md) — 当前任务状态总览 |
 | **归档记录** | [.harness/ARCHIVE.md](./.harness/ARCHIVE.md) — 已完成任务归档索引 |
 
-交付状态说明：v0.17.8 是一个 patch 序列版本，只搬两个 base 拥有的依赖事实——`backend/go.mod` 的 go directive 从 1.26.9 抬到 1.26.10（关闭 `GO-2026-6809`：`crypto/x509` 对被攻破的中间证书不再信任，ops 的 OSV 扫描把这一条读成 `called: true` 并因此拒绝），`frontend/package-lock.json` 的 `zod` 从 4.3.6 抬到 4.6.7（关闭 high 级 `GHSA-mrhx-c7xc-m3w5`，它让 frontend 的 `npm audit --audit-level=high` 返回 failure；`zod` 不是直接依赖、`src/` 也不 import 它，只经 `eslint-plugin-react-hooks` 与 `zod-validation-error` 进入，影响面限于 dev 工具链）。`Dockerfile` 的镜像标签与两份文档的工具链基线一起对齐，因为它是 go 版本的第二个独立读取通道，CI 的 `go-version-file` 覆盖不到。**schema 仍是 30，没有新路由、权限码、菜单 seed、i18n 文案或公开符号变化，`backend/` 与 `frontend/src/` 的产品源码一行未改**，消费者只需把 `foundation-release.lock.json` 推进到 v0.17.8 再 `npm run rebuild:from-base`；重建后这两个文件自动带上修复，ops 主干 `Security Gates` 的 `npm audit (frontend)` 与 `osv call analysis` 两项失败输入翻绿。上一版 v0.17.7 落地的是三处 base 归属的 lint 与 CodeQL 注释级结论；租户运营的全部内容（套餐落库 `000030`、`/system/tenant-ops/*` 三个平台域读面与 5 个权限码、兼容作用域收口、密码面无障碍、boundary 基线清空）在 v0.17.6，配额仍然只展示不强制。残留：`SonarCloud Scan` 只在 `pantheon-ops` 上失败——失败的那一步是 ops 自己的 `.github/workflows/sonarcloud.yml`（ops 的 `.github` 根属消费者 overlay，这个 workflow 归消费者），ops 主干 run `40457897338` 止于 `GET https://api.sonarcloud.io/analysis/jres` 返回 403，另外 ops `main` 还挂着 249 条未解决 Sonar issue；这是凭据/权限问题，需要维护者提供有效 `SONAR_TOKEN`，本轮不改 Sonar 规则与项目配置。base 没有、也从来没有 scanner workflow：发布目标 `e256d1fb` 上 `SonarCloud Gate` 与 `SonarCloud Code Analysis` 两个 check-run 都是 success，Sonar API 报主干质量门禁 OK、未解决 issue 为 0。这句话此前写作「base 与 ops 每次 run 同红」，是从上一轮沿用、未重新测量，本轮就地更正。`golang.org/x/crypto` 的 `GO-2026-5932`（openpgp 按设计不安全、无修复版本）在两处扫描里都是未调用，是否强制替换成 `ProtonMail/go-crypto` 属维护者的依赖风险策略，本轮只登记。FR-016 / FR-017（4 个 checker 无 npm script 也不在任何 workflow）仍为 open，接入 CI 属门禁策略，留给维护者拍板。
+交付状态说明：本仓库是 foundation 的**唯一源码来源**，下游消费者（如 `pantheon-ops`）以源码副本方式消费，通过 `foundation-release.lock.json` 锁定版本、`npm run rebuild:from-base` 重建。当前版本号、该版本的改动内容与是否已发布，只看两处：[`VERSION`](./VERSION) 与 [发布说明索引](./docs/release-notes/README.md)（逐版本 `RELEASE_NOTES_vX.Y.Z.md`，随 release 冻结、只追加不回改）。本文件不再抄写具体版本的改动明细——历史教训是"正文手抄 + 无人复核"必然滞后于 `VERSION`。
 
 ## 项目定位
 
@@ -28,7 +28,7 @@ Pantheon Platform 是一个面向企业后台的模块化单体底座，沉淀�
 ## 核心能力
 
 - **认证与会话**：access/refresh token、注销失效、在线会话、登录日志。
-- **多租户系统**：完整数据隔离、租户CRUD API、成员管理、配额强制、审计日志、租户切换、Bootstrap自动化、Prometheus监控。详见 [租户API文档](./docs/api/TENANT_API.md) 和 [升级指南](./docs/migrations/COMPAT_TO_MULTI_UPGRADE.md)。
+- **多租户系统**：系统域（租户、用户、角色、菜单、组织、配置、审计）按 `tenant_id` 行级隔离；业务域（`modules/business/*`）为单租户语义，不参与租户隔离（见 [租户合同 §2.6](./docs/contracts/TENANT_CONTRACT_V1.md)）。含租户CRUD API、成员管理、配额度量与展示（超限不拒绝写入，合同 §2.4.1）、审计日志、租户切换、Bootstrap自动化、Prometheus监控。详见 [租户API文档](./docs/api/TENANT_API.md) 和 [升级指南](./docs/migrations/COMPAT_TO_MULTI_UPGRADE.md)。
 - **IAM 与权限**：用户、角色、菜单、页面权限、操作权限、Casbin 接口策略。
 - **组织管理**：部门、岗位、用户组织归属，以及组织架构视图。
 - **配置治理**：系统设置、字典管理、缓存刷新、敏感配置保护。
@@ -169,54 +169,49 @@ npm run test:smoke:all
 
 # 生成 foundation release metadata
 # 以下为下一版本占位示例；替换版本与候选提交后再执行
-npm run release:foundation:manifest -- --release-version pantheon-base-v0.13.0 --release-line release/0.13 --base-commit <40-char-commit>
+npm run release:foundation:manifest -- --release-version pantheon-base-v<X.Y.Z> --release-line release/<X.Y> --base-commit <40-char-commit>
 
 # 一次性生成 release metadata + dist bundle
-npm run release:foundation:cut -- --release-version pantheon-base-v0.13.0 --release-line release/0.13 --base-commit <40-char-commit>
+npm run release:foundation:cut -- --release-version pantheon-base-v<X.Y.Z> --release-line release/<X.Y> --base-commit <40-char-commit>
 
 # 正式发布 foundation release：同步本地产物、Git tag 与 GitHub Release
-npm run release:foundation:publish -- --release-version pantheon-base-v0.13.0 --release-line release/0.13 --base-commit <40-char-commit>
+npm run release:foundation:publish -- --release-version pantheon-base-v<X.Y.Z> --release-line release/<X.Y> --base-commit <40-char-commit>
 ```
 
 ## 代码质量与安全门禁
 
 ### GitHub Required Checks (main 分支合并门禁)
 
-**Quality Gates** ✅ (最后验证: 2026-10-03):
-- 文档治理: `frontmatter-check`, `check-doc-links`, `check-doc-inventory` - 通过
-- 前端契约: `check-structure-contract --strict`, `check-boundaries --baseline`, `check-generated --strict` - 通过
-- 后端测试: `go test ./...`, `go vet ./...`, `go test -race` (CI) - 通过
-- 编码规范: `check-encoding --strict`, `check-duplication` - 通过
-- Smoke 测试: Core Smoke Tests (report-only, 不阻塞合并)
+合并门禁以仓库内的 workflow 定义为准，**本文件不维护"最后验证日期"或通过状态快照**。这类快照一旦写进 README 就无法随代码复核，历史上一度出现"README 声称 0 个阻塞性失败、实际门禁已漂移"的情况。
 
-**Security Gates** ✅ (最后验证: 2026-10-03):
-- SonarCloud 分析: Security Rating A (无 BLOCKER/CRITICAL 安全问题) - 通过
-- Secret 扫描: `gitleaks` (fail-closed) - 通过
-- Workflow 安全: `zizmor` (high/critical fail-closed) - 通过
-- CodeQL 扫描: CodeQL Analysis + Alert Gate - 通过
-- 依赖漏洞: Dependency vulnerabilities (report-only, release 时复审) - 通过
+- `Quality Gates`：文档治理（`frontmatter-check`、`check-doc-links`、`check-doc-inventory`）、前端契约（`check-structure-contract --strict`、`check-boundaries --baseline`、`check-generated --strict`）、后端测试（`go test ./...`、`go vet ./...`、`go test -race`）、编码规范（`check-encoding --strict`、`check-duplication`）。Smoke 为 report-only，不阻塞合并。
+- `Security Gates`：`gitleaks`（fail-closed）、`zizmor`（high/critical fail-closed）、CodeQL Analysis + Alert Gate、依赖漏洞（report-only，release 时复审）。
 
-**交付质量总结**: 所有必需质量门禁已通过，0 个阻塞性失败，项目处于可交付状态。
+定义见 [.github/workflows/ci.yml](./.github/workflows/ci.yml)。**当前是否通过，以 `main` 上最近一次 required checks 的 run 为准**（仓库 Actions 页面对应 run），本文不作状态承诺。
 
 ### Release Gate (Foundation Release 额外要求)
 
-- ✅ SonarCloud Code Analysis (非 main 合并必需，release 时必需)
-- ✅ govulncheck v1.3.0 (当前 0 reachable vulnerabilities)
-- ✅ npm audit (root + frontend)
-- ✅ Full Smoke Suite (platform + system + business)
+额外要求定义在 [.github/workflows/release-gate.yml](./.github/workflows/release-gate.yml)：
 
-### 企业级整改完成 (2026-09-22)
+- SonarCloud Code Analysis（非 main 合并必需，release 时必需）
+- govulncheck（要求 0 reachable vulnerabilities）
+- npm audit（root + frontend）
+- Full Smoke Suite（platform + system + business）
+
+### 企业级整改完成 (2026-09-22 当轮记录，不是当前状态)
+
+> 本节数字（Go 版本、CVE 数、用例数）都是 **2026-09-22 当轮读数**，此后未随代码复核；作为历史记录保留，不作为当前状态声明。
 
 已完成两轮整改共 12 个任务：
 - **命名与边界整改** (6/6): auth 模块解耦、边界门禁、生成器治理、文档整理
 - **企业级整改** (6/6): 会话撤销闭环、租户隔离、导出分页、后台维护器、Redis fail-fast
 
-关键成果：
-- Go 1.26.6 修复 7 个 stdlib CVE
+关键成果（当日口径）：
+- 当轮把 Go 基线抬到 1.26.6 并修复 7 个 stdlib CVE；此后基线继续抬升，**当前值看 `backend/go.mod`**（本文件不抄写具体补丁版本）
 - 统一导出上限 10,000 行，会话列表 SQL 分页 + 索引优化
 - 保留操作移出读路径，后台维护器 (`pkg/maintenance`) 统一调度
 - 全模块 `-race` 检测通过 (无 DATA RACE)
-- Core Smoke 279 个用例全部通过
+- Core Smoke 279 个用例全部通过（用例数随套件演进会变，以 `npm run test:smoke:*` 的当次运行为准）
 
 更完整的策略见 [代码质量与安全治理策略](./docs/designs/QUALITY_AND_SECURITY_STRATEGY.md) 和 [.harness/STATUS.md](./.harness/STATUS.md)。
 
@@ -288,7 +283,7 @@ git config core.hooksPath .githooks
 - **Website**：如暂无线上环境，可暂留空。
 - **Topics**：`go`、`gin`、`gorm`、`react`、`typescript`、`vite`、`arco-design`、`casbin`、`iam`、`audit`、`i18n`、`admin-dashboard`、`modular-monolith`、`low-code`、`enterprise-platform`
 - **Features**：启用 Issues、Pull Requests、Actions；如暂不开放协作，可关闭 Wiki。
-- **Community Files**：仓库当前已检查入库的社区文件只有 `README.md`、`README.en.md`、`SECURITY.md`、`.github/CODEOWNERS`、`.github/dependabot.yml` 和 `.github/pull_request_template.md`；尚未提供 `CONTRIBUTING` 或 Issue Templates。
+- **Community Files**：已入库的社区文件为 `README.md`、`README.en.md`、`CONTRIBUTING.md`、`SECURITY.md`、`LICENSE`、`.github/CODEOWNERS`、`.github/dependabot.yml`、`.github/pull_request_template.md`，以及 `.github/ISSUE_TEMPLATE/` 下的三份模板（`bug_report.md`、`feature_request.md`、`question.md`）。**尚未提供** `CODE_OF_CONDUCT.md`。
 
 当前对外定位建议：
 

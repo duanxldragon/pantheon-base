@@ -4,11 +4,11 @@ doc_type: Remediation
 layer: platform
 depends_on_layers:
   - platform
-status: Active
+status: Archived
 linked_contracts:
   - docs/designs/FOUNDATION_RELEASE_MODEL.md
   - docs/contracts/PLATFORM_CONTRACT.md
-updated_at: 2026-10-23
+updated_at: 2026-10-31
 ---
 
 # Task Packet: 2026-10-23-v0173-release-closeout

@@ -2,8 +2,8 @@
 title: Preserve post-merge workflow triggers
 doc_type: Remediation
 layer: ci-workflow
-status: Active
-updated_at: 2026-08-12
+status: Archived
+updated_at: 2026-10-31
 linked_contracts:
   - docs/designs/WORKFLOW.md
 ---

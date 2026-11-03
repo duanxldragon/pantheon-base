@@ -7,6 +7,7 @@
   },
   "executedAt": "2026-10-31",
   "workingDirectory": "pantheon-base/.tmp/deps-fr",
+  "runtimeGap": "Marked runtime-sensitive because the task manifest lists verificationPlan.runtimeEvidence entries, but the change is a frontend lockfile refresh of follow-redirects (1.16.1 -> 1.16.2) with no code edit: there is no runtime log/metric/trace/performance probe to record. Consumption is verified by the npm ci / npm ls / npm audit readings, the frontend lint+type-check+build run, and the hosted gh run logs cited in commands[].",
   "linkage": {
     "taskDoc": "docs/harness/tasks/2026-10-31-frontend-follow-redirects-audit.task.md",
     "taskManifest": ".harness/tasks/2026-10-31-frontend-follow-redirects-audit/manifest.json",

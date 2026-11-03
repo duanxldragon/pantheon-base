@@ -1,0 +1,106 @@
+{
+  "taskId": "2026-10-31-audit-p1-entry-doc-truthfulness",
+  "repo": "pantheon-base",
+  "executedAt": "2026-10-31",
+  "agent": {
+    "tool": "other",
+    "adapter": "workbuddy-agent"
+  },
+  "runtimeSensitive": false,
+  "runtimeGap": "纯文档包，产品代码、迁移、CI、i18n 资源均未触及，因此没有运行态证据需求。可执行性通过把文档里的命令照抄执行来验证（见 commands 中 backend/ 内 go run 的前置条件）。",
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-31-audit-p1-entry-doc-truthfulness/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-31-audit-p1-entry-doc-truthfulness/",
+    "reviewFile": ".harness/evidence/2026-10-31-audit-p1-entry-doc-truthfulness/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-10-31.md",
+      "docs/contracts/TENANT_CONTRACT_V1.md"
+    ]
+  },
+  "commands": [
+    {
+      "command": "git show origin/main:VERSION",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "输出 `0.18.2`。原 README/README.en 版本表写 `pantheon-base-v0.17.8`，与 origin/main 差两个 patch 版本；现在是“以 VERSION 为准 + 指向 docs/release-notes 索引”，正文不再抄写任何 release 号。"
+    },
+    {
+      "command": "grep -rn \"pantheon-base-v0\\.17\\.8\\|配额强制\\|0 个阻塞性失败\" README.md README.en.md DESIGN.md DESIGN.en.md docs/README.md docs/README.en.md docs/designs/README.md docs/designs/README.en.md | wc -l",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "输出 `0`：三处失真字符串在八份入口文档中已全部消失。注意 README.md:185 保留的是对历史教训的叙述（“README 声称 0 个阻塞性失败、实际门禁已漂移”），不是状态承诺。"
+    },
+    {
+      "command": "grep -rn \"quota\\|Quota\" backend/modules/system/iam/user backend/modules/system/iam/role | wc -l",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "输出 `0`：user / role 写路径没有任何配额校验，所以“配额强制”是纯失实。配额只在租户运营读面通过 `QuotaFor` 读取并展示（合同 §2.4.1）。README 现已写“配额度量与展示（超限不拒绝写入）”。"
+    },
+    {
+      "command": "ls CONTRIBUTING.md LICENSE && ls .github/ISSUE_TEMPLATE",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "`CONTRIBUTING.md`、`LICENSE` 存在；`.github/ISSUE_TEMPLATE/` 含 `bug_report.md`、`feature_request.md`、`question.md`。原文“尚未提供 CONTRIBUTING 或 Issue Templates”因此是反向失实（把已存在的说成不存在），现已改为完整列举，并把真正缺的 `CODE_OF_CONDUCT.md` 标为未提供。"
+    },
+    {
+      "command": "for f in docs/designs/*.md; do b=$(basename \"$f\"); case \"$b\" in *.en.md|README.md) continue;; esac; grep -q \"(./$b)\" docs/designs/README.md || echo \"MISSING $b\"; done; echo done",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "无 MISSING 输出：62 份中文主文档全部被 `docs/designs/README.md` 引用（审计时为 18 份缺口）。"
+    },
+    {
+      "command": "ls -1 docs/designs/*.md | grep -v '\\.en\\.md$' | grep -v 'README.md' | wc -l; ls -1 docs/designs/*.en.md | wc -l; for f in docs/designs/*.md; do b=$(basename \"$f\"); case \"$b\" in *.en.md|README.md) continue;; esac; [ -f \"docs/designs/${b%.md}.en.md\" ] || echo -n \"$b \"; done",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "62 份中文主文档、58 个 `.en.md`（含 README.en.md，即 57 份成对）；缺英文副本的正好是 LOGIN_RISK_CONTROL_DESIGN、MULTI_TENANT_DESIGN、OPERATIONAL_WORKBENCH_COMPONENTS_DESIGN、PERMISSION_MENU_DECOUPLING、RUNTIME_MODULE_ENGINE_EVOLUTION 这 5 份。索引里“62 份中 57 份有 .en.md，缺 5 份”的声明与实测一致（本包不补这 5 份英文副本）。"
+    },
+    {
+      "command": "grep -n \"go run\\|system_init\\|backend/\" docs/README.md",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "docs/README.md:150-156 现为 docker compose → 迁移 + runtime seed → `cd backend && go run ./cmd/server`，并显式说明 `database/system_init.sql` 只是历史参考、在仓库根执行 `go run ./backend/cmd/server` 会失败。docs/README.en.md 没有本地启动章节（只链 DEV_DB_INIT_GUIDE），因此无同类失真可改。"
+    },
+    {
+      "command": "grep -n \"多租户\\|租户\" DESIGN.md | head -40; grep -n \"tenant\" DESIGN.en.md | head -12",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "DESIGN.md 新增 §3.4 租户章（compat/multi 双模、上下文优先级、Casbin domain、已交付面、明确未做面含“业务域为单租户语义”），并指向合同 V1；DESIGN.en.md:56-63 有对应英文段。§3.3 已从“P2 未来能力”改成逐项现状表（多租户/MFA/数据权限/工作台/主题标已交付，SSO-OIDC/登录风控/品牌配置标仍未实现并给判据），§4.3 改写为“拆分已交付，本节记历史理由”，§9 第 10 条把“多租户预留”更正为已交付。"
+    },
+    {
+      "command": "node scripts/frontmatter-check.mjs",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "`Frontmatter check passed. Checked 415 docs, 295 with frontmatter.` exit 0。"
+    },
+    {
+      "command": "node scripts/harness/check-doc-links.mjs --root . --strict",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "`Docs link check (strict): 0 finding(s)` exit 0：补索引与改写链接没有引入死链。"
+    },
+    {
+      "command": "node scripts/harness/check-doc-inventory.mjs --root . --strict",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "`Docs inventory check (strict): 0 finding(s)` exit 0：新增 docs 登记齐全。"
+    },
+    {
+      "command": "node scripts/harness/check-encoding.mjs --root . --strict",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "`Encoding check (strict): 0 finding(s) across 2614 scanned file(s)` exit 0：中文改动没有引入编码问题。"
+    },
+    {
+      "command": "git diff --stat README.md README.en.md DESIGN.md DESIGN.en.md docs/README.md docs/README.en.md docs/designs/README.md docs/designs/README.en.md",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "8 文件 +223/-57。没有触及 backend/**、frontend/**、.github/**、VERSION、CHANGELOG、docs/history、docs/reviews。"
+    }
+  ],
+  "knownGaps": [
+    "README.en.md 未描述多租户能力（漏写而非错写），补写属能力面扩充，登记为后续文档项。",
+    "5 份设计文档永久没有 .en.md（已在 docs/designs/README.md 内点名声明），本包不补英文副本。",
+    "8 份 docs/TENANT_*_2026-*.md 仍在 docs/ 根，仅登记为非一线入口；物理归档由 2026-10-31-audit-p2-doc-lifecycle-archive 处置。"
+  ]
+}

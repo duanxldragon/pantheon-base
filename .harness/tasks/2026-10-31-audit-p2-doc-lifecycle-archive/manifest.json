@@ -1,0 +1,180 @@
+{
+  "taskId": "2026-10-31-audit-p2-doc-lifecycle-archive",
+  "taskDoc": "docs/harness/tasks/2026-10-31-audit-p2-doc-lifecycle-archive.task.md",
+  "title": "文档生命周期收口：完成态任务包、未实现设计、孤立文档与根级索引（AUD-006/011/017/018/019）",
+  "goal": "以“evidence 是否存在”为唯一判据，把 68 份 Active 任务包、6 份未实现设计、1 份零入链设计与 8 份根级 TENANT_* 的状态与位置一次性对齐，并给出 ops 侧 8 份重复文档的删除清单与校验命令。",
+  "primaryLayer": "platform",
+  "status": "completed",
+  "executedAt": "2026-10-31",
+  "executionResult": {
+    "taskPacketDocsTotal": 92,
+    "flippedToArchived": 69,
+    "alreadyArchived": 7,
+    "leftActive": 3,
+    "leftDraft": 6,
+    "manifestMissingFrontmatter": 7,
+    "designsMarkedDraft": 6,
+    "tenantDocsRelocatedToReviews": 7,
+    "inboundLinkFixes": 5,
+    "residualFindings": [
+      "7 份 legacy 任务包文档（2026-07-29-sonar-ts-final、2026-07-30-local-consolidation、2026-08-21-sonarcloud-remediation、2026-09-01-release-docs-reconciliation、2026-09-01-release-gate-sonar-cleanup、2026-09-02-foundation-release-v0-10-26-and-ops-sync、2026-09-29-v0140-release-completion）没有 frontmatter，无法在文档侧承载 status；证据与 manifest 均已完成。补 frontmatter 属 W5 元数据包。",
+      "门禁接线未做：check-task-packet 仍不比较 task doc status 与证据存在性，判据函数已备好（scripts/harness/task-evidence-state.mjs），由 W8 接入。",
+      "AUD-011 的删除动作未执行：8 份文档在 base 与 pantheon-ops 下 sha256 相同，清单与校验命令已落盘，需 ops 维护者执行。",
+      "docs/release-notes/RELEASE_NOTES_v0.14.0.md 的一条相对链接因文件迁移被改动（仅路径，未改正文）；该目录在 Do Not Touch 内，属修复必绿的强制副作用。"
+    ]
+  },
+  "priority": "P2",
+  "wave": "W4",
+  "programmeRef": {
+    "taskId": "2026-10-31-audit-remediation-programme",
+    "taskDoc": "docs/harness/tasks/2026-10-31-audit-remediation-programme.task.md",
+    "manifest": ".harness/tasks/2026-10-31-audit-remediation-programme/manifest.json"
+  },
+  "type": "doc-lifecycle",
+  "estimatedComplexity": "medium",
+  "findings": [
+    "docs/harness/tasks/*.task.md 在 origin/main 上共 82 份，其中 68 份 status: Active（含 2026-08-05 的 v0.10.1 发布任务），而 .harness/archive/** 中对应证据已归档。",
+    "6 份从未实现的设计标 status: Active：ALERT_MONITORING_CENTER_DESIGN、APPROVAL_*、NOTICE_CENTER_DESIGN、REPORT_CENTER_DESIGN、SCHEDULER_CENTER_DESIGN、TASK_CENTER_DESIGN。",
+    "docs/designs/TASK_CENTER_DESIGN.md 全仓零入链（PERMISSION_MENU_DECOUPLING 有 1 处引用、MULTI_TENANT_DESIGN 有 26 处，均不算孤立）。",
+    "docs/ 根目录有 8 份 TENANT_*.md 未进 docs/README.md 索引，其中 TENANT_SCOPE_FREEZE_DECISION_2026-10-15.md 是现行维护者裁决，不能简单挪走。",
+    "base 与 pantheon-ops 有 8 份文档逐字节相同（TENANT_FULL_FLOW_REVIEW / INITIALIZATION_FINDINGS / INITIALIZATION_GUIDE / LOGIN_INIT_EVALUATION / MATURITY_FINAL / REVIEW_SUMMARY / SCOPE_FREEZE_DECISION / SYSTEM_REVIEW），违反“Ops 只做 business/*”的 workspace 规则。"
+  ],
+  "scope": {
+    "in": [
+      "AUD-006：按“evidence 目录存在 + summary 有完成读数”逐份判定，完成者置 Archived，判据不足者保留 Active 并登记原因",
+      "AUD-017：6 份未实现设计的 status 改为 Draft（表达“想做没做”）或 Archived，并在首段加未实现声明",
+      "AUD-018：TASK_CENTER_DESIGN 零入链——归档或补索引（索引补齐由 W5 执行）",
+      "AUD-019：8 份根级 TENANT_* 移入 docs/reviews/ 或补索引；TENANT_SCOPE_FREEZE_DECISION 保持在可达位置",
+      "AUD-011：产出 ops 侧 8 份重复文档清单 + sha256 校验命令（跨仓执行不在本包）",
+      "附带项：.harness/STATUS.md 补 v0.18.2 章节（当前停在 v0.18.1，属同类“完成态未回写”）",
+      "机械锁：提供“Active 任务包必须有未归档 evidence”的判据函数与清单，接线由 2026-10-31-audit-p2-ci-checker-wiring 完成"
+    ],
+    "out": [
+      "删除任何文档（本包只做状态与位置调整）",
+      "改写历史结论或评审正文",
+      "修改 docs/harness/DOCUMENT_FRONTMATTER_SPEC.md（属元数据三合一包）",
+      "在 ops 仓内执行删除",
+      "修改产品代码、迁移、CI、i18n 资源"
+    ]
+  },
+  "dependencyLayers": [
+    "platform",
+    "inheritance-sync"
+  ],
+  "implementationNotes": [
+    "判据先行：先写“taskId / evidence 是否存在 / summary 是否有完成读数 / 结论”四列表，再批量改 status；反过来做就是用改状态掩盖证据缺失。",
+    "status 的语义以 docs/contracts/DOCUMENT_METADATA_AND_STATUS.md 为准；若定义与现状冲突，先改定义再改状态，不能把规范妥协成现状。",
+    "6 份设计用 Draft 而非 Archived：它们表达“想做但没做”，Archived 会被读成“做过并废弃”。",
+    "TENANT_SCOPE_FREEZE_DECISION 是现行裁决，必须保持在可被索引到/引用的位置，不能随批量搬迁沉底。",
+    "AUD-011 用 sha256sum 逐字节校验，不用“内容看起来一样”判断。",
+    "本包不删任何文件：删除需单独立项并逐份 REVIEW，避免以“归档”为名做不可逆动作。"
+  ],
+  "contractAnchors": [
+    "docs/contracts/DOCUMENT_GOVERNANCE_CONTRACT.md",
+    "docs/contracts/DOCUMENT_METADATA_AND_STATUS.md",
+    "docs/harness/TASK_PACKET_SPEC.md"
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "doc-lifecycle",
+    "portableFailureClass": "stale-doc-state",
+    "ownerLayer": "foundation-source",
+    "ratchetDecision": "gate-updated",
+    "coverageDimensions": [
+      "maintainability",
+      "method-health"
+    ]
+  },
+  "expectedFiles": {
+    "create": [
+      "docs/harness/tasks/2026-10-31-audit-p2-doc-lifecycle-archive.task.md",
+      ".harness/tasks/2026-10-31-audit-p2-doc-lifecycle-archive/manifest.json",
+      ".harness/evidence/2026-10-31-audit-p2-doc-lifecycle-archive/archive-plan.md",
+      ".harness/evidence/2026-10-31-audit-p2-doc-lifecycle-archive/commands.json",
+      ".harness/evidence/2026-10-31-audit-p2-doc-lifecycle-archive/summary.md",
+      ".harness/evidence/2026-10-31-audit-p2-doc-lifecycle-archive/review.md"
+    ],
+    "modify": [
+      "docs/harness/tasks/*.task.md（仅 status 字段）",
+      "docs/designs/ALERT_MONITORING_CENTER_DESIGN.md",
+      "docs/designs/NOTICE_CENTER_DESIGN.md",
+      "docs/designs/REPORT_CENTER_DESIGN.md",
+      "docs/designs/SCHEDULER_CENTER_DESIGN.md",
+      "docs/designs/TASK_CENTER_DESIGN.md",
+      "docs/README.md",
+      ".harness/STATUS.md"
+    ],
+    "doNotTouch": [
+      "docs/history/**",
+      "docs/reviews/**（既有报告正文）",
+      ".harness/archive/**",
+      "backend/**",
+      "frontend/**",
+      ".github/**",
+      "VERSION",
+      "CHANGELOG.md",
+      "docs/release-notes/**"
+    ]
+  },
+  "executionRoles": {
+    "implementerPosture": "先建判据表再改状态；对判据不足的包宁可留 Active 并写原因，也不猜完成。",
+    "reviewerPosture": [
+      "确认每份被改为 Archived 的任务包都能在 .harness/evidence 或 .harness/archive 找到完成证据。",
+      "确认没有把“实际未完成”的包改成 Archived 来减少 Active 计数。",
+      "确认 6 份设计的 status 与正文声明一致，且 Draft 而非一律 Archived。",
+      "确认 TENANT_SCOPE_FREEZE_DECISION 仍可被索引或直接引用到。",
+      "确认本包没有删除任何文件，AUD-011 只在清单层面交付。"
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "node scripts/harness/check-task-packet.mjs --root .",
+      "npm run check:docs-frontmatter",
+      "node scripts/harness/check-doc-links.mjs --root . --strict",
+      "node scripts/harness/check-doc-inventory.mjs --root . --strict",
+      "grep -h '^status:' docs/harness/tasks/*.task.md | sort | uniq -c",
+      "sha256sum 对比 base/ops 的 8 份文档",
+      "node scripts/harness/check-evidence.mjs --root . --strict"
+    ],
+    "runtimeEvidence": [
+      "无运行面变化：纯文档状态与位置调整"
+    ]
+  },
+  "runtimeSensitive": false,
+  "runtimeGap": "纯文档包，无运行证据需求；有效性以“证据存在性”这一静态判据代替运行验证。",
+  "evidenceRequired": [
+    ".harness/evidence/2026-10-31-audit-p2-doc-lifecycle-archive/archive-plan.md：逐份判据表",
+    ".harness/evidence/2026-10-31-audit-p2-doc-lifecycle-archive/commands.json：改前改后 status 分布、文档门禁读数、sha256 对比",
+    ".harness/evidence/2026-10-31-audit-p2-doc-lifecycle-archive/summary.md：判据选择理由与 Draft/Archived 取舍",
+    ".harness/evidence/2026-10-31-audit-p2-doc-lifecycle-archive/review.md：逐条 reviewer posture"
+  ],
+  "humanGates": [
+    "TENANT_SCOPE_FREEZE_DECISION_2026-10-15.md 的存放位置需维护者确认。",
+    "ops 侧删除 8 份重复文档由消费仓维护者执行。",
+    "任何“删除文档”的诉求都应另立任务，不在本包内顺手做。"
+  ],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed",
+    "每份 Active 任务包都有“已完成/未完成”判据记录，无静默保留",
+    "6 份未实现设计的 status 与正文声明一致",
+    "docs/ 根目录不再有未入索引的 TENANT_*",
+    "AUD-011 的 8 份文档清单与校验命令落盘"
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-31-audit-p2-doc-lifecycle-archive/manifest.json",
+    "taskDoc": "docs/harness/tasks/2026-10-31-audit-p2-doc-lifecycle-archive.task.md",
+    "evidenceDir": ".harness/evidence/2026-10-31-audit-p2-doc-lifecycle-archive/",
+    "summaryFile": ".harness/evidence/2026-10-31-audit-p2-doc-lifecycle-archive/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-31-audit-p2-doc-lifecycle-archive/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-10-31.md",
+      "docs/contracts/DOCUMENT_METADATA_AND_STATUS.md"
+    ]
+  }
+}

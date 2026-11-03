@@ -3,10 +3,10 @@ title: 发布说明目录化与索引（根目录收敛）
 doc_type: Remediation
 layer: platform
 depends_on_layers: []
-status: Active
+status: Archived
 linked_contracts:
   - docs/designs/REPOSITORY_LAYOUT.md
-updated_at: 2026-10-28
+updated_at: 2026-10-31
 ---
 
 # Task Packet: 2026-10-28-release-notes-directory

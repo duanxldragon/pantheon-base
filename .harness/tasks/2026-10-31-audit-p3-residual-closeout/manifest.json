@@ -1,0 +1,184 @@
+{
+  "taskId": "2026-10-31-audit-p3-residual-closeout",
+  "taskDoc": "docs/harness/tasks/2026-10-31-audit-p3-residual-closeout.task.md",
+  "title": "审计 P3 残留三条收口（AUD-021 / AUD-025 / AUD-028）",
+  "goal": "把 programme 收口时显式留开的三条 P3 各自做完，并且每条都以“先红后绿”的读数收口，而不是以一次编辑收口。",
+  "primaryLayer": "platform",
+  "status": "completed",
+  "priority": "P3",
+  "wave": "W10",
+  "programmeRef": {
+    "taskId": "2026-10-31-audit-remediation-programme",
+    "taskDoc": "docs/harness/tasks/2026-10-31-audit-remediation-programme.task.md",
+    "manifest": ".harness/tasks/2026-10-31-audit-remediation-programme/manifest.json"
+  },
+  "type": "maintainability-closeout",
+  "estimatedComplexity": "small",
+  "findings": [
+    "AUD-021：`lowcode/templates` 自 #120 起被 tsconfig.app.json exclude、全仓零 import，不参与构建，却被 check-search-toolbar-contract.mjs 以 EXEMPT_SEGMENTS 整目录豁免；于是模板里的退役 FilterPanel 永远不会被清掉，审计也因此把它读成“生成页仍在使用”。",
+    "AUD-021：只删 import 不撤豁免，下一次仍能加回去——豁免才是成因。",
+    "AUD-025：`Active` 是一句关于现在的断言（DOCUMENT_METADATA_AND_STATUS §4.2），但没有时效规则；144 份 Active 文档的 updated_at 已超过 90 天。",
+    "AUD-028：`main.go` 的 `_, cancel := context.WithTimeout(...)` 什么都没约束——telemetry.InitTracer 不收 context，cancel 只在函数返回时触发。",
+    "AUD-028 的修法本身也需要留注释，否则下一位维护者会“好心”把 timeout 加回来。"
+  ],
+  "scope": {
+    "in": [
+      "AUD-021：删两个模板文件里的死 FilterPanel import，并撤销 check-search-toolbar-contract.mjs 对该目录的整体豁免",
+      "AUD-021：生成器侧与门禁侧各补一条锁，且都做负向验证",
+      "AUD-025：frontmatter-check 增加 Active 超 90 天未复核的计数输出与 --report-overdue 明细",
+      "AUD-025：把规则写进 DOCUMENT_METADATA_AND_STATUS §6.5 中英双版，并说明为何不做成 error",
+      "AUD-028：删除死 context.WithTimeout，原地写明为什么不设 timeout"
+    ],
+    "out": [
+      "删除 frontend/src/modules/lowcode/templates/ 整个目录（1,894 行死代码）",
+      "给 144 份逾期 Active 文档逐份改 updated_at 或降级",
+      "把 90 天窗口做成 error，或调整 ENFORCED_DIR_PREFIXES",
+      "改动 InitTracer 签名或新增启动超时策略",
+      "触碰 VERSION / CHANGELOG.md"
+    ]
+  },
+  "dependencyLayers": [
+    "platform"
+  ],
+  "implementationNotes": [
+    "AUD-021 的判据不是“import 没了”，而是“模板目录不再是豁免区，塞回去会让门禁变红”。",
+    "生成器侧锁与门禁侧锁覆盖两件不同的事：产物是否用 SearchToolbar / 模板目录是否仍被豁免。缺一条都留缝。",
+    "AUD-025 不做成 error：100+ 份逾期下，唯一能让门禁变绿的过门方式是批量改日期，而批量改日期恰好摧毁这条规则想保护的东西。",
+    "AUD-025 的读数要与审计对账：审计写 102 份 / 60 天，实测 144 份 / 90 天，口径不同，不复现，以实测为准并写进契约。",
+    "AUD-028 必须留注释解释“为什么这里没有 timeout”，否则会被加回来。"
+  ],
+  "contractAnchors": [
+    "docs/contracts/DOCUMENT_METADATA_AND_STATUS.md",
+    "docs/contracts/DOCUMENT_FRONTMATTER_SCHEMA.md",
+    "docs/frontend/DESIGN_ENGINEERING_GUIDE.md",
+    "docs/frontend/UI_PATTERN_LIBRARY.md"
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "maintainability",
+    "portableFailureClass": "doc-code-drift",
+    "ownerLayer": "foundation-source",
+    "ratchetDecision": "gate-updated",
+    "coverageDimensions": [
+      "maintainability",
+      "behaviour",
+      "architecture-fitness"
+    ]
+  },
+  "expectedFiles": {
+    "create": [
+      "docs/harness/tasks/2026-10-31-audit-p3-residual-closeout.task.md",
+      ".harness/tasks/2026-10-31-audit-p3-residual-closeout/manifest.json",
+      ".harness/evidence/2026-10-31-audit-p3-residual-closeout/commands.json",
+      ".harness/evidence/2026-10-31-audit-p3-residual-closeout/summary.md",
+      ".harness/evidence/2026-10-31-audit-p3-residual-closeout/review.md"
+    ],
+    "modify": [
+      "frontend/src/modules/lowcode/templates/listTemplate.ts",
+      "frontend/src/modules/lowcode/templates/index.ts",
+      "frontend/scripts/check-search-toolbar-contract.mjs",
+      "tests/scripts/check-search-toolbar-contract.test.mjs",
+      "frontend/tests/generator/generator-quality-contract.test.ts",
+      "scripts/frontmatter-check.mjs",
+      "tests/docs/frontmatter-check.test.mjs",
+      "docs/contracts/DOCUMENT_METADATA_AND_STATUS.md",
+      "docs/contracts/DOCUMENT_METADATA_AND_STATUS.en.md",
+      "backend/cmd/server/main.go"
+    ],
+    "doNotTouch": [
+      "backend/pkg/telemetry/**",
+      "backend/internal/middleware/**",
+      "backend/modules/**",
+      "docs/contracts/DOCUMENT_FRONTMATTER_SCHEMA.md",
+      "VERSION",
+      "CHANGELOG.md"
+    ]
+  },
+  "executionRoles": {
+    "implementerPosture": "每条都以“先制造一次红，再修成绿”推进；不接受“代码看起来改了所以算完成”。",
+    "reviewerPosture": [
+      "确认 AUD-021 撤的是豁免本身，不只是删了一行 import。",
+      "确认两条 AUD-021 锁在恢复旧行为时都会红。",
+      "确认 AUD-025 的规则确实不阻断构建，且契约里写清了为什么。",
+      "确认 AUD-028 的注释解释的是“为什么不需要 timeout”，不是“我删了什么”。",
+      "确认没有借收口之名扩大改动面。"
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "cd frontend && node scripts/check-search-toolbar-contract.mjs（0 findings / 106 文件）",
+      "负向：把 FilterPanel 塞回 templates/listTemplate.ts → 必须 exit 1 且报 no-filter-panel",
+      "npm run test:search-toolbar-contract（10/10；负向：恢复豁免 → 第 10 条红）",
+      "cd frontend && npm run test:generator:quality（14/14；负向：拼回生成器 → 第 14 条红）",
+      "node scripts/frontmatter-check.mjs（通过并输出逾期份数）",
+      "npm run test:docs-frontmatter（14/14；负向：逾期计入 ok → 第 14 条红）",
+      "cd backend && go build ./... && go vet ./cmd/server/ && gofmt -l cmd/server/main.go",
+      "cd frontend && npx tsc -b",
+      "node scripts/harness/check-evidence.mjs --root . --strict",
+      "node scripts/harness/check-review.mjs --root . --strict"
+    ],
+    "runtimeEvidence": [
+      "AUD-025 在真实仓库上的读数：144 份逾期（其中 71 份 .en.md），最老 198 天"
+    ]
+  },
+  "runtimeSensitive": false,
+  "runtimeGap": "三条均为静态可判定项（门禁脚本、文档元数据、启动期死代码），无运行时行为变化，因此不需要运行时证据；AUD-025 的读数来自真实仓库扫描而非 fixture。",
+  "evidenceRequired": [
+    ".harness/evidence/2026-10-31-audit-p3-residual-closeout/commands.json：三条各自的负向 + 正向读数成对记录",
+    ".harness/evidence/2026-10-31-audit-p3-residual-closeout/summary.md：为什么撤豁免比删 import 关键、为什么 90 天不做成 error、templates/ 目录的处置建议",
+    ".harness/evidence/2026-10-31-audit-p3-residual-closeout/review.md：逐条 reviewer posture + 反向检查"
+  ],
+  "humanGates": [
+    "撤销门禁豁免会收紧 CI；若下游有同名目录副本并依赖该豁免，需维护者确认后再随 release 送达（已核对：pantheon-ops 仅 .foundation/releases/*/bundle/ 历史快照内有同名文件，活动代码不引用）。",
+    "frontend/src/modules/lowcode/templates/ 目录的最终删除（1,894 行）属独立决策，不由本包代做。"
+  ],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed",
+    "AUD-021：模板目录不再豁免，塞回 FilterPanel 会让门禁变红",
+    "AUD-025：90 天窗口有读数、有契约、有锁，且不阻断构建",
+    "AUD-028：死 context.WithTimeout 已删，且原地写明为什么这里不需要 timeout"
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-31-audit-p3-residual-closeout/manifest.json",
+    "taskDoc": "docs/harness/tasks/2026-10-31-audit-p3-residual-closeout.task.md",
+    "evidenceDir": ".harness/evidence/2026-10-31-audit-p3-residual-closeout/",
+    "summaryFile": ".harness/evidence/2026-10-31-audit-p3-residual-closeout/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-31-audit-p3-residual-closeout/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-10-31.md",
+      "docs/contracts/DOCUMENT_METADATA_AND_STATUS.md"
+    ]
+  },
+  "executionResult": {
+    "executedAt": "2026-11-01",
+    "headSha": "ef0073860ce03087d9cf05de6b5d7732687ef769",
+    "outcome": "completed",
+    "summary": "三条 P3 全部收口，每条都留了负向读数。AUD-021 没有停在“删掉一行 import”：成因是 check-search-toolbar-contract.mjs 对 lowcode/templates 的整目录豁免，而该目录自 #120 起就被 tsconfig exclude、全仓零 import，根本不参与构建。删 import 并撤销豁免后，被检文件从 102 涨到 106，把 FilterPanel 塞回模板会让门禁 exit 1；另加生成器侧第 14 条与门禁侧第 10 条两条锁，都在恢复旧行为时验证过会红。顺手把该脚本里两处指向已不存在的 DESIGN.md §7.2 的引用改成 docs/frontend/DESIGN_ENGINEERING_GUIDE.md §8.1。AUD-025 在 frontmatter-check 增加 90 天复核窗口的计数与 --report-overdue 明细，规则写进 DOCUMENT_METADATA_AND_STATUS §6.5 中英双版；实测 144 份逾期（71 份 .en.md、最老 198 天），与审计的“102 份 / 60 天”口径不同、未复现，已在契约中写明以实测为准。刻意不做成 error：100+ 份逾期下唯一能变绿的过门方式是批量改日期，而那正是这条规则要防的事。AUD-028 删掉 main.go 里空转的 context.WithTimeout 并留注释解释为什么不设 timeout；context 包仍被 shutdown 段使用，import 未动。",
+    "deviations": [
+      "任务包原计划只删 AUD-021 的 import；执行中发现豁免才是成因，遂把撤销豁免一并纳入，并为此新增门禁侧第 10 条锁。改动面比预估多一个脚本与一个测试文件，但仍限于同一目录语义。",
+      "AUD-028 无需负向读数（删除类改动没有行为可红），以 build/vet/gofmt 三清代替。"
+    ],
+    "residualFindings": [
+      {
+        "id": "AUD-021b",
+        "severity": "P3",
+        "title": "lowcode/templates 目录整体是死代码（1,894 行 / 5 文件）",
+        "detail": "该目录自 #120 起被 frontend/tsconfig.app.json exclude（当次提交的说明就是“修 lowcode 模块的 TypeScript 与构建错误”），全仓零 import，index.ts 只 import 同目录的 detailTemplate_clean.txt，闭成一个孤岛。它不参与构建、不被任何测试引用，却仍被 check-search-toolbar-contract 扫描，也是 AUD-021 的成因。本包已撤掉豁免并清掉退役组件引用，但没有删除目录：删除 1,894 行属独立动作，需单独决策（并同步确认 pantheon-ops 无活动代码引用——已核对，ops 侧仅 .foundation/releases/*/bundle/ 历史快照内有同名文件）。",
+        "status": "open"
+      },
+      {
+        "id": "AUD-025-review-round",
+        "severity": "P3",
+        "title": "144 份逾期 Active 文档需要一次人工复核轮",
+        "detail": "本包只建立可见性（计数 + --report-overdue），不处置文档本身。144 份中 71 份是 .en.md 镜像、73 份中文正文，最老 198 天（docs/designs/BACKEND.md 等 2026-04-17）。按 §6.5，处置是“复核后重写 updated_at”或“降为 Draft/Superseded”，两者都要求真读一遍，不能靠脚本批量完成。",
+        "status": "open"
+      }
+    ]
+  }
+}

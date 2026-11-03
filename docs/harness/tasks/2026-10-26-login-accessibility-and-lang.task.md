@@ -6,12 +6,12 @@ depends_on_layers:
   - system/auth
   - system/iam
   - system/config
-status: Active
+status: Archived
 linked_contracts:
   - docs/contracts/SYSTEM_AUTH_CONTRACT.md
   - DESIGN.md
   - docs/harness/VERIFICATION_EVIDENCE_SPEC.md
-updated_at: 2026-10-26
+updated_at: 2026-10-31
 ---
 
 # Task Packet: 2026-10-26-login-accessibility-and-lang

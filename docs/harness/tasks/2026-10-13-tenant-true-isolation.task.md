@@ -8,14 +8,14 @@ depends_on_layers:
   - system/auth
   - system/org
   - system/audit
-status: Active
+status: Archived
 linked_contracts:
   - docs/contracts/TENANT_CONTRACT_V1.md
   - docs/contracts/PLATFORM_CONTRACT.md
   - docs/contracts/DOCUMENT_GOVERNANCE_CONTRACT.md
   - docs/designs/TENANT_RESOURCE_SCOPE_MATRIX.md
   - docs/designs/TENANT_READY_SINGLE_TENANT_DESIGN.md
-updated_at: 2026-10-13
+updated_at: 2026-10-31
 ---
 
 # Task Packet: 2026-10-13-tenant-true-isolation

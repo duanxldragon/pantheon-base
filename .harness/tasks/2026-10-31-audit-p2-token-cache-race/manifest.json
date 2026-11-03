@@ -1,0 +1,168 @@
+{
+  "taskId": "2026-10-31-audit-p2-token-cache-race",
+  "taskDoc": "docs/harness/tasks/2026-10-31-audit-p2-token-cache-race.task.md",
+  "title": "token 会话缓存必须无数据竞争（AUD-026）",
+  "goal": "消除 token 会话缓存把内部指针交给调用方、并在锁外改写共享 SessionData 的数据竞争，同时补上“同 token 并发”用例，让 go test -race 真正能守住这块。",
+  "primaryLayer": "platform",
+  "status": "completed",
+  "priority": "P2",
+  "wave": "W7",
+  "programmeRef": {
+    "taskId": "2026-10-31-audit-remediation-programme",
+    "taskDoc": "docs/harness/tasks/2026-10-31-audit-remediation-programme.task.md",
+    "manifest": ".harness/tasks/2026-10-31-audit-remediation-programme/manifest.json"
+  },
+  "type": "concurrency-correctness",
+  "estimatedComplexity": "small",
+  "findings": [
+    "lookupTokenSessionCache 在 RLock 下返回 *tokenCachedSession 共享指针，锁在返回时即释放。",
+    "refreshTokenActivity（token_middleware.go:181-190）随后在锁外改写 cached.data.LastActivityAt，同时也改写 sessionData.LastActivityAt。",
+    "resolveTokenSession 把 cached.data 直接交给下游，调用方读写的就是缓存条目本身。",
+    "同一 token 的并发请求因此同时读写同一 SessionData；go test -race 未捕获，是因为缺少同 token 并发的用例，而不是门禁本身失效。",
+    "影响面限于 LastActivityAt 时间戳（空闲超时判定可能偏移），不构成越权，但属可复现的内存安全缺陷。"
+  ],
+  "scope": {
+    "in": [
+      "缓存命中时返回 SessionData 值拷贝（RoleKeys 切片独立复制），或持锁改写缓存条目（不得在持锁期间做 Redis I/O）",
+      "修复 refreshTokenActivity 的双重写入，使缓存条目与本次请求的会话视图不共享内存",
+      "新增同 token 并发用例，先在修复前跑出 DATA RACE 作为负向证据",
+      "确认 invalidateTokenSessionCache、60s TTL 与 10000 条上限清理逻辑在改动后仍成立"
+    ],
+    "out": [
+      "修改 Redis 会话语义、黑名单 fail-closed 行为、空闲超时时长",
+      "把内存缓存换成 Redis 或其他方案",
+      "调整 PANTHEON_TOKEN_CACHE_TTL_SECONDS 默认值",
+      "修改租户上下文或 Casbin 链路",
+      "顺手优化中间件其他逻辑"
+    ]
+  },
+  "dependencyLayers": [
+    "platform"
+  ],
+  "implementationNotes": [
+    "首选值拷贝：一次性消除“调用方持有内部指针”这类问题，而不是只堵当前这一处写入。",
+    "拷贝必须显式复制 RoleKeys 切片，否则只是把竞争从结构体搬到切片底层数组。",
+    "若选持锁改写，不要在持锁期间调用 RefreshSessionActivity（网络 I/O），否则这把锁会变成全局瓶颈。",
+    "并发用例必须真的并发同一 token；不同 token 的并发不会触发这条竞争。",
+    "先跑负向再跑正向：DATA RACE 栈是“用例有效”的唯一证明。"
+  ],
+  "contractAnchors": [
+    "docs/contracts/SYSTEM_AUTH_CONTRACT.md",
+    "docs/contracts/PLATFORM_CONTRACT.md"
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "concurrency-correctness",
+    "portableFailureClass": "data-race",
+    "ownerLayer": "foundation-source",
+    "ratchetDecision": "gate-updated",
+    "coverageDimensions": [
+      "behaviour",
+      "runtime-quality",
+      "maintainability"
+    ]
+  },
+  "expectedFiles": {
+    "create": [
+      "docs/harness/tasks/2026-10-31-audit-p2-token-cache-race.task.md",
+      ".harness/tasks/2026-10-31-audit-p2-token-cache-race/manifest.json",
+      ".harness/evidence/2026-10-31-audit-p2-token-cache-race/commands.json",
+      ".harness/evidence/2026-10-31-audit-p2-token-cache-race/summary.md",
+      ".harness/evidence/2026-10-31-audit-p2-token-cache-race/review.md"
+    ],
+    "modify": [
+      "backend/internal/middleware/token_middleware.go",
+      "backend/internal/middleware/token_middleware_test.go"
+    ],
+    "doNotTouch": [
+      "backend/pkg/authtoken/**",
+      "backend/internal/middleware/tenant_context_middleware.go",
+      "backend/internal/middleware/casbin_middleware.go",
+      "backend/modules/auth/**",
+      "VERSION",
+      "CHANGELOG.md"
+    ]
+  },
+  "executionRoles": {
+    "implementerPosture": "先写出能报 DATA RACE 的用例，再改实现；以“调用方拿不到共享指针”为验收判据，不以“测试变绿”为判据。",
+    "reviewerPosture": [
+      "确认修复前确有 DATA RACE 读数，修复后同一命令干净。",
+      "确认拷贝包含 RoleKeys 切片，未把竞争搬到切片底层数组。",
+      "确认没有在持锁期间做 Redis I/O。",
+      "确认黑名单、空闲超时、撤销语义未变。",
+      "确认既有 middleware 测试无回归。"
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "cd backend && go test -race -run TestTokenSessionCacheConcurrent ./internal/middleware/ -count=1（修复前必须报 DATA RACE）",
+      "同命令修复后干净通过",
+      "cd backend && go test -short ./internal/middleware/...",
+      "cd backend && go vet ./... && go build ./...",
+      "node scripts/harness/check-evidence.mjs --root . --strict"
+    ],
+    "runtimeEvidence": [
+      "修复前后的 -race 读数对比（含 DATA RACE 栈片段）"
+    ]
+  },
+  "runtimeSensitive": true,
+  "runtimeGap": "并发用例用 httptest + 内存 Redis 桩即可触发竞争，不需要真实 Redis；真实部署下的并发压力验证留待 release 前集成测试。",
+  "evidenceRequired": [
+    ".harness/evidence/2026-10-31-audit-p2-token-cache-race/commands.json：修复前 DATA RACE 栈、修复后干净读数、回归读数",
+    ".harness/evidence/2026-10-31-audit-p2-token-cache-race/summary.md：值拷贝 vs 持锁改写的取舍、RoleKeys 拷贝处理、门禁为何漏掉",
+    ".harness/evidence/2026-10-31-audit-p2-token-cache-race/review.md：逐条 reviewer posture"
+  ],
+  "humanGates": [
+    "修改安全主链路中间件需一位非作者复核，确认未放宽 fail-closed 行为。",
+    "若为消除竞争而调整缓存策略（如缩短 TTL），需说明对撤销时效的影响。"
+  ],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed",
+    "并发用例修复前报 DATA RACE、修复后干净",
+    "调用方无法获得可被并发改写的共享指针",
+    "黑名单/空闲超时/撤销语义未变"
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-31-audit-p2-token-cache-race/manifest.json",
+    "taskDoc": "docs/harness/tasks/2026-10-31-audit-p2-token-cache-race.task.md",
+    "evidenceDir": ".harness/evidence/2026-10-31-audit-p2-token-cache-race/",
+    "summaryFile": ".harness/evidence/2026-10-31-audit-p2-token-cache-race/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-31-audit-p2-token-cache-race/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-10-31.md",
+      "docs/contracts/SYSTEM_AUTH_CONTRACT.md"
+    ]
+  },
+  "executionResult": {
+    "executedAt": "2026-11-01",
+    "headSha": "ef0073860ce03087d9cf05de6b5d7732687ef769",
+    "outcome": "completed",
+    "summary": "先写同 token 并发用例再改实现：修复前同一命令报 2 处 DATA RACE（token_middleware.go:182 读 / :183 写 / :186 写，栈帧均在 refreshTokenActivity），修复后同一命令 ok 且 0 race。修法取值拷贝：map 值类型由指针改值、data 字段由指针改值、新增 cloneSessionData 显式复制 RoleKeys、storeTokenSessionCache 落库时也拷贝、新增 touchTokenSessionCacheActivity 在写锁内同步活跃时间（持锁期间无 Redis I/O）。黑名单/空闲超时/撤销/TTL/淘汰策略一行未改，公开面 InvalidateTokenAuthCache 签名不变。",
+    "deviations": [
+      "任务包 verificationPlan 的命令是不带 PANTHEON_TEST_REDIS_* 的 go test -race；实际并发用例走真实 Redis（testredis DBMiddleware 库 4），因此命令额外注入了 PANTHEON_TEST_REDIS_ADDR/PASSWORD/REQUIRED，否则用例会 skip 而不是给出读数。",
+      "既有 TestTokenSessionCacheDisabledByZeroTTL 因 map 值类型变化做了机械适配（加锁访问 + 值字面量），断言未放宽。"
+    ],
+    "residualFindings": [
+      {
+        "id": "AUD-026-race-only",
+        "severity": "P3",
+        "title": "竞争仅在 -race 下可观测",
+        "detail": "不带 -race 的 go test 在修复前也会通过（断言只覆盖身份与时间戳）。CI 的 race 腿是这条缺陷唯一守门人；若将来为缩短时长把 -race 从 CI 去掉，缺陷会静默回归。已由 TestTokenSessionCacheHandsOutCopies 部分兜底（该用例不带 -race 也会红在切片共享上），但内存可见性半边仍依赖 race。",
+        "status": "open"
+      },
+      {
+        "id": "AUD-026-stress",
+        "severity": "P3",
+        "title": "多实例与 Redis 退化下的并发未验证",
+        "detail": "本轮只证明单进程内同 token 并发不再共享内存；真实部署的多实例、Redis 抖动场景属 release 前集成测试。",
+        "status": "open"
+      }
+    ]
+  }
+}

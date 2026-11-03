@@ -6,12 +6,12 @@ depends_on_layers:
   - system/iam
   - system/auth
   - system/config
-status: Active
+status: Archived
 linked_contracts:
   - docs/contracts/PLATFORM_CONTRACT.md
   - docs/contracts/TENANT_CONTRACT_V1.md
   - docs/contracts/DOCUMENT_GOVERNANCE_CONTRACT.md
-updated_at: 2026-10-20
+updated_at: 2026-10-31
 ---
 
 # Task Packet: 2026-10-20-sonarcloud-zero-issues

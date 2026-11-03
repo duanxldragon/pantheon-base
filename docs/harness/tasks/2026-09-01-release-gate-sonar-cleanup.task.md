@@ -1,3 +1,13 @@
+---
+title: Resolve the remaining AppTable SonarCloud complexity issue
+doc_type: Remediation
+layer: platform
+status: Archived
+updated_at: 2026-10-31
+linked_contracts:
+  - docs/contracts/PLATFORM_CONTRACT.md
+---
+
 # Task Packet: 2026-09-01-release-gate-sonar-cleanup
 
 ## Goal

@@ -1,0 +1,321 @@
+{
+  "taskId": "2026-10-31-audit-remediation-programme",
+  "taskDoc": "docs/harness/tasks/2026-10-31-audit-remediation-programme.task.md",
+  "title": "Pantheon Base 全局审计整改 programme（9 个子包与 7 项冻结门槛）",
+  "goal": "把合并终版审计的 3 个 P1 与 18 个 P2 拆成 9 个可独立评审的整改子包，规定依赖顺序、7 项冻结门槛与明确不处理的项；programme 本身不改产品代码。",
+  "primaryLayer": "platform",
+  "status": "completed",
+  "progress": "2026-11-01：9 个子包（W1–W9）全部 completed，7 项冻结门槛全部达成；W10 关闭三条 P3 残留（AUD-021/025/028），W11 关闭 AUD-001c（文档加例外），W12 为三条 P2 补上可验证的前置条件（只读预检 + 两份执行单 + 冻结宣告文本），三条 P2 的**动作**仍归维护者。",
+  "priority": "P1",
+  "type": "audit-remediation-programme",
+  "estimatedComplexity": "small",
+  "findings": [
+    "合并终版审计结论为 B：核心安全与业务闭环成立（构建、vet、-short 测试、前端 4 条门禁、文档 3 条门禁实测通过），但 3 项 P1 阻止直接冻结。",
+    "3 项 P1 集中在两类：交付物不可用（AUD-001 生成器不可编译且默认迁移模式不建表）、能力承诺与实现不一致（AUD-002 业务域零租户建模而 README 宣称完整隔离），另加一项文档步骤必然失败（AUD-016）。",
+    "18 项 P2 集中在收口与同步：68 份完成态任务包仍 Active、元数据规范三份并存、跨仓 8 份重复文档、死代码与死表、CI 重复跑 Go 测试、11/26 checker 未接线、token 缓存数据竞争。",
+    "7 项 P3 不立项，避免以整改为名继续增加维护面。",
+    "pkg/security/ssrf 曾被前序报告判为死代码并建议删除，实际下游 pantheon-ops 有 5 处引用，本 programme 明确禁止删除。"
+  ],
+  "scope": {
+    "in": [
+      "登记 9 个子包的任务文档与 manifest，并规定依赖：W1→W6、W2→W3→W4→W5→W8；W7/W9 独立",
+      "冻结门槛：7 项全部满足，或剩余项被显式登记为冻结后接受的 gap",
+      "把审计 §12.4 的“明确不建议处理”8 项写成 programme 级 Out",
+      "维护审计 28 条 → 子包的着落表，确保无静默遗漏"
+    ],
+    "out": [
+      "修改审计报告结论或证据",
+      "P3（AUD-020/021/022/023/024/025/028）的实施",
+      "删除 pkg/security/ssrf（下游 5 处引用，D 类保留）",
+      "功能扩展、性能优化、UI 视觉改版、大组件拆分",
+      "合并 docs/harness 与 .harness、删除历史评审报告",
+      "切 foundation release、改 VERSION / CHANGELOG"
+    ]
+  },
+  "children": [
+    {
+      "wave": "W1",
+      "taskId": "2026-10-31-audit-p1-lowcode-generator-build",
+      "taskDoc": "docs/harness/tasks/2026-10-31-audit-p1-lowcode-generator-build.task.md",
+      "manifest": ".harness/tasks/2026-10-31-audit-p1-lowcode-generator-build/manifest.json",
+      "priority": "P1",
+      "status": "completed",
+      "dependsOn": [],
+      "audits": "AUD-001",
+      "blockingFreeze": true
+    },
+    {
+      "wave": "W2",
+      "taskId": "2026-10-31-audit-p1-business-route-tenant-context",
+      "taskDoc": "docs/harness/tasks/2026-10-31-audit-p1-business-route-tenant-context.task.md",
+      "manifest": ".harness/tasks/2026-10-31-audit-p1-business-route-tenant-context/manifest.json",
+      "priority": "P1",
+      "status": "completed",
+      "dependsOn": [],
+      "audits": "AUD-002",
+      "blockingFreeze": true
+    },
+    {
+      "wave": "W3",
+      "taskId": "2026-10-31-audit-p1-entry-doc-truthfulness",
+      "taskDoc": "docs/harness/tasks/2026-10-31-audit-p1-entry-doc-truthfulness.task.md",
+      "manifest": ".harness/tasks/2026-10-31-audit-p1-entry-doc-truthfulness/manifest.json",
+      "priority": "P1",
+      "status": "completed",
+      "dependsOn": [
+        "W2"
+      ],
+      "audits": "AUD-003/004/007/016/024",
+      "blockingFreeze": true
+    },
+    {
+      "wave": "W4",
+      "taskId": "2026-10-31-audit-p2-doc-lifecycle-archive",
+      "taskDoc": "docs/harness/tasks/2026-10-31-audit-p2-doc-lifecycle-archive.task.md",
+      "manifest": ".harness/tasks/2026-10-31-audit-p2-doc-lifecycle-archive/manifest.json",
+      "priority": "P2",
+      "status": "completed",
+      "dependsOn": [
+        "W3"
+      ],
+      "audits": "AUD-006/011/017/018/019",
+      "blockingFreeze": true
+    },
+    {
+      "wave": "W5",
+      "taskId": "2026-10-31-audit-p2-doc-metadata-and-index",
+      "taskDoc": "docs/harness/tasks/2026-10-31-audit-p2-doc-metadata-and-index.task.md",
+      "manifest": ".harness/tasks/2026-10-31-audit-p2-doc-metadata-and-index/manifest.json",
+      "priority": "P2",
+      "status": "completed",
+      "dependsOn": [
+        "W4"
+      ],
+      "audits": "AUD-008/009/010",
+      "blockingFreeze": true
+    },
+    {
+      "wave": "W6",
+      "taskId": "2026-10-31-audit-p2-dead-code-legacy-surface",
+      "taskDoc": "docs/harness/tasks/2026-10-31-audit-p2-dead-code-legacy-surface.task.md",
+      "manifest": ".harness/tasks/2026-10-31-audit-p2-dead-code-legacy-surface/manifest.json",
+      "priority": "P2",
+      "status": "planned",
+      "dependsOn": [
+        "W1"
+      ],
+      "audits": "AUD-012/013/014/020",
+      "blockingFreeze": true
+    },
+    {
+      "wave": "W7",
+      "taskId": "2026-10-31-audit-p2-token-cache-race",
+      "taskDoc": "docs/harness/tasks/2026-10-31-audit-p2-token-cache-race.task.md",
+      "manifest": ".harness/tasks/2026-10-31-audit-p2-token-cache-race/manifest.json",
+      "priority": "P2",
+      "status": "planned",
+      "dependsOn": [],
+      "audits": "AUD-026",
+      "blockingFreeze": true
+    },
+    {
+      "wave": "W8",
+      "taskId": "2026-10-31-audit-p2-ci-checker-wiring",
+      "taskDoc": "docs/harness/tasks/2026-10-31-audit-p2-ci-checker-wiring.task.md",
+      "manifest": ".harness/tasks/2026-10-31-audit-p2-ci-checker-wiring/manifest.json",
+      "priority": "P2",
+      "status": "completed",
+      "dependsOn": [
+        "W4",
+        "W5"
+      ],
+      "audits": "AUD-015/027",
+      "blockingFreeze": true
+    },
+    {
+      "wave": "W9",
+      "taskId": "2026-10-31-audit-p2-oidc-scaffold-decision",
+      "taskDoc": "docs/harness/tasks/2026-10-31-audit-p2-oidc-scaffold-decision.task.md",
+      "manifest": ".harness/tasks/2026-10-31-audit-p2-oidc-scaffold-decision/manifest.json",
+      "priority": "P2",
+      "status": "completed",
+      "dependsOn": [],
+      "audits": "AUD-005",
+      "blockingFreeze": false
+    },
+    {
+      "wave": "W12",
+      "taskId": "2026-11-01-audit-p2-human-gate-preconditions",
+      "taskDoc": "docs/harness/tasks/2026-11-01-audit-p2-human-gate-preconditions.task.md",
+      "manifest": ".harness/tasks/2026-11-01-audit-p2-human-gate-preconditions/manifest.json",
+      "priority": "P2",
+      "status": "completed",
+      "dependsOn": [
+        "W6"
+      ],
+      "audits": "AUD-013-prod / AUD-014-followup / FREEZE-DECLARATION",
+      "blockingFreeze": false
+    }
+  ],
+  "dependencyLayers": [
+    "platform",
+    "system/auth",
+    "inheritance-sync"
+  ],
+  "implementationNotes": [
+    "拆包单位是“一次可评审的 diff”，不是“一个发现一个包”：入口文档五条合为 W3，文档生命周期五条合为 W4。",
+    "每个子包必须“修复 + 机械锁”，否则下一轮漂移会原样重现。",
+    "依赖不是形式：W6 删 scaffold.Generate 必须等 W1 改完生成器，避免同区域两次改动互相覆盖。",
+    "W2 决定“租户语义是什么”，W3 负责把 README/DESIGN 写成那个结论；两包不得各改一遍同一段。",
+    "冻结判定只读 9 个 manifest 的 status 与各自 evidence 读数，不用散文结论替代。"
+  ],
+  "contractAnchors": [
+    "docs/reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-10-31.md",
+    "docs/contracts/PLATFORM_CONTRACT.md",
+    "docs/harness/HARNESS_ENGINEERING_CONTRACT.md"
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "governance-programme",
+    "portableFailureClass": "audit-remediation-programme",
+    "ownerLayer": "foundation-source",
+    "ratchetDecision": "gate-updated",
+    "coverageDimensions": [
+      "behaviour",
+      "maintainability",
+      "architecture-fitness",
+      "runtime-quality"
+    ]
+  },
+  "expectedFiles": {
+    "create": [
+      "docs/harness/tasks/2026-10-31-audit-remediation-programme.task.md",
+      ".harness/tasks/2026-10-31-audit-remediation-programme/manifest.json",
+      ".harness/evidence/2026-10-31-audit-remediation-programme/commands.json",
+      ".harness/evidence/2026-10-31-audit-remediation-programme/summary.md",
+      ".harness/evidence/2026-10-31-audit-remediation-programme/review.md"
+    ],
+    "modify": [],
+    "doNotTouch": [
+      "backend/**",
+      "frontend/**",
+      ".github/workflows/**",
+      "backend/pkg/database/migrations/**",
+      "docs/reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-10-31.md",
+      "pantheon-ops/**"
+    ]
+  },
+  "executionRoles": {
+    "implementerPosture": "只做拆包与门槛登记，不顺手修任何发现；子包边界与依赖一旦写入就按表执行，不为“看起来更快”合并或跳过。",
+    "reviewerPosture": [
+      "确认审计 28 条每一行都能对应到子包、明确不处理、或显式 gap，没有静默遗漏。",
+      "确认 9 个子包的 scope.in/out 互不重叠到会产生冲突改动（尤其 W3/W4/W5 三个文档包）。",
+      "确认依赖顺序被尊重：W6 不得先于 W1，W8 不得先于 W4/W5。",
+      "确认 programme 自身没有修改产品代码、CI 或迁移。",
+      "确认 P3 没有被重新包装成任务，pkg/security/ssrf 未被列入删除范围。"
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "node scripts/harness/check-task-packet.mjs --root .",
+      "npm run check:task-packet-template",
+      "npm run check:docs-frontmatter",
+      "node scripts/harness/check-doc-links.mjs --root . --strict",
+      "node scripts/harness/check-doc-inventory.mjs --root . --strict",
+      "逐个 JSON.parse 9 个子包 manifest"
+    ],
+    "runtimeEvidence": [
+      "无运行面变化：本包只新增治理文档与 manifest"
+    ]
+  },
+  "runtimeSensitive": false,
+  "runtimeGap": "programme 不产生产品运行面；子包的运行证据由各子包自行给出。",
+  "evidenceRequired": [
+    ".harness/evidence/2026-10-31-audit-remediation-programme/commands.json：9 份任务包与 manifest 的门禁读数",
+    ".harness/evidence/2026-10-31-audit-remediation-programme/summary.md：子包清单、依赖图、7 项冻结门槛、不处理清单",
+    ".harness/evidence/2026-10-31-audit-remediation-programme/review.md：审计 28 条 → 子包的逐条着落表"
+  ],
+  "humanGates": [
+    "W2（业务域租户语义 A/B/C）与 W9（OIDC 去留）是不可逆或对外承诺类决策，必须维护者拍板。",
+    "W6 的 legacy 端点下线与 W8 的 workflow 修改需两位非作者批准，其中一位为 CI/发布负责。",
+    "冻结宣告归维护者：programme 只提供门槛达成读数。"
+  ],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed",
+    "9 个子包全部登记且各自 manifest 通过校验",
+    "审计 28 条每一条都能对应到子包 / 明确不处理 / 显式 gap",
+    "未把 P3 观察项升级为独立任务"
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-31-audit-remediation-programme/manifest.json",
+    "taskDoc": "docs/harness/tasks/2026-10-31-audit-remediation-programme.task.md",
+    "evidenceDir": ".harness/evidence/2026-10-31-audit-remediation-programme/",
+    "summaryFile": ".harness/evidence/2026-10-31-audit-remediation-programme/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-31-audit-remediation-programme/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-10-31.md",
+      "docs/contracts/PLATFORM_CONTRACT.md"
+    ]
+  },
+  "executionResult": {
+    "executedAt": "2026-11-01",
+    "headSha": "ef0073860ce03087d9cf05de6b5d7732687ef769",
+    "outcome": "completed",
+    "summary": "9/9 子包 completed，7/7 冻结门槛达成，全量门禁 0 error。28 条审计条目中 23 条着落到子包；AUD-022/023 按审计建议不处理；AUD-021/025/028 当时留开，随后由 2026-10-31-audit-p3-residual-closeout（W10）逐条收口——三条现均已 closed，各自附负向读数。收口复核推翻并修复了 W6 的 000031.down 形状缺陷，并更正了 W6 evidence 里把 check-evidence 误记为 passed 的一行。programme 层面唯一未闭合项仍是 FREEZE-DECLARATION（P2，归维护者）。",
+    "deviations": [
+      "programme 原计划不改任何既有文件；实际在收口时修改了两个子包的 evidence 与任务文档（W6 的 000031.down 修复、knownGaps 补齐、Machine Readable 补块），因为这些属子包收口而非 programme 自身范围。",
+      "冻结宣告未执行：按 Human Gates，进入维护冻结由维护者拍板，programme 只交付读数。"
+    ],
+    "residualFindings": [
+      {
+        "id": "AUD-021",
+        "severity": "P3",
+        "title": "生成页仍使用已退役的 FilterPanel（带显式豁免）",
+        "detail": "由 2026-10-31-audit-p3-residual-closeout 收口。真正成因不是那行 import，而是 check-search-toolbar-contract.mjs 对 lowcode/templates 的整目录豁免——该目录自 #120 起被 tsconfig exclude、全仓零 import，不参与构建。已删死 import 并撤销豁免（被检文件 102→106），另补生成器侧与门禁侧两条锁，均负向验证过会红。残留：templates/ 目录本身 1,894 行死代码未删，登记为 AUD-021b。",
+        "status": "closed",
+        "closedBy": {
+          "taskId": "2026-10-31-audit-p3-residual-closeout",
+          "manifest": ".harness/tasks/2026-10-31-audit-p3-residual-closeout/manifest.json",
+          "evidence": ".harness/evidence/2026-10-31-audit-p3-residual-closeout/commands.json"
+        }
+      },
+      {
+        "id": "AUD-025",
+        "severity": "P3",
+        "title": "Active 文档缺少 90 天复核规则",
+        "detail": "由 2026-10-31-audit-p3-residual-closeout 收口。frontmatter-check 新增 90 天复核窗口的计数与 --report-overdue 明细，规则写入 DOCUMENT_METADATA_AND_STATUS §6.5 中英双版；实测 144 份逾期（71 份 .en.md，最老 198 天），与审计的 102 份/60 天口径不同，未复现审计口径，已在契约中写明以实测为准。刻意不做成 error。残留：144 份需要一次人工复核轮，登记为 AUD-025-review-round。",
+        "status": "closed",
+        "closedBy": {
+          "taskId": "2026-10-31-audit-p3-residual-closeout",
+          "manifest": ".harness/tasks/2026-10-31-audit-p3-residual-closeout/manifest.json",
+          "evidence": ".harness/evidence/2026-10-31-audit-p3-residual-closeout/commands.json"
+        }
+      },
+      {
+        "id": "AUD-028",
+        "severity": "P3",
+        "title": "main.go 的未使用 cancel 仍存在",
+        "detail": "由 2026-10-31-audit-p3-residual-closeout 收口。已删除空转的 context.WithTimeout 并在原地写明为什么不设 timeout（InitTracer 不收 context），避免被好心加回。context 包仍被 shutdown 段使用，import 未动；go build / go vet / gofmt -l 三清。",
+        "status": "closed",
+        "closedBy": {
+          "taskId": "2026-10-31-audit-p3-residual-closeout",
+          "manifest": ".harness/tasks/2026-10-31-audit-p3-residual-closeout/manifest.json",
+          "evidence": ".harness/evidence/2026-10-31-audit-p3-residual-closeout/commands.json"
+        }
+      },
+      {
+        "id": "FREEZE-DECLARATION",
+        "severity": "P2",
+        "title": "进入维护冻结的宣告未执行",
+        "detail": "programme 的 Human Gates 写明冻结宣告归维护者。当前 9/9 子包 completed、7/7 门槛达成，但「冻结」这一动作需要维护者明确宣告，不由 programme 自行落定。",
+        "status": "open"
+      }
+    ]
+  }
+}

@@ -7,13 +7,13 @@ depends_on_layers:
   - system/auth
   - system/org
   - system/config
-status: Active
+status: Archived
 linked_contracts:
   - docs/contracts/TENANT_CONTRACT_V1.md
   - docs/contracts/PLATFORM_CONTRACT.md
   - docs/designs/TENANT_RESOURCE_SCOPE_MATRIX.md
   - docs/runbooks/TENANT_MIGRATION_RUNBOOK.md
-updated_at: 2026-10-19
+updated_at: 2026-10-31
 ---
 
 # Task Packet: 2026-10-19-tenant-permission-isolation-remediation

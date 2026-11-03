@@ -1,3 +1,13 @@
+---
+title: Final TypeScript Sonar remediation batch
+doc_type: Remediation
+layer: platform
+status: Archived
+updated_at: 2026-10-31
+linked_contracts:
+  - docs/contracts/PLATFORM_CONTRACT.md
+---
+
 # Task Packet: 2026-07-29-sonar-ts-final
 
 ## Goal

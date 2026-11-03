@@ -4,12 +4,12 @@ doc_type: Remediation
 layer: platform
 depends_on_layers:
   - system/config
-status: Active
+status: Archived
 linked_contracts:
   - docs/designs/FOUNDATION_RELEASE_MODEL.md
   - docs/designs/REPOSITORY_LAYOUT.md
   - docs/VERSION_MANAGEMENT_GUIDE.md
-updated_at: 2026-10-27
+updated_at: 2026-10-31
 ---
 
 # Task Packet: 2026-10-27-v0177-lint-codeql-closure

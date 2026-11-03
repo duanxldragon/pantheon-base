@@ -6,7 +6,7 @@ status: Active
 linked_contracts:
   - docs/contracts/PLATFORM_CONTRACT.md
   - docs/contracts/SYSTEM_IAM_CONTRACT.md
-updated_at: 2026-04-17
+updated_at: 2026-11-01
 ---
 
 # 模块契约设计
@@ -128,17 +128,24 @@ backend/modules/{system|business}/{module}/
 type BackendModule interface {
     Name() string
     RegisterRoutes(r *gin.RouterGroup)
+    Migrate(db *gorm.DB) error
     SeedMenus(db *gorm.DB) error
     SeedPerms(db *gorm.DB) error
     SeedI18n(db *gorm.DB) error
 }
 ```
 
-如果后续需要数据库迁移，再扩展：
+`Migrate` 已落地（旧文"如果后续需要数据库迁移，再扩展"不再成立）。装配执行时机（`RegisterBackendModules`）：
 
-```go
-Migrate(db *gorm.DB) error
-```
+| 阶段 | 何时执行 | 受 `PANTHEON_AUTO_MIGRATE` 控制 |
+| --- | --- | --- |
+| `Migrate()` | 仅 `true`（开发）时执行；`false`（默认/生产）跳过，schema 走 `backend/pkg/database/migrations/` 版本化迁移 | 是 |
+| `Bootstrap()` | 可选接口，`false` 分支恒执行 | 否——**不在 AutoMigrate 禁令覆盖范围内** |
+| `SeedMenus` / `SeedPerms` / `SeedI18n` / `RegisterRoutes` | 恒执行 | 否 |
+
+`FuncModule.BootstrapFunc` 的用途与边界：低代码生成的业务模块把 `BootstrapFunc` 指向 `service.Migrate()`（内部 GORM `AutoMigrate`），使运行时才有 schema 的生成表在启动时自动建表/补列。
+这是 `docs/DEPLOYMENT_GUIDE.md` §3 显式记录并被否决过两个替代方案的例外，代价（需要 DDL 权限、列只增不减）见该节；平台表（`system_*` / `platform_*`）不得借此例外走 AutoMigrate。
+行为由 `backend/pkg/contracts/module_test.go` 的 `TestRegisterBackendModules_DefaultModeRunsBootstrapForGeneratedModules` 锁定。
 
 ### 4.3.1 当前阶段的最低要求
 
@@ -450,6 +457,8 @@ export interface ModuleManifest {
 - 不直接耦合底座实现
 - 通过模块契约接入菜单、权限、i18n
 - 不把业务页面写死进 system 模块
+- 不参与租户隔离：业务域（`modules/business/*`）在 V1 内是单租户语义。经 `contracts.ProtectedGroup` / `contracts.DataScopedGroup`（`backend/pkg/contracts/route_groups.go`）接入的业务路由不挂租户上下文中间件，这是 `TENANT_CONTRACT_V1 §2.6` 明确要求的，不是遗漏
+- 不得在业务域宣称租户隔离：业务模块不得对外宣称已按 `tenant_id` 隔离，也不得自建隔离机制；给这两个助手追加租户中间件属合同变更，不是缺陷修复，必须与 `TENANT_CONTRACT_V1 §2.6` 的改写、业务表租户列与生成器改造同批落地
 
 ## 11. 当前阶段的实施要求
 

@@ -6,12 +6,12 @@ depends_on_layers:
   - system/auth
   - system/iam
   - system/config
-status: Active
+status: Archived
 linked_contracts:
   - docs/contracts/PLATFORM_CONTRACT.md
   - docs/operations/RUNBOOK.md
   - docs/reviews/PANTHEON_BASE_FINAL_ACCEPTANCE_REVIEW_2026-10-21.md
-updated_at: 2026-10-22
+updated_at: 2026-10-31
 ---
 
 # Task Packet: 2026-10-22-release-and-residual-closeout

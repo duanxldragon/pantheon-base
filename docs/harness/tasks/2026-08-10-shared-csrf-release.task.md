@@ -2,8 +2,8 @@
 title: Distribute shared CSRF request client in foundation release
 doc_type: Remediation
 layer: system/auth
-status: Active
-updated_at: 2026-08-10
+status: Archived
+updated_at: 2026-10-31
 linked_contracts:
   - docs/designs/FOUNDATION_RELEASE_MODEL.md
   - docs/designs/WORKFLOW.md

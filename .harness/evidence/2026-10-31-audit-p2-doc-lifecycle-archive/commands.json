@@ -1,0 +1,114 @@
+{
+  "taskId": "2026-10-31-audit-p2-doc-lifecycle-archive",
+  "repo": "pantheon-base",
+  "executedAt": "2026-10-31",
+  "agent": {
+    "tool": "other",
+    "adapter": "workbuddy-agent"
+  },
+  "runtimeSensitive": false,
+  "runtimeGap": "纯文档状态与位置收口：未改产品代码、迁移、CI、i18n。有效性以静态判据（证据存在性 + 门禁读数）代替运行验证。",
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-31-audit-p2-doc-lifecycle-archive/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-31-audit-p2-doc-lifecycle-archive/",
+    "reviewFile": ".harness/evidence/2026-10-31-audit-p2-doc-lifecycle-archive/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-10-31.md",
+      "docs/contracts/DOCUMENT_METADATA_AND_STATUS.md"
+    ]
+  },
+  "commands": [
+    {
+      "command": "node scripts/harness/task-evidence-state.mjs --root . | tail -2",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "改动前读数：`Total: 92 {\"archive\":76,\"already-archived\":7,\"keep-active\":9}`。判据函数把 92 份任务包文档逐份分类，而不是按作者说法批量改状态。"
+    },
+    {
+      "command": "grep -h '^status:' docs/harness/tasks/*.task.md | sort | uniq -c",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "改动前：`70 Active / 7 Archived / 8 Draft`（共 92，含新增的 9 份审计包）。改动后：`3 Active / 77 Archived / 5 Draft`（最后一份 Archived 是本包自身任务文档，在证据落盘后才改）。"
+    },
+    {
+      "command": "node scripts/harness/task-evidence-state.mjs --root . --json",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "改动后：`{\"archive\":7,\"already-archived\":77,\"keep-active\":8}`——剩下 7 份 `archive` 全部是**没有 frontmatter** 的 legacy 任务包（状态无处落，文件名已列在 archive-plan.md），8 份 keep-active 中 3 份为 `Active`（manifest 仍 in-progress）、5 份为 `Draft`（planned、无证据）。"
+    },
+    {
+      "command": "ls docs/TENANT_*.md",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "改动前 8 份；改动后只剩 `docs/TENANT_INITIALIZATION_GUIDE.md`——它是仍在维护的操作指南（docs/README.md §2.1/§4.3 一线入口），不是专题评审记录，因此不随另外 7 份进 docs/reviews/。"
+    },
+    {
+      "command": "for f in TENANT_FULL_FLOW_REVIEW_2026-10-14 TENANT_INITIALIZATION_FINDINGS_2026-10-13 TENANT_INITIALIZATION_GUIDE TENANT_LOGIN_INIT_EVALUATION_2026-10-15 TENANT_MATURITY_FINAL_2026-09-29 TENANT_REVIEW_SUMMARY_2026-09-29 TENANT_SCOPE_FREEZE_DECISION_2026-10-15 TENANT_SYSTEM_REVIEW_2026-09-29; do a=$(sha256sum docs/$f.md | cut -c1-16); b=$(sha256sum ../pantheon-ops/docs/$f.md | cut -c1-16); echo \"$f $([ \\\"$a\\\" = \\\"$b\\\" ] && echo SAME || echo DIFF) $a\"; done",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "8 份全部 SAME（前 16 位相同：fd751c53 / d72f9369 / 718d3d20 / c33116fd / 72b3d93e / 807dff90 / d571c304 / f9f656e4）。逐字节相同证实 AUD-011：ops 这 8 份是 base 的副本，删除动作由 ops 维护者执行，本包不跨仓改文件。"
+    },
+    {
+      "command": "ls backend/modules; ls backend/modules/business; ls frontend/src/modules; for k in alert notice report scheduler task approval; do echo -n \"$k \"; grep -ril $k --include=*.go backend/modules | grep -v _test | head -3 | tr '\\n' ' '; echo; done",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "backend 域只有 `auth / business / lowcode / platform / system`，frontend 只有 `auth / generated / lowcode / platform / system`；alert/notice/report/scheduler/approval 均无实现包（命中仅出现在 auth 的日志与安全事件里，属无关词）。这是 6 份设计改 `Draft` 的代码判据。"
+    },
+    {
+      "command": "grep -c 'task-evidence-state' scripts/harness/README.md",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "输出 `1`：新判据模块已登记进 scripts/harness/README.md 的 Shared Utilities 清单（否则 `check-doc-inventory --strict` 会报 script missing from inventory README）。"
+    },
+    {
+      "command": "node scripts/harness/check-task-packet.mjs --root .",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "exit 0；`92` 份 [PASS]，`0` 份 [FAIL]。状态批量改 `Archived` 后任务包结构校验仍全绿。"
+    },
+    {
+      "command": "node scripts/frontmatter-check.mjs",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "`Frontmatter check passed. Checked 415 docs, 295 with frontmatter.` exit 0。此前该项报错 \"main entry link must target Active docs only: ./harness/tasks/2026-10-07-release-readiness-remediation.task.md (Archived)\"，已把 docs/README.md 里该条主入口链接降级为纯路径文本（符合 DOCUMENT_FRONTMATTER_SPEC 的 \"mention without direct main-entry link\"）。"
+    },
+    {
+      "command": "node scripts/harness/check-doc-links.mjs --root . --strict",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "`Docs link check (strict): 0 finding(s)` exit 0。7 份文档移动后按新目录重算了文件内相对链接（`../contracts/`、`../designs/`、同目录 `./`），并修正 5 处外部入链：docs/README.md §4.5 的 7 条、docs/TENANT_INITIALIZATION_GUIDE.md 的参考条、docs/designs/TENANT_RESOURCE_SCOPE_MATRIX.md 的路径文本、docs/release-notes/RELEASE_NOTES_v0.14.0.md 的一条相对链接、docs/README.en.md 的路径说明。"
+    },
+    {
+      "command": "node scripts/harness/check-doc-inventory.mjs --root . --strict",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "`Docs inventory check (strict): 0 finding(s)` exit 0（修复前为 1 finding：新脚本未进 scripts/harness/README.md 清单）。"
+    },
+    {
+      "command": "node scripts/harness/check-evidence.mjs --root . --strict",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "exit 0，本包 `.harness/evidence/2026-10-31-audit-p2-doc-lifecycle-archive/commands.json` 判定 PASS。"
+    },
+    {
+      "command": "node scripts/harness/check-encoding.mjs --root . --strict",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "`Encoding check (strict): 0 finding(s) across 2614 scanned file(s)` exit 0：移动 + 改写没有引入编码问题。"
+    },
+    {
+      "command": "node scripts/harness/check-doc-frontmatter.mjs --root . --strict",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "`Doc frontmatter check (strict): 0 error(s), 0 warning(s)` exit 0。"
+    }
+  ],
+  "knownGaps": [
+    "门禁未接线：check-task-packet 仍不比较任务包 doc status 与证据存在性。判据函数已备好（scripts/harness/task-evidence-state.mjs），接线属 2026-10-31-audit-p2-ci-checker-wiring。",
+    "7 份 legacy 任务包文档没有 frontmatter（2026-07-29-sonar-ts-final、2026-07-30-local-consolidation、2026-08-21-sonarcloud-remediation、2026-09-01-release-docs-reconciliation、2026-09-01-release-gate-sonar-cleanup、2026-09-02-foundation-release-v0-10-26-and-ops-sync、2026-09-29-v0140-release-completion），其证据与 manifest 均已 completed，但状态无法在文档侧承载；补 frontmatter 属 W5 元数据包。",
+    "AUD-011 的删除动作未执行（跨仓，需 pantheon-ops 维护者）；本包只交付逐字节校验与清单。",
+    "docs/release-notes/RELEASE_NOTES_v0.14.0.md 的一条相对链接因文件迁移被改路径（未改正文），该目录在 Do Not Touch 内，属保持 check-doc-links 绿的强制副作用。",
+    "`npm run check:docs-frontmatter` 在本机经 WSL relay 调用失败（execvpe(/bin/bash) failed），改为直接执行 package.json 中同一命令 `node scripts/frontmatter-check.mjs`；这是环境问题而非文档问题。"
+  ]
+}

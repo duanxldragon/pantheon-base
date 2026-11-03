@@ -7,11 +7,11 @@ depends_on_layers:
   - system/iam
   - system/org
   - system/config
-status: Active
+status: Archived
 linked_contracts:
   - docs/contracts/TENANT_CONTRACT_V1.md
   - docs/reviews/CODEBASE_SIMPLIFICATION_AUDIT.md
-updated_at: 2026-10-28
+updated_at: 2026-10-31
 ---
 
 # Task Packet: 2026-10-27-s3-tenant-scope-unification

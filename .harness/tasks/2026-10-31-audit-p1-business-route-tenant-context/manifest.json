@@ -1,0 +1,157 @@
+{
+  "taskId": "2026-10-31-audit-p1-business-route-tenant-context",
+  "taskDoc": "docs/harness/tasks/2026-10-31-audit-p1-business-route-tenant-context.task.md",
+  "title": "业务域租户语义必须显式化并与合同、README 对齐（AUD-002）",
+  "goal": "先定“业务域是否纳入租户隔离”这一决策，再让代码、TENANT_CONTRACT_V1 与 README 三者一致：当前业务路由助手不挂租户中间件、业务表完全没有 tenant_id、而入口文档宣称“完整数据隔离”，三者互相矛盾且无人声明。",
+  "primaryLayer": "platform",
+  "status": "completed",
+  "decision": "C —— 显式声明业务域在 V1 内不参与租户隔离（维护者 2026-10-31 拍板）。合同 §2.6 + MODULE_CONTRACT §10 + README:31 三处对齐，route_groups.go 注释改写，route_groups_test.go 断言中间件链不含租户中间件（已做负向验证）。",
+  "priority": "P1",
+  "wave": "W2",
+  "programmeRef": {
+    "taskId": "2026-10-31-audit-remediation-programme",
+    "taskDoc": "docs/harness/tasks/2026-10-31-audit-remediation-programme.task.md",
+    "manifest": ".harness/tasks/2026-10-31-audit-remediation-programme/manifest.json"
+  },
+  "type": "tenant-contract",
+  "estimatedComplexity": "medium",
+  "findings": [
+    "backend/pkg/contracts/route_groups.go:15-28 的 ProtectedGroup/DataScopedGroup 只挂 TokenAuth + Casbin（+ 可选 DataScope），没有租户上下文中间件；base 内 0 处使用，pantheon-ops 有 14 处调用（13 处 DataScopedGroup + 1 处 ProtectedGroup）。",
+    "pkg/tenant/tenant.go 的 FromGin 在无上下文时返回 nil，WithTenantScope(nil) 原样返回查询（不过滤），因此这些路由在 multi 模式下既不解析租户也不拒绝请求。",
+    "TENANT_CONTRACT_V1 §3.2 要求“上下文缺失且非 compat 模式 → 请求拒绝”，§3.3 要求带 tenant_id 的表必须附加过滤；helper 与合同冲突。",
+    "但业务域根本没有租户建模：internal/scaffold/contract.go:74 明确注释 \"tenant\" is intentionally rejected: tenant isolation has no runtime implementation；生成器产出不含 tenant_id；pantheon-ops/backend/modules/business 全目录 tenant_id/TenantID 命中 0。",
+    "因此不存在“按行跨租户读写”这种可利用漏洞；真实缺口是业务域为单租户语义却无人声明，而 README.md:31 宣称“完整数据隔离”、DESIGN.md 又写多租户“未来实现”，三处口径互斥。"
+  ],
+  "scope": {
+    "in": [
+      "决策记录：业务域在 v1 内是否参与租户隔离（三选一，写入 .harness/evidence 与 TENANT_CONTRACT_V1）",
+      "方案 A：helper 内部挂 PlatformScopeTenantContextMiddleware（或由调用方显式选择的严格变体）",
+      "方案 B：删除这两个 helper，业务模块显式声明作用域，并同步 MODULE_CONTRACT 与生成器模板",
+      "方案 C：在 TENANT_CONTRACT_V1 增补“业务域不参与租户隔离”的显式条款，helper 注释与 MODULE_CONTRACT 同步改写，README/DESIGN 口径随之一致",
+      "新增 backend/pkg/contracts/route_groups_test.go：断言所选方案在 compat 与 multi 双模式下的行为",
+      "无论选哪个方案，README.md:31 与 DESIGN 的租户表述必须与本包结论一致（与 2026-10-31-audit-p1-entry-doc-truthfulness 协同，避免重复改同一段）"
+    ],
+    "out": [
+      "修改 pkg/tenant.Resolve 的解析优先级或 deny-by-default 语义",
+      "在 base 内为 pantheon-ops 加特殊分支",
+      "在 ops 仓内改代码（由 ops 按同步要求单独执行）",
+      "为业务域补租户列/迁移（仅当维护者选 A/B 且单独立项时才做，本包不默认承担）",
+      "平台作用域清单的增删（TENANT_CONTRACT_V1 §3.4 已冻结）"
+    ]
+  },
+  "dependencyLayers": [
+    "platform",
+    "system/iam",
+    "inheritance-sync"
+  ],
+  "implementationNotes": [
+    "这是决策包而不是纯修复包：先产出决策记录，再按决策改代码。没有决策就改代码，会把“单租户语义”变成半吊子隔离，比现状更危险。",
+    "选 A/B 时必须同时回答“业务表没有 tenant_id 怎么办”：只挂中间件而不加租户列，会让 multi 模式下的业务路由拒绝一切请求（或全落到 tenant 0），等于把静默问题变成显式故障。",
+    "选 C 的成本最低且诚实：明确写“业务域在 v1 内不参与租户隔离”，同时把 README 的“完整数据隔离”改成“系统域完整隔离、业务域单租户”，并保留未来纳入的路径说明。",
+    "无论选哪个方案，都要修掉 helper 的注释——它现在读起来像“已经处理了租户”，这是误导来源。",
+    "与 2026-10-31-audit-p1-entry-doc-truthfulness 的分工：本包决定“租户语义是什么”，文档包负责把 README/DESIGN 写成那个结论；两包不得各改一遍同一段。"
+  ],
+  "contractAnchors": [
+    "docs/contracts/TENANT_CONTRACT_V1.md",
+    "docs/contracts/PLATFORM_CONTRACT.md",
+    "docs/designs/MODULE_CONTRACT.md",
+    "docs/reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-10-31.md"
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "tenant-contract",
+    "portableFailureClass": "contract-bypass",
+    "ownerLayer": "foundation-source",
+    "ratchetDecision": "gate-updated",
+    "coverageDimensions": [
+      "behaviour",
+      "architecture-fitness",
+      "runtime-quality"
+    ]
+  },
+  "expectedFiles": {
+    "create": [
+      "docs/harness/tasks/2026-10-31-audit-p1-business-route-tenant-context.task.md",
+      ".harness/tasks/2026-10-31-audit-p1-business-route-tenant-context/manifest.json",
+      "backend/pkg/contracts/route_groups_test.go",
+      ".harness/evidence/2026-10-31-audit-p1-business-route-tenant-context/decision.md",
+      ".harness/evidence/2026-10-31-audit-p1-business-route-tenant-context/commands.json",
+      ".harness/evidence/2026-10-31-audit-p1-business-route-tenant-context/summary.md",
+      ".harness/evidence/2026-10-31-audit-p1-business-route-tenant-context/review.md"
+    ],
+    "modify": [
+      "backend/pkg/contracts/route_groups.go",
+      "docs/contracts/TENANT_CONTRACT_V1.md",
+      "docs/contracts/TENANT_CONTRACT_V1.en.md",
+      "docs/designs/MODULE_CONTRACT.md",
+      "README.md"
+    ],
+    "doNotTouch": [
+      "backend/pkg/tenant/tenant.go",
+      "backend/internal/middleware/tenant_context_middleware.go",
+      "backend/modules/system/**",
+      "backend/pkg/database/migrations/**",
+      "pantheon-ops/**"
+    ]
+  },
+  "executionRoles": {
+    "implementerPosture": "先写决策记录（含被否方案与理由），再动代码；把“三处口径一致”作为验收判据，而不是把中间件挂上就算完成。",
+    "reviewerPosture": [
+      "确认决策记录明确回答了“业务表有没有 tenant_id、multi 模式下业务路由会怎样”，没有含糊表述。",
+      "确认所选方案与 TENANT_CONTRACT_V1 的条款逐字一致，且 helper 注释不再暗示已处理租户。",
+      "确认没有引入第二条隐式入口（绕过 helper 直接 r.Group 的写法在 MODULE_CONTRACT 中被明确禁止或说明）。",
+      "确认 pkg/tenant 与租户中间件未被改动，DataScopeMiddleware 的 fail-closed 行为未放宽。",
+      "确认与 entry-doc-truthfulness 包的改动不重叠：同一段落只有一个包负责。"
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "cd backend && go test -short ./pkg/contracts/...",
+      "cd backend && go test -short ./internal/middleware/...",
+      "cd backend && go build ./...",
+      "负向：未声明作用域的业务路由 + multi + 无 claim → 行为与决策一致（拒绝或落 tenant 0）",
+      "正向：compat 模式下业务路由不受影响",
+      "若方案 A/B：pantheon-ops 分支 go build ./... （预期显式失败直到同批升级）",
+      "node scripts/harness/check-evidence.mjs --root . --strict"
+    ],
+    "runtimeEvidence": [
+      "compat 与 multi 双模式下同一业务路由的 HTTP 状态与写入归属读数",
+      "决策记录：三方案的代价对比与最终选择"
+    ]
+  },
+  "runtimeSensitive": true,
+  "runtimeGap": "本轮不启动完整 multi 环境；双模式读数用 httptest + Casbin 桩完成，真实 multi 部署验证留待 release 前的集成验证。",
+  "evidenceRequired": [
+    ".harness/evidence/2026-10-31-audit-p1-business-route-tenant-context/commands.json：决策记录、双模式读数、测试与构建读数",
+    ".harness/evidence/2026-10-31-audit-p1-business-route-tenant-context/summary.md：为什么“零租户建模 + 宣称完整隔离”比“没有隔离”更危险，A/B/C 代价",
+    ".harness/evidence/2026-10-31-audit-p1-business-route-tenant-context/review.md：逐条 reviewer posture"
+  ],
+  "humanGates": [
+    "A/B/C 选择归维护者：A/B 会改变对外能力承诺并需双仓同批，C 会缩小 README 承诺范围。",
+    "若需调整 sharedPaths 或 ops 调用点，走 foundation release 评审。",
+    "本包不自行修改 ops 仓库，也不在 base 内为 ops 保留特殊分支。"
+  ],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed",
+    "决策记录落盘且 TENANT_CONTRACT_V1 有对应条款",
+    "代码、合同、README 三处租户口径一致",
+    "不再存在“读起来像已处理租户、实际未处理”的注释或文档"
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-31-audit-p1-business-route-tenant-context/manifest.json",
+    "taskDoc": "docs/harness/tasks/2026-10-31-audit-p1-business-route-tenant-context.task.md",
+    "evidenceDir": ".harness/evidence/2026-10-31-audit-p1-business-route-tenant-context/",
+    "summaryFile": ".harness/evidence/2026-10-31-audit-p1-business-route-tenant-context/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-31-audit-p1-business-route-tenant-context/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/contracts/TENANT_CONTRACT_V1.md",
+      "docs/reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-10-31.md"
+    ]
+  }
+}

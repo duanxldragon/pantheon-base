@@ -1,3 +1,13 @@
+---
+title: Resolve all unresolved SonarCloud issues (networkidle)
+doc_type: Remediation
+layer: platform
+status: Archived
+updated_at: 2026-10-31
+linked_contracts:
+  - docs/contracts/PLATFORM_CONTRACT.md
+---
+
 # Task Packet: 2026-08-21-sonarcloud-remediation
 
 ## Goal

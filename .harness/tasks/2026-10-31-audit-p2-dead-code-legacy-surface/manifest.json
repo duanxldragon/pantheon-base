@@ -1,0 +1,197 @@
+{
+  "taskId": "2026-10-31-audit-p2-dead-code-legacy-surface",
+  "taskDoc": "docs/harness/tasks/2026-10-31-audit-p2-dead-code-legacy-surface.task.md",
+  "title": "死代码、死表与 legacy 认证端点收口（AUD-012/013/014/020）",
+  "goal": "在 workspace 级消费检索的前提下，清理前端零消费 hook、scaffold.Generate 空实现、仅测试调用的中间件包装与无人读写的 permission_role_data_scope_policy 表，并就 legacy 认证端点给出保留或下线的明确决策。",
+  "primaryLayer": "platform",
+  "status": "completed",
+  "priority": "P2",
+  "wave": "W6",
+  "programmeRef": {
+    "taskId": "2026-10-31-audit-remediation-programme",
+    "taskDoc": "docs/harness/tasks/2026-10-31-audit-remediation-programme.task.md",
+    "manifest": ".harness/tasks/2026-10-31-audit-remediation-programme/manifest.json"
+  },
+  "type": "dead-code-removal",
+  "estimatedComplexity": "medium",
+  "findings": [
+    "frontend/src/hooks/usePagination.ts（59 行）与 useRequest.ts（105 行）仅被 hooks/index.ts:15-18 再导出，frontend/src 内零 import。",
+    "backend/internal/scaffold/engine.go:28 的 Generate(schemaJSON string) error 反序列化后直接返回 nil，全仓零调用；capitalize 仅被它使用。",
+    "internal/middleware/casbin_middleware.go:128-130 的 readRoleKeysFromContext 仅被 casbin_middleware_test.go:61,71 调用。",
+    "表 permission_role_data_scope_policy 与 system_role_data_scope 功能重叠，无 INSERT/SELECT，仅 role_service.go:600-603 删除角色时防御性清理 + dashboard_service.go:348 表白名单占位。",
+    "legacy 认证端点 /system/{login,refresh,logout,user/info} 与 /auth/* 并存，csrf_middleware.go:22-26 为其保留两条精确豁免；base 前端与 ops 前端都只用 /auth/*。",
+    "v0.18.0→v0.18.1 的 isForbiddenRequestError 事故（FR-021）证明：只在本仓检索就删共享导出，会让消费仓构建失败。"
+  ],
+  "scope": {
+    "in": [
+      "AUD-012a：删除两个零消费 hook 与 hooks/index.ts 的 4 行再导出（前置：base + ops 双端检索为空）",
+      "AUD-012b：删除 scaffold/engine.go 的 Generate 与 capitalize（依赖生成器包完成，避免同区域并发改动）",
+      "AUD-020：删除 readRoleKeysFromContext，测试改用 common.GetRoleKeys",
+      "AUD-013：新增 000031_drop_permission_role_data_scope_policy（含 down），同步删除防御性清理与白名单项；不改写 000001",
+      "AUD-014：legacy 认证端点二选一——保留并标 Deprecated + 定下线日期，或直接下线并移除 csrf_middleware.go:22-26 的两条 legacy 豁免",
+      "每项删除都留下 workspace 级检索命令与输出"
+    ],
+    "out": [
+      "删除 pkg/security/ssrf（base 0 引用但 ops 有 5 处引用，D 类为下游保留，明确不处理）",
+      "删除 pkg/ratelimit 或三个零调用预设（与 middleware.RateLimiter 的分工需单独评估）",
+      "修改 backend/modules/business/** 或 pantheon-ops 代码",
+      "重构 DataScopeMiddleware 或数据权限模型",
+      "清理 permission_role_data_scope_policy 之外的历史表"
+    ]
+  },
+  "dependencyLayers": [
+    "platform",
+    "inheritance-sync"
+  ],
+  "implementationNotes": [
+    "删除顺序固定：先检索（base 全仓 + ops 前后端）、再删除、最后跑构建。只搜 base 会重演 FR-021。",
+    "前端 hook 在 hooks/index.ts 里是具名再导出，属公共 API；ops 若有引用，改为标 @deprecated + 一个 release 后再删。",
+    "死表删除必须走新迁移：000001 已进入版本链，改写会让已部署环境与新环境结构分叉。",
+    "down 迁移只重建表结构，不承诺恢复数据——这一点必须写进 summary.md，否则会被读成“可回滚”。",
+    "legacy 认证端点属对外 API 面，默认倾向保留 + 标弃用 + 定日期；除非维护者确认无外部集成。",
+    "删除 readRoleKeysFromContext 时只替换调用，不改 common.GetRoleKeys 的语义。"
+  ],
+  "contractAnchors": [
+    "docs/contracts/PLATFORM_CONTRACT.md",
+    "docs/contracts/SYSTEM_AUTH_CONTRACT.md",
+    "docs/harness/AI_QUALITY_GOVERNANCE.md"
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "dead-code-removal",
+    "portableFailureClass": "unused-surface",
+    "ownerLayer": "foundation-source",
+    "ratchetDecision": "guide-updated",
+    "coverageDimensions": [
+      "maintainability",
+      "architecture-fitness",
+      "runtime-quality"
+    ]
+  },
+  "expectedFiles": {
+    "create": [
+      "docs/harness/tasks/2026-10-31-audit-p2-dead-code-legacy-surface.task.md",
+      ".harness/tasks/2026-10-31-audit-p2-dead-code-legacy-surface/manifest.json",
+      "backend/pkg/database/migrations/000031_drop_permission_role_data_scope_policy.up.sql",
+      "backend/pkg/database/migrations/000031_drop_permission_role_data_scope_policy.down.sql",
+      ".harness/evidence/2026-10-31-audit-p2-dead-code-legacy-surface/commands.json",
+      ".harness/evidence/2026-10-31-audit-p2-dead-code-legacy-surface/summary.md",
+      ".harness/evidence/2026-10-31-audit-p2-dead-code-legacy-surface/review.md"
+    ],
+    "modify": [
+      "frontend/src/hooks/index.ts",
+      "backend/internal/scaffold/engine.go",
+      "backend/internal/middleware/casbin_middleware.go",
+      "backend/internal/middleware/casbin_middleware_test.go",
+      "backend/modules/system/iam/role/role_service.go",
+      "backend/modules/platform/dashboard_service.go",
+      "backend/modules/auth/module.go",
+      "backend/internal/middleware/csrf_middleware.go"
+    ],
+    "doNotTouch": [
+      "backend/pkg/security/ssrf/**",
+      "backend/pkg/contracts/**",
+      "backend/modules/business/**",
+      "backend/pkg/database/migrations/000001_*",
+      "pantheon-ops/**",
+      "VERSION",
+      "CHANGELOG.md"
+    ]
+  },
+  "executionRoles": {
+    "implementerPosture": "每一项删除先给检索证据再动手；对公共导出面按“弃用一版再删”的节奏，不为减行数冒断构建的风险。",
+    "reviewerPosture": [
+      "确认每项删除都有 base 全仓 + ops 前后端的检索输出，而不是只搜 base。",
+      "确认 pkg/security/ssrf 未被删除，且 evidence 记录了它被下游 5 处引用。",
+      "确认 000031 未改写历史迁移，up/down 可往返，down 的数据承诺表述准确。",
+      "确认 legacy 端点处置有明确决策，CSRF 豁免与端点状态一致（不留下无对应路由的豁免）。",
+      "确认前端删除后 npm run build 通过，而不是只跑 tsc。"
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "grep -rn \"usePagination\\|useRequest\" frontend/src ../pantheon-ops/frontend/src",
+      "grep -rn \"scaffold.Generate\" backend",
+      "grep -rn \"readRoleKeysFromContext\" backend",
+      "cd backend && go build ./... && go vet ./...",
+      "cd backend && go test -short ./internal/middleware/... ./modules/system/iam/role/... ./modules/platform/...",
+      "cd frontend && npx tsc -b && npm run build",
+      "迁移 up/down 往返读数",
+      "node scripts/harness/check-evidence.mjs --root . --strict"
+    ],
+    "runtimeEvidence": [
+      "迁移 000031 up/down 往返的表存在性读数",
+      "前端完整构建（含 prebuild 链）的退出码"
+    ]
+  },
+  "runtimeSensitive": true,
+  "runtimeGap": "死表 drop 需要真实数据库执行；若本地无可用 DSN，用 testmysql 容器执行并记录退出码，不声称已在生产库验证。",
+  "evidenceRequired": [
+    ".harness/evidence/2026-10-31-audit-p2-dead-code-legacy-surface/commands.json：每项检索命令与输出、构建/测试读数、迁移往返读数",
+    ".harness/evidence/2026-10-31-audit-p2-dead-code-legacy-surface/summary.md：ssrf 不删的理由、down 迁移数据承诺边界、legacy 端点决策",
+    ".harness/evidence/2026-10-31-audit-p2-dead-code-legacy-surface/review.md：逐条 reviewer posture"
+  ],
+  "humanGates": [
+    "legacy 认证端点下线属对外承诺变更，必须维护者确认无外部集成方。",
+    "删除前端公共导出需一次 foundation release，并在 ops 构建通过后才算验证完成（FR-021）。",
+    "死表 drop 不可逆，需确认数据可丢弃并留一份导出。"
+  ],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed",
+    "每一项删除都有 base + ops 双侧检索证据",
+    "pkg/security/ssrf 未被删除且原因已记录",
+    "000031 迁移 up/down 可往返，历史迁移未被改写，且 down 重建形状与 v30 逐字节一致",
+    "legacy 端点的处置有明确决策（保留 + Deprecated + 2026-12-31 下线）"
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-31-audit-p2-dead-code-legacy-surface/manifest.json",
+    "taskDoc": "docs/harness/tasks/2026-10-31-audit-p2-dead-code-legacy-surface.task.md",
+    "evidenceDir": ".harness/evidence/2026-10-31-audit-p2-dead-code-legacy-surface/",
+    "summaryFile": ".harness/evidence/2026-10-31-audit-p2-dead-code-legacy-surface/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-31-audit-p2-dead-code-legacy-surface/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-10-31.md",
+      "docs/harness/AI_QUALITY_GOVERNANCE.md"
+    ]
+  },
+  "executionResult": {
+    "executedAt": "2026-10-31",
+    "closedAt": "2026-11-01",
+    "headSha": "ef0073860ce03087d9cf05de6b5d7732687ef769",
+    "outcome": "completed",
+    "summary": "五项全部落地：两个零消费 hook 与再导出删除（base 0 命中、ops 6 行全为自有副本）、scaffold.Generate 与 capitalize 删除（scaffold 包保留）、readRoleKeysFromContext 删除并改调 common.GetRoleKeys、死表 permission_role_data_scope_policy 由新迁移 000031 drop、legacy 认证端点按保守方案保留并挂 Deprecation/Sunset 头。收口复核发现并修复了 000031.down 的重建形状缺陷：它把 000024 已删除的 role_key 全局唯一索引建了回来，使回滚到 v30 后两个租户不能共用同一个 role_key；现以 SHOW CREATE TABLE 逐字节对比为判据，并新增回归用例（在缺陷版本上验证过会红）。",
+    "deviations": [
+      "任务包 AUD-014 给的是二选一（保留+弃用 / 直接下线）。实际按 (a) 执行：下线会让仍在用 /system/login 的集成方中断，而本仓无法证明没有外部集成方，故只加弃用头并定 2026-12-31，真正下线留给维护者确认后执行。",
+      "初版 evidence 把 check-evidence --strict 记为 passed，实际因缺 knownGaps 为 FAIL；收口时补 knownGaps 并改为如实记录。"
+    ],
+    "residualFindings": [
+      {
+        "id": "AUD-014-followup",
+        "severity": "P2",
+        "title": "legacy 认证端点的真正下线未执行",
+        "detail": "/system/{login,refresh,logout,user/info} 四条路由与 csrf_middleware.go 的两条精确豁免仍保留，仅附加 Deprecation/Sunset 头。2026-12-31 需维护者确认无外部集成方后一并移除路由、豁免与 casbin 对应 case，并同步 SYSTEM_AUTH_CONTRACT §7.7。",
+        "status": "open"
+      },
+      {
+        "id": "AUD-013-prod",
+        "severity": "P2",
+        "title": "000031 的 DROP TABLE 未在生产库执行",
+        "detail": "up 迁移不可逆；本地 testmysql 一次性库的往返读数不能替代生产验证。执行前需按 human gate 确认表内数据可丢弃并留一份导出。",
+        "status": "open"
+      },
+      {
+        "id": "AUD-012-ops",
+        "severity": "P3",
+        "title": "pantheon-ops 仍保留自有 usePagination/useRequest 副本",
+        "detail": "base 已删，ops 侧 6 行命中为 ops 自有文件（不 import base）。按 doNotTouch 不在本包处理，需在 ops 仓另行收口。",
+        "status": "open"
+      }
+    ]
+  }
+}

@@ -3,12 +3,12 @@ title: 代码精简程序收口（13 波实测汇总与计划状态纠正）
 doc_type: Remediation
 layer: platform
 depends_on_layers: []
-status: Active
+status: Archived
 linked_contracts:
   - docs/reviews/CODE_SIMPLIFICATION_PLAN.md
   - docs/reviews/REDUNDANT_CODE_CANDIDATES.md
   - docs/harness/AI_QUALITY_GOVERNANCE.md
-updated_at: 2026-10-29
+updated_at: 2026-10-31
 ---
 
 # Task Packet: 2026-10-29-simplification-program-closeout

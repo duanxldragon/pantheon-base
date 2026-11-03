@@ -3,10 +3,10 @@ title: TenantList 认知复杂度整改（S3776 复测与真正修复）
 doc_type: Remediation
 layer: platform
 depends_on_layers: []
-status: Active
+status: Archived
 linked_contracts:
   - docs/harness/AI_QUALITY_GOVERNANCE.md
-updated_at: 2026-10-28
+updated_at: 2026-10-31
 ---
 
 # Task Packet: 2026-10-28-tenantlist-s3776-followup

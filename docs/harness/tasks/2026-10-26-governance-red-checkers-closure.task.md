@@ -5,12 +5,12 @@ layer: platform
 depends_on_layers:
   - system/iam
   - app
-status: Active
+status: Archived
 linked_contracts:
   - docs/designs/REPOSITORY_LAYOUT.md
   - docs/harness/VERIFICATION_EVIDENCE_SPEC.md
   - docs/harness/FAILURE_RATCHET_POLICY.md
-updated_at: 2026-10-26
+updated_at: 2026-10-31
 ---
 
 # Task Packet: 2026-10-26-governance-red-checkers-closure
@@ -157,7 +157,7 @@ G-05 落在 workspace 与 ops 的继承文档上，但门禁脚本与其契约�
 
 - `node scripts/harness/check-boundaries.mjs --root . --strict` → 0 finding / 0 stale / 退出码 0（收口前 1 finding、退出码 1）。
 - `node scripts/harness/check-boundaries.mjs --strict --repo pantheon-base --baseline config/boundary-baseline.json`（`ci.yml:391` 形式）→ 退出码 0，baselined 由 1 变 0。
-- `node scripts/harness/check-runtime-evidence.mjs --root . --strict` → 0 error / 0 warning / 退出码 0（收口后 55 个 evidence 目录，含本轮自己的工件）。
+- `node scripts/harness/check-runtime-evidence.mjs --root . --strict` → 54 file / 0 error / 0 warning / 退出码 0。
 - `node scripts/harness/check-inheritance-contract.mjs --root .. --strict`（在 `pantheon-base` 目录执行，即 workspace 根形式）→ 0 finding / 退出码 0。
 - 24 个 strict 检查器矩阵复跑（`frontend/.tmp/gov-matrix.mjs`，gitignore）全 rc=0，含 `check-evidence` / `check-review` / `check-task-packet` / `check-structure-contract` / `check-failure-registry`。
 - `cd frontend && node node_modules/typescript/bin/tsc -b`、`node node_modules/eslint/bin/eslint.js src --max-warnings 0`、

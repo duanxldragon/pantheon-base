@@ -2,8 +2,8 @@
 title: Adopt cross-repository handoff evidence in the foundation source
 doc_type: Remediation
 layer: inheritance-sync
-status: Active
-updated_at: 2026-08-17
+status: Archived
+updated_at: 2026-10-31
 linked_contracts:
   - docs/acceptances/TASK_PACKET_BASE_TEMPLATE.md
   - docs/designs/FOUNDATION_RELEASE_MODEL.md

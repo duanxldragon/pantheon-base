@@ -1,3 +1,13 @@
+---
+title: Publish pantheon-base-v0.10.26 and upgrade Pantheon Ops
+doc_type: Remediation
+layer: inheritance-sync
+status: Archived
+updated_at: 2026-10-31
+linked_contracts:
+  - docs/contracts/PLATFORM_CONTRACT.md
+---
+
 # Task Packet: 2026-09-02-foundation-release-v0-10-26-and-ops-sync
 
 ## Goal

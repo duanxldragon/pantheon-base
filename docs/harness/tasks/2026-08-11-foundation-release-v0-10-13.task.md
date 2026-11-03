@@ -2,8 +2,8 @@
 title: Publish Pantheon Base foundation release v0.10.13
 doc_type: Remediation
 layer: ci-workflow
-status: Active
-updated_at: 2026-08-11
+status: Archived
+updated_at: 2026-10-31
 linked_contracts:
   - docs/designs/FOUNDATION_RELEASE_MODEL.md
 ---

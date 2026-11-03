@@ -3,12 +3,12 @@ title: v0.17.8 发布收口任务包（base 归属的两处依赖漏洞）
 doc_type: Remediation
 layer: platform
 depends_on_layers: []
-status: Active
+status: Archived
 linked_contracts:
   - docs/designs/FOUNDATION_RELEASE_MODEL.md
   - docs/VERSION_MANAGEMENT_GUIDE.md
   - SECURITY.md
-updated_at: 2026-10-27
+updated_at: 2026-10-31
 ---
 
 # Task Packet: 2026-10-27-v0178-dep-vuln-closure
