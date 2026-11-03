@@ -148,6 +148,38 @@ jobs:
         # current-format doc that drifts (or a stale allowlist entry) fails it.
         run: npm run check:task-packet
 
+      - name: Check harness evidence
+        run: npm run check:harness-evidence
+
+      - name: Check harness review
+        run: npm run check:harness-review
+
+      - name: Check harness runtime evidence
+        # warnings also fail --strict; historical packets carry explicit runtimeGap notes.
+        run: npm run check:harness-runtime-evidence
+
+      - name: Check harness graph review
+        # Dormant until a task packet declares structuralScope; wired so the sensor
+        # is already in place when one does.
+        run: npm run check:harness-graph-review
+
+      - name: Check harness audit coverage
+        run: npm run check:harness-audit-coverage
+
+      - name: Check harness feature ledger
+        # The ledger is empty today; wired so schema/entry drift is caught the
+        # moment the first entry lands.
+        run: npm run check:harness-feature-ledger
+
+      - name: Check harness permission contract
+        run: npm run check:harness-permission-contract
+
+      - name: Check backend DTO contract
+        run: npm run check:backend-dto-contract
+
+      - name: Check backend response contract
+        run: npm run check:backend-response-contract
+
       - name: Check PR governance template
         run: npm run check:pr-governance
 

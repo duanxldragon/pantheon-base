@@ -27,6 +27,7 @@ node scripts/harness/check-encoding.mjs --root . --strict
 node scripts/harness/check-review.mjs --root . --strict
 node scripts/harness/check-runtime-evidence.mjs --root . --strict   # warnings also fail --strict
 node scripts/harness/check-task-packet.mjs --root .   # all task packets; pre-template docs would be listed in config/task-packet-legacy-docs.json, which is now empty
+node scripts/harness/task-evidence-state.mjs --root . --json   # evidence-based lifecycle evaluator (criteria now enforced by check-task-packet.mjs wiring, 2026-10-31)
 node scripts/harness/check-evidence.mjs --root . --strict
 node scripts/harness/check-failure-registry.mjs --root . --strict
 node scripts/harness/check-boundaries.mjs --root .
@@ -37,6 +38,32 @@ node scripts/harness/check-visual-evidence.mjs --root .
 node scripts/harness/check-feature-ledger.mjs --root . --strict
 node scripts/harness/check-generated.mjs --root . --strict
 ```
+
+## Wired checker scripts (2026-10-31)
+
+Wave `2026-10-31-audit-p2-ci-checker-wiring` triaged every `check-*.mjs` with the order
+"does it go red right now?" before "should it be wired?", and every wired checker was
+negative-verified (a fabricated violation exits 1) before the step landed. Root constraint
+(FR-026): a new checker must land in the same diff with its wiring - a workflow step plus
+npm script, or an explicit mirror-only / workspace-only decision recorded in this table.
+
+| npm script | checker | wiring |
+|---|---|---|
+| `check:harness-evidence` | `check-evidence.mjs --root . --strict` | `quality.yml` / Docs Governance |
+| `check:harness-review` | `check-review.mjs --root . --strict` | `quality.yml` / Docs Governance |
+| `check:harness-runtime-evidence` | `check-runtime-evidence.mjs --root . --strict` | `quality.yml` / Docs Governance |
+| `check:harness-graph-review` | `check-graph-review.mjs --root . --strict` | `quality.yml` / Docs Governance (dormant until `structuralScope`) |
+| `check:harness-audit-coverage` | `check-audit-coverage.mjs --root . --strict` | `quality.yml` / Docs Governance |
+| `check:harness-feature-ledger` | `check-feature-ledger.mjs --root . --strict` | `quality.yml` / Docs Governance |
+| `check:harness-permission-contract` | `check-permission-contract.mjs --root . --strict` | `quality.yml` / Docs Governance |
+| `check:backend-dto-contract` | `check-backend-dto-contract.mjs --root . --strict` | `quality.yml` / Docs Governance |
+| `check:backend-response-contract` | `check-backend-response-contract.mjs --root . --strict` | `quality.yml` / Docs Governance |
+| `check:inheritance-contract` | `check-inheritance-contract.mjs --root .. --strict` | workspace runs only; NOT a base PR gate (`--root .` always fails in a single-repo checkout) |
+| - (mirror-only) | `check-doc-frontmatter.mjs` | not wired: `scripts/frontmatter-check.mjs` is the single implementation (W5 decision; double-running the same rule is the spec-duplication class) |
+
+`check-task-packet.mjs` now enforces the `task-evidence-state.mjs` lifecycle predicate: a
+task doc `status` that mismatches its evidence (Archived without `summary.md`, or complete
+evidence with a non-Archived status) is an error, no longer a manual step.
 
 ## Graph Review Tools
 
