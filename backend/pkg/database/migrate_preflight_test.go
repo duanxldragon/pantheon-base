@@ -154,7 +154,8 @@ func preflightStatements(t *testing.T) []string {
 		t.Fatalf("read preflight script: %v", err)
 	}
 
-	var statements []string
+	// The script is asserted to hold exactly six statements below.
+	statements := make([]string, 0, 6)
 	for _, chunk := range preflightSeparator.Split(string(raw), -1) {
 		var body []string
 		for _, line := range strings.Split(chunk, "\n") {

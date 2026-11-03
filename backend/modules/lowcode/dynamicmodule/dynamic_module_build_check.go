@@ -47,6 +47,10 @@ func runGoBuildGeneratedModule(workspaceRoot, packagePath string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), generatedModuleBuildTimeout)
 	defer cancel()
 
+	// goBinary comes from PANTHEON_GO_BIN (absolute path enforced by resolveGoBinary)
+	// or exec.LookPath; packagePath is the generated module import path produced by
+	// the naming gate, not request input. Neither is attacker-controlled.
+	//nolint:gosec // G204: both arguments are validated before reaching exec.
 	cmd := exec.CommandContext(ctx, goBinary, "build", packagePath)
 	cmd.Dir = filepath.Join(workspaceRoot, "backend")
 	output, err := cmd.CombinedOutput()
