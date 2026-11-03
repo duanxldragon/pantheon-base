@@ -3,14 +3,15 @@ package dynamicmodule
 
 import (
 	"errors"
-	"github.com/duanxldragon/pantheon-base/backend/pkg/common"
-	"log/slog"
 	"strings"
 	"time"
 
 	"github.com/duanxldragon/pantheon-base/backend/internal/scaffold"
+	"github.com/duanxldragon/pantheon-base/backend/pkg/common"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/contracts"
+	"github.com/duanxldragon/pantheon-base/backend/pkg/logging"
 
+	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
 
@@ -354,10 +355,13 @@ func (s *DynamicModuleService) verifyGeneratedModuleCompiles(scope, shortName st
 	}
 	packagePath := "./modules/" + scope + "/" + shortName
 	if err := s.buildGeneratedModule(s.workspaceRoot, packagePath); err != nil {
-		slog.Warn("generated module build check failed",
-			"module", scope+"/"+shortName,
-			"package", packagePath,
-			"error", err)
+		// Route through pkg/logging: it sanitises the message and every field, so
+		// the user-derived module/package values cannot forge log lines (CodeQL
+		// go/log-injection alerts 97/98).
+		logging.Warn("generated module build check failed",
+			zap.String("module", logging.SanitizeLogValue(scope+"/"+shortName)),
+			zap.String("package", logging.SanitizeLogValue(packagePath)),
+			zap.String("error", logging.SanitizeLogValue(err.Error())))
 		return common.NewBadRequest(msgSourceUncompilable)
 	}
 	return nil
