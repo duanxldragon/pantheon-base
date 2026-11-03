@@ -1,0 +1,180 @@
+{
+  "taskId": "2026-10-31-audit-p1-entry-doc-truthfulness",
+  "taskDoc": "docs/harness/tasks/2026-10-31-audit-p1-entry-doc-truthfulness.task.md",
+  "title": "入口文档必须与当前实现一致（AUD-003/004/007/016/024）",
+  "goal": "把 README / DESIGN / docs/README / docs/designs/README 的四类失真改成代码可反证的事实，并让 release 号只保留一个可维护来源。",
+  "primaryLayer": "platform",
+  "status": "completed",
+  "priority": "P1",
+  "wave": "W3",
+  "programmeRef": {
+    "taskId": "2026-10-31-audit-remediation-programme",
+    "taskDoc": "docs/harness/tasks/2026-10-31-audit-remediation-programme.task.md",
+    "manifest": ".harness/tasks/2026-10-31-audit-remediation-programme/manifest.json"
+  },
+  "type": "docs-truthfulness",
+  "estimatedComplexity": "small",
+  "findings": [
+    "README.md:11-15 声称当前 foundation release 为 v0.17.8，而 origin/main VERSION=0.18.2 且 RELEASE_NOTES_v0.18.2.md 已存在。",
+    "README.md:31 声称“配额强制”，与同文件 :20 的“配额仍然只展示不强制”以及代码（user/role 写路径无 quota 校验）冲突。",
+    "README.md:262 声称尚未提供 CONTRIBUTING 与 Issue Templates，实际两者都在库内。",
+    "DESIGN.md:22/87/375 仍把多租户描述为未来/P2/不提前实现，且无租户章；§4.3 的拆分理由引用已不存在的职责混合。",
+    "docs/designs/README.md 索引缺口 18 份设计、宣称的 .en companion 有 5 份不存在、updated_at 停在 2026-06-27。",
+    "docs/README.md:151-157 指导使用已废弃的 database/system_init.sql，且 go run ./backend/cmd/server 在仓库根不可执行。",
+    "README.md:238-249 引用 2026-10-03 的门禁快照，无可复核 run 链接。"
+  ],
+  "scope": {
+    "in": [
+      "README(.en)：版本表改为指向 VERSION 与 release-notes 索引；修正 quota 与 community files 两处；移除不可复核的门禁快照",
+      "DESIGN(.en)：新增租户章（compat/multi 双模、已交付面、未做面）；修正 §3.3/§9 的“未来”表述与 §4.3 的历史理由",
+      "docs/README(.en)：修正建库与启动命令；把 8 份 TENANT_* 纳入索引或随归档包迁移",
+      "docs/designs/README(.en)：补齐 18 条缺失条目，修正 .en 声明，更新 updated_at"
+    ],
+    "out": [
+      "改写 docs/history 与 docs/reviews 的历史结论",
+      "补写 5 份缺失的 .en.md",
+      "修改产品代码、迁移、CI、i18n 资源",
+      "在 README 增加未来路线图或功能承诺"
+    ]
+  },
+  "dependencyLayers": [
+    "platform"
+  ],
+  "implementationNotes": [
+    "版本号只留一个来源：正文不再抄写具体 release 号，改为指向 VERSION 与 release-notes 索引，消除“手抄后无人复核”的机制。",
+    "quota 必须区分展示与强制：tenant_ops_view.go:159 只做展示，写路径无校验；文档只描述已存在的行为。",
+    "DESIGN 增补租户章的事实来源是 TENANT_CONTRACT_V1 与代码，不是历史评审报告，也不能引用已过期的 scope 矩阵 §4。",
+    "docs/README 的启动命令必须可执行：backend/go.mod 决定 go run 要在 backend/ 内执行。"
+  ],
+  "contractAnchors": [
+    "docs/contracts/TENANT_CONTRACT_V1.md",
+    "docs/contracts/PLATFORM_CONTRACT.md",
+    "docs/contracts/DOCUMENT_GOVERNANCE_CONTRACT.md"
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "docs-truthfulness",
+    "portableFailureClass": "doc-code-drift",
+    "ownerLayer": "foundation-source",
+    "ratchetDecision": "guide-updated",
+    "coverageDimensions": [
+      "maintainability",
+      "architecture-fitness"
+    ]
+  },
+  "expectedFiles": {
+    "create": [
+      "docs/harness/tasks/2026-10-31-audit-p1-entry-doc-truthfulness.task.md",
+      ".harness/tasks/2026-10-31-audit-p1-entry-doc-truthfulness/manifest.json",
+      ".harness/evidence/2026-10-31-audit-p1-entry-doc-truthfulness/commands.json",
+      ".harness/evidence/2026-10-31-audit-p1-entry-doc-truthfulness/summary.md",
+      ".harness/evidence/2026-10-31-audit-p1-entry-doc-truthfulness/review.md"
+    ],
+    "modify": [
+      "README.md",
+      "README.en.md",
+      "DESIGN.md",
+      "DESIGN.en.md",
+      "docs/README.md",
+      "docs/README.en.md",
+      "docs/designs/README.md",
+      "docs/designs/README.en.md"
+    ],
+    "doNotTouch": [
+      "docs/history/**",
+      "docs/reviews/**",
+      "CHANGELOG.md",
+      "VERSION",
+      "docs/release-notes/**",
+      "backend/**",
+      "frontend/**",
+      ".github/**"
+    ]
+  },
+  "executionRoles": {
+    "implementerPosture": "只把已实现的说准：每条改动都带代码反证；不新增承诺、不补写英文副本、不改历史结论。",
+    "reviewerPosture": [
+      "逐条核对五组失真的反证命令确实支持新表述。",
+      "确认 README 不再硬编码 release 号，也没有引入未实现的功能描述。",
+      "确认 DESIGN 租户章与 TENANT_CONTRACT_V1 §1/§2/§4 一致，未把未做面写成已做。",
+      "确认 docs/README 的命令可以照抄执行（在 backend/ 内 go run）。",
+      "确认 designs 索引条目数与目录内中文主文档数一致。"
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "npm run check:docs-frontmatter",
+      "node scripts/harness/check-doc-links.mjs --root . --strict",
+      "node scripts/harness/check-doc-inventory.mjs --root . --strict",
+      "git show origin/main:VERSION",
+      "grep -c quota backend/modules/system/iam/user/*.go",
+      "ls CONTRIBUTING.md .github/ISSUE_TEMPLATE",
+      "ls docs/designs/*.md | wc -l"
+    ],
+    "runtimeEvidence": [
+      "无运行面变化：纯文档"
+    ]
+  },
+  "runtimeSensitive": false,
+  "runtimeGap": "纯文档包，无运行证据需求；可执行性通过照抄命令验证。",
+  "evidenceRequired": [
+    ".harness/evidence/2026-10-31-audit-p1-entry-doc-truthfulness/commands.json：五组反证命令、四条文档门禁、索引计数",
+    ".harness/evidence/2026-10-31-audit-p1-entry-doc-truthfulness/summary.md：原文→事实→新表述三列对照",
+    ".harness/evidence/2026-10-31-audit-p1-entry-doc-truthfulness/review.md：逐条 reviewer posture"
+  ],
+  "humanGates": [
+    "README/DESIGN 是仓库门面，新表述不得引入未实现的功能承诺。",
+    "若维护者要保留“当前 release”字样，需同时给出复核机制，否则登记为 gap。"
+  ],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed",
+    "README 不再硬编码 release 号，quota 与 community files 与代码一致",
+    "DESIGN 租户章与 TENANT_CONTRACT_V1 一致",
+    "docs/README 建库与启动命令可执行",
+    "designs 索引补齐 18 条且 .en 声明属实"
+  ],
+  "executionResult": {
+    "completedAt": "2026-10-31",
+    "evidenceDir": ".harness/evidence/2026-10-31-audit-p1-entry-doc-truthfulness/",
+    "outcome": "八份入口文档改为代码可反证的事实：README(.en) 版本表取消硬编码 release 号（指向 VERSION + release-notes 索引）、配额改“度量展示（超限不拒绝写入，合同 §2.4.1）”、community files 列全 CONTRIBUTING/LICENSE/三份 Issue 模板并只把 CODE_OF_CONDUCT 标为缺失、门禁改“以最近一次 required checks 的 run 为准”并删除 2026-10-03 快照；DESIGN(.en) 新增 §3.4 租户章（compat/multi 双模、上下文优先级、Casbin domain、已交付面、明确未做面含业务域单租户语义），§3.3 改逐项现状表并带判据，§4.3 改历史背景，§9 第 10 条更正；docs/README(.en) 启动命令改为 docker compose → 迁移 + runtime seed → cd backend && go run ./cmd/server，声明 system_init.sql 仅历史参考，8 份 TENANT_* 登记为非一线入口；docs/designs/README(.en) 索引补齐至 62/62 并如实声明 5 份缺 .en.md。",
+    "residualFindings": [
+      {
+        "id": "AUD-003d",
+        "severity": "P3",
+        "summary": "README.en.md 对多租户能力完全沉默（漏写而非错写），补写属能力面扩充，不在本包 In 范围。",
+        "disposition": "登记为后续文档项，不阻断冻结"
+      },
+      {
+        "id": "AUD-007b",
+        "severity": "P3",
+        "summary": "5 份设计文档永久无 .en.md（LOGIN_RISK_CONTROL_DESIGN、MULTI_TENANT_DESIGN、OPERATIONAL_WORKBENCH_COMPONENTS_DESIGN、PERMISSION_MENU_DECOUPLING、RUNTIME_MODULE_ENGINE_EVOLUTION）。",
+        "disposition": "已在索引内如实声明，不补副本"
+      }
+    ],
+    "verification": [
+      "frontmatter-check: 415 docs / 295 with frontmatter, exit 0",
+      "check-doc-links --strict: 0 finding(s)",
+      "check-doc-inventory --strict: 0 finding(s)",
+      "check-encoding --strict: 0 finding(s) across 2614 files",
+      "docs/designs 索引覆盖 62/62 中文主文档（逐文件 grep 无 MISSING）"
+    ],
+    "scopeHeld": "仅 8 份入口文档（+223/-57）；backend/**、frontend/**、.github/**、VERSION、CHANGELOG、docs/history、docs/reviews 未改动"
+  },
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-31-audit-p1-entry-doc-truthfulness/manifest.json",
+    "taskDoc": "docs/harness/tasks/2026-10-31-audit-p1-entry-doc-truthfulness.task.md",
+    "evidenceDir": ".harness/evidence/2026-10-31-audit-p1-entry-doc-truthfulness/",
+    "summaryFile": ".harness/evidence/2026-10-31-audit-p1-entry-doc-truthfulness/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-31-audit-p1-entry-doc-truthfulness/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-10-31.md",
+      "docs/contracts/TENANT_CONTRACT_V1.md"
+    ]
+  }
+}

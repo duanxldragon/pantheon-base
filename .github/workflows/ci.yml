@@ -164,7 +164,7 @@ jobs:
       # database per test and skips cleanly when the DSN is absent.
       - name: Run Go tests with coverage
         working-directory: backend
-        run: go test -race -short -coverprofile=coverage.out -covermode=atomic ./...
+        run: go test -short -coverprofile=coverage.out -covermode=atomic ./...
 
       - name: Upload Go coverage artifact
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9

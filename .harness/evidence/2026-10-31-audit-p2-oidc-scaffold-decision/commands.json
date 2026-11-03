@@ -1,0 +1,136 @@
+{
+  "taskId": "2026-10-31-audit-p2-oidc-scaffold-decision",
+  "repo": "pantheon-base",
+  "executedAt": "2026-10-31",
+  "agent": {
+    "tool": "other",
+    "adapter": "workbuddy-agent"
+  },
+  "runtimeSensitive": true,
+  "runtimeGap": "OIDC 包从未注册路由，删除前后的运行面完全相同（同一进程、同一路由表、同一中间件链），因此不存在需要运行态比对的差异点；本包以编译期事实（引用面 0、路由注册 0）替代运行态证据。未启动后端，未连 MySQL/Redis：`go test -short` 覆盖认证模块单测，`migrate_test.go` 的列存在性断言需要真实 MySQL，本轮未执行——但该断言针对的是**未改动**的 000029 迁移，不因删代码而失效。若身份源后续确定，真实 IdP 端到端联调属于选 (c) 之后的新任务，本包不承担。",
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-31-audit-p2-oidc-scaffold-decision/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-31-audit-p2-oidc-scaffold-decision/",
+    "reviewFile": ".harness/evidence/2026-10-31-audit-p2-oidc-scaffold-decision/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/contracts/SYSTEM_AUTH_CONTRACT.md",
+      "docs/designs/SSO_OIDC_DESIGN.md",
+      "docs/reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-10-31.md"
+    ]
+  },
+  "commands": [
+    {
+      "command": "find backend/modules/auth/oidc -type f | sort && wc -l backend/modules/auth/oidc/*.go",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "删除前规模读数：config.go / handler.go / provider.go / service.go 四文件，77 / 115 / 92 / 303 = 587 行。与审计报告 §3.5 的数字一致。"
+    },
+    {
+      "command": "grep -rn \"auth/oidc\\|oidc\\.\" backend --include=*.go | grep -v \"backend/modules/auth/oidc/\" | wc -l",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "包外引用 = **0**。这是删除安全性的唯一硬前提：没有 import、没有路由注册、没有测试引用。"
+    },
+    {
+      "command": "grep -rn -i \"oidc\" frontend/src | wc -l",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "前端 5 处命中，逐条查看后确认全部是 `login.sso_enabled` 功能开关的 i18n 文案（zh-CN/en-US/fr-FR/ja-JP/ko-KR），不引用后端 OIDC 实现。合同 §7.3 允许该开关作为配置项存在，故前端未改动。"
+    },
+    {
+      "command": "grep -n -i \"oidc\\|sso\" backend/.env.example",
+      "cwd": "pantheon-base",
+      "status": "failed",
+      "details": "路径不存在（`No such file or directory`）。任务包的 expectedFiles.modify 写的是 `backend/.env.example`，实际文件在仓库根 `.env.example`。改查根路径后命中 0：`PANTHEON_OIDC_*` 从未登记，说明该能力从未被当作对外承诺。任务包该字段已在本次执行中更正。"
+    },
+    {
+      "command": "grep -rn \"PANTHEON_OIDC\" -l . | grep -v node_modules",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "命中集中在 `.harness/archive/2026-09/*`（历史设计/实现任务的 task 与 completion）、`.harness/RELEASE_v0.12.0_GUIDE.md`、`.tmp/*` 副本，以及本次任务包自身。即：除被删代码外，`PANTHEON_OIDC_*` 只出现在历史记录里，没有任何部署或配置面在用。"
+    },
+    {
+      "command": "cat .harness/archive/2026-09/evidence/2026-09-08-p1-sso-oidc-design/completion.md",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "既有决策材料的关键句：\"This task is design-first. Implementation (Phase 2, ~9 hours) is deferred for future execution after design approval.\" 即设计任务自己声明实现被推迟，而实现代码却已存在——这是选 (a) 而非 (b) 的决定性依据。"
+    },
+    {
+      "command": "ls -R .harness/archive/2026-09/tasks/2026-09-08-p1-sso-oidc-implementation",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "目录存在但**为空**（无 task.md、无 completion.md）。归档体系里没有任何\"实现已批准并完成\"的记录，进一步证明这 587 行是在未获批准的前提下写出的。"
+    },
+    {
+      "command": "cp -r backend/modules/auth/oidc /tmp/pantheon-oidc-backup-2026-10-31/ && rm -rf backend/modules/auth/oidc",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "删除前先备份到系统临时目录（4 文件）。代码本身在 HEAD `ef00738` 已入库，git 历史可完整恢复；临时备份只是为了让本轮 review 不必 checkout 即可对照原文。"
+    },
+    {
+      "command": "grep -rn \"auth/oidc\\|oidc\\.\" backend --include=*.go | wc -l",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "删除后全仓（含被删目录本身已不存在）引用 = **0**。删除没有留下悬挂引用。"
+    },
+    {
+      "command": "cd backend && go build ./...",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "exit 0，无输出。587 行删除后全仓仍可编译——这是\"零引用\"的编译期复核。"
+    },
+    {
+      "command": "cd backend && go vet ./...",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "exit 0，无输出。"
+    },
+    {
+      "command": "cd backend && go test -short ./modules/auth/... ./pkg/contracts/...",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "`modules/auth [no test files]`；`login` / `mfa` / `security` / `session` 全部 ok；`pkg/contracts` ok。认证域既有测试未因删除而减少或失败。"
+    },
+    {
+      "command": "grep -rn \"auth_type\\|oidc_subject\\|oidc_provider\\|oidc_last_sync\" backend --include=*.go | grep -v \"modules/auth/oidc/\"",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "仅 `pkg/database/migrate_test.go:30,102,104,105,106` 命中——断言 000029 建出的列与索引存在。迁移未改动，这些断言仍应通过（需真实 MySQL，本轮 `-short` 未执行）。这同时证明四列在业务代码里确实没有消费者。"
+    },
+    {
+      "command": "cat backend/pkg/database/migrations/000029_oidc_fields.up.sql",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "迁移把 4 列 + 租户级唯一键 `uk_system_user_tenant_oidc_subject` + `auth_type` 索引写进版本链，且全部用 information_schema 守卫。**未改动**：历史迁移不可改写；其注释中\"the oidc scaffolding reads and writes ...\"一句因此成为历史陈述，与当前代码的差异已由合同 §7.3 的处置说明承担解释责任。"
+    }
+  ],
+  "knownGaps": [
+    "system_user 的四个 oidc_* 列与迁移 000029 保留未删。drop 列不可逆、需先证明无环境启用过，按合同 §8 走两步：先删代码观察一个 release，再单独提 drop 迁移。该延后事项已写进 SYSTEM_AUTH_CONTRACT §7.3，不是口头承诺。",
+    "下游 pantheon-ops 仍保有自己的一份 backend/modules/auth/oidc/（4 文件，包外引用 0）。本次删除不会让 ops 编译失败，但要到下一次 rebuild:from-base 才会随之移除。",
+    "000029 迁移注释里「the oidc scaffolding reads and writes …」已成历史陈述。迁移不可改写是刻意选择，差异由合同 §7.3 的处置说明承担解释责任。",
+    "本轮未启动后端、未连 MySQL/Redis：删除的包零引用、零路由，运行面在删除前后完全相同，不存在需要运行态比对的差异点。migrate_test.go 对四列的断言需真实 MySQL，-short 下未执行；该断言针对未改动的迁移，不因删代码而失效。"
+  ],
+  "gates": [
+    {
+      "gate": "go build",
+      "status": "passed",
+      "details": "exit 0"
+    },
+    {
+      "gate": "go vet",
+      "status": "passed",
+      "details": "exit 0"
+    },
+    {
+      "gate": "go test -short (auth + contracts)",
+      "status": "passed",
+      "details": "全 ok"
+    },
+    {
+      "gate": "reference surface = 0",
+      "status": "passed",
+      "details": "删除前后均为 0，删除后无悬挂引用"
+    }
+  ]
+}

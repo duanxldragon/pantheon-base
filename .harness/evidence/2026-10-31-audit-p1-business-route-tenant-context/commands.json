@@ -1,0 +1,118 @@
+{
+  "taskId": "2026-10-31-audit-p1-business-route-tenant-context",
+  "repo": "pantheon-base",
+  "executedAt": "2026-10-31",
+  "agent": {
+    "tool": "other",
+    "adapter": "workbuddy-agent"
+  },
+  "runtimeSensitive": true,
+  "runtimeGap": "本包选方案 C（显式声明业务域不参与租户隔离），**运行行为零变化**：没有新增中间件、没有新增/删除路由、没有迁移、没有改 `pkg/tenant` 解析优先级。因此不存在需要双模式（compat/multi）比对的运行态差异——这正是 C 与 A/B 的根本区别。未启动后端、未连 MySQL/Redis：中间件链用 `gin.RouterGroup.Handlers` + `runtime.FuncForPC` 做结构断言，属编译期可判定事实，不需要运行实例。真实 multi 部署下的业务路由行为留待 release 前的集成验证（那时行为应与本条款一致：业务请求不因租户模式改变）。",
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-31-audit-p1-business-route-tenant-context/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-31-audit-p1-business-route-tenant-context/",
+    "reviewFile": ".harness/evidence/2026-10-31-audit-p1-business-route-tenant-context/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/contracts/TENANT_CONTRACT_V1.md",
+      "docs/designs/MODULE_CONTRACT.md",
+      "docs/reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-10-31.md"
+    ]
+  },
+  "commands": [
+    {
+      "command": "grep -rn \"contracts\\.DataScopedGroup(\\|contracts\\.ProtectedGroup(\\|contracts\\.ProtectedGroupWithRedis(\" pantheon-ops/backend --include=*.go | grep -v \"pkg/contracts/route_groups.go\" | wc -l",
+      "cwd": "pantheon-platform",
+      "status": "passed",
+      "details": "下游调用点 = **14**（13 处 `DataScopedGroup` + 1 处 `ProtectedGroup`），分布在 bizscope / cicd / cmdb(3) / deploy / filedist(2) / k8s(2) / observability(3) / service。**本数字更正了审计报告的 25 处**：25 是把 `pkg/contracts/route_groups.go` 副本里的 3 行定义与文档提及一并计入的结果。结论不变（下游依赖是真实的、且集中在业务域），但数量必须以 14 为准。"
+    },
+    {
+      "command": "grep -rn \"ProtectedGroup(\\|DataScopedGroup(\" pantheon-base/backend --include=*.go | grep -v \"pkg/contracts/route_groups.go\" | grep -v \"_test.go\" | wc -l",
+      "cwd": "pantheon-platform",
+      "status": "passed",
+      "details": "底座内生产代码调用点 = **0**。即：这两个助手在 base 里没有任何消费者，完全是为下游准备的公共入口——所以它的语义必须由合同定义，而不是由 base 的使用习惯定义。"
+    },
+    {
+      "command": "grep -rn \"TenantID\" pantheon-ops/backend/modules/business --include=*.go | wc -l",
+      "cwd": "pantheon-platform",
+      "status": "passed",
+      "details": "下游业务域 `TenantID` 命中 = **0**：没有任何业务模型带租户字段。"
+    },
+    {
+      "command": "grep -rn \"tenant_id\" pantheon-ops/backend/modules/business --include=*.go",
+      "cwd": "pantheon-platform",
+      "status": "passed",
+      "details": "`tenant_id` 命中 = **1**，且唯一一处是 `retired_modules_test.go:110` 里的 `CREATE TABLE` 测试夹具（退役模块的 DDL 字符串），不是模型字段、不参与查询。因此\"业务域零租户建模\"成立，但准确表述是\"1 处测试夹具字符串命中，0 处模型/查询命中\"，而不是\"全目录 0 命中\"。"
+    },
+    {
+      "command": "cat backend/pkg/contracts/route_groups.go（改动前）",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "改动前 25 行，三个导出函数**零注释**。这是本条缺口最隐蔽的部分：读者只能从函数名 `ProtectedGroup` 推断它\"保护\"了什么，而它并不保护租户边界。"
+    },
+    {
+      "command": "cd backend && go test -short -run \"TestProtectedGroupChain|TestDataScopedGroupChain\" -v ./pkg/contracts/",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "新增两个测试通过：`TestProtectedGroupChain` 断言链路长度=2 且依次为 TokenAuth / Casbin；`TestDataScopedGroupChain` 断言长度=3 且末尾为 DataScope；两者都断言不含 TenantContextMiddleware / PlatformScopeTenantContextMiddleware。"
+    },
+    {
+      "command": "sed -i 's|Use(middleware\\.CasbinMiddleware())|Use(middleware.CasbinMiddleware()).\\n\\t\\tUse(middleware.TenantContextMiddleware(nil, nil))|' pkg/contracts/route_groups.go && go test -short -count=1 -run TestProtectedGroupChain ./pkg/contracts/",
+      "cwd": "pantheon-base/backend",
+      "status": "failed",
+      "details": "**负向验证（预期失败，且确实失败）**：人为给 `ProtectedGroupWithRedis` 注入 `TenantContextMiddleware` 后，测试报 `ProtectedGroup chain length = 3 (...TenantContextMiddleware.tenantContextMiddleware.func3), want 2`。这证明该测试是真门禁而不是永远绿的摆设——W8 对 checker 的负向验证要求同样适用于本包新增的测试。"
+    },
+    {
+      "command": "cp /tmp/rg.bak pkg/contracts/route_groups.go && go test -short -count=1 -run TestProtectedGroupChain ./pkg/contracts/",
+      "cwd": "pantheon-base/backend",
+      "status": "passed",
+      "details": "还原后立即回到 `ok`，确认负向验证没有留下改动。"
+    },
+    {
+      "command": "cd backend && go build ./... && go vet ./...",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "均 exit 0，无输出。"
+    },
+    {
+      "command": "grep -n \"### 2.6\\|## 3. 租户上下文\" docs/contracts/TENANT_CONTRACT_V1.md && grep -n \"^| V1\\.\" docs/contracts/TENANT_CONTRACT_V1.md | tail -2",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "中文合同新增 §2.6（第 296 行）在 §3 之前；变更记录追加 V1.10 行且 V1.9 未被覆盖（V1.1–V1.10 十行完整）。EN 版同步：§2.6 在第 313 行，变更记录 V1.1–V1.6 + V1.10，并加了一条翻译注记说明 V1.7–V1.9 仅存于中文版。"
+    },
+    {
+      "command": "grep -n \"多租户系统\" README.md",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "README:31 的\"完整数据隔离\"改为\"系统域（租户、用户、角色、菜单、组织、配置、审计）按 `tenant_id` 行级隔离；业务域（`modules/business/*`）为单租户语义，不参与租户隔离\"，并顺带把同一行的\"配额强制\"改为\"配额度量与展示（超限不拒绝写入，合同 §2.4.1）\"——两处都是同一句里的失实，一次改完避免 W3 二次编辑同一行。"
+    }
+  ],
+  "knownGaps": [
+    "本轮只改底座。下游 pantheon-ops 是源码副本式消费，它自己那份 pkg/contracts/route_groups.go 与 14 处业务调用点（13 DataScoped + 1 Protected）要到下一次 npm run rebuild:from-base 才会同步；在那之前 ops 侧仍是旧注释、旧形态。",
+    "docs/contracts/TENANT_RESOURCE_SCOPE_MATRIX.md §3 仍留着一条 biz_*「新增时逐表登记 / 按评审」的预留行，容易被读成“业务表要登记”。合同 §2.6 已说明那是 V2 入口，矩阵本身的行注释留给 W5（doc-metadata-and-index）处理。",
+    "route_groups_test.go 只能钉住底座这一份助手的中间件链；它无法阻止下游副本被单独改坏——那属于 shared-drift 门禁的职责。",
+    "本轮没有启动后端做端到端请求验证：业务域不挂租户中间件这件事是“少一个中间件”，运行态比对的差异点需要构造 multi 模式 + 带租户上下文的反例才能观测，成本高于收益；改由负向注入测试（注入 TenantContextMiddleware 后链长度断言失败）承担。"
+  ],
+  "gates": [
+    {
+      "gate": "go test ./pkg/contracts/...",
+      "status": "passed",
+      "details": "ok，含新增 2 个结构断言"
+    },
+    {
+      "gate": "负向验证（注入租户中间件）",
+      "status": "passed",
+      "details": "测试如期 FAIL，证明门禁有效"
+    },
+    {
+      "gate": "go build / go vet",
+      "status": "passed",
+      "details": "exit 0"
+    },
+    {
+      "gate": "合同三处口径一致",
+      "status": "passed",
+      "details": "TENANT_CONTRACT_V1 §2.6/§1/§7/§9 + MODULE_CONTRACT §10 + README:31 指向同一结论"
+    }
+  ]
+}

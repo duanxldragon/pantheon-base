@@ -1,0 +1,162 @@
+{
+  "taskId": "2026-11-01-audit-p2-human-gate-preconditions",
+  "repo": "pantheon-base",
+  "executedAt": "2026-11-01",
+  "agent": {
+    "tool": "other",
+    "adapter": "workbuddy"
+  },
+  "runtimeSensitive": true,
+  "runtimeGap": "预检脚本与用例跑在本地一次性库（testmysql），不是生产库。生产库的真实版本、dirty 状态与真实行数只能由执行者在当天读出，这也是 runbook 要求把六条读数原样贴进变更记录的原因。冻结宣告里的读数取自工作区快照 ef00738 加未提交整改，不等于任何已发布提交上的读数。",
+  "knownGaps": [
+    "预检只能报“有多少行”，不能报“这些行是否还有用”。判据仍要人读第 6 条样例行，脚本无法替代这个判断。",
+    "000031 的 up/down 文件仍是 untracked，未进任何提交。生产执行的前置条件之一是它先合入 main，本包没有替维护者提交。",
+    "预检的六条语句按顺序依赖：第 3/6 条在表不存在时会报错。runbook 已写明 version=31 时这是预期行为，但脚本本身没有容错分支（刻意不加——只读脚本一旦开始分支判断，执行者就无法确认自己看的是哪一条）。",
+    "冻结宣告未签署，且签署前提不成立：整改产物未进 main。本包只交付文本，不制造“已冻结”的印象。"
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-11-01-audit-p2-human-gate-preconditions/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-11-01-audit-p2-human-gate-preconditions/",
+    "reviewFile": ".harness/evidence/2026-11-01-audit-p2-human-gate-preconditions/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-10-31.md",
+      "docs/runbooks/MIGRATION_000031_PRODUCTION_DROP.md",
+      "docs/runbooks/DECOMMISSION_LEGACY_AUTH_ROUTES_2026-12-31.md"
+    ]
+  },
+  "commands": [
+    {
+      "command": "cat backend/pkg/database/migrations/000031_drop_permission_role_data_scope_policy.{up,down}.sql",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "确认风险模型。up 是 DROP TABLE IF EXISTS；down 是 CREATE TABLE IF NOT EXISTS 重建 v30 结构，文件头写 DATA IS NOT RESTORED。所以 down 不是撤销，migrate down 后再 up 等于再删一次。"
+    },
+    {
+      "command": "sed -n '100,130p' backend/cmd/server/main.go && grep -n 'func RunMigrations' -A 25 backend/pkg/database/migrate.go",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "确认 DROP 与部署不可分离：main.go:101 runDatabaseMigrations → ShouldAutoMigrate()==false → RunMigrations → m.Up()。PANTHEON_AUTO_MIGRATE=false（生产配置）恰恰是走版本化迁移的那条分支，迁移在服务启动时执行。"
+    },
+    {
+      "command": "grep -n 'tenantmigration\\|PANTHEON_AUTO_MIGRATE\\|go build' Dockerfile docker-compose.yml k8s/README.md",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "Dockerfile:41 只构建 ./cmd/server，镜像内无迁移二进制；k8s/README.md:52 却写 “Set to false (run migrations manually)”。据此确认文档与制品不一致，登记为 AUD-013-ops-migrate-entry（P3）。"
+    },
+    {
+      "command": "cat backend/cmd/tenantmigration/main.go",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "纠正本包开工时的错误认知“没有迁移 CLI”。实际存在：status 分支只读（不调用 RunMigrations，main.go:23 的 up 分支才调用），可用于部署前查版本与 dirty。runbook §4.2 据此给出 go run 命令。"
+    },
+    {
+      "command": "grep -rn 'GET_LOCK' $(go env GOMODCACHE)/github.com/golang-migrate/migrate/v4@v4.17.1/database/mysql/mysql.go",
+      "cwd": "pantheon-base/backend",
+      "status": "passed",
+      "details": "mysql.go:298 是 SELECT GET_LOCK(?, 10)。据此在 runbook 里写明滚动更新时迁移由最先取到锁的 Pod 执行、其余等待 10s 后 ErrLocked 并重启（表现为部署抖动，不是数据损坏）。"
+    },
+    {
+      "command": "grep -n 'currentRuntimeSchemaVersion = ' -A 1 backend/pkg/database/migrate.go && sed -n '204,232p' backend/pkg/database/migrate.go",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "currentRuntimeSchemaVersion=24 < 31，所以 000031 不会被 bootstrap 打点跳过；bootstrapMigrationVersion 在 recorded > target 时直接返回（:212），已到 31 的库不会被降回 24 重跑 DROP。两条都写进 runbook §1.3。"
+    },
+    {
+      "command": "grep -rn 'permission_role_data_scope_policy' --include=*.go backend/ && sed -n '1,20p' backend/modules/system/iam/permission/permission_data_scope_model.go",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "除迁移与两个测试外无运行时代码引用该表；唯一模型 PermissionRoleDataScopePolicy 的 TableName() 是 system_role_data_scope（:14）。但 runbook 明确写了不能用“代码不读它”替代预检第 3/5 条——000025 只搬当时存在的行，绕过代码写入的残留不会被覆盖。"
+    },
+    {
+      "command": "grep -rn 'system/login\\|system/refresh\\|system/logout\\|system/user/info' --include=*.ts --include=*.tsx frontend/src/",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "命中全部是 /system/login-log*（当前接口）与 /system/refresh/state（另一条当前接口），零处调用四条 legacy 路由。据此在下线计划里写明本次不涉及前端改动，且 CSRF 豁免是精确匹配（csrf_middleware.go:52），删 /system/refresh 的豁免不影响 /system/refresh/state。"
+    },
+    {
+      "command": "for f in docs/designs/BACKEND.md docs/designs/BACKEND.en.md docs/TENANT_INITIALIZATION_GUIDE.md docs/contracts/SYSTEM_AUTH_CONTRACT.{md,en.md}; do grep -n 'system/login\\|system/refresh\\|system/logout\\|system/user/info' $f; done",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "下线计划 §2.6 的清单来源。关键发现：docs/TENANT_INITIALIZATION_GUIDE.md:659-664 用 legacy 路径写登录示例，它不在合同体系内，只改 SYSTEM_AUTH_CONTRACT 会让按指南操作的人拿到 404。"
+    },
+    {
+      "command": "cd backend && gofmt -l pkg/database/ ; go vet ./pkg/database/",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "gofmt 无输出、vet 无输出。首次运行时 vet 报 migrate_preflight_test.go:9 \"gorm.io/gorm\" imported and not used——初稿留了一个未使用的 import，已删。"
+    },
+    {
+      "command": "cd backend && go test ./pkg/database/ -run TestPreflight000031ReportsWhatTheDropWouldDestroy -v -count=1",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "PASS（约 6s）。用例迁到 30 → 造 2 行（{0,platform_admin} 与 {7,platform_admin}，即 000024 允许的跨租户同 role_key 形状）→ 逐条断言六条读数 → 应用 000031 → 死表消失、system_role_data_scope 存活。"
+    },
+    {
+      "command": "负向 A：把预检第 3 条改成 FROM permission_role_data_scope_policy WHERE 1=0",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "FAIL：preflight reports rows_to_be_dropped=0, want 2 — an under-report here approves a destructive deploy on false information。红在正确的断言上，恢复后 PASS。这是本包最关键的负向验证：执行者据以批准破坏性 DDL 的唯一数字必须不可能被低估。"
+    },
+    {
+      "command": "负向 B：把 backend/pkg/database/migrate.go:21 的 //go:embed migrations/*.sql 改成 //go:embed migrations",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "FAIL：preflight script is embedded in migrationFS — production would ship it as a migration file。证明 embed 隔离不是注释里的假设，而是被断言钉住的性质。恢复后 PASS。"
+    },
+    {
+      "command": "cd backend && go test ./pkg/database/ -count=1",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "ok 59.708s。整包（含全部迁移往返用例）通过，新用例不干扰既有迁移用例。"
+    },
+    {
+      "command": "cd backend && go build ./... && go vet ./...",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "build OK / vet OK，exit 0。"
+    },
+    {
+      "command": "cd backend && go test -short ./...",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "EXIT=0 / ok=47 / FAIL=0 / no test files=5。带真实 MySQL 与 Redis（仓库根 .env.test）。pkg/database 单包 110s——迁移链往返是真库执行。未跑 -race（本机需把 /d/msys64/mingw64/bin 放进 PATH），竞争读数在 W7 证据里。"
+    },
+    {
+      "command": "cd frontend && npx tsc -b",
+      "cwd": "pantheon-base/frontend",
+      "status": "passed",
+      "details": "exit 0。本包未改前端，跑它是为了确认前端基线在本工作区仍然干净（工作区有 150 个 modified）。"
+    },
+    {
+      "command": "node frontend/scripts/check-search-toolbar-contract.mjs",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "0 finding(s) across 106 module file(s) + index.css。与 W10 撤销整目录豁免后的读数一致。"
+    },
+    {
+      "command": "node scripts/frontmatter-check.mjs",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "421 docs / 306 with frontmatter / 115 不强制 / 143 份 Active 超 90 天（只报告）。143 而非 W10 记录的 144：W11 更新了 docs/designs/MODULE_CONTRACT.md（§4.3 真实内容变更）后它退出逾期集合。已在 DOCUMENT_METADATA_AND_STATUS §6.5 中英双版补写这一读数变化。"
+    },
+    {
+      "command": "node scripts/harness/check-doc-links.mjs --root . --strict ; node scripts/harness/check-doc-inventory.mjs --root . --strict ; node scripts/harness/check-encoding.mjs --root . --strict",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "0 findings / 0 findings / 0 findings across 2609 files。三份新增文档与两份 runbook 未引入死链、未破坏 inventory、编码干净。"
+    },
+    {
+      "command": "node scripts/harness/check-task-packet.mjs --root .",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "94 个任务包 / 0 error / 14 warning（warning 全为历史任务包既存项，与 W11 收口后读数一致）。"
+    },
+    {
+      "command": "node scripts/harness/check-evidence.mjs --root . --strict ; node scripts/harness/check-review.mjs --root . --strict",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "15 份 / 0 error；15 份 / 0 error。本包的 commands.json 与 review.md 计入后仍为 0 error。"
+    }
+  ]
+}

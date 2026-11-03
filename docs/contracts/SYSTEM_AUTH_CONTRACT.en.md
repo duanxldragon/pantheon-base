@@ -3,7 +3,7 @@ title: system/auth Contract
 doc_type: Contract
 layer: system/auth
 status: Active
-updated_at: 2026-04-30
+updated_at: 2026-10-31
 ---
 
 # system/auth Contract
@@ -144,6 +144,9 @@ This contract depends on:
 - `login.captcha_enabled` and `login.sso_enabled` may remain as configuration switches
 - until a real protocol exists, fake CAPTCHA or SSO entry points must not be displayed
 - until the identity source is defined, real `SSO / OIDC / OAuth2 / WeCom` integration must not be implemented early
+- 2026-10-31 disposition (AUD-005, option (a) step 1): `backend/modules/auth/oidc/` (4 files / 587 lines) was unreachable implementation written before either design or contract approval — zero package-external imports, zero route registrations, no registered environment variables, no tests, in direct conflict with this clause; it has been deleted. Any future re-implementation must take `docs/designs/SSO_OIDC_DESIGN.md` (still Draft) as design input and go through approval again
+- Kept: migration `000029_oidc_fields` and the four nullable `system_user` columns (`auth_type` / `oidc_*`) are not dropped — published migrations must not be rewritten, the columns have no consumers and zero carrying cost, and the schema stays reusable once the identity source is decided
+- Deferred (registered here, not a verbal promise): delete the code first, observe one release, then land a column-drop migration separately under the contract-change discipline of §8
 
 ### 7.4 Security Constraints
 
@@ -155,6 +158,21 @@ This contract depends on:
 
 - all `system/auth` design, assessment, remediation, and acceptance docs must link back to this contract
 - if an “auth-related” change actually modifies user-management behavior in `iam`, the boundary must be explained first
+
+### 7.6 Legacy Dual Entry (`/system/*` Auth Endpoints): Deprecation and Sunset Constraints
+
+`/system/login`, `/system/refresh`, `/system/logout` and `/system/user/info` are legacy dual entry points sharing handlers with `/auth/*` (AUD-014, 2026-10-31 decision: keep and mark deprecated instead of immediate removal; both base and ops frontends call only `/auth/*`).
+
+| Endpoint | Legacy path | Current path | Disposition |
+| --- | --- | --- | --- |
+| login | `POST /api/v1/system/login` | `POST /api/v1/auth/login` | kept until 2026-12-31 with deprecation headers |
+| refresh | `POST /api/v1/system/refresh` | `POST /api/v1/auth/refresh` | kept until 2026-12-31 with deprecation headers |
+| logout | `POST /api/v1/system/logout` | `POST /api/v1/auth/logout` | kept until 2026-12-31 with deprecation headers |
+| current user info | `GET /api/v1/system/user/info` | `GET /api/v1/auth/me` | kept until 2026-12-31 with deprecation headers |
+
+- Responses matching the four paths must carry `Deprecation: true` and `Sunset: Sat, 31 Dec 2026 23:59:59 GMT` (`middleware.LegacyDeprecationMiddleware` matching `legacySelfServicePaths`; see `backend/internal/middleware/csrf_middleware.go` and the two mounts in `backend/modules/auth/module.go`)
+- The sunset date is registered as **2026-12-31**. Removing the endpoints changes an external promise: the maintainer must first confirm that no external integrator still calls the four paths
+- Teardown must remove the two routes in the `sys` public group (which then becomes empty and is deleted), the `/logout` and `/user/info` lines under `systemProtected`, both `LegacyDeprecationMiddleware` mounts, and the exact `/api/v1/system/login` and `/api/v1/system/refresh` CSRF exemptions in `csrf_middleware.go` — no exemption without a matching route may remain. Teardown plan: `docs/runbooks/DECOMMISSION_LEGACY_AUTH_ROUTES_2026-12-31.md`
 
 ## 8. Definition of Done
 

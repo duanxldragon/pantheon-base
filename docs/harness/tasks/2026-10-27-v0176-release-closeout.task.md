@@ -6,12 +6,12 @@ depends_on_layers:
   - platform
   - system/config
   - system/org
-status: Active
+status: Archived
 linked_contracts:
   - docs/designs/FOUNDATION_RELEASE_MODEL.md
   - docs/contracts/TENANT_CONTRACT_V1.md
   - docs/contracts/PLATFORM_CONTRACT.md
-updated_at: 2026-10-27
+updated_at: 2026-10-31
 ---
 
 # Task Packet: 2026-10-27-v0176-release-closeout
@@ -80,7 +80,7 @@ system/iam
 - Quality Profile: `permission-policy`
 - Portable Failure Class: `scope-leak` / `contract-drift` / `inaccessible-control` / `hardcoded-entitlement`
 - Owner Layer: `foundation-source`
-- Ratchet Decision: `registry-only`
+- Ratchet Decision: `ratchet-executed`
 - Coverage Dimensions:
   - behaviour
   - maintainability

@@ -1,0 +1,104 @@
+{
+  "taskId": "2026-10-31-audit-remediation-programme",
+  "repo": "pantheon-base",
+  "executedAt": "2026-11-01",
+  "agent": {
+    "tool": "other",
+    "adapter": "workbuddy"
+  },
+  "runtimeSensitive": false,
+  "runtimeGap": "programme 本身不改运行面，无 runtime 证据需求；7 项冻结门槛的运行时读数各自记录在对应子包的 commands.json 内，本文件只登记汇总读数与着落关系。",
+  "knownGaps": [
+    "冻结宣告属维护者：programme 只提供 9/9 子包 completed 与 7 项门槛达成的读数，不代替维护者拍板进入维护冻结。",
+    "审计 28 条里有 5 条 P3（AUD-021/022/023/025/028）按 programme 的 out 条款不单独立项，只在其他包内顺带处理或维持现状；这 5 条不阻断冻结，但不是“已修复”。",
+    "W6 的 legacy 认证端点真正下线（2026-12-31）与 000031 的生产库执行属维护者 human gate，programme 不能替其关闭。",
+    "W7 的竞争只在 -race 下可观测；若 CI 去掉 race 腿，该缺陷会静默回归。"
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-31-audit-remediation-programme/manifest.json",
+    "taskDoc": "docs/harness/tasks/2026-10-31-audit-remediation-programme.task.md",
+    "evidenceDir": ".harness/evidence/2026-10-31-audit-remediation-programme/",
+    "summaryFile": ".harness/evidence/2026-10-31-audit-remediation-programme/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-31-audit-remediation-programme/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-10-31.md",
+      "docs/contracts/PLATFORM_CONTRACT.md",
+      "docs/harness/HARNESS_ENGINEERING_CONTRACT.md"
+    ]
+  },
+  "commands": [
+    {
+      "command": "for d in .harness/tasks/2026-10-31-audit-*; do jq -r '.wave + \"\\t\" + .status + \"\\t\" + .taskId' $d/manifest.json; done",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "9 个子包 + programme 全部 JSON 可解析。终态：W1/W2/W3/W4/W5/W6/W7/W8/W9 均为 completed（9/9），programme 自身在收口前为 in-progress、收口后 completed。"
+    },
+    {
+      "command": "node scripts/harness/check-task-packet.mjs --root .",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "92 file(s), 0 error(s), 15 warning(s)。15 条 warning 全部是历史任务包的既存项（缺推荐 Linkage 子项 / 引用已归档的 release notes），本次 9 个子包无 warning。"
+    },
+    {
+      "command": "npm run check:task-packet-template",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "OK pantheon-base task-packet template is present and linked。"
+    },
+    {
+      "command": "npm run check:docs-frontmatter",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "Checked 415 docs, 302 with frontmatter, 113 without（informational, not enforced）；强制目录 4 个（docs/superpowers/specs/、docs/archive/{examples,baselines,upgrade}/）。"
+    },
+    {
+      "command": "node scripts/harness/check-doc-links.mjs --root . --strict",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "0 finding(s)。W4 把 7 份 docs/TENANT_*.md 移入 docs/reviews/ 后重算过文件内链接，本读数覆盖该轮改动。"
+    },
+    {
+      "command": "node scripts/harness/check-doc-inventory.mjs --root . --strict",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "0 finding(s)。"
+    },
+    {
+      "command": "node scripts/harness/check-evidence.mjs --root . --strict",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "12 file(s), 0 error(s), 0 warning(s)。收口过程中修掉两处：W6 的 commands.json 缺 knownGaps（error: root.knownGaps must be an array），W7 的 agent.tool 用了枚举外的值（error: root.agent.tool must be one of ...）。"
+    },
+    {
+      "command": "node scripts/harness/check-review.mjs --root . --strict",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "12 file(s), 0 error(s)。W6 的 review.md 收口前缺 `## Machine Readable` 块，补块后通过。"
+    },
+    {
+      "command": "npm run check:harness-encoding",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "0 finding(s) across 2609 scanned file(s)。"
+    },
+    {
+      "command": "cd backend && go build ./... && go vet ./...",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "均 exit 0（W6 删除 scaffold.Generate / readRoleKeysFromContext 与 W7 改 token 缓存后复测）。"
+    },
+    {
+      "command": "cd backend && PANTHEON_TEST_DSN_REQUIRED=true go test -short ./...",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "全仓 -short：除 ok / no test files 外无输出，即 0 FAIL；真实 MySQL 与 Redis 均注入，skip 未发生。"
+    },
+    {
+      "command": "cd backend && CGO_ENABLED=1 go test -race ./internal/middleware/ -count=1",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "ok 5.535s，0 DATA RACE（W7 修复后）。修复前同包内同 token 并发用例报 2 处 DATA RACE，读数见 W7 的 commands.json。"
+    }
+  ]
+}

@@ -48,6 +48,7 @@ English version: [README.en.md](./README.en.md)
 - `system/config`：`./contracts/SYSTEM_CONFIG_CONTRACT.md`，`./designs/DICT_AND_SETTING_DESIGN.md`，`./designs/I18N_MODULE_DESIGN.md`
 - `lowcode` / generator：`./designs/LOWCODE_GENERATOR_GUIDE.md`，`./designs/GENERATOR_MODULE_DESIGN.md`，`./designs/DYNAMIC_MODULE_GOVERNANCE_DESIGN.md`
 - `business/*`：对应 `./designs/BUSINESS_<MODULE>_DESIGN.md` 和 `./acceptances/BUSINESS_<MODULE>_ACCEPTANCE.md`
+- 租户 / 多租户：`./contracts/TENANT_CONTRACT_V1.md`（权威合同）、`./api/TENANT_API.md`、`./TENANT_INITIALIZATION_GUIDE.md`、`./migrations/COMPAT_TO_MULTI_UPGRADE.md`；设计背景见 `./designs/MULTI_TENANT_DESIGN.md` 与 `./designs/TENANT_READY_SINGLE_TENANT_DESIGN.md`
 
 ### 2.2 Harness 方法层
 
@@ -89,7 +90,7 @@ Shared skills live in `../../pantheon-harness/skills/`; recommended shared skill
 - [租户菜单边界、登录审计归属与套餐差异化修复验收（2026-10-22）](./reviews/PANTHEON_BASE_TENANT_PLAN_AND_AUDIT_FIXES_2026-10-22.md)
 - [企业级最终验收评估报告（2026-10-07，被 2026-10-21 验收继任确认）](./reviews/ENTERPRISE_RELEASE_READINESS_REVIEW_2026-10-07.md)
 - 历史多模型评审转写（审计凭证，2026-09-10 基线评审与六模型交叉评审）：[20260910](./reviews/pantheon-base-review-20260910.md) · [ChatGPT](./reviews/pantheon-base-review-chatgpt.md) · [Claude](./reviews/pantheon-base-review-claude.md) · [DeepSeek](./reviews/pantheon-base-review-deepseek.md) · [GLM](./reviews/pantheon-base-review-glm.md) · [Grok](./reviews/pantheon-base-review-grok.md) · [Kimi](./reviews/pantheon-base-review-kimi.md)
-- [最终验收整改任务包（2026-10-07）](./harness/tasks/2026-10-07-release-readiness-remediation.task.md) — 可执行任务清单位于 `../.harness/tasks/2026-10-07-*/manifest.json`
+- 最终验收整改任务包（2026-10-07，已归档）：`harness/tasks/2026-10-07-release-readiness-remediation.task.md` — 可执行任务清单位于 `../.harness/tasks/2026-10-07-*/manifest.json`
 - [设计与实现验收清单](./acceptances/ACCEPTANCE_CHECKLIST.md)
 - [Pantheon Base Agent 执行清单](./acceptances/AGENT_EXECUTION_CHECKLIST.md)
 - [Pantheon Base Task Packet 模板](./acceptances/TASK_PACKET_BASE_TEMPLATE.md)
@@ -117,6 +118,9 @@ Shared skills live in `../../pantheon-harness/skills/`; recommended shared skill
 - [开发库初始化指南](./DEV_DB_INIT_GUIDE.md)
 - [版本管理指南](./VERSION_MANAGEMENT_GUIDE.md)
 - [发布说明索引（v0.13.1 起）](./release-notes/README.md)
+- [租户初始化指南](./TENANT_INITIALIZATION_GUIDE.md)
+- [租户 API](./api/TENANT_API.md)
+- [compat → multi 升级指南](./migrations/COMPAT_TO_MULTI_UPGRADE.md)
 - [系统导入导出 Smoke 指南](./acceptances/SYSTEM_IMPORT_EXPORT_SMOKE_GUIDE.md)
 - [gstack Windows 使用清单](./designs/GSTACK_WINDOWS_GUIDE.md)
 
@@ -129,15 +133,36 @@ Shared skills live in `../../pantheon-harness/skills/`; recommended shared skill
 - [Harness 治理指南](./HARNESS_GOVERNANCE_GUIDE.md)
 - [Harness PR 生成器指南](./harness-pr-generator-guide.md)
 
+### 4.5 租户专题历史记录
+
+下列 7 份专题评估与冻结记录（原 `docs/TENANT_*.md`，已由文档生命周期包 `2026-10-31-audit-p2-doc-lifecycle-archive` 移入 `docs/reviews/`）是 2026-09/10 的审计与决策凭证。**它们不是一线入口**：其中的结论可能已被 `contracts/TENANT_CONTRACT_V1.md`（权威合同）与后续实现取代，读现状请以 §2.1 的合同与 §4.3 的指南为准。
+
+- [租户系统评审（2026-09-29）](./reviews/TENANT_SYSTEM_REVIEW_2026-09-29.md)
+- [租户成熟度终评（2026-09-29）](./reviews/TENANT_MATURITY_FINAL_2026-09-29.md)
+- [租户评审摘要（2026-09-29）](./reviews/TENANT_REVIEW_SUMMARY_2026-09-29.md)
+- [租户初始化发现（2026-10-13）](./reviews/TENANT_INITIALIZATION_FINDINGS_2026-10-13.md)
+- [租户全链路复核（2026-10-14）](./reviews/TENANT_FULL_FLOW_REVIEW_2026-10-14.md)
+- [租户登录初始化评估（2026-10-15）](./reviews/TENANT_LOGIN_INIT_EVALUATION_2026-10-15.md)
+- [租户 scope 冻结决策（2026-10-15）](./reviews/TENANT_SCOPE_FREEZE_DECISION_2026-10-15.md) — 现行裁决，仍具有约束力，不适用上文“可能已被取代”
+
 ## 6. 本地启动
 
-1. 执行 `docker compose up -d`，或手动执行 `database/system_init.sql` 初始化 MySQL；底座默认库名为 `pantheon_base`。
+1. 执行 `docker compose up -d` 启动 MySQL 与 Redis；底座默认库名为 `pantheon_base`。
+   **不要**再用 `database/system_init.sql` 建库——它只是历史参考，schema 的权威来源是版本化迁移 + runtime seed（见 [开发库初始化指南](./DEV_DB_INIT_GUIDE.md) 与 [部署指南](./DEPLOYMENT_GUIDE.md)）。
 2. 设置 `PANTHEON_DSN`，例如 `user:pass@tcp(127.0.0.1:3306)/pantheon_base?charset=utf8mb4&parseTime=True&loc=Local`。
 3. 可选设置 `PANTHEON_REDIS_ADDR=127.0.0.1:6379` 与 `PANTHEON_REDIS_PASSWORD=<你的本地 Redis 密码>`；请勿把真实密码写进文档或提交到仓库（可用值参考 `.env.example`，且不要复用生产密码）。
 4. 生产环境设置 `PANTHEON_INITIAL_ADMIN_PASSWORD`，长度不少于 12 位；开发环境未设置时会创建 `admin / 123456`。
-5. 后端执行 `go run ./backend/cmd/server`。
+5. 进入 **`backend/`** 再执行 `go run ./cmd/server`（`backend/go.mod` 是 Go module 根，在仓库根执行 `go run ./backend/cmd/server` 会失败）。
+   默认启动路径会自动执行版本化迁移与 runtime seed；只有显式设置 `PANTHEON_AUTO_MIGRATE=true` 才走 GORM AutoMigrate（仅限开发环境，生产禁用）。
 6. 前端进入 `frontend/` 执行 `npm install` 和 `npm run dev`。
 7. 启动后可访问 `GET /api/v1/health` 验证进程、数据库与 Redis 状态。
+
+```bash
+docker compose up -d
+export PANTHEON_DSN='root:dev_password_change_me@tcp(127.0.0.1:3306)/pantheon_base?charset=utf8mb4&parseTime=True&loc=Local'
+export PANTHEON_REDIS_ADDR='127.0.0.1:6379'
+cd backend && go run ./cmd/server
+```
 
 ## 7. 当前系统能力概览
 
@@ -146,6 +171,7 @@ Shared skills live in `../../pantheon-harness/skills/`; recommended shared skill
 - 支持安全中心、自助会话管理、登录日志审计与个人中心资料维护。
 - 支持平台首页真实统计卡片与最近登录活动概览。
 - 支持动态菜单、页面权限、按钮权限、接口权限分层治理。
+- 支持租户（多租户）`compat` / `multi` 双模：租户 CRUD、初始化、成员、套餐、审计、租户切换；配额目前**只展示不强制**，业务域为单租户语义（见 [租户合同 V1](./contracts/TENANT_CONTRACT_V1.md) §2.6）。
 - 支持前端 `check:menu-contract`、`check:i18n-hardcode` 等门禁。
 
 ## 8. 本轮整理说明

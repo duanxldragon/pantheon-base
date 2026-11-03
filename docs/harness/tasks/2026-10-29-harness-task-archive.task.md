@@ -3,10 +3,10 @@ title: 已完成任务归档与规范引用解析
 doc_type: Remediation
 layer: platform
 depends_on_layers: []
-status: Active
+status: Archived
 linked_contracts:
   - docs/harness/AI_QUALITY_GOVERNANCE.md
-updated_at: 2026-10-29
+updated_at: 2026-10-31
 ---
 
 # Task Packet: 2026-10-29-harness-task-archive

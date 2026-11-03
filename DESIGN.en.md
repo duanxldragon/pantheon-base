@@ -34,7 +34,19 @@ System foundation domains include:
 
 - P0: auth, authorization, org, navigation, i18n, audit
 - P1: sessions, permission workbench, dictionaries, settings
-- P2: multi-tenancy, SSO/OIDC, MFA and risk control, data permissions, theming, dashboards
+- Delivered: multi-tenancy (`compat` / `multi` dual mode, see the section below), MFA/TOTP with step-up verification, data permissions (role data scope plus `dept_and_children`), dashboards, theming (four themes and dark mode)
+- Not implemented: SSO / OAuth2 / OIDC login, login risk control (device fingerprinting, unfamiliar-location detection), tenant branding, quota enforcement
+
+## Multi-Tenancy (Delivered; The Contract Is Authoritative)
+
+The Chinese design document carries the full chapter (`DESIGN.md` section 3.4). The single source of truth for tenant semantics is [`docs/contracts/TENANT_CONTRACT_V1.en.md`](./docs/contracts/TENANT_CONTRACT_V1.en.md); this section is a pointer, not a second ruling. Earlier copies of this file listed multi-tenancy as future P2 work only, which contradicts the shipped surface (audit AUD-004).
+
+- Model (contract sections 2.1 / 2.3): shared schema with row-level `tenant_id`; `tenant_id = 0` is the platform-global scope. No separate schema or database per tenant in V1.
+- Modes (contract section 6): `tenant.mode = compat | multi`, a `system/config` feature flag defaulting to `compat`. `multi` is a superset of `compat`, not an either/or world switch. Switching is one-way (`compat` to `multi`); rolling back means a data rollback per the runbook.
+- Context resolution priority (contract section 3.1): explicit `X-Tenant-Id` header (platform capability plus audit) -> JWT `tenant_id` claim -> platform-scoped fallback to `tenant_id = 0` on route groups explicitly declared as platform-management APIs -> `compat` fallback. Missing context on a non-declared route fails closed with `TENANT_CONTEXT_MISSING`; reference implementation is `pkg/tenant.Resolve` and `internal/middleware.PlatformScopeTenantContextMiddleware`.
+- Casbin domain (contract section 4): policy domain is `tenant:<tenant_id>` (`tenant:0` globally), tenant roles are named `role:<name>@tenant:<tenant_id>`, and checks run global-then-domain. The two namespaces are never merged or implicitly promoted.
+- Delivered surface, each falsifiable against the route registration in `backend/modules/system/system_modules.go`: the 8 `/system/tenant` tenant CRUD and membership routes, the 5 `/system/tenant-ops/*` platform reads and plan editor routes (contract section 2.5), tenant initialization and `Bootstrap`, login-time tenant attribution plus `POST /auth/tenants/switch`, and plan/quota storage (migration `000030`) read through `PlanStore.QuotaFor`.
+- Explicitly not delivered: quota enforcement (quotas are measured and displayed; **no write is rejected for exceeding one**, contract section 2.4.1), separate-schema isolation, cross-tenant sharing or federated queries, tenant custom domains and deployment shapes, self-service registration and billing, and - decided in `2026-10-31-audit-p1-business-route-tenant-context` - **business domains (`modules/business/*`) keep single-tenant semantics in V1**. Attaching tenant middleware to business route groups does not create isolation; in `multi` mode it only turns every business request into `TENANT_CONTEXT_MISSING`.
 
 ## Guardrails
 

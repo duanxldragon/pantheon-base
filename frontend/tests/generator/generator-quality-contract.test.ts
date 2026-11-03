@@ -1,10 +1,13 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import test from 'node:test';
 
 import {
   GENERATED_MARKER,
   ModuleExporter,
 } from '../../src/modules/lowcode/generator/exporter';
+import { GO_MODULE_PATH } from '../../src/modules/lowcode/generator/backendGenerator';
 import {
   buildAuditActionKey,
   buildDashboardQuickActionDescriptionKey,
@@ -599,4 +602,118 @@ test('emits many-to-many and master-detail runtime contracts', () => {
   assert.equal((masterDetailPage.match(/const \{ id \} = useParams/g) || []).length, 1);
   assert.equal((masterDetailPage.match(/const scope = 'business';/g) || []).length, 1);
   assert.equal((masterDetailPage.match(/const navigate = useNavigate\(\);/g) || []).length, 1);
+});
+
+// AUD-021 lock #14 (artifact side): the generator must emit SearchToolbar and never
+// FilterPanel. The source side of the same rule is lock #10 in
+// tests/scripts/check-search-toolbar-contract.test.mjs; dropping either one leaves a
+// gap — source-only misses a generator wiring FilterPanel back in, artifact-only
+// lets a dirty template go unnoticed. Negative-verified by pushing FilterPanel into
+// frontendGenerator.ts's imports array: not ok 14.
+test('the generated List page uses SearchToolbar and never emits FilterPanel', () => {
+  const files = generatedFiles(createSchema());
+  const listPage = files.get('frontend/src/modules/business/cmdb/asset/CmdbAssetList.tsx') || '';
+
+  assert.ok(listPage.length > 0, 'expected a generated List page');
+  assert.match(listPage, /SearchToolbar/);
+  assert.doesNotMatch(listPage, /FilterPanel/);
+});
+
+// ── AUD-001：生成物必须可编译、可建表，导入前缀单一来源 ──────────────────
+
+function readGoModuleLine(): string {
+  // 该测试被 transpile 到临时目录执行，相对路径不可用；npm run 的 cwd 是 frontend/，
+  // 从仓库根起跑时也能命中，两个候选覆盖两种启动目录。
+  const candidates = [
+    join(process.cwd(), '..', 'backend', 'go.mod'),
+    join(process.cwd(), 'backend', 'go.mod'),
+  ];
+  for (const candidate of candidates) {
+    try {
+      const match = readFileSync(candidate, 'utf8').match(/^module\s+(\S+)\s*$/m);
+      if (match) {
+        return match[1];
+      }
+    } catch {
+      // try next candidate
+    }
+  }
+  throw new Error('backend/go.mod not found from cwd: ' + candidates.join(', '));
+}
+
+test('GO_MODULE_PATH stays in sync with backend/go.mod', () => {
+  // 棘轮：模板曾手写 pantheon-base/... 而注册器写真实模块路径，两处不同源且长期无人发现。
+  // 改模块名但忘改常量时，这条先红。
+  assert.equal(GO_MODULE_PATH, readGoModuleLine());
+});
+
+test('generated Go imports are all derived from GO_MODULE_PATH', () => {
+  const files = generatedFiles(createSchema());
+  for (const [path, content] of files) {
+    if (!path.startsWith('backend/') || !path.endsWith('.go')) {
+      continue;
+    }
+    assert.doesNotMatch(content, /"pantheon-base\//, `${path} must not carry a hand-written pantheon-base/ import`);
+  }
+  const moduleSrc = files.get('backend/modules/business/cmdb/asset/module.go') || '';
+  const serviceSrc = files.get('backend/modules/business/cmdb/asset/asset_service.go') || '';
+  const handlerSrc = files.get('backend/modules/business/cmdb/asset/asset_handler.go') || '';
+  assert.ok(moduleSrc.includes('"' + GO_MODULE_PATH + '/pkg/contracts"'), 'module.go must import contracts via GO_MODULE_PATH');
+  assert.ok(serviceSrc.includes('"' + GO_MODULE_PATH + '/pkg/common"'), 'service.go must import common via GO_MODULE_PATH');
+  assert.ok(serviceSrc.includes('"' + GO_MODULE_PATH + '/pkg/database"'), 'service.go must import database via GO_MODULE_PATH');
+  assert.ok(handlerSrc.includes('"' + GO_MODULE_PATH + '/pkg/common"'), 'handler.go must import common via GO_MODULE_PATH');
+});
+
+test('generated module wires BootstrapFunc for the default versioned-migration mode', () => {
+  const files = generatedFiles(createSchema());
+  const moduleSrc = files.get('backend/modules/business/cmdb/asset/module.go') || '';
+  // RegisterBackendModules 默认模式只跑 Bootstrap；缺 BootstrapFunc 时生成的表永远不会建出来。
+  assert.match(
+    moduleSrc,
+    /BootstrapFunc: func\(_ \*gorm\.DB\) error { return service\.Migrate\(\) },/,
+  );
+  // dev 的 PANTHEON_AUTO_MIGRATE=true 路径仍走 MigrateFunc。
+  assert.match(
+    moduleSrc,
+    /MigrateFunc: func\(_ \*gorm\.DB\) error { return service\.Migrate\(\) },/,
+  );
+});
+
+test('generated routes use contracts route-group helpers instead of assembling middleware chains', () => {
+  const scopedModule =
+    generatedFiles(createSchema()).get('backend/modules/business/cmdb/asset/module.go') || '';
+  const plainModule =
+    generatedFiles(createSchema({ enableDataScope: false, templateLevel: 'basic' })).get(
+      'backend/modules/business/cmdb/asset/module.go',
+    ) || '';
+
+  for (const [label, moduleSrc] of [
+    ['data-scope', scopedModule],
+    ['plain', plainModule],
+  ] as const) {
+    assert.doesNotMatch(moduleSrc, /middleware\./, `${label} module must not call middleware directly`);
+    assert.doesNotMatch(moduleSrc, /\.Group\([^)]*\)\.Use\(/, `${label} module must not hand-assemble the chain`);
+  }
+  assert.match(
+    scopedModule,
+    /protected := contracts\.DataScopedGroup\(r, "\/business\/cmdb\/asset", db\)/,
+  );
+  assert.match(
+    plainModule,
+    /protected := contracts\.ProtectedGroup\(r, "\/business\/cmdb\/asset"\)/,
+  );
+});
+
+test('generated routes stay outside tenant isolation', () => {
+  // W2 / TENANT_CONTRACT_V1 §2.6：业务域不参与租户隔离，生成物不得挂 TenantContextMiddleware，
+  // 否则 multi 模式下所有业务请求都会变成 TENANT_CONTEXT_MISSING。
+  const plainModule =
+    generatedFiles(createSchema({ enableDataScope: false, templateLevel: 'basic' })).get(
+      'backend/modules/business/cmdb/asset/module.go',
+    ) || '';
+  assert.doesNotMatch(plainModule, /TenantContextMiddleware/);
+  assert.match(
+    plainModule,
+    /protected := contracts\.ProtectedGroup\(r, "\/business\/cmdb\/asset"\)/,
+  );
 });

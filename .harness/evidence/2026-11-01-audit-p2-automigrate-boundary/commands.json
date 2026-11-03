@@ -1,0 +1,76 @@
+{
+  "taskId": "2026-11-01-audit-p2-automigrate-boundary",
+  "repo": "pantheon-base",
+  "executedAt": "2026-11-01",
+  "agent": {
+    "tool": "other",
+    "adapter": "workbuddy"
+  },
+  "runtimeSensitive": false,
+  "runtimeGap": "只改文档、注释、日志文案与测试，运行时行为零变化，因此不需要数据库或端到端运行证据。启动日志读数来自单元测试的实际 stdout。",
+  "knownGaps": [
+    "被采纳的方案（文档加例外）没有改变事实：生成业务表的 DDL 仍由 AutoMigrate 在启动时决定，不在版本化迁移链里，列变更随二进制升级静默生效且没有 down 迁移。该代价已写进 DEPLOYMENT_GUIDE §3，属被接受的取舍，不是遗漏；根治方案（生成器产出迁移文件）登记为 AUD-001c-ddl 待重估。",
+    "本包只改 pantheon-base 的 DEPLOYMENT_GUIDE。若 pantheon-ops 的部署文档复制过旧表述，会在其仓内与本例外冲突，需下游自行同步（按约定不改 ops），登记为 AUD-001c-ops-doc。",
+    "负向验证 A 只覆盖 FuncModule 被收紧这一种回归；若有人改动 RegisterBackendModules 的分支结构，由负向 B 与既有的 PhasedExecution 覆盖，两者合起来才完整。"
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-11-01-audit-p2-automigrate-boundary/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-11-01-audit-p2-automigrate-boundary/",
+    "reviewFile": ".harness/evidence/2026-11-01-audit-p2-automigrate-boundary/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-10-31.md",
+      "docs/DEPLOYMENT_GUIDE.md"
+    ]
+  },
+  "commands": [
+    {
+      "command": "grep -rn 'PANTHEON_ENABLE_DYNAMIC_MODULES' --include=*.go --include=*.md backend docs",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "冲突可达性核查（这是本包最关键的一步）。命中最关键三处：backend/modules/lowcode/dynamicmodule/module.go:19（dynamicModuleEnabled 的默认值是 !IsProductionEnv()）、同文件 :70/:81（DynamicModuleEnvGuard 挂在 /lowcode/dynamic-modules 这组路由上）、docs/DEPLOYMENT_GUIDE.md:82（生产固定 false）。结论：该变量只挡 HTTP 注册路由；编译进 backend/modules/business/generated_registry.go 的模块不经过这组路由，启动时仍走 Bootstrap → AutoMigrate。所以冲突真实存在，不能用“生产不开动态模块”解释掉。"
+    },
+    {
+      "command": "sed -n '1,20p' backend/modules/business/generated_registry.go",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "确认生成模块是编译进二进制、由 InitGeneratedBusinessModules 静态注册的（当前文件内容为“Intentionally empty”，生成器会重写它）。这条与上一条合起来证明：Bootstrap 阶段在生产的默认路径下确实会执行到生成模块。"
+    },
+    {
+      "command": "cd backend && go build ./... && go vet ./pkg/contracts/ && gofmt -l pkg/contracts/",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "全部 exit 0，gofmt -l 无输出。改动仅 backend/pkg/contracts/module.go 与 module_test.go 两个文件。"
+    },
+    {
+      "command": "cd backend && go test ./pkg/contracts/ -run TestRegisterBackendModules -v -count=1",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "3/3 PASS：PhasedExecution、RunsMigrateWhenAutoMigrateEnabled、DefaultModeRunsBootstrapForGeneratedModules（新增）。测试 stdout 实测到新日志：`INFO versioned migrations mode: module Migrate() skipped, runtime bootstraps run instead note=\"generated business modules create their own tables via AutoMigrate inside Bootstrap; see docs/DEPLOYMENT_GUIDE.md §3\"`。"
+    },
+    {
+      "command": "cd backend && go test ./pkg/contracts/ -run TestRegisterBackendModules（把 FuncModule.Bootstrap 改为在 MigrateFunc == nil 时提前返回后）",
+      "cwd": "pantheon-base",
+      "status": "failed",
+      "details": "负向 A（隔离新用例的独立价值）：`--- FAIL: TestRegisterBackendModules_DefaultModeRunsBootstrapForGeneratedModules`，失败信息 `a module that only sets BootstrapFunc must still bootstrap in versioned mode; otherwise low-code generated tables are never created (DEPLOYMENT_GUIDE §3)`；另两个用例仍 PASS。这证明新用例守的是 FuncModule 的 nil-MigrateFunc 形状，而不是重复覆盖既有用例。恢复后 3/3 绿。"
+    },
+    {
+      "command": "cd backend && go test ./pkg/contracts/ -run TestRegisterBackendModules（删掉整个 bootstrap 阶段后）",
+      "cwd": "pantheon-base",
+      "status": "failed",
+      "details": "负向 B（检验新用例是否被写成“唯一守门人”）：`--- FAIL: TestRegisterBackendModules_PhasedExecution` 与 `--- FAIL: TestRegisterBackendModules_DefaultModeRunsBootstrapForGeneratedModules` 同时红。结论：新用例不是 bootstrap 阶段的唯一守门人，初版注释里“既有用例在删掉该阶段时仍会通过”的说法是错的，已改正。恢复后 3/3 绿。"
+    },
+    {
+      "command": "npm run check:docs-frontmatter && npm run check:harness-docs && npm run check:harness-inventory && npm run check:harness-encoding && npm run check:duplication",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "五条全部 PASS。docs/designs/MODULE_CONTRACT.md 的 updated_at 已从 2026-04-17 更新为 2026-11-01（该文件是 Active 文档，不改 updated_at 会让 §6.5 的复核窗口读数失真）；docs/DEPLOYMENT_GUIDE.md 无 frontmatter（不在强制目录内），其 in-body“最后更新”同步为 2026-11-01。"
+    },
+    {
+      "command": "node scripts/harness/check-evidence.mjs --root . --strict && node scripts/harness/check-review.mjs --root . --strict",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "两条 strict 门禁均 0 error。"
+    }
+  ]
+}

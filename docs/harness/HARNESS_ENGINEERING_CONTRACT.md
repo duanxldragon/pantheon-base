@@ -214,7 +214,7 @@ This rule applies equally to:
 8. 涉及 UI 时，已执行视觉质量门并保存截图、浏览器证据或未运行原因。
 9. 已列出未验证项和剩余风险。
 10. Review gate 没有未解决的 P0/P1。
-11. 如果仓库启用了文档治理，还需通过 `DOCUMENT_FRONTMATTER_SPEC.md` 定义的 frontmatter / README / 合同关联校验。
+11. 如果仓库启用了文档治理，还需通过 `docs/contracts/DOCUMENT_FRONTMATTER_SCHEMA.md`（唯一权威；原 `docs/harness/DOCUMENT_FRONTMATTER_SPEC.md` 已归档为指针）定义的 frontmatter / README / 合同关联校验。
 ## 8. Trivial 任务例外
 
 以下任务可以不创建 task packet，但仍需遵守相关合同：

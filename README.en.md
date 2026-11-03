@@ -12,12 +12,12 @@ The project is not intended to be just a login shell plus CRUD scaffolding. Its 
 
 | Item | Value |
 | --- | --- |
-| Current foundation release | [`pantheon-base-v0.17.8`](https://github.com/duanxldragon/pantheon-base/releases/tag/pantheon-base-v0.17.8) (with the four consumable assets) |
-| Shell/Harness baseline | `1.4.0` (see [VERSION](./VERSION) / [SHELL_VERSION.json](./SHELL_VERSION.json)) |
+| Current version | Take it from [`VERSION`](./VERSION) at the repo root (this file does not restate a release number, because a hand-copied number is a number nobody re-checks) |
+| Release notes | [docs/release-notes/README.md](./docs/release-notes/README.md) — per-version index; full change log in [CHANGELOG.md](./CHANGELOG.md) |
+| Shell/Harness baseline | `1.4.0` (see [SHELL_VERSION.json](./SHELL_VERSION.json)) |
 | Deployment guide | [docs/DEPLOYMENT_GUIDE.md](./docs/DEPLOYMENT_GUIDE.md) (MySQL 8, Redis 7, migrations + runtime seed, health checks, telemetry, backup/restore, and schema-aware rollback) |
-| Changelog | [CHANGELOG.md](./CHANGELOG.md) / [RELEASE_NOTES_v0.17.8.md](./docs/release-notes/RELEASE_NOTES_v0.17.8.md) |
 
-Delivery status: v0.17.8 is a patch-line release that moves two base-owned dependency facts. `backend/go.mod` raises the `go` directive from 1.26.9 to 1.26.10, which closes `GO-2026-6809` (`crypto/x509` no longer trusts compromised intermediate certificates); the ops `Enforce OSV call analysis` step read stdlib 1.26.9 as `called: true` and therefore failed the whole `Dependency Vulnerabilities` gate. `frontend/package-lock.json` raises `zod` from 4.3.6 to 4.6.7, which closes the high-severity `GHSA-mrhx-c7xc-m3w5` (memory exhaustion while validating oversized constrained collections) that made `npm audit --audit-level=high` fail for the frontend project; `zod` is not a direct dependency and `src/` never imports it, so the reachable surface is the dev toolchain only. `Dockerfile`'s image tag and the toolchain baseline in `docs/DEPLOYMENT_GUIDE.md` move with the directive because the image is a second, independent read of the Go version that `go-version-file` does not cover. **The schema stays at 30, no route, permission code, menu seed, i18n copy or exported symbol changes, and no file under `backend/` (other than `go.mod`) or `frontend/src/` is touched**, so a consumer only advances `foundation-release.lock.json` to v0.17.8 and re-runs `npm run rebuild:from-base`; after that the two repaired files arrive in the consumer tree from the snapshot and the two failing gate inputs flip green. The previous v0.17.7 landed the three base-owned lint and CodeQL annotations; the tenant-operations content (stored plans in migration `000030`, the three `/system/tenant-ops/*` platform-scoped reads with five permission codes, the compat scope pins, password accessibility and the emptied boundary baseline) is v0.17.6, and quotas stay display-only. Residual: `SonarCloud Scan` fails on `pantheon-ops` only — the failing step is ops' own `.github/workflows/sonarcloud.yml` (ops' `.github` root is a consumer overlay, so that workflow is consumer-owned), run `40457897338` on ops `main` ends with `GET https://api.sonarcloud.io/analysis/jres` returning 403, and ops `main` additionally carries 249 unresolved Sonar issues; that is a credential/permission defect needing a valid `SONAR_TOKEN` from the maintainer, and no Sonar rule or project configuration was changed here. Base owns no scanner workflow and never did: on the release target `e256d1fb` the `SonarCloud Gate` and `SonarCloud Code Analysis` check-runs both conclude `success`, and the Sonar API reports main quality gate `OK` with `0` unresolved issues. Earlier copies of this sentence said the 403 made both repositories red; that was carried forward from previous rounds without being re-measured and is corrected here rather than left standing. `golang.org/x/crypto` `GO-2026-5932` (openpgp is unsafe by design, has no fixed version, and both scanners report it as not called) stays registered as a maintainer dependency-risk decision rather than being closed here. FR-016 / FR-017 (four checkers with no npm script and no workflow step) stay `open` because wiring them into CI is a gate-policy decision reserved for the maintainer.
+Delivery status: this repository is the single source of the foundation. Consumers (for example `pantheon-ops`) take it as a source copy, pinned through `foundation-release.lock.json` and rebuilt with `npm run rebuild:from-base`. The current version, what changed in it, and whether it is published live in exactly two places: [`VERSION`](./VERSION) and the [release-notes index](./docs/release-notes/README.md) (`RELEASE_NOTES_vX.Y.Z.md` per release, frozen with the release, append-only). This file no longer restates a per-release change list - the lesson from the previous wording is that a hand-copied summary always drifts behind `VERSION`.
 
 ## Positioning
 
@@ -145,9 +145,9 @@ npm run test:smoke:platform
 npm run test:smoke:system
 npm run test:smoke:all
 # Illustrative next-release placeholders only; replace the version and candidate commit before use
-npm run release:foundation:manifest -- --release-version pantheon-base-v0.13.0 --release-line release/0.13 --base-commit <40-char-commit>
-npm run release:foundation:cut -- --release-version pantheon-base-v0.13.0 --release-line release/0.13 --base-commit <40-char-commit>
-npm run release:foundation:publish -- --release-version pantheon-base-v0.13.0 --release-line release/0.13 --base-commit <40-char-commit>
+npm run release:foundation:manifest -- --release-version pantheon-base-v<X.Y.Z> --release-line release/<X.Y> --base-commit <40-char-commit>
+npm run release:foundation:cut -- --release-version pantheon-base-v<X.Y.Z> --release-line release/<X.Y> --base-commit <40-char-commit>
+npm run release:foundation:publish -- --release-version pantheon-base-v<X.Y.Z> --release-line release/<X.Y> --base-commit <40-char-commit>
 ```
 
 ## Quality and Security Gates
@@ -158,7 +158,7 @@ This repository keeps GitHub-native merge gates only:
 - `Security Gates` for secret scan, workflow posture, dependency reports, CodeQL scan, and the CodeQL alert gate
 
 SonarCloud is not a required `main` merge check, but the foundation release gate still requires `SonarCloud Code Analysis`.
-CodeQL is the primary security signal. Code quality is gated by GitHub required checks, CodeQL, branch protection, and optional Copilot review. An active ruleset already targets `main`, but it currently requires only `Quality Gates`; `Security Gates` and conversation resolution must be added and verified before certified delivery.
+Code quality is gated by GitHub required checks, CodeQL, branch protection, and optional Copilot review. This section describes gate **definitions** only: it keeps no "last verified" date and no pass/fail snapshot, because a snapshot written here cannot be re-checked against the code and always drifts. Whether the checks currently pass is whatever the latest `main` run of the required checks reports (see [`.github/workflows/ci.yml`](./.github/workflows/ci.yml) and the repository Actions page). The `main` ruleset is expected to require `Quality Gates`; treat `Security Gates` and conversation resolution as pending verification against the ruleset itself, not against this sentence.
 
 ## Document Entry
 
@@ -191,7 +191,7 @@ Preferred external positioning:
 - `Modular monolith backoffice platform`
 - `Controlled low-code generation workflow`
 
-Currently checked-in community files: `README.md`, `README.en.md`, `SECURITY.md`, `.github/CODEOWNERS`, `.github/dependabot.yml`, and `.github/pull_request_template.md`. There is no checked-in `CONTRIBUTING` file or issue templates yet.
+Currently checked-in community files: `README.md`, `README.en.md`, `CONTRIBUTING.md`, `SECURITY.md`, `LICENSE`, `.github/CODEOWNERS`, `.github/dependabot.yml`, `.github/pull_request_template.md`, and three issue templates under `.github/ISSUE_TEMPLATE/` (`bug_report.md`, `feature_request.md`, `question.md`). `CODE_OF_CONDUCT.md` is **not** present.
 
 Avoid claiming, for now:
 

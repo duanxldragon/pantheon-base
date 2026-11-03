@@ -3,11 +3,11 @@ title: S3 OIDC handler response-envelope classification packet
 doc_type: Remediation
 layer: system/auth
 depends_on_layers: []
-status: Active
+status: Archived
 linked_contracts:
   - docs/contracts/SYSTEM_AUTH_CONTRACT.md
   - docs/reviews/OIDC_RESPONSE_CONTRACT_2026-10-27.md
-updated_at: 2026-10-28
+updated_at: 2026-10-31
 ---
 
 # Task Packet: 2026-10-27-s3-oidc-envelope

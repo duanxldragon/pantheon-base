@@ -1,0 +1,172 @@
+{
+  "taskId": "2026-10-31-audit-p2-ci-checker-wiring",
+  "taskDoc": "docs/harness/tasks/2026-10-31-audit-p2-ci-checker-wiring.task.md",
+  "title": "CI 去重与 11 个未接线 checker 的处置（AUD-015/027）",
+  "goal": "为 26 个 check-*.mjs 中未接线的 11 个逐个给出接线/合并/删除的归宿并做负向验证，同时消除 go test -race 在 ci.yml 与 quality.yml 的重复执行。",
+  "primaryLayer": "platform",
+  "status": "completed",
+  "executedAt": "2026-10-31",
+  "executionResult": {
+    "checkersTriaged": 11,
+    "wiredToQualityGate": 9,
+    "wiredWorkspaceOnly": 1,
+    "keptAsPortableMirror": 1,
+    "deleted": 0,
+    "goRaceRunsPerPullRequest": "2 -> 1",
+    "taskPacketLifecycleLock": "check-task-packet 现在比较 doc status 与 evidence（task-evidence-state 判据）",
+    "negativeVerifications": [
+      "任务包 status 与证据不一致：caught（exit 1，报 evidence is complete (manifest-completed) but status is Active）",
+      "review.md 缺少 ## Machine Readable 块：caught（exit 1）",
+      "commands.json 非法 JSON：caught（exit 1，报 Invalid JSON）"
+    ],
+    "residualFindings": [
+      "check-doc-frontmatter.mjs 未接线：它是 portable 镜象，与已经实现的 scripts/frontmatter-check.mjs 规则重叠，双跑会把同一个问题报两次；已在 scripts/harness/README.md 写入“mirror-only” 行。",
+      "check-inheritance-contract.mjs 只能在 workspace 根跑（--root ..：exit 0；--root .：exit 1，报 7 条“workspace/ops 文档缺失”），所以不进 base PR 门禁，只保留 npm script 供 workspace 级使用。",
+      "check-graph-review.mjs 当前扫到 0 个带 structuralScope 的任务包，接线后在该字段出现前不会红——它是“结构评审发生过才生效”的传感器。"
+    ]
+  },
+  "priority": "P2",
+  "wave": "W8",
+  "programmeRef": {
+    "taskId": "2026-10-31-audit-remediation-programme",
+    "taskDoc": "docs/harness/tasks/2026-10-31-audit-remediation-programme.task.md",
+    "manifest": ".harness/tasks/2026-10-31-audit-remediation-programme/manifest.json"
+  },
+  "type": "gate-integrity",
+  "estimatedComplexity": "medium",
+  "findings": [
+    "scripts/harness/ 有 26 个 check-*.mjs，其中 11 个未接入任何 npm script 或 workflow：check-audit-coverage、check-backend-dto-contract、check-backend-response-contract、check-doc-frontmatter、check-evidence、check-feature-ledger、check-graph-review、check-inheritance-contract、check-permission-contract、check-review、check-runtime-evidence。",
+    "未接线清单含 check-permission-contract、check-feature-ledger、check-inheritance-contract 这类直接对应核心契约的检查，属“写了但从不执行”。",
+    "ci.yml:167 跑 go test -race -short，quality.yml:384 跑 go test -race，两者都在 pull_request 触发，后者是前者的超集。",
+    "FR-016/FR-017 已登记过同一失败模式（checker 未接线），本轮再次出现，说明“新增 checker 时必须同时接线”尚未成为机械约束。",
+    "HARNESS_ENGINEERING_CONTRACT 的 checker 清单与实际数量不一致（文档写 10 个，实际 26 个）。"
+  ],
+  "scope": {
+    "in": [
+      "AUD-027：11 个未接线 checker 逐个处置（接线 / 合并 / 删除），形成 checker-triage.md",
+      "接线分流：契约类进 quality.yml，证据类进 Release Gate，不全部塞进 prebuild",
+      "每个新接线 checker 做负向验证（造最小违规样例确认会红），并撤销样例",
+      "AUD-015：go test -race 去重——保留 quality.yml，ci.yml 侧删除或改为不带 -race 的快检；先确认 coverage 上传不依赖该步骤",
+      "更新 HARNESS_ENGINEERING_CONTRACT 的 checker 清单与总数"
+    ],
+    "out": [
+      "新增任何 checker（只处置存量）",
+      "修改 checker 的断言逻辑（合并时仅做重命名与调用路径调整）",
+      "调整 prebuild 链中已接线检查的顺序",
+      "修改产品代码、迁移、文档正文",
+      "引入新的 CI 服务或第三方扫描器"
+    ]
+  },
+  "dependencyLayers": [
+    "platform"
+  ],
+  "implementationNotes": [
+    "先判“这个 checker 现在还会不会红”，再判“要不要接线”；永远绿的 checker 接上去只增加构建时间。",
+    "每个接线必须有负向验证，否则只是把“不跑”换成“跑了但永远绿”，仍是 FR-017 的失败模式。",
+    "不要全塞进 prebuild：它已有 12 条检查，再加会让开发者绕过；按性质分流到 quality 与 Release Gate。",
+    "check-doc-frontmatter 与 scripts/frontmatter-check.mjs 明显重复，优先合并；保留哪一个由元数据三合一包结论决定。",
+    "Go 测试去重前先确认 ci.yml 的 coverage 上传是否依赖该步骤；若依赖，改为复用 quality 产物而不是重跑。"
+  ],
+  "contractAnchors": [
+    "docs/harness/HARNESS_ENGINEERING_CONTRACT.md",
+    "docs/harness/AI_QUALITY_GOVERNANCE.md",
+    "docs/harness/FAILURE_RATCHET_POLICY.md"
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "gate-integrity",
+    "portableFailureClass": "unwired-sensor",
+    "ownerLayer": "foundation-source",
+    "ratchetDecision": "gate-updated",
+    "coverageDimensions": [
+      "method-health",
+      "maintainability",
+      "architecture-fitness"
+    ]
+  },
+  "expectedFiles": {
+    "create": [
+      "docs/harness/tasks/2026-10-31-audit-p2-ci-checker-wiring.task.md",
+      ".harness/tasks/2026-10-31-audit-p2-ci-checker-wiring/manifest.json",
+      ".harness/evidence/2026-10-31-audit-p2-ci-checker-wiring/checker-triage.md",
+      ".harness/evidence/2026-10-31-audit-p2-ci-checker-wiring/commands.json",
+      ".harness/evidence/2026-10-31-audit-p2-ci-checker-wiring/summary.md",
+      ".harness/evidence/2026-10-31-audit-p2-ci-checker-wiring/review.md"
+    ],
+    "modify": [
+      "package.json",
+      ".github/workflows/ci.yml",
+      ".github/workflows/quality.yml",
+      "docs/harness/HARNESS_ENGINEERING_CONTRACT.md",
+      "docs/harness/failure-registry.md"
+    ],
+    "doNotTouch": [
+      "scripts/harness/check-*.mjs（断言逻辑）",
+      "frontend/package.json（prebuild 顺序）",
+      "backend/**",
+      "frontend/src/**",
+      "docs/reviews/**",
+      "VERSION",
+      "CHANGELOG.md"
+    ]
+  },
+  "executionRoles": {
+    "implementerPosture": "先给 11 个 checker 的断言现状定性，再决定归宿；每个接线都要能演示“它真的会红”。",
+    "reviewerPosture": [
+      "确认 checker-triage.md 覆盖全部 11 个，没有“待定”。",
+      "确认每个新接线 checker 都有负向验证读数，而不是只有一次通过。",
+      "确认没有把全部 checker 塞进 prebuild 导致本地构建显著变慢。",
+      "确认 go test -race 只在一条 workflow 执行，且 coverage 上传未受影响。",
+      "确认 HARNESS_ENGINEERING_CONTRACT 的 checker 数量与实际一致。"
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "node -e \"Object.keys(require('./package.json').scripts).filter(k=>k.startsWith('check:'))\"",
+      "逐个新接线 checker：正向一次 + 故意违规一次（负向）",
+      "npm run check:harness-docs && npm run check:harness-inventory && npm run check:task-packet",
+      "node scripts/harness/check-evidence.mjs --root . --strict",
+      "workflow 触发矩阵人工核对（或 zizmor，若可用）"
+    ],
+    "runtimeEvidence": [
+      "每个新接线 checker 的负向读数（故意违规时退出码非 0）"
+    ]
+  },
+  "runtimeSensitive": false,
+  "runtimeGap": "CI 真实运行需远端；本地以“脚本可执行 + 负向能红”代替远端 run，远端状态在 PR 上复核。",
+  "evidenceRequired": [
+    ".harness/evidence/2026-10-31-audit-p2-ci-checker-wiring/checker-triage.md：11 个 checker 的逐项处置表",
+    ".harness/evidence/2026-10-31-audit-p2-ci-checker-wiring/commands.json：正/负向读数、去重前后触发矩阵",
+    ".harness/evidence/2026-10-31-audit-p2-ci-checker-wiring/summary.md：分流理由、删除理由、coverage 影响",
+    ".harness/evidence/2026-10-31-audit-p2-ci-checker-wiring/review.md：逐条 reviewer posture"
+  ],
+  "humanGates": [
+    "修改 .github/workflows/* 需两位非作者批准，其中一位为 CI/发布负责。",
+    "删除 checker 属减少门禁，需在 failure-registry 登记并说明为何不会重演对应事故。",
+    "若接线显著延长 PR 时长，需维护者确认可接受上限。"
+  ],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed",
+    "11 个 checker 每个都有明确归宿，无“待定”",
+    "每个新接线 checker 都有负向验证",
+    "go test -race 不再在两条 workflow 重复执行",
+    "HARNESS_ENGINEERING_CONTRACT 的 checker 清单与实际一致"
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-31-audit-p2-ci-checker-wiring/manifest.json",
+    "taskDoc": "docs/harness/tasks/2026-10-31-audit-p2-ci-checker-wiring.task.md",
+    "evidenceDir": ".harness/evidence/2026-10-31-audit-p2-ci-checker-wiring/",
+    "summaryFile": ".harness/evidence/2026-10-31-audit-p2-ci-checker-wiring/summary.md",
+    "reviewFile": ".harness/evidence/2026-10-31-audit-p2-ci-checker-wiring/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-10-31.md",
+      "docs/harness/AI_QUALITY_GOVERNANCE.md"
+    ]
+  }
+}

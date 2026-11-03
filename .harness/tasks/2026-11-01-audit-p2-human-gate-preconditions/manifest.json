@@ -1,0 +1,210 @@
+{
+  "taskId": "2026-11-01-audit-p2-human-gate-preconditions",
+  "taskDoc": "docs/harness/tasks/2026-11-01-audit-p2-human-gate-preconditions.task.md",
+  "title": "三条 P2 残留的可验证前置条件（human gate 执行单）",
+  "goal": "三条 P2（AUD-013-prod / AUD-014-followup / FREEZE-DECLARATION）的动作本身归维护者，代理不能代做。本包只补它们缺的前置条件：让 000031 的 DROP 在动手前能被读出“会丢多少行”（只读预检脚本 + 断言其语义的用例 + 生产执行规程），让 legacy 端点下线有清单而不是一句日期，让冻结宣告有文本而不是要签署人自己拼事实。",
+  "primaryLayer": "platform",
+  "status": "completed",
+  "priority": "P2",
+  "wave": "W12",
+  "programmeRef": {
+    "taskId": "2026-10-31-audit-remediation-programme",
+    "taskDoc": "docs/harness/tasks/2026-10-31-audit-remediation-programme.task.md",
+    "manifest": ".harness/tasks/2026-10-31-audit-remediation-programme/manifest.json"
+  },
+  "upstreamRef": {
+    "taskId": "2026-10-31-audit-p2-dead-code-legacy-surface",
+    "taskDoc": "docs/harness/tasks/2026-10-31-audit-p2-dead-code-legacy-surface.task.md",
+    "manifest": ".harness/tasks/2026-10-31-audit-p2-dead-code-legacy-surface/manifest.json",
+    "residualId": "AUD-013-prod / AUD-014-followup"
+  },
+  "type": "human-gate-precondition",
+  "estimatedComplexity": "medium",
+  "findings": [
+    "000031 的 up 是 DROP TABLE，down 只重建结构（文件头 DATA IS NOT RESTORED）。执行前没有任何只读手段能读出“会销毁多少行”，执行者只能凭“代码不读这张表”这句话下判断，而那句话恰好不能排除绕过代码写入的残留行。",
+    "生产路径下 DROP 与部署不可分离：PANTHEON_AUTO_MIGRATE=false 时 runDatabaseMigrations 走 RunMigrations，服务启动即应用所有 pending 迁移。镜像只构建 ./cmd/server（Dockerfile:41），部署动作本身就是迁移动作，没有“先迁移再切流量”的窗口。",
+    "k8s/README.md:52 写 “PANTHEON_AUTO_MIGRATE: Set to false (run migrations manually)”，但镜像内没有任何可手工执行的迁移入口；而 false 恰恰意味着迁移在启动时自动执行。文档与制品不一致。",
+    "cmd/tenantmigration 存在且 status 子命令只读（不触发 RunMigrations），但不在镜像内，只能从仓库 go run；名字叫 tenantmigration，实际执行全量平台迁移，名字与职责不符。",
+    "bootstrapExistingCurrentSchema 会把“看起来是当前 schema”的库打点到 currentRuntimeSchemaVersion=24。24 < 31，所以 000031 不会被跳过；反向保护存在（recorded > target 时直接返回），已到 31 的库不会被降回 24 重跑 DROP。",
+    "legacy 四端点只有一句下线日期，没有清单。实际要改的是 2 个路由 group、1 个中间件（3 个符号 + 2 个挂载点）、2 条 CSRF 豁免、2 条 Casbin case、1 个测试文件的 3 处、6 个文档（含一个不在合同体系内的 TENANT_INITIALIZATION_GUIDE.md，它用 legacy 路径写登录示例）。",
+    "冻结宣告不能直接写：工作区 HEAD ef00738 是整改前快照，150 modified / 9 deleted / 4 renamed / 3 renamed+modified / 49 untracked，整改产物全部未进 main。"
+  ],
+  "scope": {
+    "in": [
+      "backend/pkg/database/migrations/preflight/000031_preflight.sql：6 条只读 SELECT",
+      "backend/pkg/database/migrate_preflight_test.go：在 schema-30 库上逐条断言脚本读数，并验证预测与实际一致",
+      "docs/runbooks/MIGRATION_000031_PRODUCTION_DROP.md：预检 → 导出 → 还原证明 → 变更记录 → 部署 → 事后核对 → 回滚",
+      "docs/runbooks/DECOMMISSION_LEGACY_AUTH_ROUTES_2026-12-31.md：下线清单（文件 + 行号）与执行步骤",
+      "docs/reviews/PANTHEON_BASE_MAINTENANCE_FREEZE_DECLARATION.md：宣告文本 + 7 项门槛 + 今日读数 + 残留表 + 签署块",
+      "DOCUMENT_METADATA_AND_STATUS §6.5 中英：144 → 143 的成因说明"
+    ],
+    "out": [
+      "在生产库执行 000031",
+      "删除 legacy 路由 / CSRF 豁免 / Casbin case",
+      "替维护者签署冻结宣告",
+      "修改 000031 的 up/down 文本或迁移链",
+      "修改 VERSION / CHANGELOG.md / pantheon-ops"
+    ]
+  },
+  "dependencyLayers": [
+    "platform"
+  ],
+  "implementationNotes": [
+    "预检脚本放在 migrations/preflight/ 子目录：migrate.go:21 是 //go:embed migrations/*.sql，不递归，所以子目录不进迁移源。但这是模式的性质而非目录的性质，测试里加了断言钉住它，并负向验证（把模式放宽成 migrations 即红）。",
+    "脚本由测试嵌入而不在 runbook 里复制副本：副本第一次有人改表结构就会漂移；测试嵌入并逐条断言，执行者跑的就是被断言的同一个文件。",
+    "第 3 与第 5 条必须一起读：第 3 条为 0 只说明旧表空，第 5 条为 0 只说明新表空。只有「3=0」或「3>0 且 5>0 且导出已还原验证」两种组合可以继续。",
+    "解析器初版按字面 \"\\n;\\n\" 切分，对 CRLF 敏感；负向验证时暴露（报 parsed 1 而不是行数断言）。改为按行锚定的正则 (?m)^;[ \\t\\r]*$ 后才真正红在 rows_to_be_dropped 上。",
+    "runbook 给出 §3.5 两条放行路径（A：先做 G2 恢复演练；B：接受表级导出+还原证明作为本次等效控制），并写明 B 的合理性边界与“代理不得代签”。",
+    "冻结宣告故意写成未签署，并写明今天不能签的原因是整改未进 main——这不是流程问题，是冻结对象不存在。"
+  ],
+  "contractAnchors": [
+    "docs/contracts/SYSTEM_AUTH_CONTRACT.md",
+    "backend/pkg/database/migrations/000031_drop_permission_role_data_scope_policy.up.sql",
+    "docs/runbooks/TENANT_MIGRATION_RUNBOOK.md"
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "maintainability",
+    "portableFailureClass": "human-gate-without-precondition",
+    "ownerLayer": "foundation-source",
+    "ratchetDecision": "gate-updated",
+    "coverageDimensions": [
+      "maintainability",
+      "behaviour"
+    ]
+  },
+  "expectedFiles": {
+    "create": [
+      "docs/harness/tasks/2026-11-01-audit-p2-human-gate-preconditions.task.md",
+      ".harness/tasks/2026-11-01-audit-p2-human-gate-preconditions/manifest.json",
+      ".harness/evidence/2026-11-01-audit-p2-human-gate-preconditions/commands.json",
+      ".harness/evidence/2026-11-01-audit-p2-human-gate-preconditions/summary.md",
+      ".harness/evidence/2026-11-01-audit-p2-human-gate-preconditions/review.md",
+      "backend/pkg/database/migrations/preflight/000031_preflight.sql",
+      "backend/pkg/database/migrate_preflight_test.go",
+      "docs/runbooks/MIGRATION_000031_PRODUCTION_DROP.md",
+      "docs/runbooks/DECOMMISSION_LEGACY_AUTH_ROUTES_2026-12-31.md",
+      "docs/reviews/PANTHEON_BASE_MAINTENANCE_FREEZE_DECLARATION.md"
+    ],
+    "modify": [
+      "docs/contracts/DOCUMENT_METADATA_AND_STATUS.md",
+      "docs/contracts/DOCUMENT_METADATA_AND_STATUS.en.md"
+    ],
+    "doNotTouch": [
+      "backend/pkg/database/migrations/000031_drop_permission_role_data_scope_policy.up.sql",
+      "backend/pkg/database/migrations/000031_drop_permission_role_data_scope_policy.down.sql",
+      "backend/pkg/database/migrate.go",
+      "backend/modules/auth/module.go",
+      "backend/internal/middleware/csrf_middleware.go",
+      "backend/internal/middleware/casbin_middleware.go",
+      "VERSION",
+      "CHANGELOG.md",
+      "pantheon-ops/**"
+    ]
+  },
+  "executionRoles": {
+    "implementerPosture": "不要替维护者做 human gate 的决定，但也不要把“归维护者”当成不做的理由：能补的前置条件（只读预检、清单、文本）必须先补齐，否则 gate 当天只能现场发明流程。",
+    "reviewerPosture": [
+      "确认预检脚本是只读的（6 条全 SELECT，无写、无 LOCK）。",
+      "确认预检不可能低估行数——这是执行者据以批准破坏性 DDL 的唯一数字。",
+      "确认预检脚本不随二进制发布，且该性质有断言而非只有注释。",
+      "确认三条 P2 的动作没有被代理代做。",
+      "确认冻结宣告未签署，且写明不能签的真实原因。"
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "cd backend && gofmt -l pkg/database/ && go vet ./pkg/database/",
+      "cd backend && go test ./pkg/database/ -run TestPreflight000031ReportsWhatTheDropWouldDestroy -v -count=1",
+      "负向 A：第 3 条改成 WHERE 1=0 → 必须红在 rows_to_be_dropped 断言",
+      "负向 B：migrate.go 的 embed 模式放宽为 migrations → 必须红在 embed 隔离断言",
+      "cd backend && go test ./pkg/database/ -count=1",
+      "cd backend && go build ./... && go vet ./...",
+      "cd frontend && npx tsc -b",
+      "npm run check:docs-frontmatter / check:harness-docs / check:harness-inventory / check:harness-encoding",
+      "node scripts/harness/check-task-packet.mjs --root . / check-evidence --strict / check-review --strict"
+    ],
+    "runtimeEvidence": [
+      "预检用例在真实 MySQL 上执行：schema-30 库造 2 行 → 六条读数 → 应用 000031 → 死表消失、system_role_data_scope 存活"
+    ]
+  },
+  "runtimeSensitive": true,
+  "runtimeGap": "预检脚本与用例在本地一次性库（testmysql）上执行，不是生产库。生产库的真实行数、真实版本、真实 dirty 状态只能在执行当天由执行者读出——这正是 runbook 要求把读数原样贴进变更记录的原因。冻结宣告中的读数来自工作区快照 ef00738 + 未提交整改，不等于任何已发布提交上的读数。",
+  "evidenceRequired": [
+    ".harness/evidence/2026-11-01-audit-p2-human-gate-preconditions/commands.json：预检用例 + 两次负向 + 整包 + 全仓门禁读数",
+    ".harness/evidence/2026-11-01-audit-p2-human-gate-preconditions/summary.md：三条 P2 各自缺什么、补了什么、还缺什么；144→143 的成因",
+    ".harness/evidence/2026-11-01-audit-p2-human-gate-preconditions/review.md：逐条 reviewer posture，含“预检是否可能低估行数”的反向检查"
+  ],
+  "humanGates": [
+    "AUD-013-prod：生产执行需维护者/DB 负责人选择 runbook §3.5 的放行路径（A 先做 G2 演练 / B 接受表级导出还原证明），代理不得代签。",
+    "AUD-014-followup：下线需维护者书面确认无外部集成方，且日期 ≥ 2026-12-31。",
+    "FREEZE-DECLARATION：宣告归维护者，代理不得代签；且需整改产物先进 main 才能填冻结对象 SHA。"
+  ],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed",
+    "预检脚本只读（6 条全为 SELECT，无写、无锁）",
+    "预检不随二进制发布（embed 隔离断言已负向验证）",
+    "三条 P2 的执行单均写明动作归维护者，未代做",
+    "冻结宣告未签署，且写明为何今天不能签"
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-11-01-audit-p2-human-gate-preconditions/manifest.json",
+    "taskDoc": "docs/harness/tasks/2026-11-01-audit-p2-human-gate-preconditions.task.md",
+    "evidenceDir": ".harness/evidence/2026-11-01-audit-p2-human-gate-preconditions/",
+    "summaryFile": ".harness/evidence/2026-11-01-audit-p2-human-gate-preconditions/summary.md",
+    "reviewFile": ".harness/evidence/2026-11-01-audit-p2-human-gate-preconditions/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-10-31.md",
+      "docs/runbooks/MIGRATION_000031_PRODUCTION_DROP.md",
+      "docs/runbooks/DECOMMISSION_LEGACY_AUTH_ROUTES_2026-12-31.md",
+      "docs/reviews/PANTHEON_BASE_MAINTENANCE_FREEZE_DECLARATION.md"
+    ]
+  },
+  "executionResult": {
+    "executedAt": "2026-11-01",
+    "headSha": "ef0073860ce03087d9cf05de6b5d7732687ef769",
+    "outcome": "completed",
+    "summary": "三条 P2 的动作全部保留给维护者，本包只补前置条件。AUD-013-prod：新增只读预检脚本（6 条 SELECT：当前版本/dirty、死表是否存在、将销毁多少行、替换表是否存在、替换表行数、样例行），由测试嵌入并在真实 MySQL 上逐条断言，然后真的应用 000031 验证预测成立；配套生产执行规程写明“部署即迁移”这一事实（PANTHEON_AUTO_MIGRATE=false 时启动走 RunMigrations，镜像只构建 cmd/server，滚动更新时由最先取到 GET_LOCK 的 Pod 执行 DROP），并给出两条放行路径（先做 G2 恢复演练 / 接受表级导出+还原证明）。AUD-014-followup：产出下线清单，精确到文件与行号——2 个路由 group（其中 sys group 删完变空应整体删除，systemProtected 保留 15 条当前接口）、1 个中间件 3 个符号 2 个挂载点、2 条 CSRF 豁免、2 条 Casbin case、1 个测试文件 3 处、6 个文档（含不在合同体系内的 TENANT_INITIALIZATION_GUIDE.md，它用 legacy 路径写登录示例，只改合同不改它会让人按指南操作拿到 404）。FREEZE-DECLARATION：产出宣告文本，含 7 项门槛逐项对应、今日实测读数、11 条残留的归属与不阻断理由、冻结/解冻的判据与签署块；并如实写明今天不能签——HEAD ef00738 是整改前快照，150 modified / 9 deleted / 49 untracked，整改产物未进 main，冻结对象还不存在。",
+    "deviations": [
+      "开工时的认知“没有迁移 CLI”是错的：cmd/tenantmigration 存在，status 只读、up 可独立执行迁移。发现后据此改写 runbook 的版本检查步骤，并把“该二进制不在镜像内、k8s README 却写 run migrations manually”登记为残留，而不是把错误认知写进执行单。",
+      "预检解析器初版按字面 \"\\n;\\n\" 切分，负向验证时因文件被写成 CRLF 而报“parsed 1”。这不是负向验证失败，是解析器对行尾敏感（Windows 检出即触发）。改为按行锚定的正则后才真正红在 rows_to_be_dropped 断言上。",
+      "DOCUMENT_METADATA_AND_STATUS §6.5 记录的 144 份逾期在本次读数为 143，成因是 W11 更新 MODULE_CONTRACT.md（真实内容变更，非改日期）后退出逾期集合。已在中英双版补写这一读数变化，而不是把旧数字留着。"
+    ],
+    "residualFindings": [
+      {
+        "id": "AUD-013-ops-migrate-entry",
+        "severity": "P3",
+        "title": "k8s/README 声称可手工迁移，镜像内无该入口",
+        "detail": "k8s/README.md:52 写 “PANTHEON_AUTO_MIGRATE: Set to false (run migrations manually)”，但 Dockerfile:41 只构建 ./cmd/server，镜像内没有任何手工迁移入口；而 false 恰恰意味着迁移在服务启动时自动执行。可用的入口 cmd/tenantmigration 只在仓库内（go run），且名字与职责不符（叫 tenantmigration，执行全量平台迁移）。当前不造成故障（自动路径有效），但会让“按文档手工迁移”的操作者找不到入口。修法二选一：把 tenantmigration 打进镜像并在文档里给出命令，或改掉 README 的措辞承认迁移随部署自动执行。",
+        "status": "open"
+      },
+      {
+        "id": "AUD-013-prod",
+        "severity": "P2",
+        "title": "000031 的 DROP 仍未在生产执行",
+        "detail": "预检脚本、断言用例与执行规程已就绪，但生产执行需维护者/DB 负责人按 runbook §3.5 选择放行路径（A 先完成 G2 恢复演练，B 接受表级导出+还原证明作为本次等效控制）。另有一个前置事实：000031 的 up/down 文件仍是 untracked，未进任何提交，生产执行前必须先合入 main。",
+        "status": "open"
+      },
+      {
+        "id": "AUD-014-followup",
+        "severity": "P2",
+        "title": "legacy 认证端点真正下线（2026-12-31）",
+        "detail": "下线清单与执行步骤已就绪（docs/runbooks/DECOMMISSION_LEGACY_AUTH_ROUTES_2026-12-31.md）。仍需维护者书面确认无外部集成方，并附一次调用量观测（网关日志近 30 天四条路径命中数）作为证据；日期不得早于合同 §7.7 承诺的 2026-12-31。",
+        "status": "open"
+      },
+      {
+        "id": "FREEZE-DECLARATION",
+        "severity": "P2",
+        "title": "冻结宣告仍未签署",
+        "detail": "宣告文本已就绪（docs/reviews/PANTHEON_BASE_MAINTENANCE_FREEZE_DECLARATION.md），但签署前提不成立：整改产物全部未进 main（HEAD ef00738 为整改前快照，150 modified / 9 deleted / 49 untracked），冻结对象（整改合并后的 main 提交）尚不存在。代理不得代签。",
+        "status": "open"
+      }
+    ]
+  }
+}

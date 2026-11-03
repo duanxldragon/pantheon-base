@@ -3,12 +3,12 @@ title: S3 role data-scope 镜像模型去重任务包（删除副本，改用 pe
 doc_type: Remediation
 layer: system/iam
 depends_on_layers: []
-status: Active
+status: Archived
 linked_contracts:
   - docs/contracts/SYSTEM_IAM_CONTRACT.md
   - docs/designs/PERMISSION_MODEL.md
   - docs/reviews/ROLE_DATA_SCOPE_MODEL_DRIFT_2026-10-27.md
-updated_at: 2026-10-28
+updated_at: 2026-10-31
 ---
 
 # Task Packet: 2026-10-27-s3-role-data-scope-model

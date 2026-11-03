@@ -3,11 +3,11 @@ title: W7 选项 A 实现跟进任务包（outsideLadder 后果句 + 合同 §2.
 doc_type: Remediation
 layer: system/iam
 depends_on_layers: []
-status: Active
+status: Archived
 linked_contracts:
   - docs/contracts/TENANT_CONTRACT_V1.md
   - docs/reviews/TENANT_PLAN_LADDER_DECISION_2026-10-28.md
-updated_at: 2026-10-28
+updated_at: 2026-10-31
 ---
 
 # Task Packet: 2026-10-28-plan-ladder-option-a-impl

@@ -2,12 +2,12 @@
 title: Restore generated business page routes and release tooling
 doc_type: Remediation
 layer: platform
-status: Active
+status: Archived
 linked_contracts:
   - docs/designs/LOWCODE_GENERATOR_GUIDE.md
   - docs/designs/GENERATOR_MODULE_DESIGN.md
   - docs/designs/FOUNDATION_RELEASE_MODEL.md
-updated_at: 2026-08-06
+updated_at: 2026-10-31
 ---
 
 # Task Packet: 2026-08-06-generator-business-page-route

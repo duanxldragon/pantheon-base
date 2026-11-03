@@ -88,6 +88,10 @@ For Chinese-first onboarding, read:
 - [DEV_DB_INIT_GUIDE.md](./DEV_DB_INIT_GUIDE.md)
 - [VERSION_MANAGEMENT_GUIDE.md](./VERSION_MANAGEMENT_GUIDE.md)
 - [Release notes index (from v0.13.1)](./release-notes/README.en.md)
+- [TENANT_INITIALIZATION_GUIDE.md](./TENANT_INITIALIZATION_GUIDE.md): tenant initialization
+- [api/TENANT_API.md](./api/TENANT_API.md): tenant API
+- [migrations/COMPAT_TO_MULTI_UPGRADE.md](./migrations/COMPAT_TO_MULTI_UPGRADE.md): compat to multi upgrade
+- [contracts/TENANT_CONTRACT_V1.en.md](./contracts/TENANT_CONTRACT_V1.en.md): the authoritative tenant contract
 - [testing-quick-start.md](./testing-quick-start.md)
 - [testing-usage-guide.md](./testing-usage-guide.md)
 - [testing-strategy-optimization.md](./testing-strategy-optimization.md)
@@ -101,4 +105,5 @@ Directory responsibilities: `docs/harness/` contains reviewable, versioned Harne
 
 - documents with no reuse value, no linkage, and no baseline role should be deleted rather than archived
 - the Chinese index remains the more detailed source for local working context
+- seven dated tenant topical records (`docs/TENANT_*_2026-*.md`) are indexed only in the Chinese index, section 4.5. They are audit and decision evidence from 2026-09/10, not first-line entry points: their conclusions may already be superseded by the tenant contract and the current implementation
 - the superseded security hardening plan is retained under `../archive/2026-08-security/`; current security status comes from task evidence and quality gates

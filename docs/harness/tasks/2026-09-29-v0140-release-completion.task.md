@@ -1,3 +1,14 @@
+---
+title: Complete tenant P1 readiness and publish v0.14.2
+doc_type: Remediation
+layer: platform
+status: Archived
+updated_at: 2026-10-31
+linked_contracts:
+  - docs/contracts/PLATFORM_CONTRACT.md
+  - docs/contracts/TENANT_CONTRACT_V1.md
+---
+
 # Task Packet: 2026-09-29-v0140-release-completion
 
 ## Goal

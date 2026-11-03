@@ -5,12 +5,12 @@ layer: system/iam
 depends_on_layers:
   - app
   - platform
-status: Active
+status: Archived
 linked_contracts:
   - docs/contracts/TENANT_CONTRACT_V1.md
   - docs/harness/VERIFICATION_EVIDENCE_SPEC.md
   - docs/README.md
-updated_at: 2026-10-26
+updated_at: 2026-10-31
 ---
 
 # Task Packet: 2026-10-26-pr427-ci-gate-closure

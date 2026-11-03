@@ -1,3 +1,13 @@
+---
+title: Reconcile published v0.10.25 release documentation
+doc_type: Remediation
+layer: platform
+status: Archived
+updated_at: 2026-10-31
+linked_contracts:
+  - docs/contracts/DOCUMENT_GOVERNANCE_CONTRACT.md
+---
+
 # Task Packet: 2026-09-01-release-docs-reconciliation
 
 ## Goal

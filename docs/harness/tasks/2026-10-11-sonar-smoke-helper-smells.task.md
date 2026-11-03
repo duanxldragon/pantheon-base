@@ -7,11 +7,11 @@ depends_on_layers:
   - system/config
   - system/audit
   - system/org
-status: Active
+status: Archived
 linked_contracts:
   - docs/contracts/PLATFORM_CONTRACT.md
   - docs/contracts/DOCUMENT_GOVERNANCE_CONTRACT.md
-updated_at: 2026-10-11
+updated_at: 2026-10-31
 ---
 
 # Task Packet: 2026-10-11-sonar-smoke-helper-smells

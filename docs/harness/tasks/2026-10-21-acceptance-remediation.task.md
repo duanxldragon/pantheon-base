@@ -6,13 +6,13 @@ depends_on_layers:
   - system/auth
   - system/iam
   - system/config
-status: Active
+status: Archived
 linked_contracts:
   - docs/contracts/TENANT_CONTRACT_V1.md
   - docs/contracts/PLATFORM_CONTRACT.md
   - docs/contracts/SYSTEM_IAM_CONTRACT.md
   - docs/contracts/SYSTEM_AUTH_CONTRACT.md
-updated_at: 2026-10-21
+updated_at: 2026-10-31
 ---
 
 # Task Packet: 2026-10-21-acceptance-remediation

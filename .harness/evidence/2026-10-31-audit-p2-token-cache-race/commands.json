@@ -1,0 +1,64 @@
+{
+  "taskId": "2026-10-31-audit-p2-token-cache-race",
+  "repo": "pantheon-base",
+  "executedAt": "2026-11-01",
+  "agent": {
+    "tool": "other",
+    "adapter": "workbuddy"
+  },
+  "runtimeSensitive": true,
+  "runtimeGap": "并发用例用真实 Redis（testredis DBMiddleware，库 4）跑；未做真实部署下的并发压力验证，那属 release 前集成测试。",
+  "knownGaps": [
+    "竞争只在 -race 下可观测：不带 -race 的普通 go test 即使实现有缺陷也会通过（本用例的断言部分只覆盖身份与时间戳，不覆盖内存可见性）。CI 的 race 腿是这条缺陷的唯一守门人，若将来为缩短时长把 -race 从 CI 去掉，这条缺陷会静默回归。",
+    "真实部署下的并发压力（多实例、多核、Redis 抖动）未验证；本轮只证明单进程内同 token 并发不再共享内存。",
+    "空闲超时判定依赖缓存条目的 LastActivityAt 新鲜度；值拷贝后该值由 touchTokenSessionCacheActivity 在写锁内同步，语义与修复前一致，但没有为此新增独立的时序断言（靠既有 middleware 用例覆盖）。"
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-31-audit-p2-token-cache-race/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-31-audit-p2-token-cache-race/",
+    "reviewFile": ".harness/evidence/2026-10-31-audit-p2-token-cache-race/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-10-31.md",
+      "docs/contracts/SYSTEM_AUTH_CONTRACT.md"
+    ]
+  },
+  "commands": [
+    {
+      "command": "cd backend && CGO_ENABLED=1 go test -race -run 'TestTokenSessionCacheHandsOutCopies|TestTokenSessionCacheConcurrentSameTokenIsRaceFree' ./internal/middleware/ -count=1",
+      "cwd": "pantheon-base",
+      "status": "failed",
+      "details": "修复前：2 处 WARNING: DATA RACE。(1) read at token_middleware.go:182 与 previous write at :183，两侧栈帧都是 refreshTokenActivity —— 同一个 *SessionData.LastActivityAt 被并发读写；(2) write at :186 —— cached.data.LastActivityAt 在锁外写缓存条目。同时 TestTokenSessionCacheHandsOutCopies 失败：`mutating a returned RoleKeys slice changed the cached one: RoleKeys[0] = \"hacked\", want \"admin\"`，证明返回值与缓存共用同一个 RoleKeys 底层数组。"
+    },
+    {
+      "command": "cd backend && CGO_ENABLED=1 go test -race -run 'TestTokenSessionCache' ./internal/middleware/ -count=1",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "修复后：ok 1.117s，DATA RACE 计数 0。同一组用例（含既有的 TestTokenSessionCacheDisabledByZeroTTL）全绿。"
+    },
+    {
+      "command": "cd backend && CGO_ENABLED=1 go test -race ./internal/middleware/ -count=1",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "整包 -race：ok 5.535s，0 FAIL。真实 MySQL + 真实 Redis（testredis 库 4）。"
+    },
+    {
+      "command": "cd backend && go test -short ./...",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "全仓 -short 回归：除 ok / no test files 外无输出，即 0 FAIL。PANTHEON_TEST_DSN / PANTHEON_TEST_REDIS_* 均已注入，skip 未发生。"
+    },
+    {
+      "command": "cd backend && go build ./... && go vet ./internal/middleware/",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "均 exit 0。改动只在 internal/middleware/token_middleware.go 及其两个测试文件。"
+    },
+    {
+      "command": "grep -rn 'lookupTokenSessionCache|storeTokenSessionCache|touchTokenSessionCacheActivity' backend --include=*.go | grep -v _test.go",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "三个函数都只在 token_middleware.go 内部使用（resolveTokenSession / refreshTokenActivity 两处调用点），不是包外可依赖的 API，因此改签名不影响任何调用方；公开面只有 InvalidateTokenAuthCache，未改。"
+    }
+  ]
+}

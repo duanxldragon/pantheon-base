@@ -2,10 +2,10 @@
 title: Release shared visual checker fix in pantheon-base v0.10.2
 doc_type: Remediation
 layer: platform
-status: Active
+status: Archived
 linked_contracts:
   - docs/contracts/PLATFORM_CONTRACT.md
-updated_at: 2026-08-05
+updated_at: 2026-10-31
 ---
 
 # Task Packet: 2026-08-05-base-v0-10-2-visual-checker
@@ -129,5 +129,5 @@ platform
 - [x] Contract anchors read
 - [x] Verification run or exception recorded
 - [x] Evidence saved or summarized
-- [x] Review completed
+- [ ] Review completed
 - [ ] Hosted checks, release, and Ops handoff completed

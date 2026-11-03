@@ -5,12 +5,12 @@ layer: system/iam
 depends_on_layers:
   - system/auth
   - platform
-status: Active
+status: Archived
 linked_contracts:
   - docs/reviews/TENANT_FUNCTIONAL_COMPLETENESS_REVIEW_2026-10-27.md
   - docs/contracts/TENANT_CONTRACT_V1.md
   - docs/api/TENANT_API.md
-updated_at: 2026-10-27
+updated_at: 2026-10-31
 ---
 
 # Task Packet: 2026-10-27-tenant-completeness-remediation

@@ -5,12 +5,12 @@ layer: platform
 depends_on_layers:
   - system/iam
   - app
-status: Active
+status: Archived
 linked_contracts:
   - docs/harness/VERIFICATION_EVIDENCE_SPEC.md
   - docs/contracts/DOCUMENT_FRONTMATTER_SCHEMA.md
   - docs/harness/FAILURE_RATCHET_POLICY.md
-updated_at: 2026-10-26
+updated_at: 2026-10-31
 ---
 
 # Task Packet: 2026-10-26-governance-evidence-schema-backfill

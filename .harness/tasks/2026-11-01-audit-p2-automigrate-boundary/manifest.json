@@ -1,0 +1,178 @@
+{
+  "taskId": "2026-11-01-audit-p2-automigrate-boundary",
+  "taskDoc": "docs/harness/tasks/2026-11-01-audit-p2-automigrate-boundary.task.md",
+  "title": "生产 AutoMigrate 边界收口（AUD-001c）",
+  "goal": "消除 DEPLOYMENT_GUIDE 与装配器行为之间的直接矛盾：文档说生产不得启用 GORM AutoMigrate，而默认路径下低代码生成的业务表正是由 BootstrapFunc 内部的 AutoMigrate 创建的。选“文档加例外”，但把例外写窄到可逐条核对，并修正两处会让人读错它的材料（模块契约接口清单、启动日志）。",
+  "primaryLayer": "platform",
+  "status": "completed",
+  "priority": "P2",
+  "wave": "W11",
+  "programmeRef": {
+    "taskId": "2026-10-31-audit-remediation-programme",
+    "taskDoc": "docs/harness/tasks/2026-10-31-audit-remediation-programme.task.md",
+    "manifest": ".harness/tasks/2026-10-31-audit-remediation-programme/manifest.json"
+  },
+  "upstreamRef": {
+    "taskId": "2026-10-31-audit-p1-lowcode-generator-build",
+    "taskDoc": "docs/harness/tasks/2026-10-31-audit-p1-lowcode-generator-build.task.md",
+    "manifest": ".harness/tasks/2026-10-31-audit-p1-lowcode-generator-build/manifest.json",
+    "residualId": "AUD-001c"
+  },
+  "type": "doc-code-alignment",
+  "estimatedComplexity": "small",
+  "findings": [
+    "docs/DEPLOYMENT_GUIDE.md:44 写“生产环境不得启用 GORM AutoMigrate”，但默认启动路径（PANTHEON_AUTO_MIGRATE 未设）下 RegisterBackendModules 会跑 Bootstrap，而生成业务模块的 BootstrapFunc 就是 service.Migrate()，内部是 AutoMigrate。",
+    "PANTHEON_ENABLE_DYNAMIC_MODULES 生产固定 false，看起来足以消除冲突；实际只挡 /lowcode/dynamic-modules/* 的 HTTP 路由（DynamicModuleEnvGuard），编译进 generated_registry.go 的模块不受约束，启动时照样 AutoMigrate。",
+    "启动日志写 “skipping module AutoMigrate”，与 bootstrap 阶段的实际行为相反，会误导排障。",
+    "docs/designs/MODULE_CONTRACT.md §4.3 的接口清单漏了 Migrate，且仍写着“如果后续需要数据库迁移，再扩展”，与已落地的实现不符；同时未提 BootstrapFunc 的存在，读者无法从契约得知生产路径为何会建表。",
+    "既有两个装配用例都基于“同时实现 Migrate 与 Bootstrap”的自定义类型，无法区分“模块完整所以 bootstrap 跑了”与“只有 BootstrapFunc 也会 bootstrap”。"
+  ],
+  "scope": {
+    "in": [
+      "DEPLOYMENT_GUIDE §3：把禁令限定为平台 schema，新增边界表与两点操作后果，并区分 PANTHEON_ENABLE_DYNAMIC_MODULES",
+      "MODULE_CONTRACT §4.3：接口补 Migrate、加执行时机表、说明 BootstrapFunc 的用途与边界",
+      "contracts/module.go：启动日志改准 + 注释说明 bootstrap 阶段仍可能 AutoMigrate",
+      "contracts/module_test.go：新增用例钉住 FuncModule 形状（只有 BootstrapFunc 仍 bootstrap；只有 MigrateFunc 不 migrate）"
+    ],
+    "out": [
+      "让生成器产出 DDL / 迁移文件",
+      "在 Bootstrap 里改写显式 CREATE TABLE IF NOT EXISTS",
+      "修改 PANTHEON_AUTO_MIGRATE 的语义或默认值",
+      "修改生成器模板、generated_registry.go 或任何业务模块",
+      "触碰 pantheon-ops / VERSION / CHANGELOG.md"
+    ]
+  },
+  "dependencyLayers": [
+    "platform"
+  ],
+  "implementationNotes": [
+    "拒绝“显式 CREATE TABLE IF NOT EXISTS”：表已存在时它什么都不做，schema 加字段后不补列，运行时报列不存在；AutoMigrate 会补。等于用更弱的建表能力换更严格的措辞。",
+    "拒绝“生成器产出迁移文件”（记录待重估）：需手写 DDL 与 GORM 模型逐列一致（time.Time 是 datetime(3)、索引命名、m2m 关联表列顺序），不一致即查询失败且失去 AutoMigrate 兜底。",
+    "日志文案属于运维读取面，改它不是修饰，是修一个会误导排障的陈述。",
+    "新用例的注释不能写成“只有它能拦住”——负向 B 证明 PhasedExecution 也会红；它的独立价值是钉住 FuncModule 的 nil-MigrateFunc 形状。"
+  ],
+  "contractAnchors": [
+    "docs/contracts/PLATFORM_CONTRACT.md",
+    "docs/DEPLOYMENT_GUIDE.md",
+    "backend/pkg/contracts/module.go"
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "maintainability",
+    "portableFailureClass": "doc-code-drift",
+    "ownerLayer": "foundation-source",
+    "ratchetDecision": "gate-updated",
+    "coverageDimensions": [
+      "maintainability",
+      "architecture-fitness",
+      "behaviour"
+    ]
+  },
+  "expectedFiles": {
+    "create": [
+      "docs/harness/tasks/2026-11-01-audit-p2-automigrate-boundary.task.md",
+      ".harness/tasks/2026-11-01-audit-p2-automigrate-boundary/manifest.json",
+      ".harness/evidence/2026-11-01-audit-p2-automigrate-boundary/commands.json",
+      ".harness/evidence/2026-11-01-audit-p2-automigrate-boundary/summary.md",
+      ".harness/evidence/2026-11-01-audit-p2-automigrate-boundary/review.md"
+    ],
+    "modify": [
+      "docs/DEPLOYMENT_GUIDE.md",
+      "docs/designs/MODULE_CONTRACT.md",
+      "backend/pkg/contracts/module.go",
+      "backend/pkg/contracts/module_test.go"
+    ],
+    "doNotTouch": [
+      "frontend/src/modules/lowcode/generator/**",
+      "backend/modules/business/**",
+      "backend/pkg/database/migrations/**",
+      "backend/pkg/database/migrate.go",
+      "VERSION",
+      "CHANGELOG.md"
+    ]
+  },
+  "executionRoles": {
+    "implementerPosture": "先确认冲突是否真的可达（不要用环境变量名糊过去），再在三个选项里选一个并把取舍写下来；接受的那条路必须把代价也写进文档。",
+    "reviewerPosture": [
+      "确认平台表的 AutoMigrate 禁令没有被放宽。",
+      "确认例外边界是可逐条核对的表格，而不是一句“低代码例外”。",
+      "确认日志文案与 bootstrap 阶段的实际行为一致。",
+      "确认新用例不与既有用例重复，且负向验证能把它单独打红。",
+      "确认没有借机改生成器或业务模块。"
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "cd backend && go build ./... && go vet ./... && gofmt -l pkg/contracts/",
+      "cd backend && go test ./pkg/contracts/ -run TestRegisterBackendModules -v",
+      "负向 A：FuncModule.Bootstrap 在 MigrateFunc == nil 时提前返回 → 新用例红、另两个绿",
+      "负向 B：删掉整个 bootstrap 阶段 → 新用例与 PhasedExecution 都红",
+      "npm run check:docs-frontmatter / check:harness-docs / check:harness-inventory / check:harness-encoding / check:duplication",
+      "node scripts/harness/check-evidence.mjs --root . --strict",
+      "node scripts/harness/check-review.mjs --root . --strict"
+    ],
+    "runtimeEvidence": [
+      "启动日志实测输出：versioned migrations mode: module Migrate() skipped, runtime bootstraps run instead + note"
+    ]
+  },
+  "runtimeSensitive": false,
+  "runtimeGap": "只改文档、注释与日志文案，运行时行为零变化；因此不需要数据库或端到端运行证据。日志读数来自单元测试的实际输出。",
+  "evidenceRequired": [
+    ".harness/evidence/2026-11-01-audit-p2-automigrate-boundary/commands.json：三用例读数 + 两次负向读数 + 文档门禁读数",
+    ".harness/evidence/2026-11-01-audit-p2-automigrate-boundary/summary.md：三选项取舍、PANTHEON_ENABLE_DYNAMIC_MODULES 辨析",
+    ".harness/evidence/2026-11-01-audit-p2-automigrate-boundary/review.md：逐条 reviewer posture + 例外是否被写宽的反向检查"
+  ],
+  "humanGates": [
+    "部署手册面向运维，措辞改动建议由一位非作者确认没有放宽“生产不得 AutoMigrate”的平台约束。",
+    "若下游 pantheon-ops 的部署文档抄了旧表述，需在其仓内同步（本包不改 ops）。"
+  ],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed",
+    "平台表的 AutoMigrate 禁令未被放宽，例外只覆盖生成业务表",
+    "例外边界可逐条核对（表格形式，含由谁创建 / 受哪个开关控制）",
+    "新用例在 FuncModule 被收紧时会红，且不与既有用例重复"
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-11-01-audit-p2-automigrate-boundary/manifest.json",
+    "taskDoc": "docs/harness/tasks/2026-11-01-audit-p2-automigrate-boundary.task.md",
+    "evidenceDir": ".harness/evidence/2026-11-01-audit-p2-automigrate-boundary/",
+    "summaryFile": ".harness/evidence/2026-11-01-audit-p2-automigrate-boundary/summary.md",
+    "reviewFile": ".harness/evidence/2026-11-01-audit-p2-automigrate-boundary/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-10-31.md",
+      "docs/DEPLOYMENT_GUIDE.md"
+    ]
+  },
+  "executionResult": {
+    "executedAt": "2026-11-01",
+    "headSha": "ef0073860ce03087d9cf05de6b5d7732687ef769",
+    "outcome": "completed",
+    "summary": "AUD-001c 收口，选“文档加例外”。先确认冲突真实可达：PANTHEON_ENABLE_DYNAMIC_MODULES 生产固定 false，但它只挡 /lowcode/dynamic-modules/* 的 HTTP 路由（DynamicModuleEnvGuard），编译进 backend/modules/business/generated_registry.go 的模块不受约束，启动时仍走 Bootstrap → service.Migrate() → AutoMigrate，所以不能用“生产不开动态模块”把冲突解释掉。DEPLOYMENT_GUIDE §3 把禁令限定为平台 schema（system_* / platform_* 只允许版本化迁移），新增边界表说明生成业务表由 BootstrapFunc 内部的 AutoMigrate 创建且不受 PANTHEON_AUTO_MIGRATE 控制，并写明两点操作后果：应用账号需 DDL 权限、生成表列只增不减（AutoMigrate 从不删列/改类型）。MODULE_CONTRACT §4.3 补齐接口里的 Migrate 并加了“何时执行 Migrate / Bootstrap”判定表，说明 BootstrapFunc 是运行时才有 schema 的模块的出口。contracts/module.go 的启动日志从 “skipping module AutoMigrate” 改为 “module Migrate() skipped, runtime bootstraps run instead” 并附指向文档的 note——原句与 bootstrap 阶段的实际行为相反，会误导排障。新增 TestRegisterBackendModules_DefaultModeRunsBootstrapForGeneratedModules 钉住 FuncModule 形状：只有 BootstrapFunc 的模块仍被 bootstrap，只有 MigrateFunc 的不被 migrate。",
+    "deviations": [
+      "任务包原计划只改文档；执行中发现启动日志与 MODULE_CONTRACT 接口清单同样会让人读错这条规则，遂一并纳入，改动面仍限于“让人正确理解这条规则”的材料。",
+      "新增用例的初版注释写成“既有用例在删掉 bootstrap 阶段时仍会通过”，负向 B 实测推翻（PhasedExecution 也会红），已改正为“既有用例无法区分模块完整与只有 BootstrapFunc”这一真实缺口。"
+    ],
+    "residualFindings": [
+      {
+        "id": "AUD-001c-ddl",
+        "severity": "P3",
+        "title": "生成业务表的 DDL 不在版本化迁移链里",
+        "detail": "被采纳的方案把例外写进文档，但没有改变事实：生成表的列变更随二进制升级由 AutoMigrate 静默生效，没有对应的 down 迁移，也不能靠审查 SQL 发现。真正的根治是让生成器产出迁移文件（利用已有的 TYPE_MAPPING[].sql），代价是要让手写 DDL 与 GORM 模型逐列一致（time.Time 在 MySQL 上是 datetime(3)、索引命名、m2m 关联表列顺序），不一致即查询失败且失去 AutoMigrate 兜底。冻结前不引入该风险，记录待后续版本重估。",
+        "status": "open"
+      },
+      {
+        "id": "AUD-001c-ops-doc",
+        "severity": "P3",
+        "title": "下游部署手册可能仍抄着旧表述",
+        "detail": "本包只改 pantheon-base 的 DEPLOYMENT_GUIDE。若 pantheon-ops 的部署文档复制过“生产环境不得启用 GORM AutoMigrate”这句，会在其仓内与本例外冲突，需下游自行同步（本包按约定不改 ops）。",
+        "status": "open"
+      }
+    ]
+  }
+}

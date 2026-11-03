@@ -41,6 +41,29 @@ import {
 } from './schema';
 import { TYPE_MAPPING, generateStructTags, getRequiredImports } from './typeMapping';
 
+/**
+ * GO_MODULE_PATH 是生成物 Go 导入前缀的唯一来源（AUD-001）。
+ *
+ * 必须与 backend/go.mod 的 module 行一致：模板此前手写 `pantheon-base/...` 前缀，
+ * 而 internal/scaffold/workspace.go 的注册器写真实模块路径，两处不同源，
+ * 生成包因此从未编译成功。tests/generator/generator-quality-contract.test.ts
+ * 直接读 backend/go.mod 钉住这条常量——改模块名但忘改常量会先在测试里红。
+ */
+export const GO_MODULE_PATH = 'github.com/duanxldragon/pantheon-base/backend';
+
+/** 由单一模块路径常量派生项目内部 Go 导入路径（模板侧不得再手写前缀）。 */
+function goImportPath(subpath: string): string {
+  return `${GO_MODULE_PATH}/${subpath}`;
+}
+
+/** 组装 Go 导入块：falsy 条目跳过（条件导入），每行自带制表符，生成缩进同样单一来源。 */
+function buildGoImportBlock(importPaths: Array<string | false | null | undefined>): string {
+  return importPaths
+    .filter((importPath): importPath is string => Boolean(importPath))
+    .map((importPath) => `\t"${importPath}"`)
+    .join('\n');
+}
+
 type StructTagOptions = NonNullable<Parameters<typeof generateStructTags>[2]>;
 
 export class BackendGenerator {
@@ -280,8 +303,8 @@ ${relationDTOs ? `\n${relationDTOs}` : ''}
 
 import (
 \t"errors"
-\t${hasDataScope ? `"pantheon-base/pkg/common"` : ``}
-\t${hasDataScope ? `"pantheon-base/pkg/database"` : ``}
+\t${hasDataScope ? `"${goImportPath('pkg/common')}"` : ``}
+\t${hasDataScope ? `"${goImportPath('pkg/database')}"` : ``}
 \t${requiresStrconv ? `"strconv"` : ``}
 \t"strings"
 \t"time"
@@ -572,7 +595,7 @@ ${relationServices ? `\n${relationServices}` : ''}
     return `package ${this.packageName}
 
 import (
-\t"pantheon-base/pkg/common"
+\t"${goImportPath('pkg/common')}"
 \t"strconv"
 \t"github.com/gin-gonic/gin"
 )
@@ -699,7 +722,8 @@ ${relationHandlers ? `\n${relationHandlers}` : ''}
    */
   generateModule(): string {
     const modelName = this.modelName;
-    const { scope } = this.schema;
+    const { scope, templateLevel = 'enterprise' } = this.schema;
+    const hasDataScope = this.schema.enableDataScope ?? templateLevel === 'enterprise';
     const moduleName = buildModuleNamespace(scope, this.schema.name);
     const pageTitleKey = buildTitleKey(scope, this.schema.name);
     const componentKey = buildComponentKey(scope, this.schema.name, modelName);
@@ -709,11 +733,7 @@ ${relationHandlers ? `\n${relationHandlers}` : ''}
     return `package ${this.packageName}
 
 import (
-\t"pantheon-base/internal/middleware"
-\t"pantheon-base/pkg/contracts"
-\t"strings"
-\t"github.com/gin-gonic/gin"
-\t"gorm.io/gorm"
+${buildGoImportBlock([goImportPath('pkg/contracts'), 'strings', 'github.com/gin-gonic/gin', 'gorm.io/gorm'])}
 )
 
 type generatedMenuSeed struct {
@@ -755,10 +775,11 @@ func Init${modelName}Module(r *gin.RouterGroup, db *gorm.DB) {
 \tcontracts.RegisterBackendModules(r, db, contracts.FuncModule{
 \t\tModuleName:  "${moduleName}",
 \t\tMigrateFunc: func(_ *gorm.DB) error { return service.Migrate() },
+\t\tBootstrapFunc: func(_ *gorm.DB) error { return service.Migrate() },
 \t\tSeedMenusFunc: seed${modelName}Menus,
 \t\tSeedI18nFunc: seed${modelName}I18n,
 \t\tRegister: func(r *gin.RouterGroup) {
-\t\t\tprotected := r.Group("${routePath}").Use(middleware.TokenAuthMiddleware()).Use(middleware.CasbinMiddleware())
+\t\t\tprotected := ${hasDataScope ? `contracts.DataScopedGroup(r, "${routePath}", db)` : `contracts.ProtectedGroup(r, "${routePath}")`}
 \t\t\t{
 \t\t\t\tprotected.GET("/list", handler.Get${modelName}List)
 \t\t\t\tprotected.GET("/options", handler.Get${modelName}Options)

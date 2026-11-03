@@ -1,0 +1,171 @@
+{
+  "taskId": "2026-10-31-audit-p1-lowcode-generator-build",
+  "repo": "pantheon-base",
+  "executedAt": "2026-10-31",
+  "agent": {
+    "tool": "other",
+    "adapter": "workbuddy-agent"
+  },
+  "runtimeSensitive": true,
+  "runtimeGap": "生成模块的“重启激活”不在本包范围（不引入热插拔），但建表路径属于运行态事实，无法只靠静态断言证明。因此本轮在**仓库副本**（系统临时目录 /tmp/w1-ws/backend，339 MB，含真实 go.mod 与依赖）落盘生成物，并写了一个一次性集成测试调用 contracts.RegisterBackendModules（PANTHEON_AUTO_MIGRATE 未设）后断言 biz_order 存在；该测试跑在真实 MySQL 上，未进仓库（生成物不入库，测试无法在干净检出下复现）。仓库内可复现的部分由 dynamicmodule 的单元/集成测试覆盖，且本轮已用 PANTHEON_TEST_DSN 指向本机 MySQL 执行，不是 skip。",
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-31-audit-p1-lowcode-generator-build/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-31-audit-p1-lowcode-generator-build/",
+    "reviewFile": ".harness/evidence/2026-10-31-audit-p1-lowcode-generator-build/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-10-31.md",
+      "docs/designs/GENERATOR_MODULE_DESIGN.md",
+      "docs/designs/MODULE_CONTRACT.md",
+      "docs/contracts/TENANT_CONTRACT_V1.md"
+    ]
+  },
+  "commands": [
+    {
+      "command": "node frontend/scripts/export-generated-module.mjs <schema> > /tmp/w1-before.json",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "修复前基线：10 个文件 / 77,082 字节。断言命中 `\"pantheon-base/internal/middleware\"` 与 `middleware.TokenAuthMiddleware()`（无参），`BootstrapFunc` 命中 0。这是 AUD-001 四项缺陷的复现基线。"
+    },
+    {
+      "command": "grep -n \"module\" backend/go.mod | head -1",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "`module github.com/duanxldragon/pantheon-base/backend`。与模板手写的 `pantheon-base/...` 不一致——`go list pantheon-base/internal/middleware` 返回 `is not in std`，即“生成即编译失败”。"
+    },
+    {
+      "command": "grep -rn \"BootstrapFunc:\\|) Bootstrap(\" --include=*.go backend | grep -v _test.go | grep -v pkg/contracts/module.go",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "**0 命中**：全仓没有任何模块实现 Bootstrap。所以 `RegisterBackendModules` 的 bootstrap 分支在 AUD-001 修复前是一条从未被走到的路径——这不是“个别模块漏配”，而是生成器与容器契约整体错位。"
+    },
+    {
+      "command": "cd frontend && node scripts/export-generated-module.mjs <schema> > /tmp/w1-final.json",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "修复后：10 个文件 / 74,863 字节。`\"pantheon-base/` 前缀命中 0、`internal/middleware` 命中 0、`middleware.*` 调用命中 0、`BootstrapFunc:` 命中 1、`contracts.DataScopedGroup(` 命中 1。"
+    },
+    {
+      "command": "grep -n \"BootstrapFunc\\|contracts.DataScopedGroup\\|middleware\\.\" modules/business/order/module.go",
+      "cwd": "/tmp/w1-ws/backend",
+      "status": "passed",
+      "details": "第 124 行 `BootstrapFunc: func(_ *gorm.DB) error { return service.Migrate() }`；第 128 行 `protected := contracts.DataScopedGroup(r, \"/business/order\", db)`；`middleware.` 命中 0。"
+    },
+    {
+      "command": "go build ./modules/business/order/ && go vet ./modules/business/order/",
+      "cwd": "/tmp/w1-ws/backend",
+      "status": "passed",
+      "details": "两者 exit 0（分别单独执行取值，未经管道）。这是 AUD-001 第一、二项的直接判据：修复前同一份 schema 的产物无法编译。"
+    },
+    {
+      "command": "PANTHEON_TEST_DSN=<local mysql> go test ./modules/business/order/ -run TestGeneratedModuleCreatesTableInVersionedMigrationMode -count=1 -v",
+      "cwd": "/tmp/w1-ws/backend",
+      "status": "passed",
+      "details": "**PASS**。测试内容：`os.Unsetenv(\"PANTHEON_AUTO_MIGRATE\")` → `testmysql.Open` → `order.InitOrderModule(api, db)` → 断言 `db.Migrator().HasTable(\"biz_order\")`。日志出现 `versioned migrations mode: skipping module AutoMigrate and running runtime bootstraps`，证明走的是默认分支而非 AutoMigrate 分支。"
+    },
+    {
+      "command": "sed -i 's|BootstrapFunc: ...|// removed|' modules/business/order/module.go && go test ./ -run TestGeneratedModuleCreatesTableInVersionedMigrationMode -count=1",
+      "cwd": "/tmp/w1-ws/backend",
+      "status": "passed",
+      "details": "**负向验证 FAIL**：`biz_order was not created in the default versioned-migration mode; BootstrapFunc is not wired`。恢复 BootstrapFunc 后重跑 ok。这证明该测试确实在测 BootstrapFunc，而不是被别的路径顺带建表。"
+    },
+    {
+      "command": "PANTHEON_TEST_DSN=<local mysql> go test ./modules/lowcode/dynamicmodule/ -run 'TestRegisterManagedModule' -count=1 -v",
+      "cwd": "pantheon-base/backend",
+      "status": "passed",
+      "details": "4 个用例全部 PASS（含新增 3 个）。日志可见 `WARN generated module build check failed module=business/asset package=./modules/business/asset`，即闸门在注册路径上真实触发。"
+    },
+    {
+      "command": "cp dynamic_module_service.go /tmp/w1-service-backup.go && sed -i 's|return s.verifyGeneratedModuleCompiles(scope, shortName)|return nil|' dynamic_module_service.go && go test ... -run TestRegisterManagedModuleRejectsUncompilableGeneratedSource -count=1",
+      "cwd": "pantheon-base/backend",
+      "status": "passed",
+      "details": "**负向验证 FAIL**：`expected registration to be rejected when the generated package does not compile`。从备份恢复后重跑 ok（`grep -c NEGATIVE-CHECK` = 0，确认没有留下临时改动）。"
+    },
+    {
+      "command": "cd frontend && npm run -s test:generator:quality",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "13 tests / 13 pass / 0 fail。新增 5 个用例，其中 `GO_MODULE_PATH stays in sync with backend/go.mod` 直接读 `backend/go.mod` 比对常量，防止模板与注册器再次各写一份路径。"
+    },
+    {
+      "command": "cd backend && go build ./... && go vet ./...",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "两者 exit 0，无输出。"
+    },
+    {
+      "command": "PANTHEON_TEST_DSN=<local mysql> go test ./modules/lowcode/... ./pkg/contracts/... -count=1",
+      "cwd": "pantheon-base/backend",
+      "status": "passed",
+      "details": "`dynamicmodule` ok 19.0s（DB 用例真跑，非 skip）、`lowcode/generator` ok、`pkg/contracts` ok（含 route_groups_test.go 的中间件链棘轮）。"
+    },
+    {
+      "command": "gofmt -l modules/business/order/",
+      "cwd": "/tmp/w1-ws/backend",
+      "status": "failed",
+      "details": "5 个生成 Go 文件全部被列出（未格式化）。**这是修复前就存在的缺陷，本包未修**：根因是模板把结构体字段对齐与 import 分组写死（如 `Key       string` 与 `ParentKey string` 手写空格），要修需在模板里按最长字段名算列宽。已登记为 AUD-001b（P3），理由见 summary.md“边界”一节。"
+    },
+    {
+      "command": "node scripts/run-frontend-typecheck.mjs",
+      "cwd": "pantheon-base",
+      "status": "failed",
+      "details": "**本轮自己引入又修掉的缺陷，如实记录**：首次执行报 `src/i18n/resources/fr-FR.ts(1336,40): error TS1005: ',' expected`。原因是我把 `module.register.source_uncompilable` 插到了 fr-FR 的 `'module.register.schema_invalid':` 与其续行值之间——该语言包这一条是两行写法，插入点选在了键与值中间。已改为“先补齐 schema_invalid 的值行，再追加新键”，重跑 typecheck exit 0。其余 4 个语言包该条是单行写法，未受影响。教训：往 i18n 资源里插键前必须看该键在当前语言包里的**行数形态**，不能只按相邻键名定位。"
+    },
+    {
+      "command": "npm run -s --prefix frontend export:i18n-builtin-snapshot && diff -q <before> <after>",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "后端 `builtin_locale_resources.json` 是**生成物**（由前端语言包导出）。我先前是手改的，因此必须验证手改结果与生成结果逐字节一致：重新导出后 `diff -q` 无差异（SNAPSHOT_UNCHANGED）。这条命令的作用是防止“手改 JSON 与前端资源不一致”在下次导出时产生意外 diff。"
+    },
+    {
+      "command": "npm run -s --prefix frontend check:i18n-hardcode / check:i18n-generated-scope / audit:i18n-locales / check:ui-contract",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "四条均 exit 0。新增文案键在 5 个语言包与后端快照中齐全，未触发硬编码或 scope 越界。"
+    }
+  ],
+  "knownGaps": [
+    "生成物的 gofmt 不干净（5/5 文件），本包未修，登记为 AUD-001b（P3）。根因是模板写死结构体字段对齐空格；修它要按最长字段名算列宽，属模板重构，与本包四项缺陷不同源。",
+    "BootstrapFunc 内部仍是 AutoMigrate，与 docs/DEPLOYMENT_GUIDE.md:44「生产环境不得启用 GORM AutoMigrate」冲突，登记为 AUD-001c（P2）。当前实现是任务包预先批准的选项之一，但文档未豁免；冻结前应择一（文档加例外 / 改为显式 CREATE TABLE IF NOT EXISTS）。",
+    "默认迁移模式下的建表验证在仓库副本（/tmp/w1-ws）内用一次性测试完成，该测试未进仓库：生成物不入库，干净检出无法复现。仓库内可复现的替代证据是 dynamicmodule 的注册拒绝用例与前端生成器断言。",
+    "编译闸门依赖 PATH 里有 go 或 PANTHEON_GO_BIN 指向绝对路径。部署镜像若裁剪掉工具链，注册会稳定失败并返回 source_uncompilable——这是有意的 fail-closed，但需要在部署文档里写明该前置依赖（本包未改部署文档）。",
+    "生成器仍有第二处未同源的路径逻辑：frontendGenerator.ts 的前端导入路径未纳入本次单一常量约束，本包只处理 Go 侧。"
+  ],
+  "gates": [
+    {
+      "gate": "go build ./...",
+      "status": "passed",
+      "details": "exit 0"
+    },
+    {
+      "gate": "go vet ./...",
+      "status": "passed",
+      "details": "exit 0"
+    },
+    {
+      "gate": "go test (lowcode + contracts, real MySQL)",
+      "status": "passed",
+      "details": "全部 ok，DB 用例未 skip"
+    },
+    {
+      "gate": "npm run test:generator:quality",
+      "status": "passed",
+      "details": "13/13"
+    },
+    {
+      "gate": "生成物 go build（临时 workspace）",
+      "status": "passed",
+      "details": "exit 0"
+    },
+    {
+      "gate": "默认迁移模式建表（临时 workspace + 真实 MySQL）",
+      "status": "passed",
+      "details": "biz_order 存在；摘掉 BootstrapFunc 后同一测试 FAIL"
+    },
+    {
+      "gate": "gofmt -l（生成物）",
+      "status": "failed",
+      "details": "5/5 未格式化；AUD-001b，P3，本包不修（见 summary.md）"
+    }
+  ]
+}

@@ -1,0 +1,108 @@
+{
+  "taskId": "2026-10-31-audit-p3-residual-closeout",
+  "repo": "pantheon-base",
+  "executedAt": "2026-11-01",
+  "agent": {
+    "tool": "other",
+    "adapter": "workbuddy"
+  },
+  "runtimeSensitive": false,
+  "runtimeGap": "三条均为静态可判定项：AUD-021 是源码与门禁脚本、AUD-025 是文档元数据扫描、AUD-028 是启动期死代码。均无运行时行为变化，因此不需要运行时证据。AUD-025 的 144 份读数来自真实仓库扫描，不是 fixture。",
+  "knownGaps": [
+    "AUD-021 只撤掉了模板目录的豁免与退役组件引用，没有删除该目录本身（1,894 行 / 5 文件，自 #120 起 tsconfig-excluded 且全仓零 import）。删除属独立决策，已登记为 AUD-021b。",
+    "AUD-025 只建立可见性，不处置文档。144 份逾期 Active 文档需要一次人工复核轮，且按 §6.5 不能靠批量改日期完成，已登记为 AUD-025-review-round。",
+    "审计报告 §11 记的“102 份 Active 文档 / 60 天未更新”与本次实测“144 份 / 90 天”口径不同，本次未复现审计口径；以实测为准，已在 DOCUMENT_METADATA_AND_STATUS §6.5 写明。",
+    "check-search-toolbar-contract.mjs 的文档指针与错误文案原本都写 DESIGN.md §7.2，而仓库里已无此文件。收口过程中一度登记为残留 AUD-021c，最终就地改为 docs/frontend/DESIGN_ENGINEERING_GUIDE.md §8.1（该脚本本来就在改动范围内），因此不再计入残留。",
+    "AUD-028 是删除类改动，没有行为可红，因此不存在负向读数；以 go build / go vet / gofmt -l 三清代替。"
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-31-audit-p3-residual-closeout/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-31-audit-p3-residual-closeout/",
+    "reviewFile": ".harness/evidence/2026-10-31-audit-p3-residual-closeout/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-10-31.md",
+      "docs/contracts/DOCUMENT_METADATA_AND_STATUS.md"
+    ]
+  },
+  "commands": [
+    {
+      "command": "cd frontend && node scripts/check-search-toolbar-contract.mjs",
+      "cwd": "pantheon-base",
+      "status": "failed",
+      "details": "AUD-021 负向（撤豁免前先证明豁免真的在放行）：把 `import { FilterPanel }` 临时塞回 src/modules/lowcode/templates/listTemplate.ts，并已删除 EXEMPT_SEGMENTS。输出 `SearchToolbar contract check: 1 finding(s)` / `finding: src/modules/lowcode/templates/listTemplate.ts:2 [no-filter-panel]` / `contract: List pages must use SearchToolbar; FilterPanel form grids are retired`，exit 1。这条读数证明模板目录现在真的被检了——在豁免存在时，同一份文件是 0 finding。"
+    },
+    {
+      "command": "cd frontend && node scripts/check-search-toolbar-contract.mjs",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "AUD-021 正向：`SearchToolbar contract check: 0 finding(s) across 106 module file(s) + index.css`，exit 0。被检文件数从撤豁免前的 102 涨到 106，多出来的正是 templates/ 下的 4 个 .ts。"
+    },
+    {
+      "command": "npm run test:search-toolbar-contract",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "AUD-021 门禁侧锁（新增第 10 条）：10 tests / 10 pass / 0 fail。第 10 条 `does not exempt the lowcode templates directory from the FilterPanel rule` 在 tmpdir fixture 里往 src/modules/lowcode/templates/listTemplate.ts 写 FilterPanel，断言 exit 1 且命中 no-filter-panel 与文件名。"
+    },
+    {
+      "command": "npm run test:search-toolbar-contract（临时恢复 EXEMPT_SEGMENTS 后）",
+      "cwd": "pantheon-base",
+      "status": "failed",
+      "details": "AUD-021 门禁侧锁的负向：把 `const EXEMPT_SEGMENTS = [path.sep+'lowcode'+...]` 与引用它的 filter 条件恢复回去，第 10 条变 `not ok 10`，`# pass 9 # fail 1`。恢复后立即回到 10/10。这条证明第 10 条锁的是“豁免本身”，不是“某次编辑的痕迹”。"
+    },
+    {
+      "command": "cd frontend && npm run test:generator:quality",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "AUD-021 生成器侧锁（第 14 条）：14 tests / 14 pass / 0 fail。断言生成产物里的 List.tsx 含 SearchToolbar、不含 FilterPanel。"
+    },
+    {
+      "command": "cd frontend && npm run test:generator:quality（把 FilterPanel 拼进 frontendGenerator.ts 的 imports 数组后）",
+      "cwd": "pantheon-base",
+      "status": "failed",
+      "details": "AUD-021 生成器侧锁的负向：`const imports = ['Card', 'Space']` → `['Card', 'Space', 'FilterPanel']`，第 14 条变 `not ok 14`，`# pass 13 # fail 1`。恢复后回到 14/14。这条与门禁侧第 10 条覆盖的是两件事：前者看生成器产物，后者看仓库源码。"
+    },
+    {
+      "command": "node scripts/frontmatter-check.mjs",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "AUD-025 正向：`Frontmatter check passed. Checked 415 docs, 302 with frontmatter, 113 without (informational, not enforced).` + `Enforced directories: ... 4 doc(s) must carry frontmatter.` + `Active docs past the 90-day review window: 144 (informational, not enforced — see DOCUMENT_METADATA_AND_STATUS §6.5).`，exit 0。144 份中 71 份是 .en.md 镜像、73 份中文正文；最老 198 天（docs/designs/BACKEND.md 与 BACKEND.en.md，updated_at 2026-04-17）。"
+    },
+    {
+      "command": "node scripts/frontmatter-check.mjs --report-overdue",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "AUD-025 明细：逐条输出 `- <path> (updated_at YYYY-MM-DD, Nd)`，按逾期天数降序，共 144 行，其中含 `.en.md (updated_at` 的 71 行。用于需要具体名单时（例如安排一次复核轮），默认不打印。"
+    },
+    {
+      "command": "npm run test:docs-frontmatter",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "AUD-025 锁（新增第 14 条）：14 tests / 14 pass / 0 fail。fixture 在 tmpdir 造两份 Active 文档（200 天前 / 5 天前）+ 一份 Contract（Design 属 DOC_TYPES_REQUIRING_CONTRACTS，必须能解析到 linked_contracts，否则 fixture 会因为无关原因变红、读不出结论），断言 result.ok 为 true、activeReviewOverdue 只含 200 天那份且 days >= 200。"
+    },
+    {
+      "command": "npm run test:docs-frontmatter（把 activeReviewOverdue 计入 ok 判定后）",
+      "cwd": "pantheon-base",
+      "status": "failed",
+      "details": "AUD-025 锁的负向：`ok: errors.length === 0` → `ok: errors.length === 0 && activeReviewOverdue.length === 0`，第 14 条变 `not ok 14`，失败信息 `overdue docs must not fail the gate / false !== true`，`# pass 13 # fail 1`。恢复后回到 14/14。这条锁的意义是：把“只报告”改成“会阻断”会被立刻发现。"
+    },
+    {
+      "command": "cd backend && go build ./... && go vet ./cmd/server/ && gofmt -l cmd/server/main.go",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "AUD-028：三条命令均 exit 0，gofmt -l 无输出。改动仅 backend/cmd/server/main.go 一处删除 + 5 行注释；`context` 包仍被 shutdown 段（:81 / :194 / :219）使用，import 未动。"
+    },
+    {
+      "command": "cd frontend && npx tsc -b",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "AUD-021 的类型侧回归：exit 0 无输出。注意 templates/ 本身被 tsconfig.app.json exclude，所以 tsc 不覆盖它——这正是需要靠门禁与生成器测试兜住的原因。"
+    },
+    {
+      "command": "grep -rn 'lowcode/templates' --include=*.ts --include=*.tsx --include=*.mjs --include=*.json --include=*.js frontend | grep -v node_modules",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "AUD-021 的“为什么可以删这个 import”的依据：全仓对 templates 目录的唯一引用是 `tsconfig.app.json:31 \"exclude\": [\"src/modules/lowcode/templates\"]`。目录内部 index.ts 只 import 同目录的 detailTemplate_clean.txt（?raw），闭成孤岛；没有任何外部 import。pantheon-ops 侧仅 .foundation/releases/*/bundle/shared-frontend/ 历史快照内有同名文件，活动代码不引用。"
+    }
+  ]
+}

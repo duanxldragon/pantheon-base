@@ -1,0 +1,108 @@
+{
+  "taskId": "2026-10-31-audit-p2-doc-metadata-and-index",
+  "repo": "pantheon-base",
+  "executedAt": "2026-10-31",
+  "agent": {
+    "tool": "other",
+    "adapter": "workbuddy-agent"
+  },
+  "runtimeSensitive": false,
+  "runtimeGap": "纯文档规范与检查器改动，无运行面变化；检查器行为由 tests/docs/frontmatter-check.test.mjs 覆盖。",
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-10-31-audit-p2-doc-metadata-and-index/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-10-31-audit-p2-doc-metadata-and-index/",
+    "reviewFile": ".harness/evidence/2026-10-31-audit-p2-doc-metadata-and-index/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-10-31.md",
+      "docs/contracts/DOCUMENT_FRONTMATTER_SCHEMA.md",
+      "docs/contracts/TENANT_CONTRACT_V1.md"
+    ]
+  },
+  "commands": [
+    {
+      "command": "node scripts/frontmatter-check.mjs",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "`Frontmatter check passed. Checked 415 docs, 302 with frontmatter, 113 without (informational, not enforced).` + `Enforced directories: docs/superpowers/specs/, docs/archive/examples/, docs/archive/baselines/, docs/archive/upgrade/ — 4 doc(s) must carry frontmatter.` exit 0。改前为 `415 docs, 295 with frontmatter` 且输出不提强制范围；7 份 legacy 任务包补齐后带元数据数 295→302。"
+    },
+    {
+      "command": "node scripts/frontmatter-check.mjs --report-legacy",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "`Legacy metadata docs not yet migrated: 0` exit 0——旧式正文元信息头（`更新时间：`/`Type:` 等）在 `docs/` 内已归零。"
+    },
+    {
+      "command": "node --test tests/docs/frontmatter-check.test.mjs",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "13 tests / 13 pass / 0 fail。新增 `summarizeCoverage` 用例，锁定“扫描数 vs 强制数 vs 无元数据数”三个口径；空入参也断言为 0。"
+    },
+    {
+      "command": "grep -L '^---$' docs/harness/tasks/*.task.md | wc -l",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "输出 `0`：92 份任务包文档全部带 YAML frontmatter（W4 时其中 7 份没有）。"
+    },
+    {
+      "command": "grep -h '^status:' docs/harness/tasks/*.task.md | sort | uniq -c",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "`85 Archived / 3 Active / 4 Draft`（共 92）。W4 后为 77/3/5，本次 +8 来自：7 份 legacy 包补 frontmatter（`status: Archived`，与各自 manifest `completed` 一致）+ 本包自身任务文档在证据落盘后改 `Archived`。保留 `Active` 的 3 份仍是 manifest `in-progress` 的件，保留 `Draft` 的 4 份仍是 `planned` 无证据件。"
+    },
+    {
+      "command": "grep -n \"tenant_id\\|tenant.Scoper\\|TenantOwnerID\\|Scoped\" backend/modules/system/org/dept/dept_service.go backend/modules/system/org/post/post_service.go",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "`dept_service.go:28` / `post_service.go:26` 嵌入 `tenant.Scoper`；`:88` / `:144` 创建时写 `TenantID: s.TenantOwnerID()`；读路径 `s.Scoped(db/tx)`（`dept_service.go:112/170/190/234`）。这三处是把 `dept/post` 从 `platform-global`（倾向）改判为 `tenant-owned` 的依据。"
+    },
+    {
+      "command": "grep -rn \"DOCUMENT_FRONTMATTER_SPEC\" --include=*.md docs | grep -v 'docs/harness/DOCUMENT_FRONTMATTER_SPEC'",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "剩余引用只有 `HARNESS_ENGINEERING_CONTRACT`(zh/en) 一处（已改为引用 schema 并注明旧文件归档）与两份任务包的历史叙述。没有仍把旧规范当权威的活引用。"
+    },
+    {
+      "command": "node scripts/harness/check-task-packet.mjs --root .",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "exit 0；92 份 [PASS]、0 份 [FAIL]。补 frontmatter 没有破坏任务包结构校验（`doc_type: Remediation` 要求的 `linked_contracts` 均指向真实合同）。"
+    },
+    {
+      "command": "node scripts/harness/check-doc-links.mjs --root . --strict",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "`Docs link check (strict): 0 finding(s)` exit 0：指针文档与 schema §11 的相对链接均可达。"
+    },
+    {
+      "command": "node scripts/harness/check-doc-inventory.mjs --root . --strict",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "`Docs inventory check (strict): 0 finding(s)` exit 0。"
+    },
+    {
+      "command": "node scripts/harness/check-doc-frontmatter.mjs --root . --strict",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "`Doc frontmatter check (strict): 0 error(s), 0 warning(s)` exit 0：README 主入口仍只指向 `Active` 文档，合同正文与 frontmatter 关系无漂移。"
+    },
+    {
+      "command": "node scripts/harness/check-encoding.mjs --root . --strict",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "`Encoding check (strict): 0 finding(s) across 2614 scanned file(s)` exit 0。"
+    },
+    {
+      "command": "node scripts/harness/check-evidence.mjs --root . --strict",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "exit 0，本包 `commands.json` 判定 PASS。"
+    }
+  ],
+  "knownGaps": [
+    "未采用方案 (a)：`docs/history`、`docs/release-notes`、`docs/reviews`、`docs/runbooks` 及其余 `docs/**` 共 113 份文档仍不带元数据，属 schema §11.2 显式声明的非强制范围；扩大强制需同时改 §11 与 `ENFORCED_DIR_PREFIXES`。",
+    "`docs/designs/TENANT_RESOURCE_SCOPE_MATRIX.md` §5 “维护责任”仍指向 2026-09-10 的三个冻结任务，属历史登记，本次未改。",
+    "`docs/harness/HARNESS_ENGINEERING_CONTRACT`(zh/en) 仍列有到旧指针文件的路径叙述（已注明归档），未删除该句以保留可检索性。",
+    "本机 `npm run check:docs-frontmatter` 经 WSL relay 调用失败（execvpe(/bin/bash) failed），全部读数改为直接执行 `node scripts/frontmatter-check.mjs`（package.json 中的同一命令）。"
+  ]
+}

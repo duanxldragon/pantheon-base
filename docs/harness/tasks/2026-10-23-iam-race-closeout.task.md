@@ -4,11 +4,11 @@ doc_type: Remediation
 layer: platform
 depends_on_layers:
   - system/iam
-status: Active
+status: Archived
 linked_contracts:
   - docs/contracts/TENANT_CONTRACT_V1.md
   - docs/contracts/PLATFORM_CONTRACT.md
-updated_at: 2026-10-23
+updated_at: 2026-10-31
 ---
 
 # Task Packet: 2026-10-23-iam-race-closeout
@@ -64,7 +64,7 @@ platform
 - Quality Profile: `permission-policy`
 - Portable Failure Class: `unique-key-race` / `non-idempotent-repair` / `lost-update`
 - Owner Layer: `consumer-repository`
-- Ratchet Decision: `sensor-added`
+- Ratchet Decision: `test-added`
 - Coverage Dimensions:
   - behaviour
   - runtime-quality

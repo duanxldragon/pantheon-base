@@ -4,12 +4,12 @@ doc_type: Remediation
 layer: platform
 depends_on_layers:
   - system/iam
-status: Active
+status: Archived
 linked_contracts:
   - docs/contracts/TENANT_CONTRACT_V1.md
   - docs/contracts/PLATFORM_CONTRACT.md
   - docs/contracts/SYSTEM_IAM_CONTRACT.md
-updated_at: 2026-10-22
+updated_at: 2026-10-31
 ---
 
 # Task Packet: 2026-10-22-delivery-audit-remediation

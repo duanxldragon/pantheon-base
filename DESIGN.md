@@ -82,14 +82,56 @@ Pantheon Base 应定位为“**模块化单体 + 企业后台底座**”，适�
 - 字典管理：字典类型、字典项、状态、排序、缓存刷新
 - 系统设置：站点配置、安全策略、上传配置、通知配置
 
-### 3.3 P2 演进能力
+### 3.3 P2 演进项现状（逐项，附判据）
 
-- 多租户
-- SSO / OAuth2 / OIDC
-- MFA / 登录风控
-- 数据权限
-- 主题与品牌配置
-- 可视化工作台
+审计（AUD-004）指出本节把已交付与未实现混排成一份「未来清单」，读者无法据此判断现状。现改为逐项现状表：每行的判据都是目录或 `grep` 能复核的，不是叙述。
+
+| 能力 | 现状 | 判据（可复核） |
+| :--- | :--- | :--- |
+| 多租户 | **已交付**（`compat` / `multi` 双模；配额只度量与展示） | 见 §3.4 与 [租户合同 V1](./docs/contracts/TENANT_CONTRACT_V1.md)；代码在 `backend/pkg/tenant/`、`backend/modules/system/iam/tenant/`；路由见 `backend/modules/system/system_modules.go` |
+| MFA / TOTP 与高敏二次验证 | **已交付** | `backend/modules/auth/`（login / security 路径）；安全中心页面；§8「当前实现状态判断」与 §9 P0 第 1 条 |
+| 数据权限 | **已交付** | 角色数据范围策略 + `dept_and_children` 部门树展开（§9 P2 第 8 条）；`backend/modules/system/iam/permission/`；`docs/designs/DATA_PERMISSION_HOOK.md` |
+| 可视化工作台 | **已交付**（跨系统域摘要，非低代码搭建） | `frontend/src/components/operational/`、`backend/modules/platform/`；`docs/designs/PLATFORM_DASHBOARD_DESIGN.md`、`OPERATIONAL_WORKBENCH_COMPONENTS_DESIGN.md` |
+| 主题（四主题 + 暗色） | **已交付** | §7.7 色彩体系；`docs/designs/THEME_TOKENS_REFERENCE.md`、`DARK_MODE_DESIGN.md` |
+| SSO / OAuth2 / OIDC | **未实现** | 无 OIDC 登录路由在册：`backend/modules/auth/oidc/` 除测试与迁移 `000029` 外无引用者（不可达实现，处置见整改包 `2026-10-31-audit-p2-oidc-scaffold-decision`）；设计稿 `docs/designs/SSO_OIDC_DESIGN.md` 仍是设计 |
+| 登录风控（设备指纹 / 异地识别） | **未实现** | `git grep -il "fingerprint\|riskcontrol" backend/modules/auth` 命中 0；设计稿 `docs/designs/LOGIN_RISK_CONTROL_DESIGN.md` |
+| 品牌配置（租户 branding） | **未实现** | `git grep -i "branding" backend/modules` 命中 0；合同 §1 Out（自定义域名与租户级品牌归 Out） |
+
+### 3.4 多租户现状（已交付面与明确未做面）
+
+本节是摘要与指向，不复述裁决：租户能力的唯一权威是 [docs/contracts/TENANT_CONTRACT_V1.md](./docs/contracts/TENANT_CONTRACT_V1.md)（英文 [TENANT_CONTRACT_V1.en.md](./docs/contracts/TENANT_CONTRACT_V1.en.md)）。此前本文没有租户章，把多租户整体写作「P2 未来 / 不在租户模型未明确前提前实现」，与已交付实现方向相反（审计 AUD-004），就地更正。
+
+**模型（合同 §2.1 / §2.3）**：共享 schema + 行级 `tenant_id` 隔离；`tenant_id = 0` 是平台级 / 全局作用域，不「属于租户 0」。V1 不做独立 schema 或独立数据库。
+
+**双模（合同 §6）**：`tenant.mode = compat | multi`，由 `system/config` 的 feature flag 承载，默认 `compat`，运行时可读、变更走 config 变更流程。`compat` 承诺现有单租户部署零迁移继续运行、不校验 membership、Casbin 全部落 `tenant:0`。**`multi` 是 `compat` 的超集**，不是二选一的世界开关；切换只允许 compat → multi 单向，回退等于数据回滚（runbook），禁止 multi 运行后直接改回 compat 继续写入。
+
+**上下文解析优先级（合同 §3.1）**：
+
+1. 显式请求头 `X-Tenant-Id`（平台运维 / 后台管理场景，要求平台级能力 + 落审计）；
+2. 认证主体：JWT claims 的 `tenant_id`（登录时按默认租户或登录请求指定租户签发）；
+3. 平台作用域兜底：请求落在**显式声明为平台管理 API 的路由组**上，且主体具平台级能力、且不属于任何租户 → `tenant_id = 0`；
+4. compat 模式兜底：`tenant_id = 0`。
+
+未声明平台作用域且上下文缺失时 **fail-closed**（合同 §3.2 / §5：`TENANT_CONTEXT_MISSING`），不做静默放大；参考实现 `pkg/tenant.Resolve` 与 `internal/middleware.PlatformScopeTenantContextMiddleware`。
+
+**Casbin domain（合同 §4）**：policy 的 domain 取 `tenant:<tenant_id>`，全局为 `tenant:0`；租户内角色命名 `role:<name>@tenant:<tenant_id>`，全局角色不带 domain。检查顺序先全局、后 domain，两个命名空间**不合并、不隐式提升**。
+
+**已交付面**（逐条可对路由册与代码复核）：
+
+- 租户 CRUD 与成员管理：`/system/tenant` 组下 8 条路由（`GET /tenant/list`、`GET /tenant/:id`、`POST /tenant`、`PUT /tenant/:id`、`DELETE /tenant/:id`、`GET /tenant/:id/members`、`POST /tenant/:id/members`、`DELETE /tenant/:id/members/:userId`），见 `backend/modules/system/system_modules.go`
+- 平台侧租户运营读面与套餐编辑：`/system/tenant-ops/*` 5 条路由（overview、member、plan list、plan create、plan update），合同 §2.5
+- 租户初始化与 Bootstrap 自动化：`docs/TENANT_INITIALIZATION_GUIDE.md`；compat → multi 升级：`docs/migrations/COMPAT_TO_MULTI_UPGRADE.md`
+- 登录时租户归属与租户切换：`POST /auth/tenants/switch` 与其可读列表（`backend/modules/auth/login/login_tenant_switch.go`）；租户域接口面见 `docs/api/TENANT_API.md`
+- 套餐与配额：阈值落库（迁移 `000030`），经 `PlanStore.QuotaFor` 读取并在控制台展示；**超出配额不拒绝任何写入**（合同 §2.4 / §1 Out）
+
+**明确未做（不要读成已做）**：
+
+- 配额强制：写路径没有配额校验（`grep -rn "quota\|Quota" backend/modules/system/iam/user backend/modules/system/iam/role` 命中 0）
+- 独立 schema / 独立 database 隔离模型
+- 跨租户数据共享与联邦查询
+- 租户级自定义域名、独立部署形态
+- 自助注册、计费与套餐的商业化售卖（下单、升降级、账期）
+- **业务域（`modules/business/*`）在 V1 内是单租户语义**，不参与租户隔离（合同 §2.6，整改包 `2026-10-31-audit-p1-business-route-tenant-context`）。给业务路由组挂租户中间件**不会产生隔离**，只会让 `multi` 模式下所有业务请求变成 `TENANT_CONTEXT_MISSING`——这不是可用的加固方向。
 
 ## 4. 认证与授权设计
 
@@ -113,13 +155,15 @@ Pantheon Base 应定位为“**模块化单体 + 企业后台底座**”，适�
 | **permission** | 权限点、按钮权限、资源权限                                  |
 | **menu**       | 菜单树、导航信息架构、菜单元数据                            |
 
-### 4.3 为什么要拆
+### 4.3 为什么要拆（历史背景；本节记录理由，不是待办）
 
-- 当前 `backend/modules/system/iam/user/user_service.go` 同时承担认证、会话、用户资料和后台用户管理，职责过重。
+**`auth` 从 `system/user` 的混合实现中拆出已经落地**（§9 P0 第 1 条；代码面 `backend/modules/auth/` 与 `backend/modules/system/iam/` 已分属两个模块）。下列表述写于拆分之前，保留是为了说明当初为什么这样切；读现状请以 §3.3 的现状表与 §8 为准，不要把它们当成未完成项。
+
+- 拆分前 `backend/modules/system/iam/user/user_service.go` 同时承担认证、会话、用户资料和后台用户管理，职责过重。
 - 用户管理和认证安全不是同一种业务：
   - “管理别人”属于 IAM；
   - “验证我是谁 / 我能否登录”属于 Auth。
-- 后续一旦增加验证码、MFA、单点登录、设备管理、登录风控，不拆会继续膨胀。
+- 事后看，这条边界判断成立：验证码、MFA / TOTP、会话撤销、登录日志都落在了独立的 `auth` 子域内；仍未实现的是 SSO / OIDC 与登录风控（判据见 §3.3），它们继续留在 `auth` 子域，不再回流 `user`。
 
 ### 4.4 权限模型必须补强
 
@@ -372,7 +416,7 @@ border/background，避免交互态被高特异性规则压掉）。机械门禁
 
 8. 已完成：数据权限中间件、角色数据范围策略、`dept_and_children` 部门树展开和业务模块数据范围接入样板。
 9. 已完成设计锚点：SSO / OAuth2 / OIDC 与登录风控后续边界。
-10. 后续演进：更多业务模块 smoke 覆盖有权限/无权限数据集；真实多租户、SSO provider 和登录风控自动化继续按边界预留，不在身份源或租户模型未明确前提前实现。
+10. 更正（审计 AUD-004）：「真实多租户」不再是预留项——`compat` / `multi` 双模已交付并有租户 smoke（§3.4、合同 V1）。仍按边界预留的是 SSO provider 与登录风控自动化（判据见 §3.3），并且业务域在 V1 内保持单租户语义（合同 §2.6，依赖同批恢复的 W2 合同新增）。后续演进项只剩：更多业务模块 smoke 覆盖有权限/无权限数据集。
 
 ## 10. 文档使用顺序
 

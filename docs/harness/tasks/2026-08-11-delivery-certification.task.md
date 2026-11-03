@@ -2,8 +2,8 @@
 title: Certify Pantheon Base delivery for Ops development
 doc_type: Remediation
 layer: ci-workflow
-status: Active
-updated_at: 2026-08-11
+status: Archived
+updated_at: 2026-10-31
 linked_contracts:
   - docs/designs/FOUNDATION_RELEASE_MODEL.md
   - docs/designs/QUALITY_AND_SECURITY_STRATEGY.md

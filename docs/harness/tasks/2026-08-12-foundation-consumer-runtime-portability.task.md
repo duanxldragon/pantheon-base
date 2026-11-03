@@ -2,8 +2,8 @@
 title: Make generated-module smoke portable across foundation consumers
 doc_type: Remediation
 layer: inheritance-sync
-status: Active
-updated_at: 2026-08-12
+status: Archived
+updated_at: 2026-10-31
 linked_contracts:
   - docs/designs/FOUNDATION_RELEASE_MODEL.md
 ---

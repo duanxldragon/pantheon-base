@@ -2,10 +2,10 @@
 title: Remediate all open SonarCloud code smells on main
 doc_type: Remediation
 layer: platform
-status: Active
+status: Archived
 linked_contracts:
   - docs/contracts/PLATFORM_CONTRACT.md
-updated_at: 2026-08-05
+updated_at: 2026-10-31
 ---
 
 # Task Packet: 2026-08-02-sonarcloud-open-issues

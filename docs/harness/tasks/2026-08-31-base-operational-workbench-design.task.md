@@ -2,8 +2,8 @@
 title: Define Base operational workbench shared contracts
 doc_type: Design
 layer: platform
-status: Active
-updated_at: 2026-08-31
+status: Archived
+updated_at: 2026-10-31
 linked_contracts:
   - docs/designs/OPERATIONAL_WORKBENCH_COMPONENTS_DESIGN.md
 ---
