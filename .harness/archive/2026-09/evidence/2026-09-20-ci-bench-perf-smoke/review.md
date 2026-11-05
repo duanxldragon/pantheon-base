@@ -28,3 +28,24 @@ publication, no cache surface).
 - The `*testing.T` assertion breakage shows benchmarks were unexercised since
   introduction; other packages may harbor similar latent benchmark issues
   (out of scope, no other Benchmark funcs exist in-repo today).
+
+## Machine Readable
+
+```json
+{
+  "taskId": "2026-09-20-ci-bench-perf-smoke",
+  "verdict": "approved with documented P2 follow-up",
+  "verdictRationale": "'Risk accepted at standard with workflow-posture verification'; the job is advisory-only and residual follow-ups (advisory-to-blocking promotion, latent benchmark issues) are documented.",
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-09-20-ci-bench-perf-smoke/manifest.json",
+    "evidence": ".harness/evidence/2026-09-20-ci-bench-perf-smoke/commands.json",
+    "reviewFile": ".harness/evidence/2026-09-20-ci-bench-perf-smoke/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".harness/tasks/2026-09-20-ci-bench-perf-smoke/manifest.json"
+    ]
+  }
+}
+```
+
+> This block was backfilled on 2026-11-04 during the archive-coverage repair. It restates the verdict already written above in machine-readable form and links the artifacts that existed for this task; no conclusion, finding or verification claim was added, removed or reworded. The prose remains authoritative.

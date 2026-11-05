@@ -110,5 +110,6 @@
     "go": "go1.26.10 windows/amd64 (repo go.mod toolchain)",
     "db": "local MySQL 127.0.0.1:3306 via .env.test DSN (database pantheon_base)",
     "redis": "local Redis 127.0.0.1:6379 shared with the maintainer's running pantheon-ops server (key-namespace analysis in step 8)"
-  }
+  },
+  "runtimeGap": "Restated on 2026-11-04 during the archive-governance repair from this round's own text: its runtime signal is the live-server automated API smoke recorded under smokePerModule (run once against the fully-converted server), not under the canonical runtime keys, and the gaps this round itself recorded are that i18n import has no entry in the automated API smoke and that per-module isolation comes from the one-commit-per-module history rather than eight separate suite invocations. No conclusion, command status or finding was added, removed or reworded."
 }

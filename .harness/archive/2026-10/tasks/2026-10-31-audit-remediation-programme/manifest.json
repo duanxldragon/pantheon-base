@@ -100,7 +100,7 @@
       "taskDoc": "docs/harness/tasks/2026-10-31-audit-p2-dead-code-legacy-surface.task.md",
       "manifest": ".harness/tasks/2026-10-31-audit-p2-dead-code-legacy-surface/manifest.json",
       "priority": "P2",
-      "status": "planned",
+      "status": "completed",
       "dependsOn": [
         "W1"
       ],
@@ -113,7 +113,7 @@
       "taskDoc": "docs/harness/tasks/2026-10-31-audit-p2-token-cache-race.task.md",
       "manifest": ".harness/tasks/2026-10-31-audit-p2-token-cache-race/manifest.json",
       "priority": "P2",
-      "status": "planned",
+      "status": "completed",
       "dependsOn": [],
       "audits": "AUD-026",
       "blockingFreeze": true

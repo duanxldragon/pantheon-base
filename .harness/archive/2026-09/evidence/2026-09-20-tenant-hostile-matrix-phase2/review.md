@@ -20,3 +20,24 @@ product code, no contract, no permission/menu/i18n surface touched.
 
 Approve for PR. Evidence chain complete (commands.json, summary.md, review.md,
 pr-body.md); task packet present.
+
+## Machine Readable
+
+```json
+{
+  "taskId": "2026-09-20-tenant-hostile-matrix-phase2",
+  "verdict": "approved",
+  "verdictRationale": "'Approve for PR. Evidence chain complete (commands.json, summary.md, review.md, pr-body.md); task packet present.'",
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-09-20-tenant-hostile-matrix-phase2/manifest.json",
+    "evidence": ".harness/evidence/2026-09-20-tenant-hostile-matrix-phase2/commands.json",
+    "reviewFile": ".harness/evidence/2026-09-20-tenant-hostile-matrix-phase2/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".harness/tasks/2026-09-20-tenant-hostile-matrix-phase2/manifest.json"
+    ]
+  }
+}
+```
+
+> This block was backfilled on 2026-11-04 during the archive-coverage repair. It restates the verdict already written above in machine-readable form and links the artifacts that existed for this task; no conclusion, finding or verification claim was added, removed or reworded. The prose remains authoritative.

@@ -1,0 +1,123 @@
+{
+  "taskId": "2026-11-04-audit-p1-refresh-rotation",
+  "taskDoc": "docs/harness/tasks/2026-11-04-audit-p1-refresh-rotation.task.md",
+  "title": "刷新令牌并发与存储故障验证及最小修复",
+  "goal": "刷新令牌并发与存储故障验证及最小修复",
+  "primaryLayer": "system/auth",
+  "status": "in-progress",
+  "priority": "P1",
+  "type": "security-remediation",
+  "findings": [
+    "PB-003"
+  ],
+  "parentTaskId": "2026-11-04-global-audit-remediation",
+  "dependencies": [
+    "2026-11-04-audit-p1-ssrf-dial-binding",
+    "2026-11-04-audit-p1-npm-audit-exit"
+  ],
+  "scope": {
+    "in": [
+      "刷新令牌并发与存储故障验证及最小修复",
+      "先隔离验证同一旧refresh并发、跨实例和存储失败；记录实际结果，不将静态疑点直接当漏洞",
+      "确认后补原子消费/轮换最小实现；同一旧token最多一次签发成功，失败不可继续成功响应",
+      "回归正常刷新、吊销/改密、租户V1约束和失败恢复；证据不足保持未关闭"
+    ],
+    "out": [
+      "产品扩展/大重构",
+      "批量删除或重写旧文档",
+      "生产操作/发布/冻结代签",
+      "覆盖或回退用户已有改动"
+    ]
+  },
+  "dependencyLayers": [
+    "platform"
+  ],
+  "contractAnchors": [
+    "docs/reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-11-04_FULL.md",
+    "docs/harness/VERIFICATION_EVIDENCE_SPEC.md",
+    "docs/harness/REVIEW_LOOP_SPEC.md"
+  ],
+  "expectedFiles": {
+    "create": [
+      "docs/harness/tasks/2026-11-04-audit-p1-refresh-rotation.task.md",
+      ".harness/tasks/2026-11-04-audit-p1-refresh-rotation/manifest.json",
+      "backend/pkg/authtoken/consume_refresh_test.go",
+      "backend/modules/auth/login/refresh_rotation_test.go",
+      "backend/modules/auth/session/refresh_race_test.go",
+      ".harness/evidence/2026-11-04-audit-p1-refresh-rotation/commands.json",
+      ".harness/evidence/2026-11-04-audit-p1-refresh-rotation/summary.md",
+      ".harness/evidence/2026-11-04-audit-p1-refresh-rotation/review.md"
+    ],
+    "modify": [
+      "backend/pkg/authtoken/token.go",
+      "backend/modules/auth/login/login_handler.go",
+      "backend/modules/auth/session/session_service.go",
+      "docs/contracts/SYSTEM_AUTH_CONTRACT.md",
+      "docs/contracts/SYSTEM_AUTH_CONTRACT.en.md"
+    ],
+    "doNotTouch": [
+      "VERSION",
+      "CHANGELOG.md",
+      "backend/pkg/database/migrations",
+      "pantheon-ops"
+    ]
+  },
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "auth-security",
+    "portableFailureClass": "PB-003",
+    "ownerLayer": "foundation-source",
+    "ratchetDecision": "no-repeat-observed",
+    "coverageDimensions": [
+      "behaviour",
+      "maintainability"
+    ]
+  },
+  "executionRoles": {
+    "implementerPosture": "Generator executor单一写入者；并行仅只读proposal",
+    "reviewerPosture": [
+      "独立Reviewer核查失败路径、In/Out和下游兼容"
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "go test ./pkg/authtoken ./modules/auth/login ./modules/auth/session"
+    ],
+    "runtimeEvidence": [
+      "隔离测试与受控本地复现，不访问生产/外部网络"
+    ]
+  },
+  "runtimeSensitive": true,
+  "runtimeGap": "Controlled local tests/builds collected; live external integration, browser smoke and release validation remain unverified.",
+  "acceptanceCriteria": [
+    "先隔离验证同一旧refresh并发、跨实例和存储失败；记录实际结果，不将静态疑点直接当漏洞",
+    "确认后补原子消费/轮换最小实现；同一旧token最多一次签发成功，失败不可继续成功响应",
+    "回归正常刷新、吊销/改密、租户V1约束和失败恢复；证据不足保持未关闭"
+  ],
+  "implementationNotes": [
+    "两个Runtime、同一旧token16请求的动态复现从16个pair降为1个；GETDEL先消费，失败不恢复旧token。进一步确认旧Save会恢复撤销/覆盖tenant，并对刷新及切换共用条件更新，保留导出签名。",
+    "Only one Generator writer; read-only proposal/independent review attempts failed with service 503. Fallback serial implementation plus mechanical evidence; not independent self-approval."
+  ],
+  "risks": [
+    "高：并发与重试语义、跨实例会话、部分DB/Redis失败；禁止盲目并行补丁和新增租户功能"
+  ],
+  "humanGates": [
+    "实际门禁策略放宽、生产破坏操作、发布及冻结宣告：维护者；本地修复已授权"
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-11-04-audit-p1-refresh-rotation/manifest.json",
+    "taskDoc": "docs/harness/tasks/2026-11-04-audit-p1-refresh-rotation.task.md",
+    "evidenceDir": ".harness/evidence/2026-11-04-audit-p1-refresh-rotation/",
+    "reviewFile": ".harness/evidence/2026-11-04-audit-p1-refresh-rotation/review.md",
+    "summaryFile": ".harness/evidence/2026-11-04-audit-p1-refresh-rotation/summary.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".harness/tasks/2026-11-04-global-audit-remediation/plan.md",
+      "docs/reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-11-04_FULL.md"
+    ]
+  },
+  "implementationStatus": "applied",
+  "reviewStatus": "blocked",
+  "verificationStatus": "passed"
+}

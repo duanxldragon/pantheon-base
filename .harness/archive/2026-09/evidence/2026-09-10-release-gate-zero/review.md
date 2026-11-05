@@ -37,3 +37,24 @@ unchanged by design.
   (not suppression) per repo rules.
 - S6897/S6596 k8s probe changes are config-only; verified by manifest
   shape review, not by cluster deploy.
+
+## Machine Readable
+
+```json
+{
+  "taskId": "2026-09-10-release-gate-zero",
+  "verdict": "blocked",
+  "verdictRationale": "Local gates pass but SonarCloud is an outstanding gate: 'SonarCloud acceptance is verified post-merge'; summary: 'zero-issue confirmation lands with the next main analysis'.",
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-09-10-release-gate-zero/manifest.json",
+    "evidence": ".harness/evidence/2026-09-10-release-gate-zero/commands.json",
+    "reviewFile": ".harness/evidence/2026-09-10-release-gate-zero/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".harness/tasks/2026-09-10-release-gate-zero/manifest.json"
+    ]
+  }
+}
+```
+
+> This block was backfilled on 2026-11-04 during the archive-coverage repair. It restates the verdict already written above in machine-readable form and links the artifacts that existed for this task; no conclusion, finding or verification claim was added, removed or reworded. The prose remains authoritative.

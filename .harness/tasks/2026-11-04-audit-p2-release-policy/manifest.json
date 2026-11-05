@@ -1,0 +1,114 @@
+{
+  "taskId": "2026-11-04-audit-p2-release-policy",
+  "taskDoc": "docs/harness/tasks/2026-11-04-audit-p2-release-policy.task.md",
+  "title": "说明风险优先与现行 Sonar 发布门禁的权威边界",
+  "goal": "说明风险优先与现行 Sonar 发布门禁的权威边界",
+  "primaryLayer": "platform",
+  "status": "in-progress",
+  "priority": "P2",
+  "type": "audit-remediation",
+  "findings": [
+    "PB-006"
+  ],
+  "parentTaskId": "2026-11-04-global-audit-remediation",
+  "dependencies": [
+    "2026-11-04-audit-p1-npm-audit-exit"
+  ],
+  "scope": {
+    "in": [
+      "说明风险优先与现行 Sonar 发布门禁的权威边界",
+      "文档明确当前release-gate强制Sonar全BUG/VULNERABILITY/CODE_SMELL清零为发布例外",
+      "风险优先用于整改投入，不能由Agent解释为绕开已有门禁",
+      "阈值放宽/移除门禁仅写成维护者策略裁定项；本轮保持配置"
+    ],
+    "out": [
+      "产品扩展/大重构",
+      "批量删除或重写旧文档",
+      "生产操作/发布/冻结代签",
+      "覆盖或回退用户已有改动"
+    ]
+  },
+  "dependencyLayers": [
+    "system/auth"
+  ],
+  "contractAnchors": [
+    "docs/reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-11-04_FULL.md",
+    "docs/harness/VERIFICATION_EVIDENCE_SPEC.md",
+    "docs/harness/REVIEW_LOOP_SPEC.md"
+  ],
+  "expectedFiles": {
+    "create": [
+      "docs/harness/tasks/2026-11-04-audit-p2-release-policy.task.md",
+      ".harness/tasks/2026-11-04-audit-p2-release-policy/manifest.json",
+      ".harness/evidence/2026-11-04-audit-p2-release-policy/commands.json",
+      ".harness/evidence/2026-11-04-audit-p2-release-policy/summary.md",
+      ".harness/evidence/2026-11-04-audit-p2-release-policy/review.md"
+    ],
+    "modify": [
+      "docs/designs/QUALITY_AND_SECURITY_STRATEGY.md",
+      "docs/designs/QUALITY_AND_SECURITY_STRATEGY.en.md"
+    ],
+    "doNotTouch": [
+      "VERSION",
+      "CHANGELOG.md",
+      "backend/pkg/database/migrations",
+      "pantheon-ops"
+    ]
+  },
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "ci-workflow",
+    "portableFailureClass": "PB-006",
+    "ownerLayer": "foundation-source",
+    "ratchetDecision": "no-repeat-observed",
+    "coverageDimensions": [
+      "behaviour",
+      "maintainability"
+    ]
+  },
+  "executionRoles": {
+    "implementerPosture": "Generator executor单一写入者；并行仅只读proposal",
+    "reviewerPosture": [
+      "独立Reviewer核查失败路径、In/Out和下游兼容"
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "node --test tests/scripts/release-gate-workflow.test.mjs"
+    ],
+    "runtimeEvidence": []
+  },
+  "runtimeSensitive": false,
+  "runtimeGap": "No runtime behaviour changed; bounded documentation/policy review only.",
+  "acceptanceCriteria": [
+    "文档明确当前release-gate强制Sonar全BUG/VULNERABILITY/CODE_SMELL清零为发布例外",
+    "风险优先用于整改投入，不能由Agent解释为绕开已有门禁",
+    "阈值放宽/移除门禁仅写成维护者策略裁定项；本轮保持配置"
+  ],
+  "implementationNotes": [
+    "双语策略明确当前Sonar发布全BUG/VULNERABILITY/CODE_SMELL清零是发布例外；风险优先用于投入分配，现行门禁配置不放宽。",
+    "Only one Generator writer; read-only proposal/independent review attempts failed with service 503. Fallback serial implementation plus mechanical evidence; not independent self-approval."
+  ],
+  "risks": [
+    "中：擅自移除门禁削弱信号；本轮只解释当前真实规则"
+  ],
+  "humanGates": [
+    "实际门禁策略放宽、生产破坏操作、发布及冻结宣告：维护者；本地修复已授权"
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-11-04-audit-p2-release-policy/manifest.json",
+    "taskDoc": "docs/harness/tasks/2026-11-04-audit-p2-release-policy.task.md",
+    "evidenceDir": ".harness/evidence/2026-11-04-audit-p2-release-policy/",
+    "reviewFile": ".harness/evidence/2026-11-04-audit-p2-release-policy/review.md",
+    "summaryFile": ".harness/evidence/2026-11-04-audit-p2-release-policy/summary.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".harness/tasks/2026-11-04-global-audit-remediation/plan.md",
+      "docs/reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-11-04_FULL.md"
+    ]
+  },
+  "implementationStatus": "applied",
+  "reviewStatus": "blocked",
+  "verificationStatus": "passed"
+}

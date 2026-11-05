@@ -24,8 +24,8 @@ This project adheres to a Code of Conduct. By participating, you are expected to
 
 ### Prerequisites
 
-- **Go**: 1.21 or later
-- **Node.js**: 18.x or later
+- **Go**: the version declared by the `go` directive in [backend/go.mod](backend/go.mod)
+- **Node.js**: the version declared by `minimumNode` in [SHELL_VERSION.json](SHELL_VERSION.json)
 - **MySQL**: 8.0 or later
 - **Redis**: 7.0 or later
 - **Git**: Latest version
@@ -69,9 +69,11 @@ This project adheres to a Code of Conduct. By participating, you are expected to
    # Create database
    mysql -u root -p -e "CREATE DATABASE pantheon CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
    
-   # Run migrations
+   # The versioned migrations run automatically at backend startup unless
+   # PANTHEON_AUTO_MIGRATE=true (see docs/DEPLOYMENT_GUIDE.md §3). There is no
+   # separate --migrate flag.
    cd backend
-   go run ./cmd/server --migrate
+   go run ./cmd/server
    ```
 
 6. **Start development servers**
@@ -285,10 +287,10 @@ go test ./modules/auth/login
 cd frontend
 
 # Run all tests
-npm test
+npm run test:unit
 
 # Run with coverage
-npm test -- --coverage
+npm run test:unit -- --coverage
 ```
 
 ## Documentation
@@ -329,7 +331,7 @@ npm test -- --coverage
    cd backend && go test ./...
    
    # Frontend
-   cd frontend && npm test
+   cd frontend && npm run test:unit
    ```
 
 3. **Run linters**
@@ -421,8 +423,8 @@ Contributors will be:
 
 ### 前置条件
 
-- **Go**: 1.21 或更高版本
-- **Node.js**: 18.x 或更高版本
+- **Go**: 以 [backend/go.mod](backend/go.mod) 中 `go` 指令声明的版本为准
+- **Node.js**: 以 [SHELL_VERSION.json](SHELL_VERSION.json) 中 `minimumNode` 声明的版本为准
 - **MySQL**: 8.0 或更高版本
 - **Redis**: 7.0 或更高版本
 - **Git**: 最新版本
@@ -466,9 +468,10 @@ Contributors will be:
    # 创建数据库
    mysql -u root -p -e "CREATE DATABASE pantheon CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
    
-   # 运行迁移
+   # 版本化迁移在后端启动时自动执行，除非 PANTHEON_AUTO_MIGRATE=true
+   # （见 docs/DEPLOYMENT_GUIDE.md §3）。不存在单独的 --migrate 参数。
    cd backend
-   go run ./cmd/server --migrate
+   go run ./cmd/server
    ```
 
 6. **启动开发服务器**
@@ -622,10 +625,10 @@ go test ./modules/auth/login
 cd frontend
 
 # 运行所有测试
-npm test
+npm run test:unit
 
 # 带覆盖率运行
-npm test -- --coverage
+npm run test:unit -- --coverage
 ```
 
 ## 文档
@@ -659,7 +662,7 @@ npm test -- --coverage
    cd backend && go test ./...
    
    # 前端
-   cd frontend && npm test
+   cd frontend && npm run test:unit
    ```
 
 3. **运行 linter**

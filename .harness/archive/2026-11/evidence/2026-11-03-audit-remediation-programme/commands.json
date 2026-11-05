@@ -1,0 +1,64 @@
+{
+  "taskId": "2026-11-03-audit-remediation-programme",
+  "repo": "pantheon-base",
+  "executedAt": "2026-11-04",
+  "agent": { "tool": "claude-code" },
+  "runtimeSensitive": false,
+  "runtimeGap": "programme 不产生产品运行面；运行证据由各子包 commands.json 给出（W1 前端 tsc/eslint/vitest，W2–W5 静态与 Go 单测）。",
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-11-03-audit-remediation-programme/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-11-03-audit-remediation-programme/",
+    "reviewFile": ".harness/evidence/2026-11-03-audit-remediation-programme/review.md",
+    "changeRef": "none",
+    "planRefs": ["docs/reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-11-03.md"]
+  },
+  "commands": [
+    {
+      "command": "node scripts/harness/check-task-packet.mjs --root .",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "exit 0；5 个 packet 全部 [PASS]，状态与证据一致（task 文档 Archived + manifest completed + summary.md 存在）。"
+    },
+    {
+      "command": "node scripts/harness/check-evidence.mjs --root . --strict",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "exit 0；本 programme 与 4 个子包新增的 5 份 commands.json 通过结构校验（knownGaps / linkage / runtimeSensitive 均为正确类型）。"
+    },
+    {
+      "command": "node scripts/harness/check-review.mjs --root . --strict",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "exit 0；5 份 review.md 均含 `## Machine Readable` 块与合法 verdict/openDeviations。"
+    },
+    {
+      "command": "node scripts/harness/check-checker-wiring.mjs --root .",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "exit 0；32 checkers / 31 wired / 1 exception / 0 unwired。"
+    },
+    {
+      "command": "node scripts/harness/check-doc-links.mjs --root . --strict",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "exit 0，0 finding。"
+    },
+    {
+      "command": "node -e \"const fs=require('fs');for(const id of ['2026-11-03-audit-remediation-programme','2026-11-03-audit-p1-pagination-data-consistency','2026-11-03-audit-p2-governance-wiring-closeout','2026-11-03-audit-p2-doc-drift-closeout','2026-11-03-audit-p2-route-groups-unify','2026-11-03-audit-p2-data-scope-automigrate']){const m=JSON.parse(fs.readFileSync('.harness/tasks/'+id+'/manifest.json','utf8'));console.log(id, m.status);}\"",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "6 份 manifest 全部 JSON.parse 成功且 status 为 completed（programme + W1–W5）。"
+    },
+    {
+      "command": "cd backend && go build ./... && go vet ./... && go test ./... -short -count=1",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "BUILD_EXIT=0 / VET_EXIT=0 / GOTEST_EXIT=0，47 包 ok，0 FAIL。"
+    }
+  ],
+  "knownGaps": [
+    "GOV-08（前端覆盖率门禁阈值）仍需维护者一句话决策，未在 programme 内处理。",
+    "冻结宣告、000031 生产执行、legacy 端点下线仍归维护者；本 programme 与 2026-10-31 programme 的 Human Gates 一致。",
+    "4 个子包均为 L1/L2 轻量闭环，未做浏览器走查（W1 已在自身 evidence 登记该 gap）。"
+  ]
+}

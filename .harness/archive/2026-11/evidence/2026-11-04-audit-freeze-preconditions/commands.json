@@ -1,0 +1,51 @@
+{
+  "taskId": "2026-11-04-audit-freeze-preconditions",
+  "repo": "pantheon-base",
+  "executedAt": "2026-11-04",
+  "agent": {
+    "tool": "claude-code"
+  },
+  "runtimeSensitive": false,
+  "runtimeGap": "无浏览器环境。角色 >100 的缺项是静态可证的调用形态，本包不造数。",
+  "knownGaps": [
+    "本包的整改仍在工作区，未合并到 main；冻结宣告只能在合并后的 main 上签署。",
+    "GOV-08（ci.yml 前端覆盖率默认阈值 '0' 与下载步 continue-on-error）是维护者门禁策略，本轮未获授权，保持 open。",
+    "000031 的生产 DROP TABLE 执行需要维护者 human gate，本包未连库、未执行。",
+    "无浏览器环境，角色 >100 缺项只有静态调用形态证据，运行时复验未做。"
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-11-04-audit-freeze-preconditions/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-11-04-audit-freeze-preconditions/",
+    "reviewFile": ".harness/evidence/2026-11-04-audit-freeze-preconditions/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-11-04.md"
+    ]
+  },
+  "commands": [
+    {
+      "command": "gofmt -l internal/middleware/data_scope_middleware.go",
+      "cwd": "pantheon-base/backend",
+      "status": "passed",
+      "details": "exit 0，无输出。文件已是 gofmt 形态。"
+    },
+    {
+      "command": "rg -n \"must stay identical|AutoMigrate|not a supported path\" internal/middleware/data_scope_middleware.go",
+      "cwd": "pantheon-base/backend",
+      "status": "passed",
+      "details": "must stay identical 与 AutoMigrate 0 命中。not a supported path 命中 :62 与 :83。"
+    },
+    {
+      "command": "./node_modules/.bin/tsc -b --pretty false",
+      "cwd": "pantheon-base/frontend",
+      "status": "passed",
+      "details": "exit 0，无诊断输出。"
+    },
+    {
+      "command": "gofmt -l modules/system/system_modules_route_groups_test.go && go test -short -count=1 ./modules/system/ -run TestSystemModules -timeout 180s",
+      "cwd": "pantheon-base/backend",
+      "status": "passed",
+      "details": "gofmt -l 无输出。ok github.com/duanxldragon/pantheon-base/backend/modules/system。首跑 refresh 计数写成 7，实际 8（user 有两处 systemGroupOptions(deps, true)），改期望后通过。负向：删一处 WithCapability() 会使计数断言失败。"
+    }
+  ]
+}

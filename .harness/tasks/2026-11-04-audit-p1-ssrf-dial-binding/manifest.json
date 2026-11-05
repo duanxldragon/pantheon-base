@@ -1,0 +1,116 @@
+{
+  "taskId": "2026-11-04-audit-p1-ssrf-dial-binding",
+  "taskDoc": "docs/harness/tasks/2026-11-04-audit-p1-ssrf-dial-binding.task.md",
+  "title": "SSRF DNS 校验与实际拨号绑定",
+  "goal": "SSRF DNS 校验与实际拨号绑定",
+  "primaryLayer": "platform",
+  "status": "in-progress",
+  "priority": "P1",
+  "type": "security-remediation",
+  "findings": [
+    "PB-001"
+  ],
+  "parentTaskId": "2026-11-04-global-audit-remediation",
+  "dependencies": [],
+  "scope": {
+    "in": [
+      "SSRF DNS 校验与实际拨号绑定",
+      "原始DNS重绑定复现从到达loopback变为拒绝，测试先红后绿",
+      "只拨号已核查IP；私网、混合DNS、IPv4/IPv6、取消/超时、多地址和HTTPS Host/SNI行为有回归",
+      "Ops实际消费接口不删除；本地重建和业务测试通过，下游正式升级明确延期"
+    ],
+    "out": [
+      "产品扩展/大重构",
+      "批量删除或重写旧文档",
+      "生产操作/发布/冻结代签",
+      "覆盖或回退用户已有改动"
+    ]
+  },
+  "dependencyLayers": [
+    "system/auth"
+  ],
+  "contractAnchors": [
+    "docs/reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-11-04_FULL.md",
+    "docs/harness/VERIFICATION_EVIDENCE_SPEC.md",
+    "docs/harness/REVIEW_LOOP_SPEC.md"
+  ],
+  "expectedFiles": {
+    "create": [
+      "docs/harness/tasks/2026-11-04-audit-p1-ssrf-dial-binding.task.md",
+      ".harness/tasks/2026-11-04-audit-p1-ssrf-dial-binding/manifest.json",
+      "backend/pkg/security/ssrf/transport_test.go",
+      ".harness/evidence/2026-11-04-audit-p1-ssrf-dial-binding/commands.json",
+      ".harness/evidence/2026-11-04-audit-p1-ssrf-dial-binding/summary.md",
+      ".harness/evidence/2026-11-04-audit-p1-ssrf-dial-binding/review.md"
+    ],
+    "modify": [
+      "backend/pkg/security/ssrf/validator.go",
+      "backend/pkg/security/ssrf/README.md"
+    ],
+    "doNotTouch": [
+      "VERSION",
+      "CHANGELOG.md",
+      "backend/pkg/database/migrations",
+      "pantheon-ops"
+    ]
+  },
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "auth-security",
+    "portableFailureClass": "PB-001",
+    "ownerLayer": "foundation-source",
+    "ratchetDecision": "no-repeat-observed",
+    "coverageDimensions": [
+      "behaviour",
+      "maintainability"
+    ]
+  },
+  "executionRoles": {
+    "implementerPosture": "Generator executor单一写入者；并行仅只读proposal",
+    "reviewerPosture": [
+      "独立Reviewer核查失败路径、In/Out和下游兼容"
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "go test ./pkg/security/ssrf",
+      "go test ./..."
+    ],
+    "runtimeEvidence": [
+      "隔离测试与受控本地复现，不访问生产/外部网络"
+    ]
+  },
+  "runtimeSensitive": true,
+  "runtimeGap": "Controlled local tests/builds collected; live external integration, browser smoke and release validation remain unverified.",
+  "acceptanceCriteria": [
+    "原始DNS重绑定复现从到达loopback变为拒绝，测试先红后绿",
+    "只拨号已核查IP；私网、混合DNS、IPv4/IPv6、取消/超时、多地址和HTTPS Host/SNI行为有回归",
+    "Ops实际消费接口不删除；本地重建和业务测试通过，下游正式升级明确延期"
+  ],
+  "implementationNotes": [
+    "DNS核查与实际拨号绑定，空/混合私网答案拒绝；numeric IP直拨，保留Host/SNI、timeout override与所有导出签名。无新依赖。",
+    "Only one Generator writer; read-only proposal/independent review attempts failed with service 503. Fallback serial implementation plus mechanical evidence; not independent self-approval."
+  ],
+  "risks": [
+    "高：多地址、IPv6、HTTPS、重定向和Ops datasource/webhook连接行为；保留导出签名、无新依赖"
+  ],
+  "humanGates": [
+    "实际门禁策略放宽、生产破坏操作、发布及冻结宣告：维护者；本地修复已授权"
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-11-04-audit-p1-ssrf-dial-binding/manifest.json",
+    "taskDoc": "docs/harness/tasks/2026-11-04-audit-p1-ssrf-dial-binding.task.md",
+    "evidenceDir": ".harness/evidence/2026-11-04-audit-p1-ssrf-dial-binding/",
+    "reviewFile": ".harness/evidence/2026-11-04-audit-p1-ssrf-dial-binding/review.md",
+    "summaryFile": ".harness/evidence/2026-11-04-audit-p1-ssrf-dial-binding/summary.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".harness/tasks/2026-11-04-global-audit-remediation/plan.md",
+      "docs/reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-11-04_FULL.md"
+    ]
+  },
+  "implementationStatus": "applied",
+  "reviewStatus": "blocked",
+  "verificationStatus": "passed"
+}

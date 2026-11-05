@@ -1,0 +1,107 @@
+{
+  "taskId": "2026-11-04-audit-p3-ci-cost-review",
+  "taskDoc": "docs/harness/tasks/2026-11-04-audit-p3-ci-cost-review.task.md",
+  "title": "按实际价值裁定 CI 重复与 dormant 机制",
+  "goal": "按实际价值裁定 CI 重复与 dormant 机制",
+  "primaryLayer": "platform",
+  "status": "in-progress",
+  "priority": "P3",
+  "type": "audit-remediation",
+  "findings": [
+    "PB-009"
+  ],
+  "parentTaskId": "2026-11-04-global-audit-remediation",
+  "dependencies": [],
+  "scope": {
+    "in": [
+      "按实际价值裁定 CI 重复与 dormant 机制",
+      "保留coverage与race目的差异，缺少实测不删除checker或job",
+      "登记需实际run耗时/收益才能启动的低优先优化；不作为冻结必需项",
+      "不新增门禁、依赖、复杂平台；不为全风格清零重构"
+    ],
+    "out": [
+      "产品扩展/大重构",
+      "批量删除或重写旧文档",
+      "生产操作/发布/冻结代签",
+      "覆盖或回退用户已有改动"
+    ]
+  },
+  "dependencyLayers": [
+    "system/auth"
+  ],
+  "contractAnchors": [
+    "docs/reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-11-04_FULL.md",
+    "docs/harness/VERIFICATION_EVIDENCE_SPEC.md",
+    "docs/harness/REVIEW_LOOP_SPEC.md"
+  ],
+  "expectedFiles": {
+    "create": [
+      "docs/harness/tasks/2026-11-04-audit-p3-ci-cost-review.task.md",
+      ".harness/tasks/2026-11-04-audit-p3-ci-cost-review/manifest.json",
+      ".harness/evidence/2026-11-04-audit-p3-ci-cost-review/commands.json",
+      ".harness/evidence/2026-11-04-audit-p3-ci-cost-review/summary.md",
+      ".harness/evidence/2026-11-04-audit-p3-ci-cost-review/review.md"
+    ],
+    "modify": [],
+    "doNotTouch": [
+      "VERSION",
+      "CHANGELOG.md",
+      "backend/pkg/database/migrations",
+      "pantheon-ops"
+    ]
+  },
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "ci-workflow",
+    "portableFailureClass": "PB-009",
+    "ownerLayer": "foundation-source",
+    "ratchetDecision": "no-repeat-observed",
+    "coverageDimensions": [
+      "behaviour",
+      "maintainability"
+    ]
+  },
+  "executionRoles": {
+    "implementerPosture": "Generator executor单一写入者；并行仅只读proposal",
+    "reviewerPosture": [
+      "独立Reviewer核查失败路径、In/Out和下游兼容"
+    ]
+  },
+  "verificationPlan": {
+    "commands": [],
+    "runtimeEvidence": []
+  },
+  "runtimeSensitive": false,
+  "runtimeGap": "No runtime behaviour changed; bounded documentation/policy review only.",
+  "acceptanceCriteria": [
+    "保留coverage与race目的差异，缺少实测不删除checker或job",
+    "登记需实际run耗时/收益才能启动的低优先优化；不作为冻结必需项",
+    "不新增门禁、依赖、复杂平台；不为全风格清零重构"
+  ],
+  "implementationNotes": [
+    "裁定保留coverage与race、checker历史覆盖与dormant占位；缺少实际CI耗时/故障收益不能删门禁。可优化项延期，未增加门禁、平台、依赖或大重构。",
+    "Only one Generator writer; read-only proposal/independent review attempts failed with service 503. Fallback serial implementation plus mechanical evidence; not independent self-approval."
+  ],
+  "risks": [
+    "低：优化不实施；盲删可能丢coverage/race保护"
+  ],
+  "humanGates": [
+    "实际门禁策略放宽、生产破坏操作、发布及冻结宣告：维护者；本地修复已授权"
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-11-04-audit-p3-ci-cost-review/manifest.json",
+    "taskDoc": "docs/harness/tasks/2026-11-04-audit-p3-ci-cost-review.task.md",
+    "evidenceDir": ".harness/evidence/2026-11-04-audit-p3-ci-cost-review/",
+    "reviewFile": ".harness/evidence/2026-11-04-audit-p3-ci-cost-review/review.md",
+    "summaryFile": ".harness/evidence/2026-11-04-audit-p3-ci-cost-review/summary.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".harness/tasks/2026-11-04-global-audit-remediation/plan.md",
+      "docs/reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-11-04_FULL.md"
+    ]
+  },
+  "implementationStatus": "deferred-optimization",
+  "reviewStatus": "blocked",
+  "verificationStatus": "passed"
+}

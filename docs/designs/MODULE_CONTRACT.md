@@ -6,7 +6,7 @@ status: Active
 linked_contracts:
   - docs/contracts/PLATFORM_CONTRACT.md
   - docs/contracts/SYSTEM_IAM_CONTRACT.md
-updated_at: 2026-11-01
+updated_at: 2026-11-04
 ---
 
 # 模块契约设计
@@ -259,36 +259,13 @@ frontend/src/modules/{system|business}/{module}/
 
 ## 5.3 前端模块 manifest
 
-当前 `ModuleConfig` 过于轻，只包含：
+当前真实类型以 `frontend/src/core/router/types.ts` 的 `ModuleConfig` 为准，已包含 `name`、`scope`、`routes`，以及菜单、权限、i18n namespace 和 dashboard widgets 等声明。页面权限 `pagePermission` 属于路由配置，由 `RoutePermissionGuard` 执行。
 
-- `name`
-- `routes`
+不再要求额外引入另一套 `ModuleManifest` 类型。新模块复用当前类型与注册器；字段扩展须验证 Ops 实际重建和类型检查。
 
-这不足以支撑长期扩展。
+### 5.3.1 最少约束
 
-建议目标演进为：
-
-```ts
-export interface ModuleManifest {
-  name: string
-  scope: 'system' | 'business'
-  routes: ModuleRouteConfig[]
-  menus?: ModuleMenuMeta[]
-  permissions?: string[]
-  i18nNamespaces?: string[]
-  featureFlags?: string[]
-}
-```
-
-### 5.3.1 当前阶段最少约束
-
-在未升级真实类型前，所有模块至少要在文档层同步声明：
-
-- 模块名
-- 路由
-- 菜单归属
-- 权限点
-- i18n key 前缀
+模块必须同步声明模块名、scope、路由、菜单归属、权限点与 i18n namespace，沿用现有源码/生成器和一致性检查。
 
 ## 5.4 前端路由注册规则
 
@@ -492,7 +469,7 @@ export interface ModuleManifest {
 - 后端模块 seed 仍处于“部分按子域拆分”阶段，后续应逐步迁移到各模块自己的 `module.go`
 - 前端 manifest、后端菜单 seed、组件注册表已接入基础一致性检查；注册表文件按命名约定发现（`*Registry.ts` / `*registry.go`），支持 consumer overlay 注入（见 §6.4）
 - 后续应把一致性检查从源码正则解析继续演进为标准契约数据源
-- 业务模块已用 `business/cmdb` 做端到端验证，后续还需要第二个 `business/*` 模块重复验证
+- `business/cmdb` 等业务样板位于 Pantheon Ops；本轮以实际消费重建和业务测试验证复用，不为凑第二个模块新增业务功能
 
 ## 13. 验收问题
 

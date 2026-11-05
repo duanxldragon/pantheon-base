@@ -83,8 +83,8 @@ recorded with a reproduced root cause and a fix path.
     "reviewFile": ".harness/evidence/2026-10-15-tenant-closeout/review.md",
     "changeRef": "none",
     "planRefs": [
-      "docs/TENANT_SCOPE_FREEZE_DECISION_2026-10-15.md",
-      "docs/TENANT_LOGIN_INIT_EVALUATION_2026-10-15.md",
+      "docs/reviews/TENANT_SCOPE_FREEZE_DECISION_2026-10-15.md",
+      "docs/reviews/TENANT_LOGIN_INIT_EVALUATION_2026-10-15.md",
       "docs/contracts/TENANT_CONTRACT_V1.md",
       "docs/runbooks/TENANT_TROUBLESHOOTING.md"
     ]

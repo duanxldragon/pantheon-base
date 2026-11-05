@@ -1,0 +1,53 @@
+{
+  "taskId": "2026-11-04-audit-p1-refresh-rotation",
+  "repo": "pantheon-base",
+  "agent": {
+    "tool": "codex",
+    "adapter": "serial Generator fallback; independent reviewer service unavailable"
+  },
+  "commands": [
+    {
+      "command": "go test -json -p 1 ./pkg/authtoken ./modules/auth/login ./modules/auth/session",
+      "cwd": "pantheon-base/backend",
+      "status": "passed",
+      "notes": "auth-final.jsonl",
+      "exitCode": 0
+    },
+    {
+      "command": "go test ./modules/auth/session -run TestRefreshSessionRejectsConcurrentLifecycleChange -count=1 -v",
+      "cwd": "pantheon-base/backend",
+      "status": "failed",
+      "notes": "Expected red baseline: revoked row resurrected and concurrent tenant overwritten; refresh-lifecycle-before.log",
+      "exitCode": 1
+    },
+    {
+      "command": "go test ./modules/auth/session -run TestRefreshSessionRejectsConcurrentLifecycleChange -count=1 -v",
+      "cwd": "pantheon-base/backend",
+      "status": "passed",
+      "notes": "refresh-lifecycle-after.log; final auth suite additionally covers SwitchSessionRejectsConcurrentLifecycleChange",
+      "exitCode": 0
+    }
+  ],
+  "knownGaps": [
+    "Independent review unavailable: executor gpt-5.5 and architect gpt-5.4-mini attempts returned HTTP 503; no independent approval is claimed.",
+    "Controlled local tests/builds collected; live external integration, browser smoke and release validation remain unverified."
+  ],
+  "runtimeSensitive": true,
+  "runtimeGap": "Controlled local tests/builds collected; live external integration, browser smoke and release validation remain unverified.",
+  "runtimeLogs": [
+    "../audit-artifacts/base-global-remediation-2026-11-04/auth-final.jsonl"
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-11-04-audit-p1-refresh-rotation/manifest.json",
+    "taskDoc": "docs/harness/tasks/2026-11-04-audit-p1-refresh-rotation.task.md",
+    "evidenceDir": ".harness/evidence/2026-11-04-audit-p1-refresh-rotation/",
+    "reviewFile": ".harness/evidence/2026-11-04-audit-p1-refresh-rotation/review.md",
+    "summaryFile": ".harness/evidence/2026-11-04-audit-p1-refresh-rotation/summary.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".harness/tasks/2026-11-04-global-audit-remediation/plan.md",
+      "docs/reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-11-04_FULL.md"
+    ]
+  },
+  "recordedAt": "2026-11-04T11:59:58.487Z"
+}

@@ -1,0 +1,138 @@
+{
+  "taskId": "2026-11-03-audit-p1-pagination-data-consistency",
+  "taskDoc": "docs/harness/tasks/2026-11-03-audit-p1-pagination-data-consistency.task.md",
+  "title": "前端分页数据一致性修复（FE-01/FE-02，P1）",
+  "goal": "修复前端下拉与组织架构取数 9999/1000 被后端 cap=100 静默截断的问题：新增分页聚合 helper，5 处调用点改走聚合以取全量，角色/岗位/组织成员 >100 行时不再静默截断、计数不再误导。",
+  "primaryLayer": "system/iam",
+  "status": "completed",
+  "priority": "P1",
+  "wave": "W1",
+  "programmeRef": {
+    "taskId": "2026-11-03-audit-remediation-programme",
+    "taskDoc": "docs/harness/tasks/2026-11-03-audit-remediation-programme.task.md",
+    "manifest": ".harness/tasks/2026-11-03-audit-remediation-programme/manifest.json"
+  },
+  "type": "data-consistency",
+  "estimatedComplexity": "simple",
+  "findings": [
+    "FE-01（P1）：useUserList.ts:329,355 直发 getRoleList({page:1,pageSize:9999,...}) 与 getPostList({...,pageSize:9999,...})，后端 normalizeRolePageQuery/normalizePostPageQuery 走 common.NormalizePagination(...,100) 静默截断；角色/岗位 >100 时 UserFormModal 多选无法选中缺席项。",
+    "FE-02（P1）：DeptList.tsx:138 orgChartPageSize=1000（:358/:368 使用）+ dept/index.ts:39,44 warm-data 同值；后端 cap=100，>100 时组织成员列表被截断，OrgTab 以 .length 直出的 orgMemberTotal / {deptCount}/{postCount}/{userCount} 数字静默错误且无截断指示。",
+    "后端 cap=100 是模块既定语义（backend/pkg/common/handler.go:39-50 注释即言明 modules do not agree on it），修复方向是前端对齐而非改后端。"
+  ],
+  "scope": {
+    "in": [
+      "新增 frontend/src/shared/utils/fetchAllPages.ts：定长 pageSize 循环翻页至 total/不足一页，双终止条件 + 页数上限保护",
+      "useUserList.ts 两处 9999 下拉源改走 helper（保留 status/sort 过滤与 resolveRouteWarmData 包装）",
+      "DeptList.tsx loadOrgData 的 post/user 两处 1000 改走 helper，删除 orgChartPageSize",
+      "dept/index.ts posts:org-chart / users:org-chart 两处 1000 warm-data 改走 helper",
+      "helper 配套 vitest（聚合完整性 / total 边界 / 空结果 / 上限保护）"
+    ],
+    "out": [
+      "修改后端任何 NormalizePagination cap 或新增后端下拉接口",
+      "改动 UserFormModal / OrgTab 组件形态或 i18n key",
+      "处理 FE-03…FE-14 等其他审计项",
+      "触碰 pantheon-ops / VERSION / CHANGELOG.md"
+    ]
+  },
+  "dependencyLayers": [
+    "system/iam",
+    "system/org"
+  ],
+  "implementationNotes": [
+    "不能把 9999 直接降成 100：那只是把静默截断改成显式截断，用户仍选不全。必须分页聚合。",
+    "helper 终止条件：items.length < pageSize || all.length >= total，且 total===0 自然返回空数组；maxPages=200 兜底防 total 异常导致的死循环。",
+    "resolveRouteWarmData 的缓存键不变：fetch 逻辑在 loader 内完成，外部调用形态不变。"
+  ],
+  "contractAnchors": [
+    "docs/reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-11-03.md",
+    "docs/contracts/PLATFORM_CONTRACT.md",
+    "backend/pkg/common/handler.go"
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "maintainability",
+    "portableFailureClass": "data-consistency",
+    "ownerLayer": "foundation-source",
+    "ratchetDecision": "gate-updated",
+    "coverageDimensions": [
+      "behaviour",
+      "maintainability"
+    ]
+  },
+  "expectedFiles": {
+    "create": [
+      "frontend/src/shared/utils/fetchAllPages.ts",
+      "frontend/src/shared/utils/__tests__/fetchAllPages.test.ts",
+      "docs/harness/tasks/2026-11-03-audit-p1-pagination-data-consistency.task.md",
+      ".harness/tasks/2026-11-03-audit-p1-pagination-data-consistency/manifest.json",
+      ".harness/evidence/2026-11-03-audit-p1-pagination-data-consistency/commands.json",
+      ".harness/evidence/2026-11-03-audit-p1-pagination-data-consistency/summary.md",
+      ".harness/evidence/2026-11-03-audit-p1-pagination-data-consistency/review.md"
+    ],
+    "modify": [
+      "frontend/src/modules/system/iam/user/useUserList.ts",
+      "frontend/src/modules/system/org/dept/DeptList.tsx",
+      "frontend/src/modules/system/org/dept/index.ts"
+    ],
+    "doNotTouch": [
+      "backend/**",
+      "pantheon-ops/**",
+      "VERSION",
+      "CHANGELOG.md"
+    ]
+  },
+  "executionRoles": {
+    "implementerPosture": "只改 3 个前端文件 + 新增 2 个文件；改前 grep 全部 9999/1000 调用点，改后复跑验证命令并落 evidence。",
+    "reviewerPosture": [
+      "确认没有「降 cap 糊弄」——任一调用点若变回固定小 pageSize 即为失败。",
+      "确认 helper 双终止条件 + 页数上限存在且有测试。",
+      "确认后端 normalizer / 接口 / 契约零改动。",
+      "确认 5 处 9999/1000 调用点全部替换（useUserList×2、DeptList×2、index.ts×2 中的 posts/users）。"
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "npx tsc -b",
+      "eslint .",
+      "vitest run",
+      "grep -rnE \"pageSize: ?(9999|1000)\" frontend/src",
+      "cd backend && go build ./...（确认无连带破坏）"
+    ],
+    "runtimeEvidence": [
+      "无浏览器环境：以单测 + 静态验证为 evidence，渲染证据标记为可选 human-gate 补充"
+    ]
+  },
+  "runtimeSensitive": false,
+  "runtimeGap": "无浏览器渲染证据；数据一致性以单测 + grep 0 命中证明。>100 行的真实浏览器走查若需属维护者可选补充。",
+  "evidenceRequired": [
+    ".harness/evidence/2026-11-03-audit-p1-pagination-data-consistency/commands.json：tsc/eslint/vitest/grep 读数",
+    ".harness/evidence/2026-11-03-audit-p1-pagination-data-consistency/summary.md：helper 设计、5 处替换对照表",
+    ".harness/evidence/2026-11-03-audit-p1-pagination-data-consistency/review.md：逐条 reviewer posture + 反向检查"
+  ],
+  "humanGates": [
+    "默认无强制 gate；维护者可选做 >100 行数据的浏览器走查作渲染证据补充。"
+  ],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed",
+    "5 处 9999/1000 调用点全部改走 helper",
+    "helper 有单测覆盖 total 边界与上限保护",
+    "后端 cap / 接口 / 契约零改动",
+    "grep pageSize 9999|1000 0 命中"
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-11-03-audit-p1-pagination-data-consistency/manifest.json",
+    "taskDoc": "docs/harness/tasks/2026-11-03-audit-p1-pagination-data-consistency.task.md",
+    "evidenceDir": ".harness/evidence/2026-11-03-audit-p1-pagination-data-consistency/",
+    "summaryFile": ".harness/evidence/2026-11-03-audit-p1-pagination-data-consistency/summary.md",
+    "reviewFile": ".harness/evidence/2026-11-03-audit-p1-pagination-data-consistency/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-11-03.md"
+    ]
+  }
+}

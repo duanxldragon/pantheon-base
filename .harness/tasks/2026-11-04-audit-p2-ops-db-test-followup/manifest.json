@@ -1,0 +1,114 @@
+{
+  "taskId": "2026-11-04-audit-p2-ops-db-test-followup",
+  "taskDoc": "docs/harness/tasks/2026-11-04-audit-p2-ops-db-test-followup.task.md",
+  "title": "Ops既有真实数据库测试失败：业务意图与fixture裁定",
+  "goal": "Ops既有真实数据库测试失败：业务意图与fixture裁定",
+  "primaryLayer": "business/*",
+  "status": "in-progress",
+  "priority": "P2",
+  "type": "downstream-validation-followup",
+  "findings": [
+    "PB-010"
+  ],
+  "parentTaskId": "2026-11-04-global-audit-remediation",
+  "dependencies": [
+    "2026-11-04-audit-p3-consumer-seams"
+  ],
+  "scope": {
+    "in": [
+      "记录最终候选与Ops HEAD同环境失败对照",
+      "逐项判断业务实现、测试fixture或合同错误后再提出最小修复",
+      "不将12失败节点误写为12独立功能故障，不将既有失败归因于本轮Base"
+    ],
+    "out": [
+      "自动修改Ops主工作树/业务实现",
+      "为测试变绿放宽SSRF或鉴权",
+      "本轮发布/锁升级/冻结代签"
+    ]
+  },
+  "dependencyLayers": [
+    "platform",
+    "system/auth"
+  ],
+  "contractAnchors": [
+    "../pantheon-ops/docs/PROJECT_INHERITANCE.md",
+    "docs/contracts/PLATFORM_CONTRACT.md"
+  ],
+  "expectedFiles": {
+    "create": [
+      "docs/harness/tasks/2026-11-04-audit-p2-ops-db-test-followup.task.md",
+      ".harness/tasks/2026-11-04-audit-p2-ops-db-test-followup/manifest.json",
+      ".harness/evidence/2026-11-04-audit-p2-ops-db-test-followup/commands.json",
+      ".harness/evidence/2026-11-04-audit-p2-ops-db-test-followup/summary.md",
+      ".harness/evidence/2026-11-04-audit-p2-ops-db-test-followup/review.md"
+    ],
+    "modify": [],
+    "doNotTouch": [
+      "pantheon-ops",
+      "VERSION",
+      "CHANGELOG.md",
+      "backend/pkg/security/ssrf"
+    ]
+  },
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "general",
+    "portableFailureClass": "PB-010",
+    "ownerLayer": "business-consumer",
+    "ratchetDecision": "no-repeat-observed",
+    "coverageDimensions": [
+      "behaviour",
+      "maintainability"
+    ]
+  },
+  "executionRoles": {
+    "implementerPosture": "Generator executor单一写入者；并行仅只读proposal",
+    "reviewerPosture": [
+      "独立Reviewer核查失败路径、In/Out和下游兼容"
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "go test -json -p 1 -count=1 ./modules/business/...",
+      "同环境Ops HEAD目标失败测试对照"
+    ],
+    "runtimeEvidence": [
+      "../audit-artifacts/base-global-remediation-2026-11-04/downstream-control-comparison.json"
+    ]
+  },
+  "runtimeSensitive": true,
+  "runtimeGap": "真实DB失败已复现，代码/fixture业务意图责任尚未完成裁定；下游验收未关闭。",
+  "acceptanceCriteria": [
+    "所有失败与Ops HEAD对照，确认是否新引入",
+    "逐项裁定fixture/测试期望/业务实现，不削弱SSRF与认证",
+    "最小业务修复在Ops独立任务实施并重新验证后才关闭下游验收"
+  ],
+  "implementationNotes": [
+    "Ops HEAD原样对照：全部12失败节点同断言，5份测试源码SHA256一致（动态端口仅作数值归一）。原始失败不是本轮Base补丁引入。",
+    "9个顶层用例、12失败节点含父/子；266通过、0跳过，14通过包/4失败包。",
+    "逐项裁定完成（triage.md/triage.json）：8顶层用例/11节点为测试fixture或期望过期（bizscope能力未接线、deploy认领建行与租约、Start返回规范错误、observability与SSRF端口策略冲突）；1顶层用例/1节点为业务缺口（host创建state_version=0使CAS失效）；合同错误0。不放宽SSRF/鉴权，不改期望掩盖缺口。",
+    "Ops独立修复队列：测试侧8、业务侧1；observability端口/私网范围登记维护者策略裁定。本轮Ops主工作树与锁不变。",
+    "测试侧8用例已在隔离worktree audit-artifacts/ops-test-fixes-2026-11-05（基于1c057ee）修复；随后补修host业务缺口：创建/导入即state_version=1、列默认1，使ExpectedStateVersion>0真正启用CAS。真实隔离MySQL全业务套件278通过/0失败/0跳过（18包），go build全仓通过。存量0行回填由迁移000031提供（守卫表存在、幂等、down保留数据），并有迁移链+CAS端到端回归（pkg/database全量48s绿）。提交在本地分支ops/triage-test-fixes-2026-11-05（2759dd9/430e53e/dbce4ae），未push、未发布。"
+  ],
+  "risks": [
+    "高：把测试失败误当运行故障，或通过放宽安全/更新断言掩盖缺陷；发布前消费者门禁必须真实通过"
+  ],
+  "humanGates": [
+    "实际门禁策略放宽、生产破坏操作、发布及冻结宣告：维护者；本地修复已授权"
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-11-04-audit-p2-ops-db-test-followup/manifest.json",
+    "taskDoc": "docs/harness/tasks/2026-11-04-audit-p2-ops-db-test-followup.task.md",
+    "evidenceDir": ".harness/evidence/2026-11-04-audit-p2-ops-db-test-followup/",
+    "reviewFile": ".harness/evidence/2026-11-04-audit-p2-ops-db-test-followup/review.md",
+    "summaryFile": ".harness/evidence/2026-11-04-audit-p2-ops-db-test-followup/summary.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".harness/tasks/2026-11-04-global-audit-remediation/plan.md"
+    ]
+  },
+  "implementationStatus": "fixed-real-db-green-pending-review",
+  "reviewStatus": "blocked",
+  "verificationStatus": "passed"
+}

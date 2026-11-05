@@ -1,0 +1,145 @@
+{
+  "taskId": "2026-11-03-audit-p2-governance-wiring-closeout",
+  "taskDoc": "docs/harness/tasks/2026-11-03-audit-p2-governance-wiring-closeout.task.md",
+  "title": "治理接线与死脚本收口（GOV-01/02/03 + BE-02，P2）",
+  "goal": "收口 3 个零引用治理脚本（三选一生死判决）、校正 failure-registry 接线登记与事实一致、新增接线自检 checker 让「写了但没跑」被机器发现。",
+  "primaryLayer": "platform",
+  "status": "completed",
+  "priority": "P2",
+  "wave": "W2",
+  "programmeRef": {
+    "taskId": "2026-11-03-audit-remediation-programme",
+    "taskDoc": "docs/harness/tasks/2026-11-03-audit-remediation-programme.task.md",
+    "manifest": ".harness/tasks/2026-11-03-audit-remediation-programme/manifest.json"
+  },
+  "type": "checker-wiring-gap",
+  "estimatedComplexity": "moderate",
+  "findings": [
+    "GOV-02/BE-02（P2）：scripts/ 根下 check-security-patterns.mjs、check-ui-tokens.mjs、migrate-task-manifests.mjs 三个治理脚本零引用（无 npm script / workflow / 源码引用），已 grep 复核 .tmp 之外 0 命中。",
+    "GOV-01（P2）：failure-registry FR-016/FR-017 仍写「no workflow / no npm script」与 open status，需对照 quality.yml / package.json 实测后校正登记表与事实一致（上一轮 AUD-027 已把 11 个 checker 接线，FR-026 已 implemented）。",
+    "GOV-03（P2）：接线只靠人审（README 自述 review-enforced），「写了但没跑」类已复发 4 次（FR-016/017/026），无机械检查枚举 checker↔npm↔workflow 引用；新增接线自检 checker 是本包核心交付。",
+    "审计结论：GOV-03 是本轮唯一「系统性问题」（治理层，不阻塞运行时冻结），建议 3 项同源一个 diff 收口。"
+  ],
+  "scope": {
+    "in": [
+      "对 3 个零引用脚本逐一生死判定并落地（接线 / 收编到 scripts/harness/ / 删除+登记）",
+      "实测 FR-016/017 接线状态并校正 failure-registry 登记表（Status / Current Gate）",
+      "新增接线自检 checker（枚举 scripts/harness/check-*.mjs 的 npm/workflow 引用，未接线且不在例外表即红），接入 quality.yml，带自检用例"
+    ],
+    "out": [
+      "修改任何产品代码",
+      "把未接线决策静默化——每个脚本必须落入三选一",
+      "替维护者把 advisory checker 提升为 blocking CI step",
+      "触碰 pantheon-ops / VERSION / CHANGELOG.md"
+    ]
+  },
+  "dependencyLayers": [
+    "platform"
+  ],
+  "implementationNotes": [
+    "GOV-01 先实测再改登记表：读 quality.yml / package.json / ci.yml 实际引用，不照搬审计行号；FR-016/017 若已接线则 Status 同步 implemented，若仍未接线则把接线动作并入本包。",
+    "GOV-03 不是又加一个「人审」checker：让机器枚举 scripts/harness/check-*.mjs → package.json scripts 或 workflow 引用 → 未接线且不在例外表即 error。",
+    "例外表与 failure-registry 已有记录同构（check-inheritance-contract workspace-only、check-doc-frontmatter mirror-only），新 checker 读同一份来源，不维护第二份。",
+    "每个零引用脚本判决写进 summary（接线/收编/删除各给理由）。"
+  ],
+  "contractAnchors": [
+    "docs/reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-11-03.md",
+    "docs/harness/AI_QUALITY_GOVERNANCE.md",
+    "docs/harness/failure-registry.md",
+    "scripts/harness/README.md"
+  ],
+  "harnessProfile": {
+    "template": "custom",
+    "overlay": "pantheon-base",
+    "qualityProfile": "method-health",
+    "portableFailureClass": "checker-wiring-gap",
+    "ownerLayer": "foundation-source",
+    "ratchetDecision": "gate-updated",
+    "coverageDimensions": [
+      "method-health",
+      "maintainability"
+    ]
+  },
+  "expectedFiles": {
+    "create": [
+      "scripts/harness/check-checker-wiring.mjs",
+      ".harness/evidence/2026-11-03-audit-p2-governance-wiring-closeout/commands.json",
+      ".harness/evidence/2026-11-03-audit-p2-governance-wiring-closeout/summary.md",
+      ".harness/evidence/2026-11-03-audit-p2-governance-wiring-closeout/review.md"
+    ],
+    "modify": [
+      ".github/workflows/quality.yml",
+      "package.json",
+      "docs/harness/failure-registry.md",
+      "scripts/harness/README.md",
+      "scripts/check-security-patterns.mjs",
+      "scripts/check-ui-tokens.mjs",
+      "scripts/migrate-task-manifests.mjs"
+    ],
+    "doNotTouch": [
+      "backend/**",
+      "frontend/src/**",
+      "docs/reviews/**",
+      "docs/history/**",
+      "pantheon-ops/**",
+      "VERSION",
+      "CHANGELOG.md"
+    ]
+  },
+  "executionRoles": {
+    "implementerPosture": "逐脚本「先 grep 全仓引用 → 下三选一生死 → 落地」；新 checker 先负向验证（放死脚本会红）再接入。",
+    "reviewerPosture": [
+      "三选一逐条核对、无静默删除（删除的必须能在 failure-registry 看到登记理由）。",
+      "FR-016/017 登记表改动与实际接线一致。",
+      "未替维护者做 advisory→blocking 决策。",
+      "新 checker 负向用例存在且真实打红过。"
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "node scripts/harness/check-checker-wiring.mjs --root .",
+      "负向：临时放入不入例外的死 checker → 必红；移除后复绿",
+      "node scripts/harness/check-task-packet.mjs --root .",
+      "npm run check:docs-frontmatter",
+      "node scripts/harness/check-doc-links.mjs --root . --strict",
+      "grep 复核 3 个脚本：删除的 0 残留、接线的可查到引用"
+    ],
+    "runtimeEvidence": [
+      "无运行面变化：纯治理层"
+    ]
+  },
+  "runtimeSensitive": false,
+  "runtimeGap": "治理层纯配置改动，无运行时证据。",
+  "evidenceRequired": [
+    "commands.json：负向/正向 checker 读数、grep 引用复核、门禁读数",
+    "summary.md：3 个脚本三选一判决表 + FR-016/017 校正前后对照",
+    "review.md：逐条 reviewer posture + 无静默删除反向检查"
+  ],
+  "humanGates": [
+    "若处置需「新增 blocking CI step」，该 gate-policy 决策交维护者（本包只交付接线动作与读数）。",
+    "删除任何脚本前 reviewer 确认非隐式引用。"
+  ],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed",
+    "3 个零引用脚本各有三选一归宿且可复核",
+    "FR-016/017 登记表与实测一致",
+    "接线自检 checker 负向红、正向绿、已接入",
+    "未替维护者把 advisory 提升为 blocking",
+    "产品代码零改动"
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-11-03-audit-p2-governance-wiring-closeout/manifest.json",
+    "taskDoc": "docs/harness/tasks/2026-11-03-audit-p2-governance-wiring-closeout.task.md",
+    "evidenceDir": ".harness/evidence/2026-11-03-audit-p2-governance-wiring-closeout/",
+    "summaryFile": ".harness/evidence/2026-11-03-audit-p2-governance-wiring-closeout/summary.md",
+    "reviewFile": ".harness/evidence/2026-11-03-audit-p2-governance-wiring-closeout/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-11-03.md"
+    ]
+  }
+}

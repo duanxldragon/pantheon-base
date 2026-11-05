@@ -45,3 +45,24 @@ No issues found. The change is:
 - This fix targets intermittent CI failures
 - Smoke tests will validate the fix effectiveness
 - No consumer-facing changes
+
+## Machine Readable
+
+```json
+{
+  "taskId": "maintenance-test-stability-2026-09-02",
+  "verdict": "approved",
+  "verdictRationale": "Review Approval line '✅ APPROVED - Ready for merge after CI validation' with 'No issues found' and every checklist item checked.",
+  "linkage": {
+    "taskManifest": ".harness/tasks/maintenance-test-stability-2026-09-02/manifest.json",
+    "evidence": ".harness/evidence/maintenance-test-stability-2026-09-02/commands.json",
+    "reviewFile": ".harness/evidence/maintenance-test-stability-2026-09-02/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".harness/tasks/maintenance-test-stability-2026-09-02/manifest.json"
+    ]
+  }
+}
+```
+
+> This block was backfilled on 2026-11-04 during the archive-coverage repair. It restates the verdict already written above in machine-readable form and links the artifacts that existed for this task; no conclusion, finding or verification claim was added, removed or reworded. The prose remains authoritative.

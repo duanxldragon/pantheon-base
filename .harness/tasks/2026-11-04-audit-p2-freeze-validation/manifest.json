@@ -1,0 +1,127 @@
+{
+  "taskId": "2026-11-04-audit-p2-freeze-validation",
+  "taskDoc": "docs/harness/tasks/2026-11-04-audit-p2-freeze-validation.task.md",
+  "title": "最终候选及核心集成验证收口",
+  "goal": "最终候选及核心集成验证收口",
+  "primaryLayer": "platform",
+  "status": "in-progress",
+  "priority": "P2",
+  "type": "security-remediation",
+  "findings": [
+    "PB-007"
+  ],
+  "parentTaskId": "2026-11-04-global-audit-remediation",
+  "dependencies": [
+    "2026-11-04-audit-p1-refresh-rotation",
+    "2026-11-04-audit-p2-authoritative-docs",
+    "2026-11-04-audit-p2-agent-stop-points",
+    "2026-11-04-audit-p2-release-policy",
+    "2026-11-04-audit-p3-consumer-seams"
+  ],
+  "scope": {
+    "in": [
+      "最终候选及核心集成验证收口",
+      "最终工作树全量Go、FE typecheck/lint/build/test和治理检查给出结果与skip数",
+      "保留原有214项改动来源，用户既有删除不恢复、在途产物不删除",
+      "隔离DB/Redis可用则执行核心认证/迁移验证，不可用明确缺口",
+      "没有不可变候选/真实集成/外部required checks就不代签维护冻结"
+    ],
+    "out": [
+      "产品扩展/大重构",
+      "批量删除或重写旧文档",
+      "生产操作/发布/冻结代签",
+      "覆盖或回退用户已有改动"
+    ]
+  },
+  "dependencyLayers": [
+    "system/auth"
+  ],
+  "contractAnchors": [
+    "docs/reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-11-04_FULL.md",
+    "docs/harness/VERIFICATION_EVIDENCE_SPEC.md",
+    "docs/harness/REVIEW_LOOP_SPEC.md"
+  ],
+  "expectedFiles": {
+    "create": [
+      "docs/harness/tasks/2026-11-04-audit-p2-freeze-validation.task.md",
+      ".harness/tasks/2026-11-04-audit-p2-freeze-validation/manifest.json",
+      ".harness/evidence/2026-11-04-audit-p2-freeze-validation/commands.json",
+      ".harness/evidence/2026-11-04-audit-p2-freeze-validation/summary.md",
+      ".harness/evidence/2026-11-04-audit-p2-freeze-validation/review.md"
+    ],
+    "modify": [
+      "backend/modules/system/system_modules_tenant_wiring_test.go",
+      "backend/pkg/testredis/redis.go",
+      "backend/pkg/testredis/redis_test.go"
+    ],
+    "doNotTouch": [
+      "VERSION",
+      "CHANGELOG.md",
+      "backend/pkg/database/migrations",
+      "pantheon-ops"
+    ]
+  },
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "auth-security",
+    "portableFailureClass": "PB-007",
+    "ownerLayer": "foundation-source",
+    "ratchetDecision": "no-repeat-observed",
+    "coverageDimensions": [
+      "behaviour",
+      "maintainability"
+    ]
+  },
+  "executionRoles": {
+    "implementerPosture": "Generator executor单一写入者；并行仅只读proposal",
+    "reviewerPosture": [
+      "独立Reviewer核查失败路径、In/Out和下游兼容"
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "go test -json ./...",
+      "npm run type-check",
+      "npm run lint",
+      "npm run build",
+      "npm run test:unit -- --run"
+    ],
+    "runtimeEvidence": [
+      "隔离测试与受控本地复现，不访问生产/外部网络"
+    ]
+  },
+  "runtimeSensitive": true,
+  "runtimeGap": "Controlled local tests/builds collected; live external integration, browser smoke and release validation remain unverified.",
+  "acceptanceCriteria": [
+    "最终工作树全量Go、FE typecheck/lint/build/test和治理检查给出结果与skip数",
+    "保留原有214项改动来源，用户既有删除不恢复、在途产物不删除",
+    "隔离DB/Redis可用则执行核心认证/迁移验证，不可用明确缺口",
+    "没有不可变候选/真实集成/外部required checks就不代签维护冻结"
+  ],
+  "implementationNotes": [
+    "全量Go通过后，修正两个core接线测试不读取PANTHEON_TEST_REDIS_ADDR而静默skip的问题，复用testredis helper及独立DB6，单独补跑完整受影响包。对当前工作树进行全量Go、前端和治理验证；专属MySQL/Redis隔离原有数据；冻结仍需批准候选和真实外部门禁。前三次全量Go记录分别为停滞中断/共享缓存访问拒绝/专属缓存再停滞，均不记通过。",
+    "Only one Generator writer; read-only proposal/independent review attempts failed with service 503. Fallback serial implementation plus mechanical evidence; not independent self-approval."
+  ],
+  "risks": [
+    "高：测试flush会清数据，必须新隔离实例；不提交别人的工作、不发布"
+  ],
+  "humanGates": [
+    "实际门禁策略放宽、生产破坏操作、发布及冻结宣告：维护者；本地修复已授权"
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-11-04-audit-p2-freeze-validation/manifest.json",
+    "taskDoc": "docs/harness/tasks/2026-11-04-audit-p2-freeze-validation.task.md",
+    "evidenceDir": ".harness/evidence/2026-11-04-audit-p2-freeze-validation/",
+    "reviewFile": ".harness/evidence/2026-11-04-audit-p2-freeze-validation/review.md",
+    "summaryFile": ".harness/evidence/2026-11-04-audit-p2-freeze-validation/summary.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".harness/tasks/2026-11-04-global-audit-remediation/plan.md",
+      "docs/reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-11-04_FULL.md"
+    ]
+  },
+  "implementationStatus": "applied",
+  "reviewStatus": "blocked",
+  "verificationStatus": "passed"
+}

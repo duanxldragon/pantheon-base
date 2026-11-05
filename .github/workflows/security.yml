@@ -59,7 +59,7 @@ jobs:
         continue-on-error: true
         run: |
           npm ci --ignore-scripts
-          npm audit --registry=https://registry.npmjs.org --json --audit-level=high > security-reports/npm-audit-root.json || true
+          npm audit --registry=https://registry.npmjs.org --json --audit-level=high > security-reports/npm-audit-root.json
 
       - name: Report npm vulnerabilities (frontend)
         id: npm-audit-frontend
@@ -67,7 +67,7 @@ jobs:
         working-directory: frontend
         run: |
           npm ci --ignore-scripts
-          npm audit --registry=https://registry.npmjs.org --json --audit-level=high > ../security-reports/npm-audit-frontend.json || true
+          npm audit --registry=https://registry.npmjs.org --json --audit-level=high > ../security-reports/npm-audit-frontend.json
 
       - name: Upload reports
         if: always()

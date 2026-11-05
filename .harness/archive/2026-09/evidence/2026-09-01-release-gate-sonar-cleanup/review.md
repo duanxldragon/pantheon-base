@@ -21,6 +21,7 @@ Treat SonarCloud PR analysis and GitHub required checks as the independent final
 ```json
 {
   "taskId": "2026-09-01-release-gate-sonar-cleanup",
+  "verdict": "blocked",
   "decision": "approve-pending-hosted-gates",
   "findings": [],
   "reviewerPosture": ["mechanical", "ui-runtime"],
@@ -28,7 +29,12 @@ Treat SonarCloud PR analysis and GitHub required checks as the independent final
   "linkage": {
     "taskManifest": ".harness/tasks/2026-09-01-release-gate-sonar-cleanup/manifest.json",
     "evidence": ".harness/evidence/2026-09-01-release-gate-sonar-cleanup/commands.json",
-    "summary": ".harness/evidence/2026-09-01-release-gate-sonar-cleanup/summary.md"
+    "summary": ".harness/evidence/2026-09-01-release-gate-sonar-cleanup/summary.md",
+    "reviewFile": ".harness/evidence/2026-09-01-release-gate-sonar-cleanup/review.md",
+    "changeRef": "none",
+    "planRefs": ["docs/harness/tasks/2026-09-01-release-gate-sonar-cleanup.task.md"]
   }
 }
 ```
+
+This block was extended on 2026-11-04 during the archive-governance repair so it carries the keys the current review contract requires. `verdict: "blocked"` restates this artifact's own `decision` ("approve-pending-hosted-gates") and the prose above it ("Merge only after both pass; treat the post-merge Release Gate Summary as the release decision") in the contract enum: hosted SonarCloud and the required GitHub checks were outstanding, so the round was not approved. `changeRef` is `none` because this round's `commands.json` records no change reference. No finding, conclusion or verification claim was added, removed or reworded.

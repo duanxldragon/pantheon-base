@@ -1,0 +1,121 @@
+{
+  "taskId": "2026-11-04-archive-governance-scope-repair",
+  "taskDoc": "docs/harness/tasks/2026-11-04-archive-governance-scope-repair.task.md",
+  "title": "归档治理作用域修复（strict 证据链三门禁）",
+  "goal": "月度归档落地后，check-evidence / check-review / check-runtime-evidence 三个 strict 门禁对归档树失明或误红。本包把作用域改回活树加归档月，把无法事后恢复的执行事实按代际分层（计数不 gate），把运行时敏感度判定改为显式布尔优先，并把不可诚实回填的历史产物按文件具名登记在两个 legacy config。",
+  "primaryLayer": "platform",
+  "status": "completed",
+  "priority": "P1",
+  "type": "governance-repair",
+  "estimatedComplexity": "moderate",
+  "findings": [
+    "G-01：三个 strict 检查器只发现 `.harness/evidence/`，HEAD 上 196 个 commands.json 已在 `.harness/archive/**`，门禁对其零覆盖；check-runtime-evidence 甚至在归档后报 0 file(s) 却 exit 0。",
+    "G-02：`verificationPlan.runtimeEvidence` 被包作者当「本轮用什么证明」写，含 CI 运行、grep 输出与「not runtime-sensitive: …」否定句；旧判定「数组非空即运行时敏感」产生 22 条误报（反事实复跑为 18 条）。",
+    "G-03：`linkage.planRefs` 用字面路径存在性判定，指向已随包归档的规范拼写文件时误报缺失（反事实复跑为 5 条 error）。",
+    "G-04：pre-2026-10-26 产物缺 `commands[].status` / `cwd` / `agent` / `repo` / `linkage` / `knownGaps`，共 205 条，事实无法从本轮文字恢复。",
+    "G-05：8 个归档 review.md 的 verdict/checks 用合同枚举外的历史词汇，2 个 planRefs 指向已被 722fa9e1 删除的文件——重指向即伪造，具名豁免。"
+  ],
+  "scope": {
+    "in": [
+      "scripts/harness/check-evidence.mjs：归档发现、planRefs 归档感知、CURRENT_SCHEMA_FROM 代际作用域、报告与 --json 计数",
+      "scripts/harness/check-review.mjs：归档发现、resolvePlanRef、--legacy-config 与陈旧条目报错",
+      "scripts/harness/check-runtime-evidence.mjs：归档发现、布尔优先敏感度、--legacy-config",
+      "config/review-loop-legacy-artifacts.json（8 条具名）、config/runtime-evidence-legacy-artifacts.json（2 条具名）",
+      "归档 review.md 追加机器块 / 重指向 planRefs / 补齐旧块键；两份 commands.json 追加 runtimeGap；本轮 freeze-preconditions 证据补 knownGaps"
+    ],
+    "out": [
+      "提交已有 2026-11-03/11-04 工作区整改（另包，本包是其前置）",
+      "冻结宣告、GOV-08、000031 生产执行、GOV-05 continue-on-error",
+      ".github/workflows/** 与 package.json 的 check:* 布线",
+      "REVIEW_LOOP_SPEC / VERIFICATION_EVIDENCE_SPEC 的字段枚举",
+      "为 pre-2026-10-26 产物伪造 commands[].status / cwd / agent",
+      "backend/pkg/database/migrations/**、pantheon-ops/**、VERSION、CHANGELOG.md"
+    ]
+  },
+  "dependencyLayers": [
+    "system/iam"
+  ],
+  "implementationNotes": [
+    "代际作用域只放宽 gate，不放宽可见性：205 条历史缺口与文件数照常打印，负向验证（阈值改 2020-01-01）立刻变 205 error。",
+    "runtimeSensitive 布尔优先于 runtimeEvidence 文本；两边都没声明才回落文本，且忽略否定条目。",
+    "追加的机器块与 runtimeGap 全部重述该产物自己的散文，diff 必须是纯插入（numstat N/0）。",
+    "豁免按文件具名，条目指向的文件一旦消失即报错，豁免集只能缩小。"
+  ],
+  "contractAnchors": [
+    "docs/harness/VERIFICATION_EVIDENCE_SPEC.md",
+    "docs/harness/REVIEW_LOOP_SPEC.md",
+    "docs/harness/failure-registry.md",
+    "docs/reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-11-04.md"
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "behaviour",
+    "portableFailureClass": "silent-scope-loss",
+    "ownerLayer": "foundation-source",
+    "ratchetDecision": "gate-updated",
+    "coverageDimensions": [
+      "behaviour",
+      "architecture-fitness",
+      "maintainability"
+    ]
+  },
+  "expectedFiles": {
+    "create": [
+      "docs/harness/tasks/2026-11-04-archive-governance-scope-repair.task.md",
+      ".harness/tasks/2026-11-04-archive-governance-scope-repair/manifest.json",
+      "config/runtime-evidence-legacy-artifacts.json",
+      "config/review-loop-legacy-artifacts.json"
+    ],
+    "modify": [
+      "scripts/harness/check-evidence.mjs",
+      "scripts/harness/check-review.mjs",
+      "scripts/harness/check-runtime-evidence.mjs",
+      ".harness/archive/**/review.md",
+      ".harness/archive/**/commands.json"
+    ],
+    "doNotTouch": [
+      "docs/harness/REVIEW_LOOP_SPEC.md",
+      "docs/harness/VERIFICATION_EVIDENCE_SPEC.md",
+      ".github/workflows",
+      "backend/pkg/database/migrations",
+      "pantheon-ops",
+      "VERSION",
+      "CHANGELOG.md"
+    ]
+  },
+  "verification": {
+    "commands": [
+      "node scripts/harness/check-evidence.mjs --root . --strict",
+      "node scripts/harness/check-review.mjs --root . --strict",
+      "node scripts/harness/check-runtime-evidence.mjs --root . --strict",
+      "node scripts/harness/check-task-packet.mjs --root .",
+      "node scripts/frontmatter-check.mjs",
+      "node scripts/harness/check-runtime-evidence.mjs --root . --strict --legacy-config config/does-not-exist.json",
+      "node scripts/harness/check-runtime-evidence.mjs --root . --strict --legacy-config .tmp/legacy-stale.json",
+      "cd frontend && ./node_modules/.bin/tsc -b --pretty false"
+    ],
+    "runtimeEvidence": [],
+    "note": "三条 strict 门禁 exit 0；四条负向差分各自重新变红以证明改动承重；frontend tsc exit 0，本包未改 Go 运行时代码。"
+  },
+  "evidence": {
+    "directory": ".harness/evidence/2026-11-04-archive-governance-scope-repair/",
+    "summary": "已写。三个 strict 检查器扫 216–218 个归档证据产物并 exit 0；205 条 pre-2026-10-26 结构缺口以计数打印不再 gate；22 条运行时敏感度误报归零；8 + 2 条豁免具名登记。"
+  },
+  "humanGates": [
+    "豁免集扩大、CURRENT_SCHEMA_FROM 移动、strict 链 gate 级别变更：维护者",
+    "提交已有工作区整改到 main、冻结宣告、GOV-08、000031：维护者（不在本包）"
+  ],
+  "runtimeSensitive": false,
+  "runtimeGap": "纯治理工具改动，无 HTTP/运行时面。运行时验证不适用于本包：改的是三个 checker 的发现范围与判定，验证信号是 strict 退出码与负向差分，不是日志或指标。",
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-11-04-archive-governance-scope-repair/manifest.json",
+    "taskDoc": "docs/harness/tasks/2026-11-04-archive-governance-scope-repair.task.md",
+    "evidenceDir": ".harness/evidence/2026-11-04-archive-governance-scope-repair/",
+    "reviewFile": ".harness/evidence/2026-11-04-archive-governance-scope-repair/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-11-04.md"
+    ]
+  }
+}

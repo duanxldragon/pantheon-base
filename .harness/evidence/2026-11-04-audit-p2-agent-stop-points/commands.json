@@ -1,0 +1,50 @@
+{
+  "taskId": "2026-11-04-audit-p2-agent-stop-points",
+  "repo": "pantheon-base",
+  "agent": {
+    "tool": "codex",
+    "adapter": "serial Generator fallback; independent reviewer service unavailable"
+  },
+  "commands": [
+    {
+      "command": "npm run check:docs-frontmatter",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "metadata-final-check-docs-frontmatter.log",
+      "exitCode": 0
+    },
+    {
+      "command": "npm run check:harness-docs",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "metadata-final-check-harness-docs.log",
+      "exitCode": 0
+    },
+    {
+      "command": "npm run check:task-packet",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "notes": "metadata-final-check-task-packet.log",
+      "exitCode": 0
+    }
+  ],
+  "knownGaps": [
+    "Independent review unavailable: executor gpt-5.5 and architect gpt-5.4-mini attempts returned HTTP 503; no independent approval is claimed."
+  ],
+  "runtimeSensitive": false,
+  "runtimeGap": "No runtime behaviour changed; bounded documentation/policy review only.",
+  "runtimeLogs": [],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-11-04-audit-p2-agent-stop-points/manifest.json",
+    "taskDoc": "docs/harness/tasks/2026-11-04-audit-p2-agent-stop-points.task.md",
+    "evidenceDir": ".harness/evidence/2026-11-04-audit-p2-agent-stop-points/",
+    "reviewFile": ".harness/evidence/2026-11-04-audit-p2-agent-stop-points/review.md",
+    "summaryFile": ".harness/evidence/2026-11-04-audit-p2-agent-stop-points/summary.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".harness/tasks/2026-11-04-global-audit-remediation/plan.md",
+      "docs/reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-11-04_FULL.md"
+    ]
+  },
+  "recordedAt": "2026-11-04T11:59:58.489Z"
+}

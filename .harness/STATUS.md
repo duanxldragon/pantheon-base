@@ -1,8 +1,29 @@
 # Pantheon Base - Harness 任务状态
 
-**最后更新**: 2026-11-01
-**当前版本**: v0.18.1 已发布（tag `pantheon-base-v0.18.1`，目标提交 `93505225`，四件资产与 `Foundation Release Verify` run 40817118092 已核验）；`pantheon-ops` 已对 0.18.1 重建并通过后端与前端构建
-**已知缺口**: 工作区 HEAD 为 `ef00738`（`VERSION` 仍是 0.18.1，属 v0.18.2 之前的分支快照，尚未同步 main）；v0.18.2 记录见下节“v0.18.2 发布”。
+**最后更新**: 2026-11-05
+**当前候选**: `feat/base-freeze-2026-11-05`，VERSION `0.18.3`，未发布。最后正式 foundation 仍为 v0.18.2。
+**当前授权**: 维护者已授权完成现有能力（租户V1保留）、提交/CI/合并、发行与Ops正式消费；Nov4的提交延期由本任务接管，生产操作与质量策略变更仍需单独授权。
+
+## 2026-11-05 功能收尾与发行（当前执行）
+
+- F0–F8拆解：[任务](./tasks/2026-11-05-base-freeze-release/tasks.json)，[验收矩阵](./evidence/2026-11-05-base-freeze-release/functionality-matrix.md)，[证据](./evidence/2026-11-05-base-freeze-release/summary.md)。
+- 完整隔离MySQL/Redis Go race：47有测试包、1876通过节点、0失败；唯一真实S3集成用例无provider配置而跳过。前端33文件/218单测通过，lint/type-check/build通过。
+- Core27通过/3无生成模块用例跳过；租户16+视角5全部通过。
+- 2026-11-05 补测：platform-smoke 97 passed（另 77 passed 重跑，exit 0）；业务五套 generated/database-import/master-detail/many-to-many/auto-recycle 全绿；生成模块重启后 API CRUD 与真实浏览器 CRUD（校验/创建/编辑失败恢复/删除/390px）通过。F3 转 local-verified；smoke 自启 vite 需显式 --proxy-target，否则整页 API 502。
+- SSRF/refresh/npm audit修复与系统分页、data-scope、generator修复纳入当前候选；当前租户API/初始化/升级指南同步纠正。
+- 独立两路review503；npm与Go漏洞库、GitHub socket均拒绝访问。正式PR/CI/合并/发行与Ops lock未完成，未签冻结。
+
+以下是历史执行读数，不可代替当前候选验收。
+
+## 2026-11-04 FULL 审计整改（当前执行）
+
+- 用户已授权按优先级修改；1父任务 + 原9整改子任务 + 1新增P2后续任务：[主计划](./tasks/2026-11-04-global-audit-remediation/plan.md)，[证据汇总](./evidence/2026-11-04-global-audit-remediation/summary.md)。
+- P1已实施：PB-001解析核查IP后直接拨号；PB-002保留npm扫描非零退出；PB-003 GETDEL单次消费及会话条件更新。认证完整包278 tests/0 skip通过；SSRF和npm行为回归通过。
+- P2已实施：权威文档有限修正、Agent三触点、现行发布策略说明。文档frontmatter/link、任务包、evidence/review/runtime工件结构及checker wiring均通过。
+- P3：Ops完整隔离候选重建802项，已有前端218 tests与type-check/build通过；最终消费树整个后端构建通过，真实DB业务套件266通过/12失败节点，全部失败在Ops HEAD同断言复现，PB-010待业务意图裁定。CI成本优化缺少实测，明确延期，保留coverage/race与现行门禁。
+- 全量Go：首次停滞中断、第二次共享缓存访问拒绝均已保留失败日志；专属缓存 -count=1 全量47有测试包/1874通过节点/3跳过；两个core Redis硬编码跳过已修复，补跑30通过/0跳过；S3外部配置缺口保留。不会用部分通过/静态证据代替最终读数。
+- PB-010：[Ops既有DB失败P2后续裁定](./tasks/2026-11-04-audit-p2-ops-db-test-followup/manifest.json)：测试侧8用例与host `state_version`业务缺口已在隔离worktree修复，存量0行回填有迁移`000031`与端到端回归，真实DB全业务套件278通过/0失败/0跳过；剩observability端口策略裁定与推送/发布，修复未push，消费者主工作树未同步。P1相关四包race已通过：308测试节点/0跳过。
+- 状态：in-progress；独立review服务503，所有任务未自我批准；正式foundation release/消费者lock升级、批准的不可变候选、外部门禁及冻结签署未关闭。原审计数量保持基线，不回填整改计数。
 
 ## 全局审计整改 programme 登记（2026-10-31 起·2026-11-01 全部收口，9/9 + W10 + W11 + W12）
 
@@ -39,8 +60,9 @@
 
 **「进入维护冻结」的宣告未执行**：按 programme `Human Gates` 该动作归维护者，
 programme manifest 以 `FREEZE-DECLARATION`（P2）显式登记。宣告**文本已就绪**（W12）：
-`docs/reviews/PANTHEON_BASE_MAINTENANCE_FREEZE_DECLARATION.md`，含 7 项门槛对应、实测读数、
-残留归属与签署块。签署前提是整改产物先进 `main`——当前 HEAD 是整改前快照，冻结对象尚不存在。
+`docs/reviews/PANTHEON_BASE_MAINTENANCE_FREEZE_DECLARATION.md`。2026-11-04 事实：2026-10-31
+整改已进 main（HEAD `52550603`，#488），但 2026-11-03 产品整改仍未提交，且 2026-11-04
+审计要求的 FE-01b 与 DB-01 注释已在 `2026-11-04-audit-freeze-preconditions` 收口并归档。同包补了可选的路由组布尔棘轮，删一处 `WithCapability()` / `WithDataScope()` 或改一组 refresh 布尔现在会失败。该包不代签冻结。不要拿未提交工作区签冻结。
 
 **28 条不是 28/28**，且要分两个时点读：
 
@@ -98,9 +120,8 @@ W1 留下的 P2，审计要求"冻结前择一"。选**文档加例外**，并�
 解析器把整个文件当成一条语句、报 `parsed 1`。这不是负向验证生效，是解析器对行尾敏感
 （Windows 检出即触发）。改为按行锚定的正则后才真正红在行数断言上。
 
-**冻结宣告不能签的真实原因**：HEAD `ef00738` 是整改前快照（150 modified / 9 deleted /
-4 renamed / 3 renamed+modified / 49 untracked），9 个子包的整改全部未进 `main`。
-冻结的对象是提交，而包含整改的提交还不存在。
+**冻结宣告不能签的真实原因（2026-11-01 当时）**：HEAD `ef00738` 是整改前快照，9 个子包的整改全部未进 `main`。
+**2026-11-04 更正**：那次整改已由 #488 进入 main（HEAD `52550603`）。现在不能签的原因换成下一轮：2026-11-03 工作区整改未合并。FE-01b 与 DB-01 注释已在 `2026-11-04-audit-freeze-preconditions` 收口，但仍未提交。见 `docs/reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-11-04.md` §9。
 
 ### 当前仍 open 的残留（12 条，3 P2 + 9 P3，均不阻断冻结）
 
@@ -185,7 +206,7 @@ W1 执行中新增两条未闭合项（已写入任务包 `residualFindings`，�
   `frontend/scripts/check-menu-contract.mjs`、`backend/modules/business/retired_modules.go`。
 - **为何补写在这里**：本文件此前停在 v0.18.1，而 main 已发 v0.18.2，属 AUD-006 同类的
   “完成态未回写”。版本口径只认 `origin/main` 的 `VERSION`、tag 与发布说明；
-  本地工作区 `ef00738` 不含该次发布，不能拿它判断当前版本。
+  当时本地工作区 `ef00738` 不含该次发布。2026-11-04 的 HEAD 已是 `52550603`，含 v0.18.2 与 #488；判断版本仍只认 `VERSION`、tag 与发布说明，不认未提交工作区。
 
 ## v0.18.1 发布（2026-10-29·已发布）
 

@@ -3,7 +3,7 @@ title: Verification Evidence Spec
 doc_type: Contract
 layer: platform
 status: Active
-updated_at: 2026-06-26
+updated_at: 2026-11-04
 version: v1.1
 ---
 
@@ -43,7 +43,7 @@ Whether `.harness/evidence/` is committed can be chosen by project policy. CI ar
 
 | Command | CWD | Result | Notes |
 |---|---|---|---|
-| `go test ./...` | `pantheon-base` | passed |  |
+| `go test ./...` | `pantheon-base/backend` | passed |  |
 
 ## Graph Checks
 
@@ -84,8 +84,8 @@ complete | blocked | partial
   },
   "commands": [
     {
-      "command": "go test ./backend/...",
-      "cwd": "pantheon-base",
+      "command": "go test ./...",
+      "cwd": "pantheon-base/backend",
       "status": "passed",
       "durationMs": 0,
       "notes": ""

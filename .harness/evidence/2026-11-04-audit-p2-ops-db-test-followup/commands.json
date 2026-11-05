@@ -1,0 +1,113 @@
+{
+  "taskId": "2026-11-04-audit-p2-ops-db-test-followup",
+  "repo": "pantheon-base",
+  "agent": {
+    "tool": "codex",
+    "adapter": "Controlled downstream comparison"
+  },
+  "commands": [
+    {
+      "command": "go test -json -p 1 -count=1 ./modules/business/...",
+      "cwd": "audit-artifacts/base-global-remediation-2026-11-04/consumer-final/backend",
+      "status": "failed",
+      "exitCode": 1,
+      "notes": "consumer-go-business.jsonl; 已确认失败，非通过/豁免（基线 266 通过 / 12 失败）"
+    },
+    {
+      "command": "go test -json -p 1 -count=1 -run ^Test(BizScopeDeleteRejectsNonCMDBReferences|BizScopeDeleteIgnoresSoftDeletedReferences)$ ./modules/business/bizscope",
+      "cwd": "audit-artifacts/ops-test-fixes-2026-11-05/backend",
+      "status": "passed",
+      "exitCode": 0,
+      "notes": "隔离 MySQL 8.0.36:23306；测试侧修复后目标用例通过"
+    },
+    {
+      "command": "go test -json -p 1 -count=1 -run ^Test(DatasourceDefaultCanMoveAndClear|DatasourceQueriesLokiAndTempo)$ ./modules/business/observability",
+      "cwd": "audit-artifacts/ops-test-fixes-2026-11-05/backend",
+      "status": "passed",
+      "exitCode": 0,
+      "notes": "用例内注入测试 validator；生产 SSRF 策略未放宽"
+    },
+    {
+      "command": "go test -json -p 1 -count=1 -run ^Test(MarkHostResultDefersTerminalTaskUntilActiveAttemptFinishes|StartDeployTaskPersistsCanonicalSSHRunnerErrors|DeployTemplateTaskSSHExecutorFailsOnScriptPrecheck|DeleteDeployTaskReconcilesStaleRunningTask)$ ./modules/business/deploy",
+      "cwd": "audit-artifacts/ops-test-fixes-2026-11-05/backend",
+      "status": "passed",
+      "exitCode": 0,
+      "notes": "部署 4 个测试侧用例通过"
+    },
+    {
+      "command": "go test -json -p 1 -count=1 ./modules/business/...",
+      "cwd": "audit-artifacts/ops-test-fixes-2026-11-05/backend",
+      "status": "failed",
+      "exitCode": 1,
+      "notes": "business-fixed.jsonl：277 通过节点 / 1 失败节点 / 0 跳过；唯一失败为业务侧 host state_version 缺口，非本轮 8 个测试侧用例"
+    },
+    {
+      "command": "go test -json -p 1 -count=1 ./modules/business/...",
+      "cwd": "audit-artifacts/ops-test-fixes-2026-11-05/backend",
+      "status": "passed",
+      "exitCode": 0,
+      "notes": "business-hostfixed.jsonl：host state_version 修复后 278 通过节点 / 0 失败 / 0 跳过，18 包全绿"
+    },
+    {
+      "command": "go build -buildvcs=false ./...",
+      "cwd": "audit-artifacts/ops-test-fixes-2026-11-05/backend",
+      "status": "passed",
+      "exitCode": 0,
+      "notes": "隔离 worktree 默认 buildvcs 取 VCS 状态报 128，与代码无关；关闭 stamping 后全仓编译通过"
+    },
+    {
+      "command": "go test -count=1 -v -run TestHostStateVersionBackfillEnablesCAS ./pkg/database/",
+      "cwd": "audit-artifacts/ops-test-fixes-2026-11-05/backend",
+      "status": "passed",
+      "exitCode": 0,
+      "notes": "真实迁移链 000031：legacy 0 行回填为 1、版本 5 行不变、重跑幂等；回填后 stale 过渡返回 cmdbhost.state.stale"
+    },
+    {
+      "command": "go test -count=1 ./pkg/database/",
+      "cwd": "audit-artifacts/ops-test-fixes-2026-11-05/backend",
+      "status": "passed",
+      "exitCode": 0,
+      "notes": "迁移链 up/down/re-apply 与迁移契约全量通过（48.1s）"
+    },
+    {
+      "command": "go test -json -p 1 -count=1 ./modules/business/...",
+      "cwd": "audit-artifacts/ops-test-fixes-2026-11-05/backend",
+      "status": "passed",
+      "exitCode": 0,
+      "notes": "business-backfill.jsonl：回填迁移后 278 通过 / 0 失败 / 0 跳过，18 包全绿"
+    },
+    {
+      "command": "go test -json -p 1 -count=1 -run ^Test(BizScopeDeleteRejectsNonCMDBReferences|BizScopeDeleteIgnoresSoftDeletedReferences)$ ./modules/business/bizscope",
+      "cwd": "audit-artifacts/base-global-remediation-2026-11-04/consumer-final/backend",
+      "status": "failed",
+      "exitCode": 1,
+      "notes": "修复前同环境反向对照：能力未接线导致 business.cmdb.capability.notConfigured"
+    }
+  ],
+  "knownGaps": [
+    "8 个测试侧用例与 host state_version 业务缺口均已修复并通过真实 DB 全业务套件（278/0/0）。",
+    "存量 state_version=0 行的回填已在迁移链 000031 提供并有端到端回归；尚未对长期环境执行迁移。",
+    "observability 端口/私网允许范围仍为维护者策略裁定项。",
+    "Independent reviewer service503；尚无批准",
+    "Ops main worktree、锁与业务实现未改动；修复未 push、未发布"
+  ],
+  "runtimeSensitive": true,
+  "runtimeGap": "真实隔离 MySQL 下全业务套件 278 通过 / 0 失败 / 0 跳过；仅剩 observability 端口策略裁定与发布/评审动作未完成。",
+  "runtimeLogs": [
+    "../audit-artifacts/base-global-remediation-2026-11-04/consumer-go-business.jsonl",
+    "../audit-artifacts/base-global-remediation-2026-11-04/ops-control-regressions.jsonl",
+    "../audit-artifacts/base-global-remediation-2026-11-04/ops-control-observability.jsonl",
+    "../audit-artifacts/ops-test-fixes-2026-11-05/business-fixed.jsonl"
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-11-04-audit-p2-ops-db-test-followup/manifest.json",
+    "taskDoc": "docs/harness/tasks/2026-11-04-audit-p2-ops-db-test-followup.task.md",
+    "evidenceDir": ".harness/evidence/2026-11-04-audit-p2-ops-db-test-followup/",
+    "reviewFile": ".harness/evidence/2026-11-04-audit-p2-ops-db-test-followup/review.md",
+    "summaryFile": ".harness/evidence/2026-11-04-audit-p2-ops-db-test-followup/summary.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".harness/tasks/2026-11-04-global-audit-remediation/plan.md"
+    ]
+  }
+}

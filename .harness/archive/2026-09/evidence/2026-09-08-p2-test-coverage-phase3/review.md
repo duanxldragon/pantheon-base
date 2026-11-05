@@ -62,7 +62,7 @@ residual disclosed in four places. Approved with the documented follow-up.
     "evidence": ".harness/evidence/2026-09-08-p2-test-coverage-phase3/commands.json",
     "reviewFile": ".harness/evidence/2026-09-08-p2-test-coverage-phase3/review.md",
     "changeRef": "none",
-    "planRefs": [".harness/tasks/TASK_MASTER_PLAN.md"]
+    "planRefs": ["docs/history/2026-09/tasks-summaries/TASK_MASTER_PLAN.md"]
   }
 }
 ```

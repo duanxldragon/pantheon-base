@@ -63,3 +63,24 @@ This change is approved for merge as it:
 - **Review Date:** 2026-08-21
 - **Review Type:** Mechanical review - test wait strategy optimization
 - **Decision:** Approved
+
+## Machine Readable
+
+```json
+{
+  "taskId": "2026-08-21-sonarcloud-remediation",
+  "verdict": "approved with documented P2 follow-up",
+  "verdictRationale": "The review records 'Approved - Behavior-preserving test wait strategy optimization' and 'This change is approved for merge', so it is not a plain approval: the same round's `summary.md` documents the follow-up that remained, 'Status: In Progress - PR created, awaiting CI completion' plus merge, Release Gate verification, release publication and Ops consumption as Next Steps.",
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-08-21-sonarcloud-remediation/manifest.json",
+    "evidence": ".harness/evidence/2026-08-21-sonarcloud-remediation/commands.json",
+    "reviewFile": ".harness/evidence/2026-08-21-sonarcloud-remediation/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".harness/tasks/2026-08-21-sonarcloud-remediation/manifest.json"
+    ]
+  }
+}
+```
+
+> This block was backfilled on 2026-11-04 during the archive-coverage repair. It restates the verdict already written above in machine-readable form and links the artifacts that existed for this task; no conclusion, finding or verification claim was added, removed or reworded. The prose remains authoritative.

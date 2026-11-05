@@ -1,0 +1,61 @@
+{
+  "results": {
+    "go-final-nocache": {
+      "packagesPassed": 47,
+      "packagesWithoutTests": 5,
+      "passedTestNodes": 1874,
+      "failedTestNodes": 0,
+      "skippedTests": [
+        {
+          "package": "github.com/duanxldragon/pantheon-base/backend/modules/system",
+          "test": "TestInitAuditModules_TenantContextWiring/tenant_101_claim_is_scoped_to_tenant_101_rows"
+        },
+        {
+          "package": "github.com/duanxldragon/pantheon-base/backend/modules/system",
+          "test": "TestInitAuditModules_TenantContextWiring/tenant_202_claim_is_scoped_to_tenant_202_rows"
+        },
+        {
+          "package": "github.com/duanxldragon/pantheon-base/backend/pkg/upload",
+          "test": "TestServiceStoreUsesRealS3WhenConfigured"
+        }
+      ],
+      "failedPackages": []
+    },
+    "core-wiring-final": {
+      "packagesPassed": 2,
+      "packagesWithoutTests": 0,
+      "passedTestNodes": 30,
+      "failedTestNodes": 0,
+      "skippedTests": [],
+      "failedPackages": []
+    },
+    "go-race-focused": {
+      "packagesPassed": 4,
+      "packagesWithoutTests": 0,
+      "passedTestNodes": 308,
+      "failedTestNodes": 0,
+      "skippedTests": [],
+      "failedPackages": []
+    },
+    "consumer-go-business": {
+      "packagesPassed": 14,
+      "packagesWithoutTests": 16,
+      "passedTestNodes": 266,
+      "failedTestNodes": 12,
+      "skippedTests": [],
+      "failedPackages": [
+        "github.com/duanxldragon/pantheon-base/backend/modules/business/bizscope",
+        "github.com/duanxldragon/pantheon-base/backend/modules/business/cmdb/host",
+        "github.com/duanxldragon/pantheon-base/backend/modules/business/deploy",
+        "github.com/duanxldragon/pantheon-base/backend/modules/business/observability"
+      ]
+    }
+  },
+  "candidateCommit": "a9616e753b8dc2d1d4a332febb98341fdead8636",
+  "candidateDifference": [
+    "backend/modules/system/system_modules_tenant_wiring_test.go",
+    "backend/pkg/testredis/redis.go",
+    "backend/pkg/testredis/redis_test.go"
+  ],
+  "note": "The immutable local consumer candidate contains the final production fixes. After the full Base suite, only 3 bounded Redis test-fixture/registry files changed; both complete affected packages passed separately. Counts are per command, not a fabricated union. Consumer suite remains red, identically reproduced at Ops HEAD."
+}

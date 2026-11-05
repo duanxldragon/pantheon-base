@@ -1,0 +1,135 @@
+{
+  "taskId": "2026-11-03-audit-p2-doc-drift-closeout",
+  "taskDoc": "docs/harness/tasks/2026-11-03-audit-p2-doc-drift-closeout.task.md",
+  "title": "文档漂移收口（DOC-01/02 + GOV-06/07，P2）",
+  "goal": "修复 CONTRIBUTING.md 工具链版本/命令/测试名漂移，合并两份 PR 生成器指南为单一来源并指向 live 模板，消除审计 DOC-01/02 与 GOV-06/07 同源文档债。",
+  "primaryLayer": "platform",
+  "status": "completed",
+  "priority": "P2",
+  "wave": "W3",
+  "programmeRef": {
+    "taskId": "2026-11-03-audit-remediation-programme",
+    "taskDoc": "docs/harness/tasks/2026-11-03-audit-remediation-programme.task.md",
+    "manifest": ".harness/tasks/2026-11-03-audit-remediation-programme/manifest.json"
+  },
+  "type": "doc-code-alignment",
+  "estimatedComplexity": "simple",
+  "findings": [
+    "DOC-01/GOV-06（P2）：CONTRIBUTING.md 写「Go 1.21 or later」 vs backend/go.mod = go 1.26.10；「Node 18.x」 vs SHELL_VERSION.json minimumNode 24；「go run ./cmd/server --migrate」flag 存疑（需核实 main.go）；「npm test」 vs package.json 实际 scripts（上次审计记为 test:unit）。",
+    "DOC-02/GOV-07（P2）：docs/HARNESS_GOVERNANCE_GUIDE.md 与 docs/harness-pr-generator-guide.md 两份 PR 生成器指南引用已归档模板 sonarcloud-s4666，且 manifest 必填字段与 scripts/task-manifest.mjs 现行 schema 不一致。",
+    "审计建议：DPR 生成器指南 MERGE 为一份指向 live 模板；CONTRIBUTING 版本/命令对齐机器事实。"
+  ],
+  "scope": {
+    "in": [
+      "CONTRIBUTING.md：Prerequisites 从机器源读（go.mod / SHELL_VERSION.json），--migrate 改为实际存在的启动命令并写明来源，npm test 改为 package.json 实际 scripts 名",
+      "docs/HARNESS_GOVERNANCE_GUIDE.md + docs/harness-pr-generator-guide.md 二合一为单一来源，指向 live 模板（sonarcloud-s4666 已归档则改引用），manifest 字段对齐 task-manifest.mjs schema",
+      "收口后跑 check-doc-links 确认零断链"
+    ],
+    "out": [
+      "修改 backend/**、frontend/src/**、scripts/** 任何行为",
+      "删除 .harness/archive 归档模板本身",
+      "顺带「优化」其他文档",
+      "触碰 pantheon-ops / VERSION / CHANGELOG.md"
+    ]
+  },
+  "dependencyLayers": [
+    "platform"
+  ],
+  "implementationNotes": [
+    "先 grep go.mod / SHELL_VERSION.json / package.json 取真值，再改 CONTRIBUTING——「先证实事后改文档」是本包唯一纪律。",
+    "--migrate flag 先核实 backend/cmd/server/main.go 是否存在；不存在则改为文档实际描述的启动方式。",
+    "两份 PR 指南选读者少跳一次的保留稿，被并掉一份改为指向保留稿的短指针（或按 frontmatter 规范处理），不直接删除。",
+    "sonarcloud-s4666 先 grep 确认归档位置，移除引用并写明替换关系。"
+  ],
+  "contractAnchors": [
+    "docs/reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-11-03.md",
+    "docs/contracts/DOCUMENT_FRONTMATTER_SCHEMA.md",
+    "backend/go.mod",
+    "SHELL_VERSION.json"
+  ],
+  "harnessProfile": {
+    "template": "custom",
+    "overlay": "pantheon-base",
+    "qualityProfile": "maintainability",
+    "portableFailureClass": "doc-code-drift",
+    "ownerLayer": "foundation-source",
+    "ratchetDecision": "gate-updated",
+    "coverageDimensions": [
+      "maintainability",
+      "method-health"
+    ]
+  },
+  "expectedFiles": {
+    "create": [
+      ".harness/evidence/2026-11-03-audit-p2-doc-drift-closeout/commands.json",
+      ".harness/evidence/2026-11-03-audit-p2-doc-drift-closeout/summary.md",
+      ".harness/evidence/2026-11-03-audit-p2-doc-drift-closeout/review.md"
+    ],
+    "modify": [
+      "CONTRIBUTING.md",
+      "docs/HARNESS_GOVERNANCE_GUIDE.md",
+      "docs/harness-pr-generator-guide.md"
+    ],
+    "doNotTouch": [
+      ".harness/archive/**",
+      "scripts/task-manifest.mjs",
+      "backend/**",
+      "frontend/src/**",
+      "pantheon-ops/**",
+      "VERSION",
+      "CHANGELOG.md"
+    ]
+  },
+  "executionRoles": {
+    "implementerPosture": "先取真值再改；合并时逐段保留独有内容；改后跑 doc-links 确认零断链。",
+    "reviewerPosture": [
+      "版本/命令/测试名与机器事实逐条对应。",
+      "PR 指南独有步骤未弄丢（合并 diff 可查）。",
+      "未触碰 archive 模板，未扩大范围改别的文档。"
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "node scripts/harness/check-doc-links.mjs --root . --strict",
+      "npm run check:docs-frontmatter",
+      "grep 复核：go 1.21 / --migrate / sonarcloud-s4666 / npm test 在目标文档中的处理结果",
+      "cd backend && go build ./...（确认无连带）"
+    ],
+    "runtimeEvidence": [
+      "无运行面变化：纯文档"
+    ]
+  },
+  "runtimeSensitive": false,
+  "runtimeGap": "纯文档修复，无运行时证据；--migrate flag 以 main.go grep 为准并记录核实来源。",
+  "evidenceRequired": [
+    "commands.json：doc-links / frontmatter 读数、grep 旧文本复核",
+    "summary.md：真值表（go.mod/SHELL_VERSION/package.json → CONTRIBUTING 改写对照）、PR 指南合并前后字段对照",
+    "review.md：逐条 reviewer posture + 独有步骤未丢失的合并 diff 证"
+  ],
+  "humanGates": [
+    "无强制 gate（纯文档）；合并指南若涉读者工作流变化由非作者 Reviewer 确认保留稿选择。"
+  ],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed",
+    "CONTRIBUTING 版本/命令/测试名与机器事实一致",
+    "PR 指南单一来源、指向 live 模板、manifest 字段与 schema 一致",
+    "被并掉指南保留可追溯（指针/归档）未直接删除",
+    "doc-links 0 finding、frontmatter 通过",
+    "未触碰 archive 模板与产品代码"
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-11-03-audit-p2-doc-drift-closeout/manifest.json",
+    "taskDoc": "docs/harness/tasks/2026-11-03-audit-p2-doc-drift-closeout.task.md",
+    "evidenceDir": ".harness/evidence/2026-11-03-audit-p2-doc-drift-closeout/",
+    "summaryFile": ".harness/evidence/2026-11-03-audit-p2-doc-drift-closeout/summary.md",
+    "reviewFile": ".harness/evidence/2026-11-03-audit-p2-doc-drift-closeout/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-11-03.md"
+    ]
+  }
+}

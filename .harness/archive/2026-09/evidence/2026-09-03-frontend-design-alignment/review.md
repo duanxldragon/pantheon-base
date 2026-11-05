@@ -221,3 +221,24 @@
 | **设计协作流程** | ❌ 无 | ❌ 无 | ❌ 无 | ✅ Token 映射 + 交接清单 |
 | **迁移指南** | ⚠️ 简单 | ⚠️ 简单 | ⚠️ 简单 | ✅ 完整（420 行） |
 | **AI 友好** | ⚠️ 一般 | ⚠️ 一般 | ⚠️ 一般 | ✅ 高 |
+
+## Machine Readable
+
+```json
+{
+  "taskId": "2026-09-03-frontend-design-alignment",
+  "verdict": "approved with documented P2 follow-up",
+  "verdictRationale": "Prose verdict '✅ 通过' with all acceptance checklist items green; only optional P2/P3 follow-ups (visual-regression baseline, Token sync, mode-library expansion) left open.",
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-09-03-frontend-design-alignment/manifest.json",
+    "evidence": ".harness/evidence/2026-09-03-frontend-design-alignment/commands.json",
+    "reviewFile": ".harness/evidence/2026-09-03-frontend-design-alignment/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".harness/tasks/2026-09-03-frontend-design-alignment/manifest.json"
+    ]
+  }
+}
+```
+
+> This block was backfilled on 2026-11-04 during the archive-coverage repair. It restates the verdict already written above in machine-readable form and links the artifacts that existed for this task; no conclusion, finding or verification claim was added, removed or reworded. The prose remains authoritative.

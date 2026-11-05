@@ -60,7 +60,7 @@ Approved.
     "evidence": ".harness/evidence/2026-09-08-p2-community-building/commands.json",
     "reviewFile": ".harness/evidence/2026-09-08-p2-community-building/review.md",
     "changeRef": "none",
-    "planRefs": [".harness/tasks/TASK_MASTER_PLAN.md"]
+    "planRefs": ["docs/history/2026-09/tasks-summaries/TASK_MASTER_PLAN.md"]
   }
 }
 ```

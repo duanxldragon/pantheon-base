@@ -41,5 +41,6 @@
   },
   "knownGaps": [
     "Full-suite re-run evidence lands with the PR #312 required checks and the next main Full Smoke."
-  ]
+  ],
+  "runtimeGap": "Restated on 2026-11-04 during the archive-governance repair from this round's own knownGaps, which already record that no runtime signal was captured here: full-suite re-run evidence lands with the PR #312 required checks and the next main Full Smoke. No conclusion, command status or finding was added, removed or reworded."
 }

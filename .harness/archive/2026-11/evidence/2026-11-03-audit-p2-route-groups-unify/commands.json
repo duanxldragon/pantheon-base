@@ -1,0 +1,63 @@
+{
+  "taskId": "2026-11-03-audit-p2-route-groups-unify",
+  "repo": "pantheon-base",
+  "executedAt": "2026-11-04",
+  "agent": { "tool": "claude-code" },
+  "runtimeSensitive": false,
+  "runtimeGap": "未构建真实 router 快照（装配 deps 需要 MySQL 与 Redis）：以 helper 链断言（pkg/contracts/route_groups_system_test.go）+ system_modules.go 源码 ratchet 替代。真实运行期的路由行为由既有 backend-tests job 覆盖。",
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-11-03-audit-p2-route-groups-unify/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-11-03-audit-p2-route-groups-unify/",
+    "reviewFile": ".harness/evidence/2026-11-03-audit-p2-route-groups-unify/review.md",
+    "changeRef": "none",
+    "planRefs": ["docs/reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-11-03.md"]
+  },
+  "commands": [
+    {
+      "command": "grep -c 'Group(routeGroupSystem)\\.' backend/modules/system/system_modules.go",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "0 命中：不再有原地组装 .Group(routeGroupSystem).Use(...) 的链。"
+    },
+    {
+      "command": "grep -c 'Use(middleware\\.' backend/modules/system/system_modules.go",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "0 命中：文件里不再手写任何 middleware 链；单路由级中间件仍以参数形式出现（SecureAction / PlatformCapability），不属组链。"
+    },
+    {
+      "command": "grep -c 'contracts.SystemProtectedGroup(' backend/modules/system/system_modules.go",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "12 处调用（另有 SystemTokenGroup 1 处、SystemAuthGroup 2 处），覆盖原 15 条手写链。"
+    },
+    {
+      "command": "go test ./pkg/contracts/ ./modules/system/ -count=1",
+      "cwd": "pantheon-base/backend",
+      "status": "passed",
+      "details": "ok pkg/contracts 0.033s / ok modules/system 0.038s；含新增 SystemToken/Auth/Protected 链断言与源码 ratchet。"
+    },
+    {
+      "command": "go build ./... && go vet ./...",
+      "cwd": "pantheon-base/backend",
+      "status": "passed",
+      "details": "BUILD_EXIT=0 / VET_EXIT=0。"
+    },
+    {
+      "command": "gofmt -l pkg/contracts/route_groups.go pkg/contracts/route_groups_system_test.go modules/system/system_modules.go modules/system/system_modules_route_groups_test.go",
+      "cwd": "pantheon-base/backend",
+      "status": "passed",
+      "details": "无输出（全部已格式化）。"
+    },
+    {
+      "command": "go test ./... -short -count=1",
+      "cwd": "pantheon-base/backend",
+      "status": "passed",
+      "details": "GOTEST_EXIT=0；47 个包 ok，0 FAIL。"
+    }
+  ],
+  "knownGaps": [
+    "没有真实 router 快照测试：装配 systemModuleDependencies 需要 MySQL 与 Redis，本机不可用。补偿是两层静态断言——helper 链逐项钉死，且 system_modules.go 一旦重新手写 `.Use(middleware.` 就红。",
+    "ops 直接 import base 的 internal/middleware；本包未改任何中间件实现，只改组装方式，故 ops 无接口面变化（仍应随下次 foundation release 自然送达）。"
+  ]
+}

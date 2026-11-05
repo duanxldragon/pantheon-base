@@ -6,7 +6,7 @@ status: Active
 linked_contracts:
   - docs/contracts/PLATFORM_CONTRACT.md
   - docs/contracts/DOCUMENT_GOVERNANCE_CONTRACT.md
-updated_at: 2026-06-23
+updated_at: 2026-11-04
 ---
 
 # Pantheon Base Multi-Agent Delivery Workflow
@@ -59,7 +59,7 @@ Worktrees are for local implementation and validation, not as long-lived deliver
 
 ## Human Gates
 
-The dispatcher must stop for human approval before schema, permissions, auth, audit, CI, secrets, destructive, release, or external-service changes; when planner and explorer disagree on scope; or when review findings require expanding the original task.
+Authorized, reversible changes to schema descriptions, permissions, authentication, audit and CI proceed autonomously within the agreed task scope. The maintainer intervenes at three touchpoints: initial requirements, quality-gate policy decisions, and final visual/functional acceptance. Stop only for unapproved destructive/production or credentialed external actions, actual publication, material scope expansion, or a change to required/advisory gate policy. Do not request the same authorization again merely because a sensitive domain is touched.
 
 ## Minimum Closeout
 

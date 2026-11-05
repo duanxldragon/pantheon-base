@@ -1,0 +1,112 @@
+{
+  "taskId": "2026-11-04-audit-p3-consumer-seams",
+  "taskDoc": "docs/harness/tasks/2026-11-04-audit-p3-consumer-seams.task.md",
+  "title": "保留现有消费接缝并完成本地 Ops 重建验证",
+  "goal": "保留现有消费接缝并完成本地 Ops 重建验证",
+  "primaryLayer": "inheritance-sync",
+  "status": "in-progress",
+  "priority": "P3",
+  "type": "audit-remediation",
+  "findings": [
+    "PB-008"
+  ],
+  "parentTaskId": "2026-11-04-global-audit-remediation",
+  "dependencies": [
+    "2026-11-04-audit-p1-refresh-rotation",
+    "2026-11-04-audit-p2-authoritative-docs"
+  ],
+  "scope": {
+    "in": [
+      "保留现有消费接缝并完成本地 Ops 重建验证",
+      "保持注册/ModuleConfig/公共API签名，实际rebuild后Go业务和FE构建通过",
+      "采用隔离本地候选，不在Ops主工作树复制Base源码；Ops状态保持干净",
+      "发布与lock升级通过foundation release流程，明确延期；不增加插件协议"
+    ],
+    "out": [
+      "产品扩展/大重构",
+      "批量删除或重写旧文档",
+      "生产操作/发布/冻结代签",
+      "覆盖或回退用户已有改动"
+    ]
+  },
+  "dependencyLayers": [
+    "platform"
+  ],
+  "contractAnchors": [
+    "docs/reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-11-04_FULL.md",
+    "docs/harness/VERIFICATION_EVIDENCE_SPEC.md",
+    "docs/harness/REVIEW_LOOP_SPEC.md"
+  ],
+  "expectedFiles": {
+    "create": [
+      "docs/harness/tasks/2026-11-04-audit-p3-consumer-seams.task.md",
+      ".harness/tasks/2026-11-04-audit-p3-consumer-seams/manifest.json",
+      ".harness/evidence/2026-11-04-audit-p3-consumer-seams/commands.json",
+      ".harness/evidence/2026-11-04-audit-p3-consumer-seams/summary.md",
+      ".harness/evidence/2026-11-04-audit-p3-consumer-seams/review.md"
+    ],
+    "modify": [],
+    "doNotTouch": [
+      "VERSION",
+      "CHANGELOG.md",
+      "backend/pkg/database/migrations",
+      "pantheon-ops"
+    ]
+  },
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "ci-workflow",
+    "portableFailureClass": "PB-008",
+    "ownerLayer": "foundation-source",
+    "ratchetDecision": "no-repeat-observed",
+    "coverageDimensions": [
+      "behaviour",
+      "maintainability"
+    ]
+  },
+  "executionRoles": {
+    "implementerPosture": "Generator executor单一写入者；并行仅只读proposal",
+    "reviewerPosture": [
+      "独立Reviewer核查失败路径、In/Out和下游兼容"
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "node scripts/business-overlay/rebuild-from-base.mjs --help"
+    ],
+    "runtimeEvidence": []
+  },
+  "runtimeSensitive": false,
+  "runtimeGap": "No runtime behaviour changed; bounded documentation/policy review only.",
+  "acceptanceCriteria": [
+    "保持注册/ModuleConfig/公共API签名，实际rebuild后Go业务和FE构建通过",
+    "采用隔离本地候选，不在Ops主工作树复制Base源码；Ops状态保持干净",
+    "发布与lock升级通过foundation release流程，明确延期；不增加插件协议"
+  ],
+  "implementationNotes": [
+    "真实DB消费套件266通过节点/12失败节点（9顶层用例）、0跳过；全部失败在Ops HEAD同环境复现且断言相同，确认既有测试失败但业务意图责任待裁定，PB-010单独登记，下游验收不关闭。从全部现存tracked/untracked非忽略文件建立完整隔离候选，尊重既有删除；实际Ops重建802项资产，公共接口未删除。最终消费树后端验证及前端输入哈希对比；主Ops工作树不改。",
+    "Only one Generator writer; read-only proposal/independent review attempts failed with service 503. Fallback serial implementation plus mechanical evidence; not independent self-approval."
+  ],
+  "risks": [
+    "中高：文本锚点与系统共享接口；本轮不改Ops锁与业务实现"
+  ],
+  "humanGates": [
+    "实际门禁策略放宽、生产破坏操作、发布及冻结宣告：维护者；本地修复已授权"
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-11-04-audit-p3-consumer-seams/manifest.json",
+    "taskDoc": "docs/harness/tasks/2026-11-04-audit-p3-consumer-seams.task.md",
+    "evidenceDir": ".harness/evidence/2026-11-04-audit-p3-consumer-seams/",
+    "reviewFile": ".harness/evidence/2026-11-04-audit-p3-consumer-seams/review.md",
+    "summaryFile": ".harness/evidence/2026-11-04-audit-p3-consumer-seams/summary.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".harness/tasks/2026-11-04-global-audit-remediation/plan.md",
+      "docs/reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-11-04_FULL.md"
+    ]
+  },
+  "implementationStatus": "applied",
+  "reviewStatus": "blocked",
+  "verificationStatus": "partial"
+}

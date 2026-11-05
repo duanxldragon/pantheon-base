@@ -6,7 +6,7 @@ import process from 'node:process';
 import {
   buildTaskManifestPath,
   ensureTrailingSlash,
-} from './task-manifest.mjs';
+} from '../task-manifest.mjs';
 
 const DEFAULT_ROOT = process.cwd();
 const TASK_DOC_ROOT = path.join('docs', 'harness', 'tasks');

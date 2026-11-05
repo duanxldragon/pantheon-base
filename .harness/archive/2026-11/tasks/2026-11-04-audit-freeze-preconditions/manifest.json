@@ -1,0 +1,101 @@
+{
+  "taskId": "2026-11-04-audit-freeze-preconditions",
+  "taskDoc": "docs/harness/tasks/2026-11-04-audit-freeze-preconditions.task.md",
+  "title": "冻结前置收口（FE-01b + DB-01 注释诚实）",
+  "goal": "闭合 2026-11-04 审计 §9 第 2、3 项：权限角色下拉与预热复用 fetchAllPages；bootstrap 注释不再声称与迁移链逐字相同，并写明未跑迁移的全新启动不是支持路径。不提交已有工作区，不签冻结。",
+  "primaryLayer": "system/iam",
+  "status": "completed",
+  "priority": "P1",
+  "type": "freeze-precondition",
+  "estimatedComplexity": "simple",
+  "findings": [
+    "FE-01b（P1）：PermissionList.tsx:227-236 与 permission/index.ts:41 单页 pageSize 100，把 result.items 当全集。HEAD 与工作区都开。W1 2026-11-03-audit-p1-pagination-data-consistency 的 scope.in 不含这两处。",
+    "DB-01（P2，工作区半闭）：AutoMigrate 已在未提交工作区去掉。注释把 CREATE TABLE IF NOT EXISTS 说成与迁移链逐字相同。DDL 只有 id/tenant_id/role_key/mode/dept_ids。tenant_id 权威是 000024:201-221，不是 000020。",
+    "审计 §9 第 4 项：路由组布尔棘轮已补（TestSystemModulesPinGroupOptions）。第 1 项提交与第 5 项冻结宣告/GOV-08/000031 是维护者门禁，不在本包 status 里。"
+  ],
+  "scope": {
+    "in": [
+      "PermissionList.tsx 与 permission/index.ts 两处角色列表改走已有 fetchAllPages",
+      "data_scope_middleware.go 只改注释：bootstrap 只保证模型读写列，未跑迁移的全新启动不是支持路径"
+    ],
+    "out": [
+      "提交 2026-11-03 工作区整改",
+      "冻结宣告、GOV-08、执行 000031、改 GOV-05",
+      "改 000001/000002/000024，恢复 AutoMigrate，补 bootstrap 列",
+      "重开 W1，改 pantheon-ops，打 release"
+    ]
+  },
+  "dependencyLayers": [
+    "platform"
+  ],
+  "implementationNotes": [
+    "规划者不得改 frontend/src 与 backend/。本 manifest 是 planned，不是 completed。",
+    "不要沿用 2026-11-03 data-scope 包对 000020 的错误引用。",
+    "路由组布尔棘轮只锁注册行，不改中间件链。"
+  ],
+  "contractAnchors": [
+    "docs/reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-11-04.md",
+    "docs/contracts/PLATFORM_CONTRACT.md",
+    "docs/DEPLOYMENT_GUIDE.md",
+    "backend/pkg/database/migrations/000024_tenant_core_tables_repair.up.sql"
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "behaviour",
+    "portableFailureClass": "silent-truncation",
+    "ownerLayer": "foundation-source",
+    "ratchetDecision": "none",
+    "coverageDimensions": [
+      "behaviour",
+      "architecture-fitness"
+    ]
+  },
+  "expectedFiles": {
+    "create": [
+      "docs/harness/tasks/2026-11-04-audit-freeze-preconditions.task.md",
+      ".harness/tasks/2026-11-04-audit-freeze-preconditions/manifest.json"
+    ],
+    "modify": [
+      "frontend/src/modules/system/iam/permission/PermissionList.tsx",
+      "frontend/src/modules/system/iam/permission/index.ts",
+      "backend/internal/middleware/data_scope_middleware.go",
+      "backend/modules/system/system_modules_route_groups_test.go"
+    ],
+    "doNotTouch": [
+      "backend/pkg/database/migrations/**",
+      "frontend/src/shared/utils/fetchAllPages.ts",
+      "pantheon-ops/**",
+      "VERSION",
+      "CHANGELOG.md"
+    ]
+  },
+  "verification": {
+    "commands": [
+      "cd backend && gofmt -l internal/middleware/data_scope_middleware.go",
+      "cd frontend && ./node_modules/.bin/tsc -b --pretty false",
+      "cd backend && go test -short -count=1 ./modules/system/ -run TestSystemModules -timeout 180s"
+    ],
+    "note": "gofmt -l 无输出；tsc -b exit 0。路由组棘轮 go test TestSystemModules 通过。未跑迁移，未执行 000031。"
+  },
+  "evidence": {
+    "directory": ".harness/evidence/2026-11-04-audit-freeze-preconditions/",
+    "summary": "已写。FE-01b 两处走 fetchAllPages；DB-01 注释写明未跑迁移的全新启动不是支持路径；路由组布尔棘轮已补。2026-11-03 整改仍未合并。"
+  },
+  "humanGates": [
+    "提交已有工作区整改到 main",
+    "冻结宣告",
+    "GOV-08 一句话",
+    "000031 是否在生产执行"
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-11-04-audit-freeze-preconditions/manifest.json",
+    "taskDoc": "docs/harness/tasks/2026-11-04-audit-freeze-preconditions.task.md",
+    "evidenceDir": ".harness/evidence/2026-11-04-audit-freeze-preconditions/",
+    "reviewFile": ".harness/evidence/2026-11-04-audit-freeze-preconditions/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-11-04.md"
+    ]
+  }
+}

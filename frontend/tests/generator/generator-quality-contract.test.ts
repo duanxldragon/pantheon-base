@@ -3,10 +3,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import test from 'node:test';
 
-import {
-  GENERATED_MARKER,
-  ModuleExporter,
-} from '../../src/modules/lowcode/generator/exporter';
+import { GENERATED_MARKER, ModuleExporter } from '../../src/modules/lowcode/generator/exporter';
 import { GO_MODULE_PATH } from '../../src/modules/lowcode/generator/backendGenerator';
 import {
   buildAuditActionKey,
@@ -653,29 +650,47 @@ test('generated Go imports are all derived from GO_MODULE_PATH', () => {
     if (!path.startsWith('backend/') || !path.endsWith('.go')) {
       continue;
     }
-    assert.doesNotMatch(content, /"pantheon-base\//, `${path} must not carry a hand-written pantheon-base/ import`);
+    assert.doesNotMatch(
+      content,
+      /"pantheon-base\//,
+      `${path} must not carry a hand-written pantheon-base/ import`,
+    );
   }
   const moduleSrc = files.get('backend/modules/business/cmdb/asset/module.go') || '';
   const serviceSrc = files.get('backend/modules/business/cmdb/asset/asset_service.go') || '';
   const handlerSrc = files.get('backend/modules/business/cmdb/asset/asset_handler.go') || '';
-  assert.ok(moduleSrc.includes('"' + GO_MODULE_PATH + '/pkg/contracts"'), 'module.go must import contracts via GO_MODULE_PATH');
-  assert.ok(serviceSrc.includes('"' + GO_MODULE_PATH + '/pkg/common"'), 'service.go must import common via GO_MODULE_PATH');
-  assert.ok(serviceSrc.includes('"' + GO_MODULE_PATH + '/pkg/database"'), 'service.go must import database via GO_MODULE_PATH');
-  assert.ok(handlerSrc.includes('"' + GO_MODULE_PATH + '/pkg/common"'), 'handler.go must import common via GO_MODULE_PATH');
+  assert.ok(
+    moduleSrc.includes('"' + GO_MODULE_PATH + '/pkg/contracts"'),
+    'module.go must import contracts via GO_MODULE_PATH',
+  );
+  assert.ok(
+    serviceSrc.includes('"' + GO_MODULE_PATH + '/pkg/common"'),
+    'service.go must import common via GO_MODULE_PATH',
+  );
+  assert.ok(
+    serviceSrc.includes('"' + GO_MODULE_PATH + '/pkg/database"'),
+    'service.go must import database via GO_MODULE_PATH',
+  );
+  assert.ok(
+    handlerSrc.includes('"' + GO_MODULE_PATH + '/pkg/common"'),
+    'handler.go must import common via GO_MODULE_PATH',
+  );
 });
 
 test('generated module wires BootstrapFunc for the default versioned-migration mode', () => {
   const files = generatedFiles(createSchema());
   const moduleSrc = files.get('backend/modules/business/cmdb/asset/module.go') || '';
   // RegisterBackendModules 默认模式只跑 Bootstrap；缺 BootstrapFunc 时生成的表永远不会建出来。
+  // 列间距用 \s+ 匹配：AUD-001b 之后 `MigrateFunc:` 按 gofmt 规则补到
+  // `BootstrapFunc:` 的列宽，这里断言的是接线本身，不是对齐空格。
   assert.match(
     moduleSrc,
-    /BootstrapFunc: func\(_ \*gorm\.DB\) error { return service\.Migrate\(\) },/,
+    /BootstrapFunc:\s+func\(_ \*gorm\.DB\) error { return service\.Migrate\(\) },/,
   );
   // dev 的 PANTHEON_AUTO_MIGRATE=true 路径仍走 MigrateFunc。
   assert.match(
     moduleSrc,
-    /MigrateFunc: func\(_ \*gorm\.DB\) error { return service\.Migrate\(\) },/,
+    /MigrateFunc:\s+func\(_ \*gorm\.DB\) error { return service\.Migrate\(\) },/,
   );
 });
 
@@ -691,8 +706,16 @@ test('generated routes use contracts route-group helpers instead of assembling m
     ['data-scope', scopedModule],
     ['plain', plainModule],
   ] as const) {
-    assert.doesNotMatch(moduleSrc, /middleware\./, `${label} module must not call middleware directly`);
-    assert.doesNotMatch(moduleSrc, /\.Group\([^)]*\)\.Use\(/, `${label} module must not hand-assemble the chain`);
+    assert.doesNotMatch(
+      moduleSrc,
+      /middleware\./,
+      `${label} module must not call middleware directly`,
+    );
+    assert.doesNotMatch(
+      moduleSrc,
+      /\.Group\([^)]*\)\.Use\(/,
+      `${label} module must not hand-assemble the chain`,
+    );
   }
   assert.match(
     scopedModule,
@@ -716,4 +739,53 @@ test('generated routes stay outside tenant isolation', () => {
     plainModule,
     /protected := contracts\.ProtectedGroup\(r, "\/business\/cmdb\/asset"\)/,
   );
+});
+
+test('generated list connects real create/update forms and preserves recoverable submission state', () => {
+  const schema = createSchema();
+  const files = generatedFiles(schema);
+  const list = files.get('frontend/src/modules/business/cmdb/asset/CmdbAssetList.tsx') || '';
+  const form = files.get('frontend/src/modules/business/cmdb/asset/CmdbAssetForm.tsx') || '';
+  assert.doesNotMatch(list, /comingSoon/);
+  assert.match(list, /await createCmdbAsset\(\{/);
+  assert.match(list, /await getCmdbAssetDetail\(id\)/);
+  assert.match(list, /await updateCmdbAsset\(editor.id, \{/);
+  assert.match(list, /values.assetCode == null/);
+  assert.match(list, /values.vendorId == null/);
+  assert.match(list, /hasPerm\('business:cmdb:asset:create'\)/);
+  assert.match(list, /hasPerm\('business:cmdb:asset:update'\)/);
+  assert.match(list, /editorBusy.current = true/);
+  assert.match(list, /setEditorFailed\(true\)/);
+  assert.match(list, /submitError=\{editorFailed\}/);
+  assert.match(form, /disabled=\{submitting\}/);
+  assert.match(form, /errorSummary=\{submitError/);
+});
+
+test('list editor respects action/layout switches and row-only delete imports', () => {
+  for (const [pageActions, listLayout, expected] of [
+    [['create'], {}, 'create'],
+    [['update'], {}, 'update'],
+    [['view', 'create', 'update'], { headerActions: false, rowActions: false }, 'none'],
+    [['delete'], { batchActions: false }, 'delete'],
+  ] as const) {
+    const schema = createSchema({
+      pageActions: [...pageActions],
+      listLayout,
+      relations: [],
+      dependencies: [],
+    });
+    const list =
+      generatedFiles(schema).get('frontend/src/modules/business/cmdb/asset/CmdbAssetList.tsx') ||
+      '';
+    if (expected === 'none' || expected === 'delete') {
+      assert.doesNotMatch(list, /CmdbAssetForm|usePermission|editorBusy/);
+    } else {
+      assert.match(list, /CmdbAssetForm/);
+      assert.equal(list.includes('openCreateEditor'), expected === 'create');
+      assert.equal(list.includes('openUpdateEditor'), expected === 'update');
+    }
+    if (expected === 'delete') {
+      assert.match(list, /deleteCmdbAsset/);
+    }
+  }
 });

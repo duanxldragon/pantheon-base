@@ -1,0 +1,171 @@
+{
+  "candidateCommit": "a9616e753b8dc2d1d4a332febb98341fdead8636",
+  "opsControlCommit": "1c057eedfd58b2a5d77c7195d99922af1f74a17d",
+  "candidateSuite": {
+    "passedTestNodes": 266,
+    "failedTestNodes": 12,
+    "failedTopLevelTests": 9,
+    "skippedTests": 0,
+    "passedPackages": 14,
+    "failedPackages": 4
+  },
+  "allFailedNodesReproducedWithSameAssertions": true,
+  "testSourceInputs": [
+    {
+      "path": "backend/modules/business/bizscope/bizscope_service_test.go",
+      "candidate": "b58f9441dfed648bca85fece1d42a03dc61443b42b66acf496c39dc6cbee4ee3",
+      "control": "b58f9441dfed648bca85fece1d42a03dc61443b42b66acf496c39dc6cbee4ee3"
+    },
+    {
+      "path": "backend/modules/business/cmdb/host/host_service_test.go",
+      "candidate": "ea976d34c14c99f950fe0222535b792e5443a76c018f5ea71499aa077e2e8550",
+      "control": "ea976d34c14c99f950fe0222535b792e5443a76c018f5ea71499aa077e2e8550"
+    },
+    {
+      "path": "backend/modules/business/deploy/deploy_reliability_test.go",
+      "candidate": "aeffd3c33d54fa0bdfc9c2869bd485b03d0b168bd1a87e496485d90d2613a66d",
+      "control": "aeffd3c33d54fa0bdfc9c2869bd485b03d0b168bd1a87e496485d90d2613a66d"
+    },
+    {
+      "path": "backend/modules/business/deploy/deploy_service_test.go",
+      "candidate": "27b5047c9fff2b53e409c4f2c57635223c4c2c667f907e0ea1060d6699f0bac4",
+      "control": "27b5047c9fff2b53e409c4f2c57635223c4c2c667f907e0ea1060d6699f0bac4"
+    },
+    {
+      "path": "backend/modules/business/observability/datasource_service_test.go",
+      "candidate": "c708e1fe4906a6aa87acf5a8ad6238f1f6854a3b795b2264b0b9b7490e852ac3",
+      "control": "c708e1fe4906a6aa87acf5a8ad6238f1f6854a3b795b2264b0b9b7490e852ac3"
+    }
+  ],
+  "failed": [
+    {
+      "package": "github.com/duanxldragon/pantheon-base/backend/modules/business/bizscope",
+      "test": "TestBizScopeDeleteRejectsNonCMDBReferences/application",
+      "candidate": [
+        "bizscope_service_test.go:413: expected business.bizscope.inUse for biz_application reference, got business.cmdb.capability.notConfigured"
+      ],
+      "control": [
+        "bizscope_service_test.go:413: expected business.bizscope.inUse for biz_application reference, got business.cmdb.capability.notConfigured"
+      ],
+      "controlAlsoFails": true
+    },
+    {
+      "package": "github.com/duanxldragon/pantheon-base/backend/modules/business/bizscope",
+      "test": "TestBizScopeDeleteRejectsNonCMDBReferences/k8s_cluster",
+      "candidate": [
+        "bizscope_service_test.go:413: expected business.bizscope.inUse for biz_k8s_cluster reference, got business.cmdb.capability.notConfigured"
+      ],
+      "control": [
+        "bizscope_service_test.go:413: expected business.bizscope.inUse for biz_k8s_cluster reference, got business.cmdb.capability.notConfigured"
+      ],
+      "controlAlsoFails": true
+    },
+    {
+      "package": "github.com/duanxldragon/pantheon-base/backend/modules/business/bizscope",
+      "test": "TestBizScopeDeleteRejectsNonCMDBReferences/deploy_task",
+      "candidate": [
+        "bizscope_service_test.go:413: expected business.bizscope.inUse for biz_deploy_task reference, got business.cmdb.capability.notConfigured"
+      ],
+      "control": [
+        "bizscope_service_test.go:413: expected business.bizscope.inUse for biz_deploy_task reference, got business.cmdb.capability.notConfigured"
+      ],
+      "controlAlsoFails": true
+    },
+    {
+      "package": "github.com/duanxldragon/pantheon-base/backend/modules/business/bizscope",
+      "test": "TestBizScopeDeleteRejectsNonCMDBReferences",
+      "candidate": [],
+      "control": [],
+      "controlAlsoFails": true
+    },
+    {
+      "package": "github.com/duanxldragon/pantheon-base/backend/modules/business/bizscope",
+      "test": "TestBizScopeDeleteIgnoresSoftDeletedReferences",
+      "candidate": [
+        "bizscope_service_test.go:441: delete scope with only soft-deleted references: business.cmdb.capability.notConfigured"
+      ],
+      "control": [
+        "bizscope_service_test.go:441: delete scope with only soft-deleted references: business.cmdb.capability.notConfigured"
+      ],
+      "controlAlsoFails": true
+    },
+    {
+      "package": "github.com/duanxldragon/pantheon-base/backend/modules/business/cmdb/host",
+      "test": "TestHostStateTransitionsUseCompatibilityProjectionAndCAS",
+      "candidate": [
+        "host_service_test.go:82: expected stale retire rejection, got cmdbhost.state.invalid"
+      ],
+      "control": [
+        "host_service_test.go:82: expected stale retire rejection, got cmdbhost.state.invalid"
+      ],
+      "controlAlsoFails": true
+    },
+    {
+      "package": "github.com/duanxldragon/pantheon-base/backend/modules/business/deploy",
+      "test": "TestMarkHostResultDefersTerminalTaskUntilActiveAttemptFinishes",
+      "candidate": [
+        "deploy_reliability_test.go:55: load task host: record not found"
+      ],
+      "control": [
+        "deploy_reliability_test.go:55: load task host: record not found"
+      ],
+      "controlAlsoFails": true
+    },
+    {
+      "package": "github.com/duanxldragon/pantheon-base/backend/modules/business/deploy",
+      "test": "TestStartDeployTaskPersistsCanonicalSSHRunnerErrors",
+      "candidate": [
+        "deploy_service_test.go:1079: start task: business.deploy.task.sshConnectFailed"
+      ],
+      "control": [
+        "deploy_service_test.go:1079: start task: business.deploy.task.sshConnectFailed"
+      ],
+      "controlAlsoFails": true
+    },
+    {
+      "package": "github.com/duanxldragon/pantheon-base/backend/modules/business/deploy",
+      "test": "TestDeployTemplateTaskSSHExecutorFailsOnScriptPrecheck",
+      "candidate": [
+        "deploy_service_test.go:2269: start task: [1] 安装前校验 (install) precheck failed: step failed"
+      ],
+      "control": [
+        "deploy_service_test.go:2269: start task: [1] 安装前校验 (install) precheck failed: step failed"
+      ],
+      "controlAlsoFails": true
+    },
+    {
+      "package": "github.com/duanxldragon/pantheon-base/backend/modules/business/deploy",
+      "test": "TestDeleteDeployTaskReconcilesStaleRunningTask",
+      "candidate": [
+        "deploy_service_test.go:2977: delete stale task: business.deploy.task.invalidDeleteState"
+      ],
+      "control": [
+        "deploy_service_test.go:2977: delete stale task: business.deploy.task.invalidDeleteState"
+      ],
+      "controlAlsoFails": true
+    },
+    {
+      "package": "github.com/duanxldragon/pantheon-base/backend/modules/business/observability",
+      "test": "TestDatasourceDefaultCanMoveAndClear",
+      "candidate": [
+        "datasource_service_test.go:29: move default datasource: observability.datasource_invalid_url: ssrf: port <fixture> not allowed"
+      ],
+      "control": [
+        "datasource_service_test.go:29: move default datasource: observability.datasource_invalid_url: ssrf: port <fixture> not allowed"
+      ],
+      "controlAlsoFails": true
+    },
+    {
+      "package": "github.com/duanxldragon/pantheon-base/backend/modules/business/observability",
+      "test": "TestDatasourceQueriesLokiAndTempo",
+      "candidate": [
+        "datasource_service_test.go:133: query Loki: observability.datasource_invalid_url: ssrf: port <fixture> not allowed"
+      ],
+      "control": [
+        "datasource_service_test.go:133: query Loki: observability.datasource_invalid_url: ssrf: port <fixture> not allowed"
+      ],
+      "controlAlsoFails": true
+    }
+  ],
+  "note": "Normalized only dynamic httptest port numbers. Test failures are confirmed and pre-existing at Ops HEAD. Whether each test or business implementation violates intent remains undecided; no Base runtime regression or business failure is inferred solely from assertions."
+}

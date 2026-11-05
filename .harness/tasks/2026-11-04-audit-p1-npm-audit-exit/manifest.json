@@ -1,0 +1,112 @@
+{
+  "taskId": "2026-11-04-audit-p1-npm-audit-exit",
+  "taskDoc": "docs/harness/tasks/2026-11-04-audit-p1-npm-audit-exit.task.md",
+  "title": "npm 漏洞扫描非零结果传递到门禁",
+  "goal": "npm 漏洞扫描非零结果传递到门禁",
+  "primaryLayer": "platform",
+  "status": "in-progress",
+  "priority": "P1",
+  "type": "audit-remediation",
+  "findings": [
+    "PB-002"
+  ],
+  "parentTaskId": "2026-11-04-global-audit-remediation",
+  "dependencies": [],
+  "scope": {
+    "in": [
+      "npm 漏洞扫描非零结果传递到门禁",
+      "npm audit高危命中、扫描失败和npm ci失败保留非零exit并显示失败outcome",
+      "上传报告保留；main/release等严格路径失败，PR/merge_group既有report-only策略保留",
+      "行为测试执行工作流中的实际shell片段，覆盖成功/漏洞/工具故障及enforcement"
+    ],
+    "out": [
+      "产品扩展/大重构",
+      "批量删除或重写旧文档",
+      "生产操作/发布/冻结代签",
+      "覆盖或回退用户已有改动"
+    ]
+  },
+  "dependencyLayers": [
+    "system/auth"
+  ],
+  "contractAnchors": [
+    "docs/reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-11-04_FULL.md",
+    "docs/harness/VERIFICATION_EVIDENCE_SPEC.md",
+    "docs/harness/REVIEW_LOOP_SPEC.md"
+  ],
+  "expectedFiles": {
+    "create": [
+      "docs/harness/tasks/2026-11-04-audit-p1-npm-audit-exit.task.md",
+      ".harness/tasks/2026-11-04-audit-p1-npm-audit-exit/manifest.json",
+      "tests/scripts/security-audit-exit.test.mjs",
+      ".harness/evidence/2026-11-04-audit-p1-npm-audit-exit/commands.json",
+      ".harness/evidence/2026-11-04-audit-p1-npm-audit-exit/summary.md",
+      ".harness/evidence/2026-11-04-audit-p1-npm-audit-exit/review.md"
+    ],
+    "modify": [
+      ".github/workflows/security.yml"
+    ],
+    "doNotTouch": [
+      "VERSION",
+      "CHANGELOG.md",
+      "backend/pkg/database/migrations",
+      "pantheon-ops"
+    ]
+  },
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "ci-workflow",
+    "portableFailureClass": "PB-002",
+    "ownerLayer": "foundation-source",
+    "ratchetDecision": "no-repeat-observed",
+    "coverageDimensions": [
+      "behaviour",
+      "maintainability"
+    ]
+  },
+  "executionRoles": {
+    "implementerPosture": "Generator executor单一写入者；并行仅只读proposal",
+    "reviewerPosture": [
+      "独立Reviewer核查失败路径、In/Out和下游兼容"
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "node --test tests/scripts/security-workflow.test.mjs"
+    ],
+    "runtimeEvidence": []
+  },
+  "runtimeSensitive": false,
+  "runtimeGap": "No runtime behaviour changed; bounded documentation/policy review only.",
+  "acceptanceCriteria": [
+    "npm audit高危命中、扫描失败和npm ci失败保留非零exit并显示失败outcome",
+    "上传报告保留；main/release等严格路径失败，PR/merge_group既有report-only策略保留",
+    "行为测试执行工作流中的实际shell片段，覆盖成功/漏洞/工具故障及enforcement"
+  ],
+  "implementationNotes": [
+    "删除两处 npm audit 的 || true，保留上传报告与既有PR/report-only策略；严格路径以真实step outcome判定。行为回归执行工作流原shell片段。",
+    "Only one Generator writer; read-only proposal/independent review attempts failed with service 503. Fallback serial implementation plus mechanical evidence; not independent self-approval."
+  ],
+  "risks": [
+    "中：真实漏洞或扫描错误现在会使严格门禁变红；不擅自更改阈值或豁免"
+  ],
+  "humanGates": [
+    "实际门禁策略放宽、生产破坏操作、发布及冻结宣告：维护者；本地修复已授权"
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-11-04-audit-p1-npm-audit-exit/manifest.json",
+    "taskDoc": "docs/harness/tasks/2026-11-04-audit-p1-npm-audit-exit.task.md",
+    "evidenceDir": ".harness/evidence/2026-11-04-audit-p1-npm-audit-exit/",
+    "reviewFile": ".harness/evidence/2026-11-04-audit-p1-npm-audit-exit/review.md",
+    "summaryFile": ".harness/evidence/2026-11-04-audit-p1-npm-audit-exit/summary.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".harness/tasks/2026-11-04-global-audit-remediation/plan.md",
+      "docs/reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-11-04_FULL.md"
+    ]
+  },
+  "implementationStatus": "applied",
+  "reviewStatus": "blocked",
+  "verificationStatus": "passed"
+}

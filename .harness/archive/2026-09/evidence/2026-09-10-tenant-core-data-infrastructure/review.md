@@ -78,3 +78,24 @@ Remaining stop items are explicit: async context persistence, upload download au
 4. **Residual risk**: S3 download serving is not implemented by the current handler, and browser hostile smoke plus gray performance/observability remain in the follow-up verification task.
 
 **Verdict:** local upload download authorization, operation-log async persistence, and lowcode route guardrails are approved for the compat-default canary. The parent task remains open until hostile browser smoke and the verification/gray task provide runtime evidence.
+
+## Machine Readable
+
+```json
+{
+  "taskId": "2026-09-10-tenant-core-data-infrastructure",
+  "verdict": "blocked",
+  "verdictRationale": "Slices are 'approved for the compat-default canary' but the review states 'The parent task remains open until hostile browser smoke and the verification/gray task provide runtime evidence'.",
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-09-10-tenant-core-data-infrastructure/manifest.json",
+    "evidence": ".harness/evidence/2026-09-10-tenant-core-data-infrastructure/commands.json",
+    "reviewFile": ".harness/evidence/2026-09-10-tenant-core-data-infrastructure/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".harness/tasks/2026-09-10-tenant-core-data-infrastructure/manifest.json"
+    ]
+  }
+}
+```
+
+> This block was backfilled on 2026-11-04 during the archive-coverage repair. It restates the verdict already written above in machine-readable form and links the artifacts that existed for this task; no conclusion, finding or verification claim was added, removed or reworded. The prose remains authoritative.
