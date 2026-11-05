@@ -38,7 +38,7 @@
 ## 边界说明
 
 - [ ] 本次改动仅涉及单一层级
-- [ ] 本次改动涉及跨层，已说明边界与依赖
+- [x] 本次改动涉及跨层，已说明边界与依赖
 
 > 如果跨层，请补充说明：
 
@@ -68,13 +68,13 @@
 
 ## 审核留痕
 
-- Copilot review：unavailable — GitHub connection denied
-- CodeQL 结果：unavailable — hosted scan unreachable
-- GitHub checks 结果：not collected — no hosted CI success claimed
+- Copilot review：not collected; required independent native review lanes still return HTTP503
+- CodeQL 结果：original candidate SUCCESS (Security Gates41974006257); fix candidate recheck pending
+- GitHub checks 结果：original candidate CI/security/backend/frontend/smoke SUCCESS; Docs Governance/Sonar/draft handler FAILED. Fix candidate recheck pending
 - Auto-merge：not-enabled
-- Duplication Gate 结果：not collected — hosted gate pending
+- Duplication Gate 结果：original candidate SUCCESS; fix candidate recheck pending
 - 是否高风险改动：yes — auth/IAM/shared packages/generator/security workflow
-- Residual risk / follow-up：Independent reviewer and architect both model-service503; real S3 provider unconfigured; npm dev-chain moderates not upgraded. Hosted CI/CodeQL pending this PR; not merge-ready before them.
+- Residual risk / follow-up：Independent reviewer and architect both model-service503; real S3 provider unconfigured; npm dev-chain moderates not upgraded. PR remains draft until independent review and hosted gates pass. Local follow-up addresses 9 Sonar findings, helper layout and draft comment permissions; exact Sonar rerun pending.
 
 ## 检查清单
 
@@ -87,3 +87,5 @@
 - [ ] 已确认本次 PR 由 GitHub required checks、CodeQL 和分支保护负责最终合并门禁
 
 Candidate evidence: complete Go race 1876 passed test nodes / one unconfigured real-S3 skip; frontend 33 files/218 tests passed; tenant16+viewpoint5 passed; core27 pass/3 generated-business skips (covered separately by real generated-module browser and post-restart API CRUD); five business generator smoke suites passed; platform smoke 97 passed. Unchecked checklist items remain pending; no hosted CI/merge/release/consumer success is claimed.
+
+Continuation: pagination helper now in existing API/foundation ownership; unchanged five unit cases and generator14 contracts pass. All auth/dept race assertions retained. Full Go race1880 pass/one S3 skip, frontend lint/type-check/build/unit pass, structure0 findings; actionlint/zizmor changed workflow0 findings. See `.harness/evidence/2026-11-05-base-freeze-release/resume-validation.json`. No gate weakening, no independent approval, no release/consumer success claim.

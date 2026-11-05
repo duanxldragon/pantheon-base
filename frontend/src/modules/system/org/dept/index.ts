@@ -1,5 +1,5 @@
 import { defineModule } from '../../../../core/router/types';
-import { fetchAllPages } from '../../../../shared/utils/fetchAllPages';
+import { fetchAllPages } from '../../../../api/fetchAllPages';
 import { getPostList } from '../post/api';
 import { getUserList } from '../../iam/user/api';
 import { getDeptOverview, getDeptTree } from './api';

@@ -28,7 +28,7 @@ import { showImportResult } from '../../../../api/importExport';
 import { isArcoFormValidationError } from '../../../../core/arco/formValidation';
 import { publishRefresh, useRefreshSubscription } from '../../../../core/refresh/refreshBus';
 import { invalidateRouteWarmDataMany, resolveRouteWarmData } from '../../../../core/router/prefetch';
-import { fetchAllPages } from '../../../../shared/utils/fetchAllPages';
+import { fetchAllPages } from '../../../../api/fetchAllPages';
 import { usePermission } from '../../../../hooks/usePermission';
 import { buildCrossPageRowSelection } from '../../../../components/table/crossPageSelection';
 import { getRoleList } from '../role/api';

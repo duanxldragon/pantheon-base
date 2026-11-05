@@ -11,7 +11,7 @@
 - Core27通过/3无生成模块用例跳过；租户16+视角5全部通过。
 - 2026-11-05 补测：platform-smoke 97 passed（另 77 passed 重跑，exit 0）；业务五套 generated/database-import/master-detail/many-to-many/auto-recycle 全绿；生成模块重启后 API CRUD 与真实浏览器 CRUD（校验/创建/编辑失败恢复/删除/390px）通过。F3 转 local-verified；smoke 自启 vite 需显式 --proxy-target，否则整页 API 502。
 - SSRF/refresh/npm audit修复与系统分页、data-scope、generator修复纳入当前候选；当前租户API/初始化/升级指南同步纠正。
-- 独立两路review503；npm与Go漏洞库、GitHub socket均拒绝访问。正式PR/CI/合并/发行与Ops lock未完成，未签冻结。
+- PR [#489](https://github.com/duanxldragon/pantheon-base/pull/489) 已创建草稿；真实 CI/Security/CodeQL/Backend/Frontend/Smoke 通过。Docs Governance/Sonar/Draft Handler 失败已定位并修复，本地复测1880 Go节点通过、FE lint/type-check/build/unit通过，结构0违规；修复提交的远端重检待完成。独立两路review仍503，未合并/发布/升级Ops锁或签冻结。
 
 以下是历史执行读数，不可代替当前候选验收。
 

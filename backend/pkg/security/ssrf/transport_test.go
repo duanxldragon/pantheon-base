@@ -207,8 +207,8 @@ func TestPinnedDialPreservesHTTPHostAndTLSSNI(t *testing.T) {
 	if got.host != "fixture.test" || got.sni != "fixture.test" {
 		t.Fatalf("Host=%s SNI=%s", got.host, got.sni)
 	}
-	for _, max := range []int{0, 2} {
-		v.MaxRedirects = max
+	for _, redirectLimit := range []int{0, 2} {
+		v.MaxRedirects = redirectLimit
 		check := v.CreateHTTPClient(time.Second).CheckRedirect
 		req, _ := http.NewRequest("GET", "http://127.0.0.1", nil)
 		if err := check(req, []*http.Request{req}); err == nil {

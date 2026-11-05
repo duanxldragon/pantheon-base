@@ -62,7 +62,7 @@
         "F4"
       ],
       "criteria": "同一候选完整 race/FE/脚本/治理/runtime/security 门禁通过，无未处理阻断发现",
-      "state": "environment-blocked"
+      "state": "local-verified-independent-review-unavailable"
     },
     {
       "id": "F6",
@@ -72,7 +72,7 @@
         "F5"
       ],
       "criteria": "相关 PR 提交并满足所有 CI/评审，主分支落入验证候选；不合并无关 PR",
-      "state": "environment-blocked"
+      "state": "draft-pr489-gate-repairs-recheck-pending"
     },
     {
       "id": "F7",

@@ -71,7 +71,8 @@ function normalizeGoImportPaths(importPaths: Array<string | false | null | undef
       typeof importPath === 'string' ? importPath.trim().replace(/^"|"$/g, '') : '',
     )
     .filter((importPath) => importPath.length > 0)
-    .sort();
+    // Go import paths use byte order, keeping emitted blocks gofmt-stable.
+    .sort((left, right) => (left < right ? -1 : Number(left > right)));
 }
 
 function buildGoImportBlock(importPaths: Array<string | false | null | undefined>): string {
@@ -121,14 +122,14 @@ function normalizeGoWhitespace(source: string): string {
   return (
     source
       .split('\n')
-      .map((line) => line.replace(/[ \t]+$/u, ''))
+      .map((line) => line.trimEnd())
       .join('\n')
       // 空体：gofmt 把空结构体声明写成 `struct{}`、空复合字面量/映射写成 `{}`，
       // 两者都不会保留 `{` 与 `}` 之间的空行（全部字段不进表单时会撞上）。
       .replace(/struct \{\n\n[ \t]*\}/gu, 'struct{}')
       .replace(/\{\n\n[ \t]*\}/gu, '{}')
       .replace(/\n{3,}/gu, '\n\n')
-      .replace(/\s+$/u, '')
+      .trimEnd()
       .concat('\n')
   );
 }

@@ -687,10 +687,12 @@ export default ${modelName}List;
     const formFields = this.schema.model.fields.filter((field) => field.visibleInForm !== false);
     const requiredFields = formFields.filter((field) => field.required);
     const createGuard = requiredFields
-      .map(
-        (field) =>
-          `values.${field.name} == null${['string', 'text', 'enum'].includes(field.type) ? ` || values.${field.name} === ''` : ''}`,
-      )
+      .map((field) => {
+        const value = `values.${field.name}`;
+        return ['string', 'text', 'enum'].includes(field.type)
+          ? `${value} == null || ${value} === ''`
+          : `${value} == null`;
+      })
       .join(' || ');
     const createPayload = formFields
       .map((field) => `          ${field.name}: values.${field.name},`)
@@ -699,10 +701,11 @@ export default ${modelName}List;
       .filter((field) => field.type === 'bool')
       .map((field) => `${field.name}: false`)
       .join(', ');
+    const createValidation = createGuard ? `if (${createGuard}) { return; }` : '';
     const createHandler = features.createActionEnabled
       ? `
       if (editor.mode === 'create') {
-        ${createGuard ? `if (${createGuard}) { return; }` : ''}
+        ${createValidation}
         await create${modelName}({
 ${createPayload}
         });

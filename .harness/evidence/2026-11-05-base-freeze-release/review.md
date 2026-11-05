@@ -26,3 +26,5 @@
 ```
 
 本轮恢复两路原生评审后仍失败（2026-11-05）：code-reviewer request 202611051106224375838946mf2ryHC8T2SB、architect request 202611051106444352076717pjxkE79ApSvH，均 HTTP 503。未产生审查结论，blocked 状态保持。
+
+续办重试：code-reviewer request20261105144517954945460smc5f2mDFb1TA 与 architect request202611051445435516348815rwknIGs4XwDX仍HTTP503，未产生独立审查。PR489门禁修复为Generator实施结果，未自审批准；待独立评审该修复后的候选。

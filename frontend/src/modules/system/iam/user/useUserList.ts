@@ -7,7 +7,7 @@ import { showImportResult } from '../../../../api/importExport';
 import { publishRefresh, useRefreshSubscription } from '../../../../core/refresh/refreshBus';
 import { invalidateRouteWarmDataMany, resolveRouteWarmData } from '../../../../core/router/prefetch';
 import { readTenantViewpointId } from '../../../../core/tenant/viewpoint';
-import { fetchAllPages } from '../../../../shared/utils/fetchAllPages';
+import { fetchAllPages } from '../../../../api/fetchAllPages';
 import { addTenantMember, type TenantMemberRole } from '../tenant/api';
 import { usePublicSettings } from '../../../../core/setting/publicSettings';
 import { getDeptTree, type DeptNode } from '../../org/dept/api';

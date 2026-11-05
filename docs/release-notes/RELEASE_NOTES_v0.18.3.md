@@ -27,4 +27,4 @@ The existing isolated Ops DB repair branch contains a business migration also nu
 
 Current-candidate commands, exact exit codes, runtime results and gaps are maintained in [the execution evidence](../../.harness/evidence/2026-11-05-base-freeze-release/summary.md) and [functionality matrix](../../.harness/evidence/2026-11-05-base-freeze-release/functionality-matrix.md).
 
-GitHub access is currently denied by the execution environment. Independent Generator/Reviewer services returned HTTP 503; the alternate CLI also could not connect. Hosted CI, review approvals, remote merge, release and official consumer upgrade are not claimed complete.
+PR [#489](https://github.com/duanxldragon/pantheon-base/pull/489) is a draft. Hosted tests/build/security/CodeQL/smoke passed on the original candidate; its structure, Sonar and draft notification failures prompted focused fixes and local revalidation. Hosted rechecks of those fixes remain pending. Independent review services still return HTTP 503; review approval, merge, release and official consumer upgrade remain incomplete.

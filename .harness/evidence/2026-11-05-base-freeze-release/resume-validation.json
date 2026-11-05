@@ -1,0 +1,158 @@
+{
+  "recordedAt": "2026-11-05T07:43:59.459385+00:00",
+  "reviewedBaseCandidate": "9d28d3d4293c02cf4ae465c19ad6afcc9b097c6d",
+  "pr": "https://github.com/duanxldragon/pantheon-base/pull/489",
+  "status": "local-verified-hosted-recheck-pending",
+  "backend": {
+    "tests": {
+      "pass": 1880,
+      "fail": 0,
+      "skip": 1
+    },
+    "packages": {
+      "pass": 47,
+      "fail": 0,
+      "skip": 5
+    },
+    "skips": [
+      {
+        "package": "github.com/duanxldragon/pantheon-base/backend/pkg/upload",
+        "test": "TestServiceStoreUsesRealS3WhenConfigured"
+      }
+    ]
+  },
+  "commands": [
+    {
+      "command": "go test -race -json -p 1 -count=1 ./...",
+      "cwd": "pantheon-base/backend",
+      "exitCode": 0,
+      "error": null,
+      "startedAt": "2026-11-05T06:54:08.404Z",
+      "finishedAt": "2026-11-05T07:12:13.720Z",
+      "log": "gorace-resume-0.log",
+      "stderr": "gorace-resume-0-stderr.log"
+    },
+    {
+      "command": "npm run lint",
+      "cwd": "pantheon-base/frontend",
+      "exitCode": 0,
+      "error": null,
+      "startedAt": "2026-11-05T07:39:01.132Z",
+      "finishedAt": "2026-11-05T07:39:53.070Z",
+      "log": "frontend-resume-0.log",
+      "stderr": "frontend-resume-0-stderr.log"
+    },
+    {
+      "command": "npm run type-check",
+      "cwd": "pantheon-base/frontend",
+      "exitCode": 0,
+      "error": null,
+      "startedAt": "2026-11-05T07:39:53.073Z",
+      "finishedAt": "2026-11-05T07:40:16.752Z",
+      "log": "frontend-resume-1.log",
+      "stderr": "frontend-resume-1-stderr.log"
+    },
+    {
+      "command": "npm run build",
+      "cwd": "pantheon-base/frontend",
+      "exitCode": 0,
+      "error": null,
+      "startedAt": "2026-11-05T07:40:16.759Z",
+      "finishedAt": "2026-11-05T07:40:52.605Z",
+      "log": "frontend-resume-2.log",
+      "stderr": "frontend-resume-2-stderr.log"
+    },
+    {
+      "command": "npm run test:unit",
+      "cwd": "pantheon-base/frontend",
+      "exitCode": 0,
+      "error": null,
+      "startedAt": "2026-11-05T07:40:52.607Z",
+      "finishedAt": "2026-11-05T07:41:32.068Z",
+      "log": "frontend-resume-3.log",
+      "stderr": "frontend-resume-3-stderr.log"
+    }
+  ],
+  "originalSonarFindings": [
+    {
+      "rule": "go:S3776",
+      "severity": "CRITICAL",
+      "type": "CODE_SMELL",
+      "component": "duanxldragon_pantheon-base:backend/modules/auth/session/refresh_race_test.go",
+      "line": 32,
+      "message": "Refactor this method to reduce its Cognitive Complexity from 35 to the 15 allowed."
+    },
+    {
+      "rule": "go:S3776",
+      "severity": "CRITICAL",
+      "type": "CODE_SMELL",
+      "component": "duanxldragon_pantheon-base:backend/modules/auth/session/refresh_race_test.go",
+      "line": 95,
+      "message": "Refactor this method to reduce its Cognitive Complexity from 31 to the 15 allowed."
+    },
+    {
+      "rule": "go:S3776",
+      "severity": "CRITICAL",
+      "type": "CODE_SMELL",
+      "component": "duanxldragon_pantheon-base:backend/modules/system/org/dept/dept_bootstrap_scope_test.go",
+      "line": 8,
+      "message": "Refactor this method to reduce its Cognitive Complexity from 34 to the 15 allowed."
+    },
+    {
+      "rule": "go:S978",
+      "severity": "MAJOR",
+      "type": "CODE_SMELL",
+      "component": "duanxldragon_pantheon-base:backend/pkg/security/ssrf/transport_test.go",
+      "line": 210,
+      "message": "Rename this identifier, \"max\" shadows a predeclared identifier."
+    },
+    {
+      "rule": "typescript:S2871",
+      "severity": "CRITICAL",
+      "type": "BUG",
+      "component": "duanxldragon_pantheon-base:frontend/src/modules/lowcode/generator/backendGenerator.ts",
+      "line": 74,
+      "message": "Provide a compare function that depends on \"String.localeCompare\", to reliably sort elements alphabetically."
+    },
+    {
+      "rule": "typescript:S8786",
+      "severity": "MAJOR",
+      "type": "CODE_SMELL",
+      "component": "duanxldragon_pantheon-base:frontend/src/modules/lowcode/generator/backendGenerator.ts",
+      "line": 124,
+      "message": "Simplify this regular expression to reduce its runtime, as it has super-linear performance due to backtracking."
+    },
+    {
+      "rule": "typescript:S8786",
+      "severity": "MAJOR",
+      "type": "CODE_SMELL",
+      "component": "duanxldragon_pantheon-base:frontend/src/modules/lowcode/generator/backendGenerator.ts",
+      "line": 131,
+      "message": "Simplify this regular expression to reduce its runtime, as it has super-linear performance due to backtracking."
+    },
+    {
+      "rule": "typescript:S4624",
+      "severity": "MAJOR",
+      "type": "CODE_SMELL",
+      "component": "duanxldragon_pantheon-base:frontend/src/modules/lowcode/generator/frontendGenerator.ts",
+      "line": 692,
+      "message": "Refactor this code to not use nested template literals."
+    },
+    {
+      "rule": "typescript:S3358",
+      "severity": "MAJOR",
+      "type": "CODE_SMELL",
+      "component": "duanxldragon_pantheon-base:frontend/src/modules/lowcode/generator/frontendGenerator.ts",
+      "line": 705,
+      "message": "Extract this nested ternary operation into an independent statement."
+    }
+  ],
+  "notes": [
+    "Structure gate reproduced locally and from hosted failing log; relocate helper under existing API ownership (included in foundation bundle).",
+    "All original race assertions, database checks, release barriers and test cases retained.",
+    "gocognit 1.2.1 <=15 is local corroboration; exact Sonar S3776 rerun required after push.",
+    "Changed workflow: actionlint and zizmor1.25.2 zero findings. Whole workflow tree zizmor exit14/23 existing findings; not whole-tree green.",
+    "No UI appearance/interaction change in this follow-up. Existing rendered dark login/user1440x900 inspected; screenshots remain workspace artifacts.",
+    "Required code-reviewer/architect both returned503; no independent approval."
+  ]
+}

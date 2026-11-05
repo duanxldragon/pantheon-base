@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { fetchAllPages } from '../../../../src/shared/utils/fetchAllPages';
+import { fetchAllPages } from '../../../src/api/fetchAllPages';
 
 describe('fetchAllPages', () => {
   it('returns a single page when everything fits', async () => {
