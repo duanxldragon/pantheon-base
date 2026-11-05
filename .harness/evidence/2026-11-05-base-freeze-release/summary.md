@@ -38,3 +38,7 @@ Ops 隔离业务修复 dbce4ae 保留，未发布回填迁移已从000031调整�
 - npm开发链15 moderate，0 high/critical；全仓zizmor23既有发现，未宣称安全扫描全零。
 - 分页测试证明静态数据集的确定顺序与完整ID序列，不承诺并发写入的快照一致性。
 - 生产DDL不在发行授权内；000031 down仅恢复结构，遵守production migration runbook。
+
+## 合并后文档证据修复
+
+PR #489 已合入 main（de9f11a6）。main严格文档门禁发现审计报告两条截图链接依赖工作区外层附件；现打包原始PNG并修正链接，见[修复证据](ci-doc-link-repair.md)。本地严格链接、frontmatter以及隔离暂存快照检查均通过。发行仍等待最新main门禁，Ops消费待正式发行。
