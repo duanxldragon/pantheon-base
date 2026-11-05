@@ -70,7 +70,8 @@ function containsRuntimeSignal(value) {
 // `verificationPlan.runtimeEvidence` was written by packet authors as "what will
 // prove this round", so it also carries CI runs, grep output and explicit
 // negations ("not runtime-sensitive: read-only inventory"). A boolean flag is
-// the author's declaration and wins over that prose; the free-text list is
+// the author's declaration and wins over that prose. Any explicit true keeps
+// the requirement when packet and evidence flags disagree. The free-text list is
 // consulted only when neither the evidence nor the packet declares one, and
 // then only for entries that actually name a runtime artifact.
 const RUNTIME_PLAN_ITEM =
@@ -97,8 +98,9 @@ function scanFile(filePath, root) {
   if (taskManifestReference) {
     try {
       const taskManifest = readTaskManifest(root, taskManifestReference);
-      if (declaredSensitivity === null && typeof taskManifest.payload.runtimeSensitive === 'boolean') {
-        declaredSensitivity = taskManifest.payload.runtimeSensitive;
+      const taskSensitivity = taskManifest.payload.runtimeSensitive;
+      if (typeof taskSensitivity === 'boolean') {
+        declaredSensitivity = declaredSensitivity === true || taskSensitivity;
       }
       plannedRuntimeItems = Array.isArray(taskManifest.payload.verificationPlan?.runtimeEvidence)
         ? taskManifest.payload.verificationPlan.runtimeEvidence

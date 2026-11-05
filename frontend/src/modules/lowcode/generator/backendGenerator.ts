@@ -343,8 +343,9 @@ ${buildGoImportBlock(Array.from(dtoImports))}
       })
       .map((field) => {
         const baseType = this.goTypeFromField(field.type);
-        const tsType = mode === 'update' ? `*${baseType}` : baseType;
         const isRequired = mode === 'create' && field.required;
+        const isPointer = mode === 'update' || (isRequired && baseType === 'bool');
+        const tsType = isPointer ? `*${baseType}` : baseType;
         const binding = isRequired ? ' binding:"required"' : '';
         return [this.capitalize(field.name), tsType, `\`json:"${field.name}"${binding}\``];
       });
@@ -683,7 +684,10 @@ ${relationServices ? `\n${relationServices}` : ''}
   private fromCreateReqRows(): string[][] {
     return this.schema.model.fields
       .filter((f) => f.visibleInForm !== false)
-      .map((field) => [`${this.capitalize(field.name)}:`, `req.${this.capitalize(field.name)},`]);
+      .map((field) => {
+        const dereference = field.required && this.goTypeFromField(field.type) === 'bool' ? '*' : '';
+        return [`${this.capitalize(field.name)}:`, `${dereference}req.${this.capitalize(field.name)},`];
+      });
   }
 
   /**

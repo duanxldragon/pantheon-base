@@ -1,0 +1,365 @@
+{
+  "taskId": "2026-11-05-base-freeze-release",
+  "status": "local-validation-and-independent-review-passed-hosted-ci-pending",
+  "parentCommit": "1a7b388bcaa2c178346b7fcaa78cf6c0b057e246",
+  "findings": [
+    "runtime declaration true precedence",
+    "role/post unique pagination ordering",
+    "required boolean create presence",
+    "SSRF per-address deadline budget",
+    "security token report description"
+  ],
+  "validation": [
+    {
+      "command": "node --test tests/scripts/harness-runtime-evidence.test.mjs tests/scripts/security-pattern-report.test.mjs",
+      "cwd": "pantheon-base",
+      "exitCode": 1,
+      "error": null,
+      "startedAt": "2026-11-05T09:26:03.695Z",
+      "finishedAt": "2026-11-05T09:26:04.417Z",
+      "log": "reviewScripts-before-fixture-corrected-0.log",
+      "stderr": "reviewScripts-before-fixture-corrected-0-stderr.log",
+      "logSha256": "8ab3b2bd09fef32548966e372bb944961f4e6f4915256758e00bfc39d7c4234f"
+    },
+    {
+      "command": "npm run test:generator:quality",
+      "cwd": "pantheon-base/frontend",
+      "exitCode": 1,
+      "error": null,
+      "startedAt": "2026-11-05T09:26:03.749Z",
+      "finishedAt": "2026-11-05T09:26:06.614Z",
+      "log": "reviewGenerator-before-toolchain-corrected-0.log",
+      "stderr": "reviewGenerator-before-toolchain-corrected-0-stderr.log",
+      "logSha256": "1e052e4229b07daa1be3ae4dcad14f07db90015e69ee7481bd0336e8e226b16c"
+    },
+    {
+      "command": "go test -race -count=1 ./pkg/security/ssrf ./modules/system/iam/role ./modules/system/org/post -run Test(DialCheckedReservesBudgetForFallback|RolePaginationWithTiedSort|PostPaginationWithTiedSort)$",
+      "cwd": "pantheon-base/backend",
+      "exitCode": 1,
+      "error": null,
+      "startedAt": "2026-11-05T09:22:27.938Z",
+      "finishedAt": "2026-11-05T09:22:33.202Z",
+      "log": "reviewGo-before-review-fixes-0.log",
+      "stderr": "reviewGo-before-review-fixes-0-stderr.log",
+      "logSha256": "9dae59f0cf5acf5ccec392177e8bba339d6c61c26347a8cb136fbd3db95ef5fc"
+    },
+    {
+      "command": "node --test tests/scripts/harness-runtime-evidence.test.mjs tests/scripts/security-pattern-report.test.mjs",
+      "cwd": "pantheon-base",
+      "exitCode": 0,
+      "error": null,
+      "startedAt": "2026-11-05T09:27:07.374Z",
+      "finishedAt": "2026-11-05T09:27:08.235Z",
+      "log": "reviewScripts-after-review-fixes-0.log",
+      "stderr": "reviewScripts-after-review-fixes-0-stderr.log",
+      "logSha256": "e40b38672c59a4d311299c3f7f4e47b64af4a971edca80a6e66d765cdd1afbfd"
+    },
+    {
+      "command": "npm run test:generator:quality",
+      "cwd": "pantheon-base/frontend",
+      "exitCode": 0,
+      "error": null,
+      "startedAt": "2026-11-05T09:27:07.531Z",
+      "finishedAt": "2026-11-05T09:27:11.716Z",
+      "log": "reviewGenerator-after-review-fixes-0.log",
+      "stderr": "reviewGenerator-after-review-fixes-0-stderr.log",
+      "logSha256": "065e02c7562015d3f72ad6a9b1644667665e41a77ada8feb2e69258593e553fd"
+    },
+    {
+      "command": "go test -race -count=1 ./pkg/security/ssrf ./modules/system/iam/role ./modules/system/org/post -run Test(DialCheckedReservesBudgetForFallback|RolePaginationWithTiedSort|PostPaginationWithTiedSort)$",
+      "cwd": "pantheon-base/backend",
+      "exitCode": 0,
+      "error": null,
+      "startedAt": "2026-11-05T09:27:07.406Z",
+      "finishedAt": "2026-11-05T09:27:14.931Z",
+      "log": "reviewGo-after-review-fixes-0.log",
+      "stderr": "reviewGo-after-review-fixes-0-stderr.log",
+      "logSha256": "6a33b7cf2480c65547f7507873463e7cab8d1fef69137bcde888765bb2a17eb3"
+    },
+    {
+      "command": "npm run test:scripts",
+      "cwd": "pantheon-base",
+      "exitCode": 0,
+      "error": null,
+      "startedAt": "2026-11-05T09:27:30.179Z",
+      "finishedAt": "2026-11-05T09:27:46.936Z",
+      "log": "scripts-review-fixes-0.log",
+      "stderr": "scripts-review-fixes-0-stderr.log",
+      "logSha256": "b62c8037da838c59e66cda951e4fd2d9bfad40065515ab82730c1fa783b60f09"
+    },
+    {
+      "command": "npm run test:foundation-release",
+      "cwd": "pantheon-base",
+      "exitCode": 0,
+      "error": null,
+      "startedAt": "2026-11-05T09:27:46.947Z",
+      "finishedAt": "2026-11-05T09:27:54.702Z",
+      "log": "scripts-review-fixes-1.log",
+      "stderr": "scripts-review-fixes-1-stderr.log",
+      "logSha256": "c4e1d46f42e6db6c7378cbde70cfc33a3f1b6165cc1244e9de7b58ac19333fd4"
+    },
+    {
+      "command": "npm run test:docs-frontmatter",
+      "cwd": "pantheon-base",
+      "exitCode": 0,
+      "error": null,
+      "startedAt": "2026-11-05T09:27:54.704Z",
+      "finishedAt": "2026-11-05T09:27:55.407Z",
+      "log": "scripts-review-fixes-2.log",
+      "stderr": "scripts-review-fixes-2-stderr.log",
+      "logSha256": "a86c20d62161b1bcf19163d371b46f6cfee45df442bbd126356e167a9926c18d"
+    },
+    {
+      "command": "npm run lint",
+      "cwd": "pantheon-base/frontend",
+      "exitCode": 0,
+      "error": null,
+      "startedAt": "2026-11-05T09:27:30.179Z",
+      "finishedAt": "2026-11-05T09:28:23.953Z",
+      "log": "frontend-review-fixes-0.log",
+      "stderr": "frontend-review-fixes-0-stderr.log",
+      "logSha256": "5818a930434cb0d8d2d2a02064c773ab6a83550e85cc5b74a35fec5534551fa9"
+    },
+    {
+      "command": "npm run type-check",
+      "cwd": "pantheon-base/frontend",
+      "exitCode": 0,
+      "error": null,
+      "startedAt": "2026-11-05T09:28:23.960Z",
+      "finishedAt": "2026-11-05T09:28:47.591Z",
+      "log": "frontend-review-fixes-1.log",
+      "stderr": "frontend-review-fixes-1-stderr.log",
+      "logSha256": "5ebf47247dc14a635484b800d11596f249d0cdf4008716d724fcc464f81f9d1e"
+    },
+    {
+      "command": "npm run build",
+      "cwd": "pantheon-base/frontend",
+      "exitCode": 0,
+      "error": null,
+      "startedAt": "2026-11-05T09:28:47.595Z",
+      "finishedAt": "2026-11-05T09:29:29.787Z",
+      "log": "frontend-review-fixes-2.log",
+      "stderr": "frontend-review-fixes-2-stderr.log",
+      "logSha256": "bdd9a4258835cc74c79c0d812faf1a303342e7b2a2649e91771dd1741890eef3"
+    },
+    {
+      "command": "npm run test:unit",
+      "cwd": "pantheon-base/frontend",
+      "exitCode": 0,
+      "error": null,
+      "startedAt": "2026-11-05T09:29:29.793Z",
+      "finishedAt": "2026-11-05T09:30:36.389Z",
+      "log": "frontend-review-fixes-3.log",
+      "stderr": "frontend-review-fixes-3-stderr.log",
+      "logSha256": "be7729caeefc1c6fd626b2c73c972c9af9b66bf05a8af1acfe529d46c1af287e"
+    },
+    {
+      "command": "npm run check:docs-frontmatter",
+      "cwd": "pantheon-base",
+      "exitCode": 0,
+      "error": null,
+      "startedAt": "2026-11-05T09:28:55.799Z",
+      "finishedAt": "2026-11-05T09:28:56.803Z",
+      "log": "governance-review-fixes-0.log",
+      "stderr": "governance-review-fixes-0-stderr.log",
+      "logSha256": "0e17f2c597633cc3ed234cbbc9906210d72ddf80cee51d6b621f447c5f06be42"
+    },
+    {
+      "command": "npm run check:structure",
+      "cwd": "pantheon-base",
+      "exitCode": 0,
+      "error": null,
+      "startedAt": "2026-11-05T09:28:56.805Z",
+      "finishedAt": "2026-11-05T09:28:57.356Z",
+      "log": "governance-review-fixes-1.log",
+      "stderr": "governance-review-fixes-1-stderr.log",
+      "logSha256": "04bb5ccd6c8421b3c53fa1fb0ed1c850d219d793f8f8bbd9a6e2f1d4a7c11d56"
+    },
+    {
+      "command": "npm run check:task-packet-template",
+      "cwd": "pantheon-base",
+      "exitCode": 0,
+      "error": null,
+      "startedAt": "2026-11-05T09:28:57.357Z",
+      "finishedAt": "2026-11-05T09:28:57.807Z",
+      "log": "governance-review-fixes-2.log",
+      "stderr": "governance-review-fixes-2-stderr.log",
+      "logSha256": "c906367e2b043848d360d0c2a68d087d528861349348bf101a37c09439d98fc7"
+    },
+    {
+      "command": "npm run check:task-packet",
+      "cwd": "pantheon-base",
+      "exitCode": 0,
+      "error": null,
+      "startedAt": "2026-11-05T09:28:57.808Z",
+      "finishedAt": "2026-11-05T09:28:59.389Z",
+      "log": "governance-review-fixes-3.log",
+      "stderr": "governance-review-fixes-3-stderr.log",
+      "logSha256": "6ef198061227ada814860b4188ae6b6b06b28646ae9f37d657759f193ab4b248"
+    },
+    {
+      "command": "npm run check:harness-evidence",
+      "cwd": "pantheon-base",
+      "exitCode": 0,
+      "error": null,
+      "startedAt": "2026-11-05T09:28:59.393Z",
+      "finishedAt": "2026-11-05T09:29:00.365Z",
+      "log": "governance-review-fixes-4.log",
+      "stderr": "governance-review-fixes-4-stderr.log",
+      "logSha256": "dd87e7b8a416410a67c63a67c1d518153447028c80a1181188dba74a5824e7f9"
+    },
+    {
+      "command": "npm run check:harness-review",
+      "cwd": "pantheon-base",
+      "exitCode": 0,
+      "error": null,
+      "startedAt": "2026-11-05T09:29:00.367Z",
+      "finishedAt": "2026-11-05T09:29:01.395Z",
+      "log": "governance-review-fixes-5.log",
+      "stderr": "governance-review-fixes-5-stderr.log",
+      "logSha256": "c95ad0e133540ab2ae89ea23cddcbce0706693e9b66a67a996bdf2e6209ddd3d"
+    },
+    {
+      "command": "npm run check:harness-runtime-evidence",
+      "cwd": "pantheon-base",
+      "exitCode": 0,
+      "error": null,
+      "startedAt": "2026-11-05T09:29:01.403Z",
+      "finishedAt": "2026-11-05T09:29:02.394Z",
+      "log": "governance-review-fixes-6.log",
+      "stderr": "governance-review-fixes-6-stderr.log",
+      "logSha256": "5a6f01072ec7fde3019ef9c2387c9f4c57bcacaf18c9da21390005fecdaf2b16"
+    },
+    {
+      "command": "npm run check:harness-graph-review",
+      "cwd": "pantheon-base",
+      "exitCode": 0,
+      "error": null,
+      "startedAt": "2026-11-05T09:29:02.418Z",
+      "finishedAt": "2026-11-05T09:29:04.308Z",
+      "log": "governance-review-fixes-7.log",
+      "stderr": "governance-review-fixes-7-stderr.log",
+      "logSha256": "c82b64c56705a30ca300eae47449ae5c424c2d38b28eb7d1d45403790a2d1460"
+    },
+    {
+      "command": "npm run check:checker-wiring",
+      "cwd": "pantheon-base",
+      "exitCode": 0,
+      "error": null,
+      "startedAt": "2026-11-05T09:29:04.313Z",
+      "finishedAt": "2026-11-05T09:29:05.107Z",
+      "log": "governance-review-fixes-8.log",
+      "stderr": "governance-review-fixes-8-stderr.log",
+      "logSha256": "5bacbbe603de0a7d5109ebd54f6c2c1f547dd59d4f203e846b58c0e2f0455813"
+    },
+    {
+      "command": "npm run check:security-patterns",
+      "cwd": "pantheon-base",
+      "exitCode": 0,
+      "error": null,
+      "startedAt": "2026-11-05T09:29:05.116Z",
+      "finishedAt": "2026-11-05T09:30:38.978Z",
+      "log": "governance-review-fixes-9.log",
+      "stderr": "governance-review-fixes-9-stderr.log",
+      "logSha256": "138227ea32a5aa48091f445854ea984f61320ac6ef94c868a280b46d2d88d320"
+    },
+    {
+      "command": "npm run check:ui-tokens",
+      "cwd": "pantheon-base",
+      "exitCode": 0,
+      "error": null,
+      "startedAt": "2026-11-05T09:30:38.980Z",
+      "finishedAt": "2026-11-05T09:30:40.365Z",
+      "log": "governance-review-fixes-10.log",
+      "stderr": "governance-review-fixes-10-stderr.log",
+      "logSha256": "6f2d026aaf7ba15ce2e0c26c82fe3d49baaa8c8f24af60ec1f794c772aafb72f"
+    },
+    {
+      "command": "npm run check:failure-registry",
+      "cwd": "pantheon-base",
+      "exitCode": 0,
+      "error": null,
+      "startedAt": "2026-11-05T09:30:40.367Z",
+      "finishedAt": "2026-11-05T09:30:41.111Z",
+      "log": "governance-review-fixes-11.log",
+      "stderr": "governance-review-fixes-11-stderr.log",
+      "logSha256": "74170d2cd17e0f749b653fc0b4f520d2beed292bb03b2fed38d742bc1e22e8ab"
+    },
+    {
+      "command": "npm run check:harness-docs",
+      "cwd": "pantheon-base",
+      "exitCode": 0,
+      "error": null,
+      "startedAt": "2026-11-05T09:30:41.113Z",
+      "finishedAt": "2026-11-05T09:30:42.003Z",
+      "log": "governance-review-fixes-12.log",
+      "stderr": "governance-review-fixes-12-stderr.log",
+      "logSha256": "aff38ef831fbdaa9304137101838cff74335ea77c6b19a3eb5400fa047a464b6"
+    },
+    {
+      "command": "npm run check:generated-modules",
+      "cwd": "pantheon-base",
+      "exitCode": 0,
+      "error": null,
+      "startedAt": "2026-11-05T09:30:42.006Z",
+      "finishedAt": "2026-11-05T09:30:42.767Z",
+      "log": "governance-review-fixes-13.log",
+      "stderr": "governance-review-fixes-13-stderr.log",
+      "logSha256": "4b8b7d63d07a9cfbf7a3603a93c51b9cb4645bb331947678799726a375f8aa58"
+    },
+    {
+      "command": "npm run test:generator:smoke",
+      "cwd": "pantheon-base/frontend",
+      "exitCode": 0,
+      "error": null,
+      "startedAt": "2026-11-05T09:29:42.153Z",
+      "finishedAt": "2026-11-05T09:30:37.741Z",
+      "log": "generatorSmoke-review-fixes-0.log",
+      "stderr": "generatorSmoke-review-fixes-0-stderr.log",
+      "logSha256": "10608c3993eced22ec89dc2a915b16c2f3cac44163c1390990b864f0f4cb7890"
+    },
+    {
+      "command": "go test -race -json -count=1 ./pkg/security/ssrf",
+      "cwd": "pantheon-base/backend",
+      "exitCode": 0,
+      "error": null,
+      "startedAt": "2026-11-05T09:41:16.318Z",
+      "finishedAt": "2026-11-05T09:41:19.918Z",
+      "log": "ssrfFinal-complexity-0.log",
+      "stderr": "ssrfFinal-complexity-0-stderr.log",
+      "logSha256": "d8d4675a05b52ccda8dc5635cc844ce5bf8fa83c790ba7e1d1f526f17469edee"
+    },
+    {
+      "command": "go test -race -json -p 1 -count=1 ./...",
+      "cwd": "pantheon-base/backend",
+      "exitCode": 0,
+      "error": null,
+      "startedAt": "2026-11-05T09:27:30.224Z",
+      "finishedAt": "2026-11-05T09:47:58.799Z",
+      "log": "gorace-review-fixes-0.log",
+      "stderr": "gorace-review-fixes-0-stderr.log",
+      "logSha256": "5420ede220cda522e8a52902b10bb9578f8b71fe3540bebb560317518104bf1f"
+    }
+  ],
+  "limitations": [
+    "Generator before-toolchain-corrected is the valid functional red result; older attempt failed toolchain selection.",
+    "Runtime before-fixture-corrected is the valid red result; older fixture omitted required manifest fields.",
+    "Pagination proof is a static dataset; concurrent mutations are not a snapshot guarantee.",
+    "No layout changes in round2: generated DTO and mapper tested by real Gin binding; prior rendered UI evidence retained.",
+    "Real S3 remains unconfigured; one integration skip, no waiver."
+  ],
+  "sourceManifest": "review-source-manifest.json",
+  "complexity": {
+    "dialChecked": 13,
+    "checkDialFallback": 8,
+    "addressesForNetwork": 3
+  },
+  "verificationComposition": "Full suite started before two semantic-equivalent SSRF extractions; final SSRF package separately tested after extraction; exact final commit hosted full race required.",
+  "goRaceCounts": {
+    "pass": 1889,
+    "fail": 0,
+    "skip": 1,
+    "packagesPassed": 47
+  },
+  "finalSourceHashesVerified": true
+}

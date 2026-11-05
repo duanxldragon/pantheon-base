@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { existsSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
+import { basename, dirname, join, resolve } from 'node:path';
 import test from 'node:test';
 
 import { GENERATED_MARKER, ModuleExporter } from '../../src/modules/lowcode/generator/exporter';
@@ -788,4 +789,61 @@ test('list editor respects action/layout switches and row-only delete imports', 
       assert.match(list, /deleteCmdbAsset/);
     }
   }
+});
+
+test('generated required boolean create DTO preserves presence and both boolean values', (t) => {
+  const schema = createSchema({ templateLevel: 'basic', enableDataScope: false, relations: [], dependencies: [] });
+  schema.model.fields = [{
+    name: 'enabled', type: 'bool', label: '启用', labelEn: 'Enabled',
+    required: true, visibleInList: true, visibleInForm: true,
+  }];
+  const files = generatedFiles(schema);
+  const backendRoot = [resolve(process.cwd(), '../backend'), resolve(process.cwd(), 'backend')]
+    .find((root) => existsSync(join(root, 'go.mod')));
+  assert.ok(backendRoot, 'backend/go.mod is required for generated Go behavior validation');
+  const tempDir = mkdtempSync(join(backendRoot, '.generator-required-bool-'));
+  t.after(() => {
+    assert.equal(dirname(realpathSync(tempDir)), realpathSync(backendRoot));
+    rmSync(tempDir, { recursive: true, force: true });
+  });
+  for (const [file, content] of files) {
+    if (file.startsWith('backend/') && /_(model|dto|service)\.go$/.test(file)) {
+      writeFileSync(join(tempDir, basename(file)), content);
+    }
+  }
+  writeFileSync(join(tempDir, 'required_bool_test.go'), String.raw`package asset
+
+import (
+    "testing"
+    "github.com/gin-gonic/gin/binding"
+)
+
+func TestRequiredBooleanCreate(t *testing.T) {
+    for _, tc := range []struct {
+        name, body string
+        valid, want bool
+    }{
+        {"missing", "{}", false, false},
+        {"null", "{\"enabled\":null}", false, false},
+        {"false", "{\"enabled\":false}", true, false},
+        {"true", "{\"enabled\":true}", true, true},
+    } {
+        t.Run(tc.name, func(t *testing.T) {
+            var req CmdbAssetCreateReq
+            err := binding.JSON.BindBody([]byte(tc.body), &req)
+            if !tc.valid {
+                if err == nil { t.Fatal("missing/null required boolean was accepted") }
+                return
+            }
+            if err != nil { t.Fatalf("explicit boolean rejected: %v", err) }
+            item := (&CmdbAssetService{}).fromCreateReq(&req)
+            if item.Enabled != tc.want { t.Fatalf("created boolean=%t, want %t", item.Enabled, tc.want) }
+        })
+    }
+}
+`);
+  const result = spawnSync('go', ['test', '-mod=readonly', '.'], {
+    cwd: tempDir, encoding: 'utf8', timeout: 120_000,
+  });
+  assert.equal(result.status, 0, `${result.error?.message ?? ''}\n${result.stdout}\n${result.stderr}`);
 });

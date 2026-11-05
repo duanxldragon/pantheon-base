@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/netip"
 	"net/url"
+	"slices"
 	"strings"
 	"time"
 )
@@ -147,17 +148,23 @@ func (v *Validator) dialChecked(ctx context.Context, network, addr string,
 	if err != nil {
 		return nil, err
 	}
+	// Validate every answer before filtering by network family; only candidates
+	// we can actually dial share the remaining connection budget.
+	ips = addressesForNetwork(ips, network)
 	var lastErr error
-	for _, ip := range ips {
+	for index, ip := range ips {
 		if err := ctx.Err(); err != nil {
 			return nil, err
 		}
-		if (network == "tcp4" && ip.IP.To4() == nil) || (network == "tcp6" && ip.IP.To4() != nil) {
-			continue
+		attemptCtx := ctx
+		cancel := func() {}
+		if deadline, ok := ctx.Deadline(); ok {
+			attemptCtx, cancel = context.WithTimeout(ctx, time.Until(deadline)/time.Duration(len(ips)-index))
 		}
 		// Only the numeric, already checked address reaches the dialer. The
 		// request URL remains unchanged, preserving HTTP Host and TLS SNI.
-		conn, err := dial(ctx, network, net.JoinHostPort(ip.String(), port))
+		conn, err := dial(attemptCtx, network, net.JoinHostPort(ip.String(), port))
+		cancel()
 		if err == nil {
 			return conn, nil
 		}
@@ -167,6 +174,12 @@ func (v *Validator) dialChecked(ctx context.Context, network, addr string,
 		lastErr = fmt.Errorf("ssrf: hostname %s has no addresses for %s", host, network)
 	}
 	return nil, lastErr
+}
+
+func addressesForNetwork(ips []net.IPAddr, network string) []net.IPAddr {
+	return slices.DeleteFunc(slices.Clone(ips), func(ip net.IPAddr) bool {
+		return (network == "tcp4" && ip.IP.To4() == nil) || (network == "tcp6" && ip.IP.To4() != nil)
+	})
 }
 
 func resolvePublicIPs(ctx context.Context, host string,

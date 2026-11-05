@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"errors"
+	"fmt"
 	"net"
 	"net/http"
 	"net/http/httptest"
@@ -214,5 +215,50 @@ func TestPinnedDialPreservesHTTPHostAndTLSSNI(t *testing.T) {
 		if err := check(req, []*http.Request{req}); err == nil {
 			t.Fatal("private redirect must be rejected")
 		}
+	}
+}
+
+func TestDialCheckedReservesBudgetForFallback(t *testing.T) {
+	for _, parentDeadline := range []bool{false, true} {
+		t.Run(fmt.Sprintf("parent_deadline_%t", parentDeadline), func(t *testing.T) {
+			checkDialFallback(t, parentDeadline)
+		})
+	}
+}
+
+func checkDialFallback(t *testing.T, parentDeadline bool) {
+	t.Helper()
+	v := DefaultValidator()
+	v.Timeout = 400 * time.Millisecond
+	ctx := context.Background()
+	if parentDeadline {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctx, 300*time.Millisecond)
+		defer cancel()
+		v.Timeout = time.Second
+	}
+	attempts := 0
+	conn, err := v.dialChecked(ctx, "tcp4", "fallback.test:443",
+		func(context.Context, string) ([]net.IPAddr, error) {
+			return []net.IPAddr{{IP: net.ParseIP("8.8.8.8")}, {IP: net.ParseIP("2001:4860:4860::8888")}, {IP: net.ParseIP("1.1.1.1")}}, nil
+		},
+		func(attempt context.Context, _ string, addr string) (net.Conn, error) {
+			attempts++
+			if addr == "8.8.8.8:443" {
+				<-attempt.Done()
+				return nil, attempt.Err()
+			}
+			if addr != "1.1.1.1:443" {
+				t.Fatalf("unexpected fallback address: %s", addr)
+			}
+			a, b := net.Pipe()
+			t.Cleanup(func() { a.Close(); b.Close() })
+			return a, nil
+		})
+	if err != nil || conn == nil || attempts != 2 {
+		t.Fatalf("must reach second verified IPv4 before overall deadline: attempts=%d error=%v", attempts, err)
+	}
+	if ctx.Err() != nil {
+		t.Fatalf("fallback exceeded parent budget: %v", ctx.Err())
 	}
 }

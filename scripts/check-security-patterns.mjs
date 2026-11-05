@@ -144,7 +144,7 @@ function checkTokenStorage() {
   return runPattern(
     /localStorage\.(setItem|getItem).*["'].*token/,
     ['frontend/src/'],
-    /localStorage\.(setItem|getItem).*["'].*token/,
+    'localStorage token storage (XSS can steal tokens, prefer httpOnly cookies)',
   );
 }
 
