@@ -1,0 +1,168 @@
+{
+  "taskId": "2026-11-04-audit-p2-authoritative-docs",
+  "taskDoc": "docs/harness/tasks/2026-11-04-audit-p2-authoritative-docs.task.md",
+  "title": "修正已确认权威文档漂移与失效链接",
+  "goal": "修正已确认权威文档漂移与失效链接",
+  "primaryLayer": "platform",
+  "status": "in-progress",
+  "priority": "P2",
+  "type": "audit-remediation",
+  "findings": [
+    "PB-004"
+  ],
+  "parentTaskId": "2026-11-04-global-audit-remediation",
+  "dependencies": [
+    "2026-11-04-audit-p1-refresh-rotation"
+  ],
+  "scope": {
+    "in": [
+      "修正已确认权威文档漂移与失效链接",
+      "按资产附表逐项核对后只改确定的现态、命令、状态、链接，保留历史正文",
+      "失效链接替换为明确未产出/计划项；不为补链接实现审批/通知/调度/报表",
+      "三份归档、MERGE、REPLACE建议保留旧路径和历史内容，仅标历史/指向权威；不得批量删文档",
+      "中英文同步；不重新统计或改写已交付审计基线"
+    ],
+    "out": [
+      "产品扩展/大重构",
+      "批量删除或重写旧文档",
+      "生产操作/发布/冻结代签",
+      "覆盖或回退用户已有改动"
+    ]
+  },
+  "dependencyLayers": [
+    "system/auth"
+  ],
+  "contractAnchors": [
+    "docs/reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-11-04_FULL.md",
+    "docs/harness/VERIFICATION_EVIDENCE_SPEC.md",
+    "docs/harness/REVIEW_LOOP_SPEC.md"
+  ],
+  "expectedFiles": {
+    "create": [
+      "docs/harness/tasks/2026-11-04-audit-p2-authoritative-docs.task.md",
+      ".harness/tasks/2026-11-04-audit-p2-authoritative-docs/manifest.json",
+      ".harness/evidence/2026-11-04-audit-p2-authoritative-docs/commands.json",
+      ".harness/evidence/2026-11-04-audit-p2-authoritative-docs/summary.md",
+      ".harness/evidence/2026-11-04-audit-p2-authoritative-docs/review.md"
+    ],
+    "modify": [
+      "DESIGN.en.md",
+      "DESIGN.md",
+      "docs/DEV_DB_INIT_GUIDE.md",
+      "docs/VERSION_MANAGEMENT_GUIDE.md",
+      "docs/contracts/SYSTEM_IAM_CONTRACT.en.md",
+      "docs/contracts/SYSTEM_IAM_CONTRACT.md",
+      "docs/designs/ALERT_MONITORING_CENTER_DESIGN.en.md",
+      "docs/designs/APPROVAL_WORKFLOW_DESIGN.en.md",
+      "docs/designs/APPROVAL_WORKFLOW_DESIGN.md",
+      "docs/designs/AUTH_MODULE_DESIGN.md",
+      "docs/designs/BACKEND.en.md",
+      "docs/designs/BACKEND.md",
+      "docs/designs/DARK_MODE_DESIGN.en.md",
+      "docs/designs/DATA_PERMISSION_HOOK.en.md",
+      "docs/designs/DATA_PERMISSION_HOOK.md",
+      "docs/designs/DICT_AND_SETTING_DESIGN.en.md",
+      "docs/designs/DICT_AND_SETTING_DESIGN.md",
+      "docs/designs/FOUNDATION_RELEASE_MODEL.en.md",
+      "docs/designs/FOUNDATION_RELEASE_MODEL.md",
+      "docs/designs/FRONTEND.en.md",
+      "docs/designs/FRONTEND.md",
+      "docs/designs/FRONTEND_COMPONENT_PLAN.en.md",
+      "docs/designs/FRONTEND_COMPONENT_PLAN.md",
+      "docs/designs/FRONTEND_PAGE_TEMPLATES.en.md",
+      "docs/designs/FRONTEND_PAGE_TEMPLATES.md",
+      "docs/designs/GENERATOR_MODULE_DESIGN.md",
+      "docs/designs/MODULE_CONTRACT.en.md",
+      "docs/designs/MODULE_CONTRACT.md",
+      "docs/designs/NOTICE_CENTER_API_CONTRACT.md",
+      "docs/designs/P2_SCALE_ROADMAP.md",
+      "docs/designs/PANTHEON_BASE_ARCHITECTURE_OVERVIEW.md",
+      "docs/designs/PERMISSION_MENU_DECOUPLING.md",
+      "docs/designs/PLATFORM_DASHBOARD_DESIGN.md",
+      "docs/designs/QUALITY_AND_SECURITY_STRATEGY.en.md",
+      "docs/designs/QUALITY_AND_SECURITY_STRATEGY.md",
+      "docs/designs/README.md",
+      "docs/designs/REPORT_CENTER_API_CONTRACT.en.md",
+      "docs/designs/REPORT_CENTER_API_CONTRACT.md",
+      "docs/designs/REPORT_CENTER_DESIGN.en.md",
+      "docs/designs/REPORT_CENTER_DESIGN.md",
+      "docs/designs/REPORT_CENTER_TEST_PLAN.en.md",
+      "docs/designs/REPORT_CENTER_TEST_PLAN.md",
+      "docs/designs/REPOSITORY_LAYOUT.en.md",
+      "docs/designs/REPOSITORY_LAYOUT.md",
+      "docs/designs/SCHEDULER_CENTER_DB_DESIGN.md",
+      "docs/designs/SCHEDULER_CENTER_DESIGN.en.md",
+      "docs/designs/SCHEDULER_CENTER_DESIGN.md",
+      "docs/designs/TASK_CENTER_DESIGN.en.md",
+      "docs/designs/TENANT_READY_SINGLE_TENANT_DESIGN.en.md",
+      "docs/designs/TENANT_READY_SINGLE_TENANT_DESIGN.md",
+      "docs/harness/VERIFICATION_EVIDENCE_SPEC.en.md",
+      "docs/harness/VERIFICATION_EVIDENCE_SPEC.md",
+      "docs/testing-quick-start.md"
+    ],
+    "doNotTouch": [
+      "VERSION",
+      "CHANGELOG.md",
+      "backend/pkg/database/migrations",
+      "pantheon-ops"
+    ]
+  },
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "ci-workflow",
+    "portableFailureClass": "PB-004",
+    "ownerLayer": "foundation-source",
+    "ratchetDecision": "no-repeat-observed",
+    "coverageDimensions": [
+      "behaviour",
+      "maintainability"
+    ]
+  },
+  "executionRoles": {
+    "implementerPosture": "Generator executor单一写入者；并行仅只读proposal",
+    "reviewerPosture": [
+      "独立Reviewer核查失败路径、In/Out和下游兼容"
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "node scripts/frontmatter-check.mjs",
+      "node scripts/harness/check-doc-links.mjs --root . --strict"
+    ],
+    "runtimeEvidence": []
+  },
+  "runtimeSensitive": false,
+  "runtimeGap": "No runtime behaviour changed; bounded documentation/policy review only.",
+  "acceptanceCriteria": [
+    "按资产附表逐项核对后只改确定的现态、命令、状态、链接，保留历史正文",
+    "失效链接替换为明确未产出/计划项；不为补链接实现审批/通知/调度/报表",
+    "三份归档、MERGE、REPLACE建议保留旧路径和历史内容，仅标历史/指向权威；不得批量删文档",
+    "中英文同步；不重新统计或改写已交付审计基线"
+  ],
+  "implementationNotes": [
+    "只修逐项核查的权威现态、命令、目录、链接与双语描述；历史正文和路径保留，Draft缺文件明确未产出。两份本轮审计报告仅格式实体编码修正，审计计数/结论不回填。",
+    "Only one Generator writer; read-only proposal/independent review attempts failed with service 503. Fallback serial implementation plus mechanical evidence; not independent self-approval."
+  ],
+  "risks": [
+    "中：引用/继承/历史追溯；不移动旧报告，不删除未知1252份资产"
+  ],
+  "humanGates": [
+    "实际门禁策略放宽、生产破坏操作、发布及冻结宣告：维护者；本地修复已授权"
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-11-04-audit-p2-authoritative-docs/manifest.json",
+    "taskDoc": "docs/harness/tasks/2026-11-04-audit-p2-authoritative-docs.task.md",
+    "evidenceDir": ".harness/evidence/2026-11-04-audit-p2-authoritative-docs/",
+    "reviewFile": ".harness/evidence/2026-11-04-audit-p2-authoritative-docs/review.md",
+    "summaryFile": ".harness/evidence/2026-11-04-audit-p2-authoritative-docs/summary.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".harness/tasks/2026-11-04-global-audit-remediation/plan.md",
+      "docs/reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-11-04_FULL.md"
+    ]
+  },
+  "implementationStatus": "applied",
+  "reviewStatus": "blocked",
+  "verificationStatus": "passed"
+}

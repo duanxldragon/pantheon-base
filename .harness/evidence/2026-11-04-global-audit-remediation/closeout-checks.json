@@ -1,0 +1,44 @@
+[
+  {
+    "command": "npm run check:docs-frontmatter",
+    "cwd": "pantheon-base",
+    "exitCode": 0,
+    "log": "closeout-final-check-docs-frontmatter.log"
+  },
+  {
+    "command": "npm run check:harness-docs",
+    "cwd": "pantheon-base",
+    "exitCode": 0,
+    "log": "closeout-final-check-harness-docs.log"
+  },
+  {
+    "command": "npm run check:task-packet",
+    "cwd": "pantheon-base",
+    "exitCode": 0,
+    "log": "closeout-final-check-task-packet.log"
+  },
+  {
+    "command": "npm run check:harness-evidence",
+    "cwd": "pantheon-base",
+    "exitCode": 0,
+    "log": "closeout-final-check-harness-evidence.log"
+  },
+  {
+    "command": "npm run check:harness-review",
+    "cwd": "pantheon-base",
+    "exitCode": 0,
+    "log": "closeout-final-check-harness-review.log"
+  },
+  {
+    "command": "npm run check:harness-runtime-evidence",
+    "cwd": "pantheon-base",
+    "exitCode": 0,
+    "log": "closeout-final-check-harness-runtime-evidence.log"
+  },
+  {
+    "command": "npm run check:checker-wiring",
+    "cwd": "pantheon-base",
+    "exitCode": 0,
+    "log": "closeout-final-check-checker-wiring.log"
+  }
+]

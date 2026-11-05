@@ -1,5 +1,9 @@
 # Pantheon Base Documentation Index
 
+Current functionality/release closeout: [task](./harness/tasks/2026-11-05-base-freeze-release.task.md) · [validation evidence](../.harness/evidence/2026-11-05-base-freeze-release/summary.md). v0.18.3 is an unpublished candidate retaining tenant V1; official release and Ops consumption require successful gates.
+
+Current global-audit baseline: [FULL audit](./reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-11-04_FULL.md), with [all document assets](./reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-11-04_ASSETS.md). Remediation state: [harness plan](../.harness/tasks/2026-11-04-global-audit-remediation/plan.md). The older same-date report remains historical; implementation does not itself declare a maintenance freeze.
+
 Chinese version: [README.md](./README.md)
 
 This file is the unified entry point for `pantheon-base/docs/`.
@@ -92,7 +96,7 @@ For Chinese-first onboarding, read:
 - [api/TENANT_API.md](./api/TENANT_API.md): tenant API
 - [migrations/COMPAT_TO_MULTI_UPGRADE.md](./migrations/COMPAT_TO_MULTI_UPGRADE.md): compat to multi upgrade
 - [contracts/TENANT_CONTRACT_V1.en.md](./contracts/TENANT_CONTRACT_V1.en.md): the authoritative tenant contract
-- [testing-quick-start.md](./testing-quick-start.md)
+- [Core testing and verification workflow](./harness/PANTHEON_BASE_DELIVERY_WORKFLOW.en.md)
 - [testing-usage-guide.md](./testing-usage-guide.md)
 - [testing-strategy-optimization.md](./testing-strategy-optimization.md)
 - [testing-implementation-report.md](./testing-implementation-report.md)

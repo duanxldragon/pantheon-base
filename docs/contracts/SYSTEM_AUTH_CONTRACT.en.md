@@ -3,7 +3,7 @@ title: system/auth Contract
 doc_type: Contract
 layer: system/auth
 status: Active
-updated_at: 2026-10-31
+updated_at: 2026-11-04
 ---
 
 # system/auth Contract
@@ -249,3 +249,11 @@ Additional checks:
 ### 10.2 Acceptance
 
 - [ACCEPTANCE_CHECKLIST.md](../acceptances/ACCEPTANCE_CHECKLIST.md)
+
+## Refresh rotation: atomic single use（2026-11-04）
+
+The HTTP refresh handler atomically consumes the old Redis mapping with `authtoken.ConsumeRefresh` (GETDEL, Redis 7 deployment baseline) before changing the DB session or issuing a pair. Across instances, at most one request using the same old token may proceed. A replay or consume/storage error never returns a successful pair. `ValidateRefresh` remains read-only for other consumers; exported existing signatures and tenant V1 scope are unchanged.
+
+Once consumed, the old token is not restored on a later database/issuance failure or an uncertain response. The client may need to log in again. Concurrent tabs/retries can receive an unauthorized response; this is the security tradeoff of single use. The reverse index is replaced by normal issuance or cleared during revocation; consumption must not erase a newer index. Revocation, password changes, tenant membership gates and cookie response policy remain required regressions.
+
+Refresh and tenant switching update the session row only while it is unrevoked and unexpired and the observed refresh JTI/tenant remain unchanged. A stale read cannot overwrite a completed revocation, rotation, or tenant switch; conflicts fail as unauthorized. DB and Redis operations remain separate; a later failure does not restore the old refresh token.

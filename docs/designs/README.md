@@ -5,7 +5,7 @@ layer: platform
 status: Active
 linked_contracts:
   - docs/contracts/PLATFORM_CONTRACT.md
-updated_at: 2026-10-31
+updated_at: 2026-11-04
 ---
 
 # 设计文档目录
@@ -16,7 +16,7 @@ English version: [README.en.md](./README.en.md)
 
 目标不是把所有设计稿平铺出来，而是先给出中文开发者最常用的阅读顺序和主题入口。
 
-覆盖范围可反证：本目录共 **62 份中文主文档**（不含本索引、不含 `.en.md`），下面的索引逐份引用；新增设计文档时必须同步登记，死链由 `npm run check:doc-links -- --strict` 兜住。
+覆盖范围可反证：本目录共 **62 份中文主文档**（不含本索引、不含 `.en.md`），下面的索引逐份引用；新增设计文档时必须同步登记，死链由 `npm run check:harness-docs` 兜住。
 
 ## 推荐阅读顺序
 

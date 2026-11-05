@@ -1,0 +1,141 @@
+{
+  "taskId": "2026-11-03-audit-p2-route-groups-unify",
+  "taskDoc": "docs/harness/tasks/2026-11-03-audit-p2-route-groups-unify.task.md",
+  "title": "系统域路由组统一收口（ARCH-01，P2）",
+  "goal": "把 system_modules.go 中 14 处手写重复的中间件链收敛到 pkg/contracts/route_groups.go 现有助手（补齐 3 种组合），并新增路由结构断言测试钉住链形状，消除「漏挂中间件即静默权限差异」的漂移风险。",
+  "primaryLayer": "platform",
+  "status": "completed",
+  "priority": "P2",
+  "wave": "W4",
+  "programmeRef": {
+    "taskId": "2026-11-03-audit-remediation-programme",
+    "taskDoc": "docs/harness/tasks/2026-11-03-audit-remediation-programme.task.md",
+    "manifest": ".harness/tasks/2026-11-03-audit-remediation-programme/manifest.json"
+  },
+  "type": "architecture-fitness",
+  "estimatedComplexity": "moderate",
+  "findings": [
+    "ARCH-01（P2）：system_modules.go 中同一串中间件链手写重复 14 处（162,163,188,209,238,288,321,346,375,419,430,435,471,513），组合为 TokenAuth + PlatformScopeTenantContext + Casbin + (DataScope|PlatformCapability) + RefreshSync，仅 1 处差异",
+    "pkg/contracts/route_groups.go 已存在（ProtectedGroup/DataScopedGroup），但 grep 实测系统域 0 调用方，routing 全绕开它手写链",
+    "风险：任何一处漏 DataScopeMiddleware 或 PlatformCapabilityMiddleware 会静默产生权限差异，编译期不可发现",
+    "审计建议：抽路由组助手（3 种组合）+ 路由快照测试；属高置信度、低风险清理项，不阻塞冻结"
+  ],
+  "scope": {
+    "in": [
+      "route_groups.go 补齐系统域 3 种组合助手（有/无 DataScope、有/无 PlatformCapability、有/无 RefreshSync，按 14 处实际差异分类）",
+      "system_modules.go 14 处链改走新助手，每处注释声明「为什么用这个组合」",
+      "路由结构断言测试：钉住每条系统域路由的中间件链 = 期望组合"
+    ],
+    "out": [
+      "修改 internal/middleware/* 任何中间件实现",
+      "改变任何路由的中间件组合语义（现有 14 处必须行为等价）",
+      "改业务域路由（modules/business/* 不参与）",
+      "触碰 pantheon-ops / VERSION / CHANGELOG.md"
+    ]
+  },
+  "dependencyLayers": [
+    "platform",
+    "system/iam"
+  ],
+  "implementationNotes": [
+    "先读 14 处原文逐行分类（3 类组合 + 例外），分类表写进 evidence；分类先行改码在后。",
+    "新增助手签名保持现有 route_groups.go 风格（显式 db/rdb 参数），不引入配置对象。",
+    "结构断言遍历 system_modules.go 注册结果，对每条路由断言中间件链（函数指针/顺序）匹配期望组合。",
+    "14 处之外的单点中间件（SecureAction 等）保持原样，不并入本包。",
+    "ops 消费 base internal/middleware：本包不改 middleware 包，无接口面变化，在 evidence 声明。"
+  ],
+  "contractAnchors": [
+    "docs/reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-11-03.md",
+    "docs/contracts/SYSTEM_AUTH_CONTRACT.md",
+    "docs/contracts/TENANT_CONTRACT_V1.md",
+    "backend/pkg/contracts/route_groups.go"
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "architecture-fitness",
+    "portableFailureClass": "middleware-chain-drift",
+    "ownerLayer": "foundation-source",
+    "ratchetDecision": "gate-updated",
+    "coverageDimensions": [
+      "architecture-fitness",
+      "behaviour"
+    ]
+  },
+  "expectedFiles": {
+    "create": [
+      "backend/pkg/contracts/route_groups_test.go",
+      "backend/pkg/database/route_snapshot_test.go",
+      ".harness/evidence/2026-11-03-audit-p2-route-groups-unify/commands.json",
+      ".harness/evidence/2026-11-03-audit-p2-route-groups-unify/summary.md",
+      ".harness/evidence/2026-11-03-audit-p2-route-groups-unify/review.md"
+    ],
+    "modify": [
+      "backend/pkg/contracts/route_groups.go",
+      "backend/modules/system/system_modules.go"
+    ],
+    "doNotTouch": [
+      "backend/internal/middleware/**",
+      "backend/modules/business/**",
+      "backend/modules/auth/**",
+      "docs/contracts/TENANT_CONTRACT_V1.md",
+      "pantheon-ops/**",
+      "VERSION",
+      "CHANGELOG.md"
+    ]
+  },
+  "executionRoles": {
+    "implementerPosture": "先产出 14 处分类表再动手；分类表与代码 diff 同入 evidence，确保 reviewer 能逐行对照。",
+    "reviewerPosture": [
+      "对照原始 14 处链逐个确认新助手等价。",
+      "确认测试真能「删一个 DataScope 就红」。",
+      "确认 RefreshSync 有/无差异不被抹平。",
+      "确认 139 条路由中间件语义零变化。"
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "cd backend && go build ./... && go vet ./... && gofmt -l modules/system/ pkg/contracts/",
+      "cd backend && go test ./... -short",
+      "负向：删掉某组的 DataScopeMiddleware → 结构断言红",
+      "逐组对照表（14 处前/后链）在 evidence 可复核"
+    ],
+    "runtimeEvidence": [
+      "无浏览器环境；以结构断言 + 全量单测为 evidence"
+    ]
+  },
+  "runtimeSensitive": false,
+  "runtimeGap": "无浏览器/真实运行时验证；行为等价性以结构断言 + 全量单测证明。",
+  "evidenceRequired": [
+    "commands.json：build/vet/test-short 读数 + 结构断言读数（含负向）",
+    "summary.md：14 处前/后链逐行对照表 + 3 类组合判定表",
+    "review.md：逐条 reviewer posture + 「删一个 DataScope 让测试红」负向证"
+  ],
+  "humanGates": [
+    "触碰全部系统域路由属 L2 门禁面：需非作者 Reviewer 对照 14 处链逐一确认行为等价。",
+    "若出现第 4 类未知组合，交维护者判定，不静默处理。"
+  ],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed",
+    "14 处链全部有分类并走新助手 / 显式例外",
+    "结构断言能独立打红（负向验证过）",
+    "139 条路由中间件语义零变化",
+    "middleware 包 / 业务域 / 合同零改动",
+    "ops 无接口面变化声明已记录"
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-11-03-audit-p2-route-groups-unify/manifest.json",
+    "taskDoc": "docs/harness/tasks/2026-11-03-audit-p2-route-groups-unify.task.md",
+    "evidenceDir": ".harness/evidence/2026-11-03-audit-p2-route-groups-unify/",
+    "summaryFile": ".harness/evidence/2026-11-03-audit-p2-route-groups-unify/summary.md",
+    "reviewFile": ".harness/evidence/2026-11-03-audit-p2-route-groups-unify/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-11-03.md"
+    ]
+  }
+}

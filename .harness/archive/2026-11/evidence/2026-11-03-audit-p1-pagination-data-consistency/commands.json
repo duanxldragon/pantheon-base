@@ -1,0 +1,84 @@
+{
+  "taskId": "2026-11-03-audit-p1-pagination-data-consistency",
+  "repo": "pantheon-base",
+  "executedAt": "2026-11-04",
+  "agent": {
+    "tool": "claude-code"
+  },
+  "runtimeSensitive": false,
+  "runtimeGap": "无浏览器环境：数据一致性以 helper 单测（翻页聚合/边界/上限）+ 静态验证为证据。>100 行真实数据下的渲染走查未做，属维护者可选 human gate 补充（manifest humanGates 已登记）。",
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-11-03-audit-p1-pagination-data-consistency/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-11-03-audit-p1-pagination-data-consistency/",
+    "reviewFile": ".harness/evidence/2026-11-03-audit-p1-pagination-data-consistency/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-11-03.md"
+    ]
+  },
+  "commands": [
+    {
+      "command": "npx tsc -b",
+      "cwd": "pantheon-base/frontend",
+      "status": "passed",
+      "details": "exit 0，零诊断输出（无 emit 行的 clean incremental build）。tsconfig.app.json 带 noUnusedLocals/noUnusedParameters，故此读数同时证明替换后无残留类型/未用符号。"
+    },
+    {
+      "command": "npx eslint .",
+      "cwd": "pantheon-base/frontend",
+      "status": "passed",
+      "details": "exit 0，0 error / 0 warning 输出。"
+    },
+    {
+      "command": "npx vitest run",
+      "cwd": "pantheon-base/frontend",
+      "status": "passed",
+      "details": "exit 0：Test Files 33 passed (33)，Tests 218 passed (218)。含新增 tests/unit/shared/utils/fetchAllPages.test.ts 5 例。"
+    },
+    {
+      "command": "grep -rnE \"pageSize: ?(9999|1000)\" frontend/src",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "exit 1（无匹配，即 0 命中）。"
+    },
+    {
+      "command": "go build ./...",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "exit 0（backend/ 下）： 零改动，无连带破坏。"
+    }
+  ],
+  "knownGaps": [
+    "未做浏览器渲染走查：>100 角色/岗位/部门成员的下拉与 OrgTab 计数未人工目视确认。"
+  ],
+  "artifacts": [
+    {
+      "path": "frontend/src/shared/utils/fetchAllPages.ts",
+      "sha256": "021218490163037309929bcc986ed67003d08c1002c3e9536a8f2055628df5fb"
+    },
+    {
+      "path": "frontend/tests/unit/shared/utils/fetchAllPages.test.ts",
+      "sha256": "7beda043a4dc597cccade5d8f34589c57a83a1b9316173f2a9baed26f4a707a7"
+    },
+    {
+      "path": "frontend/src/modules/system/iam/user/useUserList.ts",
+      "sha256": "09140efd7c6b",
+      "note": "sha 前缀，diff 12+/4-"
+    },
+    {
+      "path": "frontend/src/modules/system/org/dept/DeptList.tsx",
+      "sha256": "72a237b2c721",
+      "note": "sha 前缀，diff 21+/18-"
+    },
+    {
+      "path": "frontend/src/modules/system/org/dept/index.ts",
+      "sha256": "a1945d8957e0",
+      "note": "sha 前缀，diff 9+/2-"
+    },
+    {
+      "path": "frontend/src/modules/system/iam/user/index.ts",
+      "sha256": "eb271b792085",
+      "note": "sha 前缀，diff 7+/2-（manifest expectedFiles 未列，属基线差异，见 summary）"
+    }
+  ]
+}

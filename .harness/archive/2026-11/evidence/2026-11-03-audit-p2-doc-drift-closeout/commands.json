@@ -1,0 +1,63 @@
+{
+  "taskId": "2026-11-03-audit-p2-doc-drift-closeout",
+  "repo": "pantheon-base",
+  "executedAt": "2026-11-04",
+  "agent": { "tool": "claude-code" },
+  "runtimeSensitive": false,
+  "runtimeGap": "纯文档修复，无运行面；以 grep 实测与文档门禁为证据。",
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-11-03-audit-p2-doc-drift-closeout/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-11-03-audit-p2-doc-drift-closeout/",
+    "reviewFile": ".harness/evidence/2026-11-03-audit-p2-doc-drift-closeout/review.md",
+    "changeRef": "none",
+    "planRefs": ["docs/reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-11-03.md"]
+  },
+  "commands": [
+    {
+      "command": "grep -c '1\\.21' CONTRIBUTING.md",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "0 命中。Prerequisites 改为指向 backend/go.mod 的 go 指令与 SHELL_VERSION.json 的 minimumNode，不再写死过期版本号。"
+    },
+    {
+      "command": "grep -c 'npm test' CONTRIBUTING.md",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "0 命中；6 处全部改为 `npm run test:unit`（frontend/package.json 实际 scripts 名，vitest run）。"
+    },
+    {
+      "command": "grep -n -- '--migrate' CONTRIBUTING.md",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "2 命中，均为本轮新写的说明句（英文 `There is no separate --migrate flag.`、中文 `不存在单独的 --migrate 参数。`）；`go run ./cmd/server --migrate` 命令已全部移除。后端 Go 源码中 `--migrate` 0 命中，证实该参数从未存在。"
+    },
+    {
+      "command": "grep -c 'sonarcloud-s4666' docs/harness-pr-generator-guide.md docs/HARNESS_GOVERNANCE_GUIDE.md",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "各 1 命中，且都是「已归档，不要再当模板用」的声明句；不再有以它为模板的字段来源引用。"
+    },
+    {
+      "command": "node scripts/harness/check-doc-links.mjs --root . --strict",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "exit 0，0 finding；两份指南互链与 .github/pull_request_template.md 链接均可解析。"
+    },
+    {
+      "command": "node scripts/frontmatter-check.mjs",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "exit 0；强制目录仍是 4 个（docs/superpowers/specs、docs/archive/*），docs/ 根不在强制集内，故指针文档无需 frontmatter。"
+    },
+    {
+      "command": "node scripts/harness/check-task-packet.mjs --root .",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "exit 0；本包 task packet 的 Contract Anchors 未指向已删文档。"
+    }
+  ],
+  "knownGaps": [
+    "CONTRIBUTING 只有一份（仓库无 CONTRIBUTING.en.md），英文与中文同文件双段，故 DOC-03 的 .en.md 收益问题在本包不适用。",
+    "若 pantheon-ops 手抄过 CONTRIBUTING 的旧 Go/Node 版本行或 `--migrate` 命令，需下游自行同步；本包按边界不改 ops。"
+  ]
+}

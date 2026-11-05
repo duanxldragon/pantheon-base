@@ -172,3 +172,24 @@
 **最后更新**: 2026-09-05T08:30:00Z
 **状态**: 等待 CI 验证
 **下一步**: 监控 CI，确认所有门禁通过
+
+## Machine Readable
+
+```json
+{
+  "taskId": "test-suite-optimization",
+  "verdict": "blocked",
+  "verdictRationale": "Artifact status is '等待 CI 验证' (awaiting CI verification) with CI checks '进行中' and reviewer '待分配', so approval is still pending.",
+  "linkage": {
+    "taskManifest": ".harness/tasks/test-suite-optimization/manifest.json",
+    "evidence": ".harness/evidence/test-suite-optimization/commands.json",
+    "reviewFile": ".harness/evidence/test-suite-optimization/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".harness/tasks/test-suite-optimization/manifest.json"
+    ]
+  }
+}
+```
+
+> This block was backfilled on 2026-11-04 during the archive-coverage repair. It restates the verdict already written above in machine-readable form and links the artifacts that existed for this task; no conclusion, finding or verification claim was added, removed or reworded. The prose remains authoritative.

@@ -1,0 +1,20 @@
+{
+  "recordedAt": "2026-11-05T08:31:11.732347+00:00",
+  "userDecision": "允许，两路评审改用 gpt-6-astra",
+  "model": "gpt-6-astra",
+  "lanes": [
+    "code-reviewer",
+    "architect"
+  ],
+  "adapter": "two independent ephemeral read-only codex exec sessions using the installed role instructions",
+  "roleDefinitions": [
+    "workspace/.codex/agents/code-reviewer.toml",
+    "workspace/.codex/agents/architect.toml"
+  ],
+  "status": "round3-completed-code-approve-architect-clear",
+  "originalNativeFailures": "HTTP503 for configured gpt-5.5 and gpt-5.4-mini",
+  "qualityPolicyChanged": false,
+  "note": "No self-review replacement; independent outputs and deterministic two-lane synthesis are still required. Permanent agent configuration was not changed.",
+  "finalSourceManifest": "review-source-manifest.json",
+  "sourceParentCommit": "1a7b388bcaa2c178346b7fcaa78cf6c0b057e246"
+}

@@ -88,7 +88,7 @@ The task must remain `in-progress` until the runtime evidence and human gates ar
     "reviewFile": ".harness/evidence/2026-09-10-tenant-verification-and-gray/review.md",
     "changeRef": "none",
     "planRefs": [
-      ".harness/tasks/TENANT_EVOLUTION_MASTER_PLAN_20260910.md",
+      "docs/history/2026-09/tasks-summaries/TENANT_EVOLUTION_MASTER_PLAN_20260910.md",
       ".harness/tasks/2026-09-10-tenant-core-auth-iam/task.md",
       ".harness/tasks/2026-09-10-tenant-core-data-infrastructure/task.md"
     ]

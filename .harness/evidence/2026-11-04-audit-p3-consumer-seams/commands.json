@@ -1,0 +1,90 @@
+{
+  "taskId": "2026-11-04-audit-p3-consumer-seams",
+  "repo": "pantheon-base",
+  "agent": {
+    "tool": "codex",
+    "adapter": "serial Generator fallback; independent reviewer service unavailable"
+  },
+  "commands": [
+    {
+      "command": "go test -json -p 1 -count=1 -run ^Test(BizScopeDeleteRejectsNonCMDBReferences|BizScopeDeleteIgnoresSoftDeletedReferences|HostStateTransitionsUseCompatibilityProjectionAndCAS|MarkHostResultDefersTerminalTaskUntilActiveAttemptFinishes|StartDeployTaskPersistsCanonicalSSHRunnerErrors|DeployTemplateTaskSSHExecutorFailsOnScriptPrecheck|DeleteDeployTaskReconcilesStaleRunningTask)$ ./modules/business/bizscope ./modules/business/cmdb/host ./modules/business/deploy",
+      "cwd": "audit-artifacts/base-global-remediation-2026-11-04/ops-control-source/backend",
+      "status": "failed",
+      "notes": "ops-control-regressions.jsonl",
+      "exitCode": 1
+    },
+    {
+      "command": "go test -json -p 1 -count=1 -run ^Test(DatasourceDefaultCanMoveAndClear|DatasourceQueriesLokiAndTempo)$ ./modules/business/observability",
+      "cwd": "audit-artifacts/base-global-remediation-2026-11-04/ops-control-source/backend",
+      "status": "failed",
+      "notes": "ops-control-observability.jsonl",
+      "exitCode": 1
+    },
+    {
+      "command": "node scripts/business-overlay/rebuild-from-base.mjs --base <base-candidate> --target <consumer-candidate>",
+      "cwd": "pantheon-ops",
+      "status": "passed",
+      "notes": "",
+      "exitCode": 0
+    },
+    {
+      "command": "go mod tidy",
+      "cwd": "consumer-final/backend",
+      "status": "passed",
+      "notes": "consumer-go-tidy.log",
+      "exitCode": 0
+    },
+    {
+      "command": "go build -buildvcs=false ./...",
+      "cwd": "audit-artifacts/base-global-remediation-2026-11-04/consumer-final/backend",
+      "status": "passed",
+      "notes": "consumer-go-build-snapshot.jsonl",
+      "exitCode": 0
+    },
+    {
+      "command": "SHA256 compare final consumer frontend input files against the consumer frontend already built/tested",
+      "cwd": "workspace",
+      "status": "passed",
+      "notes": "consumer-frontend-equivalence.json",
+      "exitCode": 0
+    },
+    {
+      "command": "go test -json -p 1 -count=1 ./modules/business/...",
+      "cwd": "audit-artifacts/base-global-remediation-2026-11-04/consumer-final/backend",
+      "status": "failed",
+      "notes": "consumer-go-business.jsonl",
+      "exitCode": 1
+    },
+    {
+      "command": "npm run type-check && npm run build && npm run test:unit",
+      "cwd": "consumer-candidate/frontend",
+      "status": "passed",
+      "notes": "Actual commands ran separately; consumer-frontend-results.json. 571 final frontend inputs verified equal by SHA256. Existing Ops dependencies reused via junction, no npm ci.",
+      "exitCode": 0
+    }
+  ],
+  "knownGaps": [
+    "Independent review unavailable: executor gpt-5.5 and architect gpt-5.4-mini attempts returned HTTP 503; no independent approval is claimed.",
+    "Downstream real-DB suite is red at 4 business packages (12 failure nodes / 9 top-level tests), identically reproduced at Ops HEAD; PB-010 intent/fixture triage pending.",
+    "No approved release commit, external required CI/Sonar result or maintenance-freeze acceptance.",
+    "Foundation release and Ops lock upgrade deferred; local synthetic candidate is not a release.",
+    "Browser full/core smoke and live external integration were not run; no UI code was modified and no visual-polish claim is made.",
+    "S3 and OIDC external-provider validation depend on provisioned services. Actual remote dependency vulnerability status is not established by mock npm tests."
+  ],
+  "runtimeSensitive": false,
+  "runtimeGap": "No runtime behaviour changed; bounded documentation/policy review only.",
+  "runtimeLogs": [],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-11-04-audit-p3-consumer-seams/manifest.json",
+    "taskDoc": "docs/harness/tasks/2026-11-04-audit-p3-consumer-seams.task.md",
+    "evidenceDir": ".harness/evidence/2026-11-04-audit-p3-consumer-seams/",
+    "reviewFile": ".harness/evidence/2026-11-04-audit-p3-consumer-seams/review.md",
+    "summaryFile": ".harness/evidence/2026-11-04-audit-p3-consumer-seams/summary.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".harness/tasks/2026-11-04-global-audit-remediation/plan.md",
+      "docs/reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-11-04_FULL.md"
+    ]
+  },
+  "recordedAt": "2026-11-04T11:59:58.492Z"
+}

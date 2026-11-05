@@ -37,3 +37,24 @@ semantics (proven by the live 23/23 run).
   suppression.
 - k8s/shell/deps from the previous rounds are untouched here and remain
   green on main.
+
+## Machine Readable
+
+```json
+{
+  "taskId": "2026-09-10-sonar-new-code-zero",
+  "verdict": "blocked",
+  "verdictRationale": "'SonarCloud new-code gate acceptance is verified post-merge'; summary defers final confirmation to the next main analysis, so the gate is still outstanding.",
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-09-10-sonar-new-code-zero/manifest.json",
+    "evidence": ".harness/evidence/2026-09-10-sonar-new-code-zero/commands.json",
+    "reviewFile": ".harness/evidence/2026-09-10-sonar-new-code-zero/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".harness/tasks/2026-09-10-sonar-new-code-zero/manifest.json"
+    ]
+  }
+}
+```
+
+> This block was backfilled on 2026-11-04 during the archive-coverage repair. It restates the verdict already written above in machine-readable form and links the artifacts that existed for this task; no conclusion, finding or verification claim was added, removed or reworded. The prose remains authoritative.

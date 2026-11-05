@@ -61,7 +61,7 @@ the packet's design-only boundary held. Approved.
     "evidence": ".harness/evidence/2026-09-08-p2-multi-tenant-design/commands.json",
     "reviewFile": ".harness/evidence/2026-09-08-p2-multi-tenant-design/review.md",
     "changeRef": "none",
-    "planRefs": [".harness/tasks/TASK_MASTER_PLAN.md"]
+    "planRefs": ["docs/history/2026-09/tasks-summaries/TASK_MASTER_PLAN.md"]
   }
 }
 ```

@@ -48,3 +48,24 @@ and gofmt all clean on commit `991ff93c`.
 - 13 baseline CODE_SMELL issues remain open (Out of scope here); if the gate
   requires zero total issues, that is a separate follow-up task, not a gap
   of this one.
+
+## Machine Readable
+
+```json
+{
+  "taskId": "2026-09-10-sonar-resolved-repair",
+  "verdict": "blocked",
+  "verdictRationale": "summary: 'SonarCloud re-analysis runs post-merge ... Final confirmation is the next main analysis', leaving the Release Gate SonarCloud job outstanding.",
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-09-10-sonar-resolved-repair/manifest.json",
+    "evidence": ".harness/evidence/2026-09-10-sonar-resolved-repair/commands.json",
+    "reviewFile": ".harness/evidence/2026-09-10-sonar-resolved-repair/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".harness/tasks/2026-09-10-sonar-resolved-repair/manifest.json"
+    ]
+  }
+}
+```
+
+> This block was backfilled on 2026-11-04 during the archive-coverage repair. It restates the verdict already written above in machine-readable form and links the artifacts that existed for this task; no conclusion, finding or verification claim was added, removed or reworded. The prose remains authoritative.

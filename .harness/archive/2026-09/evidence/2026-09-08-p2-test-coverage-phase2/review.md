@@ -56,7 +56,7 @@ Targets met, ratchet wired and locally executed, scope held. Approved.
     "evidence": ".harness/evidence/2026-09-08-p2-test-coverage-phase2/commands.json",
     "reviewFile": ".harness/evidence/2026-09-08-p2-test-coverage-phase2/review.md",
     "changeRef": "none",
-    "planRefs": [".harness/tasks/TASK_MASTER_PLAN.md"]
+    "planRefs": ["docs/history/2026-09/tasks-summaries/TASK_MASTER_PLAN.md"]
   }
 }
 ```

@@ -1,0 +1,31 @@
+{
+  "recordedAt": "2026-11-04T20:03:56.2800026+08:00",
+  "verifiedProcesses": [
+    {
+      "ProcessId": 9996,
+      "ExecutablePath": "D:\\Redis\\redis-server.exe",
+      "CommandLine": "\"D:\\Redis\\redis-server.exe\" --bind 127.0.0.1 --port 26379 --save \"\" --appendonly no --dir D:/workspace/go/pantheon-platform/audit-artifacts/base-global-remediation-2026-11-04/services/redis-data"
+    },
+    {
+      "ProcessId": 12272,
+      "ExecutablePath": "D:\\MySQL\\mysql\\bin\\mysqld.exe",
+      "CommandLine": "\"D:\\MySQL\\mysql\\bin\\mysqld.exe\" --no-defaults --console --basedir=D:/MySQL/mysql --datadir=D:/workspace/go/pantheon-platform/audit-artifacts/base-global-remediation-2026-11-04/services/mysql-data --bind-address=127.0.0.1 --port=23306 --mysqlx=OFF"
+    },
+    {
+      "ProcessId": 33020,
+      "ExecutablePath": "D:\\MySQL\\mysql\\bin\\mysqld.exe",
+      "CommandLine": "D:\\MySQL\\mysql\\bin\\mysqld.exe --no-defaults --console --basedir=D:/MySQL/mysql --datadir=D:/workspace/go/pantheon-platform/audit-artifacts/base-global-remediation-2026-11-04/services/mysql-data --bind-address=127.0.0.1 --port=23306 --mysqlx=OFF"
+    }
+  ],
+  "commands": [
+    "mysqladmin --no-defaults --connect-timeout=5 --host=127.0.0.1 --port=23306 --user=root shutdown",
+    "redis-cli -h127.0.0.1 -p26379 shutdown nosave"
+  ],
+  "mysqlExitCode": 0,
+  "redisExitCode": 0,
+  "remainingProcesses": [],
+  "remainingListeners": [],
+  "dataDirectoriesRetained": true,
+  "otherInstancesTouched": false,
+  "initialAttempt": "shutdown-first-attempt.json"
+}

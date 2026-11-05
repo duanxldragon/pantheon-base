@@ -1,0 +1,855 @@
+{
+  "knownGaps": [
+    "Independent final review approved; final candidate hosted CI/merge/release/Ops consumption pending.",
+    "真实 S3 provider 未配置：1 个集成用例跳过",
+    "npm audit 报 15 个 moderate（eslint/nyc/vite-plugin-istanbul/typescript-eslint 开发链，0 high/0 critical）；升级属依赖变更，未在本次候选处理",
+    "core 中 3 个生成模块用例在未激活模块的运行环境保持 skip；本轮改由真实生成模块的浏览器/API CRUD 覆盖，不把 skip 当通过",
+    "smoke 套件自启 vite 默认把 /api 代理到 8080；后端跑在 18080 时必须显式 --proxy-target，否则整页 API 502（本轮首跑即此原因，非产品缺陷）"
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-11-05-base-freeze-release/manifest.json",
+    "taskDoc": "docs/harness/tasks/2026-11-05-base-freeze-release.task.md",
+    "evidenceDir": ".harness/evidence/2026-11-05-base-freeze-release/",
+    "reviewFile": ".harness/evidence/2026-11-05-base-freeze-release/review.md",
+    "summaryFile": ".harness/evidence/2026-11-05-base-freeze-release/summary.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".harness/tasks/2026-11-05-base-freeze-release/tasks.json",
+      ".harness/tasks/2026-11-04-global-audit-remediation/plan.md"
+    ]
+  },
+  "repo": "pantheon-base",
+  "commands": [
+    {
+      "command": "npm run test:scripts",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "exitCode": 0,
+      "startedAt": "2026-11-05T02:03:36.900Z",
+      "finishedAt": "2026-11-05T02:03:51.227Z",
+      "notes": "workspace audit-artifacts/base-freeze-2026-11-05/scripts-1-0.log"
+    },
+    {
+      "command": "npm run test:foundation-release",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "exitCode": 0,
+      "startedAt": "2026-11-05T02:03:51.232Z",
+      "finishedAt": "2026-11-05T02:03:58.449Z",
+      "notes": "workspace audit-artifacts/base-freeze-2026-11-05/scripts-1-1.log"
+    },
+    {
+      "command": "npm run test:docs-frontmatter",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "exitCode": 0,
+      "startedAt": "2026-11-05T02:03:58.451Z",
+      "finishedAt": "2026-11-05T02:03:59.614Z",
+      "notes": "workspace audit-artifacts/base-freeze-2026-11-05/scripts-1-2.log"
+    },
+    {
+      "command": "npm run lint",
+      "cwd": "pantheon-base/frontend",
+      "status": "passed",
+      "exitCode": 0,
+      "startedAt": "2026-11-05T02:07:29.658Z",
+      "finishedAt": "2026-11-05T02:08:24.563Z",
+      "notes": "workspace audit-artifacts/base-freeze-2026-11-05/frontend-1-0.log"
+    },
+    {
+      "command": "npm run type-check",
+      "cwd": "pantheon-base/frontend",
+      "status": "passed",
+      "exitCode": 0,
+      "startedAt": "2026-11-05T02:08:24.569Z",
+      "finishedAt": "2026-11-05T02:08:49.972Z",
+      "notes": "workspace audit-artifacts/base-freeze-2026-11-05/frontend-1-1.log"
+    },
+    {
+      "command": "npm run build",
+      "cwd": "pantheon-base/frontend",
+      "status": "passed",
+      "exitCode": 0,
+      "startedAt": "2026-11-05T02:08:49.974Z",
+      "finishedAt": "2026-11-05T02:09:40.847Z",
+      "notes": "workspace audit-artifacts/base-freeze-2026-11-05/frontend-1-2.log"
+    },
+    {
+      "command": "npm run test:unit",
+      "cwd": "pantheon-base/frontend",
+      "status": "passed",
+      "exitCode": 0,
+      "startedAt": "2026-11-05T02:09:40.849Z",
+      "finishedAt": "2026-11-05T02:10:37.860Z",
+      "notes": "workspace audit-artifacts/base-freeze-2026-11-05/frontend-1-3.log"
+    },
+    {
+      "command": "go test -race -json -p 1 -count=1 ./...",
+      "cwd": "pantheon-base/backend",
+      "status": "passed",
+      "exitCode": 0,
+      "startedAt": "2026-11-05T02:07:29.648Z",
+      "finishedAt": "2026-11-05T02:32:17.130Z",
+      "notes": "workspace audit-artifacts/base-freeze-2026-11-05/gorace-1-0.log"
+    },
+    {
+      "command": "npm run check:docs-frontmatter",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "exitCode": 0,
+      "startedAt": "2026-11-05T02:37:20.724Z",
+      "finishedAt": "2026-11-05T02:37:22.691Z",
+      "notes": "workspace audit-artifacts/base-freeze-2026-11-05/governance-2-0.log"
+    },
+    {
+      "command": "npm run check:structure",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "exitCode": 0,
+      "startedAt": "2026-11-05T02:37:22.694Z",
+      "finishedAt": "2026-11-05T02:37:24.361Z",
+      "notes": "workspace audit-artifacts/base-freeze-2026-11-05/governance-2-1.log"
+    },
+    {
+      "command": "npm run check:task-packet-template",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "exitCode": 0,
+      "startedAt": "2026-11-05T02:37:24.363Z",
+      "finishedAt": "2026-11-05T02:37:25.417Z",
+      "notes": "workspace audit-artifacts/base-freeze-2026-11-05/governance-2-2.log"
+    },
+    {
+      "command": "npm run check:task-packet",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "exitCode": 0,
+      "startedAt": "2026-11-05T02:37:25.418Z",
+      "finishedAt": "2026-11-05T02:37:27.572Z",
+      "notes": "workspace audit-artifacts/base-freeze-2026-11-05/governance-2-3.log"
+    },
+    {
+      "command": "npm run check:harness-evidence",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "exitCode": 0,
+      "startedAt": "2026-11-05T02:37:27.576Z",
+      "finishedAt": "2026-11-05T02:37:29.700Z",
+      "notes": "workspace audit-artifacts/base-freeze-2026-11-05/governance-2-4.log"
+    },
+    {
+      "command": "npm run check:harness-review",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "exitCode": 0,
+      "startedAt": "2026-11-05T02:37:29.703Z",
+      "finishedAt": "2026-11-05T02:37:31.297Z",
+      "notes": "workspace audit-artifacts/base-freeze-2026-11-05/governance-2-5.log"
+    },
+    {
+      "command": "npm run check:harness-runtime-evidence",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "exitCode": 0,
+      "startedAt": "2026-11-05T02:37:31.300Z",
+      "finishedAt": "2026-11-05T02:37:33.588Z",
+      "notes": "workspace audit-artifacts/base-freeze-2026-11-05/governance-2-6.log"
+    },
+    {
+      "command": "npm run check:harness-graph-review",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "exitCode": 0,
+      "startedAt": "2026-11-05T02:37:33.595Z",
+      "finishedAt": "2026-11-05T02:37:34.824Z",
+      "notes": "workspace audit-artifacts/base-freeze-2026-11-05/governance-2-7.log"
+    },
+    {
+      "command": "npm run check:checker-wiring",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "exitCode": 0,
+      "startedAt": "2026-11-05T02:37:34.826Z",
+      "finishedAt": "2026-11-05T02:37:35.862Z",
+      "notes": "workspace audit-artifacts/base-freeze-2026-11-05/governance-2-8.log"
+    },
+    {
+      "command": "npm run check:security-patterns",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "exitCode": 0,
+      "startedAt": "2026-11-05T02:37:35.863Z",
+      "finishedAt": "2026-11-05T02:38:17.476Z",
+      "notes": "workspace audit-artifacts/base-freeze-2026-11-05/governance-2-9.log"
+    },
+    {
+      "command": "npm run check:ui-tokens",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "exitCode": 0,
+      "startedAt": "2026-11-05T02:38:17.479Z",
+      "finishedAt": "2026-11-05T02:38:19.060Z",
+      "notes": "workspace audit-artifacts/base-freeze-2026-11-05/governance-2-10.log"
+    },
+    {
+      "command": "npm run check:failure-registry",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "exitCode": 0,
+      "startedAt": "2026-11-05T02:38:19.061Z",
+      "finishedAt": "2026-11-05T02:38:19.876Z",
+      "notes": "workspace audit-artifacts/base-freeze-2026-11-05/governance-2-11.log"
+    },
+    {
+      "command": "npm run check:harness-docs",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "exitCode": 0,
+      "startedAt": "2026-11-05T02:38:19.877Z",
+      "finishedAt": "2026-11-05T02:38:20.909Z",
+      "notes": "workspace audit-artifacts/base-freeze-2026-11-05/governance-2-12.log"
+    },
+    {
+      "command": "npm run check:generated-modules",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "exitCode": 0,
+      "startedAt": "2026-11-05T02:38:20.911Z",
+      "finishedAt": "2026-11-05T02:38:21.929Z",
+      "notes": "workspace audit-artifacts/base-freeze-2026-11-05/governance-2-13.log"
+    },
+    {
+      "command": "npm audit --registry=https://registry.npmjs.org --audit-level=high",
+      "cwd": "pantheon-base",
+      "status": "failed",
+      "exitCode": 1,
+      "startedAt": "2026-11-05T02:16:54.955Z",
+      "finishedAt": "2026-11-05T02:16:55.944Z",
+      "notes": "workspace audit-artifacts/base-freeze-2026-11-05/security-1-0.log"
+    },
+    {
+      "command": "npm audit --registry=https://registry.npmjs.org --audit-level=high",
+      "cwd": "pantheon-base/frontend",
+      "status": "failed",
+      "exitCode": 1,
+      "startedAt": "2026-11-05T02:16:55.947Z",
+      "finishedAt": "2026-11-05T02:16:56.982Z",
+      "notes": "workspace audit-artifacts/base-freeze-2026-11-05/security-1-1.log"
+    },
+    {
+      "command": "npm run test:generator:smoke",
+      "cwd": "pantheon-base/frontend",
+      "status": "passed",
+      "exitCode": 0,
+      "notes": "generator-smoke.log; 1 dashboard and14 quality contract tests, three lowcode template shapes"
+    },
+    {
+      "command": "npm run test:smoke:core",
+      "cwd": "pantheon-base/frontend",
+      "status": "passed",
+      "exitCode": 0,
+      "notes": "smoke-1-0.log;27passed/3generated-business cases skipped (no generated runtime module)"
+    },
+    {
+      "command": "npm run test:smoke:tenant",
+      "cwd": "pantheon-base/frontend",
+      "status": "passed",
+      "exitCode": 0,
+      "notes": "tenant-smoke-rerun.log;16tenant+5viewpoint passed. Previous full-lifecycle case30s budget failure retained; scoped test.slow rerun completed at33.4s."
+    },
+    {
+      "command": "govulncheck -json ./...",
+      "cwd": "pantheon-base/backend",
+      "status": "failed",
+      "exitCode": 1,
+      "notes": "govulncheck-correct-toolchain.log; cached v1.3.0 binary, Go1.26.10 PATH; database socket denied. Earlier toolchain/lookup failures preserved."
+    },
+    {
+      "command": "gh api repos/duanxldragon/pantheon-base/pulls -f state=open -X GET",
+      "cwd": "pantheon-base",
+      "status": "failed",
+      "exitCode": 1,
+      "notes": "github-open-prs.stderr.log; socket access forbidden, no hosted result"
+    },
+    {
+      "command": "npm run test:smoke:system",
+      "cwd": "pantheon-base/frontend",
+      "status": "failed",
+      "exitCode": 1,
+      "notes": "system-smoke.log; original first7 modules passed; form fixture race stopped chain. Failed result preserved and recovered with scoped/full-form reruns plus remaining suites."
+    },
+    {
+      "command": "npm run test:smoke:system:forms",
+      "cwd": "pantheon-base/frontend",
+      "status": "passed",
+      "exitCode": 0,
+      "notes": "system-forms-full-rerun.log; final system module matrix total119 passed/0failed"
+    },
+    {
+      "command": "npm run test:smoke:system:iam-authz",
+      "cwd": "pantheon-base/frontend",
+      "status": "passed",
+      "exitCode": 0,
+      "notes": "system-iam-authz.log; final system module matrix total119 passed/0failed"
+    },
+    {
+      "command": "npm run test:smoke:system:governance",
+      "cwd": "pantheon-base/frontend",
+      "status": "passed",
+      "exitCode": 0,
+      "notes": "system-governance.log; final system module matrix total119 passed/0failed"
+    },
+    {
+      "command": "npm run test:smoke:system:api",
+      "cwd": "pantheon-base/frontend",
+      "status": "passed",
+      "exitCode": 0,
+      "notes": "system-api.log; final system module matrix total119 passed/0failed"
+    },
+    {
+      "command": "Scoped policy server-error smoke rerun",
+      "cwd": "pantheon-base/frontend",
+      "status": "passed",
+      "exitCode": 0,
+      "notes": "system-form-error-rerun.log; passed with role list readiness and interception asserted,50.6s."
+    },
+    {
+      "command": "ESLint changed smoke test files",
+      "cwd": "pantheon-base/frontend",
+      "status": "passed",
+      "exitCode": 0,
+      "notes": "smoke-test-lint.log; tenant-console and system-form-state-matrix"
+    },
+    {
+      "command": "gitleaks protect --staged --redact --report-format json",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "exitCode": 0,
+      "notes": "gitleaks-staged.log; then-staged tree no leaks. Whole-tree dependency scan was canceled, not passed."
+    },
+    {
+      "command": "node scripts/run-smoke-suite.mjs --host 127.0.0.1 --port 5173 --proxy-target http://127.0.0.1:18080 --cleanup-fixtures all --config playwright.config.ts -- tests/smoke/business/generated/module-governance-real.spec.ts",
+      "status": "passed",
+      "exitCode": 0,
+      "cwd": "pantheon-base/frontend",
+      "notes": "business-rerun-generated.log: 1 passed (8.7s)"
+    },
+    {
+      "command": "node scripts/run-smoke-suite.mjs --host 127.0.0.1 --port 5173 --proxy-target http://127.0.0.1:18080 --cleanup-fixtures all --setup scripts/database-import-qa-setup.mjs --config playwright.config.ts -- tests/smoke/business/generated/module-governance-host-real.spec.ts",
+      "status": "passed",
+      "exitCode": 0,
+      "cwd": "pantheon-base/frontend",
+      "notes": "business-rerun-database-import.log: 1 passed (6.0s). Same command without --proxy-target returned 502 for every page API call (env issue), not a product failure."
+    },
+    {
+      "command": "node scripts/run-smoke-suite.mjs --host 127.0.0.1 --port 5174 --proxy-target http://127.0.0.1:18080 --cleanup-fixtures all --setup scripts/master-detail-qa-setup.mjs --config playwright.master-detail.config.ts -- tests/smoke/business/generated/module-master-detail-real.spec.ts",
+      "status": "passed",
+      "exitCode": 0,
+      "cwd": "pantheon-base/frontend",
+      "notes": "business-rerun-master-detail.log: 1 passed (7.8s)"
+    },
+    {
+      "command": "node scripts/run-smoke-suite.mjs --host 127.0.0.1 --port 5174 --proxy-target http://127.0.0.1:18080 --cleanup-fixtures all --setup scripts/many-to-many-qa-setup.mjs --config playwright.many-to-many.config.ts -- tests/smoke/business/generated/module-many-to-many-real.spec.ts",
+      "status": "passed",
+      "exitCode": 0,
+      "cwd": "pantheon-base/frontend",
+      "notes": "business-rerun-many-to-many.log: 1 passed (8.7s)"
+    },
+    {
+      "command": "node scripts/run-smoke-suite.mjs --host 127.0.0.1 --port 5174 --proxy-target http://127.0.0.1:18080 --cleanup-fixtures all --config playwright.auto-recycle.config.ts -- tests/smoke/business/generated/module-auto-recycle-real.spec.ts",
+      "status": "passed",
+      "exitCode": 0,
+      "cwd": "pantheon-base/frontend",
+      "notes": "business-rerun-auto-recycle.log: 1 passed (7.8s)"
+    },
+    {
+      "command": "PANTHEON_EXTERNAL_WEB_SERVER=1 node node_modules/@playwright/test/cli.js test tests/smoke-core/business-generated-basic.spec.ts",
+      "status": "passed",
+      "exitCode": 0,
+      "cwd": "pantheon-base/frontend",
+      "notes": "3 passed (10.8s) against an active generated module; console output not persisted, module was purged by the later smoke cleanup."
+    },
+    {
+      "command": "node pantheon-base/frontend/node_modules/@playwright/test/cli.js test --config=audit-artifacts/base-freeze-2026-11-05/generated-crud.config.mjs",
+      "status": "passed",
+      "exitCode": 0,
+      "cwd": "pantheon-base",
+      "notes": "Real-browser CRUD on active generated module: validation (2 required errors), create 200, edit prefill, injected PUT 500 shows submit-bar error and keeps input, retry 200, delete confirm, 390px modal. 1 passed (6.1s). Screenshots generator-create-validation-1440.png / generator-create-1440.png / generator-update-error-1440.png / generator-list-1440.png / generator-create-390.png. Console log not persisted; module was purged by the later smoke cleanup."
+    },
+    {
+      "command": "go run golang.org/x/vuln/cmd/govulncheck@latest ./...",
+      "status": "passed",
+      "exitCode": 0,
+      "cwd": "pantheon-base/backend",
+      "notes": "workspace audit-artifacts/base-freeze-2026-11-05/govulncheck.log；No vulnerabilities found；0 影响代码，3 个模块级漏洞未被调用"
+    },
+    {
+      "command": "npm audit --json",
+      "status": "failed",
+      "exitCode": 1,
+      "cwd": "pantheon-base/frontend",
+      "notes": "audit-artifacts/base-freeze-2026-11-05/npm-audit.json；15 moderate / 0 high / 0 critical，全部位于 eslint、nyc、vite-plugin-istanbul、typescript-eslint 开发链；非零退出按 PB-002 语义保留"
+    },
+    {
+      "command": "go test -race -json -p 1 -count=1 ./...",
+      "cwd": "pantheon-base/backend",
+      "status": "passed",
+      "exitCode": 0,
+      "startedAt": "2026-11-05T06:54:08.404Z",
+      "finishedAt": "2026-11-05T07:12:13.720Z",
+      "notes": "Continuation after PR489 gate fixes; workspace audit-artifacts/base-freeze-2026-11-05/gorace-resume-0.log"
+    },
+    {
+      "command": "npm run lint",
+      "cwd": "pantheon-base/frontend",
+      "status": "passed",
+      "exitCode": 0,
+      "startedAt": "2026-11-05T07:39:01.132Z",
+      "finishedAt": "2026-11-05T07:39:53.070Z",
+      "notes": "Continuation after PR489 gate fixes; workspace audit-artifacts/base-freeze-2026-11-05/frontend-resume-0.log"
+    },
+    {
+      "command": "npm run type-check",
+      "cwd": "pantheon-base/frontend",
+      "status": "passed",
+      "exitCode": 0,
+      "startedAt": "2026-11-05T07:39:53.073Z",
+      "finishedAt": "2026-11-05T07:40:16.752Z",
+      "notes": "Continuation after PR489 gate fixes; workspace audit-artifacts/base-freeze-2026-11-05/frontend-resume-1.log"
+    },
+    {
+      "command": "npm run build",
+      "cwd": "pantheon-base/frontend",
+      "status": "passed",
+      "exitCode": 0,
+      "startedAt": "2026-11-05T07:40:16.759Z",
+      "finishedAt": "2026-11-05T07:40:52.605Z",
+      "notes": "Continuation after PR489 gate fixes; workspace audit-artifacts/base-freeze-2026-11-05/frontend-resume-2.log"
+    },
+    {
+      "command": "npm run test:unit",
+      "cwd": "pantheon-base/frontend",
+      "status": "passed",
+      "exitCode": 0,
+      "startedAt": "2026-11-05T07:40:52.607Z",
+      "finishedAt": "2026-11-05T07:41:32.068Z",
+      "notes": "Continuation after PR489 gate fixes; workspace audit-artifacts/base-freeze-2026-11-05/frontend-resume-3.log"
+    },
+    {
+      "command": "npm run check:structure",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "exitCode": 0,
+      "notes": "workspace audit-artifacts/base-freeze-2026-11-05/resume-structure-after.log"
+    },
+    {
+      "command": "npm run test:generator:quality",
+      "cwd": "pantheon-base/frontend",
+      "status": "passed",
+      "exitCode": 0,
+      "notes": "workspace audit-artifacts/base-freeze-2026-11-05/resume-generator-after.log"
+    },
+    {
+      "command": "npx vitest run tests/unit/api/fetchAllPages.test.ts",
+      "cwd": "pantheon-base/frontend",
+      "status": "passed",
+      "exitCode": 0,
+      "notes": "workspace audit-artifacts/base-freeze-2026-11-05/resume-helper-after.log"
+    },
+    {
+      "command": "node --test tests/scripts/pr-automation-workflow.test.mjs",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "exitCode": 0,
+      "notes": "workspace audit-artifacts/base-freeze-2026-11-05/resume-pr-workflow-tests.log"
+    },
+    {
+      "command": "actionlint .github/workflows/pr-automation.yml",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "exitCode": 0,
+      "notes": "workspace audit-artifacts/base-freeze-2026-11-05/resume-actionlint.log"
+    },
+    {
+      "command": "zizmor1.25.2 --format json .github/workflows/pr-automation.yml",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "exitCode": 0,
+      "notes": "workspace audit-artifacts/base-freeze-2026-11-05/resume-zizmor-changed.json"
+    },
+    {
+      "command": "gocognit1.2.1 -over 15 (changed auth/session and org/dept tests)",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "exitCode": 0,
+      "notes": "workspace audit-artifacts/base-freeze-2026-11-05/resume-complexity-after.log"
+    },
+    {
+      "command": "zizmor1.25.2 --format json .github/workflows",
+      "cwd": "pantheon-base",
+      "status": "failed",
+      "exitCode": 14,
+      "notes": "23 existing whole-tree findings; changed PR automation workflow has zero before/after. Report-only PR policy retained, no exclusions or threshold changes."
+    },
+    {
+      "command": "GitHub REST GET commits/57b42ace467dd6f96db232bfebab7626f07c84be/check-runs?per_page=100; select latest check per name",
+      "cwd": "workspace",
+      "status": "passed",
+      "exitCode": 0,
+      "startedAt": "2026-11-05T08:14:41.433630+00:00",
+      "finishedAt": "2026-11-05T08:14:41.433630+00:00",
+      "notes": "Read-only authenticated API refresh; 29 latest checks: 27 success, 2 conditional skips. Exact IDs/URLs and raw evidence hashes in hosted-validation.json. This is a coordinator evidence observation, not independent approval."
+    },
+    {
+      "command": "npm run check:docs-frontmatter",
+      "cwd": "pantheon-base",
+      "exitCode": 0,
+      "startedAt": "2026-11-05T08:15:35.073450+00:00",
+      "finishedAt": "2026-11-05T08:15:36.153577+00:00",
+      "status": "passed",
+      "notes": "Governance-only evidence update; workspace audit-artifacts/base-freeze-2026-11-05/handoff-check-docs-frontmatter.log"
+    },
+    {
+      "command": "npm run check:task-packet-template",
+      "cwd": "pantheon-base",
+      "exitCode": 0,
+      "startedAt": "2026-11-05T08:15:35.073450+00:00",
+      "finishedAt": "2026-11-05T08:15:35.956322+00:00",
+      "status": "passed",
+      "notes": "Governance-only evidence update; workspace audit-artifacts/base-freeze-2026-11-05/handoff-check-task-packet-template.log"
+    },
+    {
+      "command": "npm run check:task-packet",
+      "cwd": "pantheon-base",
+      "exitCode": 0,
+      "startedAt": "2026-11-05T08:15:35.074468+00:00",
+      "finishedAt": "2026-11-05T08:15:36.194035+00:00",
+      "status": "passed",
+      "notes": "Governance-only evidence update; workspace audit-artifacts/base-freeze-2026-11-05/handoff-check-task-packet.log"
+    },
+    {
+      "command": "npm run check:harness-evidence",
+      "cwd": "pantheon-base",
+      "exitCode": 0,
+      "startedAt": "2026-11-05T08:15:35.074468+00:00",
+      "finishedAt": "2026-11-05T08:15:36.291069+00:00",
+      "status": "passed",
+      "notes": "Governance-only evidence update; workspace audit-artifacts/base-freeze-2026-11-05/handoff-check-harness-evidence.log"
+    },
+    {
+      "command": "npm run check:harness-review",
+      "cwd": "pantheon-base",
+      "exitCode": 0,
+      "startedAt": "2026-11-05T08:15:35.956322+00:00",
+      "finishedAt": "2026-11-05T08:15:36.922270+00:00",
+      "status": "passed",
+      "notes": "Governance-only evidence update; workspace audit-artifacts/base-freeze-2026-11-05/handoff-check-harness-review.log"
+    },
+    {
+      "command": "npm run check:harness-runtime-evidence",
+      "cwd": "pantheon-base",
+      "exitCode": 0,
+      "startedAt": "2026-11-05T08:15:36.153577+00:00",
+      "finishedAt": "2026-11-05T08:15:37.031526+00:00",
+      "status": "passed",
+      "notes": "Governance-only evidence update; workspace audit-artifacts/base-freeze-2026-11-05/handoff-check-harness-runtime-evidence.log"
+    },
+    {
+      "command": "npm run check:harness-docs",
+      "cwd": "pantheon-base",
+      "exitCode": 0,
+      "startedAt": "2026-11-05T08:15:36.194035+00:00",
+      "finishedAt": "2026-11-05T08:15:37.031526+00:00",
+      "status": "passed",
+      "notes": "Governance-only evidence update; workspace audit-artifacts/base-freeze-2026-11-05/handoff-check-harness-docs.log"
+    },
+    {
+      "command": "npm run check:harness-encoding",
+      "cwd": "pantheon-base",
+      "exitCode": 0,
+      "startedAt": "2026-11-05T08:15:36.291069+00:00",
+      "finishedAt": "2026-11-05T08:15:37.941115+00:00",
+      "status": "passed",
+      "notes": "Governance-only evidence update; workspace audit-artifacts/base-freeze-2026-11-05/handoff-check-harness-encoding.log"
+    },
+    {
+      "command": "node --test tests/scripts/harness-runtime-evidence.test.mjs tests/scripts/security-pattern-report.test.mjs",
+      "cwd": "pantheon-base",
+      "exitCode": 1,
+      "startedAt": "2026-11-05T09:26:03.695Z",
+      "finishedAt": "2026-11-05T09:26:04.417Z",
+      "status": "failed",
+      "notes": "Review regression before/after: workspace audit-artifacts/base-freeze-2026-11-05/reviewScripts-before-fixture-corrected-0.log"
+    },
+    {
+      "command": "npm run test:generator:quality",
+      "cwd": "pantheon-base/frontend",
+      "exitCode": 1,
+      "startedAt": "2026-11-05T09:26:03.749Z",
+      "finishedAt": "2026-11-05T09:26:06.614Z",
+      "status": "failed",
+      "notes": "Review regression before/after: workspace audit-artifacts/base-freeze-2026-11-05/reviewGenerator-before-toolchain-corrected-0.log"
+    },
+    {
+      "command": "go test -race -count=1 ./pkg/security/ssrf ./modules/system/iam/role ./modules/system/org/post -run Test(DialCheckedReservesBudgetForFallback|RolePaginationWithTiedSort|PostPaginationWithTiedSort)$",
+      "cwd": "pantheon-base/backend",
+      "exitCode": 1,
+      "startedAt": "2026-11-05T09:22:27.938Z",
+      "finishedAt": "2026-11-05T09:22:33.202Z",
+      "status": "failed",
+      "notes": "Review regression before/after: workspace audit-artifacts/base-freeze-2026-11-05/reviewGo-before-review-fixes-0.log"
+    },
+    {
+      "command": "node --test tests/scripts/harness-runtime-evidence.test.mjs tests/scripts/security-pattern-report.test.mjs",
+      "cwd": "pantheon-base",
+      "exitCode": 0,
+      "startedAt": "2026-11-05T09:27:07.374Z",
+      "finishedAt": "2026-11-05T09:27:08.235Z",
+      "status": "passed",
+      "notes": "Review regression before/after: workspace audit-artifacts/base-freeze-2026-11-05/reviewScripts-after-review-fixes-0.log"
+    },
+    {
+      "command": "npm run test:generator:quality",
+      "cwd": "pantheon-base/frontend",
+      "exitCode": 0,
+      "startedAt": "2026-11-05T09:27:07.531Z",
+      "finishedAt": "2026-11-05T09:27:11.716Z",
+      "status": "passed",
+      "notes": "Review regression before/after: workspace audit-artifacts/base-freeze-2026-11-05/reviewGenerator-after-review-fixes-0.log"
+    },
+    {
+      "command": "go test -race -count=1 ./pkg/security/ssrf ./modules/system/iam/role ./modules/system/org/post -run Test(DialCheckedReservesBudgetForFallback|RolePaginationWithTiedSort|PostPaginationWithTiedSort)$",
+      "cwd": "pantheon-base/backend",
+      "exitCode": 0,
+      "startedAt": "2026-11-05T09:27:07.406Z",
+      "finishedAt": "2026-11-05T09:27:14.931Z",
+      "status": "passed",
+      "notes": "Review regression before/after: workspace audit-artifacts/base-freeze-2026-11-05/reviewGo-after-review-fixes-0.log"
+    },
+    {
+      "command": "npm run test:scripts",
+      "cwd": "pantheon-base",
+      "exitCode": 0,
+      "startedAt": "2026-11-05T09:27:30.179Z",
+      "finishedAt": "2026-11-05T09:27:46.936Z",
+      "status": "passed",
+      "notes": "Review regression before/after: workspace audit-artifacts/base-freeze-2026-11-05/scripts-review-fixes-0.log"
+    },
+    {
+      "command": "npm run test:foundation-release",
+      "cwd": "pantheon-base",
+      "exitCode": 0,
+      "startedAt": "2026-11-05T09:27:46.947Z",
+      "finishedAt": "2026-11-05T09:27:54.702Z",
+      "status": "passed",
+      "notes": "Review regression before/after: workspace audit-artifacts/base-freeze-2026-11-05/scripts-review-fixes-1.log"
+    },
+    {
+      "command": "npm run test:docs-frontmatter",
+      "cwd": "pantheon-base",
+      "exitCode": 0,
+      "startedAt": "2026-11-05T09:27:54.704Z",
+      "finishedAt": "2026-11-05T09:27:55.407Z",
+      "status": "passed",
+      "notes": "Review regression before/after: workspace audit-artifacts/base-freeze-2026-11-05/scripts-review-fixes-2.log"
+    },
+    {
+      "command": "npm run lint",
+      "cwd": "pantheon-base/frontend",
+      "exitCode": 0,
+      "startedAt": "2026-11-05T09:27:30.179Z",
+      "finishedAt": "2026-11-05T09:28:23.953Z",
+      "status": "passed",
+      "notes": "workspace audit-artifacts/base-freeze-2026-11-05/frontend-review-fixes-0.log"
+    },
+    {
+      "command": "npm run type-check",
+      "cwd": "pantheon-base/frontend",
+      "exitCode": 0,
+      "startedAt": "2026-11-05T09:28:23.960Z",
+      "finishedAt": "2026-11-05T09:28:47.591Z",
+      "status": "passed",
+      "notes": "workspace audit-artifacts/base-freeze-2026-11-05/frontend-review-fixes-1.log"
+    },
+    {
+      "command": "npm run build",
+      "cwd": "pantheon-base/frontend",
+      "exitCode": 0,
+      "startedAt": "2026-11-05T09:28:47.595Z",
+      "finishedAt": "2026-11-05T09:29:29.787Z",
+      "status": "passed",
+      "notes": "workspace audit-artifacts/base-freeze-2026-11-05/frontend-review-fixes-2.log"
+    },
+    {
+      "command": "npm run test:unit",
+      "cwd": "pantheon-base/frontend",
+      "exitCode": 0,
+      "startedAt": "2026-11-05T09:29:29.793Z",
+      "finishedAt": "2026-11-05T09:30:36.389Z",
+      "status": "passed",
+      "notes": "workspace audit-artifacts/base-freeze-2026-11-05/frontend-review-fixes-3.log"
+    },
+    {
+      "command": "npm run check:docs-frontmatter",
+      "cwd": "pantheon-base",
+      "exitCode": 0,
+      "startedAt": "2026-11-05T09:28:55.799Z",
+      "finishedAt": "2026-11-05T09:28:56.803Z",
+      "status": "passed",
+      "notes": "workspace audit-artifacts/base-freeze-2026-11-05/governance-review-fixes-0.log"
+    },
+    {
+      "command": "npm run check:structure",
+      "cwd": "pantheon-base",
+      "exitCode": 0,
+      "startedAt": "2026-11-05T09:28:56.805Z",
+      "finishedAt": "2026-11-05T09:28:57.356Z",
+      "status": "passed",
+      "notes": "workspace audit-artifacts/base-freeze-2026-11-05/governance-review-fixes-1.log"
+    },
+    {
+      "command": "npm run check:task-packet-template",
+      "cwd": "pantheon-base",
+      "exitCode": 0,
+      "startedAt": "2026-11-05T09:28:57.357Z",
+      "finishedAt": "2026-11-05T09:28:57.807Z",
+      "status": "passed",
+      "notes": "workspace audit-artifacts/base-freeze-2026-11-05/governance-review-fixes-2.log"
+    },
+    {
+      "command": "npm run check:task-packet",
+      "cwd": "pantheon-base",
+      "exitCode": 0,
+      "startedAt": "2026-11-05T09:28:57.808Z",
+      "finishedAt": "2026-11-05T09:28:59.389Z",
+      "status": "passed",
+      "notes": "workspace audit-artifacts/base-freeze-2026-11-05/governance-review-fixes-3.log"
+    },
+    {
+      "command": "npm run check:harness-evidence",
+      "cwd": "pantheon-base",
+      "exitCode": 0,
+      "startedAt": "2026-11-05T09:28:59.393Z",
+      "finishedAt": "2026-11-05T09:29:00.365Z",
+      "status": "passed",
+      "notes": "workspace audit-artifacts/base-freeze-2026-11-05/governance-review-fixes-4.log"
+    },
+    {
+      "command": "npm run check:harness-review",
+      "cwd": "pantheon-base",
+      "exitCode": 0,
+      "startedAt": "2026-11-05T09:29:00.367Z",
+      "finishedAt": "2026-11-05T09:29:01.395Z",
+      "status": "passed",
+      "notes": "workspace audit-artifacts/base-freeze-2026-11-05/governance-review-fixes-5.log"
+    },
+    {
+      "command": "npm run check:harness-runtime-evidence",
+      "cwd": "pantheon-base",
+      "exitCode": 0,
+      "startedAt": "2026-11-05T09:29:01.403Z",
+      "finishedAt": "2026-11-05T09:29:02.394Z",
+      "status": "passed",
+      "notes": "workspace audit-artifacts/base-freeze-2026-11-05/governance-review-fixes-6.log"
+    },
+    {
+      "command": "npm run check:harness-graph-review",
+      "cwd": "pantheon-base",
+      "exitCode": 0,
+      "startedAt": "2026-11-05T09:29:02.418Z",
+      "finishedAt": "2026-11-05T09:29:04.308Z",
+      "status": "passed",
+      "notes": "workspace audit-artifacts/base-freeze-2026-11-05/governance-review-fixes-7.log"
+    },
+    {
+      "command": "npm run check:checker-wiring",
+      "cwd": "pantheon-base",
+      "exitCode": 0,
+      "startedAt": "2026-11-05T09:29:04.313Z",
+      "finishedAt": "2026-11-05T09:29:05.107Z",
+      "status": "passed",
+      "notes": "workspace audit-artifacts/base-freeze-2026-11-05/governance-review-fixes-8.log"
+    },
+    {
+      "command": "npm run check:security-patterns",
+      "cwd": "pantheon-base",
+      "exitCode": 0,
+      "startedAt": "2026-11-05T09:29:05.116Z",
+      "finishedAt": "2026-11-05T09:30:38.978Z",
+      "status": "passed",
+      "notes": "workspace audit-artifacts/base-freeze-2026-11-05/governance-review-fixes-9.log"
+    },
+    {
+      "command": "npm run check:ui-tokens",
+      "cwd": "pantheon-base",
+      "exitCode": 0,
+      "startedAt": "2026-11-05T09:30:38.980Z",
+      "finishedAt": "2026-11-05T09:30:40.365Z",
+      "status": "passed",
+      "notes": "workspace audit-artifacts/base-freeze-2026-11-05/governance-review-fixes-10.log"
+    },
+    {
+      "command": "npm run check:failure-registry",
+      "cwd": "pantheon-base",
+      "exitCode": 0,
+      "startedAt": "2026-11-05T09:30:40.367Z",
+      "finishedAt": "2026-11-05T09:30:41.111Z",
+      "status": "passed",
+      "notes": "workspace audit-artifacts/base-freeze-2026-11-05/governance-review-fixes-11.log"
+    },
+    {
+      "command": "npm run check:harness-docs",
+      "cwd": "pantheon-base",
+      "exitCode": 0,
+      "startedAt": "2026-11-05T09:30:41.113Z",
+      "finishedAt": "2026-11-05T09:30:42.003Z",
+      "status": "passed",
+      "notes": "workspace audit-artifacts/base-freeze-2026-11-05/governance-review-fixes-12.log"
+    },
+    {
+      "command": "npm run check:generated-modules",
+      "cwd": "pantheon-base",
+      "exitCode": 0,
+      "startedAt": "2026-11-05T09:30:42.006Z",
+      "finishedAt": "2026-11-05T09:30:42.767Z",
+      "status": "passed",
+      "notes": "workspace audit-artifacts/base-freeze-2026-11-05/governance-review-fixes-13.log"
+    },
+    {
+      "command": "npm run test:generator:smoke",
+      "cwd": "pantheon-base/frontend",
+      "exitCode": 0,
+      "startedAt": "2026-11-05T09:29:42.153Z",
+      "finishedAt": "2026-11-05T09:30:37.741Z",
+      "status": "passed",
+      "notes": "workspace audit-artifacts/base-freeze-2026-11-05/generatorSmoke-review-fixes-0.log"
+    },
+    {
+      "command": "go test -race -json -count=1 ./pkg/security/ssrf",
+      "cwd": "pantheon-base/backend",
+      "exitCode": 0,
+      "startedAt": "2026-11-05T09:41:16.318Z",
+      "finishedAt": "2026-11-05T09:41:19.918Z",
+      "status": "passed",
+      "notes": "workspace audit-artifacts/base-freeze-2026-11-05/ssrfFinal-complexity-0.log"
+    },
+    {
+      "command": "go test -race -json -p 1 -count=1 ./...",
+      "cwd": "pantheon-base/backend",
+      "exitCode": 0,
+      "startedAt": "2026-11-05T09:27:30.224Z",
+      "finishedAt": "2026-11-05T09:47:58.799Z",
+      "status": "passed",
+      "notes": "workspace audit-artifacts/base-freeze-2026-11-05/gorace-review-fixes-0.log; final SSRF extraction separately verified, exact final commit hosted race still required"
+    }
+  ],
+  "taskId": "2026-11-05-base-freeze-release",
+  "runtimeSensitive": true,
+  "recordedAt": "2026-11-05T08:14:41.433630+00:00",
+  "agent": {
+    "tool": "codex",
+    "adapter": "Dispatcher verification; native Generator unavailable (503)"
+  },
+  "runtimeGap": "独立 code-reviewer / architect 重试后仍 HTTP 503，未产生批准；真实 S3 provider 未配置：1 个集成用例跳过；npm audit 报 15 个 moderate（eslint/nyc/vite-plugin-istanbul/typescript-eslint 开发链，0 high/0 critical）；升级属依赖变更，未在本次候选处理；core 中 3 个生成模块用例在未激活模块的运行环境保持 skip；本轮改由真实生成模块的浏览器/API CRUD 覆盖，不把 skip 当通过；smoke 套件自启 vite 默认把 /api 代理到 8080；后端跑在 18080 时必须显式 --proxy-target，否则整页 API 502（本轮首跑即此原因，非产品缺陷）；PR489 code candidate 57b42ace hosted CI has 27 SUCCESS/2 SKIPPED; Sonar 9 to 0, gate OK. Independent review remains HTTP503; draft, merge/release/Ops upgrade remain incomplete. Subsequent evidence-only commits require their own checks.",
+  "hostedEvidence": ".harness/evidence/2026-11-05-base-freeze-release/hosted-validation.json"
+}

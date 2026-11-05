@@ -1,0 +1,152 @@
+{
+  "taskId": "2026-11-04-audit-p2-ops-db-test-followup",
+  "triageDate": "2026-11-05",
+  "basis": {
+    "comparison": "comparison.json",
+    "runs": [
+      "audit-artifacts/base-global-remediation-2026-11-04/consumer-go-business.jsonl",
+      "audit-artifacts/base-global-remediation-2026-11-04/ops-control-regressions.jsonl",
+      "audit-artifacts/base-global-remediation-2026-11-04/ops-control-observability.jsonl"
+    ],
+    "failedNodes": 12,
+    "failedTopLevelTests": 9,
+    "reproducedAtOpsHead": true
+  },
+  "summary": {
+    "testFixtureOrExpectation": {
+      "topLevelTests": 8,
+      "nodes": 11
+    },
+    "businessImplementationGap": {
+      "topLevelTests": 1,
+      "nodes": 1
+    },
+    "contractDefect": {
+      "topLevelTests": 0,
+      "nodes": 0
+    }
+  },
+  "verdicts": [
+    {
+      "package": "backend/modules/business/bizscope",
+      "tests": [
+        "TestBizScopeDeleteRejectsNonCMDBReferences",
+        "TestBizScopeDeleteIgnoresSoftDeletedReferences"
+      ],
+      "failedNodes": 5,
+      "classification": "test-fixture",
+      "rootCause": "Tests call NewService(db) without ServiceDependencies, so CMDB capability stubs return business.cmdb.capability.notConfigured before reference counting.",
+      "evidence": [
+        "backend/modules/business/bizscope/bizscope_service_test.go:404",
+        "backend/modules/business/bizscope/bizscope_service_test.go:440",
+        "backend/modules/business/bizscope/bizscope_service_test.go:286",
+        "backend/modules/business/bizscope/bizscope_service.go:307",
+        "backend/modules/business/bizscope/bizscope_service.go:315",
+        "backend/modules/business/bizscope/bizscope_service.go:476-517"
+      ],
+      "recommendedFix": "Use the existing newBizScopeServiceWithCMDB helper in both tests.",
+      "policyImpact": "none",
+      "owner": "ops-test"
+    },
+    {
+      "package": "backend/modules/business/cmdb/host",
+      "tests": [
+        "TestHostStateTransitionsUseCompatibilityProjectionAndCAS"
+      ],
+      "failedNodes": 1,
+      "classification": "business-implementation",
+      "rootCause": "Host rows are created with state_version 0 and 0 means 'do not check', so a client cannot CAS against a freshly created host; the stale retire falls through to the lifecycle guard and returns cmdbhost.state.invalid instead of cmdbhost.state.stale.",
+      "evidence": [
+        "backend/modules/business/cmdb/host/host_model.go:26",
+        "backend/modules/business/cmdb/host/host_service.go:161-182",
+        "backend/modules/business/cmdb/host/host_state.go:52",
+        "backend/modules/business/cmdb/host/host_state.go:64-66",
+        "backend/modules/business/cmdb/host/host_state.go:104-109",
+        "pantheon-ops/docs/designs/BUSINESS_FUNCTIONAL_DESIGN.md:84"
+      ],
+      "recommendedFix": "Initialize state_version=1 on create (or declare 0 invalid) so the contract's optimistic lock is usable from creation; keep the test unchanged.",
+      "policyImpact": "none",
+      "owner": "ops-business"
+    },
+    {
+      "package": "backend/modules/business/deploy",
+      "tests": [
+        "TestMarkHostResultDefersTerminalTaskUntilActiveAttemptFinishes"
+      ],
+      "failedNodes": 1,
+      "classification": "test-fixture",
+      "rootCause": "biz_deploy_task_host rows and leases are created in the start claim, not in CreateTask; the test reads the row right after CreateTask.",
+      "evidence": [
+        "backend/modules/business/deploy/deploy_service.go:464-506",
+        "backend/modules/business/deploy/deploy_service.go:1176-1198",
+        "backend/modules/business/deploy/deploy_service.go:1202-1225",
+        "backend/modules/business/deploy/deploy_reliability_test.go:55"
+      ],
+      "recommendedFix": "Start the task (or seed host/attempt rows) before asserting the deferred terminal status.",
+      "policyImpact": "none",
+      "owner": "ops-test"
+    },
+    {
+      "package": "backend/modules/business/deploy",
+      "tests": [
+        "TestStartDeployTaskPersistsCanonicalSSHRunnerErrors",
+        "TestDeployTemplateTaskSSHExecutorFailsOnScriptPrecheck"
+      ],
+      "failedNodes": 2,
+      "classification": "test-expectation",
+      "rootCause": "Dispatch errors are returned from StartTask and the contract lists business.deploy.task.sshConnectFailed as a key start error; both tests still assert err == nil and then inspect persisted state.",
+      "evidence": [
+        "backend/modules/business/deploy/deploy_service.go:1106-1108",
+        "pantheon-ops/docs/designs/BUSINESS_DEPLOY_MODULE_DESIGN.md:468-491",
+        "backend/modules/business/deploy/deploy_service_test.go:1073-1085",
+        "backend/modules/business/deploy/deploy_service_test.go:2265-2269"
+      ],
+      "recommendedFix": "Assert the canonical returned error, then verify persisted host failure, precheck-only scripts and step_failed trace.",
+      "policyImpact": "none",
+      "owner": "ops-test"
+    },
+    {
+      "package": "backend/modules/business/deploy",
+      "tests": [
+        "TestDeleteDeployTaskReconcilesStaleRunningTask"
+      ],
+      "failedNodes": 1,
+      "classification": "test-fixture",
+      "rootCause": "Start claim acquires a live host lease; stale-task reconciliation requires zero active attempts and zero unexpired leases. The test only ages deploy_task.updated_at, so the running-state delete guard correctly rejects it.",
+      "evidence": [
+        "backend/modules/business/deploy/deploy_service.go:1006-1029",
+        "backend/modules/business/deploy/deploy_service.go:1202-1205",
+        "backend/modules/business/deploy/deploy_service_test.go:2968-2973"
+      ],
+      "recommendedFix": "Expire (or remove) attempts and host leases in the fixture before asserting reconcile-and-delete.",
+      "policyImpact": "none",
+      "owner": "ops-test"
+    },
+    {
+      "package": "backend/modules/business/observability",
+      "tests": [
+        "TestDatasourceDefaultCanMoveAndClear",
+        "TestDatasourceQueriesLokiAndTempo"
+      ],
+      "failedNodes": 2,
+      "classification": "test-fixture-vs-policy",
+      "rootCause": "The datasource service validates URLs with ssrf.DefaultValidator and its business port allowlist; fixtures use 127.0.0.1:1 and an httptest random port, so validation rejects them.",
+      "evidence": [
+        "backend/modules/business/observability/datasource_service.go:30-34",
+        "backend/modules/business/observability/datasource_service.go:137-143",
+        "backend/modules/business/observability/datasource_service.go:430-433",
+        "backend/modules/business/observability/datasource_service_test.go:20-21",
+        "backend/modules/business/observability/datasource_service_test.go:134"
+      ],
+      "recommendedFix": "Inject a validator that allows the loopback test endpoint; do not widen production SSRF ports for tests. Register 'should datasource URLs allow configurable internal ports/private addresses' as a maintainer policy decision.",
+      "policyImpact": "must-not-relax",
+      "owner": "ops-test"
+    }
+  ],
+  "opsFixQueue": {
+    "testSide": 8,
+    "businessSide": 1,
+    "policyDecision": 1,
+    "note": "Fix and re-verification belong to an independent Ops task with isolated MySQL/Redis; this round keeps the Ops main worktree and lock unchanged."
+  }
+}

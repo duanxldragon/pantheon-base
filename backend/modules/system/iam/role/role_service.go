@@ -108,6 +108,7 @@ func (s *RoleService) ListRoles(query *RoleListQuery) (*RoleListPageResp, error)
 			Column: clause.Column{Name: sortColumn},
 			Desc:   sortDesc,
 		}).
+		Order(clause.OrderByColumn{Column: clause.Column{Name: "id"}, Desc: sortDesc}).
 		Offset(offset).
 		Limit(pageSize).
 		Find(&roles).Error; err != nil {

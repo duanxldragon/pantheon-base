@@ -30,3 +30,24 @@
 
 - Hosted checks and the final `Release Gate Summary` are commit-specific and must be re-read after merge.
 - Consumer validation must run against the published tag, not the current Base branch or the dirty primary Ops worktree.
+
+## Machine Readable
+
+```json
+{
+  "taskId": "2026-09-02-foundation-release-v0-10-26-and-ops-sync",
+  "verdict": "approved with documented P2 follow-up",
+  "verdictRationale": "The mechanical review is 'CLEAR for the branch changes after the resolved package-identity finding' and the architecture review 'CLEAR with release-gate stop conditions', while the WATCH item documents the follow-up: release and consumer gates 'remain intentionally pending until this PR merges', the exact final `main` commit has a successful `Release Gate Summary`, and Ops validates the immutable artifact.",
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-09-02-foundation-release-v0-10-26-and-ops-sync/manifest.json",
+    "evidence": ".harness/evidence/2026-09-02-foundation-release-v0-10-26-and-ops-sync/commands.json",
+    "reviewFile": ".harness/evidence/2026-09-02-foundation-release-v0-10-26-and-ops-sync/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".harness/tasks/2026-09-02-foundation-release-v0-10-26-and-ops-sync/manifest.json"
+    ]
+  }
+}
+```
+
+> This block was backfilled on 2026-11-04 during the archive-coverage repair. It restates the verdict already written above in machine-readable form and links the artifacts that existed for this task; no conclusion, finding or verification claim was added, removed or reworded. The prose remains authoritative.

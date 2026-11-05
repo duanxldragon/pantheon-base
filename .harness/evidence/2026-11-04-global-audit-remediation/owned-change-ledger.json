@@ -1,0 +1,364 @@
+{
+  "baselineHead": "525506035b3a843f85b984beb46866c1329cd964",
+  "baselineStatusCount": 214,
+  "changedExistingFiles": [
+    {
+      "path": "docs/designs/NOTICE_CENTER_API_CONTRACT.md",
+      "before": "14c3f2efefcd9f8cbc74ddd73e92d84e620d0eee589e661210b0357f4d020c9d",
+      "after": "c8be16a1a6e9789e7b5b41c0154d2d12d5d27b1ab52d54f13e86732e145f17c9"
+    },
+    {
+      "path": "docs/designs/REPORT_CENTER_API_CONTRACT.en.md",
+      "before": "b7b55d4712c26de60824ad3153258252ce33c3e0576040f280b000f7b5dc72d1",
+      "after": "6ea2db2f70aa006a19baa5c6597553aa495478a2caaaff415f2a508306279162"
+    },
+    {
+      "path": "docs/designs/REPORT_CENTER_API_CONTRACT.md",
+      "before": "0a23f5dc019e2638230ff062a458400fd26ae9a5468ee9b2c0a6ef2693642254",
+      "after": "70145cfbff0c614991dea1dbf837a0b9031009a2e44100e0f73ea857e31a8cd9"
+    },
+    {
+      "path": "docs/designs/REPORT_CENTER_TEST_PLAN.en.md",
+      "before": "2a0ea282534bf3b7df0ec295918c4b76f8a4c44a09b7eaf68ef00c7800f203da",
+      "after": "6f74983258e473c006171716ea81db12e80d56771075b454057f4144180bce86"
+    },
+    {
+      "path": "docs/designs/REPORT_CENTER_TEST_PLAN.md",
+      "before": "e7ca6fed06f9e3524a87655ba4bdc0ec37c135fa29d2978618629b1703e0dc75",
+      "after": "9716a283b99e06ca111c3bc2b161d990fa12d29fc8a832d409d6038905db843d"
+    },
+    {
+      "path": "docs/designs/SCHEDULER_CENTER_DB_DESIGN.md",
+      "before": "32ada5a47a3e0b65032ea72625559c21d95ca5df10cfb539eb439150591abac1",
+      "after": "370fc09b4ed9b956b0956835fee776269f8bcb7d53bd527971dfcc4e3679218c"
+    },
+    {
+      "path": "docs/reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-11-04_ASSETS.md",
+      "before": "59221888a2c5b89ea539fff72aa04f7dbae7d4a1b3ae35996e0de4fb15602526",
+      "after": "b1735d3a1647007ed21c26fe29e33cc003966e712d76f8e0b113dd5828acc4e3"
+    },
+    {
+      "path": "docs/reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-11-04_FULL.md",
+      "before": "33bfb8d8ca0b461dabfeab1209c613b9cd464521ab49fb9135fed96122d2bed2",
+      "after": "52edf06ebe581e829b5c914dae8bf8b48c6f1dea6ce282faa22380153db33380"
+    },
+    {
+      "path": ".github/workflows/security.yml",
+      "before": "8a01f5ad79bc45dd494ec772c9a4f50d14f8284f80214b0e51ff4cceb438419e",
+      "after": "1552c817c43e7c1a5561e6b22b39a4878a8eb4f23f93c9c9624810eb31484f3f"
+    },
+    {
+      "path": ".harness/STATUS.md",
+      "before": "e1e93999d6817869b686a5b844fc0cc5ba3a91402f041fd28dc420cf916080eb",
+      "after": "c0a16cdede7fa255342440fec839c90181fb8782dde9b6329f7098af149de1c0"
+    },
+    {
+      "path": "DESIGN.en.md",
+      "before": "46caf110f36acfce9321e6079f84c2b28767bbf8997f209d9b4776bf9d1d3eba",
+      "after": "9feb31a0cef18c274b97423df16fb772f85a28e20e6f273b2515d7bb4d1b0020"
+    },
+    {
+      "path": "DESIGN.md",
+      "before": "beb746302c1695ee09b780e7164185ebcb8126a3dcc1890af78c205c0a9e869c",
+      "after": "4fbc598a76c39415b5c3d01a66b775902f0d9c42332003f24d2eb8df8d002e15"
+    },
+    {
+      "path": "backend/modules/auth/login/login_handler.go",
+      "before": "f56af895fdfac73a8c6edf79053355b2f991d93d78ce3e11c8e30ca15b442b81",
+      "after": "749e497662fb18a9057a2d543d2be6194655634ced8980f49b646a313443be67"
+    },
+    {
+      "path": "backend/modules/auth/session/session_service.go",
+      "before": "d0f6cefe17febb044403f9c1220f9a883ea483a0c865e2f6baeac1ee6d565af2",
+      "after": "0df8cd0221c5f426bf5ce60557a5e8afdfe56f071028411e227adb0d460cdb1e"
+    },
+    {
+      "path": "backend/modules/system/system_modules_tenant_wiring_test.go",
+      "before": "61d9089cd2d9d6b45dfa1329655b176535780408bf3c3f429bf7acf532034d83",
+      "after": "0a79d1871dc783cf389c1591874fc92b2a41769251ff21918b5d8fb8acd95908"
+    },
+    {
+      "path": "backend/pkg/authtoken/token.go",
+      "before": "2ba76f33885bd42b22ba9d37247dec092e407af281d58530cdb9e00ce715021e",
+      "after": "028f5e94d06113cb5f13294f3d484352b13a9118dfd31b8e5dd28a7a5919baf0"
+    },
+    {
+      "path": "backend/pkg/security/ssrf/README.md",
+      "before": "5417097c2d0ba8de1caddc3a53ca49fc15c227465cf074c28e073ca103f11036",
+      "after": "5251c6f629965b0df75c65ad605d12a760096b33fc1ed90ed64fd81c339cad8e"
+    },
+    {
+      "path": "backend/pkg/security/ssrf/validator.go",
+      "before": "83424fe85120f6eaac0891654a4c39d5311c9e922124b6ec54bc46719f2da151",
+      "after": "0e1f60fc86f99004911889432707cd16272bfe3a729d564569be39eecaff6ad3"
+    },
+    {
+      "path": "backend/pkg/testredis/redis.go",
+      "before": "7202273586ac15697d239f0c716707cc0aaf9f2695dee4e9a8b5fd95a22a95c5",
+      "after": "c92402abfeaab225e5b6015fee429b69a3aa235c3fa675181a7a63c392ec0cc6"
+    },
+    {
+      "path": "backend/pkg/testredis/redis_test.go",
+      "before": "8389bf0dd217a921bd7078e7fac2b0359ea27a51b87e800d3b9e2fe14b9eb928",
+      "after": "7a5749265bdec0e087ed94da2c6b9f4428a55f7d32ae873a63becadc0678c029"
+    },
+    {
+      "path": "docs/DEV_DB_INIT_GUIDE.md",
+      "before": "68ea3d9a14f9c4068798cd98c33be8f43bd4d96b1bc3f6868da08df94cffd462",
+      "after": "ab6981aa2fefb3a6947dc78cd36f271a0158c45f5afb118decd26a9c646d2aa3"
+    },
+    {
+      "path": "docs/README.en.md",
+      "before": "c78d2723edc91cebed321daa76e45621c7940bb9a2a2a65717ad39eb88beff7e",
+      "after": "e28b981daa0f339920d3f417f8def67c84f1fa4f3c67c4178635fe3174777752"
+    },
+    {
+      "path": "docs/README.md",
+      "before": "3db923eeba81c1cbf8464e8f3798d03a3461dd3e6c21f41b9fb2b57ddb96af3a",
+      "after": "f15e7f7b4fb7380c8b42c579b3598150787960051226873d15174941dd74b960"
+    },
+    {
+      "path": "docs/VERSION_MANAGEMENT_GUIDE.md",
+      "before": "1c099b0716af98f7fab86aad4364eb1687e289a001b99e3a259f3e415cf5396b",
+      "after": "1fa6cc07deb67f6bf80ae106f0422f3cf785d1465971e67c21e34e4df2c8e05a"
+    },
+    {
+      "path": "docs/contracts/SYSTEM_AUTH_CONTRACT.en.md",
+      "before": "947dde43c83f56b0e68f1883135a8987e7ce08198752d93259d3daea3dd295f8",
+      "after": "f5235635fb03e3bc802ec1f3957b3070816655f2ec378bd7d9590c68fa3a4f6d"
+    },
+    {
+      "path": "docs/contracts/SYSTEM_AUTH_CONTRACT.md",
+      "before": "02f4b8ee84785e0fc83a05c7db9546d382b58148a9c42d89b35f1916a3d35c89",
+      "after": "197e196a02b0cde1c1ddaf439a66692f66e27e4f7b87a7c3d5c26bbc15b48216"
+    },
+    {
+      "path": "docs/contracts/SYSTEM_IAM_CONTRACT.en.md",
+      "before": "74ab736ba6941279846895293b6355054dd1c9772338cd09c33c060c8f651772",
+      "after": "219043a1aa0204302a4ccfbc4adeddf4001f2736f7806dfe1830d28ff9443148"
+    },
+    {
+      "path": "docs/contracts/SYSTEM_IAM_CONTRACT.md",
+      "before": "5f9bde9cc51e4fdf77f7c7d00a10c4b9afcf612fd5dd014ce510811b144cab6e",
+      "after": "8db2b7173cd1c7d3c0f9e67edf82cd16ea26790d977d1f9467b3de3c77e8054d"
+    },
+    {
+      "path": "docs/designs/ALERT_MONITORING_CENTER_DESIGN.en.md",
+      "before": "dff0ca04802a70bf534391912c049f87c04789a0e7c10a72c8b9c6929afa7393",
+      "after": "c4e59577091213a69137aa48ecec31ff78805f3250436269270f2ad890744873"
+    },
+    {
+      "path": "docs/designs/APPROVAL_WORKFLOW_DESIGN.en.md",
+      "before": "3743a1637ba5204a25679c1b754dfa7f0e4cbadc42168fe260c9a8d532d24449",
+      "after": "79ab9ffc75476fb975c701746359e04a1ea1e8f4e1ec644ed5f4fb0753cb3d79"
+    },
+    {
+      "path": "docs/designs/APPROVAL_WORKFLOW_DESIGN.md",
+      "before": "f19e0cf116d09ccca95077fa8d95d49076e56e466b2c4e8dafdba6e3f30c46bb",
+      "after": "6c008522017152207b633b57a75f97fdd917b81dfe5850c4e927ef6ddedb4a9d"
+    },
+    {
+      "path": "docs/designs/AUTH_MODULE_DESIGN.md",
+      "before": "f7cf2e1da9fb35e69a6acbb499234ba62b76e81d5dd3f3c2208371325329409e",
+      "after": "c34ad1e48fb8b14f9a2702141cdafbdcfbcf08e205dd3289102c235eb41b4936"
+    },
+    {
+      "path": "docs/designs/BACKEND.en.md",
+      "before": "6e05f1ea3c872b9b296cfbea1e6a011868c3c96719d3b7d46e21283836b50eea",
+      "after": "e1ca692251e91e3e232f8cb46c45ecdc3f77d28422f943503dae108871407b95"
+    },
+    {
+      "path": "docs/designs/BACKEND.md",
+      "before": "991b6b324ef074e9d482b5f2d33b3d081c2df04a0274c5eabccb8a43338498a6",
+      "after": "a3e64535783ed617d8c6fa16bdaf234b327becd173f71233c42f5f8beec517e0"
+    },
+    {
+      "path": "docs/designs/DARK_MODE_DESIGN.en.md",
+      "before": "28f7a2e5caacd6bc33d4e814ec905e9f2b2248683ca8fa1e42f7c7beaa903b32",
+      "after": "0637cb4fa34960152a51fb6dd72c7c2ab9f1b8c458e421eaf1e9e4e7f017c448"
+    },
+    {
+      "path": "docs/designs/DATA_PERMISSION_HOOK.en.md",
+      "before": "84a2bdb29098685ff9353e3cfb1d97adc5bede7d6da4d701209755b1dc1ce50a",
+      "after": "872ac675259ae4f58db964b62fe64700ca04323042e8df450f6dc32e33ed4e59"
+    },
+    {
+      "path": "docs/designs/DATA_PERMISSION_HOOK.md",
+      "before": "86f068c4a96f1f52fc90223254547860faece4dbd26a844e4e51e0ce78f13851",
+      "after": "98be2273ad3debbff47a8c24840363462872949ec408648755290656dcbe384f"
+    },
+    {
+      "path": "docs/designs/DICT_AND_SETTING_DESIGN.en.md",
+      "before": "4ca8709d2025875166678665a3fb7c3d9171c9aa51f14eddc299ab63943f349d",
+      "after": "f19d0b5a42aae79cb71e49907a78bcce2aff6c77a50b4350d733b08e53873854"
+    },
+    {
+      "path": "docs/designs/DICT_AND_SETTING_DESIGN.md",
+      "before": "9089e7c9545c7ca87ed7cf45b184a3c17e4194f69fa5f46956fafdeec7293d6c",
+      "after": "5ce6442962c51f6466732c1331d3dbd98c91f1ecc3c419a8a94e2f9b7c794f55"
+    },
+    {
+      "path": "docs/designs/FOUNDATION_RELEASE_MODEL.en.md",
+      "before": "d7568d12ef8060df5b5795b7f1288e79f45f4f0461126a4d54e9869849cac45b",
+      "after": "a43a67b26579ec77ac9f3864156640e36666e6ea74ebc513e29e76d8491afd57"
+    },
+    {
+      "path": "docs/designs/FOUNDATION_RELEASE_MODEL.md",
+      "before": "02e837311cd36cca3fe21135f19af217820bc800dce271bb8cbfba94613172c3",
+      "after": "bfa495115e81f62cdbf33a7983960e4eb41f806c0f6560b195dedb86b8006bca"
+    },
+    {
+      "path": "docs/designs/FRONTEND.en.md",
+      "before": "3edd522777fdce369124f7ef7a24a751d742d823887ad60cd1df69d125d07d41",
+      "after": "9b6bfc65c9cfa8e38f9c2e3f6d1b220dc5396f6982952d286e3fcfc7e1d951d3"
+    },
+    {
+      "path": "docs/designs/FRONTEND.md",
+      "before": "e59f855cbd1a45de8e64baed4fc6c51bff3b1a468c368a55bbbcabcd12205f11",
+      "after": "ba4e04429a3cdaf01ae24ec9a1d4474f1ba1c2847e4988b67e78c89a61fc606b"
+    },
+    {
+      "path": "docs/designs/FRONTEND_COMPONENT_PLAN.en.md",
+      "before": "9973376f2db11e1466130537df3397e71478f076246e9a0e68804534f7e26f4f",
+      "after": "93d0c931e51d1e51cb97f18910c0cf483357307ba8c8a0e531005bcec2992a98"
+    },
+    {
+      "path": "docs/designs/FRONTEND_COMPONENT_PLAN.md",
+      "before": "233c5b22a3b4018303b9f01a8e4444337892d94fd5901644c7aa40992cf137b6",
+      "after": "61f68ad00baddf76902aeb5d6eb4ded2e5ea16d9cbfccb2338866b1f8aa8e512"
+    },
+    {
+      "path": "docs/designs/FRONTEND_PAGE_TEMPLATES.en.md",
+      "before": "8aa25974294a7c569385515ecd1e7eb6e6c169d603e45bef9a26a1b0940fd75e",
+      "after": "49df9176db58a79ff1ba154f88ffd14f1261a9bc0075fd68cf8cf3dd41f0aba0"
+    },
+    {
+      "path": "docs/designs/FRONTEND_PAGE_TEMPLATES.md",
+      "before": "f6753ae896c76e0ac4bf862b907cbe59902e8c4891ff87cc76b6a47589f9ff26",
+      "after": "3a105df8a4e3a6603fd3b4b7ef9e0089f7701f00167763cdf2266294292e7ede"
+    },
+    {
+      "path": "docs/designs/GENERATOR_MODULE_DESIGN.md",
+      "before": "433865589af7e177663ad6c7999aed4f0260ff249972c40946c8520897a80ab3",
+      "after": "bbc89aa030ad0781431fd4060b5d6a4ec7a9c23d59a28b58829831b1453af544"
+    },
+    {
+      "path": "docs/designs/MODULE_CONTRACT.en.md",
+      "before": "f27575bc78fec4f7d9af18493bd13a5d7fcd61f30c5bd14e9607a82f2eadc19f",
+      "after": "adc1e02b5015b859f8c708f7fbc0c2035d643ed1c3598cf48ba1fdaf5a2844ea"
+    },
+    {
+      "path": "docs/designs/MODULE_CONTRACT.md",
+      "before": "4a0ec267d2d44ad3dfcbad69177b61e3fc4430374c3465f293ab7c08f96fc895",
+      "after": "75ad0bdb9a3578b631292fec0d251b5c57ea0af48012a79d078a20c7821de786"
+    },
+    {
+      "path": "docs/designs/P2_SCALE_ROADMAP.md",
+      "before": "96cf6984cc5849641e6bd03fb468c4cf42b9947757534822e5b02b447df633c8",
+      "after": "16f1f73dcee8e69fc4b8756fa1af65abcd4e495b3758ee9a9c756a8bf5879df7"
+    },
+    {
+      "path": "docs/designs/PANTHEON_BASE_ARCHITECTURE_OVERVIEW.md",
+      "before": "b758eb551edfcf3e292cf95e6103c1439fd2ab6aa9cfdb879403da6f5bc70b5e",
+      "after": "1ddfabd73f8c0929c75a70404506e86ad540fbd9f751916e55db4445c055ad37"
+    },
+    {
+      "path": "docs/designs/PERMISSION_MENU_DECOUPLING.md",
+      "before": "d0246f50e9a25d14b61120d826cbfaa66e4a6a3483f004c520fec424e8233d6d",
+      "after": "30475b4072925c24c74d2878f37ae6e42829275110d85c05acc62d52748529e2"
+    },
+    {
+      "path": "docs/designs/PLATFORM_DASHBOARD_DESIGN.md",
+      "before": "5cd358990880deb31e7d92c44b984448966a9796e6fb32d6a2bfedf94e5892d2",
+      "after": "e734c1237e3c01df6b3f19c005b98f7dff58cb47caf8d04983f647ee5b44c88c"
+    },
+    {
+      "path": "docs/designs/QUALITY_AND_SECURITY_STRATEGY.en.md",
+      "before": "ec50fb3cf991f14ff2cdcccaad1b7f6f15f29dd7de43105393243b808cf7de9d",
+      "after": "612aee6a2ed5ecd026c9c4e1f1a4417ef1556b4bd1a6e3e01a7869f1937f2d7e"
+    },
+    {
+      "path": "docs/designs/QUALITY_AND_SECURITY_STRATEGY.md",
+      "before": "cd4c1e3b1c9ba583979cbcc7c6cf400ac3fdd56b33e1311f98e40cd73c9bb8bd",
+      "after": "3913639b024e782aa605c966a8e287e20b4904f7f2a28e26f718197c6e2711f5"
+    },
+    {
+      "path": "docs/designs/README.md",
+      "before": "a202d12e45679999f9eecd443a54408ab415371c494c36742b507978fd8e9f4e",
+      "after": "d4a5c5a04775bc22d4ba5ab63c46047b122c34367cb3f3d1f71b5489c33f84a4"
+    },
+    {
+      "path": "docs/designs/REPORT_CENTER_DESIGN.en.md",
+      "before": "c6d3f5d5a5d3e01c9c582e58c8e8783070a13d03e78adf71036dcfa977dffc72",
+      "after": "6ea07fb86b8fa9a42fd0ecdc55fdd9c4a0f057802a6590e431d864bf16de1793"
+    },
+    {
+      "path": "docs/designs/REPORT_CENTER_DESIGN.md",
+      "before": "4b59c3ecdfa5d3febc3b1c25361fb966544792d1a7ba2fbe4f6d39a97c7db414",
+      "after": "6a7ec1855767127cfed2e23c0c4631f958e89158f91f834e4aa6b66ad290b9d4"
+    },
+    {
+      "path": "docs/designs/REPOSITORY_LAYOUT.en.md",
+      "before": "240a194f957f9d92e9a3e6cd3a763f9d7bd2412c2ae5e4b6b19acb2b51804306",
+      "after": "f40fcbde8a3b5bdf7bcd848833ec3b00b2a9d59ddaa995298c6c0f071d4b48fa"
+    },
+    {
+      "path": "docs/designs/REPOSITORY_LAYOUT.md",
+      "before": "7d8c8998040db82cc0a901c79f48288a0948c5f4b77cd2aad66b2a45944f1ab9",
+      "after": "de9da97846b610c84edaf8ee6a111432fcc2facc151c362eba4403bcb2d2e803"
+    },
+    {
+      "path": "docs/designs/SCHEDULER_CENTER_DESIGN.en.md",
+      "before": "031d1a8de3fa720911f4ba4f6a6ad1888b7a548b8f48bc7210abc416e187f232",
+      "after": "973ca0f9aa625bf5161df9318af0b5f6183be69cff255a39ab8231f320da5e36"
+    },
+    {
+      "path": "docs/designs/SCHEDULER_CENTER_DESIGN.md",
+      "before": "446823bfb613cd9e8d99762ab99a39d7bb9d83f0e32fbd07c0c9bab0739bb76b",
+      "after": "b22b15da0cceb3cd19f0c41e915d759affec978f4ce8f152c7ac768aebf041a1"
+    },
+    {
+      "path": "docs/designs/TASK_CENTER_DESIGN.en.md",
+      "before": "fd5017477703c6161afbc796e5a489c7d4429445c1b702f5a784963db9537322",
+      "after": "d14b4c549a987a7cfcab2a3a11476925eec005cef67427aaf2ddad69547ca470"
+    },
+    {
+      "path": "docs/designs/TENANT_READY_SINGLE_TENANT_DESIGN.en.md",
+      "before": "b0fd8b9595b5540d74cff5087899d1b80c05b8c88fb877650e219043e2dbde6d",
+      "after": "f13a32c61967e3917dff6abcfaf906efcd88ff91750415345b94c94c9f7abefa"
+    },
+    {
+      "path": "docs/designs/TENANT_READY_SINGLE_TENANT_DESIGN.md",
+      "before": "414e46398c21132177ba31ac28d6da5508e922a7b9219e2f12e7e5574d636a07",
+      "after": "a951c1448c75baa1c7e539b72ae25286330226efa7393c14844984d04b422eed"
+    },
+    {
+      "path": "docs/harness/PANTHEON_BASE_DELIVERY_WORKFLOW.en.md",
+      "before": "e24fc4acdc801aee1c6b360d061024a81cdb1adb4b68e8bcfc01d036d4a34ed5",
+      "after": "7ca7bc730db1ef99465c3c8826224b142ed705c8d3d4b8f3ee4d35bd528a57f7"
+    },
+    {
+      "path": "docs/harness/PANTHEON_BASE_DELIVERY_WORKFLOW.md",
+      "before": "cf51c677b5b057dd0509f5f25233b88c92ca07f19aeacdc0526732f6d0bcc6a4",
+      "after": "1e209520a87e5f0b70425a2deb77423dd170f2c355b7affe84cfe4a9566f15bf"
+    },
+    {
+      "path": "docs/harness/VERIFICATION_EVIDENCE_SPEC.en.md",
+      "before": "718a7ba4b2c4684df9c0797f3236e383453bc7958520525c613bdc044784d7c3",
+      "after": "da3f5c8b40a2e8243db196711e17656dcbc17cf7c3074e1fff6bfe01c15a7689"
+    },
+    {
+      "path": "docs/harness/VERIFICATION_EVIDENCE_SPEC.md",
+      "before": "a949c224e9fcdaee907b1e57645d276be5b998b5cfceb87842d1c7709a23541f",
+      "after": "d25900f367874a2f07d4ff20ece212d622594c0ea57653a6af4b0dbe5580ab84"
+    },
+    {
+      "path": "docs/testing-quick-start.md",
+      "before": "3438a811962e7acbefa942a40728b181e92061aef74c8eee04ea8c3d6fa8e346",
+      "after": "66b38f22d49a199f20105ff51db33860239359f0bdcc64926e8168e4388f7c74"
+    }
+  ],
+  "removedExistingFiles": [],
+  "changedDocumentCount": 63,
+  "note": "These are remediation changes relative to the saved pre-remediation tree, not revised original audit inventory counts."
+}

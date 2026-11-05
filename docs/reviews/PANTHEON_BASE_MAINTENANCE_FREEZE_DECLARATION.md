@@ -3,7 +3,7 @@ title: Pantheon Base 维护冻结宣告（待签）
 doc_type: Assessment
 layer: platform
 status: Draft
-updated_at: 2026-11-01
+updated_at: 2026-11-05
 linked_contracts:
   - docs/contracts/PLATFORM_CONTRACT.md
 ---
@@ -19,7 +19,15 @@ the frozen commit SHA is filled in, this document records an *intent*, not a sta
 
 ---
 
-## 1. 冻结对象
+## 当前执行状态（2026-11-05，优先于下文历史读数）
+
+维护者已授权完成现有功能、保留租户、提交/合并/发行与 Ops 消费；执行任务为 [2026-11-05-base-freeze-release](../harness/tasks/2026-11-05-base-freeze-release.task.md)。11 月 1 日以下各节读数保留作为准备历史，不能作为当前验收结果。
+
+- 原 10 月 31 日整改已合并至本地 main `525506035b3a843f85b984beb46866c1329cd964`（#488），旧审计分支的树与 main 一致。
+- 当前候选分支 `feat/base-freeze-2026-11-05`，开发版本 `0.18.3`；Nov 3/4 现有修复纳入候选，本轮证据见 [summary](../../.harness/evidence/2026-11-05-base-freeze-release/summary.md)。最后正式发布仍为 v0.18.2。
+- 租户 V1 全部保留；现有功能、真实 DB/Redis、核心/租户/生成器烟测与独立评审是冻结验收范围。
+- 独立模型服务返回 503，GitHub API/CLI 网络被执行环境拒绝；没有 hosted CI、远程合并与正式发行证据，因此未签冻结，未更新 Ops 正式锁。
+## 1. 冻结对象（2026-11-01 历史准备）
 
 冻结必须指向**一个提交**，否则"冻结"没有主语。当前情况：
 

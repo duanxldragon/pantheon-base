@@ -1,0 +1,105 @@
+{
+ "system": {
+  "modulePasses": [
+   18,
+   9,
+   23,
+   5,
+   11,
+   4,
+   12,
+   4,
+   4,
+   18,
+   11
+  ],
+  "passed": 119,
+  "failed": 0,
+  "notes": "原 system-smoke 链在 forms 失败后停止；前7套通过，修复后单独跑齐后4套，组合完成11模块，未声称原单条命令 exit0"
+ },
+ "frontend": {
+  "files": 33,
+  "passed": 218,
+  "failed": 0
+ },
+ "backend": {
+  "testEvents": {
+   "pass": 1876,
+   "skip": 1
+  },
+  "packageEvents": {
+   "pass": 47,
+   "skip": 5
+  },
+  "testSkips": [
+   {
+    "package": "github.com/duanxldragon/pantheon-base/backend/pkg/upload",
+    "test": "TestServiceStoreUsesRealS3WhenConfigured"
+   }
+  ],
+  "notes": "pass 为包括子测试的测试节点；5 package skip 为没有测试的包"
+ },
+ "tenant": {
+  "passed": 21,
+  "failed": 0
+ },
+ "core": {
+  "passed": 27,
+  "skipped": 3
+ },
+ "platform": {
+  "exitCode": 0,
+  "suitePasses": [
+   97,
+   77
+  ],
+  "notes": "platform-smoke.log：97 passed (7.8m) 与 77 passed (3.5m)，exit 0（11:21 产物，同一工作树）；本轮未重跑"
+ },
+ "business": {
+  "exitCode": 0,
+  "suitePasses": [
+   1,
+   1,
+   1,
+   1,
+   1
+  ],
+  "notes": "generated / database-import / master-detail / many-to-many / auto-recycle 五套各 1 passed，exit 0；必须带 --proxy-target http://127.0.0.1:18080，否则自启 vite 代理到 8080 使整页 API 502"
+ },
+ "candidateVersion": "0.18.3",
+ "publishedVersion": "pantheon-base-v0.18.2",
+ "knownGaps": [
+  "独立 code-reviewer / architect 重试后仍 HTTP 503，未产生批准",
+  "真实 S3 provider 未配置：1 个集成用例跳过",
+  "npm audit 报 15 个 moderate（eslint/nyc/vite-plugin-istanbul/typescript-eslint 开发链，0 high/0 critical）；升级属依赖变更，未在本次候选处理",
+  "GitHub 远程 PR/CI/合并/正式 release 与 Ops 消费未完成",
+  "core 中 3 个生成模块用例在未激活模块的运行环境保持 skip；由真实生成模块浏览器/API CRUD 覆盖，不把 skip 当通过",
+  "smoke 套件自启 vite 默认代理 8080；后端非 8080 时需显式 --proxy-target"
+ ],
+ "generatedBrowserCrud": {
+  "passed": 1,
+  "failed": 0,
+  "notes": "真实生成模块浏览器 CRUD：必填校验2处、创建200、编辑预填、注入PUT500后错误可见且输入保留、重试200、删除确认、390px弹窗；PNG 5 张；模块随后被 smoke 清理 purge",
+  "artifacts": [
+   "generator-create-validation-1440.png",
+   "generator-create-1440.png",
+   "generator-update-error-1440.png",
+   "generator-list-1440.png",
+   "generator-create-390.png"
+  ]
+ },
+ "vulnerabilityScan": {
+  "govulncheckExit": 0,
+  "govulncheck": "No vulnerabilities found",
+  "npmAudit": {
+   "moderate": 15,
+   "high": 0,
+   "critical": 0,
+   "scope": "dev toolchain only"
+  },
+  "artifacts": [
+   "govulncheck.log",
+   "npm-audit.json"
+  ]
+ }
+}

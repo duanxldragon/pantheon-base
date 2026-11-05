@@ -1,5 +1,9 @@
 # Pantheon Base 文档索引
 
+当前功能收尾与发行：[任务拆解](./harness/tasks/2026-11-05-base-freeze-release.task.md) · [验收证据](../.harness/evidence/2026-11-05-base-freeze-release/summary.md)。v0.18.3 是未发布候选，租户V1保留；正式发行与Ops消费以成功门禁为准。
+
+当前全局审计基线：[完整审计](./reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-11-04_FULL.md) 与 [全量资产矩阵](./reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-11-04_ASSETS.md)。整改现态：[Harness整改计划](../.harness/tasks/2026-11-04-global-audit-remediation/plan.md)。旧同日报告保留历史，整改完成不等于已签署维护冻结。
+
 English version: [README.en.md](./README.en.md)
 
 本文是 `docs/` 的统一入口。
@@ -126,7 +130,7 @@ Shared skills live in `../../pantheon-harness/skills/`; recommended shared skill
 
 ### 4.4 测试与 Harness 指南
 
-- [测试体系优化快速启动](./testing-quick-start.md)
+- [核心测试与验证流程](./harness/PANTHEON_BASE_DELIVERY_WORKFLOW.md)
 - [测试使用指南](./testing-usage-guide.md)
 - [测试策略优化](./testing-strategy-optimization.md)
 - [测试实施报告](./testing-implementation-report.md)

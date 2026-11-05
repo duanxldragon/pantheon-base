@@ -1,0 +1,98 @@
+{
+  "taskId": "2026-11-05-base-freeze-release",
+  "updatedAt": "2026-11-05",
+  "authorization": "开发、文档、GitHub 提交合并、CI、发行和消费均已授权；租户保留",
+  "tasks": [
+    {
+      "id": "F0",
+      "title": "现有功能与已批准未完成项盘点",
+      "owner": "Generator",
+      "depends": [],
+      "criteria": "每项有合同、实现、测试/运行验收及当前缺口；租户 V1 全部保留",
+      "state": "completed"
+    },
+    {
+      "id": "F1",
+      "title": "认证、安全、租户闭环",
+      "owner": "Generator",
+      "depends": [
+        "F0"
+      ],
+      "criteria": "单次刷新、撤销/切租户并发、MFA、权限拒绝、compat/multi、初始化、成员/套餐/隔离均有实际验证",
+      "state": "local-verified"
+    },
+    {
+      "id": "F2",
+      "title": "IAM/组织/配置/i18n/审计/上传/导入导出",
+      "owner": "Generator",
+      "depends": [
+        "F0"
+      ],
+      "criteria": "已有行为缺陷修复，真实 DB/Redis 与 UI/API 主路径及负向路径通过",
+      "state": "local-verified-provider-gap"
+    },
+    {
+      "id": "F3",
+      "title": "lowcode/动态模块与平台壳层",
+      "owner": "Generator",
+      "depends": [
+        "F0"
+      ],
+      "criteria": "生成构建/注册闭环，分页候选完整性，受影响 UI 状态与渲染证据",
+      "state": "local-verified"
+    },
+    {
+      "id": "F4",
+      "title": "文档、分支与发行准备",
+      "owner": "Dispatcher",
+      "depends": [
+        "F0"
+      ],
+      "criteria": "受影响权威中英文文档一致；保留现有工作；相关分支差异有判定；按现行脚本准备新版本",
+      "state": "candidate-committed-ci-passed-evidence-sync"
+    },
+    {
+      "id": "F5",
+      "title": "最终候选验证与独立评审",
+      "owner": "Reviewer/QA",
+      "depends": [
+        "F1",
+        "F2",
+        "F3",
+        "F4"
+      ],
+      "criteria": "同一候选完整 race/FE/脚本/治理/runtime/security 门禁通过，无未处理阻断发现",
+      "state": "local-verified-independent-review-approved"
+    },
+    {
+      "id": "F6",
+      "title": "GitHub 提交、CI 与相关 PR 合并",
+      "owner": "Dispatcher",
+      "depends": [
+        "F5"
+      ],
+      "criteria": "相关 PR 提交并满足所有 CI/评审，主分支落入验证候选；不合并无关 PR",
+      "state": "draft-pr489-review-approved-final-push-ci-pending"
+    },
+    {
+      "id": "F7",
+      "title": "正式 foundation release",
+      "owner": "Dispatcher",
+      "depends": [
+        "F6"
+      ],
+      "criteria": "新版本/tag/artifact/checksum/manifest 一致，现行 release-gate 成功",
+      "state": "planned"
+    },
+    {
+      "id": "F8",
+      "title": "Ops 消费及兼容收口",
+      "owner": "Generator/Dispatcher",
+      "depends": [
+        "F7"
+      ],
+      "criteria": "正式 release overlay/lock 更新，已有 DB 修复合并，迁移链无冲突，完整 race/CI 通过",
+      "state": "planned"
+    }
+  ]
+}

@@ -38,3 +38,24 @@ No repeat error observed yet in this session; if the same
 "deps committed locally but not pushed to PR head" failure recurs, add a
 checker/smoke that diffs `go.mod` imports vs go.mod requires on release branches
 (gate-updated).
+
+## Machine Readable
+
+```json
+{
+  "taskId": "2026-09-09-oidc-deps-ci-repair",
+  "verdict": "blocked",
+  "verdictRationale": "Reviewer notes gate approval on CI ('Confirm CI ... is green on 3459678b before merge') and keep the 'Merge decision for PR #298 ... a human gate'; summary lists CI conclusions still in progress.",
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-09-09-oidc-deps-ci-repair/manifest.json",
+    "evidence": ".harness/evidence/2026-09-09-oidc-deps-ci-repair/commands.json",
+    "reviewFile": ".harness/evidence/2026-09-09-oidc-deps-ci-repair/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".harness/tasks/2026-09-09-oidc-deps-ci-repair/manifest.json"
+    ]
+  }
+}
+```
+
+> This block was backfilled on 2026-11-04 during the archive-coverage repair. It restates the verdict already written above in machine-readable form and links the artifacts that existed for this task; no conclusion, finding or verification claim was added, removed or reworded. The prose remains authoritative.

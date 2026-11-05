@@ -65,3 +65,24 @@
 ✅ **通过 - 可合并**
 
 所有变更符合预期，文档准确完整，无风险。
+
+## Machine Readable
+
+```json
+{
+  "taskId": "2026-09-04-readme-v011-final",
+  "verdict": "approved",
+  "verdictRationale": "'✅ 通过 - 可合并' for a pure README version-reference update; risk rated 极低 with no follow-up items.",
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-09-04-readme-v011-final/manifest.json",
+    "evidence": ".harness/evidence/2026-09-04-readme-v011-final/commands.json",
+    "reviewFile": ".harness/evidence/2026-09-04-readme-v011-final/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".harness/tasks/2026-09-04-readme-v011-final/manifest.json"
+    ]
+  }
+}
+```
+
+> This block was backfilled on 2026-11-04 during the archive-coverage repair. It restates the verdict already written above in machine-readable form and links the artifacts that existed for this task; no conclusion, finding or verification claim was added, removed or reworded. The prose remains authoritative.

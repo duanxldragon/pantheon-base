@@ -6,6 +6,15 @@ Pantheon Base 方法追踪记录。方法论本体位于 `pantheon-harness`。
 
 ---
 
+## [pantheon-base-v0.18.3] — Unreleased (2026-11-05 candidate)
+
+- Security: verified DNS addresses bound to actual HTTP dialing; atomic single-use refresh and conditional session lifecycle rotation; strict npm-audit failures propagated.
+- Existing-function closeout: system route groups/data scope, multi-page lookup candidates, generator formatting/build and governance regressions from the Nov 3/4 remediation.
+- Tenant V1 retained, including compat/multi, initialization, authorized membership/login/switching, system isolation, tenant operations and plan/quota display.
+- Migration chain includes foundation `000031_drop_permission_role_data_scope_policy`; production execution remains subject to its preflight/runbook.
+- Candidate validation and remaining remote/review/runtime conditions are recorded in `.harness/evidence/2026-11-05-base-freeze-release/`. No publication or Ops lock update is implied.
+
+See [candidate release notes](./docs/release-notes/RELEASE_NOTES_v0.18.3.md).
 ## [pantheon-base-v0.18.2] — 2026-10-31 (sensor and gate fixes reach the consumer)
 
 > A patch on `release/0.18`. Two consumer-visible shared files change, both without behaviour change on

@@ -1,0 +1,52 @@
+{
+  "taskId": "2026-11-03-audit-p2-data-scope-automigrate",
+  "repo": "pantheon-base",
+  "executedAt": "2026-11-04",
+  "agent": { "tool": "claude-code" },
+  "runtimeSensitive": false,
+  "runtimeGap": "形状断言是静态三方比对（Go 模型 / 启动兜底 DDL / 迁移链 SQL），不是真实 MySQL 上的 information_schema 读数：本机没有 testmysql 实例，`pkg/database` 的迁移往返用例在 -short 下不执行。",
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-11-03-audit-p2-data-scope-automigrate/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-11-03-audit-p2-data-scope-automigrate/",
+    "reviewFile": ".harness/evidence/2026-11-03-audit-p2-data-scope-automigrate/review.md",
+    "changeRef": "none",
+    "planRefs": ["docs/reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-11-03.md"]
+  },
+  "commands": [
+    {
+      "command": "grep -c 'AutoMigrate' backend/internal/middleware/data_scope_middleware.go",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "0 命中：AutoMigrate 分支与其说明性提及都已消失，文件里不再出现该调用。"
+    },
+    {
+      "command": "go test ./internal/middleware/ -run 'DataScopeModelMatches|DataScopeUniqueKey|MigrateDataScopePolicyDoesNot' -count=1",
+      "cwd": "pantheon-base/backend",
+      "status": "passed",
+      "details": "ok 0.043s。三个断言：模型字段 ↔ 迁移链 ↔ 兜底 DDL 逐列对齐；唯一键必须是 (tenant_id, role_key)；MigrateDataScopePolicy 函数体内不得再出现 AutoMigrate 且必须使用 dataScopePolicyDDL。"
+    },
+    {
+      "command": "go build ./... && go vet ./...",
+      "cwd": "pantheon-base/backend",
+      "status": "passed",
+      "details": "BUILD_EXIT=0 / VET_EXIT=0。"
+    },
+    {
+      "command": "gofmt -l internal/middleware/data_scope_middleware.go internal/middleware/data_scope_schema_test.go",
+      "cwd": "pantheon-base/backend",
+      "status": "passed",
+      "details": "无输出。"
+    },
+    {
+      "command": "go test ./... -short -count=1",
+      "cwd": "pantheon-base/backend",
+      "status": "passed",
+      "details": "GOTEST_EXIT=0；47 包 ok / 0 FAIL，data_scope 相关既有用例（failclosed / tenant / migrate）全部保留且通过。"
+    }
+  ],
+  "knownGaps": [
+    "静态比对不覆盖未来新增迁移文件：若有人把列加到第四个迁移，断言仍绿（但那时模型也须同步，字段映射缺失会红）。",
+    "`CREATE TABLE IF NOT EXISTS` 兜底在「表已存在但缺列」的老库上不会补列——这正是收口目标（迁移链唯一权威），代价是 dev 老库需重建或跑迁移。",
+    "未在生产/真实 MySQL 上验证：生产 `ShouldAutoMigrate()==false`，本改动影响的只有 AutoMigrate 模式的 dev 启动路径。"
+  ]
+}

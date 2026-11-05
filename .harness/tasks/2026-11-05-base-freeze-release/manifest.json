@@ -1,0 +1,150 @@
+{
+  "taskId": "2026-11-05-base-freeze-release",
+  "taskDoc": "docs/harness/tasks/2026-11-05-base-freeze-release.task.md",
+  "title": "Base existing-function closeout, release and Ops handoff",
+  "goal": "Complete current Base functionality including tenant V1, validate/review, merge with green CI, publish an immutable foundation release and upgrade Ops.",
+  "primaryLayer": "platform",
+  "status": "in-progress",
+  "priority": "P1",
+  "type": "security-remediation",
+  "findings": [
+    "PB-001–PB-009（原审计）",
+    "PB-010（本轮真实下游验证新增）"
+  ],
+  "dependencies": [
+    "2026-11-04-global-audit-remediation"
+  ],
+  "scope": {
+    "in": [
+      "Retain and validate all existing tenant V1 capabilities",
+      "Close actual current-function defects and already-authorized unfinished implementation",
+      "Reconcile existing Nov 3/4 local changes, update affected canonical documentation",
+      "Required tests, runtime smoke, independent review and GitHub CI",
+      "Submit/merge related PRs; official foundation release; Ops release consumption"
+    ],
+    "out": [
+      "Unstarted historical product ideas",
+      "Tenant V2 business isolation, billing or quota enforcement",
+      "Production data operations",
+      "Unapproved quality-gate weakening or solo-override",
+      "Overwriting other contributors changes or merging unrelated PRs"
+    ]
+  },
+  "dependencyLayers": [
+    "system/auth",
+    "system/iam",
+    "system/org",
+    "system/config",
+    "business/*"
+  ],
+  "contractAnchors": [
+    "docs/reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-11-04_FULL.md",
+    "docs/harness/VERIFICATION_EVIDENCE_SPEC.md",
+    "docs/harness/REVIEW_LOOP_SPEC.md"
+  ],
+  "expectedFiles": {
+    "create": [
+      "docs/harness/tasks/2026-11-05-base-freeze-release.task.md",
+      ".harness/tasks/2026-11-05-base-freeze-release/manifest.json",
+      ".harness/tasks/2026-11-05-base-freeze-release/tasks.json",
+      ".harness/evidence/2026-11-05-base-freeze-release/summary.md",
+      ".harness/evidence/2026-11-05-base-freeze-release/review.md"
+    ],
+    "modify": [
+      "backend/ (only concrete current-function defects)",
+      "frontend/src/ (only concrete current-function defects)",
+      "scripts/ (required verification/release helpers)",
+      "docs/ (affected canonical entries/contracts)",
+      "VERSION",
+      "CHANGELOG.md",
+      ".harness/STATUS.md"
+    ],
+    "doNotTouch": [
+      "Production databases",
+      "Unrelated Ops business features",
+      "Historical audit conclusions",
+      "Unrelated branches/PRs"
+    ]
+  },
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "auth-security",
+    "portableFailureClass": "runtime-evidence-gap",
+    "ownerLayer": "foundation-source",
+    "ratchetDecision": "no-repeat-observed",
+    "coverageDimensions": [
+      "behaviour",
+      "maintainability",
+      "architecture-fitness",
+      "runtime-quality"
+    ]
+  },
+  "executionRoles": {
+    "implementerPosture": "Root explicitly acts as scoped Generator for five independently reported review findings because the installed executor model channel returned HTTP503. Two user-authorized gpt-6-astra read-only role sessions provide independent review; no self-approval.",
+    "reviewerPosture": [
+      "Independent Security/Architecture Reviewer",
+      "Independent UX/QA Reviewer where UI changed"
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "go test -race ./...",
+      "npm run lint",
+      "npm run type-check",
+      "npm run build",
+      "npm run test:unit",
+      "npm run test:scripts",
+      "npm run check:task-packet",
+      "npm run check:harness-evidence",
+      "npm run check:harness-review",
+      "npm run check:docs-frontmatter",
+      "Core/system/generator runtime smoke",
+      "GitHub required CI and release gate",
+      "Ops official release reconstruction and full race"
+    ],
+    "runtimeEvidence": [
+      "Isolated MySQL/Redis tests; real backend browser/API smoke; rendered UI evidence; immutable release checksums and consumer reconstruction"
+    ]
+  },
+  "runtimeSensitive": true,
+  "runtimeGap": "Independent final review approved; final candidate hosted CI/merge/release/Ops consumption pending.; 真实 S3 provider 未配置：1 个集成用例跳过; npm audit 报 15 个 moderate（eslint/nyc/vite-plugin-istanbul/typescript-eslint 开发链，0 high/0 critical）；升级属依赖变更，未在本次候选处理; core 中 3 个生成模块用例在未激活模块的运行环境保持 skip；本轮改由真实生成模块的浏览器/API CRUD 覆盖，不把 skip 当通过; smoke 套件自启 vite 默认把 /api 代理到 8080；后端跑在 18080 时必须显式 --proxy-target，否则整页 API 502（本轮首跑即此原因，非产品缺陷）",
+  "acceptanceCriteria": [
+    "Existing functionality matrix has no unresolved implementation gaps within the approved current scope",
+    "Tenant V1 retained and positive/negative boundaries verified",
+    "All required local and hosted gates pass on the immutable candidate",
+    "Affected documents accurately describe the delivered release",
+    "Related changes merged; foundation release verified; Ops consumes that exact release"
+  ],
+  "implementationNotes": [
+    "User authorization on 2026-11-05 supersedes earlier task Out entries deferring submission/release/consumer upgrade. It does not authorize production database destruction or gate weakening.",
+    "Use existing helpers/standard dependencies and preserve existing unsubmitted changes.",
+    "Do not label partial work as release/freeze complete.",
+    "Runtime restart exposed department Bootstrap crossing tenant trees. Two real-MySQL adversarial repros failed before repair; minimal system/org fix and new regressions added under explicit local Generator posture.",
+    "PR489 hosted structure gate caught misplaced pagination helper missed by prior summary; relocated unchanged to existing frontend/src/api (foundation-owned). Sonar9 findings addressed without exclusions; exact hosted rule rerun passed (9 to 0 unresolved, gate OK). Draft comment permission corrected after403; PR remains draft.",
+    "Independent gpt-6-astra review round1 identified runtime-evidence boolean conflict, unstable role/post pagination, required bool create DTO semantics, SSRF fallback deadline budget and token-storage scanner description type. Fixes and regressions required before repeat independent review."
+  ],
+  "risks": [
+    "跨任务与下游，保留用户工作树"
+  ],
+  "humanGates": [
+    "Scope and submission/release/merge/consumption authorized by current user request; quality-policy changes and production destructive operations remain maintenance gates."
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-11-05-base-freeze-release/manifest.json",
+    "taskDoc": "docs/harness/tasks/2026-11-05-base-freeze-release.task.md",
+    "evidenceDir": ".harness/evidence/2026-11-05-base-freeze-release/",
+    "reviewFile": ".harness/evidence/2026-11-05-base-freeze-release/review.md",
+    "summaryFile": ".harness/evidence/2026-11-05-base-freeze-release/summary.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".harness/tasks/2026-11-05-base-freeze-release/tasks.json",
+      ".harness/tasks/2026-11-04-global-audit-remediation/plan.md"
+    ]
+  },
+  "implementationStatus": "local-verified-independent-review-approved",
+  "reviewStatus": "approved-code-reviewer-and-architect-final-source-manifest",
+  "verificationStatus": "local-verified-final-candidate-hosted-ci-pending",
+  "followUpTaskIds": [],
+  "hostedEvidence": ".harness/evidence/2026-11-05-base-freeze-release/hosted-validation.json"
+}

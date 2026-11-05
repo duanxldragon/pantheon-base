@@ -1,0 +1,113 @@
+{
+  "taskId": "2026-11-04-global-audit-remediation",
+  "taskDoc": "docs/harness/tasks/2026-11-04-global-audit-remediation.task.md",
+  "title": "全局审计有限整改 programme",
+  "goal": "全局审计有限整改 programme",
+  "primaryLayer": "platform",
+  "status": "in-progress",
+  "priority": "P1",
+  "type": "security-remediation",
+  "findings": [
+    "PB-001–PB-009（原审计）",
+    "PB-010（本轮真实下游验证新增）"
+  ],
+  "dependencies": [],
+  "scope": {
+    "in": [
+      "全局审计有限整改 programme",
+      "所有九项有真实状态和证据；P1优先验证并修复",
+      "冻结与发布不自动签署；低价值复杂度不追加投资",
+      "共同验证通过或缺口显式；子任务闭合不等于programme完成"
+    ],
+    "out": [
+      "产品扩展/大重构",
+      "批量删除或重写旧文档",
+      "生产操作/发布/冻结代签",
+      "覆盖或回退用户已有改动"
+    ]
+  },
+  "dependencyLayers": [
+    "system/auth"
+  ],
+  "contractAnchors": [
+    "docs/reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-11-04_FULL.md",
+    "docs/harness/VERIFICATION_EVIDENCE_SPEC.md",
+    "docs/harness/REVIEW_LOOP_SPEC.md"
+  ],
+  "expectedFiles": {
+    "create": [
+      "docs/harness/tasks/2026-11-04-global-audit-remediation.task.md",
+      ".harness/tasks/2026-11-04-global-audit-remediation/manifest.json"
+    ],
+    "modify": [],
+    "doNotTouch": [
+      "VERSION",
+      "CHANGELOG.md",
+      "backend/pkg/database/migrations",
+      "pantheon-ops"
+    ]
+  },
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "auth-security",
+    "portableFailureClass": "PB-001–PB-009",
+    "ownerLayer": "foundation-source",
+    "ratchetDecision": "no-repeat-observed",
+    "coverageDimensions": [
+      "behaviour",
+      "maintainability"
+    ]
+  },
+  "executionRoles": {
+    "implementerPosture": "Generator executor单一写入者；并行仅只读proposal",
+    "reviewerPosture": [
+      "独立Reviewer核查失败路径、In/Out和下游兼容"
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "node scripts/harness/check-task-packet.mjs --root .",
+      "node scripts/harness/check-evidence.mjs --root . --strict"
+    ],
+    "runtimeEvidence": [
+      "隔离测试与受控本地复现，不访问生产/外部网络"
+    ]
+  },
+  "runtimeSensitive": true,
+  "runtimeGap": "Downstream real-DB suite is red at 4 business packages (12 failure nodes / 9 top-level tests), identically reproduced at Ops HEAD; PB-010 intent/fixture triage pending. No approved release commit, external required CI/Sonar result or maintenance-freeze acceptance. Foundation release and Ops lock upgrade deferred; local synthetic candidate is not a release. Browser full/core smoke and live external integration were not run; no UI code was modified and no visual-polish claim is made. S3 and OIDC external-provider validation depend on provisioned services. Actual remote dependency vulnerability status is not established by mock npm tests.",
+  "acceptanceCriteria": [
+    "所有九项有真实状态和证据；P1优先验证并修复",
+    "冻结与发布不自动签署；低价值复杂度不追加投资",
+    "共同验证通过或缺口显式；子任务闭合不等于programme完成"
+  ],
+  "implementationNotes": [
+    "已授权安全可逆整改自主推进",
+    "保持API签名，无新依赖",
+    "完成状态由验证与review证据决定"
+  ],
+  "risks": [
+    "跨任务与下游，保留用户工作树"
+  ],
+  "humanGates": [
+    "实际门禁策略放宽、生产破坏操作、发布及冻结宣告：维护者；本地修复已授权"
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-11-04-global-audit-remediation/manifest.json",
+    "taskDoc": "docs/harness/tasks/2026-11-04-global-audit-remediation.task.md",
+    "evidenceDir": ".harness/evidence/2026-11-04-global-audit-remediation/",
+    "reviewFile": ".harness/evidence/2026-11-04-global-audit-remediation/review.md",
+    "summaryFile": ".harness/evidence/2026-11-04-global-audit-remediation/summary.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".harness/tasks/2026-11-04-global-audit-remediation/plan.md",
+      "docs/reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-11-04_FULL.md"
+    ]
+  },
+  "implementationStatus": "priority-remediation-applied",
+  "reviewStatus": "blocked",
+  "verificationStatus": "partial",
+  "followUpTaskIds": [
+    "2026-11-04-audit-p2-ops-db-test-followup"
+  ]
+}

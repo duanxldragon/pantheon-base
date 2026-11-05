@@ -1,0 +1,78 @@
+{
+  "taskId": "2026-11-03-audit-p2-governance-wiring-closeout",
+  "repo": "pantheon-base",
+  "executedAt": "2026-11-04",
+  "agent": { "tool": "claude-code" },
+  "runtimeSensitive": false,
+  "runtimeGap": "接线自检与模式扫描都是静态脚本，不需要运行面。三个 blocking 步骤尚未在托管 runner 上真实执行过一次；本机读数以 `node <script>` 取得（本机 `npm run` 会落入 WSL relay 失败）。",
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-11-03-audit-p2-governance-wiring-closeout/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-11-03-audit-p2-governance-wiring-closeout/",
+    "reviewFile": ".harness/evidence/2026-11-03-audit-p2-governance-wiring-closeout/review.md",
+    "changeRef": "none",
+    "planRefs": ["docs/reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-11-03.md"]
+  },
+  "commands": [
+    {
+      "command": "node scripts/harness/check-checker-wiring.mjs --root .",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "exit 0；读数 `checker-wiring: 32 checkers / 31 wired / 1 exception / 0 unwired`。唯一例外是 check-doc-frontmatter.mjs（mirror-only）。"
+    },
+    {
+      "command": "touch scripts/harness/check-wiring-probe.mjs && node scripts/harness/check-checker-wiring.mjs --root .",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "负向：exit 1 且点名该探测文件（NOT WIRED）；删除后复跑 exit 0。blocking 步骤依赖的正是这个非零退出码。"
+    },
+    {
+      "command": "node scripts/check-security-patterns.mjs --write-baseline",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "exit 0；写入 `config/security-pattern-baseline.json`，39 条唯一指纹（对应 46 条生产命中，去重后按 description+file+text），reviewBy 2027-02-02。"
+    },
+    {
+      "command": "node scripts/check-security-patterns.mjs",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "exit 0；`No new security pattern violations (46 accepted by baseline, review by 2027-02-02)`。若不排除 `_test.go`，总量为 356（28 Raw + 328 Exec），其中 310 条在测试夹具里。"
+    },
+    {
+      "command": "mkdir -p backend/internal/__probe__ && printf 'func q(db any) { db.Exec(\"x\") }' > backend/internal/__probe__/probe.go && node scripts/check-security-patterns.mjs",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "负向：exit 1，输出包含 `backend/internal/__probe__/probe.go`；删除探测文件后复跑 exit 0。证明「新命中 → 红」而不是全量接受。"
+    },
+    {
+      "command": "node scripts/check-ui-tokens.mjs",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "exit 0；Errors 0 / Warnings 6（全部为 `Modal.confirm direct usage`）。警告级不阻断，故 UI 检查无需基线。"
+    },
+    {
+      "command": "node --test tests/scripts/harness-scan-tree.test.mjs",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "exit 0；7 个用例覆盖：repo 相对路径与行号、扩展名/后缀过滤、node_modules 与 dist 跳过、缺失根目录上报、look-ahead 生效、基线写读去重、指纹跨行移动稳定。"
+    },
+    {
+      "command": "node --test tests/scripts/harness-check-checker-wiring.test.mjs && node --test tests/scripts/quality-workflow.test.mjs",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "均 exit 0；workflow 守卫未因移除 `Ensure ripgrep` 步骤或新增 blocking 步骤而红。"
+    },
+    {
+      "command": "node scripts/harness/check-task-packet.mjs --root . && node scripts/harness/check-doc-links.mjs --root . --strict && node scripts/harness/check-failure-registry.mjs --root . --strict",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "全部 exit 0；README wiring 表、failure-registry 备注与 blocking 状态、Node 扫描替换一致。"
+    }
+  ],
+  "knownGaps": [
+    "`config/security-pattern-baseline.json` 接受 46 条生产存量（`Raw(`/`Exec(`），reviewBy 2027-02-02；它们是真实存在的调用，未逐条判定是否安全，基线只保证「不再新增」。",
+    "SQL 注入规则排除 `_test.go`（310 条夹具命中）：测试不是生产查询面，但这意味着测试里的危险用法不设防。",
+    "UI token 检查有 6 条 `Modal.confirm` 警告，警告级不阻断，未纳入基线。",
+    "三个 blocking 步骤尚未在托管 runner 上跑过一次真实执行。",
+    "migrate-task-manifests.mjs 收编时只修了相对导入（./task-manifest.mjs → ../task-manifest.mjs），未执行 `--write`。"
+  ]
+}

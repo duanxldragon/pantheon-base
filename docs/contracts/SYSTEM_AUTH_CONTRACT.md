@@ -11,7 +11,7 @@ related_designs:
   - docs/designs/SSO_OIDC_DESIGN.md
 related_acceptances:
   - docs/acceptances/ACCEPTANCE_CHECKLIST.md
-updated_at: 2026-10-31
+updated_at: 2026-11-04
 ---
 
 # system/auth 合同文档
@@ -286,3 +286,11 @@ Pantheon 早期最明显的结构性问题之一，是认证与后台用户管�
 | 日期 | 版本 | 变更内容 | 原因 |
 |------|------|---------|------|
 | 2026-06-25 | v1.0 | 初始版本 | 评估审计添加 |
+
+## Refresh rotation: atomic single use（2026-11-04）
+
+HTTP refresh 在变更数据库会话或签发新 pair 前，通过 `authtoken.ConsumeRefresh` 原子消费旧 Redis 映射（GETDEL，部署基线 Redis 7）。跨实例使用同一旧 token 最多只有一个请求可以继续；重放或消费/存储错误不能返回成功 pair。公共 `ValidateRefresh` 仍保持只读，已有导出签名与租户 V1 范围不变。
+
+消费后如数据库/签发失败或响应不确定，不恢复旧 token，客户端可能需要重新登录。多标签页并发与重试可能收到未授权响应，这是单次消费的安全取舍。反向索引由正常签发替换或吊销清理；消费不能删除较新的索引。吊销、改密、membership gate 与 Cookie 响应策略仍须回归。
+
+刷新与租户切换对会话行采用条件更新：会话仍未撤销、未到期，且读取时的 refresh JTI/tenant 未改变才允许写入。过期读不能覆盖期间完成的撤销、轮换或租户切换；冲突按未授权失败处理。DB 与 Redis 跨存储仍非事务，后续失败不恢复旧刷新令牌。

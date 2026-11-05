@@ -87,3 +87,24 @@
 
 **审查者**: Claude (Opus 5)  
 **审查时间**: 2026-09-04 12:30 UTC
+
+## Machine Readable
+
+```json
+{
+  "taskId": "2026-09-04-readme-v011-update",
+  "verdict": "approved",
+  "verdictRationale": "总体评价: ✅ 通过 ... 建议合并 for doc-only changes; potential risk 'no ne', no blocking findings.",
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-09-04-readme-v011-update/manifest.json",
+    "evidence": ".harness/evidence/2026-09-04-readme-v011-update/commands.json",
+    "reviewFile": ".harness/evidence/2026-09-04-readme-v011-update/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".harness/tasks/2026-09-04-readme-v011-update/manifest.json"
+    ]
+  }
+}
+```
+
+> This block was backfilled on 2026-11-04 during the archive-coverage repair. It restates the verdict already written above in machine-readable form and links the artifacts that existed for this task; no conclusion, finding or verification claim was added, removed or reworded. The prose remains authoritative.

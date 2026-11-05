@@ -1,0 +1,138 @@
+{
+  "taskId": "2026-11-04-archive-governance-scope-repair",
+  "repo": "pantheon-base",
+  "executedAt": "2026-11-04",
+  "agent": {
+    "tool": "claude-code"
+  },
+  "runtimeSensitive": false,
+  "runtimeGap": "纯治理工具改动，无 HTTP/运行时面。验证信号是三个 strict 检查器的退出码与四条负向差分，不是日志、指标或 trace。",
+  "commands": [
+    {
+      "command": "node scripts/harness/check-evidence.mjs --root . --strict",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "exit 0。Evidence check (strict): 218 file(s), 0 error(s), 0 warning(s)。Pre-2026-10-26 structural findings counted, not gated: 205 across 43 archived artifact(s)。修复前（HEAD 版检查器 + 已归档工作区）读数是 1 file(s), 1 error(s)「No evidence command files found」，即对 196 个归档证据零覆盖。"
+    },
+    {
+      "command": "node scripts/harness/check-review.mjs --root . --strict",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "exit 0。Review check (strict): 216 file(s), 0 error(s)；Legacy review artifacts exempted by config/review-loop-legacy-artifacts.json: 8。修复起点为 80 error(s)，回填 30 个机器块 + 重指向 6 处 planRefs + 补齐 2 个旧式块后归零。"
+    },
+    {
+      "command": "node scripts/harness/check-runtime-evidence.mjs --root . --strict",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "exit 0。Runtime evidence check (strict): 216 file(s), 0 error(s), 0 warning(s)；Legacy runtime-evidence artifacts exempted by config/runtime-evidence-legacy-artifacts.json: 2。归档发现接入后曾报 22 warning，敏感度判定改为布尔优先后降至 4，两份 runtimeGap 重述 + 2 条具名豁免后归零。"
+    },
+    {
+      "command": "node scripts/harness/check-task-packet.mjs --root .",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "exit 0。Task packet check: 107 file(s), 0 error(s), 14 warning(s)（收尾复跑读数）。本轮全部任务包 PASS，含本包与 2026-11-04-audit-freeze-preconditions。"
+    },
+    {
+      "command": "node scripts/frontmatter-check.mjs",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "exit 0。Checked 446 docs, 330 with frontmatter, 116 without (informational)。Enforced 目录 4 份文档合格；Active docs past the 90-day review window: 146（informational，未强制，即逾期复审轮仍待跑）。本包起因是 2026-11-04 审计报告 frontmatter 违规（layer/updated_at/doc_type/status），已修并把 2026-11-03 报告标 Superseded。"
+    },
+    {
+      "command": "node scripts/harness/check-runtime-evidence.mjs --root . --strict --legacy-config config/does-not-exist.json",
+      "cwd": "pantheon-base",
+      "status": "failed",
+      "details": "负向差分 N1，预期红：exit 1，218 file(s), 2 warning(s)。证明 runtime 豁免集承重；条目指向不存在的产物时（N2，.tmp/legacy-stale.json）改报 stale legacy runtime-evidence allowlist entry 错误，豁免集不能扩大后遗忘。"
+    },
+    {
+      "command": "node .tmp/ev-n3.mjs --root . --strict  # check-evidence 副本，CURRENT_SCHEMA_FROM 改为 2020-01-01",
+      "cwd": "pantheon-base",
+      "status": "failed",
+      "details": "负向差分 N3，预期红：exit 1，218 file(s), 205 error(s)。证明代际作用域承重，且被放宽的正是那 205 条历史结构缺口，不是当前代产物。"
+    },
+    {
+      "command": "node .tmp/ev-n5.mjs --root . --strict  # check-evidence 副本，planRefs 还原为字面路径存在性判定",
+      "cwd": "pantheon-base",
+      "status": "failed",
+      "details": "负向差分 N4，预期红：exit 1，5 error(s)（另有 222 条 pre-schema 计数）。证明 planRefs 归档感知只放行确实存在于归档树的规范拼写引用，不掩盖真丢失（fix-report.md 这类仍走具名豁免）。"
+    },
+    {
+      "command": "node .tmp/rte-n4.mjs --root . --strict  # check-runtime-evidence 副本，还原 runtimeEvidence 非空即敏感",
+      "cwd": "pantheon-base",
+      "status": "failed",
+      "details": "负向差分 N5，预期红：exit 1，18 warning(s)。旧判定把「not runtime-sensitive: read-only inventory」这类否定文本和纯 CI/grep 计划读成运行时敏感；布尔优先后这些包不再被误标。"
+    },
+    {
+      "command": "cd frontend && ./node_modules/.bin/tsc -b --pretty false",
+      "cwd": "pantheon-base/frontend",
+      "status": "passed",
+      "details": "exit 0，无输出。本包未改前端码，跑一遍证明无回归。"
+    },
+    {
+      "command": "cd backend && go build ./... && go vet ./...",
+      "cwd": "pantheon-base/backend",
+      "status": "failed",
+      "details": "exit 1。失败点全在未跟踪的 backend/modules/business/aud001bcheck/（并发 P3 收口 agent 的在途产物，非本包、非 HEAD：HEAD 上 go build/go vet 均 exit 0，见 .harness/archive/2026-11/evidence/2026-11-04-audit-freeze-preconditions/commands.json）。本包不改 Go；该包收敛后由落地轮复跑并记录。"
+    },
+    {
+      "command": "node scripts/harness/check-failure-registry.mjs --root . --strict",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "exit 0。Failure registry check: 1 file(s), 0 error(s), 0 warning(s)，FR-027 已登记（method-health / static-sensor-gap / occurrences 2 / sensor / sensor-added / implemented），并把 Last reviewed 推到 2026-11-04。"
+    },
+    {
+      "command": "node scripts/harness/check-failure-registry.mjs --root . .tmp/fr-reg-cf26.md --strict   # 副本：FR-026 行 Status 改为 implemented-bogus",
+      "cwd": "pantheon-base",
+      "status": "failed",
+      "details": "exit 1，「Line 41: Invalid Status \"implemented-bogus\"」。同法跑 .tmp/fr-reg-cf27.md 读「Line 42: …」。这两行登记前落在表格空行之后，HEAD 版 findRegistryTable 在 FR-025 之后即 break，同一手法的副本读数是 0 error(s) exit 0——即这两行从未被校验。反证表扫描作用域修复确实生效。"
+    },
+    {
+      "command": "git show HEAD:scripts/harness/check-failure-registry.mjs > scripts/harness/check-failure-registry.mjs && node --test tests/scripts/harness-check-failure-registry.test.mjs   # 随后 cp .tmp/checker-new.mjs 还原",
+      "cwd": "pantheon-base",
+      "status": "failed",
+      "details": "HEAD 检查器 + 新回归用例：「rows after a blank separator line are still validated」失败（0 !== 1，检查器 exit 0）。换回本轮修复后的检查器：3/3 pass。用例先证伪再转正，不是随代码一起写死的绿。"
+    },
+    {
+      "command": "node scripts/harness/check-evidence.mjs --root . --strict   # FR-027 与 README 作用域小节落地后复跑",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "details": "exit 0：evidence 219 file(s) 0 error(s)，Pre-2026-10-26 counted-not-gated 205 across 43 archived artifact(s)。同批复跑 check-review 217 file(s) 0 error(s)（config/review-loop-legacy-artifacts.json 豁免 8 条）、check-runtime-evidence 217 file(s) 0 error(s) 0 warning(s)（config/runtime-evidence-legacy-artifacts.json 豁免 2 条）、check-doc-inventory 0 finding(s)、check-encoding 0 finding(s) across 2720 files、check-task-packet 107 file(s) 0 error(s) 14 warning(s)。"
+    },
+    {
+      "command": "node scripts/harness/check-doc-links.mjs --root . --strict",
+      "cwd": "pantheon-base",
+      "status": "failed",
+      "details": "exit 1：Docs link check (strict) 16 finding(s)，全部是并发设计文档 agent 在途产物的悬空内部链接（APPROVAL_WORKFLOW_DESIGN.(en.)md 指向不存在的 APPROVAL_WORKFLOW_DB_DESIGN / _API_CONTRACT / _TEST_PLAN；REPORT_CENTER_* 与 NOTICE_CENTER_API_CONTRACT 指向不存在的 SCHEDULER_CENTER_API_CONTRACT / SCHEDULER_CENTER_TEST_PLAN；NOTICE_CENTER_API_CONTRACT.md 指向缺失的 .en 副本）。这些文件与本轮治理整改无关且未跟踪，落地 PR 只 stage 治理范围；设计文档包由后续轮补全后再复跑本命令。"
+    },
+    {
+      "command": "cd backend && go build ./... && go vet ./...",
+      "cwd": "pantheon-base/backend",
+      "status": "passed",
+      "details": "exit 0 / exit 0（收尾复跑）。先前记录的 exit 1 来自当时未跟踪的 backend/modules/business/aud001bcheck/ 在途产物，该目录已被其作者在本轮收口前移除；本条读数取代那条红读数，工作区当前无在途 Go 产物。"
+    },
+    {
+      "command": "cd backend && go test ./internal/middleware/... ./pkg/contracts/... ./modules/system/... && PANTHEON_TEST_DSN_REQUIRED=1 go test -run DataScope ./internal/middleware/",
+      "cwd": "pantheon-base/backend",
+      "status": "failed",
+      "details": "第一段 exit 0（15 个包 ok，0 FAIL）；但 `-v -run DataScope|RouteGroup` 读数是 DB 相关用例全部 `--- SKIP` 而包仍报 ok（本仓库已知的 skip-masking）。第二段按既有纪律加 `PANTHEON_TEST_DSN_REQUIRED=1`：exit 1，`mysql.go:67: mysql is required … neither PANTHEON_TEST_DSN nor PANTHEON_DSN is configured`，即本机无 MySQL 可用，不做「绿灯即覆盖」的宣称。新增的 schema 契约用例（TestDataScopeModelMatchesMigrationChain / TestDataScopeUniqueKeyIsTheIdentity / TestMigrateDataScopePolicyDoesNotAutoMigrate）不依赖 DSN，实测 `--- PASS`。权威读数交给 CI：`.github/workflows/ci.yml` 与 `quality.yml` 都起了 `mysql:8.0` service 并同时设置 `PANTHEON_TEST_DSN` 与 `PANTHEON_TEST_DSN_REQUIRED: \"true\"`，落地 PR 的 `Backend Tests` 是这些用例的真实执行环境。"
+    }
+  ],
+  "knownGaps": [
+    "pre-2026-10-26 的 205 条结构缺口仍存在于归档树，本包选择分层计数而非伪造回填；是否永久分层或逐条回填是维护者决定。",
+    "8 + 2 条具名豁免的收缩依赖未来把这些历史产物改到当代 schema 或删除，本包不代为决定。",
+    "并发文档/P3 agent 若在落定后新增 review.md/commands.json，需按当代 schema 写，本包的绿读数不替它们背书。",
+    "设计文档包（approval/scheduler/task center 的 DB/API/test-plan 同级文档）在并发 agent 触顶后未完成，check-doc-links --strict 因此 16 条悬空链接读红；该红属于设计文档轮，不属于本治理包，落地 PR 不 stage 这些未跟踪文件。",
+    "DB 相关后端用例在本机 SKIP（无 MySQL），已用 PANTHEON_TEST_DSN_REQUIRED=1 证伪「绿灯即覆盖」；真实执行读数依赖落地 PR 的 CI Backend Tests（ci.yml / quality.yml 均配 mysql:8.0 service 并强制 required），合并前必须回读该检查而非引用本轮本地读数。"
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-11-04-archive-governance-scope-repair/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-11-04-archive-governance-scope-repair/",
+    "summaryFile": ".harness/evidence/2026-11-04-archive-governance-scope-repair/summary.md",
+    "reviewFile": ".harness/evidence/2026-11-04-archive-governance-scope-repair/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-11-04-archive-governance-scope-repair.task.md",
+      "docs/reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-11-04.md"
+    ]
+  }
+}

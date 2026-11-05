@@ -1,0 +1,206 @@
+{
+  "taskId": "2026-11-03-audit-remediation-programme",
+  "taskDoc": "docs/harness/tasks/2026-11-03-audit-remediation-programme.task.md",
+  "title": "2026-11-03 全局审计整改 programme（5 个子包）",
+  "goal": "把 2026-11-03 全局审计最终版的 2 个 P1 与优先 P2 拆成 5 个可独立评审的执行子包，登记进 .harness 并按依赖顺序开始执行；programme 本身不改产品代码。",
+  "primaryLayer": "platform",
+  "status": "completed",
+  "priority": "P1",
+  "type": "audit-remediation-programme",
+  "estimatedComplexity": "moderate",
+  "findings": [
+    "审计最终版（docs/reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-11-03.md，基线 52550603）裁决 B：完成少量整改后进入维护冻结阶段；P0=0 / P1=2 / P2=14 / P3=15。",
+    "2 个 P1 为前端数据一致性：FE-01（角色/岗位下拉 pageSize 9999 vs 后端 cap=100 静默截断）、FE-02（组织架构 pageSize 1000 + .length 静态计数误导治理决策）。",
+    "优先 P2 集中在：GOV-01/02/03（接线登记自相矛盾、死脚本零引用、接线靠人审无机械检查）、DOC-01/02 与 GOV-06/07（文档工具链漂移）、ARCH-01（中间件链手写重复 14 处）、DB-01（data_scope 运行时单表 AutoMigrate）。",
+    "P3 全部（FE-06…FE-14、GOV-09/10/11、DOC-03、BE-01）与 GOV-04/05 判「可以优化」，不立项。",
+    "维护者动作（冻结宣告签署、000031 生产执行、GOV-08 覆盖率门禁决策）归 human gate，programme 不代做。"
+  ],
+  "scope": {
+    "in": [
+      "登记 5 个子包的任务文档与 manifest",
+      "覆盖审计 §12「应该处理」清单：FE-01/FE-02 / GOV-01/02/03(+BE-02) / DOC-01/02(+GOV-06/07) / ARCH-01 / DB-01",
+      "每个子包「修复 + 机械验证」，evidence 落 .harness/evidence/<id>/",
+      "执行顺序：W1（P1 冻结前必做）优先，其余按可用资源逐个执行"
+    ],
+    "out": [
+      "P3 全部与 GOV-04/05 的实施（审计判可以优化，不立项）",
+      "GOV-08 的决策（归维护者 human gate）",
+      "维护者动作：冻结宣告、000031 生产执行时点",
+      "删除 pkg/security/ssrf、合并 docs/history 与 docs/reviews 历史、切 foundation release、改 VERSION/CHANGELOG",
+      "修改 pantheon-ops"
+    ]
+  },
+  "children": [
+    {
+      "wave": "W1",
+      "taskId": "2026-11-03-audit-p1-pagination-data-consistency",
+      "taskDoc": "docs/harness/tasks/2026-11-03-audit-p1-pagination-data-consistency.task.md",
+      "manifest": ".harness/tasks/2026-11-03-audit-p1-pagination-data-consistency/manifest.json",
+      "priority": "P1",
+      "status": "completed",
+      "dependsOn": [],
+      "audits": "FE-01 / FE-02",
+      "blockingFreeze": true
+    },
+    {
+      "wave": "W2",
+      "taskId": "2026-11-03-audit-p2-governance-wiring-closeout",
+      "taskDoc": "docs/harness/tasks/2026-11-03-audit-p2-governance-wiring-closeout.task.md",
+      "manifest": ".harness/tasks/2026-11-03-audit-p2-governance-wiring-closeout/manifest.json",
+      "priority": "P2",
+      "status": "completed",
+      "dependsOn": [],
+      "audits": "GOV-01 / GOV-02 / GOV-03 / BE-02",
+      "blockingFreeze": false
+    },
+    {
+      "wave": "W3",
+      "taskId": "2026-11-03-audit-p2-doc-drift-closeout",
+      "taskDoc": "docs/harness/tasks/2026-11-03-audit-p2-doc-drift-closeout.task.md",
+      "manifest": ".harness/tasks/2026-11-03-audit-p2-doc-drift-closeout/manifest.json",
+      "priority": "P2",
+      "status": "completed",
+      "dependsOn": [],
+      "audits": "DOC-01 / DOC-02 / GOV-06 / GOV-07",
+      "blockingFreeze": false
+    },
+    {
+      "wave": "W4",
+      "taskId": "2026-11-03-audit-p2-route-groups-unify",
+      "taskDoc": "docs/harness/tasks/2026-11-03-audit-p2-route-groups-unify.task.md",
+      "manifest": ".harness/tasks/2026-11-03-audit-p2-route-groups-unify/manifest.json",
+      "priority": "P2",
+      "status": "completed",
+      "dependsOn": [],
+      "audits": "ARCH-01",
+      "blockingFreeze": false
+    },
+    {
+      "wave": "W5",
+      "taskId": "2026-11-03-audit-p2-data-scope-automigrate",
+      "taskDoc": "docs/harness/tasks/2026-11-03-audit-p2-data-scope-automigrate.task.md",
+      "manifest": ".harness/tasks/2026-11-03-audit-p2-data-scope-automigrate/manifest.json",
+      "priority": "P2",
+      "status": "completed",
+      "dependsOn": [],
+      "audits": "DB-01",
+      "blockingFreeze": false
+    }
+  ],
+  "dependencyLayers": [
+    "platform",
+    "system/iam",
+    "system/org",
+    "inheritance-sync"
+  ],
+  "implementationNotes": [
+    "拆包单位是「一次可评审的 diff」：W3 把 GOV-06/DOC-01 与 GOV-07/DOC-02 合并（同属文档漂移），W2 把 GOV-01/02/03 与 BE-02 合并（同源：scripts 生死与接线登记）。",
+    "每个子包必须「修复 + 可复跑验证」，验证命令写入 verificationPlan，evidence 落 .harness/evidence/<id>/。",
+    "W1 前端改动不触碰后端契约；后端 cap=100 语义是既定行为，前端负责对齐。",
+    "W4 用 route_groups.go 现有助手补齐系统域三种组合，不新造链。",
+    "W5 先确认迁移表已持有 system_role_data_scope 的最终形状（000001/000002/000020），再决定 AutoMigrate 分支去留。",
+    "冻结判定只读 5 个 manifest 的 status 与各自 evidence 读数，不用散文结论替代。"
+  ],
+  "contractAnchors": [
+    "docs/reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-11-03.md",
+    "docs/contracts/PLATFORM_CONTRACT.md",
+    "docs/harness/HARNESS_ENGINEERING_CONTRACT.md"
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "governance-programme",
+    "portableFailureClass": "audit-remediation-programme",
+    "ownerLayer": "foundation-source",
+    "ratchetDecision": "gate-updated",
+    "coverageDimensions": [
+      "behaviour",
+      "maintainability",
+      "architecture-fitness",
+      "runtime-quality"
+    ]
+  },
+  "expectedFiles": {
+    "create": [
+      "docs/harness/tasks/2026-11-03-audit-remediation-programme.task.md",
+      ".harness/tasks/2026-11-03-audit-remediation-programme/manifest.json",
+      "docs/harness/tasks/2026-11-03-audit-p1-pagination-data-consistency.task.md",
+      ".harness/tasks/2026-11-03-audit-p1-pagination-data-consistency/manifest.json",
+      "docs/harness/tasks/2026-11-03-audit-p2-governance-wiring-closeout.task.md",
+      ".harness/tasks/2026-11-03-audit-p2-governance-wiring-closeout/manifest.json",
+      "docs/harness/tasks/2026-11-03-audit-p2-doc-drift-closeout.task.md",
+      ".harness/tasks/2026-11-03-audit-p2-doc-drift-closeout/manifest.json",
+      "docs/harness/tasks/2026-11-03-audit-p2-route-groups-unify.task.md",
+      ".harness/tasks/2026-11-03-audit-p2-route-groups-unify/manifest.json",
+      "docs/harness/tasks/2026-11-03-audit-p2-data-scope-automigrate.task.md",
+      ".harness/tasks/2026-11-03-audit-p2-data-scope-automigrate/manifest.json",
+      ".harness/evidence/2026-11-03-audit-remediation-programme/commands.json",
+      ".harness/evidence/2026-11-03-audit-remediation-programme/summary.md",
+      ".harness/evidence/2026-11-03-audit-remediation-programme/review.md"
+    ],
+    "modify": [],
+    "doNotTouch": [
+      "backend/modules/business/**",
+      "backend/pkg/security/ssrf",
+      "docs/history/**",
+      "docs/reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-11-03.md",
+      "pantheon-ops/**",
+      "VERSION",
+      "CHANGELOG.md"
+    ]
+  },
+  "executionRoles": {
+    "implementerPosture": "每个子包按自己的 scope.in 只改清单内文件；改前确认「不会红」的验证命令，改后跑绿并落 evidence。",
+    "reviewerPosture": [
+      "对照审计 ID（FE-01/02、GOV-01/02/03、DOC-01/02、ARCH-01、DB-01）逐一确认闭合。",
+      "确认没有把 P3 或 human-gate 项（GOV-08、冻结宣告、000031）偷偷塞进子包。",
+      "确认 Do Not Touch 清单未被触碰（ssrf、business、docs/history、docs/reviews、VERSION、ops）。"
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "node scripts/harness/check-task-packet.mjs --root .",
+      "npm run check:docs-frontmatter",
+      "node scripts/harness/check-doc-links.mjs --root . --strict",
+      "逐个 JSON.parse 5 个子包 manifest"
+    ],
+    "runtimeEvidence": [
+      "无运行面变化：programme 只登记子包与 manifest；运行证据由子包各自给出"
+    ]
+  },
+  "runtimeSensitive": false,
+  "runtimeGap": "programme 不产生产品运行面；子包的运行证据由各子包自行给出。",
+  "evidenceRequired": [
+    ".harness/evidence/2026-11-03-audit-remediation-programme/commands.json：5 份子包任务文档与 manifest 的门禁读数",
+    ".harness/evidence/2026-11-03-audit-remediation-programme/summary.md：子包清单、依赖图、P1/P2 覆盖表、不处理清单",
+    ".harness/evidence/2026-11-03-audit-remediation-programme/review.md：审计 §11/§12 问题 → 子包的逐条着落表"
+  ],
+  "humanGates": [
+    "GOV-08（前端覆盖率门禁阈值）需维护者一句话决策。",
+    "冻结宣告签署与 000031 生产执行时点属维护者动作，programme 不代做。",
+    "W5 的 AutoMigrate 分支行为变化由非作者 Reviewer 确认。"
+  ],
+  "completionChecklist": [
+    "Layer and boundary declared",
+    "Contract anchors read",
+    "Verification run or exception recorded",
+    "Evidence saved or summarized",
+    "Review completed",
+    "5 个子包全部登记且各自 manifest 通过校验",
+    "审计 §12「应该处理」的 P1×2 + P2×6 全部：已闭合 / 保留为 open 且有明确下一步",
+    "未把 P3 观察项升级为独立任务",
+    "Do Not Touch 清单未被触碰"
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-11-03-audit-remediation-programme/manifest.json",
+    "taskDoc": "docs/harness/tasks/2026-11-03-audit-remediation-programme.task.md",
+    "evidenceDir": ".harness/evidence/2026-11-03-audit-remediation-programme/",
+    "summaryFile": ".harness/evidence/2026-11-03-audit-remediation-programme/summary.md",
+    "reviewFile": ".harness/evidence/2026-11-03-audit-remediation-programme/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-11-03.md",
+      "docs/contracts/PLATFORM_CONTRACT.md"
+    ]
+  }
+}

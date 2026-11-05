@@ -180,6 +180,25 @@ jobs:
       - name: Check backend response contract
         run: npm run check:backend-response-contract
 
+      - name: Check checker wiring
+        # GOV-03 / FR-026: a checker nothing invokes is not coverage. Blocking since
+        # 2026-11-04 by maintainer instruction — the gate-policy decision that the
+        # task packet reserved for the maintainer (see the evidence directory).
+        id: checker-wiring
+        run: npm run check:checker-wiring
+
+      - name: Check security patterns
+        # Wired 2026-11-03 (GOV-02/BE-02): this checker had no npm script and no
+        # workflow reference, so it was run by nobody. Blocking since 2026-11-04.
+        id: security-patterns
+        run: npm run check:security-patterns
+
+      - name: Check UI token usage
+        # Same disposition as check-security-patterns (GOV-02/BE-02): blocking
+        # since 2026-11-04.
+        id: ui-tokens
+        run: npm run check:ui-tokens
+
       - name: Check PR governance template
         run: npm run check:pr-governance
 
