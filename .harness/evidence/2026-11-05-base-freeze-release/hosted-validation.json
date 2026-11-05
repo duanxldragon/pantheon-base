@@ -1,0 +1,299 @@
+{
+  "recordedAt": "2026-11-05T08:14:41.433630+00:00",
+  "candidate": "57b42ace467dd6f96db232bfebab7626f07c84be",
+  "codeTrees": {
+    "backend": "02341ada0ee53a3924522a6599723be71c060658",
+    "frontend/src": "a3351c514bced1a6885abcc54a5d57f986b01062"
+  },
+  "pr": "https://github.com/duanxldragon/pantheon-base/pull/489",
+  "status": "hosted-ci-passed-independent-review-unavailable",
+  "counts": {
+    "success": 27,
+    "skipped": 2
+  },
+  "checks": [
+    {
+      "name": "Actionlint",
+      "id": 127118330937,
+      "conclusion": "success",
+      "completedAt": "2026-11-05T07:46:34Z",
+      "url": "https://github.com/duanxldragon/pantheon-base/actions/runs/41989580656/job/127118330937"
+    },
+    {
+      "name": "Automate Solo PR",
+      "id": 127118468065,
+      "conclusion": "skipped",
+      "completedAt": "2026-11-05T07:46:47Z",
+      "url": "https://github.com/duanxldragon/pantheon-base/actions/runs/41989583272/job/127118468065"
+    },
+    {
+      "name": "Backend Tests",
+      "id": 127118449625,
+      "conclusion": "success",
+      "completedAt": "2026-11-05T07:52:13Z",
+      "url": "https://github.com/duanxldragon/pantheon-base/actions/runs/41989583484/job/127118449625"
+    },
+    {
+      "name": "Bench Perf Smoke (advisory)",
+      "id": 127118330460,
+      "conclusion": "success",
+      "completedAt": "2026-11-05T07:47:46Z",
+      "url": "https://github.com/duanxldragon/pantheon-base/actions/runs/41989580512/job/127118330460"
+    },
+    {
+      "name": "Boundary Gate",
+      "id": 127118330731,
+      "conclusion": "success",
+      "completedAt": "2026-11-05T07:46:36Z",
+      "url": "https://github.com/duanxldragon/pantheon-base/actions/runs/41989580512/job/127118330731"
+    },
+    {
+      "name": "CI Summary",
+      "id": 127119848729,
+      "conclusion": "success",
+      "completedAt": "2026-11-05T07:50:31Z",
+      "url": "https://github.com/duanxldragon/pantheon-base/actions/runs/41989580512/job/127119848729"
+    },
+    {
+      "name": "Change Scope",
+      "id": 127118375305,
+      "conclusion": "success",
+      "completedAt": "2026-11-05T07:46:44Z",
+      "url": "https://github.com/duanxldragon/pantheon-base/actions/runs/41989583484/job/127118375305"
+    },
+    {
+      "name": "CodeQL",
+      "id": 127119086605,
+      "conclusion": "success",
+      "completedAt": "2026-11-05T07:48:30Z",
+      "url": "https://github.com/duanxldragon/pantheon-base/runs/127119086605"
+    },
+    {
+      "name": "CodeQL Security",
+      "id": 127118329828,
+      "conclusion": "success",
+      "completedAt": "2026-11-05T07:48:35Z",
+      "url": "https://github.com/duanxldragon/pantheon-base/actions/runs/41989580518/job/127118329828"
+    },
+    {
+      "name": "Coverage Gate",
+      "id": 127119684461,
+      "conclusion": "success",
+      "completedAt": "2026-11-05T07:50:26Z",
+      "url": "https://github.com/duanxldragon/pantheon-base/actions/runs/41989580512/job/127119684461"
+    },
+    {
+      "name": "Dependency Vulnerabilities",
+      "id": 127118330053,
+      "conclusion": "success",
+      "completedAt": "2026-11-05T07:48:21Z",
+      "url": "https://github.com/duanxldragon/pantheon-base/actions/runs/41989580518/job/127118330053"
+    },
+    {
+      "name": "Docs Governance",
+      "id": 127118375873,
+      "conclusion": "success",
+      "completedAt": "2026-11-05T07:47:00Z",
+      "url": "https://github.com/duanxldragon/pantheon-base/actions/runs/41989583484/job/127118375873"
+    },
+    {
+      "name": "Draft PR Handler",
+      "id": 127118343801,
+      "conclusion": "success",
+      "completedAt": "2026-11-05T07:46:35Z",
+      "url": "https://github.com/duanxldragon/pantheon-base/actions/runs/41989583272/job/127118343801"
+    },
+    {
+      "name": "Duplication Gate",
+      "id": 127118375587,
+      "conclusion": "success",
+      "completedAt": "2026-11-05T07:47:01Z",
+      "url": "https://github.com/duanxldragon/pantheon-base/actions/runs/41989583484/job/127118375587"
+    },
+    {
+      "name": "Fast Checks",
+      "id": 127118330700,
+      "conclusion": "success",
+      "completedAt": "2026-11-05T07:48:22Z",
+      "url": "https://github.com/duanxldragon/pantheon-base/actions/runs/41989580512/job/127118330700"
+    },
+    {
+      "name": "Frontend Contract",
+      "id": 127118449614,
+      "conclusion": "success",
+      "completedAt": "2026-11-05T07:48:21Z",
+      "url": "https://github.com/duanxldragon/pantheon-base/actions/runs/41989583484/job/127118449614"
+    },
+    {
+      "name": "Frontend Unit Tests",
+      "id": 127118330713,
+      "conclusion": "success",
+      "completedAt": "2026-11-05T07:47:30Z",
+      "url": "https://github.com/duanxldragon/pantheon-base/actions/runs/41989580512/job/127118330713"
+    },
+    {
+      "name": "GitHub Feedback Prereq",
+      "id": 127118344251,
+      "conclusion": "success",
+      "completedAt": "2026-11-05T07:46:45Z",
+      "url": "https://github.com/duanxldragon/pantheon-base/actions/runs/41989583272/job/127118344251"
+    },
+    {
+      "name": "Go Lint",
+      "id": 127118449827,
+      "conclusion": "success",
+      "completedAt": "2026-11-05T07:48:58Z",
+      "url": "https://github.com/duanxldragon/pantheon-base/actions/runs/41989583484/job/127118449827"
+    },
+    {
+      "name": "PR Governance Prereq",
+      "id": 127118344139,
+      "conclusion": "success",
+      "completedAt": "2026-11-05T07:46:47Z",
+      "url": "https://github.com/duanxldragon/pantheon-base/actions/runs/41989583272/job/127118344139"
+    },
+    {
+      "name": "PR Smoke Core (Optional)",
+      "id": 127118451904,
+      "conclusion": "skipped",
+      "completedAt": "2026-11-05T07:46:44Z",
+      "url": "https://github.com/duanxldragon/pantheon-base/actions/runs/41989583484/job/127118451904"
+    },
+    {
+      "name": "PR Smoke Modules",
+      "id": 127120524268,
+      "conclusion": "success",
+      "completedAt": "2026-11-05T08:04:28Z",
+      "url": "https://github.com/duanxldragon/pantheon-base/actions/runs/41989583484/job/127120524268"
+    },
+    {
+      "name": "Quality Gates",
+      "id": 127125230691,
+      "conclusion": "success",
+      "completedAt": "2026-11-05T08:04:34Z",
+      "url": "https://github.com/duanxldragon/pantheon-base/actions/runs/41989583484/job/127125230691"
+    },
+    {
+      "name": "Secret Scan",
+      "id": 127118330179,
+      "conclusion": "success",
+      "completedAt": "2026-11-05T07:47:01Z",
+      "url": "https://github.com/duanxldragon/pantheon-base/actions/runs/41989580518/job/127118330179"
+    },
+    {
+      "name": "Security Gates",
+      "id": 127119144267,
+      "conclusion": "success",
+      "completedAt": "2026-11-05T07:48:41Z",
+      "url": "https://github.com/duanxldragon/pantheon-base/actions/runs/41989580518/job/127119144267"
+    },
+    {
+      "name": "Smoke Sanity",
+      "id": 127120524421,
+      "conclusion": "success",
+      "completedAt": "2026-11-05T07:57:12Z",
+      "url": "https://github.com/duanxldragon/pantheon-base/actions/runs/41989583484/job/127120524421"
+    },
+    {
+      "name": "SonarCloud Code Analysis",
+      "id": 127118629017,
+      "conclusion": "success",
+      "completedAt": "2026-11-05T07:47:11Z",
+      "url": "https://github.com/duanxldragon/pantheon-base/runs/127118629017"
+    },
+    {
+      "name": "Unit Tests",
+      "id": 127118330879,
+      "conclusion": "success",
+      "completedAt": "2026-11-05T07:50:00Z",
+      "url": "https://github.com/duanxldragon/pantheon-base/actions/runs/41989580512/job/127118330879"
+    },
+    {
+      "name": "Workflow Security",
+      "id": 127118330196,
+      "conclusion": "success",
+      "completedAt": "2026-11-05T07:46:41Z",
+      "url": "https://github.com/duanxldragon/pantheon-base/actions/runs/41989580518/job/127118330196"
+    }
+  ],
+  "sonar": {
+    "unresolvedIssues": 0,
+    "originalUnresolvedIssues": 9,
+    "qualityGate": "OK",
+    "conditions": [
+      {
+        "status": "OK",
+        "metricKey": "new_reliability_rating",
+        "comparator": "GT",
+        "periodIndex": 1,
+        "errorThreshold": "1",
+        "actualValue": "1"
+      },
+      {
+        "status": "OK",
+        "metricKey": "new_security_rating",
+        "comparator": "GT",
+        "periodIndex": 1,
+        "errorThreshold": "1",
+        "actualValue": "1"
+      },
+      {
+        "status": "OK",
+        "metricKey": "new_maintainability_rating",
+        "comparator": "GT",
+        "periodIndex": 1,
+        "errorThreshold": "1",
+        "actualValue": "1"
+      },
+      {
+        "status": "OK",
+        "metricKey": "new_duplicated_lines_density",
+        "comparator": "GT",
+        "periodIndex": 1,
+        "errorThreshold": "3",
+        "actualValue": "0.0"
+      },
+      {
+        "status": "OK",
+        "metricKey": "new_security_hotspots_reviewed",
+        "comparator": "LT",
+        "periodIndex": 1,
+        "errorThreshold": "100",
+        "actualValue": "100.0"
+      }
+    ],
+    "ignoredConditions": false,
+    "newExclusions": false
+  },
+  "sources": [
+    {
+      "path": "workspace/audit-artifacts/base-freeze-2026-11-05/handoff-check-runs.json",
+      "sha256": "9f7670855a07818279570ab87327da8d4677125f2bc60f93fee08ce4be5d3569"
+    },
+    {
+      "path": "workspace/audit-artifacts/base-freeze-2026-11-05/resume-quality-jobs-native.json",
+      "sha256": "b960877312d492064a4e19efb6b81a118068ff739b530657bafc9d291ed5658f"
+    },
+    {
+      "path": "workspace/audit-artifacts/base-freeze-2026-11-05/sonar-pr489-after.json",
+      "sha256": "cf67db9d759d0293fb21b577f7f120e94ab8ebf7976e49d6b80b70e0d9ea5e2b"
+    },
+    {
+      "path": "workspace/audit-artifacts/base-freeze-2026-11-05/sonar-gate-after.json",
+      "sha256": "e9bbb4fd154aecaa093a7486924a628e74bf4b3440e989231c671ef4a70a3cd3"
+    }
+  ],
+  "review": {
+    "codeReviewer": "unavailable-http503-gpt-5.5",
+    "architect": "unavailable-http503-gpt-5.4-mini",
+    "retriedAt": "2026-11-05T08:14:41.433630+00:00",
+    "approval": false
+  },
+  "delivery": {
+    "draft": true,
+    "merged": false,
+    "released": false,
+    "opsConsumed": false
+  },
+  "scope": "Evidence is for the identified code candidate. A subsequent governance-only commit keeps these code trees but needs its own hosted checks."
+}

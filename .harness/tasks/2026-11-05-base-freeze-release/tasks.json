@@ -49,7 +49,7 @@
         "F0"
       ],
       "criteria": "受影响权威中英文文档一致；保留现有工作；相关分支差异有判定；按现行脚本准备新版本",
-      "state": "local-committed-ci-pending"
+      "state": "candidate-committed-ci-passed-evidence-sync"
     },
     {
       "id": "F5",
@@ -62,7 +62,7 @@
         "F4"
       ],
       "criteria": "同一候选完整 race/FE/脚本/治理/runtime/security 门禁通过，无未处理阻断发现",
-      "state": "local-verified-independent-review-unavailable"
+      "state": "local-and-hosted-verified-independent-review-unavailable"
     },
     {
       "id": "F6",
@@ -72,7 +72,7 @@
         "F5"
       ],
       "criteria": "相关 PR 提交并满足所有 CI/评审，主分支落入验证候选；不合并无关 PR",
-      "state": "draft-pr489-gate-repairs-recheck-pending"
+      "state": "draft-pr489-ci-passed-independent-review-blocked"
     },
     {
       "id": "F7",

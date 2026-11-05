@@ -7,11 +7,11 @@
 ## 2026-11-05 功能收尾与发行（当前执行）
 
 - F0–F8拆解：[任务](./tasks/2026-11-05-base-freeze-release/tasks.json)，[验收矩阵](./evidence/2026-11-05-base-freeze-release/functionality-matrix.md)，[证据](./evidence/2026-11-05-base-freeze-release/summary.md)。
-- 完整隔离MySQL/Redis Go race：47有测试包、1876通过节点、0失败；唯一真实S3集成用例无provider配置而跳过。前端33文件/218单测通过，lint/type-check/build通过。
+- 完整隔离MySQL/Redis Go race：47有测试包、1880通过节点（修复后完整重测）、0失败；唯一真实S3集成用例无provider配置而跳过。前端33文件/218单测通过，lint/type-check/build通过。
 - Core27通过/3无生成模块用例跳过；租户16+视角5全部通过。
 - 2026-11-05 补测：platform-smoke 97 passed（另 77 passed 重跑，exit 0）；业务五套 generated/database-import/master-detail/many-to-many/auto-recycle 全绿；生成模块重启后 API CRUD 与真实浏览器 CRUD（校验/创建/编辑失败恢复/删除/390px）通过。F3 转 local-verified；smoke 自启 vite 需显式 --proxy-target，否则整页 API 502。
 - SSRF/refresh/npm audit修复与系统分页、data-scope、generator修复纳入当前候选；当前租户API/初始化/升级指南同步纠正。
-- PR [#489](https://github.com/duanxldragon/pantheon-base/pull/489) 已创建草稿；真实 CI/Security/CodeQL/Backend/Frontend/Smoke 通过。Docs Governance/Sonar/Draft Handler 失败已定位并修复，本地复测1880 Go节点通过、FE lint/type-check/build/unit通过，结构0违规；修复提交的远端重检待完成。独立两路review仍503，未合并/发布/升级Ops锁或签冻结。
+- PR [#489](https://github.com/duanxldragon/pantheon-base/pull/489) 已创建草稿；代码候选 `57b42ace` 的27项远端检查成功、2条件跳过，包含Docs Governance/Sonar/Draft Handler与Quality Gates；Sonar9→0、Gate OK。本地1880 Go节点/FE/结构门禁通过，详见 [远端证据](./evidence/2026-11-05-base-freeze-release/hosted-validation.json)。独立两路review再次重试仍503，未合并/发布/升级Ops锁或签冻结。
 
 以下是历史执行读数，不可代替当前候选验收。
 

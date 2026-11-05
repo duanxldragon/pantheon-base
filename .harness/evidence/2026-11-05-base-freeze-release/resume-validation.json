@@ -1,8 +1,8 @@
 {
-  "recordedAt": "2026-11-05T07:43:59.459385+00:00",
+  "recordedAt": "2026-11-05T08:14:41.433630+00:00",
   "reviewedBaseCandidate": "9d28d3d4293c02cf4ae465c19ad6afcc9b097c6d",
   "pr": "https://github.com/duanxldragon/pantheon-base/pull/489",
-  "status": "local-verified-hosted-recheck-pending",
+  "status": "local-and-hosted-verified-independent-review-unavailable",
   "backend": {
     "tests": {
       "pass": 1880,
@@ -150,9 +150,15 @@
   "notes": [
     "Structure gate reproduced locally and from hosted failing log; relocate helper under existing API ownership (included in foundation bundle).",
     "All original race assertions, database checks, release barriers and test cases retained.",
-    "gocognit 1.2.1 <=15 is local corroboration; exact Sonar S3776 rerun required after push.",
+    "Exact hosted Sonar rerun passed on the fix candidate: 9 to 0 unresolved issues, quality gate OK, ratings A, no new exclusions.",
     "Changed workflow: actionlint and zizmor1.25.2 zero findings. Whole workflow tree zizmor exit14/23 existing findings; not whole-tree green.",
     "No UI appearance/interaction change in this follow-up. Existing rendered dark login/user1440x900 inspected; screenshots remain workspace artifacts.",
-    "Required code-reviewer/architect both returned503; no independent approval."
-  ]
+    "Required code-reviewer/architect retried again and both returned HTTP503; no independent approval."
+  ],
+  "verifiedCandidate": "57b42ace467dd6f96db232bfebab7626f07c84be",
+  "codeTrees": {
+    "backend": "02341ada0ee53a3924522a6599723be71c060658",
+    "frontend/src": "a3351c514bced1a6885abcc54a5d57f986b01062"
+  },
+  "hostedEvidence": ".harness/evidence/2026-11-05-base-freeze-release/hosted-validation.json"
 }
