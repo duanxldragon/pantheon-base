@@ -145,7 +145,7 @@ PB-003：Refresh 路径依次 GET 校验旧 token、保存/签发新 pair、DEL 
 
 type-check、lint、build、218 个 Vitest 测试及 prebuild 的菜单/i18n/UI/SearchToolbar 等检查通过，说明现态代码具有可构建性和较完整的自动约束。登录页桌面与手机截图清晰，无已观察到的布局溢出或 pageerror，作为本轮限定的视觉通过证据。
 
-[桌面登录截图](../../../audit-artifacts/base-global-audit-2026-11-04/login-desktop.png) 与 [手机登录截图](../../../audit-artifacts/base-global-audit-2026-11-04/login-mobile.png) 位于 workspace 证据目录；这些跨仓库证据链接在只复制 Base 仓库时不可用，应连同附件一起交付。
+[桌面登录截图](../../.harness/evidence/2026-11-05-base-freeze-release/audit-screenshots/login-desktop.png) 与 [手机登录截图](../../.harness/evidence/2026-11-05-base-freeze-release/audit-screenshots/login-mobile.png) 已作为原始证据附件纳入 Base 仓库，单仓库检出与正式快照均可访问。
 
 | 前端项目 | 结论 |
 | --- | --- |

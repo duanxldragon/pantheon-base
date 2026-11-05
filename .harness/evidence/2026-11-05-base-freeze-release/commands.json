@@ -841,6 +841,13 @@
       "finishedAt": "2026-11-05T09:47:58.799Z",
       "status": "passed",
       "notes": "workspace audit-artifacts/base-freeze-2026-11-05/gorace-review-fixes-0.log; final SSRF extraction separately verified, exact final commit hosted race still required"
+    },
+    {
+      "command": "node scripts/harness/check-doc-links.mjs --root <isolated staged snapshot> --strict",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "exitCode": 0,
+      "notes": "git checkout-index snapshot docs-clean-snapshot; explicit PANTHEON_HARNESS_ROOT; 0 findings, no external audit-artifacts images"
     }
   ],
   "taskId": "2026-11-05-base-freeze-release",
