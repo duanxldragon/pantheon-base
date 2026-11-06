@@ -1,7 +1,7 @@
 {
   "taskId": "2026-11-05-base-freeze-release",
   "updatedAt": "2026-11-06",
-  "authorization": "开发、文档、GitHub 提交合并、CI、发行和消费均已授权；租户保留",
+  "authorization": "Prior full delivery scope plus latest user: PR485, minimatch52, v0.18.4, GitHub-only latest release consumption; no production data or gate weakening",
   "tasks": [
     {
       "id": "F0",
@@ -49,7 +49,8 @@
         "F0"
       ],
       "criteria": "受影响权威中英文文档一致；保留现有工作；相关分支差异有判定；按现行脚本准备新版本",
-      "state": "candidate-committed-ci-passed-evidence-sync"
+      "state": "v0184-security-preparation-network-blocked",
+      "note": "Base branch fast-forwarded to2a7061fa; dependency override added, install/lock pending"
     },
     {
       "id": "F5",
@@ -62,7 +63,8 @@
         "F4"
       ],
       "criteria": "同一候选完整 race/FE/脚本/治理/runtime/security 门禁通过，无未处理阻断发现",
-      "state": "local-verified-independent-review-approved"
+      "state": "new-security-and-consumer-review-verification-pending",
+      "note": "Old approvals apply only to prior exact source; new independent adapters cannot connect"
     },
     {
       "id": "F6",
@@ -72,7 +74,8 @@
         "F5"
       ],
       "criteria": "相关 PR 提交并满足所有 CI/评审，主分支落入验证候选；不合并无关 PR",
-      "state": "pr489-pr490-merged-sonar-followup-local-verified"
+      "state": "prior-base-delivery-merged-new-security-pr-pending",
+      "note": "Latest merged main2a7061fa includes PR485; security patch not committed/pushed/merged"
     },
     {
       "id": "F7",
@@ -82,7 +85,8 @@
         "F6"
       ],
       "criteria": "新版本/tag/artifact/checksum/manifest 一致，现行 release-gate 成功",
-      "state": "waiting-for-sonar-followup-and-final-main-gates"
+      "state": "v0183-publisher-completed-v0184-not-published",
+      "note": "Publisher53536 exit0 reports four assets; independent latest GitHub query blocked; final targetv0184 awaits gates"
     },
     {
       "id": "F8",
@@ -92,7 +96,8 @@
         "F7"
       ],
       "criteria": "正式 release overlay/lock 更新，已有 DB 修复合并，迁移链无冲突，完整 race/CI 通过",
-      "state": "preparation-reviewed-waiting-for-official-release"
+      "state": "github-consumer-scripts-verified-final-release-not-consumed",
+      "note": "Ops54 script tests pass; v0184 full final rebuild/race/smoke/CI/review/merge pending; main lockv0182 retained"
     }
   ]
 }

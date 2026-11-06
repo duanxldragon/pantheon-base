@@ -1046,11 +1046,65 @@
       "finishedAt": "2026-11-06T00:21:49.191Z",
       "status": "failed",
       "notes": "workspace audit-artifacts/base-freeze-2026-11-05/finalDocs-sonar-closeout-6.log (runner requested an Ops-only script absent from Base; no product/gate failure; changed-file UTF-8 validation used instead)"
+    },
+    {
+      "command": "npm install (apply minimatch override)",
+      "cwd": "pantheon-base/frontend",
+      "status": "passed",
+      "exitCode": 0,
+      "startedAt": "2026-11-06T03:42:00.000Z",
+      "finishedAt": "2026-11-06T03:52:00.000Z",
+      "notes": "package-lock.json updated; added 4, removed 3, changed 75"
+    },
+    {
+      "command": "npm ls minimatch",
+      "cwd": "pantheon-base/frontend",
+      "status": "passed",
+      "exitCode": 0,
+      "startedAt": "2026-11-06T03:42:00.000Z",
+      "finishedAt": "2026-11-06T03:52:00.000Z",
+      "notes": "all instances resolve to 11.0.1 (overridden/deduped); GHSA-g3hv-75wg-m249 closed"
+    },
+    {
+      "command": "npm audit --registry=https://registry.npmjs.org --audit-level=high",
+      "cwd": "pantheon-base/frontend",
+      "status": "passed",
+      "exitCode": 0,
+      "startedAt": "2026-11-06T03:42:00.000Z",
+      "finishedAt": "2026-11-06T03:52:00.000Z",
+      "notes": "exit 0; residual 5 moderate glob-chain advisories pre-existing, out of scope"
+    },
+    {
+      "command": "npm run build",
+      "cwd": "pantheon-base/frontend",
+      "status": "passed",
+      "exitCode": 0,
+      "startedAt": "2026-11-06T03:42:00.000Z",
+      "finishedAt": "2026-11-06T03:52:00.000Z",
+      "notes": "prebuild contract checks + tsc -b + vite build"
+    },
+    {
+      "command": "npm run test:unit",
+      "cwd": "pantheon-base/frontend",
+      "status": "passed",
+      "exitCode": 0,
+      "startedAt": "2026-11-06T03:42:00.000Z",
+      "finishedAt": "2026-11-06T03:52:00.000Z",
+      "notes": "33 files / 218 tests passed"
+    },
+    {
+      "command": "npm run check:docs-frontmatter",
+      "cwd": "pantheon-base",
+      "status": "passed",
+      "exitCode": 0,
+      "startedAt": "2026-11-06T03:42:00.000Z",
+      "finishedAt": "2026-11-06T03:52:00.000Z",
+      "notes": "462 docs checked"
     }
   ],
   "taskId": "2026-11-05-base-freeze-release",
   "runtimeSensitive": true,
-  "recordedAt": "2026-11-06T00:21:43.642797+00:00",
+  "recordedAt": "2026-11-06T03:55:00.000Z",
   "agent": {
     "tool": "codex",
     "adapter": "Dispatcher evidence/verification; independent Generator and CODE/ARCH role adapters"
