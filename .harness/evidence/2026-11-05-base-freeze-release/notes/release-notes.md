@@ -21,3 +21,7 @@ The release contains migration `000031_drop_permission_role_data_scope_policy`; 
 - 生成必填布尔创建 DTO 区分缺失与 false，并同步模型映射。
 - SSRF 已验证地址按剩余时间分配拨号期限，保留 Host/SNI 和整体超时。
 - 运行态证据声明冲突保留任一 true 的要求；token-storage 扫描恢复正常报告。
+
+## Final Sonar closeout validation
+
+Two release-blocking Sonar findings were addressed with a nested cancellation explanation and grouped callback parameters. Fresh full Go race: 1889 pass / 0 fail / 1 skip; 47 passing test packages; 14 governance checks and independent CODE/ARCH incremental reviews passed. Current hosted same-rule analysis and Release Gate remain mandatory before publication.

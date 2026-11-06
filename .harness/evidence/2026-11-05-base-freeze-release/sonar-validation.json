@@ -1,0 +1,189 @@
+{
+  "baselineCommit": "0e56f922f97585c0e4675603ac39f4dbf1a8b1d5",
+  "counts": {
+    "pass": 1889,
+    "fail": 0,
+    "skip": 1
+  },
+  "passingPackages": 47,
+  "skips": [
+    {
+      "package": "github.com/duanxldragon/pantheon-base/backend/pkg/upload",
+      "test": "TestServiceStoreUsesRealS3WhenConfigured"
+    }
+  ],
+  "commands": [
+    {
+      "command": "go test -race -json -p 1 -count=1 ./...",
+      "cwd": "pantheon-base/backend",
+      "exitCode": 0,
+      "error": null,
+      "startedAt": "2026-11-06T00:01:49.024Z",
+      "finishedAt": "2026-11-06T00:21:18.242Z",
+      "log": "gorace-sonar-closeout-0.log",
+      "stderr": "gorace-sonar-closeout-0-stderr.log"
+    },
+    {
+      "command": "npm run check:docs-frontmatter",
+      "cwd": "pantheon-base",
+      "exitCode": 0,
+      "error": null,
+      "startedAt": "2026-11-06T00:03:54.051Z",
+      "finishedAt": "2026-11-06T00:03:55.213Z",
+      "log": "governance-sonar-closeout-0.log",
+      "stderr": "governance-sonar-closeout-0-stderr.log"
+    },
+    {
+      "command": "npm run check:structure",
+      "cwd": "pantheon-base",
+      "exitCode": 0,
+      "error": null,
+      "startedAt": "2026-11-06T00:03:55.223Z",
+      "finishedAt": "2026-11-06T00:03:55.876Z",
+      "log": "governance-sonar-closeout-1.log",
+      "stderr": "governance-sonar-closeout-1-stderr.log"
+    },
+    {
+      "command": "npm run check:task-packet-template",
+      "cwd": "pantheon-base",
+      "exitCode": 0,
+      "error": null,
+      "startedAt": "2026-11-06T00:03:55.877Z",
+      "finishedAt": "2026-11-06T00:03:56.472Z",
+      "log": "governance-sonar-closeout-2.log",
+      "stderr": "governance-sonar-closeout-2-stderr.log"
+    },
+    {
+      "command": "npm run check:task-packet",
+      "cwd": "pantheon-base",
+      "exitCode": 0,
+      "error": null,
+      "startedAt": "2026-11-06T00:03:56.473Z",
+      "finishedAt": "2026-11-06T00:03:57.401Z",
+      "log": "governance-sonar-closeout-3.log",
+      "stderr": "governance-sonar-closeout-3-stderr.log"
+    },
+    {
+      "command": "npm run check:harness-evidence",
+      "cwd": "pantheon-base",
+      "exitCode": 0,
+      "error": null,
+      "startedAt": "2026-11-06T00:03:57.405Z",
+      "finishedAt": "2026-11-06T00:03:58.898Z",
+      "log": "governance-sonar-closeout-4.log",
+      "stderr": "governance-sonar-closeout-4-stderr.log"
+    },
+    {
+      "command": "npm run check:harness-review",
+      "cwd": "pantheon-base",
+      "exitCode": 0,
+      "error": null,
+      "startedAt": "2026-11-06T00:03:58.900Z",
+      "finishedAt": "2026-11-06T00:03:59.735Z",
+      "log": "governance-sonar-closeout-5.log",
+      "stderr": "governance-sonar-closeout-5-stderr.log"
+    },
+    {
+      "command": "npm run check:harness-runtime-evidence",
+      "cwd": "pantheon-base",
+      "exitCode": 0,
+      "error": null,
+      "startedAt": "2026-11-06T00:03:59.737Z",
+      "finishedAt": "2026-11-06T00:04:00.418Z",
+      "log": "governance-sonar-closeout-6.log",
+      "stderr": "governance-sonar-closeout-6-stderr.log"
+    },
+    {
+      "command": "npm run check:harness-graph-review",
+      "cwd": "pantheon-base",
+      "exitCode": 0,
+      "error": null,
+      "startedAt": "2026-11-06T00:04:00.419Z",
+      "finishedAt": "2026-11-06T00:04:01.020Z",
+      "log": "governance-sonar-closeout-7.log",
+      "stderr": "governance-sonar-closeout-7-stderr.log"
+    },
+    {
+      "command": "npm run check:checker-wiring",
+      "cwd": "pantheon-base",
+      "exitCode": 0,
+      "error": null,
+      "startedAt": "2026-11-06T00:04:01.023Z",
+      "finishedAt": "2026-11-06T00:04:01.661Z",
+      "log": "governance-sonar-closeout-8.log",
+      "stderr": "governance-sonar-closeout-8-stderr.log"
+    },
+    {
+      "command": "npm run check:security-patterns",
+      "cwd": "pantheon-base",
+      "exitCode": 0,
+      "error": null,
+      "startedAt": "2026-11-06T00:04:01.663Z",
+      "finishedAt": "2026-11-06T00:04:31.684Z",
+      "log": "governance-sonar-closeout-9.log",
+      "stderr": "governance-sonar-closeout-9-stderr.log"
+    },
+    {
+      "command": "npm run check:ui-tokens",
+      "cwd": "pantheon-base",
+      "exitCode": 0,
+      "error": null,
+      "startedAt": "2026-11-06T00:04:31.685Z",
+      "finishedAt": "2026-11-06T00:04:32.632Z",
+      "log": "governance-sonar-closeout-10.log",
+      "stderr": "governance-sonar-closeout-10-stderr.log"
+    },
+    {
+      "command": "npm run check:failure-registry",
+      "cwd": "pantheon-base",
+      "exitCode": 0,
+      "error": null,
+      "startedAt": "2026-11-06T00:04:32.634Z",
+      "finishedAt": "2026-11-06T00:04:33.150Z",
+      "log": "governance-sonar-closeout-11.log",
+      "stderr": "governance-sonar-closeout-11-stderr.log"
+    },
+    {
+      "command": "npm run check:harness-docs",
+      "cwd": "pantheon-base",
+      "exitCode": 0,
+      "error": null,
+      "startedAt": "2026-11-06T00:04:33.152Z",
+      "finishedAt": "2026-11-06T00:04:33.957Z",
+      "log": "governance-sonar-closeout-12.log",
+      "stderr": "governance-sonar-closeout-12-stderr.log"
+    },
+    {
+      "command": "npm run check:generated-modules",
+      "cwd": "pantheon-base",
+      "exitCode": 0,
+      "error": null,
+      "startedAt": "2026-11-06T00:04:33.958Z",
+      "finishedAt": "2026-11-06T00:04:34.537Z",
+      "log": "governance-sonar-closeout-13.log",
+      "stderr": "governance-sonar-closeout-13-stderr.log"
+    }
+  ],
+  "review": {
+    "code": "APPROVE",
+    "architecture": "CLEAR",
+    "sourceManifest": "review-source-manifest-sonar.json"
+  },
+  "logSha256": {
+    "gorace-sonar-closeout-0.log": "fc37b948ca8d75eaa81433f8f5b3a1090d0a34d052821473e4bb77eb5e1f58ac",
+    "governance-sonar-closeout-0.log": "0e17f2c597633cc3ed234cbbc9906210d72ddf80cee51d6b621f447c5f06be42",
+    "governance-sonar-closeout-1.log": "beb4335a56017e1ba965ab3450ca3ac59b01dd32b874023672abfe51f2e8e1e3",
+    "governance-sonar-closeout-2.log": "c906367e2b043848d360d0c2a68d087d528861349348bf101a37c09439d98fc7",
+    "governance-sonar-closeout-3.log": "6ef198061227ada814860b4188ae6b6b06b28646ae9f37d657759f193ab4b248",
+    "governance-sonar-closeout-4.log": "dd87e7b8a416410a67c63a67c1d518153447028c80a1181188dba74a5824e7f9",
+    "governance-sonar-closeout-5.log": "c95ad0e133540ab2ae89ea23cddcbce0706693e9b66a67a996bdf2e6209ddd3d",
+    "governance-sonar-closeout-6.log": "5a6f01072ec7fde3019ef9c2387c9f4c57bcacaf18c9da21390005fecdaf2b16",
+    "governance-sonar-closeout-7.log": "c82b64c56705a30ca300eae47449ae5c424c2d38b28eb7d1d45403790a2d1460",
+    "governance-sonar-closeout-8.log": "5bacbbe603de0a7d5109ebd54f6c2c1f547dd59d4f203e846b58c0e2f0455813",
+    "governance-sonar-closeout-9.log": "138227ea32a5aa48091f445854ea984f61320ac6ef94c868a280b46d2d88d320",
+    "governance-sonar-closeout-10.log": "6f2d026aaf7ba15ce2e0c26c82fe3d49baaa8c8f24af60ec1f794c772aafb72f",
+    "governance-sonar-closeout-11.log": "74170d2cd17e0f749b653fc0b4f520d2beed292bb03b2fed38d742bc1e22e8ab",
+    "governance-sonar-closeout-12.log": "aff38ef831fbdaa9304137101838cff74335ea77c6b19a3eb5400fa047a464b6",
+    "governance-sonar-closeout-13.log": "4b8b7d63d07a9cfbf7a3603a93c51b9cb4645bb331947678799726a375f8aa58"
+  }
+}

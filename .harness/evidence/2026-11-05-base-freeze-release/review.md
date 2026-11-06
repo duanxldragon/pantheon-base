@@ -28,7 +28,7 @@
     "reviewFile": ".harness/evidence/2026-11-05-base-freeze-release/review.md",
     "evidence": ".harness/evidence/2026-11-05-base-freeze-release/commands.json"
   },
-  "sourceManifest": ".harness/evidence/2026-11-05-base-freeze-release/review-source-manifest.json",
+  "sourceManifest": ".harness/evidence/2026-11-05-base-freeze-release/review-source-manifest-sonar.json",
   "codeRecommendation": "APPROVE",
   "architectStatus": "CLEAR",
   "limitations": [
@@ -42,3 +42,7 @@
 ## 文档附件跟进
 
 独立 code-reviewer 对四项暂存文档/图片修复结论 APPROVE；详见 [附件修复评审](docs-link-review.md)。产品源码未变化，原双路结论仍适用。
+
+## Sonar 增量复审
+
+两路独立 gpt-6-astra 复审均通过：[CODE APPROVE](sonar-code-review.md)、[ARCH CLEAR](sonar-arch-review.md)。仅新增空回调解释与同类型参数分组，完整文件差异已核实。原评审指纹保留，[最终组合指纹](review-source-manifest-sonar.json) 与当前 13 个源码文件一致。托管 Sonar 同规则复测和发行门禁仍需通过。

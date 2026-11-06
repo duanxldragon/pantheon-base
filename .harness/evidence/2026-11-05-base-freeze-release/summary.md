@@ -1,6 +1,6 @@
 # Base 功能收尾与发行执行证据
 
-状态：in-progress。PR [#489](https://github.com/duanxldragon/pantheon-base/pull/489) 为草稿；v0.18.3 尚未发布，最后正式版 v0.18.2。
+状态：in-progress。PR [#489](https://github.com/duanxldragon/pantheon-base/pull/489) 与 [#490](https://github.com/duanxldragon/pantheon-base/pull/490) 已合并；v0.18.3 尚未发布，最后正式版 v0.18.2。
 
 ## 当前修复与评审
 
@@ -14,7 +14,7 @@
 - 前端 lint/type-check/build、33 文件/218 单测通过；test:scripts、foundation-release/frontmatter 回归通过。
 - 14 项治理检查全部通过；完整 generator smoke 通过，basic/enterprise/many-to-many 生成 Go 格式与 TS 编译通过。
 - 全量隔离 MySQL/Redis Go race 完成：1889通过测试节点/0失败/1真实S3 skip，47个有测试包通过；两处 SSRF 提取后的该包完整 race 已通过。
-- PR 反馈快照无未关闭条目；当前 GitHub CodeQL/Dependabot 开放告警均为 0。最终提交 CI 待推送后确认。
+- PR 反馈快照无未关闭条目；当前 GitHub CodeQL/Dependabot 开放告警均为 0。新 Sonar 增量候选 CI 待推送后确认。
 - 精确命令、退出码及原始日志 SHA256 见 review-remediation.json，源码指纹见 review-source-manifest.json。原始日志保存在 workspace audit-artifacts/base-freeze-2026-11-05。
 
 ## 已有运行态与渲染证据
@@ -33,7 +33,7 @@ Ops 隔离业务修复 dbce4ae 保留，未发布回填迁移已从000031调整�
 
 ## 明确缺口
 
-- 当前候选CI、合并、发行及正式Ops消费尚待完成。
+- Sonar 增量候选 CI/合并、正式发行及 Ops 消费尚待完成；主功能与截图附件 PR 已合并。
 - 真实S3 provider未配置，集成用例跳过；未获得豁免。
 - npm开发链15 moderate，0 high/critical；全仓zizmor23既有发现，未宣称安全扫描全零。
 - 分页测试证明静态数据集的确定顺序与完整ID序列，不承诺并发写入的快照一致性。
@@ -42,3 +42,9 @@ Ops 隔离业务修复 dbce4ae 保留，未发布回填迁移已从000031调整�
 ## 合并后文档证据修复
 
 PR #489 已合入 main（de9f11a6）。main严格文档门禁发现审计报告两条截图链接依赖工作区外层附件；现打包原始PNG并修正链接，见[修复证据](ci-doc-link-repair.md)。本地严格链接、frontmatter以及隔离暂存快照检查均通过。发行仍等待最新main门禁，Ops消费待正式发行。
+
+## Release Gate Sonar follow-up
+
+Main `0e56f922` Full Smoke 已通过，Release Gate 因两项未关闭 Sonar 问题失败。最小修复已获得 CODE APPROVE / ARCH CLEAR；新的完整 Go race：1889 pass / 0 fail / 1 skip; 47 passing test packages；14 项治理检查通过。详见 [Sonar closeout](sonar-closeout.md)。新提交的托管 Sonar 同规则复测、CI 与 main Release Gate 仍为发布条件。
+
+Ops 准备树 37 项 overlay 回归、真实 MySQL 回填 race 与独立 CODE/ARCH 评审已通过。正式消费仍等待 v0.18.3 发布。
