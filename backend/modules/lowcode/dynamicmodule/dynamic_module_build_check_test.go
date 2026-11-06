@@ -61,7 +61,7 @@ func TestRegisterManagedModuleRejectsUncompilableGeneratedSource(t *testing.T) {
 	service := &DynamicModuleService{
 		db:            db,
 		workspaceRoot: workspaceRoot,
-		buildGeneratedModule: func(_ string, packagePath string) error {
+		buildGeneratedModule: func(_, packagePath string) error {
 			builtPackage = packagePath
 			return errors.New("module.register.source_uncompilable: build failed: undefined: contracts.ProtectedGroup")
 		},

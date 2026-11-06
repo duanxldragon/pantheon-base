@@ -157,7 +157,9 @@ func (v *Validator) dialChecked(ctx context.Context, network, addr string,
 			return nil, err
 		}
 		attemptCtx := ctx
-		cancel := func() {}
+		cancel := func() {
+			// No per-attempt timer exists to cancel when ctx has no deadline.
+		}
 		if deadline, ok := ctx.Deadline(); ok {
 			attemptCtx, cancel = context.WithTimeout(ctx, time.Until(deadline)/time.Duration(len(ips)-index))
 		}

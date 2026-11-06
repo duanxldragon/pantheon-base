@@ -1,6 +1,6 @@
 {
   "taskId": "2026-11-05-base-freeze-release",
-  "updatedAt": "2026-11-05",
+  "updatedAt": "2026-11-06",
   "authorization": "开发、文档、GitHub 提交合并、CI、发行和消费均已授权；租户保留",
   "tasks": [
     {
@@ -72,7 +72,7 @@
         "F5"
       ],
       "criteria": "相关 PR 提交并满足所有 CI/评审，主分支落入验证候选；不合并无关 PR",
-      "state": "draft-pr489-review-approved-final-push-ci-pending"
+      "state": "pr489-pr490-merged-sonar-followup-local-verified"
     },
     {
       "id": "F7",
@@ -82,7 +82,7 @@
         "F6"
       ],
       "criteria": "新版本/tag/artifact/checksum/manifest 一致，现行 release-gate 成功",
-      "state": "planned"
+      "state": "waiting-for-sonar-followup-and-final-main-gates"
     },
     {
       "id": "F8",
@@ -92,7 +92,7 @@
         "F7"
       ],
       "criteria": "正式 release overlay/lock 更新，已有 DB 修复合并，迁移链无冲突，完整 race/CI 通过",
-      "state": "planned"
+      "state": "preparation-reviewed-waiting-for-official-release"
     }
   ]
 }

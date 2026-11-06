@@ -1,0 +1,15 @@
+{
+  "backend/modules/system/iam/role/role_pagination_test.go": "8b5c63e0564b30b071c23eb0c57752186225d8bc5bda4e23aafe71e441ee2181",
+  "backend/modules/system/iam/role/role_service.go": "9113205a64c6487bcb306ffe6f892364bd38a7adcc1f0ebdf7ac1f377abc46b1",
+  "backend/modules/system/org/post/post_pagination_test.go": "eb7fa22d150a37a640eab473763812cdea2301f13c994295434a6c2b690a4cb8",
+  "backend/modules/system/org/post/post_service.go": "99711bf90f2476260d3b6b4061e73adf50c80c373a702e7997a842d794d10a90",
+  "backend/pkg/security/ssrf/transport_test.go": "a7de647fd77bfd59a68ff3bb00dc46a3afb21a54dc897ce26d219e99b9470b0b",
+  "backend/pkg/security/ssrf/validator.go": "a8eb82da92721104c260ade049f5d45141186e427e8cd5860a204add3db58f73",
+  "frontend/src/modules/lowcode/generator/backendGenerator.ts": "125efba697b3f78a1554c479c1c5a7b0df3b9ea618f439ce4e58e3f3e7a0b5c1",
+  "frontend/tests/generator/generator-quality-contract.test.ts": "d3df0c924577779d6a9486d5a04e8f1ba5f13b8c9273fc2af92ce4cc91995415",
+  "scripts/check-security-patterns.mjs": "7f52b9eba29170ee99ebcc5364b630e012eb29f4df7092c318af187c832432ef",
+  "scripts/harness/check-runtime-evidence.mjs": "0f1697be161a245307daaa1879a5abecdfd1c8d1c64789567d31e00d260fceda",
+  "tests/scripts/harness-runtime-evidence.test.mjs": "9703a8ed621ec0f56cf2f9e7383864d4717328a8f2babdcf1689f21f2e5c71d7",
+  "tests/scripts/security-pattern-report.test.mjs": "9c35d453f44eca80a7e478bf1453a67a61f9d33bdd4ba8138882e8a1eb0c2a1a",
+  "backend/modules/lowcode/dynamicmodule/dynamic_module_build_check_test.go": "8c06c5afa4aaf8adf875c503ec3ee0520d248beb5dc2725428429d37ca72a32c"
+}

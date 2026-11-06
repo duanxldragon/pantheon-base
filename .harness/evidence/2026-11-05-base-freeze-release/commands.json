@@ -1,6 +1,6 @@
 {
   "knownGaps": [
-    "Independent final review approved; final candidate hosted CI/merge/release/Ops consumption pending.",
+    "Two Sonar fixes have independent CODE APPROVE / ARCH CLEAR and fresh full Go race; hosted same-rule analysis, current CI, release and official Ops consumption remain pending.",
     "真实 S3 provider 未配置：1 个集成用例跳过",
     "npm audit 报 15 个 moderate（eslint/nyc/vite-plugin-istanbul/typescript-eslint 开发链，0 high/0 critical）；升级属依赖变更，未在本次候选处理",
     "core 中 3 个生成模块用例在未激活模块的运行环境保持 skip；本轮改由真实生成模块的浏览器/API CRUD 覆盖，不把 skip 当通过",
@@ -848,15 +848,213 @@
       "status": "passed",
       "exitCode": 0,
       "notes": "git checkout-index snapshot docs-clean-snapshot; explicit PANTHEON_HARNESS_ROOT; 0 findings, no external audit-artifacts images"
+    },
+    {
+      "command": "go test -race -json -p 1 -count=1 ./...",
+      "cwd": "pantheon-base/backend",
+      "exitCode": 0,
+      "startedAt": "2026-11-06T00:01:49.024Z",
+      "finishedAt": "2026-11-06T00:21:18.242Z",
+      "status": "passed",
+      "notes": "workspace audit-artifacts/base-freeze-2026-11-05/gorace-sonar-closeout-0.log"
+    },
+    {
+      "command": "npm run check:docs-frontmatter",
+      "cwd": "pantheon-base",
+      "exitCode": 0,
+      "startedAt": "2026-11-06T00:03:54.051Z",
+      "finishedAt": "2026-11-06T00:03:55.213Z",
+      "status": "passed",
+      "notes": "workspace audit-artifacts/base-freeze-2026-11-05/governance-sonar-closeout-0.log"
+    },
+    {
+      "command": "npm run check:structure",
+      "cwd": "pantheon-base",
+      "exitCode": 0,
+      "startedAt": "2026-11-06T00:03:55.223Z",
+      "finishedAt": "2026-11-06T00:03:55.876Z",
+      "status": "passed",
+      "notes": "workspace audit-artifacts/base-freeze-2026-11-05/governance-sonar-closeout-1.log"
+    },
+    {
+      "command": "npm run check:task-packet-template",
+      "cwd": "pantheon-base",
+      "exitCode": 0,
+      "startedAt": "2026-11-06T00:03:55.877Z",
+      "finishedAt": "2026-11-06T00:03:56.472Z",
+      "status": "passed",
+      "notes": "workspace audit-artifacts/base-freeze-2026-11-05/governance-sonar-closeout-2.log"
+    },
+    {
+      "command": "npm run check:task-packet",
+      "cwd": "pantheon-base",
+      "exitCode": 0,
+      "startedAt": "2026-11-06T00:03:56.473Z",
+      "finishedAt": "2026-11-06T00:03:57.401Z",
+      "status": "passed",
+      "notes": "workspace audit-artifacts/base-freeze-2026-11-05/governance-sonar-closeout-3.log"
+    },
+    {
+      "command": "npm run check:harness-evidence",
+      "cwd": "pantheon-base",
+      "exitCode": 0,
+      "startedAt": "2026-11-06T00:03:57.405Z",
+      "finishedAt": "2026-11-06T00:03:58.898Z",
+      "status": "passed",
+      "notes": "workspace audit-artifacts/base-freeze-2026-11-05/governance-sonar-closeout-4.log"
+    },
+    {
+      "command": "npm run check:harness-review",
+      "cwd": "pantheon-base",
+      "exitCode": 0,
+      "startedAt": "2026-11-06T00:03:58.900Z",
+      "finishedAt": "2026-11-06T00:03:59.735Z",
+      "status": "passed",
+      "notes": "workspace audit-artifacts/base-freeze-2026-11-05/governance-sonar-closeout-5.log"
+    },
+    {
+      "command": "npm run check:harness-runtime-evidence",
+      "cwd": "pantheon-base",
+      "exitCode": 0,
+      "startedAt": "2026-11-06T00:03:59.737Z",
+      "finishedAt": "2026-11-06T00:04:00.418Z",
+      "status": "passed",
+      "notes": "workspace audit-artifacts/base-freeze-2026-11-05/governance-sonar-closeout-6.log"
+    },
+    {
+      "command": "npm run check:harness-graph-review",
+      "cwd": "pantheon-base",
+      "exitCode": 0,
+      "startedAt": "2026-11-06T00:04:00.419Z",
+      "finishedAt": "2026-11-06T00:04:01.020Z",
+      "status": "passed",
+      "notes": "workspace audit-artifacts/base-freeze-2026-11-05/governance-sonar-closeout-7.log"
+    },
+    {
+      "command": "npm run check:checker-wiring",
+      "cwd": "pantheon-base",
+      "exitCode": 0,
+      "startedAt": "2026-11-06T00:04:01.023Z",
+      "finishedAt": "2026-11-06T00:04:01.661Z",
+      "status": "passed",
+      "notes": "workspace audit-artifacts/base-freeze-2026-11-05/governance-sonar-closeout-8.log"
+    },
+    {
+      "command": "npm run check:security-patterns",
+      "cwd": "pantheon-base",
+      "exitCode": 0,
+      "startedAt": "2026-11-06T00:04:01.663Z",
+      "finishedAt": "2026-11-06T00:04:31.684Z",
+      "status": "passed",
+      "notes": "workspace audit-artifacts/base-freeze-2026-11-05/governance-sonar-closeout-9.log"
+    },
+    {
+      "command": "npm run check:ui-tokens",
+      "cwd": "pantheon-base",
+      "exitCode": 0,
+      "startedAt": "2026-11-06T00:04:31.685Z",
+      "finishedAt": "2026-11-06T00:04:32.632Z",
+      "status": "passed",
+      "notes": "workspace audit-artifacts/base-freeze-2026-11-05/governance-sonar-closeout-10.log"
+    },
+    {
+      "command": "npm run check:failure-registry",
+      "cwd": "pantheon-base",
+      "exitCode": 0,
+      "startedAt": "2026-11-06T00:04:32.634Z",
+      "finishedAt": "2026-11-06T00:04:33.150Z",
+      "status": "passed",
+      "notes": "workspace audit-artifacts/base-freeze-2026-11-05/governance-sonar-closeout-11.log"
+    },
+    {
+      "command": "npm run check:harness-docs",
+      "cwd": "pantheon-base",
+      "exitCode": 0,
+      "startedAt": "2026-11-06T00:04:33.152Z",
+      "finishedAt": "2026-11-06T00:04:33.957Z",
+      "status": "passed",
+      "notes": "workspace audit-artifacts/base-freeze-2026-11-05/governance-sonar-closeout-12.log"
+    },
+    {
+      "command": "npm run check:generated-modules",
+      "cwd": "pantheon-base",
+      "exitCode": 0,
+      "startedAt": "2026-11-06T00:04:33.958Z",
+      "finishedAt": "2026-11-06T00:04:34.537Z",
+      "status": "passed",
+      "notes": "workspace audit-artifacts/base-freeze-2026-11-05/governance-sonar-closeout-13.log"
+    },
+    {
+      "command": "npm run check:docs-frontmatter",
+      "cwd": "pantheon-base",
+      "exitCode": 0,
+      "startedAt": "2026-11-06T00:21:43.746Z",
+      "finishedAt": "2026-11-06T00:21:44.648Z",
+      "status": "passed",
+      "notes": "workspace audit-artifacts/base-freeze-2026-11-05/finalDocs-sonar-closeout-0.log"
+    },
+    {
+      "command": "npm run check:task-packet",
+      "cwd": "pantheon-base",
+      "exitCode": 0,
+      "startedAt": "2026-11-06T00:21:44.652Z",
+      "finishedAt": "2026-11-06T00:21:45.527Z",
+      "status": "passed",
+      "notes": "workspace audit-artifacts/base-freeze-2026-11-05/finalDocs-sonar-closeout-1.log"
+    },
+    {
+      "command": "npm run check:harness-evidence",
+      "cwd": "pantheon-base",
+      "exitCode": 0,
+      "startedAt": "2026-11-06T00:21:45.528Z",
+      "finishedAt": "2026-11-06T00:21:46.456Z",
+      "status": "passed",
+      "notes": "workspace audit-artifacts/base-freeze-2026-11-05/finalDocs-sonar-closeout-2.log"
+    },
+    {
+      "command": "npm run check:harness-review",
+      "cwd": "pantheon-base",
+      "exitCode": 0,
+      "startedAt": "2026-11-06T00:21:46.456Z",
+      "finishedAt": "2026-11-06T00:21:47.264Z",
+      "status": "passed",
+      "notes": "workspace audit-artifacts/base-freeze-2026-11-05/finalDocs-sonar-closeout-3.log"
+    },
+    {
+      "command": "npm run check:harness-runtime-evidence",
+      "cwd": "pantheon-base",
+      "exitCode": 0,
+      "startedAt": "2026-11-06T00:21:47.267Z",
+      "finishedAt": "2026-11-06T00:21:47.964Z",
+      "status": "passed",
+      "notes": "workspace audit-artifacts/base-freeze-2026-11-05/finalDocs-sonar-closeout-4.log"
+    },
+    {
+      "command": "npm run check:harness-docs",
+      "cwd": "pantheon-base",
+      "exitCode": 0,
+      "startedAt": "2026-11-06T00:21:47.968Z",
+      "finishedAt": "2026-11-06T00:21:48.775Z",
+      "status": "passed",
+      "notes": "workspace audit-artifacts/base-freeze-2026-11-05/finalDocs-sonar-closeout-5.log"
+    },
+    {
+      "command": "npm run check:encoding",
+      "cwd": "pantheon-base",
+      "exitCode": 1,
+      "startedAt": "2026-11-06T00:21:48.777Z",
+      "finishedAt": "2026-11-06T00:21:49.191Z",
+      "status": "failed",
+      "notes": "workspace audit-artifacts/base-freeze-2026-11-05/finalDocs-sonar-closeout-6.log (runner requested an Ops-only script absent from Base; no product/gate failure; changed-file UTF-8 validation used instead)"
     }
   ],
   "taskId": "2026-11-05-base-freeze-release",
   "runtimeSensitive": true,
-  "recordedAt": "2026-11-05T08:14:41.433630+00:00",
+  "recordedAt": "2026-11-06T00:21:43.642797+00:00",
   "agent": {
     "tool": "codex",
-    "adapter": "Dispatcher verification; native Generator unavailable (503)"
+    "adapter": "Dispatcher evidence/verification; independent Generator and CODE/ARCH role adapters"
   },
-  "runtimeGap": "独立 code-reviewer / architect 重试后仍 HTTP 503，未产生批准；真实 S3 provider 未配置：1 个集成用例跳过；npm audit 报 15 个 moderate（eslint/nyc/vite-plugin-istanbul/typescript-eslint 开发链，0 high/0 critical）；升级属依赖变更，未在本次候选处理；core 中 3 个生成模块用例在未激活模块的运行环境保持 skip；本轮改由真实生成模块的浏览器/API CRUD 覆盖，不把 skip 当通过；smoke 套件自启 vite 默认把 /api 代理到 8080；后端跑在 18080 时必须显式 --proxy-target，否则整页 API 502（本轮首跑即此原因，非产品缺陷）；PR489 code candidate 57b42ace hosted CI has 27 SUCCESS/2 SKIPPED; Sonar 9 to 0, gate OK. Independent review remains HTTP503; draft, merge/release/Ops upgrade remain incomplete. Subsequent evidence-only commits require their own checks.",
+  "runtimeGap": "Real S3 provider remains unconfigured (see explicit skip). Fresh Sonar closeout full Go race and dual independent reviews passed. Hosted same-rule Sonar, current CI/Release Gate, official release and Ops consumption remain pending.",
   "hostedEvidence": ".harness/evidence/2026-11-05-base-freeze-release/hosted-validation.json"
 }

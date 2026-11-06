@@ -1,0 +1,133 @@
+{
+  "total": 2,
+  "p": 1,
+  "ps": 100,
+  "paging": {
+    "pageIndex": 1,
+    "pageSize": 100,
+    "total": 2
+  },
+  "effortTotal": 10,
+  "debtTotal": 10,
+  "issues": [
+    {
+      "key": "AaGrL0HaJCD94L_fBHde",
+      "rule": "go:S1186",
+      "severity": "CRITICAL",
+      "component": "duanxldragon_pantheon-base:backend/pkg/security/ssrf/validator.go",
+      "project": "duanxldragon_pantheon-base",
+      "line": 160,
+      "hash": "091ec8e5d993cb96a7fad45b591d76a5",
+      "textRange": {
+        "startLine": 160,
+        "endLine": 160,
+        "startOffset": 19,
+        "endOffset": 21
+      },
+      "flows": [],
+      "status": "OPEN",
+      "message": "Add a nested comment explaining why this function is empty or complete the implementation.",
+      "effort": "5min",
+      "debt": "5min",
+      "tags": [
+        "suspicious"
+      ],
+      "creationDate": "2026-11-05T18:07:45+08:00",
+      "updateDate": "2026-11-05T18:08:00+08:00",
+      "type": "CODE_SMELL",
+      "organization": "duanxldragon",
+      "cleanCodeAttribute": "COMPLETE",
+      "cleanCodeAttributeCategory": "INTENTIONAL",
+      "impacts": [
+        {
+          "softwareQuality": "MAINTAINABILITY",
+          "severity": "HIGH"
+        }
+      ],
+      "issueStatus": "OPEN",
+      "projectName": "pantheon-base",
+      "internalTags": [],
+      "lastChangeAnalysisUuid": "3e5b1d74-4a16-4750-9faa-d12c25362c05",
+      "lastChangeSource": "ANALYSIS"
+    },
+    {
+      "key": "AaGe-ESLMuwTm92gAeWg",
+      "rule": "godre:S8209",
+      "severity": "MINOR",
+      "component": "duanxldragon_pantheon-base:backend/modules/lowcode/dynamicmodule/dynamic_module_build_check_test.go",
+      "project": "duanxldragon_pantheon-base",
+      "line": 64,
+      "hash": "16613710488f13148f320e0b79ebf17d",
+      "textRange": {
+        "startLine": 64,
+        "endLine": 64,
+        "startOffset": 28,
+        "endOffset": 58
+      },
+      "flows": [],
+      "status": "OPEN",
+      "message": "Group together these consecutive parameters of the same type.",
+      "effort": "5min",
+      "debt": "5min",
+      "tags": [
+        "idiom",
+        "style"
+      ],
+      "creationDate": "2026-11-03T09:11:51+08:00",
+      "updateDate": "2026-11-03T09:12:08+08:00",
+      "type": "CODE_SMELL",
+      "organization": "duanxldragon",
+      "cleanCodeAttribute": "CONVENTIONAL",
+      "cleanCodeAttributeCategory": "CONSISTENT",
+      "impacts": [
+        {
+          "softwareQuality": "MAINTAINABILITY",
+          "severity": "LOW"
+        }
+      ],
+      "issueStatus": "OPEN",
+      "projectName": "pantheon-base",
+      "internalTags": [],
+      "lastChangeAnalysisUuid": "fd2ac152-d222-4a59-8200-b1d9504c0130",
+      "lastChangeSource": "ANALYSIS"
+    }
+  ],
+  "components": [
+    {
+      "organization": "duanxldragon",
+      "key": "duanxldragon_pantheon-base",
+      "uuid": "AZ-IsU7fjlMtAXbc_usQ",
+      "enabled": true,
+      "qualifier": "TRK",
+      "name": "pantheon-base",
+      "longName": "pantheon-base"
+    },
+    {
+      "organization": "duanxldragon",
+      "key": "duanxldragon_pantheon-base:backend/pkg/security/ssrf/validator.go",
+      "uuid": "AaDqn1-QHLoqijiDqQ_F",
+      "enabled": true,
+      "qualifier": "FIL",
+      "name": "validator.go",
+      "longName": "backend/pkg/security/ssrf/validator.go",
+      "path": "backend/pkg/security/ssrf/validator.go"
+    },
+    {
+      "organization": "duanxldragon",
+      "key": "duanxldragon_pantheon-base:backend/modules/lowcode/dynamicmodule/dynamic_module_build_check_test.go",
+      "uuid": "AaGe-EDfMuwTm92gAeWd",
+      "enabled": true,
+      "qualifier": "FIL",
+      "name": "dynamic_module_build_check_test.go",
+      "longName": "backend/modules/lowcode/dynamicmodule/dynamic_module_build_check_test.go",
+      "path": "backend/modules/lowcode/dynamicmodule/dynamic_module_build_check_test.go"
+    }
+  ],
+  "organizations": [
+    {
+      "key": "duanxldragon",
+      "name": "duanxldragon"
+    }
+  ],
+  "facets": []
+}
