@@ -6,7 +6,7 @@ linked_contracts:
   - docs/contracts/PLATFORM_CONTRACT.md
   - docs/contracts/TENANT_CONTRACT_V1.md
 status: Active
-updated_at: 2026-11-05
+updated_at: 2026-11-06
 ---
 
 # Task Packet: 2026-11-05-base-freeze-release
@@ -14,6 +14,8 @@ updated_at: 2026-11-05
 ## Goal
 
 完成当前 Base 功能（租户保留），验证后提交并合并相关变更、确保 CI 成功、发行新的 foundation release，让 Ops 消费。
+
+2026-11-06 补充范围：纳入 GitHub 已合并 PR #485，修复 minimatch Dependabot #52，成功门禁后发行 v0.18.4，再让 Ops 从 GitHub 最新稳定正式 release 获取并消费。消费/漂移入口不得使用本地 Base 目录。当前连接 EACCES，安装、新版远程门禁、发布及最终消费待恢复允许联网的执行环境。
 
 ## Priority
 

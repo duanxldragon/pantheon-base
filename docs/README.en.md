@@ -1,6 +1,6 @@
 # Pantheon Base Documentation Index
 
-Current functionality/release closeout: [task](./harness/tasks/2026-11-05-base-freeze-release.task.md) · [validation evidence](../.harness/evidence/2026-11-05-base-freeze-release/summary.md). v0.18.3 is an unpublished candidate retaining tenant V1; official release and Ops consumption require successful gates.
+Current functionality/release closeout: [task](./harness/tasks/2026-11-05-base-freeze-release.task.md) · [validation evidence](../.harness/evidence/2026-11-05-base-freeze-release/summary.md). The v0.18.3 publisher reported all four assets uploaded. Latest scope requires the minimatch patch, a verified v0.18.4 release, and Ops consumption of the latest official GitHub release. Network access currently blocks dependency installation and the new release/consumer handoff; tenant V1 remains retained.
 
 Current global-audit baseline: [FULL audit](./reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-11-04_FULL.md), with [all document assets](./reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-11-04_ASSETS.md). Remediation state: [harness plan](../.harness/tasks/2026-11-04-global-audit-remediation/plan.md). The older same-date report remains historical; implementation does not itself declare a maintenance freeze.
 

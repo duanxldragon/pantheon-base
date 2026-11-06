@@ -1,6 +1,6 @@
 # Pantheon Base 文档索引
 
-当前功能收尾与发行：[任务拆解](./harness/tasks/2026-11-05-base-freeze-release.task.md) · [验收证据](../.harness/evidence/2026-11-05-base-freeze-release/summary.md)。v0.18.3 是未发布候选，租户V1保留；正式发行与Ops消费以成功门禁为准。
+当前功能收尾与发行：[任务拆解](./harness/tasks/2026-11-05-base-freeze-release.task.md) · [验收证据](../.harness/evidence/2026-11-05-base-freeze-release/summary.md)。v0.18.3 发布器已报告四资产上传完成；最新授权要求修复 minimatch 后发行 v0.18.4，再让 Ops 从 GitHub 正式 release 消费。当前网络阻断，安全依赖安装、新版发行与消费尚未完成，租户 V1 保留。
 
 当前全局审计基线：[完整审计](./reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-11-04_FULL.md) 与 [全量资产矩阵](./reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-11-04_ASSETS.md)。整改现态：[Harness整改计划](../.harness/tasks/2026-11-04-global-audit-remediation/plan.md)。旧同日报告保留历史，整改完成不等于已签署维护冻结。
 

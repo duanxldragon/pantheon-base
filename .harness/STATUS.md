@@ -1,16 +1,16 @@
 # Pantheon Base - Harness 任务状态
 
-**最后更新**: 2026-11-05
-**当前候选**: `feat/base-freeze-2026-11-05`，VERSION `0.18.3`，未发布。最后正式 foundation 仍为 v0.18.2。
-**当前授权**: 维护者已授权完成现有能力（租户V1保留）、提交/CI/合并、发行与Ops正式消费；Nov4的提交延期由本任务接管，生产操作与质量策略变更仍需单独授权。
+**最后更新**: 2026-11-06
+**当前候选**: `fix/v0184-minimatch-security`，基线为 GitHub main `2a7061fa`；minimatch override 已完成安装/锁定/验证，VERSION `0.18.4` 待 PR 合并后发布。
+**当前授权**: 完成功能收尾与发行消费，纳入 PR485、修复 minimatch #52；Ops 从 GitHub 官方 release 获取最新稳定版。生产操作、门禁放宽与 solo-override 未授权。
 
-## 2026-11-05 功能收尾与发行（当前执行）
+## 2026-11-06 安全补丁与 GitHub 消费（当前执行）
 
-- F0–F8任务与授权保持；[当前证据](./evidence/2026-11-05-base-freeze-release/summary.md)是本轮状态入口。
-- 两路gpt-6-astra独立复审已解决五项发现：round2代码APPROVE/架构CLEAR；随后SSRF复杂度提取的round3复审APPROVE/CLEAR。全量race完成（1889通过测试节点/0失败/1真实S3 skip，47个有测试包通过），前端/脚本/生成器/14治理检查通过。
-- PR489草稿；旧候选1a7b388b为27 SUCCESS/2条件SKIPPED，新源码尚需自身CI。合并/发行/Ops消费未完成。
-- Ops隔离分支保留dbce4ae，未发布回填改为000032并声明overlay资产；backfill race与overlay测试通过，正式重建待release。
-- 真实S3缺provider、开发链moderate及生产DDL边界均保持显式，不放宽门禁。
+- v0.18.3 发布器 exit0，报告四资产上传完成；独立再次查询历史会话受网络限制阻断。
+- 2026-11-06 网络恢复：minimatch override 安装成功并落入 package-lock，全部实例统一至 11.0.1；GHSA-g3hv-75wg-m249 消除，audit --audit-level=high 通过，前端 build 通过，218 单测通过，docs frontmatter 通过。详见 [v0184 验证证据](./evidence/2026-11-05-base-freeze-release/2026-11-06-v0184-security-validation.json)。
+- Ops 隔离分支 GitHub-only 消费与快照来源修复：54 tests pass，overlay/docs/template 校验通过；主工作树和正式 lock 未升级。
+- 真实新版消费树的全量 CGO race、smoke、独立复审、GitHub CI 和合并均待完成。当前网络连接 EACCES，审查服务也不可达，未自我批准或弱化门禁。
+- [当前证据](./evidence/2026-11-05-base-freeze-release/summary.md)记录补充范围、源码指纹和恢复顺序。
 
 以下是历史执行读数，不可代替当前候选验收。
 

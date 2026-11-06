@@ -1,8 +1,22 @@
 # Base 功能收尾与发行执行证据
 
-状态：in-progress。PR [#489](https://github.com/duanxldragon/pantheon-base/pull/489) 与 [#490](https://github.com/duanxldragon/pantheon-base/pull/490) 已合并；v0.18.3 尚未发布，最后正式版 v0.18.2。
+状态：in-progress。当前以 2026-11-06 补充状态为准；下文保留旧候选验证历史。
 
-## 当前修复与评审
+## 2026-11-06 当前状态（取代下文历史读数）
+
+用户补充要求：纳入 GitHub 新合并 PR #485，修复 Dependabot #52（minimatch / GHSA-g3hv-75wg-m249，修复版本 11.0.1），发布 v0.18.4，再让 Ops 从 GitHub 最新稳定正式 release 消费。
+
+Base 安全分支 `fix/v0184-minimatch-security` 已快进至 GitHub main `2a7061fa0e5bc943c6dc91166e16dc77d614ee70`。限定受影响版本范围的 minimatch override 已写入；当前网络连接 EACCES，在线及离线安装均失败，package-lock 未更新，未进行新版兼容性/audit/CI 验证，因此安全修复仍未关闭，VERSION 保持 0.18.3。
+
+此前 v0.18.3 发布器 session53536 返回 exit0，输出确认四个正式资产上传完成。再次独立查询 GitHub 时网络连接被禁止；未重切或覆盖 v0.18.3 资产。v0.18.4 尚未切包、发布或消费。
+
+Ops 隔离分支已实现 GitHub 最新稳定版获取/四资产校验/不可变 tag 与 manifest 及 git-archive commit 校验/锁定重建；CLI 拒绝本地 Base 来源参数。漂移检查直接读取验证过的快照字节，覆盖父 Ops HEAD 不同、共享文件删除、篡改/过期缓存及业务迁移冲突。当前消费与迁移测试 54 pass / 0 fail / 0 skip，overlay、frontmatter 和 task-template 校验通过。真实 v0.18.4 暂存重建、全量 CGO race、业务 smoke、GitHub CI 与合并均未完成；Ops 主工作树及正式锁文件仍为 v0.18.2。
+
+两路独立复审未产生新批准：原适配器 MCP 配置解析失败；临时禁用无关 MCP 后代码/架构服务均无法连接。原批准和指纹只作历史，不覆盖本轮变更。当前 source manifest 另存，不将旧 21/21 当作新批准。
+
+阻断：本会话 sandbox 禁止 npm registry、api.github.com 和审查服务网络连接，审批策略 never。未申请提权、未放宽门禁。恢复允许联网的执行环境后按依赖安装验证 → Base review/CI/merge/release gate → v0.18.4 官方发布 → Ops GitHub 下载消费/最终验证/review/CI/merge 顺序继续。
+
+## 历史修复与评审
 
 用户授权两路独立评审使用 gpt-6-astra。首轮代码 REQUEST CHANGES / 架构 BLOCK 的五项发现已修复：运行态声明冲突、角色/岗位稳定分页、必填布尔创建 DTO、SSRF 回退期限、token-storage 扫描报告。
 
@@ -48,3 +62,12 @@ PR #489 已合入 main（de9f11a6）。main严格文档门禁发现审计报告�
 Main `0e56f922` Full Smoke 已通过，Release Gate 因两项未关闭 Sonar 问题失败。最小修复已获得 CODE APPROVE / ARCH CLEAR；新的完整 Go race：1889 pass / 0 fail / 1 skip; 47 passing test packages；14 项治理检查通过。详见 [Sonar closeout](sonar-closeout.md)。新提交的托管 Sonar 同规则复测、CI 与 main Release Gate 仍为发布条件。
 
 Ops 准备树 37 项 overlay 回归、真实 MySQL 回填 race 与独立 CODE/ARCH 评审已通过。正式消费仍等待 v0.18.3 发布。
+
+
+## 最新续办：明确 v0.18.4 与授权
+
+用户再次明确授权发行 v0.18.4、让 Ops 主线锁定消费并检查结果。已补 `npm run fetch:base-release -- --release pantheon-base-v0.18.4`，该入口只请求指定的 GitHub 正式 tag，不会退回 latest 或其他版本；无参数仍支持最新稳定版。新增回归后 57 tests pass / 0 fail / 0 skip。重新运行真实 v0.18.4 获取命令仍被系统拒绝网络 socket，锁文件哈希保持不变。GitHub查询与npm安装也返回相同阻断。当前审批策略 never，不能发起工具提权请求；聊天授权已记录但不会修改执行环境。v0.18.4 未发行，Ops主线仍为v0.18.2，主线消费结果尚不能验证。详见 v0184-explicit-consumption-status.json。
+
+## 2026-11-06 网络恢复后的 minimatch 安装验证（最新）
+
+网络恢复后完成被阻断的依赖安装验证：`npm install` 成功并将限定范围 override 写入 package-lock，全部 minimatch 实例统一至 11.0.1，GHSA-g3hv-75wg-m249（Dependabot #52）消除；`npm audit --registry=https://registry.npmjs.org --audit-level=high` exit 0（残余 5 项 moderate 为既有 glob 链告警，修复需 nyc 破坏性升级，不在本次范围）；前端 `npm run build` 通过、`npm run test:unit` 218/218 通过、docs frontmatter 检查通过。VERSION 升至 0.18.4。命令与结果明细见 [v0184-security-validation.json](2026-11-06-v0184-security-validation.json)。待办：PR CI 与合并、main Release Gate、v0.18.4 切包发布与四资产校验、Ops 官方 release 消费。

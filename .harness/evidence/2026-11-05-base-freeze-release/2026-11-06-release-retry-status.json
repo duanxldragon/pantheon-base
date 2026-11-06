@@ -1,0 +1,27 @@
+{
+  "recordedAt": "2026-11-06T03:30:26.9326463Z",
+  "taskId": "2026-11-05-base-freeze-release",
+  "requestedRelease": "pantheon-base-v0.18.4",
+  "status": "network-access-denied-release-and-consumption-incomplete",
+  "githubApi": "EACCES socket access denied",
+  "npmInstallExit": 1,
+  "officialFetchExit": 1,
+  "consumerRegressionTests": {
+    "tests": 57,
+    "log": "2026-11-06-retry-consumer-tests.log",
+    "skip": 0,
+    "pass": 57,
+    "fail": 0
+  },
+  "overlayCheckExit": 0,
+  "packageLockUnchanged": true,
+  "opsMainLockUnchanged": true,
+  "opsMainRelease": "pantheon-base-v0.18.2",
+  "independentReviews": "Both native independent review attempts returned model-provider HTTP503; no new approvals",
+  "pending": [
+    "minimatch install/lock/audit/build validation",
+    "Independent review and hosted CI/Release Gate",
+    "Publish and verify immutable v0.18.4 assets",
+    "Ops official snapshot reconstruction/full CGO race/frontend/business smoke/CI/merge"
+  ]
+}

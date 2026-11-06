@@ -20,7 +20,9 @@
       "Close actual current-function defects and already-authorized unfinished implementation",
       "Reconcile existing Nov 3/4 local changes, update affected canonical documentation",
       "Required tests, runtime smoke, independent review and GitHub CI",
-      "Submit/merge related PRs; official foundation release; Ops release consumption"
+      "Submit/merge related PRs; official foundation release; Ops release consumption",
+      "Include merged GitHub dependency PR485 and remediate minimatch Dependabot52 / GHSA-g3hv-75wg-m249",
+      "Publish v0.18.4 after gates; Ops selects latest stable release from GitHub and uses verified assets only"
     ],
     "out": [
       "Unstarted historical product ideas",
@@ -81,7 +83,7 @@
     ]
   },
   "executionRoles": {
-    "implementerPosture": "Root explicitly acts as scoped Generator for five independently reported review findings because the installed executor model channel returned HTTP503. Two user-authorized gpt-6-astra read-only role sessions provide independent review; no self-approval.",
+    "implementerPosture": "Root explicitly acts as scoped Generator for five independently reported review findings because the installed executor model channel returned HTTP503. Two user-authorized gpt-6-astra read-only role sessions provide independent review; no self-approval. Native executor ops_github_consumer also failed HTTP503 on 2026-11-06; root continues scoped Generator for consumer scripts/dependency config.",
     "reviewerPosture": [
       "Independent Security/Architecture Reviewer",
       "Independent UX/QA Reviewer where UI changed"
@@ -108,7 +110,7 @@
     ]
   },
   "runtimeSensitive": true,
-  "runtimeGap": "Independent final review approved; final candidate hosted CI/merge/release/Ops consumption pending.; 真实 S3 provider 未配置：1 个集成用例跳过; npm audit 报 15 个 moderate（eslint/nyc/vite-plugin-istanbul/typescript-eslint 开发链，0 high/0 critical）；升级属依赖变更，未在本次候选处理; core 中 3 个生成模块用例在未激活模块的运行环境保持 skip；本轮改由真实生成模块的浏览器/API CRUD 覆盖，不把 skip 当通过; smoke 套件自启 vite 默认把 /api 代理到 8080；后端跑在 18080 时必须显式 --proxy-target，否则整页 API 502（本轮首跑即此原因，非产品缺陷）",
+  "runtimeGap": "New minimatch candidate is not installed/locked/validated; sandbox network EACCES blocks GitHub/npm/review adapters. v0.18.4 release and official Ops final reconstruction/race/smoke/CI/merge remain pending. Historical real-S3 provider gap persists.",
   "acceptanceCriteria": [
     "Existing functionality matrix has no unresolved implementation gaps within the approved current scope",
     "Tenant V1 retained and positive/negative boundaries verified",
@@ -122,7 +124,9 @@
     "Do not label partial work as release/freeze complete.",
     "Runtime restart exposed department Bootstrap crossing tenant trees. Two real-MySQL adversarial repros failed before repair; minimal system/org fix and new regressions added under explicit local Generator posture.",
     "PR489 hosted structure gate caught misplaced pagination helper missed by prior summary; relocated unchanged to existing frontend/src/api (foundation-owned). Sonar9 findings addressed without exclusions; exact hosted rule rerun passed (9 to 0 unresolved, gate OK). Draft comment permission corrected after403; PR remains draft.",
-    "Independent gpt-6-astra review round1 identified runtime-evidence boolean conflict, unstable role/post pagination, required bool create DTO semantics, SSRF fallback deadline budget and token-storage scanner description type. Fixes and regressions required before repeat independent review."
+    "Independent gpt-6-astra review round1 identified runtime-evidence boolean conflict, unstable role/post pagination, required bool create DTO semantics, SSRF fallback deadline budget and token-storage scanner description type. Fixes and regressions required before repeat independent review.",
+    "Latest user steering supersedes v0.18.3 as final handoff version. Do not use local Base checkout for production consumer paths.",
+    "Current environment blocks npm and GitHub connections with EACCES; do not weaken checks or fabricate release/lock evidence."
   ],
   "risks": [
     "跨任务与下游，保留用户工作树"
@@ -142,9 +146,9 @@
       ".harness/tasks/2026-11-04-global-audit-remediation/plan.md"
     ]
   },
-  "implementationStatus": "local-verified-independent-review-approved",
-  "reviewStatus": "approved-code-reviewer-and-architect-final-source-manifest",
-  "verificationStatus": "local-verified-final-candidate-hosted-ci-pending",
+  "implementationStatus": "minimatch-install-and-github-consumer-in-progress",
+  "reviewStatus": "new-security-and-consumer-diff-awaits-independent-review",
+  "verificationStatus": "new-candidate-not-verified-network-access-denied",
   "followUpTaskIds": [],
   "hostedEvidence": ".harness/evidence/2026-11-05-base-freeze-release/hosted-validation.json"
 }
