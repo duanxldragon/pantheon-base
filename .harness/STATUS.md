@@ -1,15 +1,16 @@
 # Pantheon Base - Harness 任务状态
 
 **最后更新**: 2026-11-06
-**当前候选**: `fix/v0184-minimatch-security`，基线为 GitHub main `2a7061fa`；minimatch override 已完成安装/锁定/验证，VERSION `0.18.4` 待 PR 合并后发布。
+**当前候选**: 无。v0.18.4 已发布：GitHub release `pantheon-base-v0.18.4`（Latest）指向 main `0a8229c6`（PR #494 squash 合并），四个正式资产校验通过。
 **当前授权**: 完成功能收尾与发行消费，纳入 PR485、修复 minimatch #52；Ops 从 GitHub 官方 release 获取最新稳定版。生产操作、门禁放宽与 solo-override 未授权。
 
 ## 2026-11-06 安全补丁与 GitHub 消费（当前执行）
 
 - v0.18.3 发布器 exit0，报告四资产上传完成；独立再次查询历史会话受网络限制阻断。
 - 2026-11-06 网络恢复：minimatch override 安装成功并落入 package-lock，全部实例统一至 11.0.1；GHSA-g3hv-75wg-m249 消除，audit --audit-level=high 通过，前端 build 通过，218 单测通过，docs frontmatter 通过。详见 [v0184 验证证据](./evidence/2026-11-05-base-freeze-release/2026-11-06-v0184-security-validation.json)。
-- Ops 隔离分支 GitHub-only 消费与快照来源修复：54 tests pass，overlay/docs/template 校验通过；主工作树和正式 lock 未升级。
-- 真实新版消费树的全量 CGO race、smoke、独立复审、GitHub CI 和合并均待完成。当前网络连接 EACCES，审查服务也不可达，未自我批准或弱化门禁。
+- PR #494 全部门禁通过并 squash 合并为 `0a8229c6`；Dependabot alert #52 已关闭。main Full Smoke 首跑在 `backoffice-ui-visual` dept 筛选契约失败（重试同点），重跑转绿且该提交无 UI 差异，判定环境性；Release Gate 重算 `completed/success`。
+- v0.18.4 切包发布完成：tag `pantheon-base-v0.18.4`（annotated）指向 `0a8229c6`，GitHub release 为 Latest，四资产 tgz/sha256/repo.tar/sha256 均通过 `check-release-assets` 本地与远端校验。
+- Ops 隔离分支 GitHub-only 消费与快照来源修复：54 tests pass，overlay/docs/template 校验通过；Ops 主工作树从官方 v0.18.4 release 的正式消费重建（CGO race、smoke、CI、合并）尚未执行，为下一步。
 - [当前证据](./evidence/2026-11-05-base-freeze-release/summary.md)记录补充范围、源码指纹和恢复顺序。
 
 以下是历史执行读数，不可代替当前候选验收。

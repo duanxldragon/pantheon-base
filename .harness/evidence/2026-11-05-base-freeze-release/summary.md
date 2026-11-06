@@ -71,3 +71,7 @@ Ops 准备树 37 项 overlay 回归、真实 MySQL 回填 race 与独立 CODE/AR
 ## 2026-11-06 网络恢复后的 minimatch 安装验证（最新）
 
 网络恢复后完成被阻断的依赖安装验证：`npm install` 成功并将限定范围 override 写入 package-lock，全部 minimatch 实例统一至 11.0.1，GHSA-g3hv-75wg-m249（Dependabot #52）消除；`npm audit --registry=https://registry.npmjs.org --audit-level=high` exit 0（残余 5 项 moderate 为既有 glob 链告警，修复需 nyc 破坏性升级，不在本次范围）；前端 `npm run build` 通过、`npm run test:unit` 218/218 通过、docs frontmatter 检查通过。VERSION 升至 0.18.4。命令与结果明细见 [v0184-security-validation.json](2026-11-06-v0184-security-validation.json)。待办：PR CI 与合并、main Release Gate、v0.18.4 切包发布与四资产校验、Ops 官方 release 消费。
+
+## 2026-11-06 v0.18.4 发布完成
+
+PR #494 合并为 main `0a8229c67ab482c2e163622fc4e5b87301c53399`，Dependabot alert #52 关闭。main Full Smoke 首跑在 `backoffice-ui-visual › control thickness contract` 的 `/system/dept` 筛选项断言失败（含 retry 同点）；该提交相对绿色基线 `2a7061fa` 无 UI 源码差异，重跑转绿，Release Gate 重算 `completed/success`。随后 `cut-foundation-release` 切包、`publish-foundation-release` 发布：annotated tag 指向 `0a8229c6`，GitHub release `pantheon-base-v0.18.4` 为 Latest，四资产经 `check-release-assets` 远端/本地校验通过。剩余：Ops 主工作树从官方 v0.18.4 正式消费重建与验证。详见 [发布状态](2026-11-06-v0184-release-published.json)。

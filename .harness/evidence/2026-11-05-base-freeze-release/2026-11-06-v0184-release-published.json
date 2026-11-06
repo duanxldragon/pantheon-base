@@ -1,0 +1,19 @@
+{
+  "recordedAt": "2026-11-06T04:55:00Z",
+  "taskId": "2026-11-05-base-freeze-release",
+  "releaseVersion": "pantheon-base-v0.18.4",
+  "status": "published",
+  "baseCommit": "0a8229c67ab482c2e163622fc4e5b87301c53399",
+  "mergedPr": 494,
+  "dependabotAlert": { "number": 52, "state": "fixed" },
+  "releaseGate": "completed/success on base commit (after Full Smoke rerun; first-run failure was backoffice-ui-visual dept filter chrome count with no UI diff vs green baseline)",
+  "githubReleaseUrl": "https://github.com/duanxldragon/pantheon-base/releases/tag/pantheon-base-v0.18.4",
+  "assets": [
+    "foundation-release-pantheon-base-v0.18.4.tgz",
+    "foundation-release-pantheon-base-v0.18.4.tgz.sha256",
+    "repo.tar",
+    "repo.tar.sha256"
+  ],
+  "assetCheck": "check-release-assets passed (local bundle + 4 hosted assets)",
+  "nextPending": "Ops main worktree consumption rebuild from official v0.18.4 (fetch, CGO race, smoke, CI, merge)"
+}
