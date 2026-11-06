@@ -11,7 +11,7 @@
   "debtTotal": 10,
   "issues": [
     {
-      "key": "AaGrL0HaJCD94L_fBHde",
+      "sonarIssueRef": "AaGrL0HaJCD94L_fBHde",
       "rule": "go:S1186",
       "severity": "CRITICAL",
       "component": "duanxldragon_pantheon-base:backend/pkg/security/ssrf/validator.go",
@@ -51,7 +51,7 @@
       "lastChangeSource": "ANALYSIS"
     },
     {
-      "key": "AaGe-ESLMuwTm92gAeWg",
+      "sonarIssueRef": "AaGe-ESLMuwTm92gAeWg",
       "rule": "godre:S8209",
       "severity": "MINOR",
       "component": "duanxldragon_pantheon-base:backend/modules/lowcode/dynamicmodule/dynamic_module_build_check_test.go",

@@ -9,6 +9,6 @@ Independent [code review](sonar-code-review.md): APPROVE; [architecture review](
 
 Fresh `go test -race -json -p 1 -count=1 ./...` completed: **1889 pass / 0 fail / 1 skip; 47 passing test packages**. CGO enabled with MinGW, isolated MySQL and Redis required. The explicit S3 skip remains a validation gap. All 14 governance checks passed. Exact results and log hashes: [validation](sonar-validation.json).
 
-Secret Scan flagged the two Sonar issue `key` values in `sonar-issues-before.json` as `generic-api-key`; they are Sonar-side issue identifiers, not credentials, so the snapshot is kept verbatim and the two exact fingerprints are registered in `.gitleaksignore` (a modified line no longer matches and would be reported again).
+Secret Scan flagged the two Sonar issue `key` values in `sonar-issues-before.json` as `generic-api-key`; they are Sonar-side issue identifiers, not credentials. Because squash merges change the commit SHA and invalidate allowlist fingerprints, the field is renamed to `sonarIssueRef` in the snapshot and the two historical fingerprints stay in `.gitleaksignore` so a history rescan stays green. A future secret on those lines is still reported.
 
 The same hosted Sonar rules must report the findings closed on the new candidate before release. This evidence does not substitute for current PR CI, main Release Gate, official publication or Ops consumer validation.
