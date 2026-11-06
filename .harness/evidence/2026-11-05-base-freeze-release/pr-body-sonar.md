@@ -40,7 +40,9 @@
 - [x] 本次改动仅涉及单一层级
 - [ ] 本次改动涉及跨层，已说明边界与依赖
 
-> 如果跨层，请补充说明：
+> 如果跨层，请补充说明：不跨层；两项改动分别位于共享安全包与生成器测试。
+
+## 验证记录
 
 Fresh `go test -race -json -p 1 -count=1 ./...`: 1889 pass / 0 fail / 1 skip; 47 passing test packages (S3 provider unavailable). All 14 governance checks passed. CODE APPROVE / ARCH CLEAR independently verified the exact two-file delta. Source hashes and raw-log hashes are recorded in `sonar-validation.json` and `review-source-manifest-sonar.json`. Frontend/runtime behavior is unchanged; prior rendered evidence and full smoke remain linked, with fresh hosted checks required on this candidate.
 
