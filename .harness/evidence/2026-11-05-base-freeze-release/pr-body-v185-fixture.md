@@ -30,7 +30,7 @@
 - audit coverage: original production code unchanged; shared test root and external-reference lifecycle regression reviewed
 - visual evidence: no UI source change or visual claim
 - inheritance contract: ../docs/WORKSPACE_INHERITANCE.md; correction must ship as official foundation artifact
-- Base/ops inheritance: Shared test correction is Base-owned; ship official verified assets and update Ops root lock, no manual file copy
+- Base/ops inheritance: Shared test correction and exact common seed helper are Base-owned; ship official verified assets and update Ops root lock, no manual file copy
 - base drift: no manual Base main copy into Ops; v0.18.4 remains immutable
 
 ## 边界说明
@@ -42,9 +42,9 @@
 
 ## 验证记录
 
-- [x] Backend全部当前文件与已运行Base完整race的源逐字相同；实际验证1890通过/0失败/1真实S3 skip，原日志hash和gzip在retry5-fixture-source-validation.json
+- [x] 当前候选直接完整CGO readonly race：1890通过/0失败/1真实S3 skip；required MySQL/Redis，源哈希执行前后不变，resume7-base-full-race.json及gzip日志
 - [x] 2项定向DB/Redis回归：原四行行为、外部仍引用key保持active
-- [x] 本候选CODE APPROVE/ARCH CLEAR，resume7-fixture-approval.json绑定同一补丁快照
+- [x] 初始修复及Sonar共享夹具helper均有两路独立批准；resume8-sonar-approval.json绑定当前源快照
 - [ ] 本PR与合并后不可变commit required checks/Release Gate（真实通过后才能发行）
 
 ## 审核留痕
@@ -53,7 +53,7 @@
 - CodeQL 结果：本PR待实际Security Gates，不提前宣称通过
 - GitHub checks 结果：pending current PR；前一官方v0.18.4结果不是本PR结果
 - Auto-merge：not-enabled
-- Duplication Gate 结果：pending current PR；新增独立业务含义回归
+- Duplication Gate 结果：前次Sonar新增重复55.4%失败；已等价提取共享seed，当前head同指标复测必须<=3%，不改阈值/排除
 - 是否高风险改动：共享动态模块/i18n测试边界，需两路独立评审
 - Residual risk / follow-up：原stock消费race失败和模块图问题仍待官方消费补验；S3未验证无waiver、维护冻结未签、OpsQA/策略/生产事项独立保留
 

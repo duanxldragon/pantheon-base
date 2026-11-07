@@ -1,0 +1,17 @@
+{
+  "recordedAt": "2026-11-07T01:28:15.231Z",
+  "archives": [
+    {
+      "raw": "resume7-base-full-race.log",
+      "rawSha256": "953167045005d835c5bfba04d4f37afbe78ee613873badfb46de4391112162eb",
+      "archive": "resume7-base-full-race.log.gz",
+      "archiveSha256": "fb520a55be39eeaa6c32e21c5169e7b86b8fdf7dd855ae4d19591e9e084db617"
+    },
+    {
+      "raw": "resume7-sonar-fixture-focused.log",
+      "rawSha256": "c163746c88680333c5e52f6f2caa1ad553a07f648dc271fc534e04320b30945f",
+      "archive": "resume7-sonar-fixture-focused.log.gz",
+      "archiveSha256": "153b324c1e488bf93ce17dd6cd3fcf980efc39e6d5f70802d83ce0e73ae7e86d"
+    }
+  ]
+}

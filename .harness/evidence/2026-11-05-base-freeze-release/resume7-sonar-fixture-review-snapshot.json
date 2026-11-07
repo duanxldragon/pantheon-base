@@ -1,0 +1,20 @@
+{
+  "recordedAt": "2026-11-07T01:16:18.143Z",
+  "baseline": "c37200180b1b213f7ffb53790d4f68655213a8cd",
+  "files": [
+    {
+      "path": "backend/modules/lowcode/dynamicmodule/dynamic_module_service_test.go",
+      "sha256": "2be503c9646ac9aaff0c2f106622ecea21eb4bafd2d49db8f4d85ba383783a1c"
+    }
+  ],
+  "scope": "Only remove duplicated registration/menu/i18n seed via one shared test helper; all assertions and scan-root fixes preserved; no production change",
+  "sourceRoot": "D:/workspace/go/pantheon-platform/audit-artifacts/task-closeout-2026-11-06/base-v185",
+  "fullRace": "resume7-base-full-race.json pending",
+  "focused": {
+    "command": "go test -race -count=1 -buildvcs=false ./modules/lowcode/dynamicmodule -run TestPurgeModule(AllowsBusinessStaticModuleWithoutTable|PreservesExternallyReferencedI18n)$",
+    "exitCode": 0,
+    "log": "resume7-sonar-fixture-focused.log",
+    "sha256": "c163746c88680333c5e52f6f2caa1ad553a07f648dc271fc534e04320b30945f"
+  },
+  "postReview": "Only real evidence/PR status references may change; source semantics/metadata other than factual validation unchanged"
+}

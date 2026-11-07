@@ -1,6 +1,6 @@
 # Current bounded fixture review
 
-CODE APPROVE/ARCH CLEAR only for v0.18.5 fixture snapshot. [Approval](resume7-fixture-approval.json). Aggregate task closure, provider, freeze and publication have separate pending gates.
+CODE APPROVE/ARCH CLEAR cover initial fixture correction and equivalent shared seed helper. [Current approval](resume8-sonar-approval.json). Aggregate task closure, provider, freeze and publication have separate pending gates.
 
 ## Machine Readable
 
@@ -11,7 +11,7 @@ CODE APPROVE/ARCH CLEAR only for v0.18.5 fixture snapshot. [Approval](resume7-fi
   "reviewer": "Independent existing bounded CODE/ARCH reports, coordinator records approval",
   "findings": [],
   "approvalScope": "bounded-v0185-fixture-patch-only",
-  "independentApproval": ".harness/evidence/2026-11-05-base-freeze-release/resume7-fixture-approval.json",
+  "independentApproval": ".harness/evidence/2026-11-05-base-freeze-release/resume8-sonar-approval.json",
   "linkage": {
     "taskManifest": ".harness/tasks/2026-11-05-base-freeze-release/manifest.json",
     "evidence": ".harness/evidence/2026-11-05-base-freeze-release/commands.json",

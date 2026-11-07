@@ -1,0 +1,43 @@
+{
+  "duplications": [
+    {
+      "blocks": [
+        {
+          "from": 530,
+          "size": 26,
+          "_ref": "1"
+        },
+        {
+          "from": 626,
+          "size": 26,
+          "_ref": "1"
+        }
+      ]
+    },
+    {
+      "blocks": [
+        {
+          "from": 1065,
+          "size": 36,
+          "_ref": "1"
+        },
+        {
+          "from": 1125,
+          "size": 36,
+          "_ref": "1"
+        }
+      ]
+    }
+  ],
+  "files": {
+    "1": {
+      "key": "duanxldragon_pantheon-base:backend/modules/lowcode/dynamicmodule/dynamic_module_service_test.go",
+      "name": "backend/modules/lowcode/dynamicmodule/dynamic_module_service_test.go",
+      "uuid": "AaGzi5hZoXd4W9Erixy-",
+      "project": "duanxldragon_pantheon-base",
+      "projectUuid": "AaGzisP2DnatzzXUKf3S",
+      "projectName": "pantheon-base",
+      "pullRequest": "496"
+    }
+  }
+}
