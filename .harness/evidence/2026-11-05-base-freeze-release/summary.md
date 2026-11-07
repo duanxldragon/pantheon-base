@@ -4,7 +4,7 @@ Current candidate includes one exact shared test seed helper; original four-row 
 
 Direct current-worktree CGO race with required real MySQL/Redis completed: 1890 pass, 0 fail, 1 skip; 47 passing packages. [Result](resume7-base-full-race.json) binds unchanged fixture hash; [raw log archive](resume7-base-full-race.log.gz) contains test events proving execution. One real S3 integration skip has no waiver.
 
-Sonar PR496 previously failed new duplication density 55.4% (36 newly duplicated lines). The exact repeated seed is now extracted once; same hosted metric must pass <=3% before merge. No threshold or exclusion changes. v0.18.5 remains unreleased; current PR checks, merged commit release gate, official publication and stock Ops consumption still pending. All original 12 manifests remain in-progress; freeze unsigned.
+Sonar PR496 previously failed new duplication density 55.4% (36 newly duplicated lines). The exact repeated seed is now extracted once; same hosted metric now passes at 0.0% against unchanged 3% threshold on head 2c1660a75d42630c3b90f02a6e7cc349194712ad ([proof](resume8-sonar-pr496-after.json)). Final PR checks and merged commit release gate remain pending. No threshold or exclusion changes. v0.18.5 remains unreleased; current PR checks, merged commit release gate, official publication and stock Ops consumption still pending. All original 12 manifests remain in-progress; freeze unsigned.
 
 ## Previous candidate record
 

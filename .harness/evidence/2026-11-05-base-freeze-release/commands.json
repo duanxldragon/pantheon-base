@@ -1161,7 +1161,8 @@
       "exitCode": 0,
       "status": "passed",
       "log": ".harness/evidence/2026-11-05-base-freeze-release/resume7-base-full-race.log.gz",
-      "sha256": "953167045005d835c5bfba04d4f37afbe78ee613873badfb46de4391112162eb",
+      "sha256": "fb520a55be39eeaa6c32e21c5169e7b86b8fdf7dd855ae4d19591e9e084db617",
+      "rawSha256": "953167045005d835c5bfba04d4f37afbe78ee613873badfb46de4391112162eb",
       "counts": {
         "pass": 1890,
         "fail": 0,

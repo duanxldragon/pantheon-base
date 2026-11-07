@@ -53,7 +53,7 @@
 - CodeQL 结果：本PR待实际Security Gates，不提前宣称通过
 - GitHub checks 结果：pending current PR；前一官方v0.18.4结果不是本PR结果
 - Auto-merge：not-enabled
-- Duplication Gate 结果：前次Sonar新增重复55.4%失败；已等价提取共享seed，当前head同指标复测必须<=3%，不改阈值/排除
+- Duplication Gate 结果：前次Sonar新增重复55.4%失败；已等价提取共享seed，同指标复测已为0.0%（阈值3%未改），见resume8-sonar-pr496-after.json；最终head仍须实际checks通过
 - 是否高风险改动：共享动态模块/i18n测试边界，需两路独立评审
 - Residual risk / follow-up：原stock消费race失败和模块图问题仍待官方消费补验；S3未验证无waiver、维护冻结未签、OpsQA/策略/生产事项独立保留
 
