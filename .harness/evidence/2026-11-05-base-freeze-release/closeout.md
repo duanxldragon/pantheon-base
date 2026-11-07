@@ -1,3 +1,11 @@
+# Final reviewed original-task closeout (2026-11-07)
+
+2026-11-07: exact original scope approved by fresh independent CODE APPROVE / ARCH CLEAR on the final five-task plan. Official Base v0.18.5 at1da0834b; Base1890/0/1 and47packages, FE218, immutable Full Smoke/Release Gate passed. Official Ops PR177 merged at92c1efcfc4f754a7f0a4e9f181f446f4a2ddcfc2 after required hosted gates including Smoke Sanity; full readonly CGO consumer race2170/0/1,64packages, no source overlay or module mutation; FE218/scripts59/migration32clean/four standard generator smoke passed. Original unchanged SSRF public-API attack replay now records2 DNS lookups / loopbacknotreached; original deliberate attack-failure panic is preserved as a nonzero result, not called a green test. All40 original criteria and all source/contract boundaries preserved. S3 provider skip/no waiver, maintenance freeze unsigned, OpsQA002 and extra host-import runtime table gaps, network policy/CI measurements/baselines/production operations remain explicit separate residuals.
+
+Twelve original tasks are closed only after the two bounded review rounds. Original40 criteria remain intact. Seven transitions merged via Base PR497; final five governance projection and its own hosted CI/merge follow. Inventory includes237 archived manifests:250 total /250 completed /0 in-progress in this candidate. This states task acceptance, without a maintenance-freeze signature or provider/policy waiver.
+
+## Historical checkpoints (preserved)
+
 # Current task closeout (2026-11-07)
 
 Seven original scopes are independently approved and locally closed; five consumer/programme tasks remain in-progress. Base v0.18.5 is officially published at1da0834b with four verified assets. Complete consumer readonly race/runtime and final consumption CI/merge remain in progress. Base race1890/0/1 and FE218 are current; historical1889/overlay/module-reconciliation records below remain historical. Current source and approval: resume9-seven-task-applied.json, resume9-official-provenance.json. The pristine resume8-pr496-baseline-summary.md backup is the earlier immutable candidate checkpoint. Frozen maintenance state remains unsigned and real S3 skip has no waiver.

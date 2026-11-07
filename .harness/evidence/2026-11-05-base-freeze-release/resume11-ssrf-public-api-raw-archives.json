@@ -1,0 +1,20 @@
+{
+  "recordedAt": "2026-11-07T03:27:01.493Z",
+  "files": [
+    {
+      "file": "resume11-ssrf-original-public-api.log.gz",
+      "rawSha256": "3bf0ba5fb1e1fc0b3a64fce25bfc59592681388ef8d787aeb8f65730df261573",
+      "rawBytes": 411
+    },
+    {
+      "file": "resume11-ssrf-original-public-api.go.gz",
+      "rawSha256": "60935894e4bc76e70767d7672bbbd1c4b6403940d9ec697cf2d2183d246f9043",
+      "rawBytes": 3077
+    },
+    {
+      "file": "resume11-ssrf-original-red.log.gz",
+      "rawSha256": "c6e26ed1f678503f78295cd1f0f4e2ea924bf1ecb7152473b676ea3c5f04df04",
+      "rawBytes": 63
+    }
+  ]
+}

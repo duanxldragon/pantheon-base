@@ -1,0 +1,21 @@
+{
+  "exitCode": 1,
+  "interpretation": "Original attack reproducer deliberately panics when the private endpoint is NOT reached; nonzero must not be called a green test. Judge actual lookup/reached/error output against original red and pinned-dial regressions.",
+  "probe": "D:/workspace/go/pantheon-platform/audit-artifacts/base-global-audit-2026-11-04/ssrf-rebind-repro.go",
+  "probeSha256": "60935894e4bc76e70767d7672bbbd1c4b6403940d9ec697cf2d2183d246f9043",
+  "logSha256": "3bf0ba5fb1e1fc0b3a64fce25bfc59592681388ef8d787aeb8f65730df261573",
+  "log": "resume11-ssrf-original-public-api.log",
+  "finishedAt": "2026-11-07T03:26:13.1493184Z",
+  "sourceCommit": "1da0834bdce636fd2fc1063290e3f32339e2d27a",
+  "command": "go run -buildvcs=false -mod=readonly D:/workspace/go/pantheon-platform/audit-artifacts/base-global-audit-2026-11-04/ssrf-rebind-repro.go",
+  "startedAt": "2026-11-07T03:26:06.7245028Z",
+  "cwd": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\task-closeout-2026-11-06\\base-final-closeout\\backend",
+  "probeUnchanged": true,
+  "actualWorktreeHead": "7e483e7a4e939b1623b8798b6a06b22f763696fe",
+  "originalAttackBlocked": true,
+  "greenTestExitClaim": false,
+  "expectedAttackProbePanic": true,
+  "scope": "Actual unchanged original ValidateURL -> CreateHTTPClient -> Get public API replay. Internal dialChecked regression remains separate green evidence.",
+  "currentHelperSha256": "a8eb82da92721104c260ade049f5d45141186e427e8cd5860a204add3db58f73",
+  "immutableHelperSha256": "a8eb82da92721104c260ade049f5d45141186e427e8cd5860a204add3db58f73"
+}

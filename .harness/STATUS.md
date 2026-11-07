@@ -1,3 +1,9 @@
+# Final original-task inventory (2026-11-07)
+
+250 manifests including237 archives:250 completed /0 in-progress in the reviewed candidate. Original12/40 criteria unchanged. Seven closures merged BasePR497; five final independent approvals applied, final governance PR CI/merge remains required. Official185 published; OpsPR177 merged, full consumer validation passed. Maintenance freeze unsigned, S3 unwaived, separate residuals retained. Evidence: .harness/evidence/2026-11-05-base-freeze-release/resume11-five-task-applied.json.
+
+## Historical inventory (preserved)
+
 # Current inventory (2026-11-07)
 
 250 manifests:245 completed /5 in-progress. Seven original scopes closed under independent CODE/ARCH approval; five consumer/programme tasks remain open. Original40 criteria retained. Official185 publication complete; full consumer validation/CI closeout still running. Freeze unsigned/S3 unwaived. Evidence: .harness/evidence/2026-11-05-base-freeze-release/resume9-seven-task-applied.json.

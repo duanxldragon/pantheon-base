@@ -1,5 +1,9 @@
 # Pantheon Base 文档索引
 
+当前（2026-11-07）：原12项任务的40条验收标准均保留并获独立 CODE/ARCH 批准。七项已通过PR497合并；最后五项治理收口待本PR门禁。Base v0.18.5正式发布，Ops PR177正式消费已合并；完整无overlay race、前端、脚本、迁移和四套标准smoke通过。冻结未签，S3无豁免，业务/策略残余明确。 See [evidence](../.harness/evidence/2026-11-05-base-freeze-release/resume11-five-task-applied.json).
+
+### Historical checkpoints
+
 当前（2026-11-07）：七个原任务已获独立 CODE/ARCH 批准并关闭；五个消费/总交付任务仍开放。Base v0.18.5 已正式发布，四资产已验证并重建 Ops，完整消费 race/runtime/CI 收口继续进行。冻结未签，S3 无豁免。 See [证据](../.harness/evidence/2026-11-05-base-freeze-release/resume9-seven-task-applied.json).
 
 ### Historical delivery checkpoint

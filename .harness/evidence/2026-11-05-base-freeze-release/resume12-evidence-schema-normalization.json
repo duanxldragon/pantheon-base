@@ -1,0 +1,7 @@
+{
+  "recordedAt": "2026-11-07T03:33:08.740Z",
+  "originalFile": "commands.json",
+  "archive": "r12-commands-before-schema.gz",
+  "rawSha256": "20d94532f43371f364dbfccb0db38c908af9c76fad8c23bd5b25cdff7b3d522a",
+  "scope": "Add status/cwd fields and links to already archived raw logs for exact executed consumer commands; no command/result/time changes"
+}

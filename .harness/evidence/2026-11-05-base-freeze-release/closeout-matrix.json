@@ -14,14 +14,14 @@
     "2026-11-04-global-audit-remediation",
     "2026-11-05-base-freeze-release"
   ],
-  "scope": "Original12-task closure, original40 acceptance criteria unchanged; current diff is governance/evidence plus one Base-only test-fixture isolation correction. Explicit test-source overlay and module graph reconciliation do not assert stock-release full-race success.",
+  "scope": "Original12/40 criteria preserved; governance/evidence only; official185 full readonly consumer race without source overlay passed. Historical failures remain archived.",
   "baselineCommit": "c543a033ad986e14f4b42130481549b7adcb5029",
   "release": {
-    "tag": "pantheon-base-v0.18.4",
-    "commit": "0a8229c67ab482c2e163622fc4e5b87301c53399",
-    "basePr": 494,
-    "opsPr": 171,
-    "opsCommit": "7ed1521a37f5a7379693f7faa1bed0eae409249e"
+    "tag": "pantheon-base-v0.18.5",
+    "commit": "1da0834bdce636fd2fc1063290e3f32339e2d27a",
+    "basePr": 496,
+    "opsPr": 177,
+    "opsCommit": "92c1efcfc4f754a7f0a4e9f181f446f4a2ddcfc2"
   },
   "reviewStatus": "retry4 CODE REQUEST CHANGES / ARCH BLOCK; aggregate closure disallowed, corrective official release and module normalization in progress",
   "tasks": [
@@ -163,8 +163,8 @@
         "只拨号已核查IP；私网、混合DNS、IPv4/IPv6、取消/超时、多地址和HTTPS Host/SNI行为有回归",
         "Ops实际消费接口不删除；本地重建和业务测试通过，下游正式升级明确延期"
       ],
-      "evidenceDecision": "Official v0.18.4 release and root-lock consumption confirmed. Fresh rebuild828/shared-drift, migration32, FE218, consumer57 regressions and4 generated smokes passed. Stock race failed shared fixture; corrected overlay2170/0/1 passed; Base direct validation separately recorded. Residuals and approval boundary explicit.",
-      "proposedDisposition": "blocked by current CODE required-consumer-validation/module-graph findings; no aggregate completion approved",
+      "evidenceDecision": "2026-11-07: exact original scope approved by fresh independent CODE APPROVE / ARCH CLEAR on the final five-task plan. Official Base v0.18.5 at1da0834b; Base1890/0/1 and47packages, FE218, immutable Full Smoke/Release Gate passed. Official Ops PR177 merged at92c1efcfc4f754a7f0a4e9f181f446f4a2ddcfc2 after required hosted gates including Smoke Sanity; full readonly CGO consumer race2170/0/1,64packages, no source overlay or module mutation; FE218/scripts59/migration32clean/four standard generator smoke passed. Original unchanged SSRF public-API attack replay now records2 DNS lookups / loopbacknotreached; original deliberate attack-failure panic is preserved as a nonzero result, not called a green test. All40 original criteria and all source/contract boundaries preserved. S3 provider skip/no waiver, maintenance freeze unsigned, OpsQA002 and extra host-import runtime table gaps, network policy/CI measurements/baselines/production operations remain explicit separate residuals.",
+      "proposedDisposition": "closed after fresh final same-plan CODE/ARCH approval",
       "evidenceRefs": [
         ".harness/evidence/2026-11-04-audit-p1-ssrf-dial-binding/commands.json",
         ".harness/evidence/2026-11-04-audit-p1-ssrf-dial-binding/summary.md",
@@ -184,7 +184,8 @@
             "../audit-artifacts/base-global-remediation-2026-11-04/ssrf-after.log"
           ],
           "interpretation": "DNS rebinding expected red and subsequent green preserved.",
-          "independentReview": "Current CODE does not accept consumer/aggregate closure; see retry4 reports. Repair blockers and re-review."
+          "independentReview": "Original criterion approved in final independent five-scope reports; actual official consumer and exact source/runtime proof accepted, residuals explicitly separate.",
+          "historicalIndependentReview": "Current CODE does not accept consumer/aggregate closure; see retry4 reports. Repair blockers and re-review."
         },
         {
           "index": 2,
@@ -196,7 +197,8 @@
             "backend/pkg/security/ssrf/transport_test.go"
           ],
           "interpretation": "Numeric checked-IP dialing, mixed/private answers, IPv4/IPv6, total deadlines, multi-address fallback and HTTPS host/SNI are covered.",
-          "independentReview": "Current CODE does not accept consumer/aggregate closure; see retry4 reports. Repair blockers and re-review."
+          "independentReview": "Original criterion approved in final independent five-scope reports; actual official consumer and exact source/runtime proof accepted, residuals explicitly separate.",
+          "historicalIndependentReview": "Current CODE does not accept consumer/aggregate closure; see retry4 reports. Repair blockers and re-review."
         },
         {
           "index": 3,
@@ -215,9 +217,11 @@
             "../pantheon-ops/foundation-release.lock.json"
           ],
           "interpretation": "Original upgrade deferral was superseded by the authorized delivery parent; Official upgrade/reconstruction passed. Stock consumer full race failed one shared test fixture (2168/1/1); corrected test-source overlay full race is separately recorded, not a stock-release pass. Historical host/tenant/root-suite attribution remains unverified; hosted Smoke Sanity covers platform contracts/system only.",
-          "independentReview": "Current CODE does not accept consumer/aggregate closure; see retry4 reports. Repair blockers and re-review."
+          "independentReview": "Original criterion approved in final independent five-scope reports; actual official consumer and exact source/runtime proof accepted, residuals explicitly separate.",
+          "historicalIndependentReview": "Current CODE does not accept consumer/aggregate closure; see retry4 reports. Repair blockers and re-review."
         }
-      ]
+      ],
+      "historicalEvidenceDecision": "Official v0.18.4 release and root-lock consumption confirmed. Fresh rebuild828/shared-drift, migration32, FE218, consumer57 regressions and4 generated smokes passed. Stock race failed shared fixture; corrected overlay2170/0/1 passed; Base direct validation separately recorded. Residuals and approval boundary explicit."
     },
     {
       "taskId": "2026-11-04-audit-p2-agent-stop-points",
@@ -445,8 +449,8 @@
         "逐项裁定fixture/测试期望/业务实现，不削弱SSRF与认证",
         "最小业务修复在Ops独立任务实施并重新验证后才关闭下游验收"
       ],
-      "evidenceDecision": "Official v0.18.4 release and root-lock consumption confirmed. Fresh rebuild828/shared-drift, migration32, FE218, consumer57 regressions and4 generated smokes passed. Stock race failed shared fixture; corrected overlay2170/0/1 passed; Base direct validation separately recorded. Residuals and approval boundary explicit.",
-      "proposedDisposition": "blocked by current CODE required-consumer-validation/module-graph findings; no aggregate completion approved",
+      "evidenceDecision": "2026-11-07: exact original scope approved by fresh independent CODE APPROVE / ARCH CLEAR on the final five-task plan. Official Base v0.18.5 at1da0834b; Base1890/0/1 and47packages, FE218, immutable Full Smoke/Release Gate passed. Official Ops PR177 merged at92c1efcfc4f754a7f0a4e9f181f446f4a2ddcfc2 after required hosted gates including Smoke Sanity; full readonly CGO consumer race2170/0/1,64packages, no source overlay or module mutation; FE218/scripts59/migration32clean/four standard generator smoke passed. Original unchanged SSRF public-API attack replay now records2 DNS lookups / loopbacknotreached; original deliberate attack-failure panic is preserved as a nonzero result, not called a green test. All40 original criteria and all source/contract boundaries preserved. S3 provider skip/no waiver, maintenance freeze unsigned, OpsQA002 and extra host-import runtime table gaps, network policy/CI measurements/baselines/production operations remain explicit separate residuals.",
+      "proposedDisposition": "closed after fresh final same-plan CODE/ARCH approval",
       "evidenceRefs": [
         ".harness/evidence/2026-11-04-audit-p2-ops-db-test-followup/commands.json",
         ".harness/evidence/2026-11-04-audit-p2-ops-db-test-followup/summary.md",
@@ -465,7 +469,8 @@
             ".harness/evidence/2026-11-04-audit-p2-ops-db-test-followup/triage.json"
           ],
           "interpretation": "All twelve failure nodes/nine top-level tests compared to Ops baseline; confirmed existing failures.",
-          "independentReview": "Current CODE does not accept consumer/aggregate closure; see retry4 reports. Repair blockers and re-review."
+          "independentReview": "Original criterion approved in final independent five-scope reports; actual official consumer and exact source/runtime proof accepted, residuals explicitly separate.",
+          "historicalIndependentReview": "Current CODE does not accept consumer/aggregate closure; see retry4 reports. Repair blockers and re-review."
         },
         {
           "index": 2,
@@ -478,7 +483,8 @@
             "../pantheon-ops/backend/modules/business/cmdb/host/host_service.go"
           ],
           "interpretation": "Eight fixture/expectation failures and one host version business defect classified. Test validator is isolated to tests; production network policy retained.",
-          "independentReview": "Current CODE does not accept consumer/aggregate closure; see retry4 reports. Repair blockers and re-review."
+          "independentReview": "Original criterion approved in final independent five-scope reports; actual official consumer and exact source/runtime proof accepted, residuals explicitly separate.",
+          "historicalIndependentReview": "Current CODE does not accept consumer/aggregate closure; see retry4 reports. Repair blockers and re-review."
         },
         {
           "index": 3,
@@ -497,9 +503,11 @@
             "../pantheon-ops/backend/modules/business/cmdb/host/host_state_version_migration_test.go"
           ],
           "interpretation": "Original business suite278/0/0 and migration/CAS regressions retained; fresh migration passed. Stock full race failed the shared fixture; corrected test-source overlay validation is distinct and pending independent acceptance; hosted Smoke Sanity proves its own platform/system scope; Ops000032 follows Base000031. Network-policy decision stays separately open.",
-          "independentReview": "Current CODE does not accept consumer/aggregate closure; see retry4 reports. Repair blockers and re-review."
+          "independentReview": "Original criterion approved in final independent five-scope reports; actual official consumer and exact source/runtime proof accepted, residuals explicitly separate.",
+          "historicalIndependentReview": "Current CODE does not accept consumer/aggregate closure; see retry4 reports. Repair blockers and re-review."
         }
-      ]
+      ],
+      "historicalEvidenceDecision": "Official v0.18.4 release and root-lock consumption confirmed. Fresh rebuild828/shared-drift, migration32, FE218, consumer57 regressions and4 generated smokes passed. Stock race failed shared fixture; corrected overlay2170/0/1 passed; Base direct validation separately recorded. Residuals and approval boundary explicit."
     },
     {
       "taskId": "2026-11-04-audit-p2-release-policy",
@@ -631,8 +639,8 @@
         "采用隔离本地候选，不在Ops主工作树复制Base源码；Ops状态保持干净",
         "发布与lock升级通过foundation release流程，明确延期；不增加插件协议"
       ],
-      "evidenceDecision": "Official v0.18.4 release and root-lock consumption confirmed. Fresh rebuild828/shared-drift, migration32, FE218, consumer57 regressions and4 generated smokes passed. Stock race failed shared fixture; corrected overlay2170/0/1 passed; Base direct validation separately recorded. Residuals and approval boundary explicit.",
-      "proposedDisposition": "blocked by current CODE required-consumer-validation/module-graph findings; no aggregate completion approved",
+      "evidenceDecision": "2026-11-07: exact original scope approved by fresh independent CODE APPROVE / ARCH CLEAR on the final five-task plan. Official Base v0.18.5 at1da0834b; Base1890/0/1 and47packages, FE218, immutable Full Smoke/Release Gate passed. Official Ops PR177 merged at92c1efcfc4f754a7f0a4e9f181f446f4a2ddcfc2 after required hosted gates including Smoke Sanity; full readonly CGO consumer race2170/0/1,64packages, no source overlay or module mutation; FE218/scripts59/migration32clean/four standard generator smoke passed. Original unchanged SSRF public-API attack replay now records2 DNS lookups / loopbacknotreached; original deliberate attack-failure panic is preserved as a nonzero result, not called a green test. All40 original criteria and all source/contract boundaries preserved. S3 provider skip/no waiver, maintenance freeze unsigned, OpsQA002 and extra host-import runtime table gaps, network policy/CI measurements/baselines/production operations remain explicit separate residuals.",
+      "proposedDisposition": "closed after fresh final same-plan CODE/ARCH approval",
       "evidenceRefs": [
         ".harness/evidence/2026-11-04-audit-p3-consumer-seams/commands.json",
         ".harness/evidence/2026-11-04-audit-p3-consumer-seams/summary.md",
@@ -657,7 +665,8 @@
             ".harness/evidence/2026-11-05-base-freeze-release/retry2-ops-pr171.json"
           ],
           "interpretation": "Official rebuild/drift, FE checks/218 tests and required hosted gates passed. Stock race:2168 pass/1 fixture fail/1 S3 skip; corrected test-only overlay is separately validated. Historical local host/tenant/root-suite failures remain unverified attribution.",
-          "independentReview": "Current CODE does not accept consumer/aggregate closure; see retry4 reports. Repair blockers and re-review."
+          "independentReview": "Original criterion approved in final independent five-scope reports; actual official consumer and exact source/runtime proof accepted, residuals explicitly separate.",
+          "historicalIndependentReview": "Current CODE does not accept consumer/aggregate closure; see retry4 reports. Repair blockers and re-review."
         },
         {
           "index": 2,
@@ -670,7 +679,8 @@
             "../pantheon-ops/foundation-release.lock.json"
           ],
           "interpretation": "Official verified snapshot staged then synchronized; no manual copy from Base main. Official production/test sources remain owned by release acquisition; current Ops modifications are closeout evidence only. Base fixture patch is not manually copied to Ops; next official sync explicitly deferred FIXTURE-SYNC-001.",
-          "independentReview": "Current CODE does not accept consumer/aggregate closure; see retry4 reports. Repair blockers and re-review."
+          "independentReview": "Original criterion approved in final independent five-scope reports; actual official consumer and exact source/runtime proof accepted, residuals explicitly separate.",
+          "historicalIndependentReview": "Current CODE does not accept consumer/aggregate closure; see retry4 reports. Repair blockers and re-review."
         },
         {
           "index": 3,
@@ -683,9 +693,11 @@
             "../pantheon-ops/foundation-release.lock.json"
           ],
           "interpretation": "Original deferral later fulfilled by authorized parent; official exact-version lock, no new plugin protocol.",
-          "independentReview": "Current CODE does not accept consumer/aggregate closure; see retry4 reports. Repair blockers and re-review."
+          "independentReview": "Original criterion approved in final independent five-scope reports; actual official consumer and exact source/runtime proof accepted, residuals explicitly separate.",
+          "historicalIndependentReview": "Current CODE does not accept consumer/aggregate closure; see retry4 reports. Repair blockers and re-review."
         }
-      ]
+      ],
+      "historicalEvidenceDecision": "Official v0.18.4 release and root-lock consumption confirmed. Fresh rebuild828/shared-drift, migration32, FE218, consumer57 regressions and4 generated smokes passed. Stock race failed shared fixture; corrected overlay2170/0/1 passed; Base direct validation separately recorded. Residuals and approval boundary explicit."
     },
     {
       "taskId": "2026-11-04-global-audit-remediation",
@@ -695,8 +707,8 @@
         "冻结与发布不自动签署；低价值复杂度不追加投资",
         "共同验证通过或缺口显式；子任务闭合不等于programme完成"
       ],
-      "evidenceDecision": "Nine original findings plus PB010 each have scoped results; release and downstream completed; provider/policy/production follow-ups remain explicitly open.",
-      "proposedDisposition": "blocked by current CODE required-consumer-validation/module-graph findings; no aggregate completion approved",
+      "evidenceDecision": "2026-11-07: exact original scope approved by fresh independent CODE APPROVE / ARCH CLEAR on the final five-task plan. Official Base v0.18.5 at1da0834b; Base1890/0/1 and47packages, FE218, immutable Full Smoke/Release Gate passed. Official Ops PR177 merged at92c1efcfc4f754a7f0a4e9f181f446f4a2ddcfc2 after required hosted gates including Smoke Sanity; full readonly CGO consumer race2170/0/1,64packages, no source overlay or module mutation; FE218/scripts59/migration32clean/four standard generator smoke passed. Original unchanged SSRF public-API attack replay now records2 DNS lookups / loopbacknotreached; original deliberate attack-failure panic is preserved as a nonzero result, not called a green test. All40 original criteria and all source/contract boundaries preserved. S3 provider skip/no waiver, maintenance freeze unsigned, OpsQA002 and extra host-import runtime table gaps, network policy/CI measurements/baselines/production operations remain explicit separate residuals.",
+      "proposedDisposition": "closed after fresh final same-plan CODE/ARCH approval",
       "evidenceRefs": [
         ".harness/evidence/2026-11-04-global-audit-remediation/commands.json",
         ".harness/evidence/2026-11-04-global-audit-remediation/summary.md",
@@ -716,7 +728,8 @@
             ".harness/evidence/2026-11-04-audit-p2-ops-db-test-followup/triage.json"
           ],
           "interpretation": "Nine original findings and PB010 each have results; P1 red/green implementation evidence retained.",
-          "independentReview": "Current CODE does not accept consumer/aggregate closure; see retry4 reports. Repair blockers and re-review."
+          "independentReview": "Original criterion approved in final independent five-scope reports; actual official consumer and exact source/runtime proof accepted, residuals explicitly separate.",
+          "historicalIndependentReview": "Current CODE does not accept consumer/aggregate closure; see retry4 reports. Repair blockers and re-review."
         },
         {
           "index": 2,
@@ -728,7 +741,8 @@
             ".harness/evidence/2026-11-05-base-freeze-release/closeout-residuals.json"
           ],
           "interpretation": "No automatic freeze signature; release was separately authorized and delivered. CI optimization remains a scoped retain/defer decision.",
-          "independentReview": "Current CODE does not accept consumer/aggregate closure; see retry4 reports. Repair blockers and re-review."
+          "independentReview": "Original criterion approved in final independent five-scope reports; actual official consumer and exact source/runtime proof accepted, residuals explicitly separate.",
+          "historicalIndependentReview": "Current CODE does not accept consumer/aggregate closure; see retry4 reports. Repair blockers and re-review."
         },
         {
           "index": 3,
@@ -741,9 +755,11 @@
             ".harness/evidence/2026-11-05-base-freeze-release/closeout-residuals.json"
           ],
           "interpretation": "Common gate processes pass and uncovered integrations/local fixture failures remain explicit; programme requires its own dual-lane acceptance, not child-state inference.",
-          "independentReview": "Current CODE does not accept consumer/aggregate closure; see retry4 reports. Repair blockers and re-review."
+          "independentReview": "Original criterion approved in final independent five-scope reports; actual official consumer and exact source/runtime proof accepted, residuals explicitly separate.",
+          "historicalIndependentReview": "Current CODE does not accept consumer/aggregate closure; see retry4 reports. Repair blockers and re-review."
         }
-      ]
+      ],
+      "historicalEvidenceDecision": "Nine original findings plus PB010 each have scoped results; release and downstream completed; provider/policy/production follow-ups remain explicitly open."
     },
     {
       "taskId": "2026-11-05-base-freeze-release",
@@ -755,8 +771,8 @@
         "Affected documents accurately describe the delivered release",
         "Related changes merged; foundation release verified; Ops consumes that exact release"
       ],
-      "evidenceDecision": "Official v0.18.4 release and root-lock consumption confirmed. Fresh rebuild828/shared-drift, migration32, FE218, consumer57 regressions and4 generated smokes passed. Stock race failed shared fixture; corrected overlay2170/0/1 passed; Base direct validation separately recorded. Residuals and approval boundary explicit.",
-      "proposedDisposition": "blocked by current CODE required-consumer-validation/module-graph findings; no aggregate completion approved",
+      "evidenceDecision": "2026-11-07: exact original scope approved by fresh independent CODE APPROVE / ARCH CLEAR on the final five-task plan. Official Base v0.18.5 at1da0834b; Base1890/0/1 and47packages, FE218, immutable Full Smoke/Release Gate passed. Official Ops PR177 merged at92c1efcfc4f754a7f0a4e9f181f446f4a2ddcfc2 after required hosted gates including Smoke Sanity; full readonly CGO consumer race2170/0/1,64packages, no source overlay or module mutation; FE218/scripts59/migration32clean/four standard generator smoke passed. Original unchanged SSRF public-API attack replay now records2 DNS lookups / loopbacknotreached; original deliberate attack-failure panic is preserved as a nonzero result, not called a green test. All40 original criteria and all source/contract boundaries preserved. S3 provider skip/no waiver, maintenance freeze unsigned, OpsQA002 and extra host-import runtime table gaps, network policy/CI measurements/baselines/production operations remain explicit separate residuals.",
+      "proposedDisposition": "closed after fresh final same-plan CODE/ARCH approval",
       "evidenceRefs": [
         ".harness/evidence/2026-11-05-base-freeze-release/commands.json",
         ".harness/evidence/2026-11-05-base-freeze-release/summary.md",
@@ -777,7 +793,8 @@
             ".harness/evidence/2026-11-05-base-freeze-release/closeout-residuals.json"
           ],
           "interpretation": "Existing approved implementation scope delivered; real S3/provider and local fixture coverage are unverified/failed, not implementation-complete provider certifications. Independent reviewers must confirm this scoped interpretation and the test-only downstream sync deferral.",
-          "independentReview": "Current CODE does not accept consumer/aggregate closure; see retry4 reports. Repair blockers and re-review."
+          "independentReview": "Original criterion approved in final independent five-scope reports; actual official consumer and exact source/runtime proof accepted, residuals explicitly separate.",
+          "historicalIndependentReview": "Current CODE does not accept consumer/aggregate closure; see retry4 reports. Repair blockers and re-review."
         },
         {
           "index": 2,
@@ -790,7 +807,8 @@
             "backend/modules/auth/login/refresh_rotation_test.go"
           ],
           "interpretation": "Tenant V1 positive/negative local evidence plus immutable hosted Tenant Smoke passed; no V2 claim.",
-          "independentReview": "Current CODE does not accept consumer/aggregate closure; see retry4 reports. Repair blockers and re-review."
+          "independentReview": "Original criterion approved in final independent five-scope reports; actual official consumer and exact source/runtime proof accepted, residuals explicitly separate.",
+          "historicalIndependentReview": "Current CODE does not accept consumer/aggregate closure; see retry4 reports. Repair blockers and re-review."
         },
         {
           "index": 3,
@@ -811,7 +829,8 @@
             ".harness/evidence/2026-11-05-base-freeze-release/retry3-consumer-migration.json"
           ],
           "interpretation": "Required process gates passed on delivered commits; Base optional smoke and Ops PR dependency scan are conditional skips. S3 test skip is not a pass or waiver. Stock release consumer race fixture failure and corrected overlay are separate outcomes; historical local host/tenant fixture attribution remains unverified. Fresh runtime deploy schema failure is QA-002.",
-          "independentReview": "Current CODE does not accept consumer/aggregate closure; see retry4 reports. Repair blockers and re-review."
+          "independentReview": "Original criterion approved in final independent five-scope reports; actual official consumer and exact source/runtime proof accepted, residuals explicitly separate.",
+          "historicalIndependentReview": "Current CODE does not accept consumer/aggregate closure; see retry4 reports. Repair blockers and re-review."
         },
         {
           "index": 4,
@@ -825,7 +844,8 @@
             ".harness/evidence/2026-11-05-base-freeze-release/closeout-matrix.json"
           ],
           "interpretation": "Current entries use exact released version/consumer facts; historical failures and original criteria retained.",
-          "independentReview": "Current CODE does not accept consumer/aggregate closure; see retry4 reports. Repair blockers and re-review."
+          "independentReview": "Original criterion approved in final independent five-scope reports; actual official consumer and exact source/runtime proof accepted, residuals explicitly separate.",
+          "historicalIndependentReview": "Current CODE does not accept consumer/aggregate closure; see retry4 reports. Repair blockers and re-review."
         },
         {
           "index": 5,
@@ -840,9 +860,11 @@
             "../pantheon-ops/foundation-release.lock.json"
           ],
           "interpretation": "Base PR494/official stable four-asset release and merged Ops PR171/root lock share exact commit and digests.",
-          "independentReview": "Current CODE does not accept consumer/aggregate closure; see retry4 reports. Repair blockers and re-review."
+          "independentReview": "Original criterion approved in final independent five-scope reports; actual official consumer and exact source/runtime proof accepted, residuals explicitly separate.",
+          "historicalIndependentReview": "Current CODE does not accept consumer/aggregate closure; see retry4 reports. Repair blockers and re-review."
         }
-      ]
+      ],
+      "historicalEvidenceDecision": "Official v0.18.4 release and root-lock consumption confirmed. Fresh rebuild828/shared-drift, migration32, FE218, consumer57 regressions and4 generated smokes passed. Stock race failed shared fixture; corrected overlay2170/0/1 passed; Base direct validation separately recorded. Residuals and approval boundary explicit."
     }
   ],
   "criteriaLegend": {
@@ -1200,5 +1222,39 @@
     "baseline": "1da0834bdce636fd2fc1063290e3f32339e2d27a",
     "release": "pantheon-base-v0.18.5",
     "publication": "resume9-official-provenance.json"
+  },
+  "historicalRelease": {
+    "tag": "pantheon-base-v0.18.4",
+    "commit": "0a8229c67ab482c2e163622fc4e5b87301c53399",
+    "basePr": 494,
+    "opsPr": 171,
+    "opsCommit": "7ed1521a37f5a7379693f7faa1bed0eae409249e"
+  },
+  "historicalScope": "Original12-task closure, original40 acceptance criteria unchanged; current diff is governance/evidence plus one Base-only test-fixture isolation correction. Explicit test-source overlay and module graph reconciliation do not assert stock-release full-race success.",
+  "finalCloseout": {
+    "recordedAt": "2026-11-07T03:32:24.184Z",
+    "originalCriteriaCount": 40,
+    "completedTaskIds": [
+      "2026-11-04-audit-p1-npm-audit-exit",
+      "2026-11-04-audit-p1-refresh-rotation",
+      "2026-11-04-audit-p1-ssrf-dial-binding",
+      "2026-11-04-audit-p2-agent-stop-points",
+      "2026-11-04-audit-p2-authoritative-docs",
+      "2026-11-04-audit-p2-freeze-validation",
+      "2026-11-04-audit-p2-ops-db-test-followup",
+      "2026-11-04-audit-p2-release-policy",
+      "2026-11-04-audit-p3-ci-cost-review",
+      "2026-11-04-audit-p3-consumer-seams",
+      "2026-11-04-global-audit-remediation",
+      "2026-11-05-base-freeze-release"
+    ],
+    "remainingOriginalTaskIds": [],
+    "sourceCommit": "1da0834bdce636fd2fc1063290e3f32339e2d27a",
+    "release": "pantheon-base-v0.18.5",
+    "consumerPr": 177,
+    "consumerCommit": "92c1efcfc4f754a7f0a4e9f181f446f4a2ddcfc2",
+    "review": "resume11-five-task-applied.json",
+    "freezeSigned": false,
+    "waivers": []
   }
 }

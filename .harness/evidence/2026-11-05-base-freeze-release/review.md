@@ -1,3 +1,36 @@
+# Final independent original-scope review
+
+2026-11-07: exact original scope approved by fresh independent CODE APPROVE / ARCH CLEAR on the final five-task plan. Official Base v0.18.5 at1da0834b; Base1890/0/1 and47packages, FE218, immutable Full Smoke/Release Gate passed. Official Ops PR177 merged at92c1efcfc4f754a7f0a4e9f181f446f4a2ddcfc2 after required hosted gates including Smoke Sanity; full readonly CGO consumer race2170/0/1,64packages, no source overlay or module mutation; FE218/scripts59/migration32clean/four standard generator smoke passed. Original unchanged SSRF public-API attack replay now records2 DNS lookups / loopbacknotreached; original deliberate attack-failure panic is preserved as a nonzero result, not called a green test. All40 original criteria and all source/contract boundaries preserved. S3 provider skip/no waiver, maintenance freeze unsigned, OpsQA002 and extra host-import runtime table gaps, network policy/CI measurements/baselines/production operations remain explicit separate residuals.
+
+## Machine Readable
+
+```json
+{
+  "taskId": "2026-11-05-base-freeze-release",
+  "verdict": "approved",
+  "reviewer": "Independent installed CODE/ARCH configured-default ephemeral sessions",
+  "findings": [],
+  "approvalScope": "original-five-task-final-plan",
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-11-05-base-freeze-release/manifest.json",
+    "evidence": ".harness/evidence/2026-11-05-base-freeze-release/commands.json",
+    "reviewFile": ".harness/evidence/2026-11-05-base-freeze-release/review.md",
+    "changeRef": "none",
+    "planRefs": [".harness/tasks/2026-11-05-base-freeze-release/manifest.json"]
+  },
+  "structuralReview": {
+    "affectedSubgraph": [
+      "Original criterion acceptance and official Base release -> Ops consumer; final change only governance/evidence projection"
+    ],
+    "checks": ["cycle", "hub", "call-depth", "sensitive-flow"],
+    "findings": [],
+    "notes": "Source, original acceptance criteria and scope unchanged; current independent approval and exact official validation/merge are linked."
+  }
+}
+```
+
+## Historical review (preserved)
+
 # Current partial independent closeout (2026-11-07)
 
 Seven original scopes: CODE APPROVE / ARCH CLEAR on identical fingerprints; exact guarded transitions applied and12 governance checks passed. Reports resume9-seven-code-reviewer.md / resume9-seven-architect.md, application resume9-seven-task-applied.json. This does not approve the parent programme or remaining five tasks; prior full-plan BLOCK/REQUEST CHANGES remains historical and those scopes stay open. Official185 published and acquired; complete consumer validation/CI/merge continues.
@@ -8,7 +41,7 @@ Seven original scopes: CODE APPROVE / ARCH CLEAR on identical fingerprints; exac
 
 **BLOCKED: independent review requires remediation.** Historical approvals below apply only to their recorded source hashes. Current CODE REQUEST CHANGES and ARCH BLOCK reports require corrected evidence, complete source coverage and a fresh judgment. No author self-approval.
 
-## Machine Readable
+## Historical Machine Readable
 
 ```json
 {

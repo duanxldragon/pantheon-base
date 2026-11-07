@@ -4,7 +4,7 @@
   "title": "全局审计有限整改 programme",
   "goal": "全局审计有限整改 programme",
   "primaryLayer": "platform",
-  "status": "in-progress",
+  "status": "completed",
   "priority": "P1",
   "type": "security-remediation",
   "findings": [
@@ -75,7 +75,7 @@
     ]
   },
   "runtimeSensitive": true,
-  "runtimeGap": "Downstream real-DB suite is red at 4 business packages (12 failure nodes / 9 top-level tests), identically reproduced at Ops HEAD; PB-010 intent/fixture triage pending. No approved release commit, external required CI/Sonar result or maintenance-freeze acceptance. Foundation release and Ops lock upgrade deferred; local synthetic candidate is not a release. Browser full/core smoke and live external integration were not run; no UI code was modified and no visual-polish claim is made. S3 and OIDC external-provider validation depend on provisioned services. Actual remote dependency vulnerability status is not established by mock npm tests.",
+  "runtimeGap": "Explicit residuals: S3 provider1skip/no waiver; maintenance freeze unsigned; OpsQA002 fresh deploy-attempt table and extra host-import runtime table gap outside this approved original Base scope; network-policy/CImeasurement/baseline/production follow-ups. Current official validation, dual review and consumer merge are complete.",
   "acceptanceCriteria": [
     "所有九项有真实状态和证据；P1优先验证并修复",
     "冻结与发布不自动签署；低价值复杂度不追加投资",
@@ -104,10 +104,19 @@
       "docs/reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-11-04_FULL.md"
     ]
   },
-  "implementationStatus": "priority-remediation-applied",
-  "reviewStatus": "blocked",
-  "verificationStatus": "partial",
+  "implementationStatus": "delivered",
+  "reviewStatus": "approved",
+  "verificationStatus": "passed-with-explicit-residuals",
   "followUpTaskIds": [
     "2026-11-04-audit-p2-ops-db-test-followup"
-  ]
+  ],
+  "closeout": {
+    "historicalState": {
+      "runtimeGap": "Downstream real-DB suite is red at 4 business packages (12 failure nodes / 9 top-level tests), identically reproduced at Ops HEAD; PB-010 intent/fixture triage pending. No approved release commit, external required CI/Sonar result or maintenance-freeze acceptance. Foundation release and Ops lock upgrade deferred; local synthetic candidate is not a release. Browser full/core smoke and live external integration were not run; no UI code was modified and no visual-polish claim is made. S3 and OIDC external-provider validation depend on provisioned services. Actual remote dependency vulnerability status is not established by mock npm tests."
+    },
+    "recordedAt": "2026-11-07T03:32:24.167Z",
+    "status": "closed-after-final-independent-approval",
+    "note": "2026-11-07: exact original scope approved by fresh independent CODE APPROVE / ARCH CLEAR on the final five-task plan. Official Base v0.18.5 at1da0834b; Base1890/0/1 and47packages, FE218, immutable Full Smoke/Release Gate passed. Official Ops PR177 merged at92c1efcfc4f754a7f0a4e9f181f446f4a2ddcfc2 after required hosted gates including Smoke Sanity; full readonly CGO consumer race2170/0/1,64packages, no source overlay or module mutation; FE218/scripts59/migration32clean/four standard generator smoke passed. Original unchanged SSRF public-API attack replay now records2 DNS lookups / loopbacknotreached; original deliberate attack-failure panic is preserved as a nonzero result, not called a green test. All40 original criteria and all source/contract boundaries preserved. S3 provider skip/no waiver, maintenance freeze unsigned, OpsQA002 and extra host-import runtime table gaps, network policy/CI measurements/baselines/production operations remain explicit separate residuals.",
+    "currentReview": ".harness/evidence/2026-11-05-base-freeze-release/resume11-five-task-applied.json"
+  }
 }

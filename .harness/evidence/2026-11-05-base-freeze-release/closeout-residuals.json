@@ -1,18 +1,20 @@
 {
-  "recordedAt": "2026-11-06T14:38:38.898Z",
+  "recordedAt": "2026-11-07T03:32:24.192Z",
   "taskId": "2026-11-05-base-freeze-release",
   "freezeSigned": false,
   "waiversGranted": [],
   "items": [
     {
       "id": "CR-001",
-      "status": "blocked",
+      "status": "resolved-original-task-review",
       "owner": "Independent code-reviewer and architect",
       "scope": "12 task closeout approval",
-      "nextAction": "Run both independent lanes on original acceptance/source and final documentation diff in an environment supporting the configured reviewer models.",
+      "nextAction": "Seven original closures merged PR497; final five accepted by fresh same-snapshot CODE/ARCH; final governance PR CI/merge still required.",
       "evidence": [
-        "closeout-review-availability.json"
-      ]
+        "resume9-seven-task-applied.json",
+        "resume11-five-task-applied.json"
+      ],
+      "historicalStatus": "blocked"
     },
     {
       "id": "S3-001",
@@ -76,14 +78,15 @@
     },
     {
       "id": "FIXTURE-SYNC-001",
-      "status": "explicitly-deferred",
+      "status": "resolved-official-v0185-consumption",
       "owner": "Base foundation release / Ops consumer",
       "scope": "Base-only i18n test-fixture isolation correction and external-reference regression",
-      "nextAction": "Include corrected test fixture in next official foundation release and consume by root lock; never hand-copy Base main files into Ops. Current validation uses an explicit Go test-source overlay and leaves official v0.18.4 bytes intact.",
+      "nextAction": "BasePR496 and official185 at1da0834b, full readonly consumer race and OpsPR177 merged; no test overlay.",
       "evidenceRefs": [
         ".harness/evidence/2026-11-05-base-freeze-release/retry3-fixture-fix.md",
         ".harness/evidence/2026-11-05-base-freeze-release/retry3-consumer-focused.json"
-      ]
+      ],
+      "historicalStatus": "explicitly-deferred"
     },
     {
       "id": "QA-001",
