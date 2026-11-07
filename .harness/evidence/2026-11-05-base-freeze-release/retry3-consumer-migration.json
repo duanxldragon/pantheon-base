@@ -1,0 +1,26 @@
+{
+  "recordedAt": "2026-11-06T13:31:10.509Z",
+  "sourceCommit": "1b4f0b344923a4964d932c51a7eb601195332714",
+  "scratch": "D:/workspace/go/pantheon-platform/audit-artifacts/task-closeout-2026-11-06",
+  "target": "D:/workspace/go/pantheon-platform/audit-artifacts/task-closeout-2026-11-06/ops-rebuilt",
+  "commands": [
+    {
+      "name": "migration",
+      "executable": "go",
+      "args": [
+        "run",
+        "-buildvcs=false",
+        "D:/workspace/go/pantheon-platform/audit-artifacts/task-closeout-2026-11-06/migration-probe.go"
+      ],
+      "cwd": "D:/workspace/go/pantheon-platform/audit-artifacts/task-closeout-2026-11-06/ops-rebuilt/backend",
+      "startedAt": "2026-11-06T13:31:10.546Z",
+      "finishedAt": "2026-11-06T13:31:18.310Z",
+      "exitCode": 0,
+      "error": null,
+      "log": "retry3-migration.log",
+      "sha256": "951fee43382f36628827e5560ecbecbfdddd239df5ef33adf6cef7e03f47f209"
+    }
+  ],
+  "repository": "pantheon-ops",
+  "sourceManifest": "retry3-source-manifest.json"
+}

@@ -1,0 +1,125 @@
+{
+  "recordedAt": "2026-11-06T14:49:22.278Z",
+  "commands": [
+    {
+      "command": "npm run check:docs-frontmatter",
+      "cwd": "D:/workspace/go/pantheon-platform/pantheon-base",
+      "exitCode": 0,
+      "status": "passed",
+      "startedAt": "2026-11-06T14:49:21.121Z",
+      "finishedAt": "2026-11-06T14:49:22.145Z",
+      "log": "retry3-check-docs-frontmatter.log",
+      "sha256": "0e17f2c597633cc3ed234cbbc9906210d72ddf80cee51d6b621f447c5f06be42"
+    },
+    {
+      "command": "npm run check:task-packet-template",
+      "cwd": "D:/workspace/go/pantheon-platform/pantheon-base",
+      "exitCode": 0,
+      "status": "passed",
+      "startedAt": "2026-11-06T14:49:21.128Z",
+      "finishedAt": "2026-11-06T14:49:21.916Z",
+      "log": "retry3-check-task-packet-template.log",
+      "sha256": "c906367e2b043848d360d0c2a68d087d528861349348bf101a37c09439d98fc7"
+    },
+    {
+      "command": "npm run check:task-packet",
+      "cwd": "D:/workspace/go/pantheon-platform/pantheon-base",
+      "exitCode": 0,
+      "status": "passed",
+      "startedAt": "2026-11-06T14:49:21.131Z",
+      "finishedAt": "2026-11-06T14:49:22.205Z",
+      "log": "retry3-check-task-packet.log",
+      "sha256": "6ef198061227ada814860b4188ae6b6b06b28646ae9f37d657759f193ab4b248"
+    },
+    {
+      "command": "npm run check:harness-evidence",
+      "cwd": "D:/workspace/go/pantheon-platform/pantheon-base",
+      "exitCode": 0,
+      "status": "passed",
+      "startedAt": "2026-11-06T14:49:21.135Z",
+      "finishedAt": "2026-11-06T14:49:22.277Z",
+      "log": "retry3-check-harness-evidence.log",
+      "sha256": "dd87e7b8a416410a67c63a67c1d518153447028c80a1181188dba74a5824e7f9"
+    },
+    {
+      "command": "npm run check:harness-review",
+      "cwd": "D:/workspace/go/pantheon-platform/pantheon-base",
+      "exitCode": 0,
+      "status": "passed",
+      "startedAt": "2026-11-06T14:49:21.140Z",
+      "finishedAt": "2026-11-06T14:49:22.189Z",
+      "log": "retry3-check-harness-review.log",
+      "sha256": "c95ad0e133540ab2ae89ea23cddcbce0706693e9b66a67a996bdf2e6209ddd3d"
+    },
+    {
+      "command": "npm run check:harness-runtime-evidence",
+      "cwd": "D:/workspace/go/pantheon-platform/pantheon-base",
+      "exitCode": 0,
+      "status": "passed",
+      "startedAt": "2026-11-06T14:49:21.144Z",
+      "finishedAt": "2026-11-06T14:49:22.157Z",
+      "log": "retry3-check-harness-runtime-evidence.log",
+      "sha256": "5a6f01072ec7fde3019ef9c2387c9f4c57bcacaf18c9da21390005fecdaf2b16"
+    },
+    {
+      "command": "npm run check:harness-docs",
+      "cwd": "D:/workspace/go/pantheon-platform/pantheon-base",
+      "exitCode": 0,
+      "status": "passed",
+      "startedAt": "2026-11-06T14:49:21.148Z",
+      "finishedAt": "2026-11-06T14:49:22.061Z",
+      "log": "retry3-check-harness-docs.log",
+      "sha256": "aff38ef831fbdaa9304137101838cff74335ea77c6b19a3eb5400fa047a464b6"
+    },
+    {
+      "command": "npm run check:harness-inventory",
+      "cwd": "D:/workspace/go/pantheon-platform/pantheon-base",
+      "exitCode": 0,
+      "status": "passed",
+      "startedAt": "2026-11-06T14:49:21.154Z",
+      "finishedAt": "2026-11-06T14:49:21.969Z",
+      "log": "retry3-check-harness-inventory.log",
+      "sha256": "dbf43926f0c41a7c788b9c9cb48f7677e9ddafdcf3a9cdfc0480874099f1bf4a"
+    },
+    {
+      "command": "npm run check:harness-encoding",
+      "cwd": "D:/workspace/go/pantheon-platform/pantheon-base",
+      "exitCode": 0,
+      "status": "passed",
+      "startedAt": "2026-11-06T14:49:21.161Z",
+      "finishedAt": "2026-11-06T14:49:22.278Z",
+      "log": "retry3-check-harness-encoding.log",
+      "sha256": "53903e18693e839b03f53cec2079889d7583bd04b597197d59222190d0b0b588"
+    },
+    {
+      "command": "npm run check:harness-graph-review",
+      "cwd": "D:/workspace/go/pantheon-platform/pantheon-base",
+      "exitCode": 0,
+      "status": "passed",
+      "startedAt": "2026-11-06T14:49:21.168Z",
+      "finishedAt": "2026-11-06T14:49:21.967Z",
+      "log": "retry3-check-harness-graph-review.log",
+      "sha256": "c82b64c56705a30ca300eae47449ae5c424c2d38b28eb7d1d45403790a2d1460"
+    },
+    {
+      "command": "npm run check:structure",
+      "cwd": "D:/workspace/go/pantheon-platform/pantheon-base",
+      "exitCode": 0,
+      "status": "passed",
+      "startedAt": "2026-11-06T14:49:21.175Z",
+      "finishedAt": "2026-11-06T14:49:22.033Z",
+      "log": "retry3-check-structure.log",
+      "sha256": "5c0cc790768314919503a89cbf008e2c8d58110f55d01ca9d96f12279abb8c67"
+    },
+    {
+      "command": "npm run check:checker-wiring",
+      "cwd": "D:/workspace/go/pantheon-platform/pantheon-base",
+      "exitCode": 0,
+      "status": "passed",
+      "startedAt": "2026-11-06T14:49:21.186Z",
+      "finishedAt": "2026-11-06T14:49:21.988Z",
+      "log": "retry3-check-checker-wiring.log",
+      "sha256": "5bacbbe603de0a7d5109ebd54f6c2c1f547dd59d4f203e846b58c0e2f0455813"
+    }
+  ]
+}

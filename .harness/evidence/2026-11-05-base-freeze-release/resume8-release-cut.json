@@ -1,0 +1,62 @@
+{
+  "recordedAt": "2026-11-07T02:08:48.544Z",
+  "mode": "cut",
+  "root": "D:/workspace/go/pantheon-platform/audit-artifacts/task-closeout-2026-11-06/base-v185-release",
+  "repo": "duanxldragon/pantheon-base",
+  "commit": "1da0834bdce636fd2fc1063290e3f32339e2d27a",
+  "version": "pantheon-base-v0.18.5",
+  "checks": [
+    {
+      "name": "CI Summary",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/duanxldragon/pantheon-base/actions/runs/42325774807/job/128261563691"
+    },
+    {
+      "name": "Quality Gates",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/duanxldragon/pantheon-base/actions/runs/42325774773/job/128263944788"
+    },
+    {
+      "name": "Security Gates",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/duanxldragon/pantheon-base/actions/runs/42325774813/job/128261395748"
+    },
+    {
+      "name": "Actionlint",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/duanxldragon/pantheon-base/actions/runs/42325774776/job/128260592439"
+    },
+    {
+      "name": "Full Smoke",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/duanxldragon/pantheon-base/actions/runs/42325774814/job/128260592909"
+    },
+    {
+      "name": "SonarCloud Code Analysis",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/duanxldragon/pantheon-base/runs/128261006322"
+    },
+    {
+      "name": "Release Gate Summary",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/duanxldragon/pantheon-base/actions/runs/42325774815/job/128265434209"
+    }
+  ],
+  "commands": [
+    {
+      "command": "node scripts/foundation-release/cut-foundation-release.mjs --release-version pantheon-base-v0.18.5 --release-line release/0.18 --base-commit 1da0834bdce636fd2fc1063290e3f32339e2d27a --release-notes Correct shared purge-test scanner isolation and add external-reference lifecycle regression. Reuse identical seed setup in a test helper. Production behavior, UI, interfaces and migrations are unchanged. Current-source CGO readonly full race: 1890 pass, 0 fail, 1 real S3 provider skip; same Sonar new duplication metric is 0.0% against unchanged 3% gate. --upgrade-notes Acquire the official four GitHub release assets, verify checksums, manifest and immutable archive commit, then rebuild using the standard business overlay assembler. Ops dependency graph normalization is merged separately in PR176. Do not copy source from Base main or use a test-source overlay. --consumer-impact The emitted official consumer includes corrected shared test fixtures. Run complete readonly CGO race, frontend, overlay/drift and applicable runtime/business checks before replacing the consumer baseline. S3 provider remains unverified without waiver; maintenance freeze remains unsigned; production migrations and residual Ops QA/policy decisions stay separate.",
+      "startedAt": "2026-11-07T02:08:48.546Z",
+      "finishedAt": "2026-11-07T02:08:52.888Z",
+      "exitCode": 0,
+      "log": "D:/workspace/go/pantheon-platform/audit-artifacts/task-closeout-2026-11-06/resume8-release-cut.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}

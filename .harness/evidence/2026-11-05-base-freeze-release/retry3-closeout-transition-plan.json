@@ -1,0 +1,300 @@
+{
+  "recordedAt": "2026-11-06T14:50:42.025Z",
+  "status": "proposal-only-not-applied",
+  "purpose": "Exact governance-only task closeout transitions authorized only after independent CODE APPROVE and ARCH CLEAR on this plan and current source/evidence. Original acceptance criteria/scope and historical evidence remain unchanged.",
+  "preconditions": [
+    "Final Base direct full-race exit0,1890 pass/0 fail/1 S3 skip",
+    "Consumer corrected-test overlay exit0,2170 pass/0 fail/1 S3 skip; stock consumer full-race failure remains failed",
+    "Independent reviewers must explicitly accept test-only next official foundation sync deferral FIXTURE-SYNC-001 and scratch module graph reconciliation; otherwise keep affected tasks in-progress",
+    "Both independent reports must cite retry3-source-manifest.json, retry3-doc-source-manifest.json and this transition plan hashes, approve specific original task ids without weakening40 criteria"
+  ],
+  "taskTransitions": [
+    {
+      "taskId": "2026-11-04-audit-p1-npm-audit-exit",
+      "manifest": ".harness/tasks/2026-11-04-audit-p1-npm-audit-exit/manifest.json",
+      "preChangeSha256": "a6b3ab531fc6145e1f0bc4c99ecef21803ea12161222142eb5a12a7f60c40584",
+      "originalCriteriaSha256": "cbda6a75a6751e83ca6629ea71c4d2a64db743004718348c5c9afc6b1a8e4d6b",
+      "originalScopeSha256": "bdf8709f3fc036e52bbab7d78715ce2c0e4e013d4920d6dfc52f8f3ac4a53c45",
+      "set": {
+        "status": "completed",
+        "implementationStatus": "delivered",
+        "reviewStatus": "approved",
+        "verificationStatus": "passed-with-documented-gaps",
+        "closeout.status": "closed-after-independent-approval"
+      },
+      "relatedFiles": [
+        "docs/harness/tasks/2026-11-04-audit-p1-npm-audit-exit.task.md",
+        ".harness/evidence/2026-11-04-audit-p1-npm-audit-exit/summary.md",
+        ".harness/evidence/2026-11-04-audit-p1-npm-audit-exit/review.md"
+      ],
+      "reviewUpdate": "Replace only current review header/JSON with actual independent APPROVE/CLEAR report references and hashes; retain historical review section untouched. No author review substitution.",
+      "packetSummaryUpdate": "Update current closeout paragraph to completed after both actual independent approvals; explicitly retain all provider/policy/runtime/test-sync gaps and historic body."
+    },
+    {
+      "taskId": "2026-11-04-audit-p1-refresh-rotation",
+      "manifest": ".harness/tasks/2026-11-04-audit-p1-refresh-rotation/manifest.json",
+      "preChangeSha256": "5ebf38c6359bf854d3681446ce0cfd52aa80e8040f7161c375ec49c5c5e69ab7",
+      "originalCriteriaSha256": "254e415db77a6908da9381e8469b4da7102b4a10d229c1af52926697cb35f2a7",
+      "originalScopeSha256": "7b78a1493ce5c13b90782c5d6002e5587dbe86fc6e37abadafa07099e2e2af96",
+      "set": {
+        "status": "completed",
+        "implementationStatus": "delivered",
+        "reviewStatus": "approved",
+        "verificationStatus": "passed-with-documented-gaps",
+        "closeout.status": "closed-after-independent-approval"
+      },
+      "relatedFiles": [
+        "docs/harness/tasks/2026-11-04-audit-p1-refresh-rotation.task.md",
+        ".harness/evidence/2026-11-04-audit-p1-refresh-rotation/summary.md",
+        ".harness/evidence/2026-11-04-audit-p1-refresh-rotation/review.md"
+      ],
+      "reviewUpdate": "Replace only current review header/JSON with actual independent APPROVE/CLEAR report references and hashes; retain historical review section untouched. No author review substitution.",
+      "packetSummaryUpdate": "Update current closeout paragraph to completed after both actual independent approvals; explicitly retain all provider/policy/runtime/test-sync gaps and historic body."
+    },
+    {
+      "taskId": "2026-11-04-audit-p1-ssrf-dial-binding",
+      "manifest": ".harness/tasks/2026-11-04-audit-p1-ssrf-dial-binding/manifest.json",
+      "preChangeSha256": "5eecdb4c1100a3052a0522875545d7b5a42bf3c2b83616984f2571b14f8cb808",
+      "originalCriteriaSha256": "5cd22a93c03c46779690614bbd791bc1af6af1a0e84a76bb7139c73acf652de8",
+      "originalScopeSha256": "8635343bdb945f1c171619e0389b65b60883e8276d9eee84a80893e8d73c0e13",
+      "set": {
+        "status": "completed",
+        "implementationStatus": "delivered",
+        "reviewStatus": "approved",
+        "verificationStatus": "passed-with-documented-gaps",
+        "closeout.status": "closed-after-independent-approval"
+      },
+      "relatedFiles": [
+        "docs/harness/tasks/2026-11-04-audit-p1-ssrf-dial-binding.task.md",
+        ".harness/evidence/2026-11-04-audit-p1-ssrf-dial-binding/summary.md",
+        ".harness/evidence/2026-11-04-audit-p1-ssrf-dial-binding/review.md"
+      ],
+      "reviewUpdate": "Replace only current review header/JSON with actual independent APPROVE/CLEAR report references and hashes; retain historical review section untouched. No author review substitution.",
+      "packetSummaryUpdate": "Update current closeout paragraph to completed after both actual independent approvals; explicitly retain all provider/policy/runtime/test-sync gaps and historic body."
+    },
+    {
+      "taskId": "2026-11-04-audit-p2-agent-stop-points",
+      "manifest": ".harness/tasks/2026-11-04-audit-p2-agent-stop-points/manifest.json",
+      "preChangeSha256": "7abd132e2afc472c2dded5b50ca0c3d70b3c94a2944ea4c11249854054a13634",
+      "originalCriteriaSha256": "e08a1d0acbd65bcf58d5416dbd2e93897eee36f59c214c397c36325a47b9e0ed",
+      "originalScopeSha256": "171097dc9e0d6e977bb2d7cead4d6fb736eab7aa3d2c12ecc5d50b8da6eab826",
+      "set": {
+        "status": "completed",
+        "implementationStatus": "delivered",
+        "reviewStatus": "approved",
+        "verificationStatus": "passed-with-documented-gaps",
+        "closeout.status": "closed-after-independent-approval"
+      },
+      "relatedFiles": [
+        "docs/harness/tasks/2026-11-04-audit-p2-agent-stop-points.task.md",
+        ".harness/evidence/2026-11-04-audit-p2-agent-stop-points/summary.md",
+        ".harness/evidence/2026-11-04-audit-p2-agent-stop-points/review.md"
+      ],
+      "reviewUpdate": "Replace only current review header/JSON with actual independent APPROVE/CLEAR report references and hashes; retain historical review section untouched. No author review substitution.",
+      "packetSummaryUpdate": "Update current closeout paragraph to completed after both actual independent approvals; explicitly retain all provider/policy/runtime/test-sync gaps and historic body."
+    },
+    {
+      "taskId": "2026-11-04-audit-p2-authoritative-docs",
+      "manifest": ".harness/tasks/2026-11-04-audit-p2-authoritative-docs/manifest.json",
+      "preChangeSha256": "2eec73de75689ed854c9e5956a39e5d73e240665ec8de18d186f8aea86df3c5e",
+      "originalCriteriaSha256": "1a8e2cf4e3f389f02dedf39fdcd9c2d4ebbb57607d1b0008c4ec1f4d6c4acce4",
+      "originalScopeSha256": "2c95f42d644ac9412b1d5b5de7450fbaa692072b5ef86513a057113028dd5a39",
+      "set": {
+        "status": "completed",
+        "implementationStatus": "delivered",
+        "reviewStatus": "approved",
+        "verificationStatus": "passed-with-documented-gaps",
+        "closeout.status": "closed-after-independent-approval"
+      },
+      "relatedFiles": [
+        "docs/harness/tasks/2026-11-04-audit-p2-authoritative-docs.task.md",
+        ".harness/evidence/2026-11-04-audit-p2-authoritative-docs/summary.md",
+        ".harness/evidence/2026-11-04-audit-p2-authoritative-docs/review.md"
+      ],
+      "reviewUpdate": "Replace only current review header/JSON with actual independent APPROVE/CLEAR report references and hashes; retain historical review section untouched. No author review substitution.",
+      "packetSummaryUpdate": "Update current closeout paragraph to completed after both actual independent approvals; explicitly retain all provider/policy/runtime/test-sync gaps and historic body."
+    },
+    {
+      "taskId": "2026-11-04-audit-p2-freeze-validation",
+      "manifest": ".harness/tasks/2026-11-04-audit-p2-freeze-validation/manifest.json",
+      "preChangeSha256": "5f5802e4141df6480175b10b7421f83dad68b8c1cab03cb45acdd6ddb2102f2b",
+      "originalCriteriaSha256": "8e44e6e34235b794923e0a5bb295157620c330f7b25b3e410394f069b7af7f3e",
+      "originalScopeSha256": "0385ab858db80a9a128da5c5a26d9310290e629aba5c47c8f9e65f1b1320494d",
+      "set": {
+        "status": "completed",
+        "implementationStatus": "delivered",
+        "reviewStatus": "approved",
+        "verificationStatus": "passed-with-documented-gaps",
+        "closeout.status": "closed-after-independent-approval"
+      },
+      "relatedFiles": [
+        "docs/harness/tasks/2026-11-04-audit-p2-freeze-validation.task.md",
+        ".harness/evidence/2026-11-04-audit-p2-freeze-validation/summary.md",
+        ".harness/evidence/2026-11-04-audit-p2-freeze-validation/review.md"
+      ],
+      "reviewUpdate": "Replace only current review header/JSON with actual independent APPROVE/CLEAR report references and hashes; retain historical review section untouched. No author review substitution.",
+      "packetSummaryUpdate": "Update current closeout paragraph to completed after both actual independent approvals; explicitly retain all provider/policy/runtime/test-sync gaps and historic body."
+    },
+    {
+      "taskId": "2026-11-04-audit-p2-ops-db-test-followup",
+      "manifest": ".harness/tasks/2026-11-04-audit-p2-ops-db-test-followup/manifest.json",
+      "preChangeSha256": "f1db15e6305a99c5999dd90168449fd075abfccdee01a7003f4f86ee9d8722fe",
+      "originalCriteriaSha256": "b8936a5cc15e8c8de320161e2ca5546a83c983744a689f843fce9164d0e6290c",
+      "originalScopeSha256": "43cd118aad724a781375e209b4c7a0c0656d393a65d642e8f5437f0e4db9f3ca",
+      "set": {
+        "status": "completed",
+        "implementationStatus": "delivered",
+        "reviewStatus": "approved",
+        "verificationStatus": "passed-with-documented-gaps",
+        "closeout.status": "closed-after-independent-approval"
+      },
+      "relatedFiles": [
+        "docs/harness/tasks/2026-11-04-audit-p2-ops-db-test-followup.task.md",
+        ".harness/evidence/2026-11-04-audit-p2-ops-db-test-followup/summary.md",
+        ".harness/evidence/2026-11-04-audit-p2-ops-db-test-followup/review.md"
+      ],
+      "reviewUpdate": "Replace only current review header/JSON with actual independent APPROVE/CLEAR report references and hashes; retain historical review section untouched. No author review substitution.",
+      "packetSummaryUpdate": "Update current closeout paragraph to completed after both actual independent approvals; explicitly retain all provider/policy/runtime/test-sync gaps and historic body."
+    },
+    {
+      "taskId": "2026-11-04-audit-p2-release-policy",
+      "manifest": ".harness/tasks/2026-11-04-audit-p2-release-policy/manifest.json",
+      "preChangeSha256": "f51509979bc011b004315ffd3ff1adb5ab3e7724f801805856102cd93d493d5e",
+      "originalCriteriaSha256": "7658fbbd6daa7a24baa9f9725668fcb10140c7413edfa9145614cc9b98cc28dc",
+      "originalScopeSha256": "042e24e7059a0de8e253b43d11ac1b5e20453b5b3993c43dbb790c6fc4a92241",
+      "set": {
+        "status": "completed",
+        "implementationStatus": "delivered",
+        "reviewStatus": "approved",
+        "verificationStatus": "passed-with-documented-gaps",
+        "closeout.status": "closed-after-independent-approval"
+      },
+      "relatedFiles": [
+        "docs/harness/tasks/2026-11-04-audit-p2-release-policy.task.md",
+        ".harness/evidence/2026-11-04-audit-p2-release-policy/summary.md",
+        ".harness/evidence/2026-11-04-audit-p2-release-policy/review.md"
+      ],
+      "reviewUpdate": "Replace only current review header/JSON with actual independent APPROVE/CLEAR report references and hashes; retain historical review section untouched. No author review substitution.",
+      "packetSummaryUpdate": "Update current closeout paragraph to completed after both actual independent approvals; explicitly retain all provider/policy/runtime/test-sync gaps and historic body."
+    },
+    {
+      "taskId": "2026-11-04-audit-p3-ci-cost-review",
+      "manifest": ".harness/tasks/2026-11-04-audit-p3-ci-cost-review/manifest.json",
+      "preChangeSha256": "3b5e6a84088e4802c025f6c0f1166234e71efde6391cdde6922a6dd89b1dd2b7",
+      "originalCriteriaSha256": "0160f1109ce5be5ac42216b9828837ac36098d9c844461feb4cc63718e3424c2",
+      "originalScopeSha256": "757c8a2e784829a2ce820b915d8fe287c66dcf2521a7530f234a2ee988bc2084",
+      "set": {
+        "status": "completed",
+        "implementationStatus": "delivered",
+        "reviewStatus": "approved",
+        "verificationStatus": "passed-with-documented-gaps",
+        "closeout.status": "closed-after-independent-approval"
+      },
+      "relatedFiles": [
+        "docs/harness/tasks/2026-11-04-audit-p3-ci-cost-review.task.md",
+        ".harness/evidence/2026-11-04-audit-p3-ci-cost-review/summary.md",
+        ".harness/evidence/2026-11-04-audit-p3-ci-cost-review/review.md"
+      ],
+      "reviewUpdate": "Replace only current review header/JSON with actual independent APPROVE/CLEAR report references and hashes; retain historical review section untouched. No author review substitution.",
+      "packetSummaryUpdate": "Update current closeout paragraph to completed after both actual independent approvals; explicitly retain all provider/policy/runtime/test-sync gaps and historic body."
+    },
+    {
+      "taskId": "2026-11-04-audit-p3-consumer-seams",
+      "manifest": ".harness/tasks/2026-11-04-audit-p3-consumer-seams/manifest.json",
+      "preChangeSha256": "2402e0a936e1dc8a8214d6b6ed9412bd96770e142f15125b2cac6408e975125e",
+      "originalCriteriaSha256": "8d27be3d5c10f5dac45c1a753e144f5246d03210bd29b771519eca69064e467b",
+      "originalScopeSha256": "59529a25e68e7e5ed44174c100a082aa525591c8410ea1530f818e1d64871cdd",
+      "set": {
+        "status": "completed",
+        "implementationStatus": "delivered",
+        "reviewStatus": "approved",
+        "verificationStatus": "passed-with-documented-gaps",
+        "closeout.status": "closed-after-independent-approval"
+      },
+      "relatedFiles": [
+        "docs/harness/tasks/2026-11-04-audit-p3-consumer-seams.task.md",
+        ".harness/evidence/2026-11-04-audit-p3-consumer-seams/summary.md",
+        ".harness/evidence/2026-11-04-audit-p3-consumer-seams/review.md"
+      ],
+      "reviewUpdate": "Replace only current review header/JSON with actual independent APPROVE/CLEAR report references and hashes; retain historical review section untouched. No author review substitution.",
+      "packetSummaryUpdate": "Update current closeout paragraph to completed after both actual independent approvals; explicitly retain all provider/policy/runtime/test-sync gaps and historic body."
+    },
+    {
+      "taskId": "2026-11-04-global-audit-remediation",
+      "manifest": ".harness/tasks/2026-11-04-global-audit-remediation/manifest.json",
+      "preChangeSha256": "f7a3b4771ae7fd8d9ed612a3a323f7e9eda7928da39b00a0bf92490e8901a2fe",
+      "originalCriteriaSha256": "d6f264c7f9f555817602fcf468567ab760bcd16a70d52021cedd493f7f6884ae",
+      "originalScopeSha256": "75d7b7056202da920736b7885a1277361d72856276782a801047ce289fb5e960",
+      "set": {
+        "status": "completed",
+        "implementationStatus": "delivered",
+        "reviewStatus": "approved",
+        "verificationStatus": "passed-with-documented-gaps",
+        "closeout.status": "closed-after-independent-approval"
+      },
+      "relatedFiles": [
+        "docs/harness/tasks/2026-11-04-global-audit-remediation.task.md",
+        ".harness/evidence/2026-11-04-global-audit-remediation/summary.md",
+        ".harness/evidence/2026-11-04-global-audit-remediation/review.md"
+      ],
+      "reviewUpdate": "Replace only current review header/JSON with actual independent APPROVE/CLEAR report references and hashes; retain historical review section untouched. No author review substitution.",
+      "packetSummaryUpdate": "Update current closeout paragraph to completed after both actual independent approvals; explicitly retain all provider/policy/runtime/test-sync gaps and historic body."
+    },
+    {
+      "taskId": "2026-11-05-base-freeze-release",
+      "manifest": ".harness/tasks/2026-11-05-base-freeze-release/manifest.json",
+      "preChangeSha256": "9e7593420aa2d394043ae0ff4a72cbb2108ea4cfa992f19a6c99f821d5dfdb88",
+      "originalCriteriaSha256": "3256d20c2d95bed06af08319a2951234aae477cabd553de2a84986657dbf05ee",
+      "originalScopeSha256": "634f1aaf7e800971f0e14c22d7bebbdc2d42a3a0f938243b96dc36c126a99058",
+      "set": {
+        "status": "completed",
+        "implementationStatus": "delivered",
+        "reviewStatus": "approved",
+        "verificationStatus": "passed-with-documented-gaps",
+        "closeout.status": "closed-after-independent-approval"
+      },
+      "relatedFiles": [
+        "docs/harness/tasks/2026-11-05-base-freeze-release.task.md",
+        ".harness/evidence/2026-11-05-base-freeze-release/summary.md",
+        ".harness/evidence/2026-11-05-base-freeze-release/review.md"
+      ],
+      "reviewUpdate": "Replace only current review header/JSON with actual independent APPROVE/CLEAR report references and hashes; retain historical review section untouched. No author review substitution.",
+      "packetSummaryUpdate": "Update current closeout paragraph to completed after both actual independent approvals; explicitly retain all provider/policy/runtime/test-sync gaps and historic body."
+    }
+  ],
+  "programmeUpdates": [
+    {
+      "path": ".harness/tasks/2026-11-05-base-freeze-release/tasks.json",
+      "actions": [
+        "F5.state=completed-with-documented-gaps after valid CODE/ARCH acceptance; explain same tested source identity and retained S3 skip",
+        "F8.state=completed-with-explicit-test-only-sync-deferral; never claim stock full-race success",
+        "F2 retains verified-with-explicit-provider-gap; no provider certification",
+        "closeoutStatus=completed-with-documented-gaps"
+      ]
+    },
+    {
+      "path": ".harness/tasks/2026-11-04-global-audit-remediation/plan.md",
+      "actions": [
+        "Update current top closeout status only; original criteria and execution checkbox history retained"
+      ]
+    }
+  ],
+  "entryUpdates": [
+    ".harness/STATUS.md:250 completed/0 in-progress for original inventory; separate residuals remain open",
+    "docs/README.md and docs/README.en.md current first paragraphs:12 tasks closed on dual-lane approval; no freeze signature/provider success claim",
+    "closeout.md/matrix/final-status/review-availability:bind actual report hashes,source/doc snapshots,reviewed transition; mark closure completed",
+    "commands.json closeout metadata:actual independent acceptance; original commands unchanged",
+    "freeze declaration current status:scoped task closure approved, declaration remains unsigned",
+    "pr-body-task-closeout.md:current validation and actual independent verdicts; current branch hosted checks pending until really run"
+  ],
+  "residualUpdates": [
+    "CR-001 resolved solely by actual fresh independent report evidence",
+    "All S3/FREEZE/OBS/CI/DEP/SEC/PROD/QA/FIXTURE-SYNC/EXT residuals retain existing statuses and exit conditions; no waiver granted"
+  ],
+  "opsBoundary": "Current Ops evidence/manifest records official consumption and actual validation; this12-task closure is in Base. Do not auto-close Ops consumer task unless independently approved as an additional scoped task; no new Ops source changes.",
+  "postChecks": [
+    "original40 criteria/scope/historical command array invariants",
+    "affected governance checks,PR body schema,git diff --check",
+    "verify applied changes match reviewed transition before commit; preserve reports and command archives"
+  ]
+}

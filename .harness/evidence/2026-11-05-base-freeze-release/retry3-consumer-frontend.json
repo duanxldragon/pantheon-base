@@ -1,0 +1,83 @@
+{
+  "recordedAt": "2026-11-06T13:29:51.339Z",
+  "sourceCommit": "1b4f0b344923a4964d932c51a7eb601195332714",
+  "scratch": "D:/workspace/go/pantheon-platform/audit-artifacts/task-closeout-2026-11-06",
+  "target": "D:/workspace/go/pantheon-platform/audit-artifacts/task-closeout-2026-11-06/ops-rebuilt",
+  "commands": [
+    {
+      "name": "frontend-lint",
+      "executable": "C:\\WINDOWS\\system32\\cmd.exe",
+      "args": [
+        "/d",
+        "/s",
+        "/c",
+        "npm.cmd run lint"
+      ],
+      "cwd": "D:/workspace/go/pantheon-platform/audit-artifacts/task-closeout-2026-11-06/ops-rebuilt/frontend",
+      "startedAt": "2026-11-06T13:29:51.379Z",
+      "finishedAt": "2026-11-06T13:30:48.876Z",
+      "exitCode": 0,
+      "error": null,
+      "log": "retry3-frontend-lint.log",
+      "sha256": "5818a930434cb0d8d2d2a02064c773ab6a83550e85cc5b74a35fec5534551fa9"
+    },
+    {
+      "name": "frontend-type-check",
+      "executable": "C:\\WINDOWS\\system32\\cmd.exe",
+      "args": [
+        "/d",
+        "/s",
+        "/c",
+        "npm.cmd run type-check"
+      ],
+      "cwd": "D:/workspace/go/pantheon-platform/audit-artifacts/task-closeout-2026-11-06/ops-rebuilt/frontend",
+      "startedAt": "2026-11-06T13:30:48.879Z",
+      "finishedAt": "2026-11-06T13:31:15.073Z",
+      "exitCode": 0,
+      "error": null,
+      "log": "retry3-frontend-type-check.log",
+      "sha256": "5ebf47247dc14a635484b800d11596f249d0cdf4008716d724fcc464f81f9d1e"
+    },
+    {
+      "name": "frontend-build",
+      "executable": "C:\\WINDOWS\\system32\\cmd.exe",
+      "args": [
+        "/d",
+        "/s",
+        "/c",
+        "npm.cmd run build"
+      ],
+      "cwd": "D:/workspace/go/pantheon-platform/audit-artifacts/task-closeout-2026-11-06/ops-rebuilt/frontend",
+      "startedAt": "2026-11-06T13:31:15.075Z",
+      "finishedAt": "2026-11-06T13:31:52.054Z",
+      "exitCode": 0,
+      "error": null,
+      "log": "retry3-frontend-build.log",
+      "sha256": "e96ce7c54c7fac8cd0cc9ed083d502c2b71bfce2087aa28d0554d3c20e98adfd"
+    },
+    {
+      "name": "frontend-test-unit",
+      "executable": "C:\\WINDOWS\\system32\\cmd.exe",
+      "args": [
+        "/d",
+        "/s",
+        "/c",
+        "npm.cmd run test:unit"
+      ],
+      "cwd": "D:/workspace/go/pantheon-platform/audit-artifacts/task-closeout-2026-11-06/ops-rebuilt/frontend",
+      "startedAt": "2026-11-06T13:31:52.055Z",
+      "finishedAt": "2026-11-06T13:32:22.000Z",
+      "exitCode": 0,
+      "error": null,
+      "log": "retry3-frontend-test-unit.log",
+      "sha256": "2e096fde0719f1eec7df9d17acb03a754fc85accf2fd9ffdfe545bb8e99e723c"
+    }
+  ],
+  "frontendDependencies": {
+    "method": "reuse installed node_modules through junction",
+    "lockBytesIdentical": true,
+    "source": "D:/workspace/go/pantheon-platform/pantheon-ops/frontend"
+  },
+  "repository": "pantheon-ops",
+  "sourceManifest": "retry3-source-manifest.json"
+}

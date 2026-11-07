@@ -5,10 +5,18 @@ layer: business/*
 linked_contracts:
   - docs/contracts/PLATFORM_CONTRACT.md
 status: Active
-updated_at: 2026-11-04
+updated_at: 2026-11-06
 ---
 
 # Task Packet: 2026-11-04-audit-p2-ops-db-test-followup
+
+## 2026-11-06 Closeout Status
+
+官方 v0.18.4 与 Ops 根锁消费已确认。补验取得重建828/shared-drift、迁移32/dirty=false、前端218单测、消费57回归与4套生成模块烟测原始日志。原消费完整race2168/1/1失败；明确的Base测试文件overlay验证2170/0/1通过。Base直接完整race退出0：1890通过/0失败/1 S3 skip；原建库连接失败已保留。双路独立复审待完成。S3未验证、历史host/tenant/root-suite归因缺失、Ops新库deploy缺表及下一正式发行的测试夹具同步均有独立残余登记。
+
+Nine top-level failures classified; Ops isolated fixes and real DB 278/0/0 followed by official reconstruction/full race and merged PR171; host migration is now Ops000032, after Base000031.
+
+[闭环矩阵、证据与残余事项](../../../.harness/evidence/2026-11-05-base-freeze-release/closeout.md)。下文执行说明包含历史记录；本节是当前状态。
 
 ## Goal
 

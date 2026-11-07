@@ -29,10 +29,16 @@
     }
   ],
   "knownGaps": [
-    "Independent review unavailable: executor gpt-5.5 and architect gpt-5.4-mini attempts returned HTTP 503; no independent approval is claimed."
+    "Fresh current CODE/ARCH acceptance pending; previous actual REQUEST CHANGES/BLOCK preserved.",
+    "Real S3 provider integration: 1 recorded skip, no waiver; provisioned provider still required.",
+    "Maintenance freeze declaration remains unsigned by maintainer; no agent signature.",
+    "Observability allowed-port/private-network policy remains a separate Ops maintainer decision; security checks unchanged.",
+    "CI optimization deferred until measured duration/value; PB009 retain/defer decision documented.",
+    "5 moderate glob-chain dependency residuals and existing 23 zizmor baseline findings not removed by this closeout.",
+    "Production migration/drop and 2026-12-31 legacy-auth decommission remain separate explicitly authorized maintainer operations."
   ],
   "runtimeSensitive": false,
-  "runtimeGap": "No runtime behaviour changed; bounded documentation/policy review only.",
+  "runtimeGap": "Delivered immutable v0.18.4 and Ops PR171 verified by saved release/consumer evidence. Real S3 provider integration retains 1 skip and no waiver. Maintenance freeze/observability policy/production operations remain separate maintainer actions. Task closure awaits independent review.",
   "runtimeLogs": [],
   "linkage": {
     "taskManifest": ".harness/tasks/2026-11-04-audit-p2-authoritative-docs/manifest.json",
@@ -46,5 +52,23 @@
       "docs/reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-11-04_FULL.md"
     ]
   },
-  "recordedAt": "2026-11-04T11:59:58.488Z"
+  "recordedAt": "2026-11-04T11:59:58.488Z",
+  "historicalKnownGaps": [
+    "Independent review unavailable: executor gpt-5.5 and architect gpt-5.4-mini attempts returned HTTP 503; no independent approval is claimed."
+  ],
+  "closeout": {
+    "recordedAt": "2026-11-06T12:36:05.510Z",
+    "matrix": ".harness/evidence/2026-11-05-base-freeze-release/closeout-matrix.json",
+    "residualRegister": ".harness/evidence/2026-11-05-base-freeze-release/closeout-residuals.json",
+    "reviewAvailability": ".harness/evidence/2026-11-05-base-freeze-release/closeout-review-availability.json",
+    "verification": ".harness/evidence/2026-11-05-base-freeze-release/closeout-validation.json",
+    "notes": "Historical commands and exit codes remain unchanged. Original implementation tests were not rerun for docs-only reconciliation."
+  },
+  "closeoutEvidence": {
+    "matrix": ".harness/evidence/2026-11-05-base-freeze-release/closeout-matrix.json",
+    "sourceManifest": ".harness/evidence/2026-11-05-base-freeze-release/retry3-source-manifest.json",
+    "stockRace": ".harness/evidence/2026-11-05-base-freeze-release/retry3-consumer-race.json",
+    "correctedOverlay": ".harness/evidence/2026-11-05-base-freeze-release/retry3-consumer-corrected-race.json",
+    "baseDirect": ".harness/evidence/2026-11-05-base-freeze-release/retry3-consumer-base-race.json"
+  }
 }

@@ -1,0 +1,4 @@
+Historical raw diff archived without byte changes.
+Archive: retry3-tested-module-reconciliation.diff.gz
+Original SHA256: 7c30f8d74196f1d4fb8849887747af80b85b5a8bcbe1004cfd8fff70b277772f
+Reason: public Go checksum evidence matched generic secret heuristics; no credential and no scanner rule change.

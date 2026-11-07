@@ -1,0 +1,129 @@
+{
+  "recordedAt": "2026-11-06T13:03:00.360Z",
+  "release": "pantheon-base-v0.18.4",
+  "commit": "0a8229c67ab482c2e163622fc4e5b87301c53399",
+  "releaseChecks": {
+    "success": 35,
+    "skipped": 1
+  },
+  "keyGates": [
+    {
+      "conclusion": "success",
+      "details_url": "https://github.com/duanxldragon/pantheon-base/actions/runs/42165007510/job/127720925357",
+      "head_sha": "0a8229c67ab482c2e163622fc4e5b87301c53399",
+      "name": "Foundation Release Verify Summary",
+      "status": "completed"
+    },
+    {
+      "conclusion": "success",
+      "details_url": "https://github.com/duanxldragon/pantheon-base/actions/runs/42165007510/job/127719317645",
+      "head_sha": "0a8229c67ab482c2e163622fc4e5b87301c53399",
+      "name": "Verify Release Assets",
+      "status": "completed"
+    },
+    {
+      "conclusion": "success",
+      "details_url": "https://github.com/duanxldragon/pantheon-base/actions/runs/42160916390/job/127718824134",
+      "head_sha": "0a8229c67ab482c2e163622fc4e5b87301c53399",
+      "name": "Release Gate Summary",
+      "status": "completed"
+    },
+    {
+      "conclusion": "success",
+      "details_url": "https://github.com/duanxldragon/pantheon-base/actions/runs/42160916390/job/127718780874",
+      "head_sha": "0a8229c67ab482c2e163622fc4e5b87301c53399",
+      "name": "SonarCloud Gate",
+      "status": "completed"
+    },
+    {
+      "conclusion": "success",
+      "details_url": "https://github.com/duanxldragon/pantheon-base/actions/runs/42160916169/job/127713170198",
+      "head_sha": "0a8229c67ab482c2e163622fc4e5b87301c53399",
+      "name": "Full Smoke",
+      "status": "completed"
+    },
+    {
+      "conclusion": "success",
+      "details_url": "https://github.com/duanxldragon/pantheon-base/actions/runs/42160916700/job/127710682935",
+      "head_sha": "0a8229c67ab482c2e163622fc4e5b87301c53399",
+      "name": "Quality Gates",
+      "status": "completed"
+    },
+    {
+      "conclusion": "success",
+      "details_url": "https://github.com/duanxldragon/pantheon-base/actions/runs/42160916599/job/127707342364",
+      "head_sha": "0a8229c67ab482c2e163622fc4e5b87301c53399",
+      "name": "Security Gates",
+      "status": "completed"
+    }
+  ],
+  "ops": {
+    "state": "MERGED",
+    "commit": "7ed1521a37f5a7379693f7faa1bed0eae409249e",
+    "url": "https://github.com/duanxldragon/pantheon-ops/pull/171",
+    "keyGates": [
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-06T06:37:34Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/duanxldragon/pantheon-ops/actions/runs/42175246034/job/127753255496",
+        "name": "Security Gates",
+        "startedAt": "2026-11-06T06:37:30Z",
+        "status": "COMPLETED",
+        "workflowName": "Security Gates"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-06T06:47:36Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/duanxldragon/pantheon-ops/actions/runs/42175245907/job/127752441584",
+        "name": "Smoke Sanity",
+        "startedAt": "2026-11-06T06:35:05Z",
+        "status": "COMPLETED",
+        "workflowName": "Code Quality Gates"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-06T06:47:41Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/duanxldragon/pantheon-ops/actions/runs/42175245907/job/127756663329",
+        "name": "Quality Gates",
+        "startedAt": "2026-11-06T06:47:38Z",
+        "status": "COMPLETED",
+        "workflowName": "Code Quality Gates"
+      }
+    ],
+    "nonSuccess": [
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-06T06:34:03Z",
+        "conclusion": "SKIPPED",
+        "detailsUrl": "https://github.com/duanxldragon/pantheon-ops/actions/runs/42175246034/job/127752098232",
+        "name": "Dependency Vulnerabilities",
+        "startedAt": "2026-11-06T06:34:03Z",
+        "status": "COMPLETED",
+        "workflowName": "Security Gates"
+      },
+      {
+        "__typename": "StatusContext",
+        "context": "Vercel",
+        "startedAt": "2026-11-06T06:34:04Z",
+        "state": "FAILURE",
+        "targetUrl": "https://vercel.com/duanxiaolongs-projects-6795928c/pantheon-ops/79eruJLX8ZStZm3MgJdffw1EfUMJ"
+      }
+    ]
+  },
+  "integrity": {
+    "officialStableRelease": true,
+    "baseCommitMatch": true,
+    "tagMatch": true,
+    "tgzDigestMatch": true,
+    "snapshotDigestMatch": true
+  },
+  "sources": [
+    "retry2-release.json",
+    "retry2-release-checks.json",
+    "retry2-ops-pr171.json",
+    "../pantheon-ops/foundation-release.lock.json"
+  ]
+}

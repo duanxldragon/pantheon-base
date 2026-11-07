@@ -1,8 +1,12 @@
 {
   "knownGaps": [
-    "Current hosted same-metric Sonar, current PR checks, immutable merged-commit Release Gate and v0.18.5 official publication remain pending.",
-    "Official stock v0.18.5 Ops consumption and its complete validation remain pending; previous stock failure and overlay evidence are historical.",
-    "S3 provider: one real integration skip, no waiver; maintenance freeze unsigned."
+    "Fresh current CODE/ARCH acceptance pending; previous actual REQUEST CHANGES/BLOCK preserved.",
+    "Real S3 provider integration: 1 recorded skip, no waiver; provisioned provider still required.",
+    "Maintenance freeze declaration remains unsigned by maintainer; no agent signature.",
+    "Observability allowed-port/private-network policy remains a separate Ops maintainer decision; security checks unchanged.",
+    "CI optimization deferred until measured duration/value; PB009 retain/defer decision documented.",
+    "5 moderate glob-chain dependency residuals and existing 23 zizmor baseline findings not removed by this closeout.",
+    "Production migration/drop and 2026-12-31 legacy-auth decommission remain separate explicitly authorized maintainer operations."
   ],
   "linkage": {
     "taskManifest": ".harness/tasks/2026-11-05-base-freeze-release/manifest.json",
@@ -1180,30 +1184,57 @@
     "tool": "codex",
     "adapter": "Dispatcher evidence/verification; independent Generator and CODE/ARCH role adapters"
   },
-  "runtimeGap": "Real S3 provider remains unconfigured (see explicit skip). Fresh Sonar closeout full Go race and dual independent reviews passed. Hosted same-rule Sonar, current CI/Release Gate, official release and Ops consumption remain pending.",
+  "runtimeGap": "Delivered immutable v0.18.4 and Ops PR171 verified by saved release/consumer evidence. Real S3 provider integration retains 1 skip and no waiver. Maintenance freeze/observability policy/production operations remain separate maintainer actions. Task closure awaits independent review.",
   "hostedEvidence": ".harness/evidence/2026-11-05-base-freeze-release/hosted-validation.json",
-  "correctiveFixtureCandidate": {
-    "version": "0.18.5",
-    "status": "unreleased-reviewed-candidate",
-    "independentApproval": ".harness/evidence/2026-11-05-base-freeze-release/resume7-fixture-approval.json",
-    "sourceValidation": ".harness/evidence/2026-11-05-base-freeze-release/retry5-fixture-source-validation.json",
-    "currentHostedChecks": "pending-current-PR-after-network-recovery",
-    "original12TaskClosureApproved": false,
-    "localValidation": ".harness/evidence/2026-11-05-base-freeze-release/resume7-governance-validation.json",
-    "foundationTests": {
-      "command": "npm run test:foundation-release",
-      "exitCode": 0,
-      "pass": 57,
-      "fail": 0,
-      "skip": 0,
-      "log": "resume7-foundation-tests.log.gz"
-    }
-  },
   "historicalKnownGaps": [
     "Two Sonar fixes have independent CODE APPROVE / ARCH CLEAR and fresh full Go race; hosted same-rule analysis, current CI, release and official Ops consumption remain pending.",
     "真实 S3 provider 未配置：1 个集成用例跳过",
     "npm audit 报 15 个 moderate（eslint/nyc/vite-plugin-istanbul/typescript-eslint 开发链，0 high/0 critical）；升级属依赖变更，未在本次候选处理",
     "core 中 3 个生成模块用例在未激活模块的运行环境保持 skip；本轮改由真实生成模块的浏览器/API CRUD 覆盖，不把 skip 当通过",
     "smoke 套件自启 vite 默认把 /api 代理到 8080；后端跑在 18080 时必须显式 --proxy-target，否则整页 API 502（本轮首跑即此原因，非产品缺陷）"
-  ]
+  ],
+  "closeout": {
+    "recordedAt": "2026-11-06T12:36:05.510Z",
+    "matrix": ".harness/evidence/2026-11-05-base-freeze-release/closeout-matrix.json",
+    "residualRegister": ".harness/evidence/2026-11-05-base-freeze-release/closeout-residuals.json",
+    "reviewAvailability": ".harness/evidence/2026-11-05-base-freeze-release/closeout-review-availability.json",
+    "verification": ".harness/evidence/2026-11-05-base-freeze-release/closeout-validation.json",
+    "notes": "Historical commands and exit codes remain unchanged. Original implementation tests were not rerun for docs-only reconciliation."
+  },
+  "closeoutEvidence": {
+    "matrix": ".harness/evidence/2026-11-05-base-freeze-release/closeout-matrix.json",
+    "sourceManifest": ".harness/evidence/2026-11-05-base-freeze-release/retry3-source-manifest.json",
+    "stockRace": ".harness/evidence/2026-11-05-base-freeze-release/retry3-consumer-race.json",
+    "correctedOverlay": ".harness/evidence/2026-11-05-base-freeze-release/retry3-consumer-corrected-race.json",
+    "baseDirect": ".harness/evidence/2026-11-05-base-freeze-release/retry3-consumer-base-race.json"
+  },
+  "currentSevenTaskCloseout": {
+    "reviewStatus": "approved-seven-only",
+    "reviews": [
+      {
+        "lane": "code-reviewer",
+        "file": "resume9-seven-code-reviewer.md",
+        "sha256": "e3470675ccee3b01242c53c0f4c19076abdca8d6438b6ab44275fd55851a2485",
+        "verdict": "APPROVE",
+        "architecturalStatus": null
+      },
+      {
+        "lane": "architect",
+        "file": "resume9-seven-architect.md",
+        "sha256": "d374f607a1dabc3cd1f09153ad1bbf5cdb08e8ff38fcd6d99a8233b7644c3b7c",
+        "verdict": "APPROVE",
+        "architecturalStatus": "CLEAR"
+      }
+    ],
+    "plan": "resume8-seven-task-transition-plan.json",
+    "remainingOpenTasks": [
+      "2026-11-04-audit-p1-ssrf-dial-binding",
+      "2026-11-04-audit-p2-ops-db-test-followup",
+      "2026-11-04-audit-p3-consumer-seams",
+      "2026-11-04-global-audit-remediation",
+      "2026-11-05-base-freeze-release"
+    ],
+    "sourceValidation": "resume7-base-full-race.json",
+    "publication": "resume9-official-provenance.json"
+  }
 }

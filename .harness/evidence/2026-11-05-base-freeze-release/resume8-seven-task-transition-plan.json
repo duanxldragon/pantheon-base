@@ -1,0 +1,183 @@
+{
+  "recordedAt": "2026-11-07T02:13:36.494Z",
+  "status": "proposal-not-applied",
+  "purpose": "Close only seven independent task scopes, after fresh CODE and ARCH approval; five consumer/programme tasks remain open. Prior whole12 plan remains rejected and unmodified.",
+  "baseline": "1da0834bdce636fd2fc1063290e3f32339e2d27a",
+  "originalTaskCount": 12,
+  "originalCriteriaCount": 40,
+  "excludedTaskIds": [
+    "2026-11-04-audit-p1-ssrf-dial-binding",
+    "2026-11-04-audit-p2-ops-db-test-followup",
+    "2026-11-04-audit-p3-consumer-seams",
+    "2026-11-04-global-audit-remediation",
+    "2026-11-05-base-freeze-release"
+  ],
+  "publication": {
+    "status": "not-executed",
+    "localCut": "resume8-release-cut.json",
+    "localAssetsValidated": true,
+    "localTagAbsent": true,
+    "blocker": "GitHub socket EACCES, no permission escalation under never policy"
+  },
+  "preconditions": [
+    "Fresh independent CODE APPROVE and ARCH CLEAR explicitly approve this exact seven-task transition plan and current source/evidence hashes",
+    "All current local governance checks must pass after factual and mechanical updates",
+    "No production operations, signed freeze, S3 waiver or required-gate weakening",
+    "Original task scope/criteria and historical commands preserved"
+  ],
+  "taskTransitions": [
+    {
+      "taskId": "2026-11-04-audit-p1-npm-audit-exit",
+      "manifest": ".harness/tasks/2026-11-04-audit-p1-npm-audit-exit/manifest.json",
+      "preChangeSha256": "a6b3ab531fc6145e1f0bc4c99ecef21803ea12161222142eb5a12a7f60c40584",
+      "originalCriteriaSha256": "cbda6a75a6751e83ca6629ea71c4d2a64db743004718348c5c9afc6b1a8e4d6b",
+      "originalScopeSha256": "bdf8709f3fc036e52bbab7d78715ce2c0e4e013d4920d6dfc52f8f3ac4a53c45",
+      "set": {
+        "status": "completed",
+        "implementationStatus": "delivered",
+        "reviewStatus": "approved",
+        "verificationStatus": "passed-with-documented-gaps",
+        "closeout.status": "closed-after-independent-approval"
+      },
+      "relatedFiles": [
+        "docs/harness/tasks/2026-11-04-audit-p1-npm-audit-exit.task.md",
+        ".harness/evidence/2026-11-04-audit-p1-npm-audit-exit/summary.md",
+        ".harness/evidence/2026-11-04-audit-p1-npm-audit-exit/review.md"
+      ],
+      "allowedDocumentationUpdate": "Prepend factual current closure and fresh independent approval references; preserve historical body, original scope and acceptance. Task inventory becomes245 completed/5 in-progress; five excluded manifests unchanged."
+    },
+    {
+      "taskId": "2026-11-04-audit-p1-refresh-rotation",
+      "manifest": ".harness/tasks/2026-11-04-audit-p1-refresh-rotation/manifest.json",
+      "preChangeSha256": "5ebf38c6359bf854d3681446ce0cfd52aa80e8040f7161c375ec49c5c5e69ab7",
+      "originalCriteriaSha256": "254e415db77a6908da9381e8469b4da7102b4a10d229c1af52926697cb35f2a7",
+      "originalScopeSha256": "7b78a1493ce5c13b90782c5d6002e5587dbe86fc6e37abadafa07099e2e2af96",
+      "set": {
+        "status": "completed",
+        "implementationStatus": "delivered",
+        "reviewStatus": "approved",
+        "verificationStatus": "passed-with-documented-gaps",
+        "closeout.status": "closed-after-independent-approval"
+      },
+      "relatedFiles": [
+        "docs/harness/tasks/2026-11-04-audit-p1-refresh-rotation.task.md",
+        ".harness/evidence/2026-11-04-audit-p1-refresh-rotation/summary.md",
+        ".harness/evidence/2026-11-04-audit-p1-refresh-rotation/review.md"
+      ],
+      "allowedDocumentationUpdate": "Prepend factual current closure and fresh independent approval references; preserve historical body, original scope and acceptance. Task inventory becomes245 completed/5 in-progress; five excluded manifests unchanged."
+    },
+    {
+      "taskId": "2026-11-04-audit-p2-agent-stop-points",
+      "manifest": ".harness/tasks/2026-11-04-audit-p2-agent-stop-points/manifest.json",
+      "preChangeSha256": "7abd132e2afc472c2dded5b50ca0c3d70b3c94a2944ea4c11249854054a13634",
+      "originalCriteriaSha256": "e08a1d0acbd65bcf58d5416dbd2e93897eee36f59c214c397c36325a47b9e0ed",
+      "originalScopeSha256": "171097dc9e0d6e977bb2d7cead4d6fb736eab7aa3d2c12ecc5d50b8da6eab826",
+      "set": {
+        "status": "completed",
+        "implementationStatus": "delivered",
+        "reviewStatus": "approved",
+        "verificationStatus": "passed-with-documented-gaps",
+        "closeout.status": "closed-after-independent-approval"
+      },
+      "relatedFiles": [
+        "docs/harness/tasks/2026-11-04-audit-p2-agent-stop-points.task.md",
+        ".harness/evidence/2026-11-04-audit-p2-agent-stop-points/summary.md",
+        ".harness/evidence/2026-11-04-audit-p2-agent-stop-points/review.md"
+      ],
+      "allowedDocumentationUpdate": "Prepend factual current closure and fresh independent approval references; preserve historical body, original scope and acceptance. Task inventory becomes245 completed/5 in-progress; five excluded manifests unchanged."
+    },
+    {
+      "taskId": "2026-11-04-audit-p2-authoritative-docs",
+      "manifest": ".harness/tasks/2026-11-04-audit-p2-authoritative-docs/manifest.json",
+      "preChangeSha256": "2eec73de75689ed854c9e5956a39e5d73e240665ec8de18d186f8aea86df3c5e",
+      "originalCriteriaSha256": "1a8e2cf4e3f389f02dedf39fdcd9c2d4ebbb57607d1b0008c4ec1f4d6c4acce4",
+      "originalScopeSha256": "2c95f42d644ac9412b1d5b5de7450fbaa692072b5ef86513a057113028dd5a39",
+      "set": {
+        "status": "completed",
+        "implementationStatus": "delivered",
+        "reviewStatus": "approved",
+        "verificationStatus": "passed-with-documented-gaps",
+        "closeout.status": "closed-after-independent-approval"
+      },
+      "relatedFiles": [
+        "docs/harness/tasks/2026-11-04-audit-p2-authoritative-docs.task.md",
+        ".harness/evidence/2026-11-04-audit-p2-authoritative-docs/summary.md",
+        ".harness/evidence/2026-11-04-audit-p2-authoritative-docs/review.md"
+      ],
+      "allowedDocumentationUpdate": "Prepend factual current closure and fresh independent approval references; preserve historical body, original scope and acceptance. Task inventory becomes245 completed/5 in-progress; five excluded manifests unchanged."
+    },
+    {
+      "taskId": "2026-11-04-audit-p2-freeze-validation",
+      "manifest": ".harness/tasks/2026-11-04-audit-p2-freeze-validation/manifest.json",
+      "preChangeSha256": "5f5802e4141df6480175b10b7421f83dad68b8c1cab03cb45acdd6ddb2102f2b",
+      "originalCriteriaSha256": "8e44e6e34235b794923e0a5bb295157620c330f7b25b3e410394f069b7af7f3e",
+      "originalScopeSha256": "0385ab858db80a9a128da5c5a26d9310290e629aba5c47c8f9e65f1b1320494d",
+      "set": {
+        "status": "completed",
+        "implementationStatus": "delivered",
+        "reviewStatus": "approved",
+        "verificationStatus": "passed-with-documented-gaps",
+        "closeout.status": "closed-after-independent-approval"
+      },
+      "relatedFiles": [
+        "docs/harness/tasks/2026-11-04-audit-p2-freeze-validation.task.md",
+        ".harness/evidence/2026-11-04-audit-p2-freeze-validation/summary.md",
+        ".harness/evidence/2026-11-04-audit-p2-freeze-validation/review.md"
+      ],
+      "allowedDocumentationUpdate": "Prepend factual current closure and fresh independent approval references; preserve historical body, original scope and acceptance. Task inventory becomes245 completed/5 in-progress; five excluded manifests unchanged."
+    },
+    {
+      "taskId": "2026-11-04-audit-p2-release-policy",
+      "manifest": ".harness/tasks/2026-11-04-audit-p2-release-policy/manifest.json",
+      "preChangeSha256": "f51509979bc011b004315ffd3ff1adb5ab3e7724f801805856102cd93d493d5e",
+      "originalCriteriaSha256": "7658fbbd6daa7a24baa9f9725668fcb10140c7413edfa9145614cc9b98cc28dc",
+      "originalScopeSha256": "042e24e7059a0de8e253b43d11ac1b5e20453b5b3993c43dbb790c6fc4a92241",
+      "set": {
+        "status": "completed",
+        "implementationStatus": "delivered",
+        "reviewStatus": "approved",
+        "verificationStatus": "passed-with-documented-gaps",
+        "closeout.status": "closed-after-independent-approval"
+      },
+      "relatedFiles": [
+        "docs/harness/tasks/2026-11-04-audit-p2-release-policy.task.md",
+        ".harness/evidence/2026-11-04-audit-p2-release-policy/summary.md",
+        ".harness/evidence/2026-11-04-audit-p2-release-policy/review.md"
+      ],
+      "allowedDocumentationUpdate": "Prepend factual current closure and fresh independent approval references; preserve historical body, original scope and acceptance. Task inventory becomes245 completed/5 in-progress; five excluded manifests unchanged."
+    },
+    {
+      "taskId": "2026-11-04-audit-p3-ci-cost-review",
+      "manifest": ".harness/tasks/2026-11-04-audit-p3-ci-cost-review/manifest.json",
+      "preChangeSha256": "3b5e6a84088e4802c025f6c0f1166234e71efde6391cdde6922a6dd89b1dd2b7",
+      "originalCriteriaSha256": "0160f1109ce5be5ac42216b9828837ac36098d9c844461feb4cc63718e3424c2",
+      "originalScopeSha256": "757c8a2e784829a2ce820b915d8fe287c66dcf2521a7530f234a2ee988bc2084",
+      "set": {
+        "status": "completed",
+        "implementationStatus": "delivered",
+        "reviewStatus": "approved",
+        "verificationStatus": "passed-with-documented-gaps",
+        "closeout.status": "closed-after-independent-approval"
+      },
+      "relatedFiles": [
+        "docs/harness/tasks/2026-11-04-audit-p3-ci-cost-review.task.md",
+        ".harness/evidence/2026-11-04-audit-p3-ci-cost-review/summary.md",
+        ".harness/evidence/2026-11-04-audit-p3-ci-cost-review/review.md"
+      ],
+      "allowedDocumentationUpdate": "Prepend factual current closure and fresh independent approval references; preserve historical body, original scope and acceptance. Task inventory becomes245 completed/5 in-progress; five excluded manifests unchanged."
+    }
+  ],
+  "residuals": {
+    "freezeSigned": false,
+    "waivers": [],
+    "open": [
+      "S3 provider",
+      "Five consumer/programme tasks until official corrected release consumption/full verification",
+      "Maintenance freeze signature",
+      "Ops policy/QA",
+      "Measured CI optimization",
+      "Moderate/zizmor baseline",
+      "Production/decommission operations"
+    ]
+  }
+}

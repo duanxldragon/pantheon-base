@@ -1,0 +1,48 @@
+{
+  "recordedAt": "2026-11-07T01:33:02.430Z",
+  "root": "D:/workspace/go/pantheon-platform/audit-artifacts/task-closeout-2026-11-06/base-v185",
+  "sourceCommit": "5c9da3c353c639bb611ab786d6dd7bd148886d4c",
+  "dependencyMethod": "existing node_modules via junction after exact lock equality",
+  "commands": [
+    {
+      "command": "npm run lint",
+      "cwd": "D:/workspace/go/pantheon-platform/audit-artifacts/task-closeout-2026-11-06/base-v185/frontend",
+      "startedAt": "2026-11-07T01:33:02.457Z",
+      "finishedAt": "2026-11-07T01:33:23.939Z",
+      "exitCode": 0,
+      "log": "lint.log.gz",
+      "rawSha256": "5818a930434cb0d8d2d2a02064c773ab6a83550e85cc5b74a35fec5534551fa9",
+      "archiveSha256": "c35921e4af13277f35a626f6a59ad270648903e66198999932fedbfe04328291"
+    },
+    {
+      "command": "npm run type-check",
+      "cwd": "D:/workspace/go/pantheon-platform/audit-artifacts/task-closeout-2026-11-06/base-v185/frontend",
+      "startedAt": "2026-11-07T01:33:23.942Z",
+      "finishedAt": "2026-11-07T01:33:33.586Z",
+      "exitCode": 0,
+      "log": "type-check.log.gz",
+      "rawSha256": "5ebf47247dc14a635484b800d11596f249d0cdf4008716d724fcc464f81f9d1e",
+      "archiveSha256": "b745a6592ca45af2e1efabe22869c59d45402820a2d00f831e830a113ab3400c"
+    },
+    {
+      "command": "npm run build",
+      "cwd": "D:/workspace/go/pantheon-platform/audit-artifacts/task-closeout-2026-11-06/base-v185/frontend",
+      "startedAt": "2026-11-07T01:33:33.586Z",
+      "finishedAt": "2026-11-07T01:33:55.799Z",
+      "exitCode": 0,
+      "log": "build.log.gz",
+      "rawSha256": "572ad9d5494f675aa180a6b54ac7729ce78684adfd7f497227937ebf7598a895",
+      "archiveSha256": "ce69212380e82ec7699828ede665a0449e957070337c61e36b395e422aaaaafb"
+    },
+    {
+      "command": "npm run test:unit",
+      "cwd": "D:/workspace/go/pantheon-platform/audit-artifacts/task-closeout-2026-11-06/base-v185/frontend",
+      "startedAt": "2026-11-07T01:33:55.799Z",
+      "finishedAt": "2026-11-07T01:34:12.379Z",
+      "exitCode": 0,
+      "log": "test-unit.log.gz",
+      "rawSha256": "80a45d85844cd2d4d6254249e9d57dde9370830ca017c8d313899d1dfcf72443",
+      "archiveSha256": "debe54964475b579891bc4097b39bc92de5a4f73a1041624463cc1c97146d92f"
+    }
+  ]
+}

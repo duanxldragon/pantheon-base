@@ -1,0 +1,103 @@
+{
+  "recordedAt": "2026-11-06T14:47:58.835Z",
+  "baselineCommit": "c543a033ad986e14f4b42130481549b7adcb5029",
+  "originalCriteria": 40,
+  "results": [
+    {
+      "taskId": "2026-11-04-audit-p1-npm-audit-exit",
+      "criteriaPreserved": true,
+      "scopePreserved": true,
+      "historicalCommandsPreserved": true,
+      "criteria": 3,
+      "status": "in-progress"
+    },
+    {
+      "taskId": "2026-11-04-audit-p1-refresh-rotation",
+      "criteriaPreserved": true,
+      "scopePreserved": true,
+      "historicalCommandsPreserved": true,
+      "criteria": 3,
+      "status": "in-progress"
+    },
+    {
+      "taskId": "2026-11-04-audit-p1-ssrf-dial-binding",
+      "criteriaPreserved": true,
+      "scopePreserved": true,
+      "historicalCommandsPreserved": true,
+      "criteria": 3,
+      "status": "in-progress"
+    },
+    {
+      "taskId": "2026-11-04-audit-p2-agent-stop-points",
+      "criteriaPreserved": true,
+      "scopePreserved": true,
+      "historicalCommandsPreserved": true,
+      "criteria": 3,
+      "status": "in-progress"
+    },
+    {
+      "taskId": "2026-11-04-audit-p2-authoritative-docs",
+      "criteriaPreserved": true,
+      "scopePreserved": true,
+      "historicalCommandsPreserved": true,
+      "criteria": 4,
+      "status": "in-progress"
+    },
+    {
+      "taskId": "2026-11-04-audit-p2-freeze-validation",
+      "criteriaPreserved": true,
+      "scopePreserved": true,
+      "historicalCommandsPreserved": true,
+      "criteria": 4,
+      "status": "in-progress"
+    },
+    {
+      "taskId": "2026-11-04-audit-p2-ops-db-test-followup",
+      "criteriaPreserved": true,
+      "scopePreserved": true,
+      "historicalCommandsPreserved": true,
+      "criteria": 3,
+      "status": "in-progress"
+    },
+    {
+      "taskId": "2026-11-04-audit-p2-release-policy",
+      "criteriaPreserved": true,
+      "scopePreserved": true,
+      "historicalCommandsPreserved": true,
+      "criteria": 3,
+      "status": "in-progress"
+    },
+    {
+      "taskId": "2026-11-04-audit-p3-ci-cost-review",
+      "criteriaPreserved": true,
+      "scopePreserved": true,
+      "historicalCommandsPreserved": true,
+      "criteria": 3,
+      "status": "in-progress"
+    },
+    {
+      "taskId": "2026-11-04-audit-p3-consumer-seams",
+      "criteriaPreserved": true,
+      "scopePreserved": true,
+      "historicalCommandsPreserved": true,
+      "criteria": 3,
+      "status": "in-progress"
+    },
+    {
+      "taskId": "2026-11-04-global-audit-remediation",
+      "criteriaPreserved": true,
+      "scopePreserved": true,
+      "historicalCommandsPreserved": true,
+      "criteria": 3,
+      "status": "in-progress"
+    },
+    {
+      "taskId": "2026-11-05-base-freeze-release",
+      "criteriaPreserved": true,
+      "scopePreserved": true,
+      "historicalCommandsPreserved": true,
+      "criteria": 5,
+      "status": "in-progress"
+    }
+  ]
+}

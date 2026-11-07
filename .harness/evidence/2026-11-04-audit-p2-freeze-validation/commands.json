@@ -120,16 +120,16 @@
     }
   ],
   "knownGaps": [
-    "Independent review unavailable: executor gpt-5.5 and architect gpt-5.4-mini attempts returned HTTP 503; no independent approval is claimed.",
-    "Controlled local tests/builds collected; live external integration, browser smoke and release validation remain unverified.",
-    "Downstream real-DB suite is red at 4 business packages (12 failure nodes / 9 top-level tests), identically reproduced at Ops HEAD; PB-010 intent/fixture triage pending.",
-    "No approved release commit, external required CI/Sonar result or maintenance-freeze acceptance.",
-    "Foundation release and Ops lock upgrade deferred; local synthetic candidate is not a release.",
-    "Browser full/core smoke and live external integration were not run; no UI code was modified and no visual-polish claim is made.",
-    "S3 and OIDC external-provider validation depend on provisioned services. Actual remote dependency vulnerability status is not established by mock npm tests."
+    "Fresh current CODE/ARCH acceptance pending; previous actual REQUEST CHANGES/BLOCK preserved.",
+    "Real S3 provider integration: 1 recorded skip, no waiver; provisioned provider still required.",
+    "Maintenance freeze declaration remains unsigned by maintainer; no agent signature.",
+    "Observability allowed-port/private-network policy remains a separate Ops maintainer decision; security checks unchanged.",
+    "CI optimization deferred until measured duration/value; PB009 retain/defer decision documented.",
+    "5 moderate glob-chain dependency residuals and existing 23 zizmor baseline findings not removed by this closeout.",
+    "Production migration/drop and 2026-12-31 legacy-auth decommission remain separate explicitly authorized maintainer operations."
   ],
   "runtimeSensitive": true,
-  "runtimeGap": "Controlled local tests/builds collected; live external integration, browser smoke and release validation remain unverified.",
+  "runtimeGap": "Delivered immutable v0.18.4 and Ops PR171 verified by saved release/consumer evidence. Real S3 provider integration retains 1 skip and no waiver. Maintenance freeze/observability policy/production operations remain separate maintainer actions. Task closure awaits independent review.",
   "runtimeLogs": [
     "../audit-artifacts/base-global-remediation-2026-11-04/go-final-nocache.jsonl"
   ],
@@ -145,5 +145,29 @@
       "docs/reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-11-04_FULL.md"
     ]
   },
-  "recordedAt": "2026-11-04T11:59:58.491Z"
+  "recordedAt": "2026-11-04T11:59:58.491Z",
+  "historicalKnownGaps": [
+    "Independent review unavailable: executor gpt-5.5 and architect gpt-5.4-mini attempts returned HTTP 503; no independent approval is claimed.",
+    "Controlled local tests/builds collected; live external integration, browser smoke and release validation remain unverified.",
+    "Downstream real-DB suite is red at 4 business packages (12 failure nodes / 9 top-level tests), identically reproduced at Ops HEAD; PB-010 intent/fixture triage pending.",
+    "No approved release commit, external required CI/Sonar result or maintenance-freeze acceptance.",
+    "Foundation release and Ops lock upgrade deferred; local synthetic candidate is not a release.",
+    "Browser full/core smoke and live external integration were not run; no UI code was modified and no visual-polish claim is made.",
+    "S3 and OIDC external-provider validation depend on provisioned services. Actual remote dependency vulnerability status is not established by mock npm tests."
+  ],
+  "closeout": {
+    "recordedAt": "2026-11-06T12:36:05.510Z",
+    "matrix": ".harness/evidence/2026-11-05-base-freeze-release/closeout-matrix.json",
+    "residualRegister": ".harness/evidence/2026-11-05-base-freeze-release/closeout-residuals.json",
+    "reviewAvailability": ".harness/evidence/2026-11-05-base-freeze-release/closeout-review-availability.json",
+    "verification": ".harness/evidence/2026-11-05-base-freeze-release/closeout-validation.json",
+    "notes": "Historical commands and exit codes remain unchanged. Original implementation tests were not rerun for docs-only reconciliation."
+  },
+  "closeoutEvidence": {
+    "matrix": ".harness/evidence/2026-11-05-base-freeze-release/closeout-matrix.json",
+    "sourceManifest": ".harness/evidence/2026-11-05-base-freeze-release/retry3-source-manifest.json",
+    "stockRace": ".harness/evidence/2026-11-05-base-freeze-release/retry3-consumer-race.json",
+    "correctedOverlay": ".harness/evidence/2026-11-05-base-freeze-release/retry3-consumer-corrected-race.json",
+    "baseDirect": ".harness/evidence/2026-11-05-base-freeze-release/retry3-consumer-base-race.json"
+  }
 }

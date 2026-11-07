@@ -1,0 +1,50 @@
+{
+  "recordedAt": "2026-11-06T12:39:49.212Z",
+  "provenance": "Normalized same-session gh query results returned before context compaction; a subsequent recapture was blocked by socket permissions. This file is a synthesis, not raw response.",
+  "commit": "0a8229c67ab482c2e163622fc4e5b87301c53399",
+  "checks": [
+    {
+      "name": "Foundation Release Verify Summary",
+      "status": "completed",
+      "conclusion": "success",
+      "runId": "42165007510",
+      "url": "https://github.com/duanxldragon/pantheon-base/actions/runs/42165007510"
+    },
+    {
+      "name": "Verify Release Assets",
+      "status": "completed",
+      "conclusion": "success",
+      "runId": "42165007510",
+      "url": "https://github.com/duanxldragon/pantheon-base/actions/runs/42165007510"
+    },
+    {
+      "name": "Release Gate Summary",
+      "status": "completed",
+      "conclusion": "success",
+      "runId": "42160916390",
+      "url": "https://github.com/duanxldragon/pantheon-base/actions/runs/42160916390"
+    },
+    {
+      "name": "Full Smoke",
+      "status": "completed",
+      "conclusion": "success",
+      "runId": "42160916169",
+      "url": "https://github.com/duanxldragon/pantheon-base/actions/runs/42160916169"
+    },
+    {
+      "name": "Quality Gates",
+      "status": "completed",
+      "conclusion": "success",
+      "runId": "42160916700",
+      "url": "https://github.com/duanxldragon/pantheon-base/actions/runs/42160916700"
+    },
+    {
+      "name": "Security Gates",
+      "status": "completed",
+      "conclusion": "success",
+      "runId": "42160916599",
+      "url": "https://github.com/duanxldragon/pantheon-base/actions/runs/42160916599"
+    }
+  ],
+  "recaptureGap": "gh API reread from this environment denied network socket; immutable release record and earlier returned query are retained."
+}

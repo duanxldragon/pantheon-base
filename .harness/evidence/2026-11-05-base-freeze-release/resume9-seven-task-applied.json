@@ -1,0 +1,54 @@
+{
+  "recordedAt": "2026-11-07T02:37:57.748Z",
+  "status": "seven-local-transitions-independently-approved-and-governance-passed",
+  "planSha256": "3e2b1c37ad3e9955b4540682341e8e349e211501620d77abd087a6189e722b5f",
+  "sourceSha256": "eb92e0f6a33618dbf5ec88ad6bf4fabcc081667e2fafac331e04e6becae30288",
+  "approvals": [
+    {
+      "lane": "code-reviewer",
+      "file": "resume9-seven-code-reviewer.md",
+      "sha256": "8c04346ca976ceb066fef5dcf312a531041d53cf459de13108e60f6b7f145f19",
+      "verdict": "APPROVE",
+      "architecturalStatus": null,
+      "originalRawSha256": "e3470675ccee3b01242c53c0f4c19076abdca8d6438b6ab44275fd55851a2485",
+      "originalRawArchive": "resume9-original-e3470675ccee3b01242c53c0f4c19076abdca8d6438b6ab44275fd55851a2485.raw.gz"
+    },
+    {
+      "lane": "architect",
+      "file": "resume9-seven-architect.md",
+      "sha256": "533c9ef18791c0cb7b2592ecf049187d6ad4888d1e46b0518f44cc0679816488",
+      "verdict": "APPROVE",
+      "architecturalStatus": "CLEAR",
+      "originalRawSha256": "d374f607a1dabc3cd1f09153ad1bbf5cdb08e8ff38fcd6d99a8233b7644c3b7c",
+      "originalRawArchive": "resume9-original-d374f607a1dabc3cd1f09153ad1bbf5cdb08e8ff38fcd6d99a8233b7644c3b7c.raw.gz"
+    }
+  ],
+  "transitionedTaskIds": [
+    "2026-11-04-audit-p1-npm-audit-exit",
+    "2026-11-04-audit-p1-refresh-rotation",
+    "2026-11-04-audit-p2-agent-stop-points",
+    "2026-11-04-audit-p2-authoritative-docs",
+    "2026-11-04-audit-p2-freeze-validation",
+    "2026-11-04-audit-p2-release-policy",
+    "2026-11-04-audit-p3-ci-cost-review"
+  ],
+  "excludedTaskIds": [
+    "2026-11-04-audit-p1-ssrf-dial-binding",
+    "2026-11-04-audit-p2-ops-db-test-followup",
+    "2026-11-04-audit-p3-consumer-seams",
+    "2026-11-04-global-audit-remediation",
+    "2026-11-05-base-freeze-release"
+  ],
+  "inventory": {
+    "total": 250,
+    "completed": 245,
+    "inProgress": 5
+  },
+  "restoredImmutableCommandEntries": 1,
+  "originalCriteriaCount": 40,
+  "freezeSigned": false,
+  "waivers": [],
+  "submitted": false,
+  "inventoryCheckCorrection": "Initial postcheck counted only13 live manifests; corrected repository archive-aware count includes237 archived manifests. No transition rerun or criterion change.",
+  "governance": "resume9-seven-task-governance.json"
+}

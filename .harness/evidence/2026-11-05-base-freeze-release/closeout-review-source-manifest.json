@@ -1,0 +1,476 @@
+{
+  "recordedAt": "2026-11-06T12:45:33.056Z",
+  "baseCommit": "c543a033ad986e14f4b42130481549b7adcb5029",
+  "hashDomain": "Working-tree bytes read by reviewers; Git may normalize CRLF for existing remote query JSON",
+  "scope": "Docs-only twelve-task reconciliation waiting independent review; no approval",
+  "excluded": [
+    ".harness/evidence/2026-11-05-base-freeze-release/closeout-review-source-manifest.json"
+  ],
+  "files": [
+    {
+      "path": ".harness/STATUS.md",
+      "bytes": 139920,
+      "sha256": "58da00b35f1f47e35f8da1d823cfc4c39b808357969474d455fd65d2ab2dbba3"
+    },
+    {
+      "path": ".harness/evidence/2026-11-04-audit-p1-npm-audit-exit/commands.json",
+      "bytes": 3189,
+      "sha256": "d752b7df1d97a03ee9c987579e6438407b6f907f02f9f95952d1d780afd2db7f"
+    },
+    {
+      "path": ".harness/evidence/2026-11-04-audit-p1-npm-audit-exit/review.md",
+      "bytes": 2923,
+      "sha256": "6100cb0ef9640ef97bae5745742187b71cbcb76e6f3fcc01ff304569a64ce7bc"
+    },
+    {
+      "path": ".harness/evidence/2026-11-04-audit-p1-npm-audit-exit/summary.md",
+      "bytes": 1577,
+      "sha256": "00ea4f990d82aa3ff97270a56ea403817d2b124544e3a9d6213e38b2a1226784"
+    },
+    {
+      "path": ".harness/evidence/2026-11-04-audit-p1-refresh-rotation/commands.json",
+      "bytes": 4033,
+      "sha256": "1795f72022c0a3fb35a84166f8720d7defc98e1affc2a95fc083a32d3536a9c9"
+    },
+    {
+      "path": ".harness/evidence/2026-11-04-audit-p1-refresh-rotation/review.md",
+      "bytes": 2963,
+      "sha256": "26578cfb1d014993378fb6b8419566780a07aed7c24c03dd7bb077da5dbe45fd"
+    },
+    {
+      "path": ".harness/evidence/2026-11-04-audit-p1-refresh-rotation/summary.md",
+      "bytes": 2242,
+      "sha256": "df60749fbc1437a641a948d8afe2203e62b0574ef73b8547fca86d5aa9e176c4"
+    },
+    {
+      "path": ".harness/evidence/2026-11-04-audit-p1-ssrf-dial-binding/commands.json",
+      "bytes": 3330,
+      "sha256": "d3f8f0f875046b7731e1b1a4a0d28d36aefe35a68bde0baefd0ec8aebe0ee7fc"
+    },
+    {
+      "path": ".harness/evidence/2026-11-04-audit-p1-ssrf-dial-binding/review.md",
+      "bytes": 2972,
+      "sha256": "c83ce161ff24af0c34ee5e5a4c2e791c227ec7a2be65876ab0b89d5111b95cae"
+    },
+    {
+      "path": ".harness/evidence/2026-11-04-audit-p1-ssrf-dial-binding/summary.md",
+      "bytes": 1635,
+      "sha256": "891c1e6f178d7ad51a382eea09f4d9b928333b762d97fbbc8401cc27a756176e"
+    },
+    {
+      "path": ".harness/evidence/2026-11-04-audit-p2-agent-stop-points/commands.json",
+      "bytes": 3489,
+      "sha256": "1ca390bc244d39fadffe1e67fec18efdd0dc9891be783bcaae407f3bcc3dce87"
+    },
+    {
+      "path": ".harness/evidence/2026-11-04-audit-p2-agent-stop-points/review.md",
+      "bytes": 2944,
+      "sha256": "b63ca0204c269fc8e0a83cc13282628cc7b1d8db1ae7013ae5d63efc8ff8db17"
+    },
+    {
+      "path": ".harness/evidence/2026-11-04-audit-p2-agent-stop-points/summary.md",
+      "bytes": 1611,
+      "sha256": "c5900a57ede99287d35320bcc4d2512c90ba2cc20072e0a492def8d44f1bdcaa"
+    },
+    {
+      "path": ".harness/evidence/2026-11-04-audit-p2-authoritative-docs/commands.json",
+      "bytes": 3495,
+      "sha256": "b5374ab283d695cdc8463e0883c4586b43bd1168b412d9909c3878b070a82b51"
+    },
+    {
+      "path": ".harness/evidence/2026-11-04-audit-p2-authoritative-docs/review.md",
+      "bytes": 2951,
+      "sha256": "274750d9ebb3f78b1d74421bfeeb2d151538e2d7fc6b0eebef434db48a5d87aa"
+    },
+    {
+      "path": ".harness/evidence/2026-11-04-audit-p2-authoritative-docs/summary.md",
+      "bytes": 1723,
+      "sha256": "e8c79e89b4365dcedb01ff6e8829808bd7eca7f23afbf0ef463a3038639904e3"
+    },
+    {
+      "path": ".harness/evidence/2026-11-04-audit-p2-freeze-validation/commands.json",
+      "bytes": 6949,
+      "sha256": "ac7160a1cc8c4ecbff46020122735e3046a7e9c694e37af598ab3586ffed9caf"
+    },
+    {
+      "path": ".harness/evidence/2026-11-04-audit-p2-freeze-validation/review.md",
+      "bytes": 2949,
+      "sha256": "9dae00fbed649d7b7d82992a9b5531a5e7a967fa1d2830ec24ac3a1c891b2478"
+    },
+    {
+      "path": ".harness/evidence/2026-11-04-audit-p2-freeze-validation/summary.md",
+      "bytes": 4055,
+      "sha256": "19a0e3b00119c51032d86e9a628703c930da7e6fe6fffe9defde380334b957f6"
+    },
+    {
+      "path": ".harness/evidence/2026-11-04-audit-p2-ops-db-test-followup/commands.json",
+      "bytes": 7370,
+      "sha256": "a95920e7a422e1bcc3413db3bb86db47c8f7ba326e8f185de7371a94b44a41c1"
+    },
+    {
+      "path": ".harness/evidence/2026-11-04-audit-p2-ops-db-test-followup/review.md",
+      "bytes": 2322,
+      "sha256": "247da38a21c0cb1b58add6aee84113fbf171f779a82def8f4c717a80b2bf8525"
+    },
+    {
+      "path": ".harness/evidence/2026-11-04-audit-p2-ops-db-test-followup/summary.md",
+      "bytes": 3552,
+      "sha256": "9930e336cac0fef62cc1b76a77de9c0c7895b6ad529db5fc485eb1d2dd26f992"
+    },
+    {
+      "path": ".harness/evidence/2026-11-04-audit-p2-release-policy/commands.json",
+      "bytes": 3471,
+      "sha256": "8685d57c9253462ec96fd81f338b2aa38fcadd93ffc27550dab143a5ed7bbb1a"
+    },
+    {
+      "path": ".harness/evidence/2026-11-04-audit-p2-release-policy/review.md",
+      "bytes": 2899,
+      "sha256": "3419a5a415e7e5229e60d9d769c4a773ebad9437437168b2c72dea487a44b561"
+    },
+    {
+      "path": ".harness/evidence/2026-11-04-audit-p2-release-policy/summary.md",
+      "bytes": 1621,
+      "sha256": "0b1bedd637b2309a8a32a9277b6655e4554b5d35a6c7a5821963f1e4ee8ec887"
+    },
+    {
+      "path": ".harness/evidence/2026-11-04-audit-p3-ci-cost-review/commands.json",
+      "bytes": 3312,
+      "sha256": "5db879c7a2482a59f71c870256b960a65160e3ef8ea94e77970c54f828d5f804"
+    },
+    {
+      "path": ".harness/evidence/2026-11-04-audit-p3-ci-cost-review/review.md",
+      "bytes": 2885,
+      "sha256": "36fa997c07b61d3049f861def034192437daf40e0082517b1a16144a793250fe"
+    },
+    {
+      "path": ".harness/evidence/2026-11-04-audit-p3-ci-cost-review/summary.md",
+      "bytes": 1712,
+      "sha256": "de55f932a212e15eda4b913ecb67ffd5a4b1de7704688a5a0f1e30927061ca05"
+    },
+    {
+      "path": ".harness/evidence/2026-11-04-audit-p3-consumer-seams/commands.json",
+      "bytes": 6159,
+      "sha256": "e6312b9e0b22a16527bbd043b87fe66a0e3ad23c558d68ad97df0ad47e27d79a"
+    },
+    {
+      "path": ".harness/evidence/2026-11-04-audit-p3-consumer-seams/review.md",
+      "bytes": 2905,
+      "sha256": "98c9dc232ef6846fb51056fa1043b30c523e367fe06ddae1db0beb07f7c8d9ac"
+    },
+    {
+      "path": ".harness/evidence/2026-11-04-audit-p3-consumer-seams/summary.md",
+      "bytes": 4187,
+      "sha256": "1120fb7a396aa8925eb07e72cc701eaadbea6c21cb8b1de1f8220f1d3219f79a"
+    },
+    {
+      "path": ".harness/evidence/2026-11-04-global-audit-remediation/commands.json",
+      "bytes": 6790,
+      "sha256": "b5796d6cdb47466a0414e2ec52df46786fb36151a745231ca61927b0c031cbe3"
+    },
+    {
+      "path": ".harness/evidence/2026-11-04-global-audit-remediation/review.md",
+      "bytes": 2428,
+      "sha256": "cbd9ca47530bd581419da068643459d00850da1a6b0bddb248859fb3e275440f"
+    },
+    {
+      "path": ".harness/evidence/2026-11-04-global-audit-remediation/summary.md",
+      "bytes": 7721,
+      "sha256": "6fd52a89cca498947d416fa9b8c6ff88c890237c75eddfa3d81afeedc18aa596"
+    },
+    {
+      "path": ".harness/evidence/2026-11-05-base-freeze-release/closeout-architect-cli.log",
+      "bytes": 337,
+      "sha256": "6e035113c1dc6f6411a80bdbfa4465f6c7e77469a4708616b09cde6449a07e3b"
+    },
+    {
+      "path": ".harness/evidence/2026-11-05-base-freeze-release/closeout-base-pr494.json",
+      "bytes": 14660,
+      "sha256": "bd80db1f4fddb7f262e9eefcbd55e4cdc6a590ddef7ac63d95e3e6b82a1a5136"
+    },
+    {
+      "path": ".harness/evidence/2026-11-05-base-freeze-release/closeout-check-checker-wiring.log",
+      "bytes": 2502,
+      "sha256": "5bacbbe603de0a7d5109ebd54f6c2c1f547dd59d4f203e846b58c0e2f0455813"
+    },
+    {
+      "path": ".harness/evidence/2026-11-05-base-freeze-release/closeout-check-docs-frontmatter.log",
+      "bytes": 449,
+      "sha256": "0e17f2c597633cc3ed234cbbc9906210d72ddf80cee51d6b621f447c5f06be42"
+    },
+    {
+      "path": ".harness/evidence/2026-11-05-base-freeze-release/closeout-check-harness-docs.log",
+      "bytes": 123,
+      "sha256": "aff38ef831fbdaa9304137101838cff74335ea77c6b19a3eb5400fa047a464b6"
+    },
+    {
+      "path": ".harness/evidence/2026-11-05-base-freeze-release/closeout-check-harness-encoding.log",
+      "bytes": 153,
+      "sha256": "5145b11fd5062864e5dd511121d9ff375e4173d3674c27f8276fad2b6af8aa16"
+    },
+    {
+      "path": ".harness/evidence/2026-11-05-base-freeze-release/closeout-check-harness-evidence.log",
+      "bytes": 34066,
+      "sha256": "dd87e7b8a416410a67c63a67c1d518153447028c80a1181188dba74a5824e7f9"
+    },
+    {
+      "path": ".harness/evidence/2026-11-05-base-freeze-release/closeout-check-harness-graph-review.log",
+      "bytes": 176,
+      "sha256": "c82b64c56705a30ca300eae47449ae5c424c2d38b28eb7d1d45403790a2d1460"
+    },
+    {
+      "path": ".harness/evidence/2026-11-05-base-freeze-release/closeout-check-harness-inventory.log",
+      "bytes": 137,
+      "sha256": "dbf43926f0c41a7c788b9c9cb48f7677e9ddafdcf3a9cdfc0480874099f1bf4a"
+    },
+    {
+      "path": ".harness/evidence/2026-11-05-base-freeze-release/closeout-check-harness-review.log",
+      "bytes": 20479,
+      "sha256": "c95ad0e133540ab2ae89ea23cddcbce0706693e9b66a67a996bdf2e6209ddd3d"
+    },
+    {
+      "path": ".harness/evidence/2026-11-05-base-freeze-release/closeout-check-harness-runtime-evidence.log",
+      "bytes": 311,
+      "sha256": "5a6f01072ec7fde3019ef9c2387c9f4c57bcacaf18c9da21390005fecdaf2b16"
+    },
+    {
+      "path": ".harness/evidence/2026-11-05-base-freeze-release/closeout-check-structure.log",
+      "bytes": 166,
+      "sha256": "d16226e55bdc142e9a635b639de13280775aee6f3a4daa5c92f00535a3bb83ba"
+    },
+    {
+      "path": ".harness/evidence/2026-11-05-base-freeze-release/closeout-check-task-packet-template.log",
+      "bytes": 137,
+      "sha256": "c906367e2b043848d360d0c2a68d087d528861349348bf101a37c09439d98fc7"
+    },
+    {
+      "path": ".harness/evidence/2026-11-05-base-freeze-release/closeout-check-task-packet.log",
+      "bytes": 10012,
+      "sha256": "6ef198061227ada814860b4188ae6b6b06b28646ae9f37d657759f193ab4b248"
+    },
+    {
+      "path": ".harness/evidence/2026-11-05-base-freeze-release/closeout-code-reviewer-cli.log",
+      "bytes": 337,
+      "sha256": "61ae1396b0b8ab187363c6f41199d49190c0b1d942be35a8dee0c6add3b31fb8"
+    },
+    {
+      "path": ".harness/evidence/2026-11-05-base-freeze-release/closeout-final-status.json",
+      "bytes": 973,
+      "sha256": "a0736b2fe7a4f859421f3f90fdc24141ab9985b1d88c7643083838e1df95039f"
+    },
+    {
+      "path": ".harness/evidence/2026-11-05-base-freeze-release/closeout-invariants.json",
+      "bytes": 4940,
+      "sha256": "ee4904bc93562c578b29ecc363082dc7c4aae30092eebd2ddbb5f68b3c25f134"
+    },
+    {
+      "path": ".harness/evidence/2026-11-05-base-freeze-release/closeout-matrix.json",
+      "bytes": 45768,
+      "sha256": "025a707043fa7d5c815335a38469c21f3ab6ea43df056e6659de2942a5f17e16"
+    },
+    {
+      "path": ".harness/evidence/2026-11-05-base-freeze-release/closeout-ops-pr171.json",
+      "bytes": 9753,
+      "sha256": "6ab83a8d1c277635b15f2a44963ae9bfdcdbb00b553584bb1283621c6b26fe49"
+    },
+    {
+      "path": ".harness/evidence/2026-11-05-base-freeze-release/closeout-pr-body-check-first.log",
+      "bytes": 190,
+      "sha256": "d27c862f70fcfe8af8590ed93757e6880b5bd5600d9736bc421afc4b38c4c65a"
+    },
+    {
+      "path": ".harness/evidence/2026-11-05-base-freeze-release/closeout-pr-body-check.log",
+      "bytes": 55,
+      "sha256": "96fe6de34981a9cc01f9091d5ed5b260650b02b754b1728322d3f6d6af4915c0"
+    },
+    {
+      "path": ".harness/evidence/2026-11-05-base-freeze-release/closeout-release-checks.json",
+      "bytes": 1818,
+      "sha256": "53630d3180adfaaea347be026293106cb0a20431b20ab8f0a49aa56797df8a89"
+    },
+    {
+      "path": ".harness/evidence/2026-11-05-base-freeze-release/closeout-release-v0184.json",
+      "bytes": 2945,
+      "sha256": "432526c4b0a0d63e6c895fa34f145b56c5cbd97015d8fe6c625d4a0b12f5f129"
+    },
+    {
+      "path": ".harness/evidence/2026-11-05-base-freeze-release/closeout-residuals.json",
+      "bytes": 2728,
+      "sha256": "bed7b9d8a28325f6e75f894ccd94414116ed0ffd693682c8ed2649688780d97d"
+    },
+    {
+      "path": ".harness/evidence/2026-11-05-base-freeze-release/closeout-review-availability.json",
+      "bytes": 1284,
+      "sha256": "d3bdcd18de7f24907bb678b1f44b8ba4c653ccc103e278f202c1130ab6c43e82"
+    },
+    {
+      "path": ".harness/evidence/2026-11-05-base-freeze-release/closeout-validation.json",
+      "bytes": 6518,
+      "sha256": "94a690f01d6d7c7ef4279462ceee8b92ec76e66c64b96b876a74abf668724a6f"
+    },
+    {
+      "path": ".harness/evidence/2026-11-05-base-freeze-release/closeout.md",
+      "bytes": 5960,
+      "sha256": "eeacc57a01a904e69bf29d1464c4caedac6a0b620ebd5037df758b531cc6650a"
+    },
+    {
+      "path": ".harness/evidence/2026-11-05-base-freeze-release/commands.json",
+      "bytes": 49199,
+      "sha256": "f6df122cf72dbc19aa4f059a5203fface7ab7804d860f883f1076f65dea2c7c7"
+    },
+    {
+      "path": ".harness/evidence/2026-11-05-base-freeze-release/pr-body-task-closeout.md",
+      "bytes": 4422,
+      "sha256": "40143c16b25b08da23b4a362858e11a81fdb26c2d4cc905988accb5abbfed55d"
+    },
+    {
+      "path": ".harness/evidence/2026-11-05-base-freeze-release/review.md",
+      "bytes": 4438,
+      "sha256": "7bf9022430aefad3314a0a2223cd0c476e2c368c8fcad7302f8ab95d5ece4c65"
+    },
+    {
+      "path": ".harness/evidence/2026-11-05-base-freeze-release/summary.md",
+      "bytes": 9732,
+      "sha256": "daf079915311a30211e98be1c4e880bc4774cd9a8616796834a8fa5d683e9766"
+    },
+    {
+      "path": ".harness/tasks/2026-11-04-audit-p1-npm-audit-exit/manifest.json",
+      "bytes": 5551,
+      "sha256": "cf586ec69eadeec250cb2667c2d4bba7f47dbe6f8e6645486378564650f29849"
+    },
+    {
+      "path": ".harness/tasks/2026-11-04-audit-p1-refresh-rotation/manifest.json",
+      "bytes": 6366,
+      "sha256": "0915fb8d8ef81338e7141186d272750fb2d4b17a50d8911abcfb05b393256d74"
+    },
+    {
+      "path": ".harness/tasks/2026-11-04-audit-p1-ssrf-dial-binding/manifest.json",
+      "bytes": 5772,
+      "sha256": "7646c54ab2d48ff1a330015969bca9407ba0889c08c8668132d56fb4f916030c"
+    },
+    {
+      "path": ".harness/tasks/2026-11-04-audit-p2-agent-stop-points/manifest.json",
+      "bytes": 5558,
+      "sha256": "91249c06d153071565217b39922e00445488ee11eab48903cbebc3da09403ad7"
+    },
+    {
+      "path": ".harness/tasks/2026-11-04-audit-p2-authoritative-docs/manifest.json",
+      "bytes": 8364,
+      "sha256": "8f258e275af78e0e542642bc6606f76d2afdfc266ca5a330585fd1e60c5924e9"
+    },
+    {
+      "path": ".harness/tasks/2026-11-04-audit-p2-freeze-validation/manifest.json",
+      "bytes": 6456,
+      "sha256": "666bfc905d61f92ded3aa671463bb12538b6bc9076acb547dfb38231bd5d4291"
+    },
+    {
+      "path": ".harness/tasks/2026-11-04-audit-p2-ops-db-test-followup/manifest.json",
+      "bytes": 6627,
+      "sha256": "2acf3670b432d10997a0d49428a083e005dda355aeaf36df6671bf806e904ed0"
+    },
+    {
+      "path": ".harness/tasks/2026-11-04-audit-p2-release-policy/manifest.json",
+      "bytes": 5524,
+      "sha256": "588f6659599bdc8682dd9a633bf81c21310f26d9a010e07516e7ba19029712fc"
+    },
+    {
+      "path": ".harness/tasks/2026-11-04-audit-p3-ci-cost-review/manifest.json",
+      "bytes": 5326,
+      "sha256": "231327cbf86699e75579471722ca2cffed80b687ae398554967ca8e100c4f8b4"
+    },
+    {
+      "path": ".harness/tasks/2026-11-04-audit-p3-consumer-seams/manifest.json",
+      "bytes": 5861,
+      "sha256": "222b252a22be9cb403d0185c3df42f0784ef26727e66ff7cf1670ace6c652b4e"
+    },
+    {
+      "path": ".harness/tasks/2026-11-04-global-audit-remediation/manifest.json",
+      "bytes": 5624,
+      "sha256": "c53e21e810dcd174c6c0e35d984a43566f99997d2c5e1a130aa37039ccbbaad0"
+    },
+    {
+      "path": ".harness/tasks/2026-11-04-global-audit-remediation/plan.md",
+      "bytes": 15968,
+      "sha256": "936a2a4805bd722fb6d8d19be5e14d3cb20856a5b9734917387f457794879609"
+    },
+    {
+      "path": ".harness/tasks/2026-11-05-base-freeze-release/manifest.json",
+      "bytes": 9055,
+      "sha256": "9c71fc4b4c112b89f116fbc813841f02d125deb72705c851a4fec19b2775def9"
+    },
+    {
+      "path": ".harness/tasks/2026-11-05-base-freeze-release/tasks.json",
+      "bytes": 5544,
+      "sha256": "f31c87746e08cbbb42eb5cc5b660927d7230035f6b701a60be773a72bb0ab5fa"
+    },
+    {
+      "path": "docs/README.en.md",
+      "bytes": 7525,
+      "sha256": "3e505a2889beae86f831f97e063518db5ee824cdf7ca66b74b3773bdddd18b3d"
+    },
+    {
+      "path": "docs/README.md",
+      "bytes": 13626,
+      "sha256": "17a34d99d476a639db1f13a54e6444eb62b49dfbc833641cf3005760325990bd"
+    },
+    {
+      "path": "docs/harness/tasks/2026-11-04-audit-p1-npm-audit-exit.task.md",
+      "bytes": 4543,
+      "sha256": "ec9d92a7e1ab66e4ffc12de80a8dda545cbb9b7a9cda2906a59e89535401dd06"
+    },
+    {
+      "path": "docs/harness/tasks/2026-11-04-audit-p1-refresh-rotation.task.md",
+      "bytes": 5093,
+      "sha256": "9adb00f480fc74e0cf44994a21cdfbce4e29baf12c20b1095dde7c1cb1cbd06c"
+    },
+    {
+      "path": "docs/harness/tasks/2026-11-04-audit-p1-ssrf-dial-binding.task.md",
+      "bytes": 4694,
+      "sha256": "10adcd5fbc4bfc6f43d8bd81e1239174590fd1675bafa4115e2122c95d71ffd2"
+    },
+    {
+      "path": "docs/harness/tasks/2026-11-04-audit-p2-agent-stop-points.task.md",
+      "bytes": 4525,
+      "sha256": "34dd55c06009e59b950e5e39d301e64d21d9223779dc016cd46bd0338532e8de"
+    },
+    {
+      "path": "docs/harness/tasks/2026-11-04-audit-p2-authoritative-docs.task.md",
+      "bytes": 6878,
+      "sha256": "56891ad94075003e64750f5bde01cf1b0be8ffb1bbfe75a394fcab02c977658f"
+    },
+    {
+      "path": "docs/harness/tasks/2026-11-04-audit-p2-freeze-validation.task.md",
+      "bytes": 4850,
+      "sha256": "62a53c2fa635ebc640d53841dbcab9eca1c5e6d5fee5a102daa345e4875bf51e"
+    },
+    {
+      "path": "docs/harness/tasks/2026-11-04-audit-p2-ops-db-test-followup.task.md",
+      "bytes": 4283,
+      "sha256": "ebc368621e1a9fbe519e696cd92eb20511848e188495de8630c554e5c76798fd"
+    },
+    {
+      "path": "docs/harness/tasks/2026-11-04-audit-p2-release-policy.task.md",
+      "bytes": 4492,
+      "sha256": "7d42a97bff8d31f1d3268ea3d955931254eb7be5e0d046e34892cb32e8ff9143"
+    },
+    {
+      "path": "docs/harness/tasks/2026-11-04-audit-p3-ci-cost-review.task.md",
+      "bytes": 4296,
+      "sha256": "52b672c09dea855b59bbe0a000f69ceb79697e0100078cc608b70d032fdcb24a"
+    },
+    {
+      "path": "docs/harness/tasks/2026-11-04-audit-p3-consumer-seams.task.md",
+      "bytes": 4482,
+      "sha256": "e150ef4f418870c68d117f8d3733fb0870a021ed28a79da1386e9e8fbc716d92"
+    },
+    {
+      "path": "docs/harness/tasks/2026-11-04-global-audit-remediation.task.md",
+      "bytes": 4069,
+      "sha256": "da2161f225624e6549314732faf0aa0e61ef595e037bc208563c7dd3c66b3cb9"
+    },
+    {
+      "path": "docs/harness/tasks/2026-11-05-base-freeze-release.task.md",
+      "bytes": 6597,
+      "sha256": "9b9a3a43e025a73d147d9959f6e8159bb541db807c30f21d167b3d481eac8385"
+    }
+  ]
+}

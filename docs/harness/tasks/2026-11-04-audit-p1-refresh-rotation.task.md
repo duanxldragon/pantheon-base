@@ -4,11 +4,19 @@ doc_type: Remediation
 layer: system/auth
 linked_contracts:
   - docs/contracts/PLATFORM_CONTRACT.md
-status: Active
-updated_at: 2026-11-04
+status: Archived
+updated_at: 2026-11-06
 ---
 
 # Task Packet: 2026-11-04-audit-p1-refresh-rotation
+
+## 2026-11-06 Closeout Status
+
+官方 v0.18.4 与 Ops 根锁消费已确认。补验取得重建828/shared-drift、迁移32/dirty=false、前端218单测、消费57回归与4套生成模块烟测原始日志。原消费完整race2168/1/1失败；明确的Base测试文件overlay验证2170/0/1通过。Base直接完整race退出0：1890通过/0失败/1 S3 skip；原建库连接失败已保留。双路独立复审待完成。S3未验证、历史host/tenant/root-suite归因缺失、Ops新库deploy缺表及下一正式发行的测试夹具同步均有独立残余登记。
+
+Original MySQL/Redis concurrency and storage-failure regressions plus later full race and Tenant V1/runtime evidence; no new auth change.
+
+[闭环矩阵、证据与残余事项](../../../.harness/evidence/2026-11-05-base-freeze-release/closeout.md)。下文执行说明包含历史记录；本节是当前状态。
 
 ## Goal
 
@@ -139,3 +147,7 @@ system/auth
 - [x] 先隔离验证同一旧refresh并发、跨实例和存储失败；记录实际结果，不将静态疑点直接当漏洞
 - [x] 确认后补原子消费/轮换最小实现；同一旧token最多一次签发成功，失败不可继续成功响应
 - [x] 回归正常刷新、吊销/改密、租户V1约束和失败恢复；证据不足保持未关闭
+
+## Current scoped closeout (2026-11-07)
+
+2026-11-07: original task scope independently approved by CODE APPROVE / ARCH CLEAR on the exact seven-task plan. Current Base1890/0/1, 47 packages, FE218 and immutable Full Smoke/Release Gate passed. Official v0.18.5 published/acquired/rebuilt; remaining five consumer/programme tasks stay open. S3 remains unverified without waiver; maintenance freeze unsigned; CI optimization remains a decision/measurement follow-up. See .harness/evidence/2026-11-05-base-freeze-release/resume9-seven-task-applied.json. Original criteria and historical body are retained.

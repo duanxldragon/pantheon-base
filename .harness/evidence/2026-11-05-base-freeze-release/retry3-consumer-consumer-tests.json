@@ -1,0 +1,25 @@
+{
+  "recordedAt": "2026-11-06T13:33:54.011Z",
+  "sourceCommit": "1b4f0b344923a4964d932c51a7eb601195332714",
+  "scratch": "D:/workspace/go/pantheon-platform/audit-artifacts/task-closeout-2026-11-06",
+  "target": "D:/workspace/go/pantheon-platform/audit-artifacts/task-closeout-2026-11-06/ops-rebuilt",
+  "commands": [
+    {
+      "name": "consumer-tests",
+      "executable": "C:\\WINDOWS\\system32\\cmd.exe",
+      "args": [
+        "/d",
+        "/s",
+        "/c",
+        "npm.cmd run test:business-overlay"
+      ],
+      "cwd": "D:/workspace/go/pantheon-platform/audit-artifacts/task-closeout-2026-11-06/ops-source",
+      "startedAt": "2026-11-06T13:33:54.045Z",
+      "finishedAt": "2026-11-06T13:34:00.711Z",
+      "exitCode": 0,
+      "error": null,
+      "log": "retry3-consumer-tests.log",
+      "sha256": "3fe12c9facd54e31e43cf815805b5555ef22eeb027dc5b359f57a106681f76b9"
+    }
+  ]
+}

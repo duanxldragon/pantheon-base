@@ -1,0 +1,134 @@
+{
+  "recordedAt": "2026-11-06T13:28:24.779Z",
+  "sourceCommit": "1b4f0b344923a4964d932c51a7eb601195332714",
+  "scratch": "D:/workspace/go/pantheon-platform/audit-artifacts/task-closeout-2026-11-06",
+  "target": "D:/workspace/go/pantheon-platform/audit-artifacts/task-closeout-2026-11-06/ops-rebuilt",
+  "commands": [
+    {
+      "name": "race",
+      "executable": "go",
+      "args": [
+        "test",
+        "-buildvcs=false",
+        "-race",
+        "-json",
+        "-p",
+        "1",
+        "-count=1",
+        "./..."
+      ],
+      "cwd": "D:/workspace/go/pantheon-platform/audit-artifacts/task-closeout-2026-11-06/ops-rebuilt/backend",
+      "startedAt": "2026-11-06T13:28:24.803Z",
+      "finishedAt": "2026-11-06T13:28:25.729Z",
+      "exitCode": 1,
+      "error": null,
+      "log": "retry3-race.log",
+      "sha256": "a50e1a4f26d946322e073feaf1db0666ffa1499c21c3a6578816b92a0aabe0fd",
+      "testResults": {
+        "pass": 0,
+        "fail": 0,
+        "skip": 0,
+        "passingPackages": 0,
+        "failingPackages": [],
+        "failures": [],
+        "skips": []
+      }
+    },
+    {
+      "name": "race-success",
+      "executable": "go",
+      "args": [
+        "test",
+        "-mod=mod",
+        "-buildvcs=false",
+        "-race",
+        "-json",
+        "-p",
+        "1",
+        "-count=1",
+        "./..."
+      ],
+      "cwd": "D:/workspace/go/pantheon-platform/audit-artifacts/task-closeout-2026-11-06/ops-rebuilt/backend",
+      "startedAt": "2026-11-06T13:29:51.367Z",
+      "finishedAt": "2026-11-06T13:54:03.400Z",
+      "exitCode": 1,
+      "error": null,
+      "log": "retry3-race-success.log",
+      "sha256": "46f78dac2255ed27b7ae0a86bddf15fe6c288ab02de986b27b6bcc030a4450e7",
+      "testResults": {
+        "pass": 2168,
+        "fail": 1,
+        "skip": 1,
+        "passingPackages": 63,
+        "failingPackages": [
+          "github.com/duanxldragon/pantheon-base/backend/modules/lowcode/dynamicmodule"
+        ],
+        "failures": [
+          {
+            "package": "github.com/duanxldragon/pantheon-base/backend/modules/lowcode/dynamicmodule",
+            "test": "TestPurgeModuleAllowsBusinessStaticModuleWithoutTable"
+          }
+        ],
+        "skips": [
+          {
+            "package": "github.com/duanxldragon/pantheon-base/backend/pkg/upload",
+            "test": "TestServiceStoreUsesRealS3WhenConfigured"
+          }
+        ]
+      }
+    }
+  ],
+  "race": {
+    "status": "failed",
+    "testNodes": {
+      "pass": 2168,
+      "fail": 1,
+      "skip": 1
+    },
+    "failedTests": [
+      {
+        "Time": "2026-11-06T21:41:59.1561576+08:00",
+        "Action": "fail",
+        "Package": "github.com/duanxldragon/pantheon-base/backend/modules/lowcode/dynamicmodule",
+        "Test": "TestPurgeModuleAllowsBusinessStaticModuleWithoutTable",
+        "Elapsed": 24.61
+      }
+    ],
+    "skips": [
+      {
+        "Time": "2026-11-06T21:54:01.4839922+08:00",
+        "Action": "skip",
+        "Package": "github.com/duanxldragon/pantheon-base/backend/pkg/upload",
+        "Test": "TestServiceStoreUsesRealS3WhenConfigured",
+        "Elapsed": 0
+      }
+    ],
+    "passingPackages": 63,
+    "diagnosis": "Shared i18n source-scan fixture leaks into consumer checkout; referenced keys correctly remain active. No product race or consumer byte drift found for this failure."
+  },
+  "repository": "pantheon-ops",
+  "sourceManifest": "retry3-source-manifest.json",
+  "latestCommand": "race-success",
+  "latestExitCode": 1,
+  "latestResults": {
+    "pass": 2168,
+    "fail": 1,
+    "skip": 1,
+    "passingPackages": 63,
+    "failingPackages": [
+      "github.com/duanxldragon/pantheon-base/backend/modules/lowcode/dynamicmodule"
+    ],
+    "failures": [
+      {
+        "package": "github.com/duanxldragon/pantheon-base/backend/modules/lowcode/dynamicmodule",
+        "test": "TestPurgeModuleAllowsBusinessStaticModuleWithoutTable"
+      }
+    ],
+    "skips": [
+      {
+        "package": "github.com/duanxldragon/pantheon-base/backend/pkg/upload",
+        "test": "TestServiceStoreUsesRealS3WhenConfigured"
+      }
+    ]
+  }
+}

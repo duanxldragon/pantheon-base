@@ -1,22 +1,18 @@
-# Current v0.18.5 candidate: complete direct race and Sonar fixture correction
+# Current task closeout (2026-11-07)
 
-Current candidate includes one exact shared test seed helper; original four-row lifecycle assertions and external-reference protection remain intact. Both independent lanes approved the same helper snapshot: [approval](resume8-sonar-approval.json), [CODE](resume7-sonar-code-reviewer.md), [ARCH](resume7-sonar-architect.md).
+Seven original scopes are independently approved and locally closed; five consumer/programme tasks remain in-progress. Base v0.18.5 is officially published at1da0834b with four verified assets. Complete consumer readonly race/runtime and final consumption CI/merge remain in progress. Base race1890/0/1 and FE218 are current; historical1889/overlay/module-reconciliation records below remain historical. Current source and approval: resume9-seven-task-applied.json, resume9-official-provenance.json. The pristine resume8-pr496-baseline-summary.md backup is the earlier immutable candidate checkpoint. Frozen maintenance state remains unsigned and real S3 skip has no waiver.
 
-Direct current-worktree CGO race with required real MySQL/Redis completed: 1890 pass, 0 fail, 1 skip; 47 passing packages. [Result](resume7-base-full-race.json) binds unchanged fixture hash; [raw log archive](resume7-base-full-race.log.gz) contains test events proving execution. One real S3 integration skip has no waiver.
+## Historical checkpoints (preserved)
 
-Sonar PR496 previously failed new duplication density 55.4% (36 newly duplicated lines). The exact repeated seed is now extracted once; same hosted metric now passes at 0.0% against unchanged 3% threshold on head 2c1660a75d42630c3b90f02a6e7cc349194712ad ([proof](resume8-sonar-pr496-after.json)). Final PR checks and merged commit release gate remain pending. No threshold or exclusion changes. v0.18.5 remains unreleased; current PR checks, merged commit release gate, official publication and stock Ops consumption still pending. All original 12 manifests remain in-progress; freeze unsigned.
+# 2026-11-06 闭环核对现态
 
-## Previous candidate record
+任务仍为`in-progress`，等待独立双路复审。
 
-# 2026-11-07 Current corrective foundation candidate
+官方v0.18.4发布和Ops PR171合并/根锁已确认。消费重建828、共享漂移、迁移32/dirty=false、前端218单测、消费脚本57回归、4套生成模块浏览器烟测通过。原消费完整race2168通过/1共享夹具失败/1S3 skip；明确测试文件overlay后的完整验证2170通过/0失败/1S3 skip，不能视为原版发行测试全部通过。Base直接完整race退出0：1890通过/0失败/1 S3 skip。 当前双路独立批准待完成。
 
-Version0.18.5 remains unreleased on fix/v0185-fixture-closed-loop. Actual bounded CODE APPROVE/ARCH CLEAR match the same snapshot; [approval](resume7-fixture-approval.json), [CODE](retry5-fixture-code-reviewer.md), [ARCH](retry5-fixture-architect.md).
+残余与验收边界见[逐项闭环](../2026-11-05-base-freeze-release/closeout.md)；下文历史内容保留当时失败/待办。
 
-All507 backend files equal the reference tree actually tested:1890 pass/0 fail/1 real S3 skip. This is byte-equivalence evidence, not a worktree rerun or current hosted CI. Original lifecycle assertions and external-reference preservation remain tested. No UI/product/schema changes.
-
-Latest previously verified official release remainsv0.18.4. GitHub connectivity recovered2026-11-07. Current-branch hosted checks/merge/Release Gate/publication and official Ops consumption remain pending actual results. Original12 tasks stay in-progress in this candidate; S3 unverified/no waiver and freeze unsigned.
-
-## Historical candidate evidence
+## 历史记录
 
 # Base 功能收尾与发行执行证据
 
@@ -82,7 +78,6 @@ PR #489 已合入 main（de9f11a6）。main严格文档门禁发现审计报告�
 Main `0e56f922` Full Smoke 已通过，Release Gate 因两项未关闭 Sonar 问题失败。最小修复已获得 CODE APPROVE / ARCH CLEAR；新的完整 Go race：1889 pass / 0 fail / 1 skip; 47 passing test packages；14 项治理检查通过。详见 [Sonar closeout](sonar-closeout.md)。新提交的托管 Sonar 同规则复测、CI 与 main Release Gate 仍为发布条件。
 
 Ops 准备树 37 项 overlay 回归、真实 MySQL 回填 race 与独立 CODE/ARCH 评审已通过。正式消费仍等待 v0.18.3 发布。
-
 
 ## 最新续办：明确 v0.18.4 与授权
 

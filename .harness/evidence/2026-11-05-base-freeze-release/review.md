@@ -1,43 +1,42 @@
-# Current bounded fixture review
+# Current partial independent closeout (2026-11-07)
 
-CODE APPROVE/ARCH CLEAR cover initial fixture correction and equivalent shared seed helper. [Current approval](resume8-sonar-approval.json). Aggregate task closure, provider, freeze and publication have separate pending gates.
+Seven original scopes: CODE APPROVE / ARCH CLEAR on identical fingerprints; exact guarded transitions applied and12 governance checks passed. Reports resume9-seven-code-reviewer.md / resume9-seven-architect.md, application resume9-seven-task-applied.json. This does not approve the parent programme or remaining five tasks; prior full-plan BLOCK/REQUEST CHANGES remains historical and those scopes stay open. Official185 published and acquired; complete consumer validation/CI/merge continues.
+
+## Historical programme review (preserved)
+
+# Current Closeout Review: 2026-11-05-base-freeze-release
+
+**BLOCKED: independent review requires remediation.** Historical approvals below apply only to their recorded source hashes. Current CODE REQUEST CHANGES and ARCH BLOCK reports require corrected evidence, complete source coverage and a fresh judgment. No author self-approval.
 
 ## Machine Readable
 
 ```json
 {
   "taskId": "2026-11-05-base-freeze-release",
-  "verdict": "approved",
-  "reviewer": "Independent existing bounded CODE/ARCH reports, coordinator records approval",
-  "findings": [],
-  "approvalScope": "bounded-v0185-fixture-patch-only",
-  "independentApproval": ".harness/evidence/2026-11-05-base-freeze-release/resume8-sonar-approval.json",
+  "verdict": "blocked",
+  "reviewer": "Independent CODE/ARCH reports returned; coordinator records remediation status without approval",
+  "findings": [
+    "Current code/spec and architecture reviews require evidence/criteria remediation; historical reviews retain their original source scope."
+  ],
+  "structuralReview": {
+    "affectedSubgraph": [
+      "task manifest -> original acceptance -> commands/review -> release/consumer evidence -> closeout register"
+    ],
+    "checks": ["cycle", "hub", "call-depth", "sensitive-flow"],
+    "findings": [],
+    "notes": "Governance linkage plus Base shared dynamicmodule test-fixture/i18n-scanner boundary. No production call chain changed; CodeGraph unavailable, current structural approval awaits independent reviewers."
+  },
   "linkage": {
     "taskManifest": ".harness/tasks/2026-11-05-base-freeze-release/manifest.json",
     "evidence": ".harness/evidence/2026-11-05-base-freeze-release/commands.json",
-    "taskDoc": "docs/harness/tasks/2026-11-05-base-freeze-release.task.md",
-    "evidenceDir": ".harness/evidence/2026-11-05-base-freeze-release/",
     "reviewFile": ".harness/evidence/2026-11-05-base-freeze-release/review.md",
-    "summaryFile": ".harness/evidence/2026-11-05-base-freeze-release/summary.md",
     "changeRef": "none",
     "planRefs": [
       ".harness/tasks/2026-11-05-base-freeze-release/tasks.json",
       ".harness/tasks/2026-11-04-global-audit-remediation/plan.md"
     ]
   },
-  "structuralReview": {
-    "affectedSubgraph": [
-      "dynamicmodule purge temporary test workspace -> i18n scanner"
-    ],
-    "checks": [
-      "cycle",
-      "hub",
-      "call-depth",
-      "sensitive-flow"
-    ],
-    "findings": [],
-    "notes": "Test-only scan-root alignment. Aggregate closure/provider/freeze/publication outside this approval."
-  }
+  "reviewAvailability": ".harness/evidence/2026-11-05-base-freeze-release/closeout-review-availability.json"
 }
 ```
 
@@ -65,7 +64,6 @@ CODE APPROVE/ARCH CLEAR cover initial fixture correction and equivalent shared s
   "findings": [],
   "linkage": {
     "taskManifest": ".harness/tasks/2026-11-05-base-freeze-release/manifest.json",
-    "evidence": ".harness/evidence/2026-11-05-base-freeze-release/commands.json",
     "changeRef": "none",
     "planRefs": [
       ".harness/tasks/2026-11-05-base-freeze-release/tasks.json",
