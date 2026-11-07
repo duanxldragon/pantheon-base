@@ -1,6 +1,10 @@
 # Pantheon Base 文档索引
 
-当前功能收尾与发行：[任务拆解](./harness/tasks/2026-11-05-base-freeze-release.task.md) · [验收证据](../.harness/evidence/2026-11-05-base-freeze-release/summary.md)。v0.18.3 发布器已报告四资产上传完成；最新授权要求修复 minimatch 后发行 v0.18.4，再让 Ops 从 GitHub 正式 release 消费。当前网络阻断，安全依赖安装、新版发行与消费尚未完成，租户 V1 保留。
+当前（2026-11-07）：七个原任务已获独立 CODE/ARCH 批准并关闭；五个消费/总交付任务仍开放。Base v0.18.5 已正式发布，四资产已验证并重建 Ops，完整消费 race/runtime/CI 收口继续进行。冻结未签，S3 无豁免。 See [证据](../.harness/evidence/2026-11-05-base-freeze-release/resume9-seven-task-applied.json).
+
+### Historical delivery checkpoint
+
+当前功能收尾与发行：[任务拆解](./harness/tasks/2026-11-05-base-freeze-release.task.md) · [逐项闭环核对](../.harness/evidence/2026-11-05-base-freeze-release/closeout.md)。Base v0.18.4 已正式发布，Ops PR #171 已合并并锁定消费，租户 V1 保留。12 个任务的交付证据已对齐，最终关闭等待独立审查；S3 provider、维护冻结签署等残余项明确保留。
 
 当前全局审计基线：[完整审计](./reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-11-04_FULL.md) 与 [全量资产矩阵](./reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-11-04_ASSETS.md)。整改现态：[Harness整改计划](../.harness/tasks/2026-11-04-global-audit-remediation/plan.md)。旧同日报告保留历史，整改完成不等于已签署维护冻结。
 

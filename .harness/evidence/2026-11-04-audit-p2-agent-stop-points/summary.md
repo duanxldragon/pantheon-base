@@ -1,3 +1,21 @@
+# Current original-scope closeout (2026-11-07)
+
+2026-11-07: original task scope independently approved by CODE APPROVE / ARCH CLEAR on the exact seven-task plan. Current Base1890/0/1, 47 packages, FE218 and immutable Full Smoke/Release Gate passed. Official v0.18.5 published/acquired/rebuilt; remaining five consumer/programme tasks stay open. S3 remains unverified without waiver; maintenance freeze unsigned; CI optimization remains a decision/measurement follow-up.
+
+Independent reports: ../2026-11-05-base-freeze-release/resume9-seven-code-reviewer.md and ../2026-11-05-base-freeze-release/resume9-seven-architect.md.
+
+## Historical evidence (preserved)
+
+# 2026-11-06 闭环核对现态
+
+任务仍为`in-progress`，等待独立双路复审。
+
+官方v0.18.4发布和Ops PR171合并/根锁已确认。消费重建828、共享漂移、迁移32/dirty=false、前端218单测、消费脚本57回归、4套生成模块浏览器烟测通过。原消费完整race2168通过/1共享夹具失败/1S3 skip；明确测试文件overlay后的完整验证2170通过/0失败/1S3 skip，不能视为原版发行测试全部通过。Base直接完整race退出0：1890通过/0失败/1 S3 skip。 当前双路独立批准待完成。
+
+残余与验收边界见[逐项闭环](../2026-11-05-base-freeze-release/closeout.md)；下文历史内容保留当时失败/待办。
+
+## 历史记录
+
 # 统一 Agent 授权与维护者三触点
 
 状态：in-progress；实现：applied；验证：passed；独立review：blocked。

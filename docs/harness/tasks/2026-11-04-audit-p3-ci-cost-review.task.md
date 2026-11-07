@@ -4,11 +4,19 @@ doc_type: Remediation
 layer: platform
 linked_contracts:
   - docs/contracts/PLATFORM_CONTRACT.md
-status: Active
-updated_at: 2026-11-04
+status: Archived
+updated_at: 2026-11-06
 ---
 
 # Task Packet: 2026-11-04-audit-p3-ci-cost-review
+
+## 2026-11-06 Closeout Status
+
+官方 v0.18.4 与 Ops 根锁消费已确认。补验取得重建828/shared-drift、迁移32/dirty=false、前端218单测、消费57回归与4套生成模块烟测原始日志。原消费完整race2168/1/1失败；明确的Base测试文件overlay验证2170/0/1通过。Base直接完整race退出0：1890通过/0失败/1 S3 skip；原建库连接失败已保留。双路独立复审待完成。S3未验证、历史host/tenant/root-suite归因缺失、Ops新库deploy缺表及下一正式发行的测试夹具同步均有独立残余登记。
+
+Decision delivered: preserve coverage/race and existing jobs; defer optimization until actual timing/value evidence. Optimization itself excluded.
+
+[闭环矩阵、证据与残余事项](../../../.harness/evidence/2026-11-05-base-freeze-release/closeout.md)。下文执行说明包含历史记录；本节是当前状态。
 
 ## Goal
 
@@ -78,8 +86,6 @@ platform
 
 ### Modify
 
-
-
 ### Do Not Touch
 
 - VERSION
@@ -132,3 +138,7 @@ platform
 - [x] 保留coverage与race目的差异，缺少实测不删除checker或job
 - [x] 登记需实际run耗时/收益才能启动的低优先优化；不作为冻结必需项
 - [x] 不新增门禁、依赖、复杂平台；不为全风格清零重构
+
+## Current scoped closeout (2026-11-07)
+
+2026-11-07: original task scope independently approved by CODE APPROVE / ARCH CLEAR on the exact seven-task plan. Current Base1890/0/1, 47 packages, FE218 and immutable Full Smoke/Release Gate passed. Official v0.18.5 published/acquired/rebuilt; remaining five consumer/programme tasks stay open. S3 remains unverified without waiver; maintenance freeze unsigned; CI optimization remains a decision/measurement follow-up. See .harness/evidence/2026-11-05-base-freeze-release/resume9-seven-task-applied.json. Original criteria and historical body are retained.

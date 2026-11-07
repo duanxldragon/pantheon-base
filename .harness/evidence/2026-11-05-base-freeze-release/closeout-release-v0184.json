@@ -1,0 +1,66 @@
+{
+  "assets": [
+    {
+      "apiUrl": "https://api.github.com/repos/duanxldragon/pantheon-base/releases/assets/715950781",
+      "contentType": "application/x-gtar",
+      "createdAt": "2026-11-06T04:52:06Z",
+      "digest": "sha256:f3adeba77e1ffb4ee0bc32126d435eaea64a68bcd57751972027d80d3c4e126f",
+      "downloadCount": 1,
+      "id": "RA_kwDOSKX4bs4qrIq9",
+      "label": "",
+      "name": "foundation-release-pantheon-base-v0.18.4.tgz",
+      "size": 31153407,
+      "state": "uploaded",
+      "updatedAt": "2026-11-06T04:55:42Z",
+      "url": "https://github.com/duanxldragon/pantheon-base/releases/download/pantheon-base-v0.18.4/foundation-release-pantheon-base-v0.18.4.tgz"
+    },
+    {
+      "apiUrl": "https://api.github.com/repos/duanxldragon/pantheon-base/releases/assets/715950780",
+      "contentType": "application/octet-stream",
+      "createdAt": "2026-11-06T04:52:06Z",
+      "digest": "sha256:a60614e29dc4f8b124511147098fdf7c8c71fae76d8a59c49931fa570b657111",
+      "downloadCount": 1,
+      "id": "RA_kwDOSKX4bs4qrIq8",
+      "label": "",
+      "name": "foundation-release-pantheon-base-v0.18.4.tgz.sha256",
+      "size": 111,
+      "state": "uploaded",
+      "updatedAt": "2026-11-06T04:52:06Z",
+      "url": "https://github.com/duanxldragon/pantheon-base/releases/download/pantheon-base-v0.18.4/foundation-release-pantheon-base-v0.18.4.tgz.sha256"
+    },
+    {
+      "apiUrl": "https://api.github.com/repos/duanxldragon/pantheon-base/releases/assets/715950789",
+      "contentType": "application/x-tar",
+      "createdAt": "2026-11-06T04:52:06Z",
+      "digest": "sha256:dcaa86cc6ff3b2d784e60e9a6ed55fe297525aaf5c9ed507a173e015741e0049",
+      "downloadCount": 1,
+      "id": "RA_kwDOSKX4bs4qrIrF",
+      "label": "",
+      "name": "repo.tar",
+      "size": 52285440,
+      "state": "uploaded",
+      "updatedAt": "2026-11-06T04:57:04Z",
+      "url": "https://github.com/duanxldragon/pantheon-base/releases/download/pantheon-base-v0.18.4/repo.tar"
+    },
+    {
+      "apiUrl": "https://api.github.com/repos/duanxldragon/pantheon-base/releases/assets/715950797",
+      "contentType": "application/octet-stream",
+      "createdAt": "2026-11-06T04:52:06Z",
+      "digest": "sha256:079b1daf9214effb8542c3fd7a788eb39b46208463d201fdb659d524d5011d34",
+      "downloadCount": 1,
+      "id": "RA_kwDOSKX4bs4qrIrN",
+      "label": "",
+      "name": "repo.tar.sha256",
+      "size": 75,
+      "state": "uploaded",
+      "updatedAt": "2026-11-06T04:52:07Z",
+      "url": "https://github.com/duanxldragon/pantheon-base/releases/download/pantheon-base-v0.18.4/repo.tar.sha256"
+    }
+  ],
+  "isDraft": false,
+  "isPrerelease": false,
+  "publishedAt": "2026-11-06T04:52:02Z",
+  "tagName": "pantheon-base-v0.18.4",
+  "targetCommitish": "0a8229c67ab482c2e163622fc4e5b87301c53399",
+  "url": "https://github.com/duanxldragon/pantheon-base/releases/tag/pantheon-base-v0.18.4"
+}

@@ -1,4 +1,4 @@
-# Base 现有功能验收矩阵（2026-11-05）
+# Base 现有功能验收矩阵（现态核对 2026-11-06）
 
 父任务：2026-11-05-base-freeze-release。本表区分已有实现、当前候选证据与未关闭条件，不能将源代码存在或历史测试替代本轮验收。现有实现和 11 月 3/4 日修复纳入交付；历史未启动方案保持原生命周期，不通过删除/隐藏功能完成冻结。
 
@@ -20,10 +20,14 @@
 | F3    | lowcode basic/enterprise/many-to-many、生成格式/构建 | frontend/src/modules/lowcode/generator；LOWCODE_GENERATOR_GUIDE              | generator dashboard/quality/lowcode 三种 shape smoke；生成物 gofmt/TS；后端 build preflight                     | 生成器shape/格式检查通过；五套业务生成 smoke 全部 exit 0（generated/database-import/master-detail/many-to-many/auto-recycle）                                    |
 | F3    | 动态模块注册、生成模块生命周期/数据表                | backend/modules/lowcode；MODULE_CONTRACT                                     | Go race 构建/注册与 registry 测试；真实注册/清理与关系模板浏览器验证；重启后CRUD仍独立，不能把core3skip视为通过 | 已闭合并发：生成→注册→重启后真实 API CRUD（父/子、布尔更新、软删列表）通过；真实浏览器 CRUD 通过（校验/创建/编辑失败恢复/删除/390px）；模块在 smoke 清理时 purge |
 | F3    | 平台工作台/壳层、导航、主题/暗色/响应式              | platform；DESIGN.md                                                          | FE static/unit、platform core/surfaces；真实渲染桌面/窄屏/暗色；关键状态                                        | 静态/部分渲染通过；platform-smoke 97 passed 与 77 passed 两次 exit 0（桌面/窄屏页面矩阵）                                                                        |
-| F4–F7 | 安全 SSRF 出站、依赖/CI、治理与正式发行              | pkg/security/ssrf；security workflow；foundation-release scripts             | DNS 绑定拨号/race、npm exit regression、治理、官方 remote CI/release assets                                     | 本地脚本与57b42ace远端CI通过；独立评审503，发行未完成                                                                                                            |
-| F8    | Base -> Ops 唯一正式消费路径                         | Ops foundation-release.lock.json + rebuild overlay                           | 官方 release checksum、lock、迁移 chain、全量消费者 race/CI                                                     | 必须在 F7 后执行，未完成                                                                                                                                         |
+| F4–F7 | 安全 SSRF 出站、依赖/CI、治理与正式发行              | pkg/security/ssrf；security workflow；foundation-release scripts             | DNS 绑定拨号/race、npm exit regression、治理、官方 remote CI/release assets                                     | 正式 v0.18.4 发布，准确提交 0a8229c6；必需 hosted gates 通过；当前双路复审待修复后重跑                                                                           |
+| F8    | Base -> Ops 唯一正式消费路径                         | Ops foundation-release.lock.json + rebuild overlay                           | 官方 release checksum、lock、迁移 chain、全量消费者 race/CI                                                     | Ops PR #171 已合并，根 lock 与官方 commit/digests 一致；补验重建828/迁移32/FE218/4生成smoke通过；原stock race夹具失败，修正overlay2170/0/1通过，批准待复审       |
 
-## 已批准未完成项与补丁归属
+## 2026-11-06 现态与证据边界
+
+F7 正式发行和 F8 消费已经交付，远端事实见 retry2-release.json、retry2-release-checks.json、retry2-ops-pr171.json。先前报告中部分 Ops 本地日志缺失，一份获取日志实际失败；这些旧结果不能替代本轮原始验证。最新验收结论以 closeout-matrix.json 与 retry3-consumer-validation.json 为准。真实 S3 未验证，Ops host/tenant fixture 历史失败仍为失败。维护冻结保持未签署。
+
+## 历史已批准未完成项与补丁归属（2026-11-05）
 
 - Nov 3：系统路由统一保护、数据范围 schema 探测、超单页候选分页、生成器结构与格式、checker 接线/结构审计，已纳入候选57b42ace，本地完整验证与远端CI通过。
 - Nov 4 PB-001/PB-002/PB-003：SSRF verified DNS address dial、npm audit exit propagation、refresh GETDEL + session 条件更新，代码与行为回归已完成，全量race1880通过/1真实S3 skip，远端CI通过。
@@ -37,4 +41,4 @@
 
 ## 停止条件
 
-本地与 hosted 证据、独立 review、正式发行/消费均满足才能完成整个任务。外部S3配置仍是明确缺口；用户授权后的独立gpt-6-astra最终两路评审已通过；GitHub已恢复访问，57b42ace远端CI结果见hosted-validation.json。本表不签署维护冻结。
+正式发行/消费已交付；最终完成仍需要当前来源指纹、逐条原始验收证据和独立 CODE/ARCH 双路复审通过。历史审批不替代当前复审。真实 S3 provider 缺口、Ops 本地 fixture 失败及生产处置边界在 closeout-residuals.json 保留。本表不签署维护冻结。

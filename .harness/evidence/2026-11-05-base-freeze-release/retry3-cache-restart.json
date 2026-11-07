@@ -1,0 +1,19 @@
+{
+  "reason": "build cache Access denied; restart with workspace cache",
+  "recordedAt": "2026-11-06T14:07:01.6655016Z",
+  "runnerIds": [
+    2932,
+    13700
+  ],
+  "terminatedDescendants": [
+    4396,
+    17116,
+    19052,
+    12408,
+    20464,
+    1908,
+    3528,
+    10380,
+    4316
+  ]
+}

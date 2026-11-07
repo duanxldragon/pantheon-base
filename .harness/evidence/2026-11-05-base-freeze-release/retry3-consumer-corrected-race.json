@@ -1,0 +1,149 @@
+{
+  "recordedAt": "2026-11-06T14:11:14.769Z",
+  "sourceCommit": "1b4f0b344923a4964d932c51a7eb601195332714",
+  "scratch": "D:/workspace/go/pantheon-platform/audit-artifacts/task-closeout-2026-11-06",
+  "target": "D:/workspace/go/pantheon-platform/audit-artifacts/task-closeout-2026-11-06/ops-rebuilt",
+  "commands": [
+    {
+      "name": "corrected-race-workspace-cache",
+      "executable": "go",
+      "args": [
+        "test",
+        "-buildvcs=false",
+        "-overlay",
+        "D:/workspace/go/pantheon-platform/audit-artifacts/task-closeout-2026-11-06/fixture-overlay.json",
+        "-race",
+        "-json",
+        "-p",
+        "4",
+        "-count=1",
+        "./..."
+      ],
+      "cwd": "D:/workspace/go/pantheon-platform/audit-artifacts/task-closeout-2026-11-06/ops-rebuilt/backend",
+      "environment": {
+        "GOCACHE": "D:/workspace/go/pantheon-platform/audit-artifacts/task-closeout-2026-11-06/go-cache",
+        "PATH": "D:/msys64/mingw64/bin;C:\\Program Files\\PowerShell\\7;C:\\Users\\xiaolong\\.codex\\tmp\\arg0-windows\\codex-arg0uhzLGE;C:\\Users\\xiaolong\\.codex\\packages\\app-server-daemon\\releases\\0.167.0-x86_64-pc-windows-msvc\\codex-path;C:\\Users\\xiaolong\\.codex\\tmp\\arg0-windows\\codex-arg0OmeF5T;D:\\cache\\npm-global\\node_modules\\@openai\\codex\\node_modules\\@openai\\codex-win32-x64\\vendor\\x86_64-pc-windows-msvc\\codex-path;C:\\Program Files\\PowerShell\\7;C:\\Program Files\\Common Files\\Oracle\\Java\\javapath;C:\\Program Files (x86)\\Common Files\\Oracle\\Java\\java8path;C:\\Program Files (x86)\\Common Files\\Oracle\\Java\\javapath;C:\\WINDOWS\\system32;C:\\WINDOWS;C:\\WINDOWS\\System32\\Wbem;C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\;C:\\WINDOWS\\System32\\OpenSSH\\;\";C:\\Program Files\\Java\\jdk1.8.0_241\\bin;C:\\Program Files\\Java\\jdk1.8.0_241\\jre\\bin\";D:\\NetSarang\\Xmanager 7\\;D:\\NetSarang\\Xshell 7\\;D:\\NetSarang\\Xftp 7\\;D:\\NetSarang\\Xlpd 7\\;D:\\Git\\cmd;D:\\Maven\\apache-maven-3.9.9\\bin;D:\\Python\\Python312\\;C:\\Users\\xiaolong;D:\\Go\\bin;D:\\cygwin64\\bin;D:\\MySQL\\mysql\\bin;C:\\Program Files\\CursorModifier;D:\\nodejs\\;C:\\Program Files\\GitHub CLI\\;C:\\Program Files\\PuTTY\\;C:\\Users\\xiaolong\\.qoder-cn\\bin\\qoderclicn;C:\\Program Files\\PowerShell\\7\\;C:\\Users\\xiaolong\\.qoder\\entry;D:\\cache\\npm-global;C:\\Users\\xiaolong\\.grok\\bin;C:\\Users\\xiaolong\\.kimi-code\\bin;C:\\Users\\xiaolong\\AppData\\Local\\trae-cli\\bin;C:\\Program Files (x86)\\Common Files\\Oracle\\Java\\java8path;C:\\Program Files (x86)\\Common Files\\Oracle\\Java\\javapath;C:\\WINDOWS\\system32;C:\\WINDOWS;C:\\WINDOWS\\System32\\Wbem;C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\;C:\\WINDOWS\\System32\\OpenSSH\\;\";C:\\Program Files\\Java\\jdk1.8.0_241\\bin;C:\\Program Files\\Java\\jdk1.8.0_241\\jre\\bin\";D:\\NetSarang\\Xmanager 7\\;D:\\NetSarang\\Xshell 7\\;D:\\NetSarang\\Xftp 7\\;D:\\NetSarang\\Xlpd 7\\;D:\\Git\\cmd;D:\\nodejs\\;C:\\Program Files\\Vagrant\\bin;C:\\Users\\xiaolong\\AppData\\Local\\Programs\\Python\\Launcher\\;C:\\Users\\xiaolong\\AppData\\Local\\Microsoft\\WindowsApps;D:\\JetBrains\\WebStorm 2024.1.3\\bin;D:\\JetBrains\\IntelliJ IDEA 2024.2.3\\bin;D:\\Bandizip\\;D:\\Microsoft VS Code\\bin;D:\\JetBrains\\PyCharm 2024.3.1.1\\bin;C:\\Users\\xiaolong\\AppData\\Local\\Microsoft\\WinGet\\Packages\\Schniz.fnm_Microsoft.Winget.Source_8wekyb3d8bbwe;C:\\Users\\xiaolong\\AppData\\Local\\Programs\\Ollama;E:\\Ollama;D:\\Maven\\apache-maven-3.9.9\\bin;D:\\Lens\\resources\\cli\\bin;C:\\Users\\xiaolong\\go\\bin;C:\\Users\\xiaolong\\AppData\\Roaming\\npm;C:\\Users\\xiaolong\\.bun\\bin;C:\\Users\\xiaolong\\AppData\\Local\\Microsoft\\WinGet\\Packages\\GitHub.Copilot_Microsoft.Winget.Source_8wekyb3d8bbwe;C:\\Users\\xiaolong\\go\\bin;C:\\Users\\xiaolong\\.qoder\\bin\\qodercli;C:\\Users\\xiaolong\\AppData\\Local\\cursor-agent;C:\\Users\\xiaolong\\.multica\\bin;C:\\Users\\xiaolong\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin",
+        "CGO_ENABLED": "1",
+        "PANTHEON_TEST_DSN": "root@tcp(127.0.0.1:24406)/closeout_test?charset=utf8mb4&parseTime=True&loc=Local",
+        "PANTHEON_TEST_DSN_REQUIRED": "1",
+        "PANTHEON_TEST_REDIS_ADDR": "127.0.0.1:27479",
+        "PANTHEON_TEST_REDIS_REQUIRED": "1"
+      },
+      "startedAt": "2026-11-06T14:11:14.906Z",
+      "finishedAt": "2026-11-06T14:26:06.573Z",
+      "exitCode": 1,
+      "error": null,
+      "log": "retry3-corrected-race-workspace-cache.log",
+      "sha256": "c64691a4f7b7485b23d85f7dfd7aa6b199c2e79e648342ad2acee56634804543",
+      "testResults": {
+        "pass": 2129,
+        "fail": 0,
+        "skip": 1,
+        "passingPackages": 62,
+        "failingPackages": [
+          "github.com/duanxldragon/pantheon-base/backend/modules/auth/login",
+          "github.com/duanxldragon/pantheon-base/backend/modules/system/i18n"
+        ],
+        "failures": [],
+        "skips": [
+          {
+            "package": "github.com/duanxldragon/pantheon-base/backend/pkg/upload",
+            "test": "TestServiceStoreUsesRealS3WhenConfigured"
+          }
+        ]
+      }
+    },
+    {
+      "name": "corrected-race-final",
+      "executable": "go",
+      "args": [
+        "test",
+        "-timeout=30m",
+        "-buildvcs=false",
+        "-overlay",
+        "D:/workspace/go/pantheon-platform/audit-artifacts/task-closeout-2026-11-06/fixture-overlay.json",
+        "-race",
+        "-json",
+        "-p",
+        "4",
+        "-count=1",
+        "./..."
+      ],
+      "cwd": "D:/workspace/go/pantheon-platform/audit-artifacts/task-closeout-2026-11-06/ops-rebuilt/backend",
+      "environment": {
+        "GOCACHE": "D:/workspace/go/pantheon-platform/audit-artifacts/task-closeout-2026-11-06/go-cache",
+        "PATH": "D:/msys64/mingw64/bin;C:\\Program Files\\PowerShell\\7;C:\\Users\\xiaolong\\.codex\\tmp\\arg0-windows\\codex-arg0uhzLGE;C:\\Users\\xiaolong\\.codex\\packages\\app-server-daemon\\releases\\0.167.0-x86_64-pc-windows-msvc\\codex-path;C:\\Users\\xiaolong\\.codex\\tmp\\arg0-windows\\codex-arg0OmeF5T;D:\\cache\\npm-global\\node_modules\\@openai\\codex\\node_modules\\@openai\\codex-win32-x64\\vendor\\x86_64-pc-windows-msvc\\codex-path;C:\\Program Files\\PowerShell\\7;C:\\Program Files\\Common Files\\Oracle\\Java\\javapath;C:\\Program Files (x86)\\Common Files\\Oracle\\Java\\java8path;C:\\Program Files (x86)\\Common Files\\Oracle\\Java\\javapath;C:\\WINDOWS\\system32;C:\\WINDOWS;C:\\WINDOWS\\System32\\Wbem;C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\;C:\\WINDOWS\\System32\\OpenSSH\\;\";C:\\Program Files\\Java\\jdk1.8.0_241\\bin;C:\\Program Files\\Java\\jdk1.8.0_241\\jre\\bin\";D:\\NetSarang\\Xmanager 7\\;D:\\NetSarang\\Xshell 7\\;D:\\NetSarang\\Xftp 7\\;D:\\NetSarang\\Xlpd 7\\;D:\\Git\\cmd;D:\\Maven\\apache-maven-3.9.9\\bin;D:\\Python\\Python312\\;C:\\Users\\xiaolong;D:\\Go\\bin;D:\\cygwin64\\bin;D:\\MySQL\\mysql\\bin;C:\\Program Files\\CursorModifier;D:\\nodejs\\;C:\\Program Files\\GitHub CLI\\;C:\\Program Files\\PuTTY\\;C:\\Users\\xiaolong\\.qoder-cn\\bin\\qoderclicn;C:\\Program Files\\PowerShell\\7\\;C:\\Users\\xiaolong\\.qoder\\entry;D:\\cache\\npm-global;C:\\Users\\xiaolong\\.grok\\bin;C:\\Users\\xiaolong\\.kimi-code\\bin;C:\\Users\\xiaolong\\AppData\\Local\\trae-cli\\bin;C:\\Program Files (x86)\\Common Files\\Oracle\\Java\\java8path;C:\\Program Files (x86)\\Common Files\\Oracle\\Java\\javapath;C:\\WINDOWS\\system32;C:\\WINDOWS;C:\\WINDOWS\\System32\\Wbem;C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\;C:\\WINDOWS\\System32\\OpenSSH\\;\";C:\\Program Files\\Java\\jdk1.8.0_241\\bin;C:\\Program Files\\Java\\jdk1.8.0_241\\jre\\bin\";D:\\NetSarang\\Xmanager 7\\;D:\\NetSarang\\Xshell 7\\;D:\\NetSarang\\Xftp 7\\;D:\\NetSarang\\Xlpd 7\\;D:\\Git\\cmd;D:\\nodejs\\;C:\\Program Files\\Vagrant\\bin;C:\\Users\\xiaolong\\AppData\\Local\\Programs\\Python\\Launcher\\;C:\\Users\\xiaolong\\AppData\\Local\\Microsoft\\WindowsApps;D:\\JetBrains\\WebStorm 2024.1.3\\bin;D:\\JetBrains\\IntelliJ IDEA 2024.2.3\\bin;D:\\Bandizip\\;D:\\Microsoft VS Code\\bin;D:\\JetBrains\\PyCharm 2024.3.1.1\\bin;C:\\Users\\xiaolong\\AppData\\Local\\Microsoft\\WinGet\\Packages\\Schniz.fnm_Microsoft.Winget.Source_8wekyb3d8bbwe;C:\\Users\\xiaolong\\AppData\\Local\\Programs\\Ollama;E:\\Ollama;D:\\Maven\\apache-maven-3.9.9\\bin;D:\\Lens\\resources\\cli\\bin;C:\\Users\\xiaolong\\go\\bin;C:\\Users\\xiaolong\\AppData\\Roaming\\npm;C:\\Users\\xiaolong\\.bun\\bin;C:\\Users\\xiaolong\\AppData\\Local\\Microsoft\\WinGet\\Packages\\GitHub.Copilot_Microsoft.Winget.Source_8wekyb3d8bbwe;C:\\Users\\xiaolong\\go\\bin;C:\\Users\\xiaolong\\.qoder\\bin\\qodercli;C:\\Users\\xiaolong\\AppData\\Local\\cursor-agent;C:\\Users\\xiaolong\\.multica\\bin;C:\\Users\\xiaolong\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin",
+        "CGO_ENABLED": "1",
+        "PANTHEON_TEST_DSN": "root@tcp(127.0.0.1:24406)/closeout_test?charset=utf8mb4&parseTime=True&loc=Local",
+        "PANTHEON_TEST_DSN_REQUIRED": "1",
+        "PANTHEON_TEST_REDIS_ADDR": "127.0.0.1:27479",
+        "PANTHEON_TEST_REDIS_REQUIRED": "1"
+      },
+      "startedAt": "2026-11-06T14:27:53.278Z",
+      "finishedAt": "2026-11-06T14:38:55.859Z",
+      "exitCode": 0,
+      "error": null,
+      "log": "retry3-corrected-race-final.log",
+      "sha256": "a077542eb355f9593c965323dc49dee1cd083af78977f9f01b2337dd2e82a312",
+      "testResults": {
+        "pass": 2170,
+        "fail": 0,
+        "skip": 1,
+        "passingPackages": 64,
+        "failingPackages": [],
+        "failures": [],
+        "skips": [
+          {
+            "package": "github.com/duanxldragon/pantheon-base/backend/pkg/upload",
+            "test": "TestServiceStoreUsesRealS3WhenConfigured"
+          }
+        ]
+      }
+    }
+  ],
+  "fixtureOverlay": {
+    "path": "D:/workspace/go/pantheon-platform/audit-artifacts/task-closeout-2026-11-06/fixture-overlay.json",
+    "replace": {
+      "original": "D:/workspace/go/pantheon-platform/audit-artifacts/task-closeout-2026-11-06/ops-rebuilt/backend/modules/lowcode/dynamicmodule/dynamic_module_service_test.go",
+      "replacement": "D:/workspace/go/pantheon-platform/pantheon-base/backend/modules/lowcode/dynamicmodule/dynamic_module_service_test.go"
+    },
+    "originalSha256": "be8cf2a0071d497d29338142aaa968f91a76db799c5bda9c0a3e971bc6976d36",
+    "replacementSha256": "5f06a01f0d1b14ffe42d2d7bba8e2d7e8ade50923a133fe26bbdd5dc3894f605",
+    "scope": "Only corrected test source is overlaid; production source and official consumer bytes are not copied or modified. Deferred test-only downstream synchronization requires explicit review."
+  },
+  "repository": "pantheon-ops",
+  "sourceManifest": "retry3-source-manifest.json",
+  "race": {
+    "tests": {
+      "pass": 2170,
+      "fail": 0,
+      "skip": 1
+    },
+    "skips": [
+      {
+        "Time": "2026-11-06T22:38:01.8462791+08:00",
+        "Action": "skip",
+        "Package": "github.com/duanxldragon/pantheon-base/backend/pkg/upload",
+        "Test": "TestServiceStoreUsesRealS3WhenConfigured",
+        "Elapsed": 0
+      }
+    ],
+    "packages": 64
+  },
+  "latestCommand": "corrected-race-final",
+  "latestExitCode": 0,
+  "latestResults": {
+    "pass": 2170,
+    "fail": 0,
+    "skip": 1,
+    "passingPackages": 64,
+    "failingPackages": [],
+    "failures": [],
+    "skips": [
+      {
+        "package": "github.com/duanxldragon/pantheon-base/backend/pkg/upload",
+        "test": "TestServiceStoreUsesRealS3WhenConfigured"
+      }
+    ]
+  }
+}

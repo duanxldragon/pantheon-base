@@ -1,0 +1,8 @@
+{
+  "command": "node scripts/check-pr-governance.mjs --event D:/workspace/go/pantheon-platform/audit-artifacts/task-closeout-2026-11-06/pr-event.json",
+  "cwd": "D:/workspace/go/pantheon-platform/pantheon-base",
+  "exitCode": 0,
+  "log": "retry3-pr-body-check.log",
+  "sha256": "96fe6de34981a9cc01f9091d5ed5b260650b02b754b1728322d3f6d6af4915c0",
+  "bodySha256": "ea53ebad707292c746bb99571e40a2a8f19be3bd3cc67d47721932c8259cd1f5"
+}

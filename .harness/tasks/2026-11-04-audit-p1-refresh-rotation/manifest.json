@@ -4,7 +4,7 @@
   "title": "刷新令牌并发与存储故障验证及最小修复",
   "goal": "刷新令牌并发与存储故障验证及最小修复",
   "primaryLayer": "system/auth",
-  "status": "in-progress",
+  "status": "completed",
   "priority": "P1",
   "type": "security-remediation",
   "findings": [
@@ -89,7 +89,7 @@
     ]
   },
   "runtimeSensitive": true,
-  "runtimeGap": "Controlled local tests/builds collected; live external integration, browser smoke and release validation remain unverified.",
+  "runtimeGap": "Current full Base verification and fresh independent CODE/ARCH acceptance pending. Official consumer stock-race fixture failure preserved; separate test-overlay2170/0/1 passed. S3 unverified, no waiver. QA-001 attribution missing, QA-002 Ops fresh deploy schema, FIXTURE-SYNC-001 official test-only downstream sync deferred.",
   "acceptanceCriteria": [
     "先隔离验证同一旧refresh并发、跨实例和存储失败；记录实际结果，不将静态疑点直接当漏洞",
     "确认后补原子消费/轮换最小实现；同一旧token最多一次签发成功，失败不可继续成功响应",
@@ -117,7 +117,25 @@
       "docs/reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-11-04_FULL.md"
     ]
   },
-  "implementationStatus": "applied",
-  "reviewStatus": "blocked",
-  "verificationStatus": "passed"
+  "implementationStatus": "delivered",
+  "reviewStatus": "approved",
+  "verificationStatus": "passed-with-documented-gaps",
+  "closeout": {
+    "recordedAt": "2026-11-07T02:36:54.351Z",
+    "deliveryStatus": "evidence-reconciled",
+    "status": "closed-after-independent-approval",
+    "matrix": ".harness/evidence/2026-11-05-base-freeze-release/closeout-matrix.json",
+    "residualRegister": ".harness/evidence/2026-11-05-base-freeze-release/closeout-residuals.json",
+    "reviewAvailability": ".harness/evidence/2026-11-05-base-freeze-release/closeout-review-availability.json",
+    "priorState": {
+      "status": "in-progress",
+      "implementationStatus": "applied",
+      "reviewStatus": "blocked",
+      "verificationStatus": "passed",
+      "runtimeGap": "Controlled local tests/builds collected; live external integration, browser smoke and release validation remain unverified."
+    },
+    "note": "2026-11-07: original task scope independently approved by CODE APPROVE / ARCH CLEAR on the exact seven-task plan. Current Base1890/0/1, 47 packages, FE218 and immutable Full Smoke/Release Gate passed. Official v0.18.5 published/acquired/rebuilt; remaining five consumer/programme tasks stay open. S3 remains unverified without waiver; maintenance freeze unsigned; CI optimization remains a decision/measurement follow-up.",
+    "historicalNote": "Original MySQL/Redis concurrency and storage-failure regressions plus later full race and Tenant V1/runtime evidence; no new auth change.",
+    "currentReview": ".harness/evidence/2026-11-05-base-freeze-release/resume9-seven-task-applied.json"
+  }
 }

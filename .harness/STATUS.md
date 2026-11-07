@@ -1,10 +1,31 @@
+# Current inventory (2026-11-07)
+
+250 manifests:245 completed /5 in-progress. Seven original scopes closed under independent CODE/ARCH approval; five consumer/programme tasks remain open. Original40 criteria retained. Official185 publication complete; full consumer validation/CI closeout still running. Freeze unsigned/S3 unwaived. Evidence: .harness/evidence/2026-11-05-base-freeze-release/resume9-seven-task-applied.json.
+
+## Historical inventory (preserved)
+
 # Pantheon Base - Harness 任务状态
 
 **最后更新**: 2026-11-06
-**当前候选**: 无。v0.18.4 已发布：GitHub release `pantheon-base-v0.18.4`（Latest）指向 main `0a8229c6`（PR #494 squash 合并），四个正式资产校验通过。
-**当前授权**: 完成功能收尾与发行消费，纳入 PR485、修复 minimatch #52；Ops 从 GitHub 官方 release 获取最新稳定版。生产操作、门禁放宽与 solo-override 未授权。
+**已交付版本**: `pantheon-base-v0.18.4`，commit `0a8229c67ab482c2e163622fc4e5b87301c53399`；四个正式资产校验通过。
+**下游消费**: Ops PR #171 已合并，根 `foundation-release.lock.json` 钉定同一 release/commit/摘要。
+**任务闭环**: 250 个 manifest，238 completed、12 in-progress；这 12 个的交付证据已对齐，独立 CODE/ARCH 已返回 REQUEST CHANGES/BLOCK，证据修复与夹具验证后等待复审，尚未批准关闭。
 
-## 2026-11-06 安全补丁与 GitHub 消费（当前执行）
+## 2026-11-06 十二任务闭环核对（当前）
+
+- [逐项验收、证据与关闭步骤](./evidence/2026-11-05-base-freeze-release/closeout.md)；原审计基线、历史失败、skip 数和源文件评审范围保留。
+- Base PR #494 已合并；minimatch 11.0.1 修复 Dependabot #52；正式 release 的 Full Smoke、Release Gate 与资产校验有记录。
+- 官方v0.18.4发布和Ops PR171合并/根锁已确认。消费重建828、共享漂移、迁移32/dirty=false、前端218单测、消费脚本57回归、4套生成模块浏览器烟测通过。原消费完整race2168通过/1共享夹具失败/1S3 skip；明确测试文件overlay后的完整验证2170通过/0失败/1S3 skip，不能视为原版发行测试全部通过。Base直接完整race仍待成功结果；此前1次建库TCP连接失败保留，完整重跑中。 当前双路独立批准待完成。
+- PB-010 既有失败已分类并在 Ops 修复/合并；host 回填最终装配为业务 000032，Base 000031 不变。observability 网络策略仍单独待维护者裁定。
+- PB-009 已作保留 coverage/race 和延期优化的裁定，优化本身不在本轮实现范围。
+- [未获豁免的残余事项](./evidence/2026-11-05-base-freeze-release/closeout-residuals.json)：真实 S3 provider 的 1 skip、未签维护冻结、observability 策略、CI 优化、5 moderate 依赖及 23 zizmor 既有基线、生产迁移与旧认证退役。
+- [当前审查阻断](./evidence/2026-11-05-base-freeze-release/closeout-review-availability.json)：原生角色503保留历史；配置默认CLI双路独立审查已返回真实发现，正在修复后复审。没有作者自审或 solo-override。
+
+## 2026-11-04/06 历史执行记录
+
+以下旧待办按当时事实保留；当前状态以本页上节及 closeout 记录为准。
+
+## 2026-11-06 安全补丁与 GitHub 消费（历史执行）
 
 - v0.18.3 发布器 exit0，报告四资产上传完成；独立再次查询历史会话受网络限制阻断。
 - 2026-11-06 网络恢复：minimatch override 安装成功并落入 package-lock，全部实例统一至 11.0.1；GHSA-g3hv-75wg-m249 消除，audit --audit-level=high 通过，前端 build 通过，218 单测通过，docs frontmatter 通过。详见 [v0184 验证证据](./evidence/2026-11-05-base-freeze-release/2026-11-06-v0184-security-validation.json)。
@@ -15,7 +36,7 @@
 
 以下是历史执行读数，不可代替当前候选验收。
 
-## 2026-11-04 FULL 审计整改（当前执行）
+## 2026-11-04 FULL 审计整改（历史执行）
 
 - 用户已授权按优先级修改；1父任务 + 原9整改子任务 + 1新增P2后续任务：[主计划](./tasks/2026-11-04-global-audit-remediation/plan.md)，[证据汇总](./evidence/2026-11-04-global-audit-remediation/summary.md)。
 - P1已实施：PB-001解析核查IP后直接拨号；PB-002保留npm扫描非零退出；PB-003 GETDEL单次消费及会话条件更新。认证完整包278 tests/0 skip通过；SSRF和npm行为回归通过。

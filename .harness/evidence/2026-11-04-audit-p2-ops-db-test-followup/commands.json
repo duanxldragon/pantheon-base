@@ -85,14 +85,16 @@
     }
   ],
   "knownGaps": [
-    "8 个测试侧用例与 host state_version 业务缺口均已修复并通过真实 DB 全业务套件（278/0/0）。",
-    "存量 state_version=0 行的回填已在迁移链 000031 提供并有端到端回归；尚未对长期环境执行迁移。",
-    "observability 端口/私网允许范围仍为维护者策略裁定项。",
-    "Independent reviewer service503；尚无批准",
-    "Ops main worktree、锁与业务实现未改动；修复未 push、未发布"
+    "Fresh current CODE/ARCH acceptance pending; previous actual REQUEST CHANGES/BLOCK preserved.",
+    "Real S3 provider integration: 1 recorded skip, no waiver; provisioned provider still required.",
+    "Maintenance freeze declaration remains unsigned by maintainer; no agent signature.",
+    "Observability allowed-port/private-network policy remains a separate Ops maintainer decision; security checks unchanged.",
+    "CI optimization deferred until measured duration/value; PB009 retain/defer decision documented.",
+    "5 moderate glob-chain dependency residuals and existing 23 zizmor baseline findings not removed by this closeout.",
+    "Production migration/drop and 2026-12-31 legacy-auth decommission remain separate explicitly authorized maintainer operations."
   ],
   "runtimeSensitive": true,
-  "runtimeGap": "真实隔离 MySQL 下全业务套件 278 通过 / 0 失败 / 0 跳过；仅剩 observability 端口策略裁定与发布/评审动作未完成。",
+  "runtimeGap": "Delivered immutable v0.18.4 and Ops PR171 verified by saved release/consumer evidence. Real S3 provider integration retains 1 skip and no waiver. Maintenance freeze/observability policy/production operations remain separate maintainer actions. Task closure awaits independent review.",
   "runtimeLogs": [
     "../audit-artifacts/base-global-remediation-2026-11-04/consumer-go-business.jsonl",
     "../audit-artifacts/base-global-remediation-2026-11-04/ops-control-regressions.jsonl",
@@ -109,5 +111,27 @@
     "planRefs": [
       ".harness/tasks/2026-11-04-global-audit-remediation/plan.md"
     ]
+  },
+  "historicalKnownGaps": [
+    "8 个测试侧用例与 host state_version 业务缺口均已修复并通过真实 DB 全业务套件（278/0/0）。",
+    "存量 state_version=0 行的回填已在迁移链 000031 提供并有端到端回归；尚未对长期环境执行迁移。",
+    "observability 端口/私网允许范围仍为维护者策略裁定项。",
+    "Independent reviewer service503；尚无批准",
+    "Ops main worktree、锁与业务实现未改动；修复未 push、未发布"
+  ],
+  "closeout": {
+    "recordedAt": "2026-11-06T12:36:05.510Z",
+    "matrix": ".harness/evidence/2026-11-05-base-freeze-release/closeout-matrix.json",
+    "residualRegister": ".harness/evidence/2026-11-05-base-freeze-release/closeout-residuals.json",
+    "reviewAvailability": ".harness/evidence/2026-11-05-base-freeze-release/closeout-review-availability.json",
+    "verification": ".harness/evidence/2026-11-05-base-freeze-release/closeout-validation.json",
+    "notes": "Historical commands and exit codes remain unchanged. Original implementation tests were not rerun for docs-only reconciliation."
+  },
+  "closeoutEvidence": {
+    "matrix": ".harness/evidence/2026-11-05-base-freeze-release/closeout-matrix.json",
+    "sourceManifest": ".harness/evidence/2026-11-05-base-freeze-release/retry3-source-manifest.json",
+    "stockRace": ".harness/evidence/2026-11-05-base-freeze-release/retry3-consumer-race.json",
+    "correctedOverlay": ".harness/evidence/2026-11-05-base-freeze-release/retry3-consumer-corrected-race.json",
+    "baseDirect": ".harness/evidence/2026-11-05-base-freeze-release/retry3-consumer-base-race.json"
   }
 }

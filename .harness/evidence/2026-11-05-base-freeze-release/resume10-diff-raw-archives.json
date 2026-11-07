@@ -1,0 +1,24 @@
+{
+  "recordedAt": "2026-11-07T02:54:50.022Z",
+  "reason": "Preserve exact historical evidence bytes as compressed raw records, consistent with prior raw log archives. No security rules, exclusions or test/source changes.",
+  "files": [
+    {
+      "path": ".harness/evidence/2026-11-05-base-freeze-release/resume7-emitted-go.mod-reconciliation.diff",
+      "archive": ".harness/evidence/2026-11-05-base-freeze-release/resume7-emitted-go.mod-reconciliation.diff.gz",
+      "rawSha256": "1643220311a210e1898296359dfc4868751902b3641642242d42818897b87358",
+      "rawBytes": 3599
+    },
+    {
+      "path": ".harness/evidence/2026-11-05-base-freeze-release/resume7-emitted-go.sum-reconciliation.diff",
+      "archive": ".harness/evidence/2026-11-05-base-freeze-release/resume7-emitted-go.sum-reconciliation.diff.gz",
+      "rawSha256": "62f0a5f11c38f6268d84d200ff89de82f38dad15068d27fbc4b7420d8a15906f",
+      "rawBytes": 18691
+    },
+    {
+      "path": ".harness/evidence/2026-11-05-base-freeze-release/retry3-tested-module-reconciliation.diff",
+      "archive": ".harness/evidence/2026-11-05-base-freeze-release/retry3-tested-module-reconciliation.diff.gz",
+      "rawSha256": "7c30f8d74196f1d4fb8849887747af80b85b5a8bcbe1004cfd8fff70b277772f",
+      "rawBytes": 11841
+    }
+  ]
+}

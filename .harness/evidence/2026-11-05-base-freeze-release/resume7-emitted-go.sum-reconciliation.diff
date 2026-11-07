@@ -1,0 +1,4 @@
+Historical raw diff archived without byte changes.
+Archive: resume7-emitted-go.sum-reconciliation.diff.gz
+Original SHA256: 62f0a5f11c38f6268d84d200ff89de82f38dad15068d27fbc4b7420d8a15906f
+Reason: public Go checksum evidence matched generic secret heuristics; no credential and no scanner rule change.

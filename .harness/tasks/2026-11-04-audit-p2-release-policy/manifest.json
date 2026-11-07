@@ -4,7 +4,7 @@
   "title": "说明风险优先与现行 Sonar 发布门禁的权威边界",
   "goal": "说明风险优先与现行 Sonar 发布门禁的权威边界",
   "primaryLayer": "platform",
-  "status": "in-progress",
+  "status": "completed",
   "priority": "P2",
   "type": "audit-remediation",
   "findings": [
@@ -80,7 +80,7 @@
     "runtimeEvidence": []
   },
   "runtimeSensitive": false,
-  "runtimeGap": "No runtime behaviour changed; bounded documentation/policy review only.",
+  "runtimeGap": "Current full Base verification and fresh independent CODE/ARCH acceptance pending. Official consumer stock-race fixture failure preserved; separate test-overlay2170/0/1 passed. S3 unverified, no waiver. QA-001 attribution missing, QA-002 Ops fresh deploy schema, FIXTURE-SYNC-001 official test-only downstream sync deferred.",
   "acceptanceCriteria": [
     "文档明确当前release-gate强制Sonar全BUG/VULNERABILITY/CODE_SMELL清零为发布例外",
     "风险优先用于整改投入，不能由Agent解释为绕开已有门禁",
@@ -108,7 +108,25 @@
       "docs/reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-11-04_FULL.md"
     ]
   },
-  "implementationStatus": "applied",
-  "reviewStatus": "blocked",
-  "verificationStatus": "passed"
+  "implementationStatus": "delivered",
+  "reviewStatus": "approved",
+  "verificationStatus": "passed-with-documented-gaps",
+  "closeout": {
+    "recordedAt": "2026-11-07T02:36:54.354Z",
+    "deliveryStatus": "evidence-reconciled",
+    "status": "closed-after-independent-approval",
+    "matrix": ".harness/evidence/2026-11-05-base-freeze-release/closeout-matrix.json",
+    "residualRegister": ".harness/evidence/2026-11-05-base-freeze-release/closeout-residuals.json",
+    "reviewAvailability": ".harness/evidence/2026-11-05-base-freeze-release/closeout-review-availability.json",
+    "priorState": {
+      "status": "in-progress",
+      "implementationStatus": "applied",
+      "reviewStatus": "blocked",
+      "verificationStatus": "passed",
+      "runtimeGap": "No runtime behaviour changed; bounded documentation/policy review only."
+    },
+    "note": "2026-11-07: original task scope independently approved by CODE APPROVE / ARCH CLEAR on the exact seven-task plan. Current Base1890/0/1, 47 packages, FE218 and immutable Full Smoke/Release Gate passed. Official v0.18.5 published/acquired/rebuilt; remaining five consumer/programme tasks stay open. S3 remains unverified without waiver; maintenance freeze unsigned; CI optimization remains a decision/measurement follow-up.",
+    "historicalNote": "Sonar zero-open release exception documented without reducing thresholds; actual release gate succeeded.",
+    "currentReview": ".harness/evidence/2026-11-05-base-freeze-release/resume9-seven-task-applied.json"
+  }
 }

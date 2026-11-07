@@ -1,0 +1,258 @@
+{
+  "mergeCommit": {
+    "oid": "7ed1521a37f5a7379693f7faa1bed0eae409249e"
+  },
+  "mergedAt": "2026-11-06T06:48:09Z",
+  "number": 171,
+  "state": "MERGED",
+  "statusCheckRollup": [
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-11-06T06:34:03Z",
+      "conclusion": "SKIPPED",
+      "detailsUrl": "https://github.com/duanxldragon/pantheon-ops/actions/runs/42175246034/job/127752098232",
+      "name": "Dependency Vulnerabilities",
+      "startedAt": "2026-11-06T06:34:03Z",
+      "status": "COMPLETED",
+      "workflowName": "Security Gates"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-11-06T06:35:03Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/duanxldragon/pantheon-ops/actions/runs/42175245907/job/127752393925",
+      "name": "Change Scope",
+      "startedAt": "2026-11-06T06:34:57Z",
+      "status": "COMPLETED",
+      "workflowName": "Code Quality Gates"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-11-06T06:34:13Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/duanxldragon/pantheon-ops/actions/runs/42175245962/job/127752096732",
+      "name": "PR Governance Prereq",
+      "startedAt": "2026-11-06T06:34:05Z",
+      "status": "COMPLETED",
+      "workflowName": "Pull Request Automation"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-11-06T06:34:17Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/duanxldragon/pantheon-ops/actions/runs/42175250624/job/127752111761",
+      "name": "PR Governance Prereq",
+      "startedAt": "2026-11-06T06:34:08Z",
+      "status": "COMPLETED",
+      "workflowName": "Pull Request Automation"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-11-06T06:35:40Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/duanxldragon/pantheon-ops/actions/runs/42175245986/job/127752096630",
+      "name": "SonarCloud Scan",
+      "startedAt": "2026-11-06T06:34:05Z",
+      "status": "COMPLETED",
+      "workflowName": "SonarCloud Scan"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-11-06T06:37:34Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/duanxldragon/pantheon-ops/actions/runs/42175245907/job/127752393923",
+      "name": "Backend Tests",
+      "startedAt": "2026-11-06T06:34:57Z",
+      "status": "COMPLETED",
+      "workflowName": "Code Quality Gates"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-11-06T06:34:18Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/duanxldragon/pantheon-ops/actions/runs/42175245962/job/127752097063",
+      "name": "GitHub Feedback Prereq",
+      "startedAt": "2026-11-06T06:34:05Z",
+      "status": "COMPLETED",
+      "workflowName": "Pull Request Automation"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-11-06T06:34:21Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/duanxldragon/pantheon-ops/actions/runs/42175250624/job/127752111305",
+      "name": "GitHub Feedback Prereq",
+      "startedAt": "2026-11-06T06:34:08Z",
+      "status": "COMPLETED",
+      "workflowName": "Pull Request Automation"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-11-06T06:34:42Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/duanxldragon/pantheon-ops/actions/runs/42175246034/job/127752097347",
+      "name": "Secret Scan",
+      "startedAt": "2026-11-06T06:34:05Z",
+      "status": "COMPLETED",
+      "workflowName": "Security Gates"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-11-06T06:38:36Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/duanxldragon/pantheon-ops/actions/runs/42175245907/job/127752393714",
+      "name": "Go Lint",
+      "startedAt": "2026-11-06T06:34:57Z",
+      "status": "COMPLETED",
+      "workflowName": "Code Quality Gates"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-11-06T06:34:25Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/duanxldragon/pantheon-ops/actions/runs/42175245962/job/127752183490",
+      "name": "Automate Solo PR",
+      "startedAt": "2026-11-06T06:34:20Z",
+      "status": "COMPLETED",
+      "workflowName": "Pull Request Automation"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-11-06T06:34:28Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/duanxldragon/pantheon-ops/actions/runs/42175250624/job/127752199412",
+      "name": "Automate Solo PR",
+      "startedAt": "2026-11-06T06:34:23Z",
+      "status": "COMPLETED",
+      "workflowName": "Pull Request Automation"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-11-06T06:34:16Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/duanxldragon/pantheon-ops/actions/runs/42175246034/job/127752097192",
+      "name": "Workflow Posture",
+      "startedAt": "2026-11-06T06:34:05Z",
+      "status": "COMPLETED",
+      "workflowName": "Security Gates"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-11-06T06:35:09Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/duanxldragon/pantheon-ops/actions/runs/42175245907/job/127752393873",
+      "name": "Duplication Gate",
+      "startedAt": "2026-11-06T06:34:57Z",
+      "status": "COMPLETED",
+      "workflowName": "Code Quality Gates"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-11-06T06:37:14Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/duanxldragon/pantheon-ops/actions/runs/42175246034/job/127752097033",
+      "name": "CodeQL Security Scan",
+      "startedAt": "2026-11-06T06:34:05Z",
+      "status": "COMPLETED",
+      "workflowName": "Security Gates"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-11-06T06:35:35Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/duanxldragon/pantheon-ops/actions/runs/42175245907/job/127752441649",
+      "name": "Docs Governance",
+      "startedAt": "2026-11-06T06:35:05Z",
+      "status": "COMPLETED",
+      "workflowName": "Code Quality Gates"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-11-06T06:37:27Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/duanxldragon/pantheon-ops/actions/runs/42175246034/job/127753182459",
+      "name": "CodeQL Alert Gate",
+      "startedAt": "2026-11-06T06:37:16Z",
+      "status": "COMPLETED",
+      "workflowName": "Security Gates"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-11-06T06:35:43Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/duanxldragon/pantheon-ops/actions/runs/42175245907/job/127752441633",
+      "name": "Frontend Contract",
+      "startedAt": "2026-11-06T06:35:05Z",
+      "status": "COMPLETED",
+      "workflowName": "Code Quality Gates"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-11-06T06:37:34Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/duanxldragon/pantheon-ops/actions/runs/42175246034/job/127753255496",
+      "name": "Security Gates",
+      "startedAt": "2026-11-06T06:37:30Z",
+      "status": "COMPLETED",
+      "workflowName": "Security Gates"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-11-06T06:47:36Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/duanxldragon/pantheon-ops/actions/runs/42175245907/job/127752441584",
+      "name": "Smoke Sanity",
+      "startedAt": "2026-11-06T06:35:05Z",
+      "status": "COMPLETED",
+      "workflowName": "Code Quality Gates"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-11-06T06:47:41Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/duanxldragon/pantheon-ops/actions/runs/42175245907/job/127756663329",
+      "name": "Quality Gates",
+      "startedAt": "2026-11-06T06:47:38Z",
+      "status": "COMPLETED",
+      "workflowName": "Code Quality Gates"
+    },
+    {
+      "__typename": "StatusContext",
+      "context": "Vercel",
+      "startedAt": "2026-11-06T06:34:04Z",
+      "state": "FAILURE",
+      "targetUrl": "https://vercel.com/duanxiaolongs-projects-6795928c/pantheon-ops/79eruJLX8ZStZm3MgJdffw1EfUMJ"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-11-06T06:37:06Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/duanxldragon/pantheon-ops/runs/127753121527",
+      "name": "CodeQL",
+      "startedAt": "2026-11-06T06:37:03Z",
+      "status": "COMPLETED",
+      "workflowName": ""
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-11-06T06:35:37Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://sonarcloud.io/dashboard?id=duanxldragon_pantheon-ops&pullRequest=171",
+      "name": "SonarCloud Code Analysis",
+      "startedAt": "2026-11-06T06:34:24Z",
+      "status": "COMPLETED",
+      "workflowName": ""
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-11-06T06:34:05Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://vercel.com/github",
+      "name": "Vercel Preview Comments",
+      "startedAt": "2026-11-06T06:34:05Z",
+      "status": "COMPLETED",
+      "workflowName": ""
+    }
+  ],
+  "url": "https://github.com/duanxldragon/pantheon-ops/pull/171"
+}

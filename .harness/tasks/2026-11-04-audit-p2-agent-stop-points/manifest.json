@@ -4,7 +4,7 @@
   "title": "统一 Agent 授权与维护者三触点",
   "goal": "统一 Agent 授权与维护者三触点",
   "primaryLayer": "platform",
-  "status": "in-progress",
+  "status": "completed",
   "priority": "P2",
   "type": "audit-remediation",
   "findings": [
@@ -81,7 +81,7 @@
     "runtimeEvidence": []
   },
   "runtimeSensitive": false,
-  "runtimeGap": "No runtime behaviour changed; bounded documentation/policy review only.",
+  "runtimeGap": "Current full Base verification and fresh independent CODE/ARCH acceptance pending. Official consumer stock-race fixture failure preserved; separate test-overlay2170/0/1 passed. S3 unverified, no waiver. QA-001 attribution missing, QA-002 Ops fresh deploy schema, FIXTURE-SYNC-001 official test-only downstream sync deferred.",
   "acceptanceCriteria": [
     "已授权安全可逆工作自主推进，不再仅因涉及auth/schema/menu一律中途询问",
     "需求澄清/门禁策略/最终验收三触点明确；真实生产/破坏/凭证操作保留限制",
@@ -109,7 +109,25 @@
       "docs/reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-11-04_FULL.md"
     ]
   },
-  "implementationStatus": "applied",
-  "reviewStatus": "blocked",
-  "verificationStatus": "passed"
+  "implementationStatus": "delivered",
+  "reviewStatus": "approved",
+  "verificationStatus": "passed-with-documented-gaps",
+  "closeout": {
+    "recordedAt": "2026-11-07T02:36:54.352Z",
+    "deliveryStatus": "evidence-reconciled",
+    "status": "closed-after-independent-approval",
+    "matrix": ".harness/evidence/2026-11-05-base-freeze-release/closeout-matrix.json",
+    "residualRegister": ".harness/evidence/2026-11-05-base-freeze-release/closeout-residuals.json",
+    "reviewAvailability": ".harness/evidence/2026-11-05-base-freeze-release/closeout-review-availability.json",
+    "priorState": {
+      "status": "in-progress",
+      "implementationStatus": "applied",
+      "reviewStatus": "blocked",
+      "verificationStatus": "passed",
+      "runtimeGap": "No runtime behaviour changed; bounded documentation/policy review only."
+    },
+    "note": "2026-11-07: original task scope independently approved by CODE APPROVE / ARCH CLEAR on the exact seven-task plan. Current Base1890/0/1, 47 packages, FE218 and immutable Full Smoke/Release Gate passed. Official v0.18.5 published/acquired/rebuilt; remaining five consumer/programme tasks stay open. S3 remains unverified without waiver; maintenance freeze unsigned; CI optimization remains a decision/measurement follow-up.",
+    "historicalNote": "Chinese/English workflow documents implement three maintainer touchpoints; production/gate-change limits retained.",
+    "currentReview": ".harness/evidence/2026-11-05-base-freeze-release/resume9-seven-task-applied.json"
+  }
 }

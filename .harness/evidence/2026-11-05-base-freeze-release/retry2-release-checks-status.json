@@ -1,0 +1,5 @@
+{
+  "command": "gh api release-commit check-runs",
+  "exitCode": 0,
+  "finishedAt": "2026-11-06T13:01:02.3973797Z"
+}

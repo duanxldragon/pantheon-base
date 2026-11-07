@@ -1,0 +1,54 @@
+{
+  "recordedAt": "2026-11-06T14:01:01.688Z",
+  "sourceCommit": "1b4f0b344923a4964d932c51a7eb601195332714",
+  "scratch": "D:/workspace/go/pantheon-platform/audit-artifacts/task-closeout-2026-11-06",
+  "target": "D:/workspace/go/pantheon-platform/audit-artifacts/task-closeout-2026-11-06/ops-rebuilt",
+  "commands": [
+    {
+      "name": "focused",
+      "executable": "go",
+      "args": [
+        "test",
+        "-buildvcs=false",
+        "-overlay",
+        "D:/workspace/go/pantheon-platform/audit-artifacts/task-closeout-2026-11-06/fixture-overlay.json",
+        "-race",
+        "-json",
+        "-p",
+        "4",
+        "-count=1",
+        "./modules/lowcode/dynamicmodule",
+        "-run",
+        "TestPurgeModule(AllowsBusinessStaticModuleWithoutTable|PreservesExternallyReferencedI18n)$"
+      ],
+      "cwd": "D:/workspace/go/pantheon-platform/audit-artifacts/task-closeout-2026-11-06/ops-rebuilt/backend",
+      "startedAt": "2026-11-06T14:01:01.714Z",
+      "finishedAt": "2026-11-06T14:01:10.667Z",
+      "exitCode": 0,
+      "error": null,
+      "log": "retry3-focused.log",
+      "sha256": "9a5587f90dee24fdfe673557ec80ddf23899799057856ba72c73e69d0bbe78e2"
+    }
+  ],
+  "fixtureOverlay": {
+    "path": "D:/workspace/go/pantheon-platform/audit-artifacts/task-closeout-2026-11-06/fixture-overlay.json",
+    "replace": {
+      "original": "D:/workspace/go/pantheon-platform/audit-artifacts/task-closeout-2026-11-06/ops-rebuilt/backend/modules/lowcode/dynamicmodule/dynamic_module_service_test.go",
+      "replacement": "D:/workspace/go/pantheon-platform/pantheon-base/backend/modules/lowcode/dynamicmodule/dynamic_module_service_test.go"
+    },
+    "originalSha256": "be8cf2a0071d497d29338142aaa968f91a76db799c5bda9c0a3e971bc6976d36",
+    "replacementSha256": "5f06a01f0d1b14ffe42d2d7bba8e2d7e8ade50923a133fe26bbdd5dc3894f605",
+    "scope": "Only corrected test source is overlaid; production source and official consumer bytes are not copied or modified. Deferred test-only downstream synchronization requires explicit review."
+  },
+  "race": {
+    "tests": {
+      "pass": 2,
+      "fail": 0,
+      "skip": 0
+    },
+    "skips": [],
+    "packages": 1
+  },
+  "repository": "pantheon-ops",
+  "sourceManifest": "retry3-source-manifest.json"
+}
