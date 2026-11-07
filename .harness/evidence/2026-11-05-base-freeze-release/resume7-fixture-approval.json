@@ -1,0 +1,25 @@
+{
+  "recordedAt": "2026-11-07T00:56:17.070Z",
+  "approvalScope": "bounded-v0185-fixture-patch-only",
+  "snapshotSha256": "d3f5c3d688dcbfb3fe5a1c68c7dc3aacc5e4c44dde4c0ec4d28d82a705fd9235",
+  "reviews": [
+    {
+      "lane": "code-reviewer",
+      "file": "retry5-fixture-code-reviewer.md",
+      "sha256": "fd9d3a69859107761e131b66022ea8a5d6998d7ba1a241a3d18b75828bc8d736",
+      "verdict": "APPROVE",
+      "approvalScope": "bounded-v0185-fixture-patch-only"
+    },
+    {
+      "lane": "architect",
+      "file": "retry5-fixture-architect.md",
+      "sha256": "8ea1d34d5b04eec6b29583d9ee19a1118b28473a16d017d67c77fa4c71e227cb",
+      "verdict": "APPROVE",
+      "approvalScope": "bounded-v0185-fixture-patch-only"
+    }
+  ],
+  "original12TaskClosureApproved": false,
+  "publicationGate": "Actual current-branch CI, merge and immutable Release Gate required",
+  "freezeSigned": false,
+  "waiversGranted": []
+}

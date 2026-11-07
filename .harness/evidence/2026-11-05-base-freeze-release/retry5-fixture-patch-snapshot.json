@@ -1,0 +1,37 @@
+{
+  "recordedAt": "2026-11-06T15:43:01.847Z",
+  "branch": "fix/v0185-fixture-closed-loop",
+  "baseline": "c543a033ad986e14f4b42130481549b7adcb5029",
+  "scope": "Corrective foundation test-only fixture patch and release metadata; original12-task completion explicitly excluded. Backend507 files byte-identical to actual full-race tested root; new immutable hosted commit gates still pending.",
+  "files": [
+    {
+      "path": "VERSION",
+      "sha256": "e3c122270d6e92cef71ca9884b7f0483dc584de61b4155d040a97a97d7a6cdc3"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "sha256": "8368197f6c38ae7c8102cb8450c0eab0e21f85d48cb06c8de9ac71d69722c173"
+    },
+    {
+      "path": "backend/modules/lowcode/dynamicmodule/dynamic_module_service_test.go",
+      "sha256": "5f06a01f0d1b14ffe42d2d7bba8e2d7e8ade50923a133fe26bbdd5dc3894f605"
+    },
+    {
+      "path": "docs/release-notes/RELEASE_NOTES_v0.18.5.md",
+      "sha256": "942b9806dcd55ffaa81e788050e3d01a722c3489dc93642a639a19b6e7a0d74d"
+    },
+    {
+      "path": ".harness/evidence/2026-11-05-base-freeze-release/retry5-fixture-patch-plan.md",
+      "sha256": "4594e20f878cd22da41ac0ce651a38b3fa788bf315247cbd54adecfb1f5f2bee"
+    },
+    {
+      "path": ".harness/evidence/2026-11-05-base-freeze-release/retry5-fixture-source-validation.json",
+      "sha256": "56a3affc5423a6db67cb55f0d7b934afe9d09d09e2a300f65156d44d21c2786c"
+    },
+    {
+      "path": ".harness/evidence/2026-11-05-base-freeze-release/pr-body-v185-fixture.md",
+      "sha256": "b612aa9acb278ddfd0cc44ac17e503039bc3f0ca44df71c3073246f086c717e8"
+    }
+  ],
+  "postReviewPlan": "Only add actual bounded CODE/ARCH report references to parent evidence/current summary/review and PR body; retain parent task in-progress. Source/version/notes unchanged except required formatting. Commit/push via repo wrapper after approval. Publication only after actual merged immutable Release Gate and required checks. Does not apply rejected12-task completion transitions."
+}

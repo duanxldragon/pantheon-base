@@ -1056,6 +1056,7 @@ func TestListRegisteredModulesDoesNotMarkBusinessStaticModuleAsBuiltIn(t *testin
 func TestPurgeModuleAllowsBusinessStaticModuleWithoutTable(t *testing.T) {
 	db := openDynamicModuleTestDB(t)
 	workspaceRoot := prepareDynamicModuleWorkspace(t)
+	t.Setenv("PANTHEON_WORKSPACE_ROOT", workspaceRoot)
 	mustWriteGeneratedRegistryStubs(t, workspaceRoot)
 	mustCreateSystemMenuTable(t, db)
 	mustCreateSystemRolePermissionTable(t, db)
@@ -1105,6 +1106,70 @@ func TestPurgeModuleAllowsBusinessStaticModuleWithoutTable(t *testing.T) {
 	assertDynamicModuleTableCount(t, db.Table("system_menu").Where("module = ?", "business.cmdb"), 0, "menu")
 	assertDynamicModuleI18nModuleRows(t, db, "business.cmdb", 2, i18n.I18nLifecycleStatusObserving)
 	assertDynamicModuleI18nRows(t, db, "system.config", "business.cmdb.host.title", 2, i18n.I18nLifecycleStatusObserving, true)
+}
+
+func TestPurgeModulePreservesExternallyReferencedI18n(t *testing.T) {
+	db := openDynamicModuleTestDB(t)
+	workspaceRoot := prepareDynamicModuleWorkspace(t)
+	t.Setenv("PANTHEON_WORKSPACE_ROOT", workspaceRoot)
+	mustWriteGeneratedRegistryStubs(t, workspaceRoot)
+	mustCreateSystemMenuTable(t, db)
+	mustCreateSystemRolePermissionTable(t, db)
+	mustMigrateSystemI18n(t, db)
+
+	moduleSourcePath := filepath.Join(workspaceRoot, "frontend", "src", "modules", "business", "cmdb", "i18n-proof.tsx")
+	mustWriteFile(t, moduleSourcePath, `export const cmdbI18nProof = ["business.cmdb.title", "business.cmdb.host.title"]`+"\n")
+	externalSourcePath := filepath.Join(workspaceRoot, "frontend", "src", "modules", "business", "asset", "i18n-proof.tsx")
+	mustWriteFile(t, externalSourcePath, `export const cmdbHostI18nProof = "business.cmdb.host.title"`+"\n")
+
+	registration := ModuleRegistration{
+		Name:        "business.cmdb",
+		DisplayName: "CMDB",
+		Scope:       "business",
+		Source:      "static",
+		Status:      ModuleStatusActive,
+		InstalledAt: "2026-05-04T12:29:36+08:00",
+	}
+	if err := db.Create(&registration).Error; err != nil {
+		t.Fatalf("seed registration: %v", err)
+	}
+	if err := db.Exec(`INSERT INTO system_menu (path, type, module) VALUES ('/business/cmdb', 'M', 'business.cmdb')`).Error; err != nil {
+		t.Fatalf("seed menu: %v", err)
+	}
+	i18nService := i18n.NewI18nService(db)
+	if err := i18nService.BatchInsert([]i18n.SystemI18n{
+		{Module: "business.cmdb", Group: "messages", Key: "business.cmdb.title", Locale: "zh-CN", Value: "配置中心"},
+		{Module: "business.cmdb", Group: "messages", Key: "business.cmdb.title", Locale: "en-US", Value: "CMDB"},
+		{Module: "system.config", Group: "messages", Key: "business.cmdb.host.title", Locale: "zh-CN", Value: "主机管理"},
+		{Module: "system.config", Group: "messages", Key: "business.cmdb.host.title", Locale: "en-US", Value: "Host Management"},
+	}); err != nil {
+		t.Fatalf("seed i18n: %v", err)
+	}
+
+	service := &DynamicModuleService{
+		db:            db,
+		workspaceRoot: workspaceRoot,
+	}
+
+	summary, err := service.PurgeModule("business.cmdb", false, true)
+	if err != nil {
+		t.Fatalf("purge business static module: %v", err)
+	}
+	if !summary.Triggered {
+		t.Fatal("expected static module purge to trigger i18n lifecycle governance")
+	}
+	if summary.ObservedRows != 2 {
+		t.Fatalf("expected static module purge to observe only 2 unreferenced rows, got %d", summary.ObservedRows)
+	}
+
+	if _, err := os.Stat(moduleSourcePath); !os.IsNotExist(err) {
+		t.Fatalf("expected purged module source to be removed, got %v", err)
+	}
+	assertFileContains(t, externalSourcePath, "business.cmdb.host.title")
+	assertDynamicModuleTableCount(t, db.Model(&ModuleRegistration{}).Where("name = ?", "business.cmdb"), 0, "registration")
+	assertDynamicModuleTableCount(t, db.Table("system_menu").Where("module = ?", "business.cmdb"), 0, "menu")
+	assertDynamicModuleI18nRows(t, db, "business.cmdb", "business.cmdb.title", 2, i18n.I18nLifecycleStatusObserving, true)
+	assertDynamicModuleI18nRows(t, db, "system.config", "business.cmdb.host.title", 2, i18n.I18nLifecycleStatusActive, false)
 }
 
 func assertDynamicModuleTableCount(t *testing.T, query *gorm.DB, want int64, label string) {

@@ -1,0 +1,84 @@
+{
+  "recordedAt": "2026-11-07T01:06:05.408Z",
+  "format": "gzip preserves original bytes; gunzip and verify originalSha256",
+  "files": [
+    {
+      "originalLog": "resume7-check-checker-wiring.log",
+      "originalSha256": "5bacbbe603de0a7d5109ebd54f6c2c1f547dd59d4f203e846b58c0e2f0455813",
+      "archive": "resume7-check-checker-wiring.log.gz",
+      "archiveSha256": "1471a6897077135f9416f4f01aaaa64cd3915417cb4a1efb58987a1d9dbc909a"
+    },
+    {
+      "originalLog": "resume7-check-docs-frontmatter.log",
+      "originalSha256": "c047f91c3d42b09325833dab83b776a09fc1aca377588a4ee67cda8a9abab6a9",
+      "archive": "resume7-check-docs-frontmatter.log.gz",
+      "archiveSha256": "3af0ab2d4e33f7d57c3244c406d735f486fec97fed879f908010dd14d6dafa23"
+    },
+    {
+      "originalLog": "resume7-check-harness-docs.log",
+      "originalSha256": "aff38ef831fbdaa9304137101838cff74335ea77c6b19a3eb5400fa047a464b6",
+      "archive": "resume7-check-harness-docs.log.gz",
+      "archiveSha256": "7f57681a6b26f1c57043bfba09fffebdb0ac6496069f3f2f60cc62f9fd83762f"
+    },
+    {
+      "originalLog": "resume7-check-harness-encoding.log",
+      "originalSha256": "5145b11fd5062864e5dd511121d9ff375e4173d3674c27f8276fad2b6af8aa16",
+      "archive": "resume7-check-harness-encoding.log.gz",
+      "archiveSha256": "71b392d1930d8d57c0d9413388f1594cd87918df5f5118b4d4776acac1635044"
+    },
+    {
+      "originalLog": "resume7-check-harness-evidence.log",
+      "originalSha256": "dd87e7b8a416410a67c63a67c1d518153447028c80a1181188dba74a5824e7f9",
+      "archive": "resume7-check-harness-evidence.log.gz",
+      "archiveSha256": "3d48bcf9eead0cd3ffb78c410fba92e7d2f1d63052cff996f09930a89786683e"
+    },
+    {
+      "originalLog": "resume7-check-harness-graph-review.log",
+      "originalSha256": "c82b64c56705a30ca300eae47449ae5c424c2d38b28eb7d1d45403790a2d1460",
+      "archive": "resume7-check-harness-graph-review.log.gz",
+      "archiveSha256": "50eaf595007060f5d6bc4cbe8d6d1f3b539cda921527eed3e6d2c4fd2b01d0d0"
+    },
+    {
+      "originalLog": "resume7-check-harness-inventory.log",
+      "originalSha256": "dbf43926f0c41a7c788b9c9cb48f7677e9ddafdcf3a9cdfc0480874099f1bf4a",
+      "archive": "resume7-check-harness-inventory.log.gz",
+      "archiveSha256": "474e9295917a74c3e7e7e5d7aa13b93cc98cafbd7a9dff042c3ce4c513a77201"
+    },
+    {
+      "originalLog": "resume7-check-harness-review.log",
+      "originalSha256": "c95ad0e133540ab2ae89ea23cddcbce0706693e9b66a67a996bdf2e6209ddd3d",
+      "archive": "resume7-check-harness-review.log.gz",
+      "archiveSha256": "8b7ab23a047598ac04a777ecc3b744af8b7e1e536f638c28fd2674e28962a621"
+    },
+    {
+      "originalLog": "resume7-check-harness-runtime-evidence.log",
+      "originalSha256": "5a6f01072ec7fde3019ef9c2387c9f4c57bcacaf18c9da21390005fecdaf2b16",
+      "archive": "resume7-check-harness-runtime-evidence.log.gz",
+      "archiveSha256": "c4c69019ca495bf26d000fef94bba312a4aaa157ec380f87e8f2094154655577"
+    },
+    {
+      "originalLog": "resume7-check-structure.log",
+      "originalSha256": "d16226e55bdc142e9a635b639de13280775aee6f3a4daa5c92f00535a3bb83ba",
+      "archive": "resume7-check-structure.log.gz",
+      "archiveSha256": "ec4b6d70a6ed6ba342d59a98df8c0f1e8fe24021edec88d12081d0af562f1d4a"
+    },
+    {
+      "originalLog": "resume7-check-task-packet-template.log",
+      "originalSha256": "c906367e2b043848d360d0c2a68d087d528861349348bf101a37c09439d98fc7",
+      "archive": "resume7-check-task-packet-template.log.gz",
+      "archiveSha256": "6d503e9ad1a2097bc1b1637fc8ab7b7231f5d6640ccf7f77739a366a39917962"
+    },
+    {
+      "originalLog": "resume7-check-task-packet.log",
+      "originalSha256": "6ef198061227ada814860b4188ae6b6b06b28646ae9f37d657759f193ab4b248",
+      "archive": "resume7-check-task-packet.log.gz",
+      "archiveSha256": "0150c5aaaef19a5f65b981f475f797b5de3d391fcac1258999e883b7e3dffc43"
+    },
+    {
+      "originalLog": "resume7-foundation-tests.log",
+      "originalSha256": "609b553cbba2ee4eb0f7c44ab35f10973f8e56aa1a65fc433ba8dd59b4ff3efe",
+      "archive": "resume7-foundation-tests.log.gz",
+      "archiveSha256": "c607b1ac0d7e1d0916c4be747399f1e93f1c401d37b9295590c9e8520eb50852"
+    }
+  ]
+}

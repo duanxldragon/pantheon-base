@@ -1164,5 +1164,22 @@
     "adapter": "Dispatcher evidence/verification; independent Generator and CODE/ARCH role adapters"
   },
   "runtimeGap": "Real S3 provider remains unconfigured (see explicit skip). Fresh Sonar closeout full Go race and dual independent reviews passed. Hosted same-rule Sonar, current CI/Release Gate, official release and Ops consumption remain pending.",
-  "hostedEvidence": ".harness/evidence/2026-11-05-base-freeze-release/hosted-validation.json"
+  "hostedEvidence": ".harness/evidence/2026-11-05-base-freeze-release/hosted-validation.json",
+  "correctiveFixtureCandidate": {
+    "version": "0.18.5",
+    "status": "unreleased-reviewed-candidate",
+    "independentApproval": ".harness/evidence/2026-11-05-base-freeze-release/resume7-fixture-approval.json",
+    "sourceValidation": ".harness/evidence/2026-11-05-base-freeze-release/retry5-fixture-source-validation.json",
+    "currentHostedChecks": "pending-current-PR-after-network-recovery",
+    "original12TaskClosureApproved": false,
+    "localValidation": ".harness/evidence/2026-11-05-base-freeze-release/resume7-governance-validation.json",
+    "foundationTests": {
+      "command": "npm run test:foundation-release",
+      "exitCode": 0,
+      "pass": 57,
+      "fail": 0,
+      "skip": 0,
+      "log": "resume7-foundation-tests.log.gz"
+    }
+  }
 }

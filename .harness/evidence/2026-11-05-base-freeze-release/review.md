@@ -1,3 +1,48 @@
+# Current bounded fixture review
+
+CODE APPROVE/ARCH CLEAR only for v0.18.5 fixture snapshot. [Approval](resume7-fixture-approval.json). Aggregate task closure, provider, freeze and publication have separate pending gates.
+
+## Machine Readable
+
+```json
+{
+  "taskId": "2026-11-05-base-freeze-release",
+  "verdict": "approved",
+  "reviewer": "Independent existing bounded CODE/ARCH reports, coordinator records approval",
+  "findings": [],
+  "approvalScope": "bounded-v0185-fixture-patch-only",
+  "independentApproval": ".harness/evidence/2026-11-05-base-freeze-release/resume7-fixture-approval.json",
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-11-05-base-freeze-release/manifest.json",
+    "evidence": ".harness/evidence/2026-11-05-base-freeze-release/commands.json",
+    "taskDoc": "docs/harness/tasks/2026-11-05-base-freeze-release.task.md",
+    "evidenceDir": ".harness/evidence/2026-11-05-base-freeze-release/",
+    "reviewFile": ".harness/evidence/2026-11-05-base-freeze-release/review.md",
+    "summaryFile": ".harness/evidence/2026-11-05-base-freeze-release/summary.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".harness/tasks/2026-11-05-base-freeze-release/tasks.json",
+      ".harness/tasks/2026-11-04-global-audit-remediation/plan.md"
+    ]
+  },
+  "structuralReview": {
+    "affectedSubgraph": [
+      "dynamicmodule purge temporary test workspace -> i18n scanner"
+    ],
+    "checks": [
+      "cycle",
+      "hub",
+      "call-depth",
+      "sensitive-flow"
+    ],
+    "findings": [],
+    "notes": "Test-only scan-root alignment. Aggregate closure/provider/freeze/publication outside this approval."
+  }
+}
+```
+
+## Historical Review Record
+
 # Review: 2026-11-05-base-freeze-release
 
 最终综合 **APPROVE**：代码 lane APPROVE，架构 lane CLEAR。五项首轮发现均修复；两处后续SSRF复杂度提取经双路独立内存反向内联，源码哈希与round2精确一致。
@@ -10,7 +55,7 @@
 
 评审通过不表示全量race、当前提交CI、发行或Ops消费已完成。round2 LOW文档旧503状态已更新；最终结果以任务证据为准。
 
-## Machine Readable
+## Historical Machine Readable
 
 ```json
 {
@@ -20,6 +65,7 @@
   "findings": [],
   "linkage": {
     "taskManifest": ".harness/tasks/2026-11-05-base-freeze-release/manifest.json",
+    "evidence": ".harness/evidence/2026-11-05-base-freeze-release/commands.json",
     "changeRef": "none",
     "planRefs": [
       ".harness/tasks/2026-11-05-base-freeze-release/tasks.json",

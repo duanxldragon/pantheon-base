@@ -1,3 +1,13 @@
+# 2026-11-07 Current corrective foundation candidate
+
+Version0.18.5 remains unreleased on fix/v0185-fixture-closed-loop. Actual bounded CODE APPROVE/ARCH CLEAR match the same snapshot; [approval](resume7-fixture-approval.json), [CODE](retry5-fixture-code-reviewer.md), [ARCH](retry5-fixture-architect.md).
+
+All507 backend files equal the reference tree actually tested:1890 pass/0 fail/1 real S3 skip. This is byte-equivalence evidence, not a worktree rerun or current hosted CI. Original lifecycle assertions and external-reference preservation remain tested. No UI/product/schema changes.
+
+Latest previously verified official release remainsv0.18.4. GitHub connectivity recovered2026-11-07. Current-branch hosted checks/merge/Release Gate/publication and official Ops consumption remain pending actual results. Original12 tasks stay in-progress in this candidate; S3 unverified/no waiver and freeze unsigned.
+
+## Historical candidate evidence
+
 # Base 功能收尾与发行执行证据
 
 状态：in-progress。当前以 2026-11-06 补充状态为准；下文保留旧候选验证历史。
