@@ -270,6 +270,24 @@
       "log": ".harness/evidence/2026-11-07-v0186-release-ops-consumption/closeout-structure-contract.log.gz",
       "sha256": "4cf6253dedab03e20fa95ba1f6da98825bdeac6b2ab114090f0c9726bc369f71",
       "rawSha256": "e8c35482264dcbc91c02243966702d59eec6e2a05ba10e60a32b85665f61e2f3"
+    },
+    {
+      "command": "GitHub PR500 Docs Governance / Check task packets (initial completed/Active mismatch)",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\pantheon-base",
+      "status": "failed",
+      "exitCode": 1,
+      "log": ".harness/evidence/2026-11-07-v0186-release-ops-consumption/base186-pr500-docs-failure.log.gz",
+      "sha256": "f6aadef150218f7f2cf1e58f06d9bbb0c9f2db8dc092a06f7a6ce0af4c4bfa69",
+      "rawSha256": "07023e1f6314bb31a6414a86abf95fc0ccab26435a7e97ba46c5684cdeaa379b"
+    },
+    {
+      "command": "node scripts/harness/check-task-packet.mjs --root .",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\pantheon-base",
+      "status": "passed",
+      "exitCode": 0,
+      "log": ".harness/evidence/2026-11-07-v0186-release-ops-consumption/base186-pr500-task-status-fixed.log.gz",
+      "sha256": "e1de371cecfa08ec01e9c2682e7c1d9b730a1be65528f81aa9c0f32ea161ffd5",
+      "rawSha256": "88c0b6adad986bdfb71d1be5e1759680fb2a5e008228541b054d88d1a7b77566"
     }
   ],
   "recordedAt": "2026-11-07T05:43:49.625Z",
@@ -369,5 +387,6 @@
     "sourceTagImmutable": true,
     "substantiveMainOnlyEvidence": ".harness/evidence/2026-11-07-v0186-release-ops-consumption/verified-main-only.json",
     "finalAdministration": "Metadata-only PR must pass its own normal required checks, merge, and final clean main-only recheck before session completion"
-  }
+  },
+  "closeoutStatusCorrection": "Actual completed task packet is Archived; original scope/criteria/source/gate unchanged; hosted failure and exact fixed rerun preserved"
 }
