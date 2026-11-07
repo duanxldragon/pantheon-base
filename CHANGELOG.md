@@ -6,12 +6,19 @@ Pantheon Base 方法追踪记录。方法论本体位于 `pantheon-harness`。
 
 ---
 
-## [pantheon-base-v0.18.5] — Unreleased (2026-11-06 fixture correction)
+## [pantheon-base-v0.18.6] — Unreleased (2026-11-07 release preparation)
+
+- Complete the original twelve tasks against all40 unchanged criteria, accepted through independent CODE/ARCH reviews and merged BasePR497/498.
+- Advance VERSION and reconcile delivery documentation. Backend, frontend, scripts, contracts and workflows remain byte-identical to the v0.18.5 production/test tree.
+- Publish only after exact immutable candidate Release Gate succeeds; Ops must fetch four official GitHub assets and pass standard assembled-tree validation before final replacement/merge.
+- S3 provider remains unverified, maintenance freeze unsigned, separate Ops runtime/policy gaps retained.
+
+## [pantheon-base-v0.18.5] — 2026-11-07 (fixture correction)
 
 - Isolate the shared purge-module i18n test scanner to its temporary workspace and retain the original four lifecycle assertions.
 - Add regression coverage that keys still referenced outside a purged module remain active.
 - Publish this test-only correction through the official foundation path so consumers can pass the unmodified full race suite; no production behavior, schema, permission or UI change.
-- Candidate source has passed direct Base full race1890/0/1; real S3 remains unverified and maintenance freeze unsigned. Final hosted release gates must pass before publication.
+- Official source1da0834b passed Base full race1890/0/1 and immutable Full Smoke/Release Gate; the four official assets were consumed by merged OpsPR177 with full readonly CGO race2170/0/1. S3 remains unverified and maintenance freeze unsigned.
 
 ## [pantheon-base-v0.18.4] — 2026-11-06
 
@@ -27,6 +34,7 @@ Pantheon Base 方法追踪记录。方法论本体位于 `pantheon-harness`。
 - Candidate validation and remaining remote/review/runtime conditions are recorded in `.harness/evidence/2026-11-05-base-freeze-release/`. No publication or Ops lock update is implied.
 
 See [candidate release notes](./docs/release-notes/RELEASE_NOTES_v0.18.3.md).
+
 ## [pantheon-base-v0.18.2] — 2026-10-31 (sensor and gate fixes reach the consumer)
 
 > A patch on `release/0.18`. Two consumer-visible shared files change, both without behaviour change on
@@ -457,7 +465,7 @@ overwritten by the next `rebuild:from-base`. Base-first is the only landing side
   code and passes 8 consecutive rounds on the new one.
 - Losing the race for a tenant `code` now answers the same conflict the pre-check would have
   returned, instead of `500 create tenant: Error 1062 (23000): Duplicate entry ... for key
-  'tenants.uk_tenant_code'`. The pre-check cannot be atomic, so the UNIQUE index is the real
+'tenants.uk_tenant_code'`. The pre-check cannot be atomic, so the UNIQUE index is the real
   arbiter; `pkg/database.IsDuplicateKey` recognises it and `CreateTenant` re-reads the blocking
   row to distinguish "taken" from "taken by a deleted row".
 - A deleted tenant can no longer be revived, gain members, or be re-provisioned. `deleted` is a
@@ -549,7 +557,7 @@ overwritten by the next `rebuild:from-base`. Base-first is the only landing side
 - The migration chain can be rolled back again. `000020_tenant_phase1_core_tables.down.sql` dropped
   indexes and columns unconditionally, but `000024.down` had already removed several of them, so
   `migrate down` aborted part-way with `Error 1091: Can't DROP 'tenant_id'; check that column/key
-  exists` and left the schema version dirty. Every destructive step is now guarded on
+exists` and left the schema version dirty. Every destructive step is now guarded on
   `information_schema`, so the rollback completes and the chain can be re-applied.
   `TestMigrationChainRollsBackAndReapplies` migrates a throwaway database up → down → up and asserts
   it returns to the same clean version; the test fails against the previous file.
@@ -795,17 +803,20 @@ overwritten by the next `rebuild:from-base`. Base-first is the only landing side
 > Published as immutable tag `pantheon-base-v0.15.0` after the hosted Release Gate, CI, security, and smoke checks passed on the release commit.
 
 ### Security
+
 - Rebuilt the SSRF IPv4 denylist in `backend/pkg/security/ssrf/validator.go` from byte
   literals (`netip.AddrFrom4`) instead of CIDR strings; behavior unchanged, clears the
   6 remaining `go:S1313` SonarCloud findings on `main`.
 
 ### Changed
+
 - Cleared all open SonarCloud issues (28 → 0); CodeQL and Dependabot clean.
 - Stabilized the narrow-viewport shell smoke test to remove a popup-measurement flake.
 - Removed the README (zh/en) milestone/maturity narrative and re-pointed version tables
   at `pantheon-base-v0.15.0`; archived superseded docs under `docs/history/2026-10/`.
 
 ### Verification
+
 - Hosted required checks and Release Gate green on the release commit.
 
 ## [pantheon-base-v0.13.0] — published (2026-09-27)
@@ -813,13 +824,16 @@ overwritten by the next `rebuild:from-base`. Base-first is the only landing side
 > Published as immutable tag `pantheon-base-v0.13.0` after the hosted Release Gate, CI, security, and smoke checks passed on source commit `c254e4c8c63f4409d49752eedb097291627d0b82`.
 
 ### Added
+
 - Foundation release metadata, verification boundary, upgrade notes, and consumer impact notes for the v0.13.0 governance release.
 - Durable task archive and status entry points for the completed Harness work.
 
 ### Changed
+
 - Recorded the September enterprise remediation and governance closeout as the v0.13.0 release scope.
 
 ### Verification
+
 - Repository-local production-readiness audit and task-archive evidence are linked from `releases/pantheon-base-v0.13.0/verification-summary.json`.
 - Hosted release checks passed; `pantheon-ops` consumption remains a separate consumer upgrade follow-up.
 
@@ -828,6 +842,7 @@ overwritten by the next `rebuild:from-base`. Base-first is the only landing side
 Enterprise-grade design system engineering framework with comprehensive governance.
 
 ### Added
+
 - **Frontend Design System Framework** (3,325 lines documentation)
   - `COMPONENT_STYLING_GUIDE.md`: Atomic design patterns, composition rules (682 lines)
   - `UI_PATTERN_LIBRARY.md`: 18 operational primitives, real-world examples (845 lines)
@@ -854,6 +869,7 @@ Enterprise-grade design system engineering framework with comprehensive governan
   - AI-friendly engineering documentation structure
 
 ### Changed
+
 - **Design System Maturity**: 3/5 → 5/5 stars (+66% improvement)
 - `DESIGN.md` §7: Complete token reference (67 tokens documented)
 - `DESIGN.md` §7.9: Anti-pattern checklist with 8 forbidden patterns
@@ -861,11 +877,13 @@ Enterprise-grade design system engineering framework with comprehensive governan
 - Migrated 133 hardcoded spacing values to semantic tokens
 
 ### Fixed
+
 - `README.md`: Updated version reference to v0.11.1 and clarified commit linkage
 - Harness manifest: Added required linkage fields for task tracking
 - Dependencies: `@humanfs/node` 0.16.7 → 0.16.8 (frontend dev tooling)
 
 ### Verification
+
 - **Release Commit**: `d3030510` (includes all v0.11.0 work + documentation updates)
 - **UI Contract**: 0 violations across 249 files
 - **Visual Quality**: WCAG 2.1 AA compliance (light + dark modes)
@@ -874,6 +892,7 @@ Enterprise-grade design system engineering framework with comprehensive governan
 - **GitHub Release**: Bound to commit d3030510cbf7cfb6e1c4d1c66de1e0fa3c5e2a91
 
 ### Consumer Impact
+
 - **Breaking Changes**: None (100% backward compatible)
 - **Migration Effort**: < 1 hour (dependency version bumps only)
 - **Optional Adoption**: New design patterns, tokens, documentation
@@ -882,18 +901,22 @@ Enterprise-grade design system engineering framework with comprehensive governan
 - **NPM Consumers**: Update `package.json` to 0.11.1
 
 ### Known Limitations
+
 - Multi-tenant isolation: Marked as P2 roadmap (not yet implemented)
 - SSO/OAuth2: Marked as P1 feature (planned for v0.12.0)
 - Runtime low-code: Controlled generation only (rebuild required)
 
 ### Documentation
+
 - 5 new frontend engineering guides (3,325 lines total)
 - Updated `DESIGN.md` with complete token system
 - Harness task evidence: `.harness/tasks/2026-09-04-v0.11.1-release-preparation/`
 - Foundation release bundle: `releases/pantheon-base-v0.11.1/`
 
 ### Version Notes
+
 v0.11.1 supersedes the unreleased v0.11.0 tag to include 7 additional commits:
+
 - Documentation improvements (README v0.11.0 updates)
 - Harness methodology linkage (task manifest structure)
 - Development tooling updates (@humanfs/node patch)
@@ -905,14 +928,17 @@ v0.11.1 supersedes the unreleased v0.11.0 tag to include 7 additional commits:
 Test stability maintenance release.
 
 ### Fixed
+
 - Increased timeout and improved wait strategy for the module governance smoke test to handle Vite hot reload timing issues.
 - Changed navigation wait condition from `domcontentloaded` to `networkidle` with explicit retry intervals.
 
 ### Verification
+
 - The GitHub Release will be bound to commit `9d6931bf88f2ccacc08acea6ccc4afc22703e880` (current HEAD).
 - Full Smoke, SonarCloud, CodeQL, Dependabot, CI, and the Release Gate must pass before publication.
 
 ### Consumer Impact
+
 - No breaking changes; this is a test infrastructure improvement only.
 - Consumers can upgrade from the immutable `pantheon-base-v0.10.27` GitHub Release.
 
@@ -923,16 +949,19 @@ Test stability maintenance release.
 Foundation release for the Go-module and npm-package consumption standardization.
 
 ### Changed
+
 - Standardized backend module consumption on `github.com/duanxldragon/pantheon-base` and removed the overlay/import-rewrite scripts (1020+ lines deleted) so downstream repos consume the foundation via Go modules instead of file copying.
 - Standardized the frontend as a consumable package with a library entrypoint and aligned its identity to `0.10.26`.
 - Folded in the final SonarCloud duplication reduction and the repository-layout governance alignment.
 - Applied dependency hardening for the grpc and browserslist advisories merged onto `main` before publication.
 
 ### Verification
+
 - The GitHub Release is bound to commit `d30d73a5125cdce79bd8d37bd60f75ad7180fcd7`.
 - Full Smoke, SonarCloud, CodeQL, Dependabot, CI, and the Release Gate passed before publication.
 
 ### Consumer Impact
+
 - Consumers must upgrade from the immutable `pantheon-base-v0.10.26` GitHub Release rather than tracking `main`.
 - `pantheon-ops` consumption remains deferred and is not included in this release closeout.
 
@@ -943,15 +972,18 @@ Foundation release for the Go-module and npm-package consumption standardization
 Foundation release for the B1-B5 operational-workbench delivery and its shared quality controls.
 
 ### Changed
+
 - Released the B1-B5 operational workbench contracts, reusable UI primitives, and UI quality gates for foundation consumers.
 - Reduced `AppTable` complexity to satisfy the SonarCloud maintainability gate.
 - Applied dependency hardening included in the release candidate.
 
 ### Verification
+
 - The GitHub Release is bound to commit `3008d21c40139f369d8c62ed5dde807ae08ddc12`.
 - Full Smoke, SonarCloud, CodeQL, Dependabot, CI, and the Release Gate passed before publication.
 
 ### Consumer Impact
+
 - Consumers must upgrade from the immutable `pantheon-base-v0.10.25` GitHub Release rather than tracking `main`.
 - `pantheon-ops` consumption remains deferred and is not included in this release closeout.
 
@@ -962,9 +994,11 @@ Foundation release for the B1-B5 operational-workbench delivery and its shared q
 Menu-contract gate extension point for consumer overlay registries.
 
 ### Changed
+
 - `frontend/scripts/check-menu-contract.mjs` 改为按命名约定发现组件注册表文件（前端 `*Registry.ts`、后端 `*registry.go`），替代硬编码文件清单。
 
 ### Consumer Impact
+
 - `pantheon-ops` 等 consumer 注入的 overlay 注册表（`businessOverlayComponentRegistry.ts` / `business_overlay_component_registry.go`）现在会被菜单契约门禁自动纳入一致性校验，不再被静默丢弃。
 
 ---
@@ -974,10 +1008,12 @@ Menu-contract gate extension point for consumer overlay registries.
 Security maintenance release for the shared frontend toolchain.
 
 ### Changed
+
 - Upgrade `js-yaml` to `3.15.1` to resolve GHSA-5p4m-2wfm-xmqj (CWE-407).
 - Upgrade `nanoid` to `3.3.17` to remove the high-severity infinite-loop advisory in the Vite/PostCSS dependency tree.
 
 ### Verification
+
 - Frontend `npm audit --audit-level=high` reports zero vulnerabilities.
 - Foundation-release, documentation, sync-drift, and lockfile installation checks pass.
 
@@ -988,11 +1024,13 @@ Security maintenance release for the shared frontend toolchain.
 Foundation release consumed by `pantheon-ops` for the shared CSRF and smoke contracts.
 
 ### Changed
+
 - Distributed the shared request client so the CSRF cookie/header contract is present in foundation-release consumers.
 - Corrected the shared smoke registry fixture used by hosted smoke validation.
 - Exported the forbidden-request guard required by the shared auth boundary.
 
 ### Verification
+
 - CI Summary, Quality, Security, CodeQL, and hosted smoke passed for the release candidate.
 - Release manifest and archive checksum are bound to commit `a95e6e52eee8ae9aeb4fd115d18c7c37609290f6`.
 
@@ -1003,6 +1041,7 @@ Foundation release consumed by `pantheon-ops` for the shared CSRF and smoke cont
 发布治理补丁，供 `pantheon-ops` 通过 foundation release 升级消费。
 
 ### Changed
+
 - CI Summary 对 required job 采用 fail-closed 聚合；保留全仓 Go Lint 的真实 advisory 结果，并由 `quality.yml` 继续阻断 PR/merge queue 中的新代码 lint。
 - Merge queue 使用其不可变 base SHA 限定新代码 lint；发布器在上传前复算并校验 foundation archive 的 SHA-256。
 - 补齐历史 task/evidence/review 收口状态和 OpenSpec 仓库骨架。
@@ -1015,11 +1054,13 @@ Foundation release consumed by `pantheon-ops` for the shared CSRF and smoke cont
 首个采用 `pantheon-base-vX.Y.Z` 标准命名的 foundation release。
 
 ### Changed
+
 - 发布工具统一校验 release tag、release line 和不可变候选 SHA。
 - Release Gate、Security、SonarCloud 和 Full Smoke 改为失败关闭。
 - 修复 Windows bundle、smoke cleanup、RangePicker 月边界和 Dashboard 嵌套按钮问题。
 
 ### Notes
+
 - 完整 release notes、consumer impact、upgrade notes 和验证摘要位于
   [GitHub Release pantheon-base-v0.10.0](https://github.com/duanxldragon/pantheon-base/releases/tag/pantheon-base-v0.10.0)。
 
@@ -1030,18 +1071,21 @@ Foundation release consumed by `pantheon-ops` for the shared CSRF and smoke cont
 冻结版本，供 `pantheon-ops` 通过 foundation release 继承。
 
 ### Changed
+
 - **Go module 重命名**: `pantheon-platform` → `pantheon-base`，覆盖 142 个 `.go` 文件 339 处 import，import 路径永不带 `backend/` 段（go.mod 在 `backend/` 内）
 - **代码生成器模板同步**: `backendGenerator.ts` 生成的业务模块 Go import 改为 `pantheon-base/...`（消除 ops 新生成模块的隐形编译炸弹）
 - **测试断言与脚本同步**: smoke 断言、`cleanup-generated-modules`、`triage-base-drift` 归一化逻辑同步新 module 名；`cleanup` 失效正则按当前真实形态规范化（去掉旧 `backend/` 段）
 
 ### Added
-- **business/* 边界门禁（双层）**:
+
+- *_business/_ 边界门禁（双层）**:
   - `golangci-lint depguard` 规则 `business-boundary`：禁止 `modules/business` import `modules/system|auth|platform` 内部，须走 `pkg/contracts`
   - `check-boundaries.mjs --strict --repo pantheon-base` 接入 CI `boundary-gate` job（新增 `--repo` 参数支持单仓扫描）
 - **测试覆盖率门禁**: 新增 `scripts/harness/check-coverage.mjs` + CI `coverage-gate` job，初始阈值取现状实测（12.2%）的 90%（11%），后续版本 ratchet 抬升
 - **MFA 生产强制安全基线**: `docs/DEPLOYMENT_GUIDE.md` 新增"强制安全基线（生产必选）"章节，`login.mfa_enabled=1` 等 5 项列为生产必选项
 
 ### Notes
+
 - `VERSION` 文件维持 harness 方法论 shell 版本（1.4.0），不随产品线变更；base 产品线版本以 git tag 为载体
 - 历史 CodeQL/Dependabot 分析临时文件未纳入本版本
 
@@ -1050,15 +1094,18 @@ Foundation release consumed by `pantheon-ops` for the shared CSRF and smoke cont
 ## [1.3.0] — 2026-06-27
 
 ### Changed
+
 - **Migrated to pantheon-harness**: 所有方法论引用从 `harness-engineering/agentic-method-kit` 迁移到 `pantheon-harness`
 - **文档路径更新**: 更新 AGENTS.md、docs/README.md、docs/harness/*.md 中的路径引用
 - **脚本路径更新**: 更新 scripts/harness/*.mjs 中的方法包文件路径
 
 ### Removed
+
 - **清理 agentic-method-kit/**: 删除 67 个文件，已迁移到 pantheon-harness
 - **清理 agentic-repo-shell/**: 删除 92 个文件，已迁移到 pantheon-harness
 
 ### Synchronized from pantheon-harness
+
 - ERROR_RECOVERY_STRATEGY.md
 - HANDOFF_PROTOCOL.md
 
@@ -1067,6 +1114,7 @@ Foundation release consumed by `pantheon-ops` for the shared CSRF and smoke cont
 ## [1.2.0] — 2026-06-26
 
 ### Changed
+
 - **System modularization**: 系统模块化重构
 - **Infrastructure improvements**: 基础设施改进
 
@@ -1075,6 +1123,7 @@ Foundation release consumed by `pantheon-ops` for the shared CSRF and smoke cont
 ## [1.0.0] — 2026-06-15
 
 ### Added
+
 - **Initial harness adoption**: 初始采纳 Harness Engineering 方法论
 - **Task packet templates**: 任务包模板
 - **Verification evidence specs**: 验证证据规范

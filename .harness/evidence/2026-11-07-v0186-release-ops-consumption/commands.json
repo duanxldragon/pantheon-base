@@ -1,0 +1,202 @@
+{
+  "taskId": "2026-11-07-v0186-release-ops-consumption",
+  "repo": "pantheon-base",
+  "agent": {
+    "tool": "codex",
+    "adapter": "Dispatcher; independent CODE/ARCH review required"
+  },
+  "commands": [
+    {
+      "command": "npm run check:docs-frontmatter",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\pantheon-base",
+      "exitCode": 1,
+      "status": "failed",
+      "log": ".harness/evidence/2026-11-07-v0186-release-ops-consumption/initial-docs-frontmatter.log.gz",
+      "sha256": "8859c8ca6a155663d4b2151754aa7eb90de65d6ac93847b6539a898735bafd93",
+      "rawSha256": "9a1a8461b64c2cc4da99213f49357cad4a801dc7242ffe3d46cfb209c1b735d1"
+    },
+    {
+      "command": "npm run check:task-packet-template",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\pantheon-base",
+      "exitCode": 0,
+      "status": "passed",
+      "log": ".harness/evidence/2026-11-07-v0186-release-ops-consumption/initial-task-packet-template.log.gz",
+      "sha256": "f88e7647cb7a6dac9fdf3ccd9b813588d1155f62677c4344348b297ac0b03938",
+      "rawSha256": "3adf394a58969f2ff6c463b3288b461879ea88400a554f7716649302e17f905f"
+    },
+    {
+      "command": "npm run check:task-packet",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\pantheon-base",
+      "exitCode": 1,
+      "status": "failed",
+      "log": ".harness/evidence/2026-11-07-v0186-release-ops-consumption/initial-task-packet.log.gz",
+      "sha256": "55ae2d7d083c739bfcbc3bf42a5acd12e9d009340270fda78d85cd6fd27d4e4d",
+      "rawSha256": "64231b3b25ff3bd707d4654b18423ef1fb0260a136e3f82310881afd308cb302"
+    },
+    {
+      "command": "npm run check:harness-evidence",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\pantheon-base",
+      "exitCode": 1,
+      "status": "failed",
+      "log": ".harness/evidence/2026-11-07-v0186-release-ops-consumption/initial-harness-evidence.log.gz",
+      "sha256": "6e77794733cb3a13dcc921f728a6bddaa7d97f839989f5b9052ed07ec5d07ee0",
+      "rawSha256": "4d891256fffa899c9be8d7e79403a017cb3d11a63effecbbfb1457ccb25ed773"
+    },
+    {
+      "command": "npm run check:harness-review",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\pantheon-base",
+      "exitCode": 0,
+      "status": "passed",
+      "log": ".harness/evidence/2026-11-07-v0186-release-ops-consumption/initial-harness-review.log.gz",
+      "sha256": "c4bf29b68aa965d3ce9ef2aa8697a90d21a01bbed48ac0e1bf2015d3ce8ef65d",
+      "rawSha256": "5dda38ed7721a9426d4d692600b62a3e1f7161d319f0ad03a965711047743d0c"
+    },
+    {
+      "command": "npm run check:harness-runtime-evidence",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\pantheon-base",
+      "exitCode": 0,
+      "status": "passed",
+      "log": ".harness/evidence/2026-11-07-v0186-release-ops-consumption/initial-harness-runtime-evidence.log.gz",
+      "sha256": "ea86126c8eb630f8bab3caa7c879b53f26d00ec1aa91a02ababa10232d677ba3",
+      "rawSha256": "dc1fea8c77f106be8ec84a0d34787f03067ee0e0b8ca349b1a7f0a1f7e052647"
+    },
+    {
+      "command": "npm run check:harness-graph-review",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\pantheon-base",
+      "exitCode": 0,
+      "status": "passed",
+      "log": ".harness/evidence/2026-11-07-v0186-release-ops-consumption/initial-harness-graph-review.log.gz",
+      "sha256": "5919bd49627741432e13b2436027a80242cbc70084f907d4f04459400cab5646",
+      "rawSha256": "825f6bb9892861c2e31cf4e9e70f7b36f7c2384f6d84ee0285a9246c752bad86"
+    },
+    {
+      "command": "npm run check:harness-docs",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\pantheon-base",
+      "exitCode": 0,
+      "status": "passed",
+      "log": ".harness/evidence/2026-11-07-v0186-release-ops-consumption/initial-harness-docs.log.gz",
+      "sha256": "1f350c3a22ad57817e72cea2f4c8cabde0759e7217677fce5f4a67eb50ba9ac8",
+      "rawSha256": "d8e6ad7f1b15451eb8df6f7941b2f1b57d2701468fa6364c70f7b1db72b1b89d"
+    },
+    {
+      "command": "npm run check:harness-encoding",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\pantheon-base",
+      "exitCode": 0,
+      "status": "passed",
+      "log": ".harness/evidence/2026-11-07-v0186-release-ops-consumption/initial-harness-encoding.log.gz",
+      "sha256": "60a99e37327225f9817a6422e31cbb7e2101e14ae6a6541311ec920800270bef",
+      "rawSha256": "c4f7f51aad98aea9ab068382cff794a2f0163032450a59bab64f52299bb071b8"
+    },
+    {
+      "command": "npm run check:harness-inventory",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\pantheon-base",
+      "exitCode": 0,
+      "status": "passed",
+      "log": ".harness/evidence/2026-11-07-v0186-release-ops-consumption/initial-harness-inventory.log.gz",
+      "sha256": "7b4bc5ca911b6d71df4bf13d8a26faf0ee6794a2a1a83c9a080d12b3a4e5e676",
+      "rawSha256": "d1caba25eea042d2284099796b5e6905a216198e41b147fe4f4c4347b25d6bb1"
+    },
+    {
+      "command": "npm run check:checker-wiring",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\pantheon-base",
+      "exitCode": 0,
+      "status": "passed",
+      "log": ".harness/evidence/2026-11-07-v0186-release-ops-consumption/initial-checker-wiring.log.gz",
+      "sha256": "ec01945c7d4d4a0ecc3b55d6783e57fd02c320aa04c9349a74be942a29e41548",
+      "rawSha256": "53316dbbcd6ca052430720c87d3b4b18eb3d0f7d992135d67d603c36ed63b8a0"
+    },
+    {
+      "command": "npm run check:structure",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\pantheon-base",
+      "exitCode": 0,
+      "status": "passed",
+      "log": ".harness/evidence/2026-11-07-v0186-release-ops-consumption/initial-structure.log.gz",
+      "sha256": "a7b87415defcca95725de9a901ac9c24644003f980497bb1115407a2250c063d",
+      "rawSha256": "99cfd85242bb32f6087180dd85dc6bff07ca2f99528aa4af5eccf8b019232159"
+    },
+    {
+      "command": "npm run test:foundation-release",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\pantheon-base",
+      "status": "passed",
+      "exitCode": 0,
+      "log": ".harness/evidence/2026-11-07-v0186-release-ops-consumption/test-foundation-release.log.gz",
+      "sha256": "d05a1b49ecf4d7b5667f78a7df07db597802d8c631ac522400a247a888a63716",
+      "rawSha256": "668e090b931a8a99ad1f203a76eb38eb75ddc70df21f371d88c5f17f4305b0b8",
+      "counts": {
+        "pass": 57,
+        "fail": 0,
+        "skip": 0
+      }
+    },
+    {
+      "command": "npm run check:docs-frontmatter",
+      "cwd": "D:/workspace/go/pantheon-platform/pantheon-base",
+      "status": "passed",
+      "exitCode": 0,
+      "log": ".harness/evidence/2026-11-07-v0186-release-ops-consumption/fixed-docs-frontmatter.log.gz",
+      "sha256": "19bbc1cd394298165af3082246a1355c3e62a75b6bc3fcb9060a91fe27bc0bf9",
+      "rawSha256": "7d184dbb8498a603c9f1ee972ad6fdec512130bfc4927cb8b2ed45f6ec0fa83c"
+    },
+    {
+      "command": "npm run check:task-packet",
+      "cwd": "D:/workspace/go/pantheon-platform/pantheon-base",
+      "status": "passed",
+      "exitCode": 0,
+      "log": ".harness/evidence/2026-11-07-v0186-release-ops-consumption/fixed-task-packet.log.gz",
+      "sha256": "a73cdc36664ea452385518d9687723e432a4b7a851de658124f5c904ddad3a48",
+      "rawSha256": "d44c65683899e047f2c5c4ec5e14abd1c3588373129952e5266f6afc2105fb33"
+    },
+    {
+      "command": "npm run check:harness-evidence",
+      "cwd": "D:/workspace/go/pantheon-platform/pantheon-base",
+      "status": "passed",
+      "exitCode": 0,
+      "log": ".harness/evidence/2026-11-07-v0186-release-ops-consumption/fixed-harness-evidence.log.gz",
+      "sha256": "28476f38166ca8ff78bcfa6dfab9d10955d2e17ad1f6b6951030784ded5b9ef0",
+      "rawSha256": "e2424af89a53bd86ee4fd54858e89d43d9f37c0e2610dc203a21ffa4b41a6c6f"
+    }
+  ],
+  "recordedAt": "2026-11-07T05:43:49.625Z",
+  "knownGaps": [
+    "New immutable release gates/publication and official186 consumer validation/merge remain pending.",
+    "S3 provider skip/no waiver; maintenance freeze unsigned; separate Ops runtime/policy/security/production residuals retained."
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-11-07-v0186-release-ops-consumption/manifest.json",
+    "taskDoc": "docs/harness/tasks/2026-11-07-v0186-release-ops-consumption.task.md",
+    "evidenceDir": ".harness/evidence/2026-11-07-v0186-release-ops-consumption/",
+    "reviewFile": ".harness/evidence/2026-11-07-v0186-release-ops-consumption/review.md",
+    "summaryFile": ".harness/evidence/2026-11-07-v0186-release-ops-consumption/summary.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".harness/tasks/2026-11-07-v0186-release-ops-consumption/manifest.json"
+    ]
+  },
+  "runtimeSensitive": false,
+  "runtimeGap": "Current phase is release preparation. New source Release Gate/publication and actual official Ops consumption are pending; no acceptance is claimed for these pending criteria. S3 provider gap/freeze unsigned and separate Ops runtime/policy gaps remain.",
+  "runtimeLogs": [],
+  "preparationApproval": {
+    "scope": "release186-preparation-only",
+    "snapshotSha256": "dd53bb2ee65062deb408e2c3da955b844878a39d745618f9a2773676a9553cd2",
+    "approvals": [
+      {
+        "lane": "code-reviewer",
+        "file": "preparation-code-reviewer.md",
+        "sha256": "ccb1443249a21767e17df9e8ace80b37e74298b49c8c1c4d1b2ab0c02f38d703",
+        "verdict": "APPROVE",
+        "architecturalStatus": null,
+        "rawArchive": ".harness/evidence/2026-11-07-v0186-release-ops-consumption/raw-code-reviewer.md.gz",
+        "rawReviewedSha256": "dcb45047d752a7a16a98072b4c4f9b87024019d6aa10f85c4210a46a6f11cfaa"
+      },
+      {
+        "lane": "architect",
+        "file": "preparation-architect.md",
+        "sha256": "22d8836d2a2633a2570bfd2eda545d506f269b27880045220c94d9d2d4144921",
+        "verdict": "APPROVE",
+        "architecturalStatus": "CLEAR",
+        "rawArchive": ".harness/evidence/2026-11-07-v0186-release-ops-consumption/raw-architect.md.gz",
+        "rawReviewedSha256": "73ebba111b6f804ae3922e4978ebdf01a7a81d7d21e4bff3bb1e867aeb85cf66"
+      }
+    ]
+  }
+}
