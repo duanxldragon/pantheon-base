@@ -1,0 +1,352 @@
+{
+  "recordedAt": "2026-11-07T03:02:26.805Z",
+  "baseline": "7e483e7a4e939b1623b8798b6a06b22f763696fe",
+  "sourceCommit": "1da0834bdce636fd2fc1063290e3f32339e2d27a",
+  "subtrees": [
+    {
+      "path": "backend",
+      "actual": "9463a3a226aef7f58242ea1dbd30054c058de141",
+      "expected": "9463a3a226aef7f58242ea1dbd30054c058de141"
+    },
+    {
+      "path": "frontend",
+      "actual": "a1cc3a3be3da449734a18b19ad1434b4ea1d0a9c",
+      "expected": "a1cc3a3be3da449734a18b19ad1434b4ea1d0a9c"
+    }
+  ],
+  "originalTasks": [
+    {
+      "taskId": "2026-11-04-audit-p1-npm-audit-exit",
+      "path": ".harness/tasks/2026-11-04-audit-p1-npm-audit-exit/manifest.json",
+      "sha256": "266aca28425b39855ce89a5d3e45dae12d68b076d4ddde36884949a2cde28509",
+      "criteriaSha256": "cbda6a75a6751e83ca6629ea71c4d2a64db743004718348c5c9afc6b1a8e4d6b",
+      "scopeSha256": "bdf8709f3fc036e52bbab7d78715ce2c0e4e013d4920d6dfc52f8f3ac4a53c45",
+      "status": "completed",
+      "acceptanceCriteria": [
+        "npm audit高危命中、扫描失败和npm ci失败保留非零exit并显示失败outcome",
+        "上传报告保留；main/release等严格路径失败，PR/merge_group既有report-only策略保留",
+        "行为测试执行工作流中的实际shell片段，覆盖成功/漏洞/工具故障及enforcement"
+      ],
+      "scope": {
+        "in": [
+          "npm 漏洞扫描非零结果传递到门禁",
+          "npm audit高危命中、扫描失败和npm ci失败保留非零exit并显示失败outcome",
+          "上传报告保留；main/release等严格路径失败，PR/merge_group既有report-only策略保留",
+          "行为测试执行工作流中的实际shell片段，覆盖成功/漏洞/工具故障及enforcement"
+        ],
+        "out": [
+          "产品扩展/大重构",
+          "批量删除或重写旧文档",
+          "生产操作/发布/冻结代签",
+          "覆盖或回退用户已有改动"
+        ]
+      }
+    },
+    {
+      "taskId": "2026-11-04-audit-p1-refresh-rotation",
+      "path": ".harness/tasks/2026-11-04-audit-p1-refresh-rotation/manifest.json",
+      "sha256": "4543f74a9629ad92f767aeac18bd151fbc0afea1d60dba8d4f995e8cbc009380",
+      "criteriaSha256": "254e415db77a6908da9381e8469b4da7102b4a10d229c1af52926697cb35f2a7",
+      "scopeSha256": "7b78a1493ce5c13b90782c5d6002e5587dbe86fc6e37abadafa07099e2e2af96",
+      "status": "completed",
+      "acceptanceCriteria": [
+        "先隔离验证同一旧refresh并发、跨实例和存储失败；记录实际结果，不将静态疑点直接当漏洞",
+        "确认后补原子消费/轮换最小实现；同一旧token最多一次签发成功，失败不可继续成功响应",
+        "回归正常刷新、吊销/改密、租户V1约束和失败恢复；证据不足保持未关闭"
+      ],
+      "scope": {
+        "in": [
+          "刷新令牌并发与存储故障验证及最小修复",
+          "先隔离验证同一旧refresh并发、跨实例和存储失败；记录实际结果，不将静态疑点直接当漏洞",
+          "确认后补原子消费/轮换最小实现；同一旧token最多一次签发成功，失败不可继续成功响应",
+          "回归正常刷新、吊销/改密、租户V1约束和失败恢复；证据不足保持未关闭"
+        ],
+        "out": [
+          "产品扩展/大重构",
+          "批量删除或重写旧文档",
+          "生产操作/发布/冻结代签",
+          "覆盖或回退用户已有改动"
+        ]
+      }
+    },
+    {
+      "taskId": "2026-11-04-audit-p1-ssrf-dial-binding",
+      "path": ".harness/tasks/2026-11-04-audit-p1-ssrf-dial-binding/manifest.json",
+      "sha256": "796368fb832abc92385fd0806b3c3aaa548c1e47540a2efff0760c8ab1823dff",
+      "criteriaSha256": "5cd22a93c03c46779690614bbd791bc1af6af1a0e84a76bb7139c73acf652de8",
+      "scopeSha256": "8635343bdb945f1c171619e0389b65b60883e8276d9eee84a80893e8d73c0e13",
+      "status": "in-progress",
+      "acceptanceCriteria": [
+        "原始DNS重绑定复现从到达loopback变为拒绝，测试先红后绿",
+        "只拨号已核查IP；私网、混合DNS、IPv4/IPv6、取消/超时、多地址和HTTPS Host/SNI行为有回归",
+        "Ops实际消费接口不删除；本地重建和业务测试通过，下游正式升级明确延期"
+      ],
+      "scope": {
+        "in": [
+          "SSRF DNS 校验与实际拨号绑定",
+          "原始DNS重绑定复现从到达loopback变为拒绝，测试先红后绿",
+          "只拨号已核查IP；私网、混合DNS、IPv4/IPv6、取消/超时、多地址和HTTPS Host/SNI行为有回归",
+          "Ops实际消费接口不删除；本地重建和业务测试通过，下游正式升级明确延期"
+        ],
+        "out": [
+          "产品扩展/大重构",
+          "批量删除或重写旧文档",
+          "生产操作/发布/冻结代签",
+          "覆盖或回退用户已有改动"
+        ]
+      }
+    },
+    {
+      "taskId": "2026-11-04-audit-p2-agent-stop-points",
+      "path": ".harness/tasks/2026-11-04-audit-p2-agent-stop-points/manifest.json",
+      "sha256": "a215eb141741178d3b553891319d688c54410cee99fe8ab9c906effcef30eee5",
+      "criteriaSha256": "e08a1d0acbd65bcf58d5416dbd2e93897eee36f59c214c397c36325a47b9e0ed",
+      "scopeSha256": "171097dc9e0d6e977bb2d7cead4d6fb736eab7aa3d2c12ecc5d50b8da6eab826",
+      "status": "completed",
+      "acceptanceCriteria": [
+        "已授权安全可逆工作自主推进，不再仅因涉及auth/schema/menu一律中途询问",
+        "需求澄清/门禁策略/最终验收三触点明确；真实生产/破坏/凭证操作保留限制",
+        "中英文规则一致，入口不复制一套规范"
+      ],
+      "scope": {
+        "in": [
+          "统一 Agent 授权与维护者三触点",
+          "已授权安全可逆工作自主推进，不再仅因涉及auth/schema/menu一律中途询问",
+          "需求澄清/门禁策略/最终验收三触点明确；真实生产/破坏/凭证操作保留限制",
+          "中英文规则一致，入口不复制一套规范"
+        ],
+        "out": [
+          "产品扩展/大重构",
+          "批量删除或重写旧文档",
+          "生产操作/发布/冻结代签",
+          "覆盖或回退用户已有改动"
+        ]
+      }
+    },
+    {
+      "taskId": "2026-11-04-audit-p2-authoritative-docs",
+      "path": ".harness/tasks/2026-11-04-audit-p2-authoritative-docs/manifest.json",
+      "sha256": "8f540d999545ef4eb9779efbe6a2bc684a546d2f51b9167a3c5dc4545820d6ea",
+      "criteriaSha256": "1a8e2cf4e3f389f02dedf39fdcd9c2d4ebbb57607d1b0008c4ec1f4d6c4acce4",
+      "scopeSha256": "2c95f42d644ac9412b1d5b5de7450fbaa692072b5ef86513a057113028dd5a39",
+      "status": "completed",
+      "acceptanceCriteria": [
+        "按资产附表逐项核对后只改确定的现态、命令、状态、链接，保留历史正文",
+        "失效链接替换为明确未产出/计划项；不为补链接实现审批/通知/调度/报表",
+        "三份归档、MERGE、REPLACE建议保留旧路径和历史内容，仅标历史/指向权威；不得批量删文档",
+        "中英文同步；不重新统计或改写已交付审计基线"
+      ],
+      "scope": {
+        "in": [
+          "修正已确认权威文档漂移与失效链接",
+          "按资产附表逐项核对后只改确定的现态、命令、状态、链接，保留历史正文",
+          "失效链接替换为明确未产出/计划项；不为补链接实现审批/通知/调度/报表",
+          "三份归档、MERGE、REPLACE建议保留旧路径和历史内容，仅标历史/指向权威；不得批量删文档",
+          "中英文同步；不重新统计或改写已交付审计基线"
+        ],
+        "out": [
+          "产品扩展/大重构",
+          "批量删除或重写旧文档",
+          "生产操作/发布/冻结代签",
+          "覆盖或回退用户已有改动"
+        ]
+      }
+    },
+    {
+      "taskId": "2026-11-04-audit-p2-freeze-validation",
+      "path": ".harness/tasks/2026-11-04-audit-p2-freeze-validation/manifest.json",
+      "sha256": "8996c8bdbd91a1b2db30c999603f54c3837c9c3a2c693cac9682ce04b8dbd04f",
+      "criteriaSha256": "8e44e6e34235b794923e0a5bb295157620c330f7b25b3e410394f069b7af7f3e",
+      "scopeSha256": "0385ab858db80a9a128da5c5a26d9310290e629aba5c47c8f9e65f1b1320494d",
+      "status": "completed",
+      "acceptanceCriteria": [
+        "最终工作树全量Go、FE typecheck/lint/build/test和治理检查给出结果与skip数",
+        "保留原有214项改动来源，用户既有删除不恢复、在途产物不删除",
+        "隔离DB/Redis可用则执行核心认证/迁移验证，不可用明确缺口",
+        "没有不可变候选/真实集成/外部required checks就不代签维护冻结"
+      ],
+      "scope": {
+        "in": [
+          "最终候选及核心集成验证收口",
+          "最终工作树全量Go、FE typecheck/lint/build/test和治理检查给出结果与skip数",
+          "保留原有214项改动来源，用户既有删除不恢复、在途产物不删除",
+          "隔离DB/Redis可用则执行核心认证/迁移验证，不可用明确缺口",
+          "没有不可变候选/真实集成/外部required checks就不代签维护冻结"
+        ],
+        "out": [
+          "产品扩展/大重构",
+          "批量删除或重写旧文档",
+          "生产操作/发布/冻结代签",
+          "覆盖或回退用户已有改动"
+        ]
+      }
+    },
+    {
+      "taskId": "2026-11-04-audit-p2-ops-db-test-followup",
+      "path": ".harness/tasks/2026-11-04-audit-p2-ops-db-test-followup/manifest.json",
+      "sha256": "8943db2df8c684c4d16ddad168a7b57fd29b03ba7571457353cd138adc26a210",
+      "criteriaSha256": "b8936a5cc15e8c8de320161e2ca5546a83c983744a689f843fce9164d0e6290c",
+      "scopeSha256": "43cd118aad724a781375e209b4c7a0c0656d393a65d642e8f5437f0e4db9f3ca",
+      "status": "in-progress",
+      "acceptanceCriteria": [
+        "所有失败与Ops HEAD对照，确认是否新引入",
+        "逐项裁定fixture/测试期望/业务实现，不削弱SSRF与认证",
+        "最小业务修复在Ops独立任务实施并重新验证后才关闭下游验收"
+      ],
+      "scope": {
+        "in": [
+          "记录最终候选与Ops HEAD同环境失败对照",
+          "逐项判断业务实现、测试fixture或合同错误后再提出最小修复",
+          "不将12失败节点误写为12独立功能故障，不将既有失败归因于本轮Base"
+        ],
+        "out": [
+          "自动修改Ops主工作树/业务实现",
+          "为测试变绿放宽SSRF或鉴权",
+          "本轮发布/锁升级/冻结代签"
+        ]
+      }
+    },
+    {
+      "taskId": "2026-11-04-audit-p2-release-policy",
+      "path": ".harness/tasks/2026-11-04-audit-p2-release-policy/manifest.json",
+      "sha256": "57407fecf1411f5dc8b126f4cbb0deff931c30a6258259035a214a1c251079c1",
+      "criteriaSha256": "7658fbbd6daa7a24baa9f9725668fcb10140c7413edfa9145614cc9b98cc28dc",
+      "scopeSha256": "042e24e7059a0de8e253b43d11ac1b5e20453b5b3993c43dbb790c6fc4a92241",
+      "status": "completed",
+      "acceptanceCriteria": [
+        "文档明确当前release-gate强制Sonar全BUG/VULNERABILITY/CODE_SMELL清零为发布例外",
+        "风险优先用于整改投入，不能由Agent解释为绕开已有门禁",
+        "阈值放宽/移除门禁仅写成维护者策略裁定项；本轮保持配置"
+      ],
+      "scope": {
+        "in": [
+          "说明风险优先与现行 Sonar 发布门禁的权威边界",
+          "文档明确当前release-gate强制Sonar全BUG/VULNERABILITY/CODE_SMELL清零为发布例外",
+          "风险优先用于整改投入，不能由Agent解释为绕开已有门禁",
+          "阈值放宽/移除门禁仅写成维护者策略裁定项；本轮保持配置"
+        ],
+        "out": [
+          "产品扩展/大重构",
+          "批量删除或重写旧文档",
+          "生产操作/发布/冻结代签",
+          "覆盖或回退用户已有改动"
+        ]
+      }
+    },
+    {
+      "taskId": "2026-11-04-audit-p3-ci-cost-review",
+      "path": ".harness/tasks/2026-11-04-audit-p3-ci-cost-review/manifest.json",
+      "sha256": "a4659cca45c6df05237894d98781057a6b67caa06239e0c38b944522196bccff",
+      "criteriaSha256": "0160f1109ce5be5ac42216b9828837ac36098d9c844461feb4cc63718e3424c2",
+      "scopeSha256": "757c8a2e784829a2ce820b915d8fe287c66dcf2521a7530f234a2ee988bc2084",
+      "status": "completed",
+      "acceptanceCriteria": [
+        "保留coverage与race目的差异，缺少实测不删除checker或job",
+        "登记需实际run耗时/收益才能启动的低优先优化；不作为冻结必需项",
+        "不新增门禁、依赖、复杂平台；不为全风格清零重构"
+      ],
+      "scope": {
+        "in": [
+          "按实际价值裁定 CI 重复与 dormant 机制",
+          "保留coverage与race目的差异，缺少实测不删除checker或job",
+          "登记需实际run耗时/收益才能启动的低优先优化；不作为冻结必需项",
+          "不新增门禁、依赖、复杂平台；不为全风格清零重构"
+        ],
+        "out": [
+          "产品扩展/大重构",
+          "批量删除或重写旧文档",
+          "生产操作/发布/冻结代签",
+          "覆盖或回退用户已有改动"
+        ]
+      }
+    },
+    {
+      "taskId": "2026-11-04-audit-p3-consumer-seams",
+      "path": ".harness/tasks/2026-11-04-audit-p3-consumer-seams/manifest.json",
+      "sha256": "285007eb9dc8eb4c8c97095fe2970623378c73cef4e0e401e2c53e7cbc832174",
+      "criteriaSha256": "8d27be3d5c10f5dac45c1a753e144f5246d03210bd29b771519eca69064e467b",
+      "scopeSha256": "59529a25e68e7e5ed44174c100a082aa525591c8410ea1530f818e1d64871cdd",
+      "status": "in-progress",
+      "acceptanceCriteria": [
+        "保持注册/ModuleConfig/公共API签名，实际rebuild后Go业务和FE构建通过",
+        "采用隔离本地候选，不在Ops主工作树复制Base源码；Ops状态保持干净",
+        "发布与lock升级通过foundation release流程，明确延期；不增加插件协议"
+      ],
+      "scope": {
+        "in": [
+          "保留现有消费接缝并完成本地 Ops 重建验证",
+          "保持注册/ModuleConfig/公共API签名，实际rebuild后Go业务和FE构建通过",
+          "采用隔离本地候选，不在Ops主工作树复制Base源码；Ops状态保持干净",
+          "发布与lock升级通过foundation release流程，明确延期；不增加插件协议"
+        ],
+        "out": [
+          "产品扩展/大重构",
+          "批量删除或重写旧文档",
+          "生产操作/发布/冻结代签",
+          "覆盖或回退用户已有改动"
+        ]
+      }
+    },
+    {
+      "taskId": "2026-11-04-global-audit-remediation",
+      "path": ".harness/tasks/2026-11-04-global-audit-remediation/manifest.json",
+      "sha256": "392438533852b85a6663d1f58c16a410f4941fc8ec85a457360dbec92c756559",
+      "criteriaSha256": "d6f264c7f9f555817602fcf468567ab760bcd16a70d52021cedd493f7f6884ae",
+      "scopeSha256": "75d7b7056202da920736b7885a1277361d72856276782a801047ce289fb5e960",
+      "status": "in-progress",
+      "acceptanceCriteria": [
+        "所有九项有真实状态和证据；P1优先验证并修复",
+        "冻结与发布不自动签署；低价值复杂度不追加投资",
+        "共同验证通过或缺口显式；子任务闭合不等于programme完成"
+      ],
+      "scope": {
+        "in": [
+          "全局审计有限整改 programme",
+          "所有九项有真实状态和证据；P1优先验证并修复",
+          "冻结与发布不自动签署；低价值复杂度不追加投资",
+          "共同验证通过或缺口显式；子任务闭合不等于programme完成"
+        ],
+        "out": [
+          "产品扩展/大重构",
+          "批量删除或重写旧文档",
+          "生产操作/发布/冻结代签",
+          "覆盖或回退用户已有改动"
+        ]
+      }
+    },
+    {
+      "taskId": "2026-11-05-base-freeze-release",
+      "path": ".harness/tasks/2026-11-05-base-freeze-release/manifest.json",
+      "sha256": "eadf2bbfc58625f53584a444f8aa05729e7bfb53df6bd25a39e6e54384a2dc05",
+      "criteriaSha256": "3256d20c2d95bed06af08319a2951234aae477cabd553de2a84986657dbf05ee",
+      "scopeSha256": "634f1aaf7e800971f0e14c22d7bebbdc2d42a3a0f938243b96dc36c126a99058",
+      "status": "in-progress",
+      "acceptanceCriteria": [
+        "Existing functionality matrix has no unresolved implementation gaps within the approved current scope",
+        "Tenant V1 retained and positive/negative boundaries verified",
+        "All required local and hosted gates pass on the immutable candidate",
+        "Affected documents accurately describe the delivered release",
+        "Related changes merged; foundation release verified; Ops consumes that exact release"
+      ],
+      "scope": {
+        "in": [
+          "Retain and validate all existing tenant V1 capabilities",
+          "Close actual current-function defects and already-authorized unfinished implementation",
+          "Reconcile existing Nov 3/4 local changes, update affected canonical documentation",
+          "Required tests, runtime smoke, independent review and GitHub CI",
+          "Submit/merge related PRs; official foundation release; Ops release consumption",
+          "Include merged GitHub dependency PR485 and remediate minimatch Dependabot52 / GHSA-g3hv-75wg-m249",
+          "Publish v0.18.4 after gates; Ops selects latest stable release from GitHub and uses verified assets only"
+        ],
+        "out": [
+          "Unstarted historical product ideas",
+          "Tenant V2 business isolation, billing or quota enforcement",
+          "Production data operations",
+          "Unapproved quality-gate weakening or solo-override",
+          "Overwriting other contributors changes or merging unrelated PRs"
+        ]
+      }
+    }
+  ],
+  "originalCriteriaCount": 40
+}

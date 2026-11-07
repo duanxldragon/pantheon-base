@@ -1,0 +1,27 @@
+{
+  "recordedAt": "2026-11-07T03:33:54.746Z",
+  "formatter": "Repository pinned Prettier; normal commit hooks still run",
+  "records": [
+    {
+      "file": "resume11-final-code-reviewer.md",
+      "rawReviewedSha256": "3fad0d3a458db5691c3bb2d0f5a427fe1b9358b25cfdf9e954be50ab0c3bd590",
+      "liveSha256": "fba52a7ebc572bd071117d6d72c943e544cb7e0e4ff512ee0321b42cdd0fe532",
+      "machineReadableSemanticsUnchanged": true,
+      "rawArchive": "r11-3fad0d3a458db5691c3bb2d0f5a427fe1b9358b25cfdf9e954be50ab0c3bd590.gz"
+    },
+    {
+      "file": "resume11-final-architect-r2.md",
+      "rawReviewedSha256": "257c2fd2e720b6b4e3c2fbe6fa751447396c9af804e59bbb1ee8a0c883d10a06",
+      "liveSha256": "51e9df6d0a80d21cff073b60594c9ac8f1641cdb633a14d1a9a826cf5dc87d21",
+      "machineReadableSemanticsUnchanged": true,
+      "rawArchive": "r11-257c2fd2e720b6b4e3c2fbe6fa751447396c9af804e59bbb1ee8a0c883d10a06.gz"
+    },
+    {
+      "file": "resume11-final-architect.md",
+      "rawReviewedSha256": "960e71c857d99d525761d6acba87e7e6f0b6a09ec152c0fbe3ecd2fddca2a379",
+      "liveSha256": "d529791c5e96f60cfe26b80c5f7442a19f113a1ff0c24e7783b1851ea359fefa",
+      "machineReadableSemanticsUnchanged": true,
+      "rawArchive": "r11-960e71c857d99d525761d6acba87e7e6f0b6a09ec152c0fbe3ecd2fddca2a379.gz"
+    }
+  ]
+}

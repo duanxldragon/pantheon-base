@@ -1,0 +1,120 @@
+{
+  "recordedAt": "2026-11-07T03:33:32.742Z",
+  "commands": [
+    {
+      "command": "npm run check:docs-frontmatter",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\task-closeout-2026-11-06\\base-final-closeout",
+      "status": "passed",
+      "exitCode": 0,
+      "log": ".harness/evidence/2026-11-05-base-freeze-release/resume12-check-docs-frontmatter.log.gz",
+      "rawSha256": "5ceeb61713896f4ab5220b3baf0469b4ad76f09ed7774f400cef70955fea58ea",
+      "sha256": "6a75bb40e56260e6a36712e87217194599756a33c10cfe9964325232decc0414"
+    },
+    {
+      "command": "npm run check:task-packet-template",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\task-closeout-2026-11-06\\base-final-closeout",
+      "status": "passed",
+      "exitCode": 0,
+      "log": ".harness/evidence/2026-11-05-base-freeze-release/resume12-check-task-packet-template.log.gz",
+      "rawSha256": "3adf394a58969f2ff6c463b3288b461879ea88400a554f7716649302e17f905f",
+      "sha256": "f88e7647cb7a6dac9fdf3ccd9b813588d1155f62677c4344348b297ac0b03938"
+    },
+    {
+      "command": "npm run check:task-packet",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\task-closeout-2026-11-06\\base-final-closeout",
+      "status": "passed",
+      "exitCode": 0,
+      "log": ".harness/evidence/2026-11-05-base-freeze-release/resume12-check-task-packet.log.gz",
+      "rawSha256": "d84c7fdd08e476ec0e9998fca8ac6ecbe08f97cc4bd42a509ebe2e86c160bb12",
+      "sha256": "677e8cae5961271d06d4ba05e99e254c44dcb6a6a0e917b9fdc6e15b40dd1035"
+    },
+    {
+      "command": "npm run check:harness-evidence",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\task-closeout-2026-11-06\\base-final-closeout",
+      "status": "passed",
+      "exitCode": 0,
+      "log": ".harness/evidence/2026-11-05-base-freeze-release/resume12-check-harness-evidence-fixed.log.gz",
+      "rawSha256": "a23d5a9e96dad687303b1ac67e2c79f26275165b7e221ac39349ff4ea05c2456",
+      "sha256": "c22b4299864bc270d31c281ec9a10d8050569b2e9bebd11c00bfbf46bdcb3755"
+    },
+    {
+      "command": "npm run check:harness-review",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\task-closeout-2026-11-06\\base-final-closeout",
+      "status": "passed",
+      "exitCode": 0,
+      "log": ".harness/evidence/2026-11-05-base-freeze-release/resume12-check-harness-review.log.gz",
+      "rawSha256": "2bee25ec87eccdaf634527cc3de26a22bf66964a4508886f459f29e472845d59",
+      "sha256": "0027207239dc2c6614a0ae4850da644351cf87ec4ebbd08d326add712ce6b5a6"
+    },
+    {
+      "command": "npm run check:harness-runtime-evidence",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\task-closeout-2026-11-06\\base-final-closeout",
+      "status": "passed",
+      "exitCode": 0,
+      "log": ".harness/evidence/2026-11-05-base-freeze-release/resume12-check-harness-runtime-evidence.log.gz",
+      "rawSha256": "64d82ad6969859906eb8cb13c7ca0a1c34fc5f577faf89c6c386a124fc998921",
+      "sha256": "ba1d0360614f9d185f53d8762365cb29d41a4b4acc16b47942521b07eb709959"
+    },
+    {
+      "command": "npm run check:harness-graph-review",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\task-closeout-2026-11-06\\base-final-closeout",
+      "status": "passed",
+      "exitCode": 0,
+      "log": ".harness/evidence/2026-11-05-base-freeze-release/resume12-check-harness-graph-review.log.gz",
+      "rawSha256": "825f6bb9892861c2e31cf4e9e70f7b36f7c2384f6d84ee0285a9246c752bad86",
+      "sha256": "5919bd49627741432e13b2436027a80242cbc70084f907d4f04459400cab5646"
+    },
+    {
+      "command": "npm run check:harness-docs",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\task-closeout-2026-11-06\\base-final-closeout",
+      "status": "passed",
+      "exitCode": 0,
+      "log": ".harness/evidence/2026-11-05-base-freeze-release/resume12-check-harness-docs.log.gz",
+      "rawSha256": "d8e6ad7f1b15451eb8df6f7941b2f1b57d2701468fa6364c70f7b1db72b1b89d",
+      "sha256": "1f350c3a22ad57817e72cea2f4c8cabde0759e7217677fce5f4a67eb50ba9ac8"
+    },
+    {
+      "command": "npm run check:harness-encoding",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\task-closeout-2026-11-06\\base-final-closeout",
+      "status": "passed",
+      "exitCode": 0,
+      "log": ".harness/evidence/2026-11-05-base-freeze-release/resume12-check-harness-encoding.log.gz",
+      "rawSha256": "55f7b4d540776c86630b49f29cb2bb8bbf3119fc933b289c2e6bf2da043bc728",
+      "sha256": "0fb0790e08f935839e0bc0f74c9795dc2c3c54fcbff8d7bcfa06f38c350af2e4"
+    },
+    {
+      "command": "npm run check:harness-inventory",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\task-closeout-2026-11-06\\base-final-closeout",
+      "status": "passed",
+      "exitCode": 0,
+      "log": ".harness/evidence/2026-11-05-base-freeze-release/resume12-check-harness-inventory.log.gz",
+      "rawSha256": "d1caba25eea042d2284099796b5e6905a216198e41b147fe4f4c4347b25d6bb1",
+      "sha256": "7b4bc5ca911b6d71df4bf13d8a26faf0ee6794a2a1a83c9a080d12b3a4e5e676"
+    },
+    {
+      "command": "npm run check:checker-wiring",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\task-closeout-2026-11-06\\base-final-closeout",
+      "status": "passed",
+      "exitCode": 0,
+      "log": ".harness/evidence/2026-11-05-base-freeze-release/resume12-check-checker-wiring.log.gz",
+      "rawSha256": "53316dbbcd6ca052430720c87d3b4b18eb3d0f7d992135d67d603c36ed63b8a0",
+      "sha256": "ec01945c7d4d4a0ecc3b55d6783e57fd02c320aa04c9349a74be942a29e41548"
+    },
+    {
+      "command": "npm run check:structure",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\task-closeout-2026-11-06\\base-final-closeout",
+      "status": "passed",
+      "exitCode": 0,
+      "log": ".harness/evidence/2026-11-05-base-freeze-release/resume12-check-structure.log.gz",
+      "rawSha256": "f0bbb3164dd5a88ae7ab56fba0ff8fad0178d12270c39e960f21984eb049d01e",
+      "sha256": "27227e8229b02475bc3dfae39b4913a457a37f5b583d07ac5088a49090b40f50"
+    }
+  ],
+  "initialFailure": {
+    "command": "npm run check:harness-evidence",
+    "exitCode": 1,
+    "log": "resume12-check-harness-evidence-initial.log.gz",
+    "rawSha256": "a415b65f7db76b00bc37dec819a64b847fe7d5fa103eaf82bdb44c9b1db92389",
+    "resolution": "Added missing command status/cwd fields and archived-log references; evidence checker rerun passed; no rules changed"
+  }
+}

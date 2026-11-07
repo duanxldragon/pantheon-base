@@ -1,3 +1,9 @@
+# Final original-scope plan acceptance (2026-11-07)
+
+2026-11-07: exact original scope approved by fresh independent CODE APPROVE / ARCH CLEAR on the final five-task plan. Official Base v0.18.5 at1da0834b; Base1890/0/1 and47packages, FE218, immutable Full Smoke/Release Gate passed. Official Ops PR177 merged at92c1efcfc4f754a7f0a4e9f181f446f4a2ddcfc2 after required hosted gates including Smoke Sanity; full readonly CGO consumer race2170/0/1,64packages, no source overlay or module mutation; FE218/scripts59/migration32clean/four standard generator smoke passed. Original unchanged SSRF public-API attack replay now records2 DNS lookups / loopbacknotreached; original deliberate attack-failure panic is preserved as a nonzero result, not called a green test. All40 original criteria and all source/contract boundaries preserved. S3 provider skip/no waiver, maintenance freeze unsigned, OpsQA002 and extra host-import runtime table gaps, network policy/CI measurements/baselines/production operations remain explicit separate residuals.
+
+## Historical plan (preserved)
+
 # Pantheon Base 全局审计整改计划
 
 日期：2026-11-04；状态：in-progress（用户已授权按优先级实施）；审计：docs/reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-11-04_FULL.md；工作树基线：525506035b3a843f85b984beb46866c1329cd964 / 214 项已有变化。
@@ -10,17 +16,17 @@ In：PB-001–PB-009逐项裁定、有限实现、文档确定漂移、现有检
 
 ## 优先级与依赖
 
-| 顺序 | 问题 | 任务 | 优先级 | 处理策略 |
-| --- | --- | --- | --- | --- |
-| 1 | PB-001 | [SSRF DNS 校验与实际拨号绑定](../2026-11-04-audit-p1-ssrf-dial-binding/manifest.json) | P1 | 实施并验证 |
-| 2 | PB-002 | [npm 漏洞扫描非零结果传递到门禁](../2026-11-04-audit-p1-npm-audit-exit/manifest.json) | P1 | 实施并验证 |
-| 3 | PB-003 | [刷新令牌并发与存储故障验证及最小修复](../2026-11-04-audit-p1-refresh-rotation/manifest.json) | P1 | 单任务TDD验证后决定最小修复 |
-| 4 | PB-004 | [修正已确认权威文档漂移与失效链接](../2026-11-04-audit-p2-authoritative-docs/manifest.json) | P2 | 实施并验证 |
-| 5 | PB-005 | [统一 Agent 授权与维护者三触点](../2026-11-04-audit-p2-agent-stop-points/manifest.json) | P2 | 实施并验证 |
-| 6 | PB-006 | [说明风险优先与现行 Sonar 发布门禁的权威边界](../2026-11-04-audit-p2-release-policy/manifest.json) | P2 | 实施并验证 |
-| 7 | PB-007 | [最终候选及核心集成验证收口](../2026-11-04-audit-p2-freeze-validation/manifest.json) | P2 | 实测与显式gap；不代签 |
-| 8 | PB-008 | [保留现有消费接缝并完成本地 Ops 重建验证](../2026-11-04-audit-p3-consumer-seams/manifest.json) | P3 | 实施并验证 |
-| 9 | PB-009 | [按实际价值裁定 CI 重复与 dormant 机制](../2026-11-04-audit-p3-ci-cost-review/manifest.json) | P3 | 仅裁定并延期优化 |
+| 顺序 | 问题   | 任务                                                                                               | 优先级 | 处理策略                    |
+| ---- | ------ | -------------------------------------------------------------------------------------------------- | ------ | --------------------------- |
+| 1    | PB-001 | [SSRF DNS 校验与实际拨号绑定](../2026-11-04-audit-p1-ssrf-dial-binding/manifest.json)              | P1     | 实施并验证                  |
+| 2    | PB-002 | [npm 漏洞扫描非零结果传递到门禁](../2026-11-04-audit-p1-npm-audit-exit/manifest.json)              | P1     | 实施并验证                  |
+| 3    | PB-003 | [刷新令牌并发与存储故障验证及最小修复](../2026-11-04-audit-p1-refresh-rotation/manifest.json)      | P1     | 单任务TDD验证后决定最小修复 |
+| 4    | PB-004 | [修正已确认权威文档漂移与失效链接](../2026-11-04-audit-p2-authoritative-docs/manifest.json)        | P2     | 实施并验证                  |
+| 5    | PB-005 | [统一 Agent 授权与维护者三触点](../2026-11-04-audit-p2-agent-stop-points/manifest.json)            | P2     | 实施并验证                  |
+| 6    | PB-006 | [说明风险优先与现行 Sonar 发布门禁的权威边界](../2026-11-04-audit-p2-release-policy/manifest.json) | P2     | 实施并验证                  |
+| 7    | PB-007 | [最终候选及核心集成验证收口](../2026-11-04-audit-p2-freeze-validation/manifest.json)               | P2     | 实测与显式gap；不代签       |
+| 8    | PB-008 | [保留现有消费接缝并完成本地 Ops 重建验证](../2026-11-04-audit-p3-consumer-seams/manifest.json)     | P3     | 实施并验证                  |
+| 9    | PB-009 | [按实际价值裁定 CI 重复与 dormant 机制](../2026-11-04-audit-p3-ci-cost-review/manifest.json)       | P3     | 仅裁定并延期优化            |
 
 P1-001/P1-002允许只读补丁建议并行，合并串行；PB-003高风险并发不进入盲并行补丁。P2文档/指令/发布边界使用同一个writer顺序改，最终整体验证只跑一次；发现新失败才定向复测。
 
@@ -108,7 +114,6 @@ P1-001/P1-002允许只读补丁建议并行，合并串行；PB-003高风险并�
 
 对应文件：仅任务证据/隔离消费者。
 风险：低：优化不实施；盲删可能丢coverage/race保护。
-
 
 ## 治理与下游
 

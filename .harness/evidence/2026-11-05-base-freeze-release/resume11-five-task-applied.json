@@ -1,0 +1,44 @@
+{
+  "recordedAt": "2026-11-07T03:32:24.254Z",
+  "status": "final-five-applied-after-independent-approval-local-governance-pending",
+  "planSha256": "a563dd762c616e5dc00f96ed10ccc22a8bd06cf0992c469660dcfba20380f3df",
+  "sourceSha256": "ca272df8435479ab20a245260b09aa44f90cece14eb66932c580c3c3d36d146b",
+  "approvals": [
+    {
+      "lane": "code-reviewer",
+      "file": "resume11-final-code-reviewer.md",
+      "sha256": "fba52a7ebc572bd071117d6d72c943e544cb7e0e4ff512ee0321b42cdd0fe532",
+      "verdict": "APPROVE",
+      "architecturalStatus": null,
+      "rawReviewedSha256": "3fad0d3a458db5691c3bb2d0f5a427fe1b9358b25cfdf9e954be50ab0c3bd590",
+      "rawArchive": ".harness/evidence/2026-11-05-base-freeze-release/r11-3fad0d3a458db5691c3bb2d0f5a427fe1b9358b25cfdf9e954be50ab0c3bd590.gz"
+    },
+    {
+      "lane": "architect",
+      "file": "resume11-final-architect-r2.md",
+      "sha256": "51e9df6d0a80d21cff073b60594c9ac8f1641cdb633a14d1a9a826cf5dc87d21",
+      "verdict": "APPROVE",
+      "architecturalStatus": "CLEAR",
+      "rawReviewedSha256": "257c2fd2e720b6b4e3c2fbe6fa751447396c9af804e59bbb1ee8a0c883d10a06",
+      "rawArchive": ".harness/evidence/2026-11-05-base-freeze-release/r11-257c2fd2e720b6b4e3c2fbe6fa751447396c9af804e59bbb1ee8a0c883d10a06.gz"
+    }
+  ],
+  "transitionedTaskIds": [
+    "2026-11-04-audit-p1-ssrf-dial-binding",
+    "2026-11-04-audit-p2-ops-db-test-followup",
+    "2026-11-04-audit-p3-consumer-seams",
+    "2026-11-04-global-audit-remediation",
+    "2026-11-05-base-freeze-release"
+  ],
+  "originalCriteriaCount": 40,
+  "inventory": {
+    "total": 250,
+    "completed": 250,
+    "inProgress": 0
+  },
+  "consumerPr": 177,
+  "consumerCommit": "92c1efcfc4f754a7f0a4e9f181f446f4a2ddcfc2",
+  "freezeSigned": false,
+  "waivers": [],
+  "finalGovernancePr": "pending"
+}

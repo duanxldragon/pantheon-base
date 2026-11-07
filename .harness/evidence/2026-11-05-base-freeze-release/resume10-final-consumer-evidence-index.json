@@ -1,0 +1,157 @@
+{
+  "source": "D:/workspace/go/pantheon-platform/audit-artifacts/task-closeout-2026-11-06/ops-v185-consumption/.harness/evidence/2026-11-05-base-v0183-consumption",
+  "files": [
+    {
+      "file": "ops-v185-resume10-consumer-approval.json",
+      "sha256": "3f478360eaaa5f424291b1ef72db3c79472a83d3907b10007f3675847452ab58"
+    },
+    {
+      "file": "ops-v185-resume10-consumer-smoke.json",
+      "sha256": "600f431de4883689d7cf1bb622857146c4c68fba7ec46b866c48df08454eb54d"
+    },
+    {
+      "file": "ops-v185-resume10-consumer-validation.json",
+      "sha256": "fc3436d55dc9fb1924ea1cd4f050f6686cc590a9139565d2523ea7931a51a974"
+    },
+    {
+      "file": "ops-v185-resume10-original-resume9-consumer-architect.md.gz",
+      "sha256": "fba612fae657ce447509e30974faf02984c852de7f672fbbd24a3f173f03948e"
+    },
+    {
+      "file": "ops-v185-resume10-original-resume9-consumer-code-reviewer.md.gz",
+      "sha256": "9bad613f9303ecc9ac54eb7c00c08d9b839fdc242839fd0b34eee023c8ed02f9"
+    },
+    {
+      "file": "ops-v185-resume10-protected-source.json",
+      "sha256": "203ca93ecf9b8aabdb585d141f7c1f3b77cfffbc621365e968ea44b09eaf012d"
+    },
+    {
+      "file": "ops-v185-resume10-raw-archives.json",
+      "sha256": "37208d6efc661c17d29c733e438baf172c7d456381238ea84f0eebf910b93515"
+    },
+    {
+      "file": "ops-v185-resume8-consumer-frontend-lint.log.gz",
+      "sha256": "c35921e4af13277f35a626f6a59ad270648903e66198999932fedbfe04328291"
+    },
+    {
+      "file": "ops-v185-resume8-consumer-frontend-type-check.log.gz",
+      "sha256": "90d3631275ee2028530f30402edce416b8d5d921558e35b2fce3b3d1a8fdf68f"
+    },
+    {
+      "file": "ops-v185-resume8-consumer-frontend.json",
+      "sha256": "95812edc1d227f9df205617ccfe0a90d1918192ee0b45f88f1af9e23b6e3e3c1"
+    },
+    {
+      "file": "ops-v185-resume8-consumer-migration.json",
+      "sha256": "a2ea63f8465409c8a4f3ba13c338229f73a1935d2d1abf49303da531213a587b"
+    },
+    {
+      "file": "ops-v185-resume8-consumer-race.json",
+      "sha256": "7490a9df1b5ef18492ec9ef2d123d9e0959e96d936823b5f31bb037423ab10c8"
+    },
+    {
+      "file": "ops-v185-resume8-consumer-readonly-full-race.log.gz",
+      "sha256": "2390230b250614e46f582066b8302a49c1eaa40e38d6accc4ac0218281fa4d43"
+    },
+    {
+      "file": "ops-v185-resume9-consumer-acquire-direct.log.gz",
+      "sha256": "5f4e0915a6f70a263738f31c94d2602777c901fb16583e99f492005e6834a657"
+    },
+    {
+      "file": "ops-v185-resume9-consumer-architect.md",
+      "sha256": "4cd7ada0b60a8a2e11c1e16519e0cb8963206b7f9d48b40dbf50b67047bd946a"
+    },
+    {
+      "file": "ops-v185-resume9-consumer-code-reviewer.md",
+      "sha256": "840eeb872386c37f110748e93281c85177c6ae66df70a42370bf1f7e0ccbdd07"
+    },
+    {
+      "file": "ops-v185-resume9-consumer-drift.log.gz",
+      "sha256": "5048e824785924f67b01e6fd106ea09026f2de87a4cc0c586d03d91e00d3621f"
+    },
+    {
+      "file": "ops-v185-resume9-consumer-final-rebuild.log.gz",
+      "sha256": "d8e0a24dcf0c87f8791420c9287787a91b59b7eb35cd66d9f2aec955442ecbbf"
+    },
+    {
+      "file": "ops-v185-resume9-consumer-frontend-build-direct.log.gz",
+      "sha256": "7fa040d1509e8b72287df6168072a8ede0625bd068194c3ac56f8eb61cff5b2d"
+    },
+    {
+      "file": "ops-v185-resume9-consumer-frontend-direct.json",
+      "sha256": "2a73f035500125da9648bf6ba258679dc7bae1da461ac37589b03ebc4265aa22"
+    },
+    {
+      "file": "ops-v185-resume9-consumer-frontend-test-unit-direct.log.gz",
+      "sha256": "32c3d63fc0adc9ae507b9e064cb36e7900ce6f085a55a34c1dd541f849448c18"
+    },
+    {
+      "file": "ops-v185-resume9-consumer-frontend-type-check-direct.log.gz",
+      "sha256": "17a66d4f9d721873779ab5b49de8bf79c247724ccff09105bd4bf3eb65089a36"
+    },
+    {
+      "file": "ops-v185-resume9-consumer-install-correction.json",
+      "sha256": "6f8ae64bb07454ce2df3cdefec77cd8f3e99bba5fa53512d270e8284940eed33"
+    },
+    {
+      "file": "ops-v185-resume9-consumer-install.json",
+      "sha256": "2960ddf01ab1bae44947220d4e6a539bb9b3772569db18fcf505292d259646f1"
+    },
+    {
+      "file": "ops-v185-resume9-consumer-overlay.log.gz",
+      "sha256": "47c060a3645075260b6ccce67070f5a97c8e823331bdb364e920d4701f4635ee"
+    },
+    {
+      "file": "ops-v185-resume9-consumer-rebuild-direct.log.gz",
+      "sha256": "4e2da49dba879642ba7e6749ecb3dfef0dce4512559d179b5814305704ebc977"
+    },
+    {
+      "file": "ops-v185-resume9-consumer-review-snapshot.json",
+      "sha256": "66cb995f359e1502b5277c74171629fce55ed68b57f07735621ce63325fb857c"
+    },
+    {
+      "file": "ops-v185-resume9-consumer-runtime-build-direct.log.gz",
+      "sha256": "9e72928e7a01615b4cf090daa617b4ca9d68531748f887f323f695eb4ca3ef63"
+    },
+    {
+      "file": "ops-v185-resume9-consumer-script-tests-direct.log.gz",
+      "sha256": "6e37978b211301ac796abba2f1b962bed9336d58a874b014599a9ca471250414"
+    },
+    {
+      "file": "ops-v185-resume9-consumer-smoke-direct.json",
+      "sha256": "07eca6a87f8afff44b705ec16b1a2e6fe7db41173331b8d39c6dbfc8aeae5466"
+    },
+    {
+      "file": "ops-v185-resume9-consumer-source-equivalence.json",
+      "sha256": "99ae58112b02b7e3133c8070964909989c7a1b9d68be0215908c3525be752b4a"
+    },
+    {
+      "file": "ops-v185-resume9-official-provenance.json",
+      "sha256": "6f343615cb02590718cb1e4a19574c7a242d65c2631c6643bbd5b11a7c3423d8"
+    },
+    {
+      "file": "ops-v185-resume9-ops-check-business-overlay.log.gz",
+      "sha256": "c02c988dfac88fc643f8883adb965f72372571a071179d4ce4a5ce8c0fdc4103"
+    },
+    {
+      "file": "ops-v185-resume9-ops-check-docs-frontmatter.log.gz",
+      "sha256": "85080386a942ebf48bc0eaeff6cefc50d6ffbe7b6aaaf75b54edfe66465f8900"
+    },
+    {
+      "file": "ops-v185-resume9-ops-check-gorm-sql-literal.log.gz",
+      "sha256": "18bfcc2f59ed76744a943c0a5a93cbe49a2a0884d21f0ce3c1912a42f50d1c85"
+    },
+    {
+      "file": "ops-v185-resume9-ops-check-task-packet-template.log.gz",
+      "sha256": "9991f91d3a8821dee9cb0064f1573a9edc89906c9dc287e6e56d8de10cbb31a8"
+    },
+    {
+      "file": "ops-v185-resume9-ops-governance.json",
+      "sha256": "1c2767a3b3eee9ec0cbf281e3f09b71ef10b59cffb626ce4b764d681e8b8f3d6"
+    },
+    {
+      "file": "ops-v185-resume9-ops-optional-packet-baseline.json",
+      "sha256": "f85561227bd3c58327761f79ba93c12d97876a41a3e8b75b3d31d9e5f28f9712"
+    }
+  ]
+}

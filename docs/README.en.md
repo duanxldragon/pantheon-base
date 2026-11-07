@@ -1,5 +1,9 @@
 # Pantheon Base Documentation Index
 
+Current (2026-11-07): all40 original criteria for12 tasks retained and independently approved. Seven closures merged throughPR497; final five governance projection awaits its own PR gates. Official Base v0.18.5 released and OpsPR177 consumption merged. Full no-overlay race/frontend/scripts/migration/four standard smoke passed. Freeze unsigned, S3 unwaived; business/policy residuals explicit. See [evidence](../.harness/evidence/2026-11-05-base-freeze-release/resume11-five-task-applied.json).
+
+### Historical checkpoints
+
 Current (2026-11-07): seven original tasks independently approved and closed; five consumer/programme tasks remain open. Base v0.18.5 published; four assets verified and Ops rebuilt. Full consumer race/runtime/CI closeout is in progress. Maintenance freeze unsigned; S3 unwaived. See [evidence](../.harness/evidence/2026-11-05-base-freeze-release/resume9-seven-task-applied.json).
 
 ### Historical delivery checkpoint

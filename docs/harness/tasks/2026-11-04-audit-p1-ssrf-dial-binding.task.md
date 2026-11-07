@@ -4,9 +4,13 @@ doc_type: Remediation
 layer: platform
 linked_contracts:
   - docs/contracts/PLATFORM_CONTRACT.md
-status: Active
+status: Archived
 updated_at: 2026-11-04
 ---
+
+> Current original-scope acceptance: 2026-11-07: exact original scope approved by fresh independent CODE APPROVE / ARCH CLEAR on the final five-task plan. Official Base v0.18.5 at1da0834b; Base1890/0/1 and47packages, FE218, immutable Full Smoke/Release Gate passed. Official Ops PR177 merged at92c1efcfc4f754a7f0a4e9f181f446f4a2ddcfc2 after required hosted gates including Smoke Sanity; full readonly CGO consumer race2170/0/1,64packages, no source overlay or module mutation; FE218/scripts59/migration32clean/four standard generator smoke passed. Original unchanged SSRF public-API attack replay now records2 DNS lookups / loopbacknotreached; original deliberate attack-failure panic is preserved as a nonzero result, not called a green test. All40 original criteria and all source/contract boundaries preserved. S3 provider skip/no waiver, maintenance freeze unsigned, OpsQA002 and extra host-import runtime table gaps, network policy/CI measurements/baselines/production operations remain explicit separate residuals.
+
+## Historical packet text (preserved)
 
 # Task Packet: 2026-11-04-audit-p1-ssrf-dial-binding
 
@@ -135,3 +139,7 @@ platform
 - [x] 原始DNS重绑定复现从到达loopback变为拒绝，测试先红后绿
 - [x] 只拨号已核查IP；私网、混合DNS、IPv4/IPv6、取消/超时、多地址和HTTPS Host/SNI行为有回归
 - [ ] Ops实际消费接口不删除；本地重建和业务测试通过，下游正式升级明确延期
+
+## Final original-scope closeout (2026-11-07)
+
+2026-11-07: exact original scope approved by fresh independent CODE APPROVE / ARCH CLEAR on the final five-task plan. Official Base v0.18.5 at1da0834b; Base1890/0/1 and47packages, FE218, immutable Full Smoke/Release Gate passed. Official Ops PR177 merged at92c1efcfc4f754a7f0a4e9f181f446f4a2ddcfc2 after required hosted gates including Smoke Sanity; full readonly CGO consumer race2170/0/1,64packages, no source overlay or module mutation; FE218/scripts59/migration32clean/four standard generator smoke passed. Original unchanged SSRF public-API attack replay now records2 DNS lookups / loopbacknotreached; original deliberate attack-failure panic is preserved as a nonzero result, not called a green test. All40 original criteria and all source/contract boundaries preserved. S3 provider skip/no waiver, maintenance freeze unsigned, OpsQA002 and extra host-import runtime table gaps, network policy/CI measurements/baselines/production operations remain explicit separate residuals. See .harness/evidence/2026-11-05-base-freeze-release/resume11-five-task-applied.json. Original scope/criteria and earlier packet text remain historical records.
