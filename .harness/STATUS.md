@@ -1,3 +1,11 @@
+# v0.18.6 release and Ops consumption (2026-11-07)
+
+Original12/40 were completed and merged through BasePR497/498 (main55ded517). Inventory before new task:250/250 completed. New release/consumer/main consolidation task is in-progress:251 total /250 completed /1 in-progress. Source behavior unchanged; VERSION186 preparation, immutable release gates/publication and actual official Ops consumption still pending.
+
+Evidence: .harness/evidence/2026-11-07-v0186-release-ops-consumption/summary.md. Historical dirty work and refs preserved in external git bundles/stashes. No S3 waiver/freeze signature or production/gate policy change.
+
+## Historical inventory
+
 # Final original-task inventory (2026-11-07)
 
 250 manifests including237 archives:250 completed /0 in-progress in the reviewed candidate. Original12/40 criteria unchanged. Seven closures merged BasePR497; five final independent approvals applied, final governance PR CI/merge remains required. Official185 published; OpsPR177 merged, full consumer validation passed. Maintenance freeze unsigned, S3 unwaived, separate residuals retained. Evidence: .harness/evidence/2026-11-05-base-freeze-release/resume11-five-task-applied.json.

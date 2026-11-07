@@ -1,5 +1,9 @@
 # Pantheon Base Documentation Index
 
+Current (2026-11-07): original12/40 completion is merged via BasePR497/498. v0.18.6 version/release preparation and official Ops consumption are in progress; no new source behavior. See [task](./harness/tasks/2026-11-07-v0186-release-ops-consumption.task.md).
+
+## Historical checkpoints
+
 Current (2026-11-07): all40 original criteria for12 tasks retained and independently approved. Seven closures merged throughPR497; final five governance projection awaits its own PR gates. Official Base v0.18.5 released and OpsPR177 consumption merged. Full no-overlay race/frontend/scripts/migration/four standard smoke passed. Freeze unsigned, S3 unwaived; business/policy residuals explicit. See [evidence](../.harness/evidence/2026-11-05-base-freeze-release/resume11-five-task-applied.json).
 
 ### Historical checkpoints

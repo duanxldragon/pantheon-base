@@ -1,0 +1,94 @@
+{
+  "recordedAt": "2026-11-07T05:45:21.310Z",
+  "repo": "D:/workspace/go/pantheon-platform/pantheon-base",
+  "taskId": "2026-11-07-v0186-release-ops-consumption",
+  "baseline": "55ded517189ad6dd57ab9b4a77af924c54c481d7",
+  "officialPrevious": "1da0834bdce636fd2fc1063290e3f32339e2d27a",
+  "approvalScope": "release186-preparation-only; original all-four new-task criteria remain pending until actual source merge/publication/consumer/onlymain completion",
+  "sourceFiles": [
+    {
+      "path": ".harness/STATUS.md",
+      "sha256": "d9fcfd0db69096ce88ef1874cf36c744b5bb2dfa41982a8f475ec38064bddc0d"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "sha256": "c5eaf9850c8a5f0c37e75c1f5eb4da1af13c1b2e2cc1d0963aaec9f1bec149f3"
+    },
+    {
+      "path": "VERSION",
+      "sha256": "b75303572e20c4b39fdf3df111cdaafbfe7c449e4b69402603aef724a4972150"
+    },
+    {
+      "path": "docs/README.en.md",
+      "sha256": "395afd76d6c1851cc3f1df5ff1195fc80809891184ce22fec31c66155a890f9b"
+    },
+    {
+      "path": "docs/README.md",
+      "sha256": "247a31bdd342c95bdd2bed49e674699667c04f979f2eed087fff1360b1a8e981"
+    },
+    {
+      "path": ".harness/evidence/2026-11-07-v0186-release-ops-consumption/commands.json",
+      "sha256": "6d807b84db0ce4f1b55c1dea2c5eeb8640996cf5f5084290743270a74a2c4c4c"
+    },
+    {
+      "path": ".harness/evidence/2026-11-07-v0186-release-ops-consumption/source-equivalence.json",
+      "sha256": "2b3dd2c454e8d02644622180ae230352a745945afd5ceda8c91142518dae9637"
+    },
+    {
+      "path": ".harness/evidence/2026-11-07-v0186-release-ops-consumption/summary.md",
+      "sha256": "534d87941b88ccefc72f647d019095a598cbfe6172b752c86f6dc16581aaf747"
+    },
+    {
+      "path": ".harness/tasks/2026-11-07-v0186-release-ops-consumption/manifest.json",
+      "sha256": "06a3d3656524f212c944ff5b8c7fb766ba4bd7fbea0f1894bcf0e801b616d40c"
+    },
+    {
+      "path": "docs/harness/tasks/2026-11-07-v0186-release-ops-consumption.task.md",
+      "sha256": "2d947a1140adcb5a5c42d09ff8969a87fcbdbe09a39beb488b4755adffca99b3"
+    },
+    {
+      "path": "docs/release-notes/RELEASE_NOTES_v0.18.6.md",
+      "sha256": "5ac0f0fd41ac10b9c23919a48b5f56ebf372c225069b39501e7fdf699679c7f3"
+    }
+  ],
+  "allowedPostReviewUpdates": [
+    "Factual peer-review reports and live fingerprints/archive hashes",
+    "Exact local/hosted command results and PR/merge/link records",
+    "Exact immutable release metadata built only after source merge; publication only after successful Release Gate",
+    "Official Ops acquisition/assembly/race/smoke/drift and merge facts, finalonlymain statuses; no scope/criteria/source/gate/waiver change"
+  ],
+  "localValidation": {
+    "governance": 12,
+    "releaseTests": {
+      "pass": 57,
+      "fail": 0,
+      "skip": 0
+    }
+  },
+  "status": {
+    "published186": false,
+    "consumed186": false,
+    "sourceMerged": false,
+    "finalTaskClosed": false
+  },
+  "scope": {
+    "in": [
+      "VERSION 0.18.6 and accurate release/changelog/task status documentation",
+      "Standard producer Release Gate and four-asset immutable GitHub release",
+      "Official Ops lock/acquisition/rebuild/full validation/merge",
+      "Archive historical refs/dirty work; reconcile unique unpublished Harness docs; only main locally/remotely"
+    ],
+    "out": [
+      "Platform/system/business runtime changes or new features",
+      "Policy/gate weakening, solo-override, S3 waiver or freeze signature",
+      "Production databases/credentials/deployment",
+      "Reintroducing stale evidence states into main"
+    ]
+  },
+  "criteria": [
+    "Base source/version preparation is reviewed and merged with required GitHub checks passed",
+    "Immutable pantheon-base-v0.18.6 has successful Release Gate, four official assets and verified checksums",
+    "Ops consumes exact official v0.18.6 via standard rebuild; readonly CGO full race, frontend, overlay, drift and applicable smoke pass before replacement/PR/merge",
+    "GitHub and local Base/Ops/Harness retain only main, with no open task PR and all historical work recoverably preserved"
+  ]
+}

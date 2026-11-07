@@ -1,0 +1,72 @@
+{
+  "recordedAt": "2026-11-07T05:52:03.843Z",
+  "snapshotSha256": "dd53bb2ee65062deb408e2c3da955b844878a39d745618f9a2773676a9553cd2",
+  "archives": [
+    {
+      "path": ".harness/STATUS.md",
+      "file": "reviewed-input-0.raw.gz",
+      "rawSha256": "d9fcfd0db69096ce88ef1874cf36c744b5bb2dfa41982a8f475ec38064bddc0d",
+      "rawBytes": 141838
+    },
+    {
+      "path": "CHANGELOG.md",
+      "file": "reviewed-input-1.raw.gz",
+      "rawSha256": "c5eaf9850c8a5f0c37e75c1f5eb4da1af13c1b2e2cc1d0963aaec9f1bec149f3",
+      "rawBytes": 67363
+    },
+    {
+      "path": "VERSION",
+      "file": "reviewed-input-2.raw.gz",
+      "rawSha256": "b75303572e20c4b39fdf3df111cdaafbfe7c449e4b69402603aef724a4972150",
+      "rawBytes": 7
+    },
+    {
+      "path": "docs/README.en.md",
+      "file": "reviewed-input-3.raw.gz",
+      "rawSha256": "395afd76d6c1851cc3f1df5ff1195fc80809891184ce22fec31c66155a890f9b",
+      "rawBytes": 8757
+    },
+    {
+      "path": "docs/README.md",
+      "file": "reviewed-input-4.raw.gz",
+      "rawSha256": "247a31bdd342c95bdd2bed49e674699667c04f979f2eed087fff1360b1a8e981",
+      "rawBytes": 14809
+    },
+    {
+      "path": ".harness/evidence/2026-11-07-v0186-release-ops-consumption/commands.json",
+      "file": "reviewed-input-5.raw.gz",
+      "rawSha256": "6d807b84db0ce4f1b55c1dea2c5eeb8640996cf5f5084290743270a74a2c4c4c",
+      "rawBytes": 8829
+    },
+    {
+      "path": ".harness/evidence/2026-11-07-v0186-release-ops-consumption/source-equivalence.json",
+      "file": "reviewed-input-6.raw.gz",
+      "rawSha256": "2b3dd2c454e8d02644622180ae230352a745945afd5ceda8c91142518dae9637",
+      "rawBytes": 444
+    },
+    {
+      "path": ".harness/evidence/2026-11-07-v0186-release-ops-consumption/summary.md",
+      "file": "reviewed-input-7.raw.gz",
+      "rawSha256": "534d87941b88ccefc72f647d019095a598cbfe6172b752c86f6dc16581aaf747",
+      "rawBytes": 1163
+    },
+    {
+      "path": ".harness/tasks/2026-11-07-v0186-release-ops-consumption/manifest.json",
+      "file": "reviewed-input-8.raw.gz",
+      "rawSha256": "06a3d3656524f212c944ff5b8c7fb766ba4bd7fbea0f1894bcf0e801b616d40c",
+      "rawBytes": 6062
+    },
+    {
+      "path": "docs/harness/tasks/2026-11-07-v0186-release-ops-consumption.task.md",
+      "file": "reviewed-input-9.raw.gz",
+      "rawSha256": "2d947a1140adcb5a5c42d09ff8969a87fcbdbe09a39beb488b4755adffca99b3",
+      "rawBytes": 5496
+    },
+    {
+      "path": "docs/release-notes/RELEASE_NOTES_v0.18.6.md",
+      "file": "reviewed-input-10.raw.gz",
+      "rawSha256": "5ac0f0fd41ac10b9c23919a48b5f56ebf372c225069b39501e7fdf699679c7f3",
+      "rawBytes": 1483
+    }
+  ]
+}
