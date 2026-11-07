@@ -6,11 +6,11 @@ Pantheon Base 方法追踪记录。方法论本体位于 `pantheon-harness`。
 
 ---
 
-## [pantheon-base-v0.18.6] — Unreleased (2026-11-07 release preparation)
+## [pantheon-base-v0.18.6] — 2026-11-07 (published and consumed)
 
 - Complete the original twelve tasks against all40 unchanged criteria, accepted through independent CODE/ARCH reviews and merged BasePR497/498.
 - Advance VERSION and reconcile delivery documentation. Backend, frontend, scripts, contracts and workflows remain byte-identical to the v0.18.5 production/test tree.
-- Publish only after exact immutable candidate Release Gate succeeds; Ops must fetch four official GitHub assets and pass standard assembled-tree validation before final replacement/merge.
+- Published immutable5553bc0e after exact Full Smoke/Release Gate; four official assets verified and consumed in OpsPR178 with full readonlyCGO2170/0/1,frontend218,assembler59,migration32clean and standardSmoke4.
 - S3 provider remains unverified, maintenance freeze unsigned, separate Ops runtime/policy gaps retained.
 
 ## [pantheon-base-v0.18.5] — 2026-11-07 (fixture correction)

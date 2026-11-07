@@ -1,6 +1,6 @@
 # Pantheon Base 文档索引
 
-当前（2026-11-07）：原12项/40条标准已通过 Base PR497/498 合并关闭；v0.18.6 版本/发行准备与 Ops 正式消费进行中，平台与系统域实现不变。 See [task](./harness/tasks/2026-11-07-v0186-release-ops-consumption.task.md).
+Official `pantheon-base-v0.18.6` is published at5553bc0e after exact Release Gate; Ops official consumption passed and merged[PR178](https://github.com/duanxldragon/pantheon-ops/pull/178). Three repositories verified main-only; final factual documentation closeout is independently approved; current administrative CI/merge/main-only recheck remain required. Original12/40 remain accepted; unwaived residuals retained. See [evidence](../.harness/evidence/2026-11-07-v0186-release-ops-consumption/summary.md).
 
 ## Historical checkpoints
 

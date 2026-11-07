@@ -1,8 +1,8 @@
-# v0.18.6 release and Ops consumption (2026-11-07)
+# Official v0.18.6 published and consumed (2026-11-07)
 
-Original12/40 were completed and merged through BasePR497/498 (main55ded517). Inventory before new task:250/250 completed. New release/consumer/main consolidation task is in-progress:251 total /250 completed /1 in-progress. Source behavior unchanged; VERSION186 preparation, immutable release gates/publication and actual official Ops consumption still pending.
+Original12/40 accepted and mergedBasePR497/498. Official186 source5553bc0e/BasePR499 published with successful immutable Release Gate and four verified assets. OpsPR17881d64b95 consumes that exact source, fully validated and independently approved. Three repositories main-only/synchronized verified; fresh final CODE/ARCH approve closure. Inventory251total/251completed/0in-progress; final administrative PR CI/merge and final main-only recheck remain required before session completion.
 
-Evidence: .harness/evidence/2026-11-07-v0186-release-ops-consumption/summary.md. Historical dirty work and refs preserved in external git bundles/stashes. No S3 waiver/freeze signature or production/gate policy change.
+Evidence: .harness/evidence/2026-11-07-v0186-release-ops-consumption/summary.md. S3 unwaived, freeze unsigned, oversized auditFR028 and separate residuals remain; historic work/data retained.
 
 ## Historical inventory
 

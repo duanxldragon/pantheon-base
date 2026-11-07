@@ -1,6 +1,6 @@
 # Pantheon Base Documentation Index
 
-Current (2026-11-07): original12/40 completion is merged via BasePR497/498. v0.18.6 version/release preparation and official Ops consumption are in progress; no new source behavior. See [task](./harness/tasks/2026-11-07-v0186-release-ops-consumption.task.md).
+Official `pantheon-base-v0.18.6` is published at5553bc0e after exact Release Gate; Ops official consumption passed and merged[PR178](https://github.com/duanxldragon/pantheon-ops/pull/178). Three repositories verified main-only; final factual documentation closeout is independently approved; current administrative CI/merge/main-only recheck remain required. Original12/40 remain accepted; unwaived residuals retained. See [evidence](../.harness/evidence/2026-11-07-v0186-release-ops-consumption/summary.md).
 
 ## Historical checkpoints
 

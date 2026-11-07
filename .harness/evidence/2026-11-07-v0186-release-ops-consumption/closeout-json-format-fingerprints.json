@@ -1,0 +1,18 @@
+{
+  "recordedAt": "2026-11-07T07:26:24.463Z",
+  "changes": [
+    {
+      "path": ".harness/evidence/2026-11-07-v0186-release-ops-consumption/consumer-final-committed-source-proof.json",
+      "before": "6ca7c635ab953b957b05bf266adf3f6efdb3defbe9a3f4761c0835b29bbf89f8",
+      "after": "32355099e8c45423f8f8667dc908727a1d6d0b6754b07c70e8191ce7a01b2955",
+      "parsedJsonUnchanged": true
+    },
+    {
+      "path": ".harness/evidence/2026-11-07-v0186-release-ops-consumption/owned-services-stopped.json",
+      "before": "42a2a6d487a4a53e02d36436d6df66b2fba4ddcebc641392f98adec1a8a7e881",
+      "after": "b3965cd371e4059e2f2976d742e69313ea2bfe4130b717e0a9e9c781fe499f44",
+      "parsedJsonUnchanged": true
+    }
+  ],
+  "rawReviewedInputsArchived": true
+}

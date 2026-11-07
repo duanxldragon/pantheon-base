@@ -105,7 +105,7 @@ platform
 - Consumer-Specific Controls: official lock, full rebuild, readonly CGO race
 - Required Sensors: governance, Release Gate, official acquisition, consumer validation
 - Required Evidence: exact commits/hashes/commands/results and independent review
-- Ratchet Decision: no-repeat-observed
+- Ratchet Decision: registry-only
 - Delivery Governance: L2
 - GitHub Signal: repo-quality-gate
 - Deferred Code Issues: existing explicit residuals only
@@ -157,7 +157,11 @@ platform
 - [x] Evidence saved or summarized
 - [x] Review completed
 
-- [ ] Base source/version preparation is reviewed and merged with required GitHub checks passed
-- [ ] Immutable pantheon-base-v0.18.6 has successful Release Gate, four official assets and verified checksums
-- [ ] Ops consumes exact official v0.18.6 via standard rebuild; readonly CGO full race, frontend, overlay, drift and applicable smoke pass before replacement/PR/merge
-- [ ] GitHub and local Base/Ops/Harness retain only main, with no open task PR and all historical work recoverably preserved
+- [x] Base source/version preparation is reviewed and merged with required GitHub checks passed
+- [x] Immutable pantheon-base-v0.18.6 has successful Release Gate, four official assets and verified checksums
+- [x] Ops consumes exact official v0.18.6 via standard rebuild; readonly CGO full race, frontend, overlay, drift and applicable smoke pass before replacement/PR/merge
+- [x] GitHub and local Base/Ops/Harness retain only main, with no open task PR and all historical work recoverably preserved
+
+## Verified final closeout
+
+Official186 publication/source gates, actual independently approved and merged OpsPR178, and three-repository main-only are verified in task evidence. Fresh final CODE/ARCH approve the same snapshot; all original criteria preserved. Administrative metadata PR CI/merge and final main-only recheck remain mandatory before session completion. FR028 is open/deferred without storage fix or waiver.
