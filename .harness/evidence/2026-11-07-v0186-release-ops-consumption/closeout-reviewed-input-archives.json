@@ -1,0 +1,120 @@
+{
+  "snapshotSha256": "f7b74e38a06e2324b54e5134ef874c10090bab0861126f272cc1b4c08542ddfb",
+  "files": [
+    {
+      "path": ".harness/STATUS.md",
+      "rawSha256": "5d10fd18ff103289fe0452d4f41db5c791969e3cc512241f88e89fa71e26632c",
+      "archive": ".harness/evidence/2026-11-07-v0186-release-ops-consumption/closeout-reviewed-input-0.raw.gz"
+    },
+    {
+      "path": ".harness/evidence/2026-11-07-v0186-release-ops-consumption/commands.json",
+      "rawSha256": "1aa7e1eda3769c6ebf0543793a51d3c6e58697670b9169b622a3f2f24a4d8814",
+      "archive": ".harness/evidence/2026-11-07-v0186-release-ops-consumption/closeout-reviewed-input-1.raw.gz"
+    },
+    {
+      "path": ".harness/evidence/2026-11-07-v0186-release-ops-consumption/summary.md",
+      "rawSha256": "58e2a323c191aa369ebb89ebe17e72234b0cf8f2fbe6644cd67394e30abd8654",
+      "archive": ".harness/evidence/2026-11-07-v0186-release-ops-consumption/closeout-reviewed-input-2.raw.gz"
+    },
+    {
+      "path": ".harness/tasks/2026-11-07-v0186-release-ops-consumption/manifest.json",
+      "rawSha256": "99b82b24f0947b315d3d8818924d5d6d16657b92163807ff6354bd566ef243e7",
+      "archive": ".harness/evidence/2026-11-07-v0186-release-ops-consumption/closeout-reviewed-input-3.raw.gz"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "rawSha256": "b3549f44d0cbfa8e50b5fde7b02dd149b28c5fd94ed4682bba3d27ed0c9efc3c",
+      "archive": ".harness/evidence/2026-11-07-v0186-release-ops-consumption/closeout-reviewed-input-4.raw.gz"
+    },
+    {
+      "path": "docs/README.en.md",
+      "rawSha256": "d2cb9652e091e3250b0f087c11fa56df72a11581045648a92edb5ddd55571ef8",
+      "archive": ".harness/evidence/2026-11-07-v0186-release-ops-consumption/closeout-reviewed-input-5.raw.gz"
+    },
+    {
+      "path": "docs/README.md",
+      "rawSha256": "d4d5674a751f9eaf0790660b71298879a88e926dff30461fc7f8043f00fb3263",
+      "archive": ".harness/evidence/2026-11-07-v0186-release-ops-consumption/closeout-reviewed-input-6.raw.gz"
+    },
+    {
+      "path": "docs/harness/failure-registry.md",
+      "rawSha256": "aa4d7d8a4e4ebef26f0ea619f5d0db6584e05f34b3e08f00768b488d8d27a97b",
+      "archive": ".harness/evidence/2026-11-07-v0186-release-ops-consumption/closeout-reviewed-input-7.raw.gz"
+    },
+    {
+      "path": "docs/harness/tasks/2026-11-07-v0186-release-ops-consumption.task.md",
+      "rawSha256": "1f16abd2e506b64c274f4a0f260b6bd2254c0b8eddaf660de8525f813b7b9d7f",
+      "archive": ".harness/evidence/2026-11-07-v0186-release-ops-consumption/closeout-reviewed-input-8.raw.gz"
+    },
+    {
+      "path": "docs/release-notes/RELEASE_NOTES_v0.18.6.md",
+      "rawSha256": "63b0bd6dfaa6cec8dcadfc8172e00864c05a00ce3f88faea1fe75203aee57a8a",
+      "archive": ".harness/evidence/2026-11-07-v0186-release-ops-consumption/closeout-reviewed-input-9.raw.gz"
+    },
+    {
+      "path": ".harness/evidence/2026-11-07-v0186-release-ops-consumption/consumer-race-summary.json",
+      "rawSha256": "1f081414340a0b80d9140f9fc11cff8b022a365002eaf6baecefacb2af6e44e2",
+      "archive": ".harness/evidence/2026-11-07-v0186-release-ops-consumption/closeout-reviewed-input-10.raw.gz"
+    },
+    {
+      "path": ".harness/evidence/2026-11-07-v0186-release-ops-consumption/consumer-runtime-residuals.json",
+      "rawSha256": "ce9654562adf53620e45173f3c3e6314f3914156b6dfe0e7b723a93f009ac26a",
+      "archive": ".harness/evidence/2026-11-07-v0186-release-ops-consumption/closeout-reviewed-input-11.raw.gz"
+    },
+    {
+      "path": ".harness/evidence/2026-11-07-v0186-release-ops-consumption/consumer-source-equivalence.json",
+      "rawSha256": "8ec1b1cb26ea46f19cc87f88c3c642ebad7ba33b7387aeea84c137a5c22b6802",
+      "archive": ".harness/evidence/2026-11-07-v0186-release-ops-consumption/closeout-reviewed-input-12.raw.gz"
+    },
+    {
+      "path": ".harness/evidence/2026-11-07-v0186-release-ops-consumption/consumer-standard-smoke-results.json",
+      "rawSha256": "7d9042d0a7215de98270afec6e5d5b88898bf9595e7a6781d125838bb04e87ec",
+      "archive": ".harness/evidence/2026-11-07-v0186-release-ops-consumption/closeout-reviewed-input-13.raw.gz"
+    },
+    {
+      "path": ".harness/evidence/2026-11-07-v0186-release-ops-consumption/consumer-validation-commands.json",
+      "rawSha256": "343c24845721444a443b80f7350e95ce883485cf654368676c56d6cb968c5748",
+      "archive": ".harness/evidence/2026-11-07-v0186-release-ops-consumption/closeout-reviewed-input-14.raw.gz"
+    },
+    {
+      "path": ".harness/evidence/2026-11-07-v0186-release-ops-consumption/official186-consumer-checks.json",
+      "rawSha256": "68affddbc5ef6cbe584e3f2f94ae1895d472a54830d7e633d11e5a4206a41bf8",
+      "archive": ".harness/evidence/2026-11-07-v0186-release-ops-consumption/closeout-reviewed-input-15.raw.gz"
+    },
+    {
+      "path": ".harness/evidence/2026-11-07-v0186-release-ops-consumption/official186-consumer-merge.json",
+      "rawSha256": "05490b45f2715d9ebfe52dba26c77489bcdb6483b9904572cf67d9aa2b144cca",
+      "archive": ".harness/evidence/2026-11-07-v0186-release-ops-consumption/closeout-reviewed-input-16.raw.gz"
+    },
+    {
+      "path": ".harness/evidence/2026-11-07-v0186-release-ops-consumption/official186-github-release.json",
+      "rawSha256": "2264141536831830bb06680999e71439c37ce1dd2a5e147b42c48a32d9b2aefb",
+      "archive": ".harness/evidence/2026-11-07-v0186-release-ops-consumption/closeout-reviewed-input-17.raw.gz"
+    },
+    {
+      "path": ".harness/evidence/2026-11-07-v0186-release-ops-consumption/official186-publication.json",
+      "rawSha256": "920d1027b44edec60da04442ec2322ae9d8e1ba906457483da79fbdf7d17ee22",
+      "archive": ".harness/evidence/2026-11-07-v0186-release-ops-consumption/closeout-reviewed-input-18.raw.gz"
+    },
+    {
+      "path": ".harness/evidence/2026-11-07-v0186-release-ops-consumption/official186-source-checks.json",
+      "rawSha256": "a2b2ec40452a5d6dff374c2c0c373e850621b441882ab9791f5c0ec6eb2e0d2e",
+      "archive": ".harness/evidence/2026-11-07-v0186-release-ops-consumption/closeout-reviewed-input-19.raw.gz"
+    },
+    {
+      "path": ".harness/evidence/2026-11-07-v0186-release-ops-consumption/owned-services-stopped.json",
+      "rawSha256": "42a2a6d487a4a53e02d36436d6df66b2fba4ddcebc641392f98adec1a8a7e881",
+      "archive": ".harness/evidence/2026-11-07-v0186-release-ops-consumption/closeout-reviewed-input-20.raw.gz"
+    },
+    {
+      "path": ".harness/evidence/2026-11-07-v0186-release-ops-consumption/verified-delivery-facts.json",
+      "rawSha256": "d28d2b70bcbafa09f07d6b9c9af3cb7bcc571e5bc922b870c4306c4284785682",
+      "archive": ".harness/evidence/2026-11-07-v0186-release-ops-consumption/closeout-reviewed-input-21.raw.gz"
+    },
+    {
+      "path": ".harness/evidence/2026-11-07-v0186-release-ops-consumption/verified-main-only.json",
+      "rawSha256": "268954b52a689f789b965fe7b634dfa25514e0e3eb813f0efd867e26f3f80575",
+      "archive": ".harness/evidence/2026-11-07-v0186-release-ops-consumption/closeout-reviewed-input-22.raw.gz"
+    }
+  ]
+}

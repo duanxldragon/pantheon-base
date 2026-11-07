@@ -4,7 +4,7 @@
   "title": "发布 Base v0.18.6、Ops 正式消费与三仓 main 收口",
   "goal": "Publish an immutable reviewed Base patch release, consume it in Ops through official artifacts, and consolidate all workspace repositories to main without losing prior work.",
   "primaryLayer": "platform",
-  "status": "in-progress",
+  "status": "completed",
   "priority": "P1",
   "type": "release",
   "dependencies": [],
@@ -45,7 +45,8 @@
       "CHANGELOG.md",
       ".harness/STATUS.md",
       "docs/README.md",
-      "docs/README.en.md"
+      "docs/README.en.md",
+      "docs/harness/failure-registry.md"
     ],
     "doNotTouch": [
       "backend/",
@@ -62,7 +63,7 @@
     "qualityProfile": "ci-workflow",
     "portableFailureClass": "release-consumer-handoff",
     "ownerLayer": "foundation-source",
-    "ratchetDecision": "no-repeat-observed",
+    "ratchetDecision": "registry-only",
     "coverageDimensions": [
       "behaviour",
       "maintainability",
@@ -96,7 +97,7 @@
     ]
   },
   "runtimeSensitive": false,
-  "runtimeGap": "Current phase is release preparation. New source Release Gate/publication and actual official Ops consumption are pending; no acceptance is claimed for these pending criteria. S3 provider gap/freeze unsigned and separate Ops runtime/policy gaps remain.",
+  "runtimeGap": "Real S3 provider unverified; freeze unsigned; existing repeated oversized json_result audit write failure; separate QA002/host-import and policy/security/production/legacy-auth followups; external non-required Ops Vercel preview failed. No waivers or policy changes.",
   "acceptanceCriteria": [
     "Base source/version preparation is reviewed and merged with required GitHub checks passed",
     "Immutable pantheon-base-v0.18.6 has successful Release Gate, four official assets and verified checksums",
@@ -105,7 +106,9 @@
   ],
   "implementationNotes": [
     "User explicitly authorizes push/PR merge/branch consolidation/new release/Ops consumption on2026-11-07. Prior40 criteria and historical artifacts are untouched.",
-    "Version metadata is distinct from frontend UI package version; no package or runtime-source change."
+    "Version metadata is distinct from frontend UI package version; no package or runtime-source change.",
+    "Official186 immutable5553bc0e published with four verified assets after exact source Release Gate. Actual official consumer full readonly CGO2170/0/1 and frontend218/assembler59/migration32/standardSmoke4 passed, independently approved CODE/ARCH and mergedOpsPR178. All three repositories verified main-only before administrative closeout.",
+    "Repeated oversized audit json_result write failure registered asFR028; no storage implementation or gate policy fix/waiver claimed."
   ],
   "risks": [
     "Final publication must target exact successful Release Gate commit; target tag/assets immutable.",
@@ -125,9 +128,9 @@
       ".harness/tasks/2026-11-07-v0186-release-ops-consumption/manifest.json"
     ]
   },
-  "implementationStatus": "preparation-delivered-hosted-merge-pending",
+  "implementationStatus": "official186-published-consumed-merged-main-only-verified",
   "reviewStatus": "approved",
-  "verificationStatus": "preparation-local-passed-delivery-pending",
+  "verificationStatus": "local-governance-and-immutable-release-consumer-gates-passed",
   "preparationApproval": {
     "scope": "release186-preparation-only",
     "snapshotSha256": "dd53bb2ee65062deb408e2c3da955b844878a39d745618f9a2773676a9553cd2",
@@ -151,5 +154,61 @@
         "rawReviewedSha256": "73ebba111b6f804ae3922e4978ebdf01a7a81d7d21e4bff3bb1e867aeb85cf66"
       }
     ]
+  },
+  "deliveryFacts": {
+    "recordedAt": "2026-11-07T07:17:16.110Z",
+    "baseSourcePR": "https://github.com/duanxldragon/pantheon-base/pull/499",
+    "immutableRelease": "https://github.com/duanxldragon/pantheon-base/releases/tag/pantheon-base-v0.18.6",
+    "baseCommit": "5553bc0e8ddc006cb7a6b99a46968bf8cf907a49",
+    "consumerPR": "https://github.com/duanxldragon/pantheon-ops/pull/178",
+    "consumerCommit": "81d64b95201ebd4a545548d933d251dced1e7123",
+    "mainOnlyVerifiedAt": "2026-11-07T07:14:52.696Z",
+    "sourceChanges": [],
+    "protectedPaths": [
+      "backend",
+      "frontend",
+      "scripts",
+      ".github",
+      "config",
+      "schema"
+    ],
+    "baseTaskInventoryBeforeCloseout": {
+      "total": 251,
+      "completed": 250,
+      "inProgress": 1
+    },
+    "residuals": "consumer-runtime-residuals.json",
+    "administrativeCloseout": "Substantive publication/consumption/main-only facts achieved; final metadata PRs require normal CI/merge and final main-only recheck"
+  },
+  "closeoutApproval": {
+    "scope": "v0186-verified-delivery-closeout",
+    "snapshotSha256": "f7b74e38a06e2324b54e5134ef874c10090bab0861126f272cc1b4c08542ddfb",
+    "approvals": [
+      {
+        "lane": "code-reviewer",
+        "file": "closeout-code-reviewer.md",
+        "verdict": "APPROVE",
+        "architecturalStatus": null,
+        "sha256": "08da8d4c0834a7c35f33a78e6f613167dc6a2e55b7c0b17c2a0ef413d251296a",
+        "rawArchive": ".harness/evidence/2026-11-07-v0186-release-ops-consumption/closeout-raw-code-reviewer.md.gz",
+        "rawReviewedSha256": "36ced0d3a2a5e0aed808483bb2016f14ee976ca9a0895792849c34e4140c6111"
+      },
+      {
+        "lane": "architect",
+        "file": "closeout-architect.md",
+        "verdict": "APPROVE",
+        "architecturalStatus": "CLEAR",
+        "sha256": "43e935791613595555b0a96778ac325abdb06b7b91fe9b4c835cb5a188ed1b79",
+        "rawArchive": ".harness/evidence/2026-11-07-v0186-release-ops-consumption/closeout-raw-architect.md.gz",
+        "rawReviewedSha256": "5487abedeac168116af9761032142b6479133ee124cf60584d32b8ce3356e9b0"
+      }
+    ]
+  },
+  "completion": {
+    "recordedAt": "2026-11-07T07:25:50.865Z",
+    "verifiedDelivery": ".harness/evidence/2026-11-07-v0186-release-ops-consumption/verified-delivery-facts.json",
+    "sourceTagImmutable": true,
+    "substantiveMainOnlyEvidence": ".harness/evidence/2026-11-07-v0186-release-ops-consumption/verified-main-only.json",
+    "finalAdministration": "Metadata-only PR must pass its own normal required checks, merge, and final clean main-only recheck before session completion"
   }
 }

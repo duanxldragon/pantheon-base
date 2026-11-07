@@ -1,9 +1,9 @@
 ## 变更摘要
 
-- 改动层级： platform：发行治理；Ops 在后续 PR 正式消费
-- 改动模块： VERSION、CHANGELOG、文档索引、v0.18.6 release notes 与新 L2 task/evidence
-- 目标问题： 原12项任务已验收合并，但最新发行仍为0.18.5；发行记录和版本需要反映最终收口
-- 预期影响： 准备0.18.6，源码行为保持与正式0.18.5一致；合并后仍须精确 Full Smoke/Release Gate、官方发行和Ops实际消费
+- 改动层级： platform: release/governance closeout; official source and business runtime unchanged
+- 改动模块： Existing task/status/index/release notes and verified GitHub/consumer/main-only facts; BaseFR028 registry-only
+- 目标问题： Preparation-era release/consumer status is stale after official186 publication and mergedOpsPR178; persist actual acceptance
+- 预期影响： All251 task manifests completed under final independent approval; immutable5553bc0e release/fourassets/consumerlock unchanged; own metadataCI/merge/finalcleanup mandatory
 
 ## Harness 链路
 
@@ -15,7 +15,7 @@
 - OpenSpec change： none
 - Trivial change： no
 - Quality Profile： ci-workflow
-- Ratchet Decision： no-repeat-observed
+- Ratchet Decision： registry-only
 - GitHub Signal： repo-quality-gate
 
 ## Harness adoption markers
@@ -25,22 +25,22 @@
 - task id: 2026-11-07-v0186-release-ops-consumption
 - task manifest: .harness/tasks/2026-11-07-v0186-release-ops-consumption/manifest.json
 - evidence: .harness/evidence/2026-11-07-v0186-release-ops-consumption/commands.json
-- boundaries: version/docs/task preparation only; backend/frontend/scripts/workflows/config byte-identical to immutable1da0834b; original12/40 untouched
+- boundaries: Governance facts and registry-only residual only; backend/frontend/scripts/.github/config/schema unchanged, originalscopecriteria retained
 - backend response contract: unchanged
 - backend DTO contract: unchanged
 - permission contract: unchanged
-- audit coverage: unchanged; historical runtime/red failures retained, no gate weakening
-- visual evidence: no UI source/behavior change; no new rendering needed; immutable source Full Smoke remains required
-- inheritance contract: standard four official GitHub assets and exact lock/rebuild only; v0.18.6 official consumer acceptance pending
-- base drift: protected code diff against v0.18.5 is empty; exact new Ops drift will be verified after official acquisition
-- Base/ops inheritance: Base publishes; Ops separately fetches/validates/rebuilds official artifact; no hand-copy or overlays of tests
+- audit coverage: Existing repeated oversized json_result loss185/186 registeredFR028 open; functional smoke is not lossless audit proof; no waiver or storage implementation change
+- visual evidence: No UI source or behavior change; actual official consumer standard browser smoke4passed; no visual-polish claim
+- inheritance contract: Official1865553bc0e source released after successful exact gates; consumer full validation/independent review and OpsPR178 merged
+- base drift: Actual1337 protected consumer source unchanged;826compared/816identical/10existingallowed,164business/2migrations
+- Base/ops inheritance: Base official producer; Ops only standard official lock/rebuild; consumerPR178 merged after full validators, no hand-copy or module/test overlays
 
 ## 边界说明
 
 - [x] 本次改动仅涉及单一层级
 - [ ] 本次改动涉及跨层，已说明边界与依赖
 
-> 如果跨层，请补充说明：本次只提交发行准备。独立CODE/ARCH批准准备范围，不替代尚未发生的发行和消费验收。12类本地检查通过，57项发行工具回归通过；原始失败和修复重跑日志保留。所有原40标准/scope不变，生产和测试源码无差异。新发布必须在精确合并commit获得Full Smoke/Release Gate成功后才使用正式发布器；Ops随后从GitHub获取四资产并完整验证实际组装树。本次为什么跨层、各层分别承担什么职责、是否影响菜单/权限/i18n/审计。
+补充说明：正式186已在精确Release Gate成功后发布，OpsPR178已通过真实全量验收并合并，三仓main-only检查有原始证据。本PR仅回写事实与开放的FR028，不改变源码、原scope/criteria、门禁、发行tag/资产；当前行政收口CI/merge和最后main-only复核仍必需。
 
 ## 验证记录
 
@@ -63,12 +63,12 @@
 ## 审核留痕
 
 - Copilot review： automatic-policy
-- CodeQL 结果： previous immutable source and Base498/mergedOps177 security gates passed; this PR and new source Release Gate pending
-- GitHub checks 结果： 12 local governance categories passed and57 foundation-release tests passed; this PR hosted checks pending
+- CodeQL 结果： Official source and consumerPR178 CodeQL/Security Gates successful; current metadata PR result pending
+- GitHub checks 结果： Official immutable source CI/Quality/Security/Core Smoke/Full Smoke/Release Gate success; consumerPR178 requiredCI allpass;12localgovernance categories passed; currentmetadataCI pending
 - Auto-merge： not-enabled
-- Duplication Gate 结果： no runtime source change; current PR hosted result pending
-- 是否高风险改动： L2 release/inheritance, two fresh independent preparation approvals with identical snapshot hash
-- Residual risk / follow-up： new immutable release and actual186 consumption pending; S3 provider skip/no waiver, maintenance freeze unsigned; separate Ops runtime/policy/security/production residuals retained
+- Duplication Gate 结果： ConsumerPR178 passed; no executable source change; current metadataCI pending
+- 是否高风险改动： L2 release/inheritance closeout; two fresh independent final approvals including ARCH
+- Residual risk / follow-up： S3 unverified/unwaived,freezeunsigned,oversizedauditFR028 open,QA002/hostimport and policy/security/production/legacy gaps; external OpsVercel preview failed without policychange
 
 ## 检查清单
 

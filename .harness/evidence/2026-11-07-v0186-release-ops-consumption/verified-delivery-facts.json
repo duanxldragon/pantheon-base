@@ -1,0 +1,25 @@
+{
+  "recordedAt": "2026-11-07T07:17:16.110Z",
+  "baseSourcePR": "https://github.com/duanxldragon/pantheon-base/pull/499",
+  "immutableRelease": "https://github.com/duanxldragon/pantheon-base/releases/tag/pantheon-base-v0.18.6",
+  "baseCommit": "5553bc0e8ddc006cb7a6b99a46968bf8cf907a49",
+  "consumerPR": "https://github.com/duanxldragon/pantheon-ops/pull/178",
+  "consumerCommit": "81d64b95201ebd4a545548d933d251dced1e7123",
+  "mainOnlyVerifiedAt": "2026-11-07T07:14:52.696Z",
+  "sourceChanges": [],
+  "protectedPaths": [
+    "backend",
+    "frontend",
+    "scripts",
+    ".github",
+    "config",
+    "schema"
+  ],
+  "baseTaskInventoryBeforeCloseout": {
+    "total": 251,
+    "completed": 250,
+    "inProgress": 1
+  },
+  "residuals": "consumer-runtime-residuals.json",
+  "administrativeCloseout": "Substantive publication/consumption/main-only facts achieved; final metadata PRs require normal CI/merge and final main-only recheck"
+}
