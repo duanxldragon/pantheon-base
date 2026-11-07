@@ -1,3 +1,23 @@
+# Current v0.18.5 candidate: complete direct race and Sonar fixture correction
+
+Current candidate includes one exact shared test seed helper; original four-row lifecycle assertions and external-reference protection remain intact. Both independent lanes approved the same helper snapshot: [approval](resume8-sonar-approval.json), [CODE](resume7-sonar-code-reviewer.md), [ARCH](resume7-sonar-architect.md).
+
+Direct current-worktree CGO race with required real MySQL/Redis completed: 1890 pass, 0 fail, 1 skip; 47 passing packages. [Result](resume7-base-full-race.json) binds unchanged fixture hash; [raw log archive](resume7-base-full-race.log.gz) contains test events proving execution. One real S3 integration skip has no waiver.
+
+Sonar PR496 previously failed new duplication density 55.4% (36 newly duplicated lines). The exact repeated seed is now extracted once; same hosted metric now passes at 0.0% against unchanged 3% threshold on head 2c1660a75d42630c3b90f02a6e7cc349194712ad ([proof](resume8-sonar-pr496-after.json)). Final PR checks and merged commit release gate remain pending. No threshold or exclusion changes. v0.18.5 remains unreleased; current PR checks, merged commit release gate, official publication and stock Ops consumption still pending. All original 12 manifests remain in-progress; freeze unsigned.
+
+## Previous candidate record
+
+# 2026-11-07 Current corrective foundation candidate
+
+Version0.18.5 remains unreleased on fix/v0185-fixture-closed-loop. Actual bounded CODE APPROVE/ARCH CLEAR match the same snapshot; [approval](resume7-fixture-approval.json), [CODE](retry5-fixture-code-reviewer.md), [ARCH](retry5-fixture-architect.md).
+
+All507 backend files equal the reference tree actually tested:1890 pass/0 fail/1 real S3 skip. This is byte-equivalence evidence, not a worktree rerun or current hosted CI. Original lifecycle assertions and external-reference preservation remain tested. No UI/product/schema changes.
+
+Latest previously verified official release remainsv0.18.4. GitHub connectivity recovered2026-11-07. Current-branch hosted checks/merge/Release Gate/publication and official Ops consumption remain pending actual results. Original12 tasks stay in-progress in this candidate; S3 unverified/no waiver and freeze unsigned.
+
+## Historical candidate evidence
+
 # Base 功能收尾与发行执行证据
 
 状态：in-progress。当前以 2026-11-06 补充状态为准；下文保留旧候选验证历史。

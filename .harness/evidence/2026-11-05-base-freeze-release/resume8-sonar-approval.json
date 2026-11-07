@@ -1,0 +1,36 @@
+{
+  "recordedAt": "2026-11-07T01:28:15.232Z",
+  "scope": "bounded-v0185-fixture-plus-equivalent-sonar-helper-only",
+  "initialApproval": "resume7-fixture-approval.json",
+  "snapshot": "resume7-sonar-fixture-review-snapshot.json",
+  "snapshotSha256": "13c2ad1f5de1e24fa8f565d693b15664d1881322756a7e8ada0f678278165432",
+  "source": [
+    {
+      "path": "backend/modules/lowcode/dynamicmodule/dynamic_module_service_test.go",
+      "sha256": "2be503c9646ac9aaff0c2f106622ecea21eb4bafd2d49db8f4d85ba383783a1c"
+    }
+  ],
+  "lanes": [
+    {
+      "lane": "code-reviewer",
+      "verdict": "APPROVE",
+      "path": "resume7-sonar-code-reviewer.md",
+      "sha256": "2cd78fce55b37f48dcc0cce6554b05688d5c99692f020da50ba8bc800bbd5b66"
+    },
+    {
+      "lane": "architect",
+      "verdict": "APPROVE",
+      "path": "resume7-sonar-architect.md",
+      "sha256": "75d35d4883d1631def6731d3f55ff1dabedef9a72a6a3b108ec1b381e1d6a6d6"
+    }
+  ],
+  "race": "resume7-base-full-race.json",
+  "raceSha256": "18ba47efed745b880c518aaa864f8713573d357dcf7bbf909b6b1caf70472919",
+  "excluded": [
+    "Original 12-task closure",
+    "S3/provider acceptance",
+    "Signed maintenance freeze",
+    "Publication",
+    "Official consumer completion"
+  ]
+}

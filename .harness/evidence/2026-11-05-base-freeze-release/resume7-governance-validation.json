@@ -1,0 +1,125 @@
+{
+  "recordedAt": "2026-11-07T00:56:54.635Z",
+  "commands": [
+    {
+      "command": "npm run check:docs-frontmatter",
+      "cwd": "D:/workspace/go/pantheon-platform/audit-artifacts/task-closeout-2026-11-06/base-v185",
+      "startedAt": "2026-11-07T00:56:46.745Z",
+      "finishedAt": "2026-11-07T00:56:47.391Z",
+      "exitCode": 0,
+      "status": "passed",
+      "log": "resume7-check-docs-frontmatter.log",
+      "sha256": "c047f91c3d42b09325833dab83b776a09fc1aca377588a4ee67cda8a9abab6a9"
+    },
+    {
+      "command": "npm run check:task-packet-template",
+      "cwd": "D:/workspace/go/pantheon-platform/audit-artifacts/task-closeout-2026-11-06/base-v185",
+      "startedAt": "2026-11-07T00:56:47.391Z",
+      "finishedAt": "2026-11-07T00:56:47.808Z",
+      "exitCode": 0,
+      "status": "passed",
+      "log": "resume7-check-task-packet-template.log",
+      "sha256": "c906367e2b043848d360d0c2a68d087d528861349348bf101a37c09439d98fc7"
+    },
+    {
+      "command": "npm run check:task-packet",
+      "cwd": "D:/workspace/go/pantheon-platform/audit-artifacts/task-closeout-2026-11-06/base-v185",
+      "startedAt": "2026-11-07T00:56:47.809Z",
+      "finishedAt": "2026-11-07T00:56:48.423Z",
+      "exitCode": 0,
+      "status": "passed",
+      "log": "resume7-check-task-packet.log",
+      "sha256": "6ef198061227ada814860b4188ae6b6b06b28646ae9f37d657759f193ab4b248"
+    },
+    {
+      "command": "npm run check:harness-evidence",
+      "cwd": "D:/workspace/go/pantheon-platform/audit-artifacts/task-closeout-2026-11-06/base-v185",
+      "startedAt": "2026-11-07T00:56:48.423Z",
+      "finishedAt": "2026-11-07T00:56:49.272Z",
+      "exitCode": 0,
+      "status": "passed",
+      "log": "resume7-check-harness-evidence.log",
+      "sha256": "dd87e7b8a416410a67c63a67c1d518153447028c80a1181188dba74a5824e7f9"
+    },
+    {
+      "command": "npm run check:harness-review",
+      "cwd": "D:/workspace/go/pantheon-platform/audit-artifacts/task-closeout-2026-11-06/base-v185",
+      "startedAt": "2026-11-07T00:56:49.272Z",
+      "finishedAt": "2026-11-07T00:56:49.961Z",
+      "exitCode": 0,
+      "status": "passed",
+      "log": "resume7-check-harness-review.log",
+      "sha256": "c95ad0e133540ab2ae89ea23cddcbce0706693e9b66a67a996bdf2e6209ddd3d"
+    },
+    {
+      "command": "npm run check:harness-runtime-evidence",
+      "cwd": "D:/workspace/go/pantheon-platform/audit-artifacts/task-closeout-2026-11-06/base-v185",
+      "startedAt": "2026-11-07T00:56:49.961Z",
+      "finishedAt": "2026-11-07T00:56:50.591Z",
+      "exitCode": 0,
+      "status": "passed",
+      "log": "resume7-check-harness-runtime-evidence.log",
+      "sha256": "5a6f01072ec7fde3019ef9c2387c9f4c57bcacaf18c9da21390005fecdaf2b16"
+    },
+    {
+      "command": "npm run check:harness-graph-review",
+      "cwd": "D:/workspace/go/pantheon-platform/audit-artifacts/task-closeout-2026-11-06/base-v185",
+      "startedAt": "2026-11-07T00:56:50.591Z",
+      "finishedAt": "2026-11-07T00:56:51.189Z",
+      "exitCode": 0,
+      "status": "passed",
+      "log": "resume7-check-harness-graph-review.log",
+      "sha256": "c82b64c56705a30ca300eae47449ae5c424c2d38b28eb7d1d45403790a2d1460"
+    },
+    {
+      "command": "npm run check:harness-docs",
+      "cwd": "D:/workspace/go/pantheon-platform/audit-artifacts/task-closeout-2026-11-06/base-v185",
+      "startedAt": "2026-11-07T00:56:51.190Z",
+      "finishedAt": "2026-11-07T00:56:51.879Z",
+      "exitCode": 0,
+      "status": "passed",
+      "log": "resume7-check-harness-docs.log",
+      "sha256": "aff38ef831fbdaa9304137101838cff74335ea77c6b19a3eb5400fa047a464b6"
+    },
+    {
+      "command": "npm run check:harness-inventory",
+      "cwd": "D:/workspace/go/pantheon-platform/audit-artifacts/task-closeout-2026-11-06/base-v185",
+      "startedAt": "2026-11-07T00:56:51.879Z",
+      "finishedAt": "2026-11-07T00:56:52.402Z",
+      "exitCode": 0,
+      "status": "passed",
+      "log": "resume7-check-harness-inventory.log",
+      "sha256": "dbf43926f0c41a7c788b9c9cb48f7677e9ddafdcf3a9cdfc0480874099f1bf4a"
+    },
+    {
+      "command": "npm run check:harness-encoding",
+      "cwd": "D:/workspace/go/pantheon-platform/audit-artifacts/task-closeout-2026-11-06/base-v185",
+      "startedAt": "2026-11-07T00:56:52.403Z",
+      "finishedAt": "2026-11-07T00:56:53.564Z",
+      "exitCode": 0,
+      "status": "passed",
+      "log": "resume7-check-harness-encoding.log",
+      "sha256": "5145b11fd5062864e5dd511121d9ff375e4173d3674c27f8276fad2b6af8aa16"
+    },
+    {
+      "command": "npm run check:structure",
+      "cwd": "D:/workspace/go/pantheon-platform/audit-artifacts/task-closeout-2026-11-06/base-v185",
+      "startedAt": "2026-11-07T00:56:53.565Z",
+      "finishedAt": "2026-11-07T00:56:54.103Z",
+      "exitCode": 0,
+      "status": "passed",
+      "log": "resume7-check-structure.log",
+      "sha256": "d16226e55bdc142e9a635b639de13280775aee6f3a4daa5c92f00535a3bb83ba"
+    },
+    {
+      "command": "npm run check:checker-wiring",
+      "cwd": "D:/workspace/go/pantheon-platform/audit-artifacts/task-closeout-2026-11-06/base-v185",
+      "startedAt": "2026-11-07T00:56:54.103Z",
+      "finishedAt": "2026-11-07T00:56:54.635Z",
+      "exitCode": 0,
+      "status": "passed",
+      "log": "resume7-check-checker-wiring.log",
+      "sha256": "5bacbbe603de0a7d5109ebd54f6c2c1f547dd59d4f203e846b58c0e2f0455813"
+    }
+  ]
+}

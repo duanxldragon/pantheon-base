@@ -1,0 +1,27 @@
+{
+  "startedAt": "2026-11-07T01:16:07.593Z",
+  "finishedAt": "2026-11-07T01:27:03.639Z",
+  "command": "go test -timeout=30m -buildvcs=false -mod=readonly -race -json -p 2 -count=1 ./...",
+  "cwd": "D:/workspace/go/pantheon-platform/audit-artifacts/task-closeout-2026-11-06/base-v185/backend",
+  "exitCode": 0,
+  "log": "resume7-base-full-race.log",
+  "sha256": "953167045005d835c5bfba04d4f37afbe78ee613873badfb46de4391112162eb",
+  "fixtureSha256": "2be503c9646ac9aaff0c2f106622ecea21eb4bafd2d49db8f4d85ba383783a1c",
+  "sourceUnchanged": true,
+  "counts": {
+    "pass": 1890,
+    "fail": 0,
+    "skip": 1,
+    "packages": 47
+  },
+  "failures": [],
+  "skips": [
+    {
+      "Time": "2026-11-07T09:25:19.2921834+08:00",
+      "Action": "skip",
+      "Package": "github.com/duanxldragon/pantheon-base/backend/pkg/upload",
+      "Test": "TestServiceStoreUsesRealS3WhenConfigured",
+      "Elapsed": 0
+    }
+  ]
+}

@@ -1,0 +1,243 @@
+{
+  "paging": {
+    "pageIndex": 1,
+    "pageSize": 100,
+    "total": 5
+  },
+  "baseComponent": {
+    "id": "AaGzisP2DnatzzXUKf3S",
+    "key": "duanxldragon_pantheon-base",
+    "name": "pantheon-base",
+    "qualifier": "TRK",
+    "measures": [
+      {
+        "metric": "new_duplicated_lines",
+        "periods": [
+          {
+            "index": 1,
+            "value": "36",
+            "bestValue": false
+          }
+        ]
+      },
+      {
+        "metric": "new_duplicated_lines_density",
+        "periods": [
+          {
+            "index": 1,
+            "value": "55.38461538461539",
+            "bestValue": false
+          }
+        ]
+      },
+      {
+        "metric": "new_lines",
+        "periods": [
+          {
+            "index": 1,
+            "value": "65"
+          }
+        ]
+      }
+    ],
+    "pullRequest": "496"
+  },
+  "components": [
+    {
+      "id": "AaGzi5hZoXd4W9Erix0b",
+      "key": "duanxldragon_pantheon-base:backend",
+      "name": "backend",
+      "qualifier": "DIR",
+      "path": "backend",
+      "measures": [
+        {
+          "metric": "new_duplicated_lines",
+          "periods": [
+            {
+              "index": 1,
+              "value": "36",
+              "bestValue": false
+            }
+          ]
+        },
+        {
+          "metric": "new_duplicated_lines_density",
+          "periods": [
+            {
+              "index": 1,
+              "value": "55.38461538461539",
+              "bestValue": false
+            }
+          ]
+        },
+        {
+          "metric": "new_lines",
+          "periods": [
+            {
+              "index": 1,
+              "value": "65"
+            }
+          ]
+        }
+      ],
+      "pullRequest": "496"
+    },
+    {
+      "id": "AaGzi5hZoXd4W9Erixy-",
+      "key": "duanxldragon_pantheon-base:backend/modules/lowcode/dynamicmodule/dynamic_module_service_test.go",
+      "name": "dynamic_module_service_test.go",
+      "qualifier": "FIL",
+      "path": "backend/modules/lowcode/dynamicmodule/dynamic_module_service_test.go",
+      "language": "go",
+      "measures": [
+        {
+          "metric": "new_duplicated_lines",
+          "periods": [
+            {
+              "index": 1,
+              "value": "36",
+              "bestValue": false
+            }
+          ]
+        },
+        {
+          "metric": "new_duplicated_lines_density",
+          "periods": [
+            {
+              "index": 1,
+              "value": "55.38461538461539",
+              "bestValue": false
+            }
+          ]
+        },
+        {
+          "metric": "new_lines",
+          "periods": [
+            {
+              "index": 1,
+              "value": "65"
+            }
+          ]
+        }
+      ],
+      "pullRequest": "496"
+    },
+    {
+      "id": "AaGzi5hZoXd4W9ErixzK",
+      "key": "duanxldragon_pantheon-base:backend/modules/lowcode/dynamicmodule",
+      "name": "dynamicmodule",
+      "qualifier": "DIR",
+      "path": "backend/modules/lowcode/dynamicmodule",
+      "measures": [
+        {
+          "metric": "new_duplicated_lines",
+          "periods": [
+            {
+              "index": 1,
+              "value": "36",
+              "bestValue": false
+            }
+          ]
+        },
+        {
+          "metric": "new_duplicated_lines_density",
+          "periods": [
+            {
+              "index": 1,
+              "value": "55.38461538461539",
+              "bestValue": false
+            }
+          ]
+        },
+        {
+          "metric": "new_lines",
+          "periods": [
+            {
+              "index": 1,
+              "value": "65"
+            }
+          ]
+        }
+      ],
+      "pullRequest": "496"
+    },
+    {
+      "id": "AaGzi5hZoXd4W9ErixzM",
+      "key": "duanxldragon_pantheon-base:backend/modules/lowcode",
+      "name": "lowcode",
+      "qualifier": "DIR",
+      "path": "backend/modules/lowcode",
+      "measures": [
+        {
+          "metric": "new_duplicated_lines",
+          "periods": [
+            {
+              "index": 1,
+              "value": "36",
+              "bestValue": false
+            }
+          ]
+        },
+        {
+          "metric": "new_duplicated_lines_density",
+          "periods": [
+            {
+              "index": 1,
+              "value": "55.38461538461539",
+              "bestValue": false
+            }
+          ]
+        },
+        {
+          "metric": "new_lines",
+          "periods": [
+            {
+              "index": 1,
+              "value": "65"
+            }
+          ]
+        }
+      ],
+      "pullRequest": "496"
+    },
+    {
+      "id": "AaGzi5hZoXd4W9Erixzb",
+      "key": "duanxldragon_pantheon-base:backend/modules",
+      "name": "modules",
+      "qualifier": "DIR",
+      "path": "backend/modules",
+      "measures": [
+        {
+          "metric": "new_duplicated_lines",
+          "periods": [
+            {
+              "index": 1,
+              "value": "36",
+              "bestValue": false
+            }
+          ]
+        },
+        {
+          "metric": "new_duplicated_lines_density",
+          "periods": [
+            {
+              "index": 1,
+              "value": "55.38461538461539",
+              "bestValue": false
+            }
+          ]
+        },
+        {
+          "metric": "new_lines",
+          "periods": [
+            {
+              "index": 1,
+              "value": "65"
+            }
+          ]
+        }
+      ],
+      "pullRequest": "496"
+    }
+  ]
+}

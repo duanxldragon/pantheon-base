@@ -6,6 +6,18 @@ Pantheon Base 方法追踪记录。方法论本体位于 `pantheon-harness`。
 
 ---
 
+## [pantheon-base-v0.18.5] — Unreleased (2026-11-06 fixture correction)
+
+- Isolate the shared purge-module i18n test scanner to its temporary workspace and retain the original four lifecycle assertions.
+- Add regression coverage that keys still referenced outside a purged module remain active.
+- Publish this test-only correction through the official foundation path so consumers can pass the unmodified full race suite; no production behavior, schema, permission or UI change.
+- Candidate source has passed direct Base full race1890/0/1; real S3 remains unverified and maintenance freeze unsigned. Final hosted release gates must pass before publication.
+
+## [pantheon-base-v0.18.4] — 2026-11-06
+
+- Merged dependency PR485 and upgraded minimatch to11.0.1; official four-asset foundation release on0a8229c67ab482c2e163622fc4e5b87301c53399, consumed by Ops PR171.
+- Real S3/provider and maintenance-freeze signing remain separate explicit gaps.
+
 ## [pantheon-base-v0.18.3] — Unreleased (2026-11-05 candidate)
 
 - Security: verified DNS addresses bound to actual HTTP dialing; atomic single-use refresh and conditional session lifecycle rotation; strict npm-audit failures propagated.
