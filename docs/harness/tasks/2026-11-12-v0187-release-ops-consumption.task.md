@@ -154,13 +154,13 @@ platform
 - [x] Quality profile or explicit `none` declared
 - [x] Ratchet decision declared for repeated failures
 - [x] Contract anchors read
-- [ ] Verification run or exception recorded
-- [ ] Evidence saved or summarized
-- [ ] Review completed
-- [ ] Base source/version preparation reviewed and merged with required GitHub checks passed
-- [ ] Immutable pantheon-base-v0.18.7 has successful Release Gate, four official assets and verified checksums
+- [x] Verification run or exception recorded
+- [x] Evidence saved or summarized
+- [x] Review completed
+- [x] Base source/version preparation reviewed and merged with required GitHub checks passed
+- [x] Immutable pantheon-base-v0.18.7 has successful Release Gate, four official assets and verified checksums
 - [ ] Ops consumes exact official v0.18.7 via standard rebuild with full validation before replacement/merge
 
 ## Status
 
-preparation in progress; no release or consumption is claimed until exact hosted evidence exists.
+published at immutable 3203624e55438866edb951bd74e671eab38d2f16: Release Gate Summary run 43194854386 success on the exact commit, annotated tag `pantheon-base-v0.18.7` pushed, GitHub release carries all four official assets verified by `check:release-assets`. Release-blocking SonarCloud blockers were cleared by code-only remediation on main (PR #506: 63->0; PR #507: 4 residual refactor issues->0, main remains 0 unresolved). No consumption is claimed until the Ops exact-tag rebuild and full validation evidence exists.

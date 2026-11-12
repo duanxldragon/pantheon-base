@@ -1,6 +1,6 @@
-# v0.18.7 release preparation open (2026-11-12)
+# v0.18.7 published; Ops consumption pending (2026-11-12)
 
-PR #504 merged the formal-queue foundation contracts (permission routes + seal, permission-cache revocation repair, shared operational UI/Dashboard adapters) with whole-scope local-panel CODE/ARCH approval. Task 2026-11-12-v0187-release-ops-consumption prepares VERSION 0.18.7 plus two release-blocking remediations (CodeQL go/log-injection sink sanitizer; smoke empty-state loading stall repair) because the first main push c8a71003 failed Security Gates and the operation-log smoke. Release Gate, tag, four official assets and Ops consumption are pending exact hosted evidence.
+PR #504 merged the formal-queue foundation contracts (permission routes + seal, permission-cache revocation repair, shared operational UI/Dashboard adapters) with whole-scope local-panel CODE/ARCH approval. Task 2026-11-12-v0187-release-ops-consumption carries VERSION 0.18.7 plus two release-blocking remediations (CodeQL go/log-injection sink sanitizer; smoke empty-state loading stall repair) because the first main push c8a71003 failed Security Gates and the operation-log smoke. Remaining Release Gate blockers were cleared by code-only SonarCloud remediation on main (PR #506 63->0, PR #507 residual 4->0, no waivers or gate changes). The annotated tag `pantheon-base-v0.18.7` was published at immutable 3203624e after Release Gate Summary run 43194854386 success, with all four official assets verified by `check:release-assets` locally and remotely. Ops consumption of the exact tag is pending.
 
 Evidence: .harness/evidence/2026-11-12-v0187-release-ops-consumption/summary.md. S3 unwaived, freeze unsigned, FR028 deferred, separate Ops product-acceptance residuals remain.
 

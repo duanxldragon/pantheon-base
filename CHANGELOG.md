@@ -6,11 +6,13 @@ Pantheon Base 方法追踪记录。方法论本体位于 `pantheon-harness`。
 
 ---
 
-## [pantheon-base-v0.18.7] — 2026-11-12 (preparation)
+## [pantheon-base-v0.18.7] — 2026-11-12 (published)
 
 - Release the formal-queue foundation contract closeout merged through Base PR #504: provider-owned permission routes with fail-closed startup seal, permission-cache revocation repair verified red->green, shared operational UI/Dashboard adapter contracts and consumer artifact governance.
 - Two release-blocking remediations: audit-route log values emitted through `logging.SanitizeLogValue` closing the CodeQL go/log-injection alert, and the system smoke empty-state sampler no longer stalls on Arco's transient loading empty state (main push c8a71003 operation-log smoke failure).
 - Whole-scope independent CODE/ARCH review of PR #504 recorded in task 2026-11-07-ops-formal-queue-foundation-gaps; publication requires the exact merged-commit Release Gate and four verified official assets; Ops consumption pending.
+- Cleared the remaining Release Gate blockers on main with code-only remediation: PR #506 fixed all 63 unresolved SonarCloud issues and PR #507 removed the 4 residual issues introduced by that refactor, bringing main to zero unresolved issues with no waivers, exclusions or gate changes.
+- Published the immutable annotated tag `pantheon-base-v0.18.7` at 3203624e55438866edb951bd74e671eab38d2f16 after the Release Gate Summary succeeded on that exact commit (run 43194854386); the GitHub release carries all four official assets and `check:release-assets` verified them locally and remotely.
 - S3 provider remains unverified, maintenance freeze unsigned, FR028 deferred and separate Ops product-acceptance residuals retained.
 
 ## [pantheon-base-v0.18.6] — 2026-11-07 (published and consumed)
