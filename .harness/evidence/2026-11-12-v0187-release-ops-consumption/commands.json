@@ -171,7 +171,8 @@
   ],
   "knownGaps": [
     "Ops official acquisition/rebuild/validation belongs to the downstream consumption task.",
-    "Real S3 provider skip unwaived; maintenance freeze unsigned; FR028 deferred."
+    "Real S3 provider skip unwaived; maintenance freeze unsigned; FR028 deferred.",
+    "No new runtime metrics/traces were produced by publication; runtime signal remains the preparation-stage race logs and hosted Release Gate logs referenced by the publication evidence files."
   ],
   "linkage": {
     "taskManifest": ".harness/tasks/2026-11-12-v0187-release-ops-consumption/manifest.json",
