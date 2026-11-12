@@ -448,6 +448,12 @@ function buildListLayout(
   };
 }
 
+function resolveSchemaDataScopeMode(mode: DataScopeMode, enableDataScope: boolean): DataScopeMode {
+  if (mode === 'tenant') return 'tenant';
+  if (enableDataScope) return mode;
+  return 'none';
+}
+
 function buildModuleSchema(input: BuildModuleSchemaInput): ModuleSchema {
   const { values, metadata } = input;
   const name = normalizeModulePath(values.name || '');
@@ -525,7 +531,7 @@ function buildModuleSchema(input: BuildModuleSchemaInput): ModuleSchema {
     pageActions,
     dependencies: parseDependencyModules(input.dependencyModulesText),
     relations: parseRelationContracts(input.relationContractsText),
-    dataScopeMode: input.dataScopeMode === 'tenant' ? 'tenant' : input.enableDataScope ? input.dataScopeMode : 'none',
+    dataScopeMode: resolveSchemaDataScopeMode(input.dataScopeMode, input.enableDataScope),
     listLayout: buildListLayout(
       input.listLayout,
       metadata,
@@ -1715,7 +1721,8 @@ const ModuleWizard: React.FC = () => {
                         value={templateVersion}
                         onChange={(value) => {
                           setTemplateVersion((value as 'v1' | 'v2') || 'v1');
-                          if (value !== 'v2' && dataScopeMode === 'tenant') setDataScopeMode('dept');
+                          if (value !== 'v2' && dataScopeMode === 'tenant')
+                            setDataScopeMode('dept');
                         }}
                       >
                         <Select.Option value="v1">
@@ -1783,11 +1790,12 @@ const ModuleWizard: React.FC = () => {
                           {t('generator.wizard.dataScopeMode.custom')}
                         </Select.Option>
                         {templateVersion === 'v2' &&
-                          ((form.getFieldValue('scope') as ModuleScope | undefined) || 'business') === 'business' && (
-                          <Select.Option value="tenant">
-                            {t('generator.wizard.dataScopeMode.tenant', 'Tenant')}
-                          </Select.Option>
-                        )}
+                          ((form.getFieldValue('scope') as ModuleScope | undefined) ||
+                            'business') === 'business' && (
+                            <Select.Option value="tenant">
+                              {t('generator.wizard.dataScopeMode.tenant', 'Tenant')}
+                            </Select.Option>
+                          )}
                       </Select>
                     </FormItem>
                   </Col>

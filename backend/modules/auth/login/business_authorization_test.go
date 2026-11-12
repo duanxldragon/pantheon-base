@@ -341,18 +341,7 @@ func TestBusinessRouteHeaderAndBodyCannotAcquireIdentity(t *testing.T) {
 	calls := 0
 	routes.POST("/items/:id", func(c *gin.Context) {
 		calls++
-		for _, key := range common.GetRoleKeys(c) {
-			if key == "admin" || (key == "platform_ops" && tenant.FromGin(c).ResolvedBy != tenant.ResolvedByHeader) {
-				t.Error("token/local role key promoted in request context")
-			}
-		}
-		input, err := businessauth.FromGin(c)
-		if err != nil || input.Identity.ActorID != f.actor.ID {
-			t.Error("body replaced identity")
-		}
-		if input.Resolution.TenantID != 101 && input.Resolution.ResolvedBy != tenant.ResolvedByHeader {
-			t.Error("body replaced tenant")
-		}
+		assertBusinessRouteAdoptedIdentity(t, f, c)
 		common.Success(c, nil)
 	})
 	request := func(header string) {
@@ -365,6 +354,30 @@ func TestBusinessRouteHeaderAndBodyCannotAcquireIdentity(t *testing.T) {
 	if calls != 1 {
 		t.Fatal("valid claim refused")
 	}
+	assertFreshAuthorizationKeepsSQLActivity(t, f, request)
+	calls-- // Keep the header refusal assertions relative to their original baseline.
+	assertBusinessHeaderOverridesRefused(t, request, &calls)
+	assertBusinessGlobalOverrideLifecycle(t, f, request, &calls)
+}
+
+func assertBusinessRouteAdoptedIdentity(t *testing.T, f businessFixture, c *gin.Context) {
+	t.Helper()
+	for _, key := range common.GetRoleKeys(c) {
+		if key == "admin" || (key == "platform_ops" && tenant.FromGin(c).ResolvedBy != tenant.ResolvedByHeader) {
+			t.Error("token/local role key promoted in request context")
+		}
+	}
+	input, err := businessauth.FromGin(c)
+	if err != nil || input.Identity.ActorID != f.actor.ID {
+		t.Error("body replaced identity")
+	}
+	if input.Resolution.TenantID != 101 && input.Resolution.ResolvedBy != tenant.ResolvedByHeader {
+		t.Error("body replaced tenant")
+	}
+}
+
+func assertFreshAuthorizationKeepsSQLActivity(t *testing.T, f businessFixture, request func(header string)) {
+	t.Helper()
 	var live session.SystemUserSession
 	if err := f.db.Where("session_id = ?", f.input.Identity.SessionID).Take(&live).Error; err != nil {
 		t.Fatal(err)
@@ -380,26 +393,33 @@ func TestBusinessRouteHeaderAndBodyCannotAcquireIdentity(t *testing.T) {
 	if live.LastActivityAt == nil || !live.LastActivityAt.Equal(before) {
 		t.Fatal("fresh authorization wrote SQL activity")
 	}
-	calls-- // Keep the header refusal assertions relative to their original baseline.
+}
+
+func assertBusinessHeaderOverridesRefused(t *testing.T, request func(header string), calls *int) {
+	t.Helper()
 	for _, header := range []string{"202", "-1", "not-a-number", "18446744073709551616"} {
 		request(header)
-		if calls != 1 {
+		if *calls != 1 {
 			t.Fatal("untrusted override acquired scope")
 		}
 	}
+}
+
+func assertBusinessGlobalOverrideLifecycle(t *testing.T, f businessFixture, request func(header string), calls *int) {
+	t.Helper()
 	f.globalGrant(t)
 	request("202")
-	if calls != 2 {
+	if *calls != 2 {
 		t.Fatal("real global override required target membership")
 	}
 	mustBusinessSQL(t, f.db.Model(&tenant.Tenant{}).Where("id = ?", 202).Update("status", "suspended"))
 	request("202")
-	if calls != 2 {
+	if *calls != 2 {
 		t.Fatal("suspended override reached handler")
 	}
 	mustBusinessSQL(t, f.db.Model(&tenant.Membership{}).Where("user_id = ?", f.actor.ID).Update("status", "disabled"))
 	request("0")
-	if calls != 2 {
+	if *calls != 2 {
 		t.Fatal("header resurrected revoked claim")
 	}
 }

@@ -111,6 +111,7 @@ platform
 - Implementer: Dispatcher bounded version/governance metadata plus the two gate repairs
 - Reviewer: independent CODE and ARCH on the preparation snapshot
 - Stop points: no production operations or gate weakening authorized
+- Release Gate follow-on: main@2338d108 SonarCloud analysis reported 63 unresolved issues (zero-unresolved hard gate); all 63 were fixed by behavior-preserving refactors on branch `fix/sonar-zero-v0187` following the 2026-10-20 zero-issues rule-to-fix mapping (no batch marks, no excludes, no gate changes).
 
 ## Verification Plan
 

@@ -10,6 +10,12 @@ var moduleRelationFieldPattern = regexp.MustCompile(`^[A-Za-z][A-Za-z0-9_]*$`)
 
 const msgInvalidDependency = "module.generate.invalid_dependency"
 
+const (
+	msgInvalidRelation        = "module.generate.invalid_relation"
+	msgInvalidDataScope       = "module.generate.invalid_data_scope"
+	msgInvalidTemplateVersion = "module.generate.invalid_template_version"
+)
+
 const scopeBusiness = "business"
 
 func validateGovernanceContract(req *RegisterGeneratedModuleRequest) error {
@@ -24,7 +30,7 @@ func validateGovernanceContract(req *RegisterGeneratedModuleRequest) error {
 	}
 	for _, relation := range req.Schema.Relations {
 		if !isValidRelationContract(req.Schema.Scope, relation) {
-			return common.NewBadRequest("module.generate.invalid_relation")
+			return common.NewBadRequest(msgInvalidRelation)
 		}
 	}
 	return nil
@@ -33,29 +39,33 @@ func validateGovernanceContract(req *RegisterGeneratedModuleRequest) error {
 func validateTemplateAndDataScope(schema ModuleSchema) error {
 	templateVersion := strings.TrimSpace(schema.TemplateVersion)
 	if templateVersion != "" && templateVersion != "v1" && templateVersion != "v2" {
-		return common.NewBadRequest("module.generate.invalid_template_version")
+		return common.NewBadRequest(msgInvalidTemplateVersion)
 	}
 	dataScopeMode := strings.TrimSpace(schema.DataScopeMode)
 	if dataScopeMode == "tenant" {
-		if templateVersion != "v2" || schema.Scope != scopeBusiness {
-			return common.NewBadRequest("module.generate.invalid_data_scope")
-		}
-		if len(schema.Relations) != 0 || schema.Metadata.TableRole == "detail" || schema.Metadata.TableRole == "relation" ||
-			schema.Metadata.PrimaryTable != "" || schema.Metadata.RelationFromField != "" || schema.Metadata.RelationToField != "" {
-			return common.NewBadRequest("module.generate.invalid_relation")
-		}
-		for _, field := range schema.Model.Fields {
-			if strings.EqualFold(strings.ReplaceAll(field.Name, "_", ""), "tenantid") {
-				return common.NewBadRequest("module.generate.invalid_data_scope")
-			}
-			if field.Type == "relation" {
-				return common.NewBadRequest("module.generate.invalid_relation")
-			}
-		}
-		return nil
+		return validateTenantDataScope(schema, templateVersion)
 	}
 	if dataScopeMode != "" && !isValidDataScopeMode(dataScopeMode) {
-		return common.NewBadRequest("module.generate.invalid_data_scope")
+		return common.NewBadRequest(msgInvalidDataScope)
+	}
+	return nil
+}
+
+func validateTenantDataScope(schema ModuleSchema, templateVersion string) error {
+	if templateVersion != "v2" || schema.Scope != scopeBusiness {
+		return common.NewBadRequest(msgInvalidDataScope)
+	}
+	if len(schema.Relations) != 0 || schema.Metadata.TableRole == "detail" || schema.Metadata.TableRole == "relation" ||
+		schema.Metadata.PrimaryTable != "" || schema.Metadata.RelationFromField != "" || schema.Metadata.RelationToField != "" {
+		return common.NewBadRequest(msgInvalidRelation)
+	}
+	for _, field := range schema.Model.Fields {
+		if strings.EqualFold(strings.ReplaceAll(field.Name, "_", ""), "tenantid") {
+			return common.NewBadRequest(msgInvalidDataScope)
+		}
+		if field.Type == "relation" {
+			return common.NewBadRequest(msgInvalidRelation)
+		}
 	}
 	return nil
 }
@@ -66,7 +76,7 @@ func validateRelationMetadata(metadata ModuleMetadata) error {
 		metadata.RelationToField,
 	} {
 		if field != "" && (field != strings.TrimSpace(field) || !moduleRelationFieldPattern.MatchString(field)) {
-			return common.NewBadRequest("module.generate.invalid_relation")
+			return common.NewBadRequest(msgInvalidRelation)
 		}
 	}
 	return nil

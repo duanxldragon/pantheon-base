@@ -9,6 +9,7 @@ import (
 	"github.com/duanxldragon/pantheon-base/backend/pkg/authtoken"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/testredis"
 	"github.com/gin-gonic/gin"
+	"github.com/redis/go-redis/v9"
 )
 
 func TestBusinessTokenFreshReadOnly(t *testing.T) {
@@ -42,16 +43,27 @@ func TestBusinessTokenFreshReadOnly(t *testing.T) {
 	if calls != 1 || before != after || expiry != expiryAfter {
 		t.Fatal("fresh auth wrote payload or expiration")
 	}
+	assertBusinessTokenRevokedDespiteWarmCache(ctx, t, rdb, token, data, request, &calls)
+	assertBusinessTokenBlacklistMarkers(ctx, t, rdb, token, data, request, &calls)
+	assertBusinessTokenPersistentInvalidClosed(ctx, t, rdb, token, data, request, &calls)
+}
+
+func assertBusinessTokenRevokedDespiteWarmCache(ctx context.Context, t *testing.T, rdb *redis.Client, token string, data *authtoken.SessionData, request func(), calls *int) {
+	t.Helper()
 	// A warm legacy cache must not grant a deleted opaque session.
 	storeTokenSessionCache(token, data, time.Now().Add(time.Minute))
-	defer invalidateTokenSessionCache(token)
+	t.Cleanup(func() { invalidateTokenSessionCache(token) })
 	if err := rdb.Del(ctx, authtoken.SessionKey(token)).Err(); err != nil {
 		t.Fatal(err)
 	}
 	request()
-	if calls != 1 {
+	if *calls != 1 {
 		t.Fatal("legacy cache granted a revoked token")
 	}
+}
+
+func assertBusinessTokenBlacklistMarkers(ctx context.Context, t *testing.T, rdb *redis.Client, token string, data *authtoken.SessionData, request func(), calls *int) {
+	t.Helper()
 	for _, key := range []string{authtoken.BlacklistUserKey(7), authtoken.BlacklistSessionKey(data.SessionID)} {
 		if err := authtoken.StoreSession(ctx, rdb, token, data, time.Minute); err != nil {
 			t.Fatal(err)
@@ -60,7 +72,7 @@ func TestBusinessTokenFreshReadOnly(t *testing.T) {
 			t.Fatal(err)
 		}
 		request()
-		if calls != 1 {
+		if *calls != 1 {
 			t.Fatal("empty blacklist marker allowed")
 		}
 		if err := rdb.Del(ctx, key).Err(); err != nil {
@@ -70,32 +82,36 @@ func TestBusinessTokenFreshReadOnly(t *testing.T) {
 			t.Fatal(err)
 		}
 		request()
-		if calls != 1 {
+		if *calls != 1 {
 			t.Fatal("independent blacklist read error allowed")
 		}
 		if err := rdb.Del(ctx, key).Err(); err != nil {
 			t.Fatal(err)
 		}
 	}
+}
+
+func assertBusinessTokenPersistentInvalidClosed(ctx context.Context, t *testing.T, rdb *redis.Client, token string, data *authtoken.SessionData, request func(), calls *int) {
+	t.Helper()
 	if err := authtoken.StoreSession(ctx, rdb, token, data, 0); err != nil {
 		t.Fatal(err)
 	}
 	request()
-	if calls != 1 {
+	if *calls != 1 {
 		t.Fatal("persistent token accepted")
 	}
 	if err := rdb.Set(ctx, authtoken.SessionKey(token), `{"uid":-1,"sid":"forged","tn":-1}`, time.Minute).Err(); err != nil {
 		t.Fatal(err)
 	}
 	request()
-	if calls != 1 {
+	if *calls != 1 {
 		t.Fatal("invalid claim accepted")
 	}
 	if err := rdb.Close(); err != nil {
 		t.Fatal(err)
 	}
 	request()
-	if calls != 1 {
+	if *calls != 1 {
 		t.Fatal("closed store accepted")
 	}
 }

@@ -94,6 +94,19 @@ func TestBusinessTelemetryPrivacy(t *testing.T) {
 
 	// Register actual parameter routes, validate them against Gin and seal before
 	// serving requests. Matching happens in global middleware before any denial.
+	engines, callsByKind := telemetrySealRegistry(t)
+
+	for _, kind := range telemetryCases {
+		t.Run(kind, func(t *testing.T) {
+			telemetryRunPrivacyCase(t, kind, engines[kind], callsByKind[kind], exporter, started)
+		})
+	}
+	t.Run("unmatched-defaults", func(t *testing.T) { telemetryAssertLegacy(t, exporter) })
+	t.Run("production-otlp", telemetryAssertOTLP)
+}
+
+func telemetrySealRegistry(t *testing.T) (map[string]*gin.Engine, map[string]*int) {
+	t.Helper()
 	engines := map[string]*gin.Engine{}
 	callsByKind := map[string]*int{}
 	var actualRoutes gin.RoutesInfo
@@ -115,68 +128,72 @@ func TestBusinessTelemetryPrivacy(t *testing.T) {
 	if auditpolicy.RegisterMetadataOnly([]auditpolicy.Route{telemetryRoute("late")}) == nil {
 		t.Fatal("late strategy registration accepted")
 	}
+	return engines, callsByKind
+}
 
-	for _, kind := range telemetryCases {
-		t.Run(kind, func(t *testing.T) {
-			exporter.Reset()
-			started.take()
-			body, response := telemetryExercise(t, kind, engines[kind])
-			calls := callsByKind[kind]
-			spans := exporter.GetSpans()
-			if len(spans) != 1 {
-				t.Fatalf("expected one completed server span, got %d", len(spans))
-			}
-			span := spans[0]
-			telemetryAssertSafeSpan(t, span, telemetryRoute(kind), response.Header().Get(common.HeaderRequestID))
-			initial := started.take()
-			if len(initial) != 1 {
-				t.Fatal("expected exactly one server span at SDK Start")
-			}
-			telemetryAssertSafeSpan(t, initial[0], telemetryRoute(kind), response.Header().Get(common.HeaderRequestID))
-			attrs := telemetryAttributes(span.Attributes)
-			if attrs["http.response.status_code"] != int64(response.Code) {
-				t.Error("span lost HTTP status")
-			}
-			wantOutcome := "unknown"
-			switch kind {
-			case "success":
-				wantOutcome = "success"
-			case "provider":
-				wantOutcome = "upstream"
-			case "storage":
-				wantOutcome = "storage"
-			case "business200", "csrf", "auth", "tenant":
-				wantOutcome = "denied"
-			case "invalid-json", "body-stream":
-				wantOutcome = "invalid"
-			}
-			if attrs["business.outcome"] != wantOutcome {
-				t.Errorf("outcome = %v, want %s", attrs["business.outcome"], wantOutcome)
-			}
-			wantStatus := codes.Error
-			if kind == "success" {
-				wantStatus = codes.Ok
-			}
-			if span.Status.Code != wantStatus || span.Status.Description != "" {
-				t.Error("span status hid failure or retained error text")
-			}
-			early := kind == "csrf" || kind == "rate" || kind == "auth" || kind == "tenant" || kind == "body"
-			if early && (*calls != 0 || body.reads != 0 || attrs["business.actor_id"] != int64(0) || attrs["business.tenant_id"] != int64(0)) {
-				t.Error("early denial consumed input or inferred ownership")
-			}
-			if kind == "success" && (attrs["business.actor_id"] != int64(7) || attrs["business.tenant_id"] != int64(101) || attrs["business.datasource_id"] != int64(9) || attrs["business.history_id"] != int64(11) || attrs["business.view_id"] != int64(12) || attrs["business.count"] != int64(2) || attrs["business.catalog_version"] != int64(1)) {
-				t.Error("source-authorized metadata was lost")
-			}
-			if kind == "invalid-metadata" && attrs["business.actor_id"] != int64(0) {
-				t.Error("invalid typed metadata retained")
-			}
-			if !t.Failed() {
-				t.Logf("safe receipt: case=%s spans=1 raw-sentinel=0 outcome=%s status=%d", kind, wantOutcome, response.Code)
-			}
-		})
+var telemetryWantOutcomeByKind = map[string]string{
+	"success": "success", "provider": "upstream", "storage": "storage",
+	"business200": "denied", "csrf": "denied", "auth": "denied", "tenant": "denied",
+	"invalid-json": "invalid", "body-stream": "invalid",
+}
+
+func telemetryWantOutcome(kind string) string {
+	if outcome, ok := telemetryWantOutcomeByKind[kind]; ok {
+		return outcome
 	}
-	t.Run("unmatched-defaults", func(t *testing.T) { telemetryAssertLegacy(t, exporter) })
-	t.Run("production-otlp", telemetryAssertOTLP)
+	return "unknown"
+}
+
+func telemetryRunPrivacyCase(t *testing.T, kind string, engine *gin.Engine, calls *int, exporter *tracetest.InMemoryExporter, started *telemetryStartRecorder) {
+	t.Helper()
+	exporter.Reset()
+	started.take()
+	body, response := telemetryExercise(t, kind, engine)
+	spans := exporter.GetSpans()
+	if len(spans) != 1 {
+		t.Fatalf("expected one completed server span, got %d", len(spans))
+	}
+	span := spans[0]
+	requestID := response.Header().Get(common.HeaderRequestID)
+	telemetryAssertSafeSpan(t, span, telemetryRoute(kind), requestID)
+	initial := started.take()
+	if len(initial) != 1 {
+		t.Fatal("expected exactly one server span at SDK Start")
+	}
+	telemetryAssertSafeSpan(t, initial[0], telemetryRoute(kind), requestID)
+	attrs := telemetryAttributes(span.Attributes)
+	if attrs["http.response.status_code"] != int64(response.Code) {
+		t.Error("span lost HTTP status")
+	}
+	wantOutcome := telemetryWantOutcome(kind)
+	if attrs["business.outcome"] != wantOutcome {
+		t.Errorf("outcome = %v, want %s", attrs["business.outcome"], wantOutcome)
+	}
+	wantStatus := codes.Error
+	if kind == "success" {
+		wantStatus = codes.Ok
+	}
+	if span.Status.Code != wantStatus || span.Status.Description != "" {
+		t.Error("span status hid failure or retained error text")
+	}
+	telemetryAssertCaseMetadata(t, kind, *calls, body, attrs)
+	if !t.Failed() {
+		t.Logf("safe receipt: case=%s spans=1 raw-sentinel=0 outcome=%s status=%d", kind, wantOutcome, response.Code)
+	}
+}
+
+func telemetryAssertCaseMetadata(t *testing.T, kind string, calls int, body *auditReadSentinel, attrs map[string]any) {
+	t.Helper()
+	early := kind == "csrf" || kind == "rate" || kind == "auth" || kind == "tenant" || kind == "body"
+	if early && (calls != 0 || body.reads != 0 || attrs["business.actor_id"] != int64(0) || attrs["business.tenant_id"] != int64(0)) {
+		t.Error("early denial consumed input or inferred ownership")
+	}
+	if kind == "success" && (attrs["business.actor_id"] != int64(7) || attrs["business.tenant_id"] != int64(101) || attrs["business.datasource_id"] != int64(9) || attrs["business.history_id"] != int64(11) || attrs["business.view_id"] != int64(12) || attrs["business.count"] != int64(2) || attrs["business.catalog_version"] != int64(1)) {
+		t.Error("source-authorized metadata was lost")
+	}
+	if kind == "invalid-metadata" && attrs["business.actor_id"] != int64(0) {
+		t.Error("invalid typed metadata retained")
+	}
 }
 
 func telemetryRoute(kind string) auditpolicy.Route {
@@ -235,66 +252,87 @@ func telemetrySetup(t *testing.T, kind string) (*gin.Engine, *int) {
 	calls := 0
 	r.POST(telemetryRoute(kind).Template, func(c *gin.Context) {
 		calls++
-		ctx := c.Request.Context()
-		if _, ok := ctx.Deadline(); !ok || (kind == "canceled" && !errors.Is(ctx.Err(), context.Canceled)) {
-			t.Error("tracing lost request deadline or cancellation")
-		}
-		if baggage.FromContext(ctx).Len() != 0 || trace.SpanContextFromContext(ctx).TraceState().Len() != 0 {
-			t.Error("client baggage or tracestate reached adopted handler")
-		}
-		carrier := propagation.MapCarrier{}
-		otel.GetTextMapPropagator().Inject(ctx, carrier)
-		if strings.Contains(carrier.Get("traceparent"), strings.Repeat("a", 32)) || carrier.Get("baggage") != "" || carrier.Get("tracestate") != "" || carrier.Get("traceparent") == "" {
-			t.Error("server-only trace propagation lost or client metadata retained")
-		}
-		switch kind {
-		case "success":
-			data, err := io.ReadAll(c.Request.Body)
-			if err != nil || !strings.Contains(string(data), telemetrySentinel) {
-				t.Error("telemetry changed the handler's request body")
-			}
-			auditpolicy.SetMetadata(c, auditpolicy.SafeMetadata{ActorID: 7, TenantID: 101, DatasourceID: 9, HistoryID: 11, ViewID: 12, Count: 2, CatalogVersion: 1})
-			common.Success(c, telemetrySentinel)
-		case "raw200", "canceled":
-			c.JSON(200, gin.H{"data": telemetrySentinel})
-		case "business200":
-			auditpolicy.SetOutcome(c, auditpolicy.OutcomeSuccess)
-			common.Fail(c, 500, telemetrySentinel)
-		case "invalid-metadata":
-			auditpolicy.SetMetadata(c, auditpolicy.SafeMetadata{ActorID: 77, Outcome: auditpolicy.Outcome(255), Count: 10001})
-			c.Status(200)
-		case "provider", "storage":
-			outcome := auditpolicy.OutcomeUpstream
-			if kind == "storage" {
-				outcome = auditpolicy.OutcomeStorage
-			}
-			auditpolicy.SetMetadata(c, auditpolicy.SafeMetadata{Outcome: outcome})
-			_ = c.Error(errors.New(telemetrySentinel))
-			common.FailWithError(c, 500, errors.New(telemetrySentinel), telemetrySentinel)
-		case "error":
-			_ = c.Error(errors.New(telemetrySentinel))
-			common.Success(c, telemetrySentinel)
-		case "panic":
-			panic(telemetrySentinel)
-		case "panic-error":
-			panic(errors.New(telemetrySentinel))
-		case "invalid-json", "body-stream":
-			var input struct {
-				Number int `json:"number"`
-			}
-			if err := c.ShouldBindJSON(&input); err != nil {
-				_ = c.Error(err)
-				auditpolicy.SetMetadata(c, auditpolicy.SafeMetadata{Outcome: auditpolicy.OutcomeInvalid})
-				common.Fail(c, 400, telemetrySentinel)
-				c.Abort()
-				return
-			}
-			t.Error("hostile JSON accepted")
-		default:
-			t.Error("denied handler ran")
-		}
+		telemetryAssertAdoptedContext(t, kind, c)
+		telemetryRunHandler(t, kind, c)
 	})
 	return r, &calls
+}
+
+func telemetryAssertAdoptedContext(t *testing.T, kind string, c *gin.Context) {
+	t.Helper()
+	ctx := c.Request.Context()
+	if _, ok := ctx.Deadline(); !ok || (kind == "canceled" && !errors.Is(ctx.Err(), context.Canceled)) {
+		t.Error("tracing lost request deadline or cancellation")
+	}
+	if baggage.FromContext(ctx).Len() != 0 || trace.SpanContextFromContext(ctx).TraceState().Len() != 0 {
+		t.Error("client baggage or tracestate reached adopted handler")
+	}
+	carrier := propagation.MapCarrier{}
+	otel.GetTextMapPropagator().Inject(ctx, carrier)
+	if strings.Contains(carrier.Get("traceparent"), strings.Repeat("a", 32)) || carrier.Get("baggage") != "" || carrier.Get("tracestate") != "" || carrier.Get("traceparent") == "" {
+		t.Error("server-only trace propagation lost or client metadata retained")
+	}
+}
+
+func telemetryRunHandler(t *testing.T, kind string, c *gin.Context) {
+	switch kind {
+	case "success":
+		telemetryHandleSuccess(t, c)
+	case "raw200", "canceled":
+		c.JSON(200, gin.H{"data": telemetrySentinel})
+	case "business200":
+		auditpolicy.SetOutcome(c, auditpolicy.OutcomeSuccess)
+		common.Fail(c, 500, telemetrySentinel)
+	case "invalid-metadata":
+		auditpolicy.SetMetadata(c, auditpolicy.SafeMetadata{ActorID: 77, Outcome: auditpolicy.Outcome(255), Count: 10001})
+		c.Status(200)
+	case "provider":
+		telemetryFailWithOutcome(c, auditpolicy.OutcomeUpstream)
+	case "storage":
+		telemetryFailWithOutcome(c, auditpolicy.OutcomeStorage)
+	case "error":
+		_ = c.Error(errors.New(telemetrySentinel))
+		common.Success(c, telemetrySentinel)
+	case "panic":
+		panic(telemetrySentinel)
+	case "panic-error":
+		panic(errors.New(telemetrySentinel))
+	case "invalid-json", "body-stream":
+		telemetryHandleBind(t, c)
+	default:
+		t.Error("denied handler ran")
+	}
+}
+
+func telemetryHandleSuccess(t *testing.T, c *gin.Context) {
+	t.Helper()
+	data, err := io.ReadAll(c.Request.Body)
+	if err != nil || !strings.Contains(string(data), telemetrySentinel) {
+		t.Error("telemetry changed the handler's request body")
+	}
+	auditpolicy.SetMetadata(c, auditpolicy.SafeMetadata{ActorID: 7, TenantID: 101, DatasourceID: 9, HistoryID: 11, ViewID: 12, Count: 2, CatalogVersion: 1})
+	common.Success(c, telemetrySentinel)
+}
+
+func telemetryFailWithOutcome(c *gin.Context, outcome auditpolicy.Outcome) {
+	auditpolicy.SetMetadata(c, auditpolicy.SafeMetadata{Outcome: outcome})
+	_ = c.Error(errors.New(telemetrySentinel))
+	common.FailWithError(c, 500, errors.New(telemetrySentinel), telemetrySentinel)
+}
+
+func telemetryHandleBind(t *testing.T, c *gin.Context) {
+	t.Helper()
+	var input struct {
+		Number int `json:"number"`
+	}
+	if err := c.ShouldBindJSON(&input); err != nil {
+		_ = c.Error(err)
+		auditpolicy.SetMetadata(c, auditpolicy.SafeMetadata{Outcome: auditpolicy.OutcomeInvalid})
+		common.Fail(c, 400, telemetrySentinel)
+		c.Abort()
+		return
+	}
+	t.Error("hostile JSON accepted")
 }
 
 func telemetryExercise(t *testing.T, kind string, r *gin.Engine) (*auditReadSentinel, *httptest.ResponseRecorder) {
@@ -425,7 +463,8 @@ func telemetryAssertLegacy(t *testing.T, exporter *tracetest.InMemoryExporter) {
 	}
 }
 
-func telemetryAssertOTLP(t *testing.T) {
+func telemetryOTLPWire(t *testing.T) (chan []byte, string, func()) {
+	t.Helper()
 	wire := make(chan []byte, len(telemetryCases))
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		data, err := io.ReadAll(r.Body)
@@ -436,9 +475,41 @@ func telemetryAssertOTLP(t *testing.T) {
 		w.Header().Set("Content-Type", "application/x-protobuf")
 		w.WriteHeader(200)
 	}))
-	defer server.Close()
+	return wire, server.URL, server.Close
+}
+
+func telemetryCheckOTLPBatch(t *testing.T, data []byte) (spans int, sentinelPresent bool) {
+	t.Helper()
+	var exported collectortrace.ExportTraceServiceRequest
+	if err := proto.Unmarshal(data, &exported); err != nil {
+		t.Fatal(err)
+	}
+	encoded, err := protojson.Marshal(&exported)
+	if err != nil {
+		t.Fatal(err)
+	}
+	sentinelPresent = strings.Contains(string(encoded), telemetrySentinel)
+	if sentinelPresent || strings.Contains(string(data), telemetrySentinel) {
+		t.Error("raw sentinel in actual production OTLP wire output")
+	}
+	for _, res := range exported.ResourceSpans {
+		for _, scope := range res.ScopeSpans {
+			spans += len(scope.Spans)
+			for _, span := range scope.Spans {
+				if len(span.ParentSpanId) != 0 || span.TraceState != "" || len(span.Links) != 0 || span.Status.Message != "" {
+					t.Error("client correlation or error text in OTLP")
+				}
+			}
+		}
+	}
+	return spans, sentinelPresent
+}
+
+func telemetryAssertOTLP(t *testing.T) {
+	wire, endpoint, closeWire := telemetryOTLPWire(t)
+	defer closeWire()
 	previous := otel.GetTracerProvider()
-	tp, err := telemetry.InitTracer("pantheon-base", strings.TrimPrefix(server.URL, "http://"))
+	tp, err := telemetry.InitTracer("pantheon-base", strings.TrimPrefix(endpoint, "http://"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -457,29 +528,10 @@ func telemetryAssertOTLP(t *testing.T) {
 	for count < len(telemetryCases) {
 		select {
 		case data := <-wire:
-			var exported collectortrace.ExportTraceServiceRequest
-			if err := proto.Unmarshal(data, &exported); err != nil {
-				t.Fatal(err)
-			}
-			encoded, err := protojson.Marshal(&exported)
-			if err != nil {
-				t.Fatal(err)
-			}
-			if strings.Contains(string(encoded), telemetrySentinel) || strings.Contains(string(data), telemetrySentinel) {
-				t.Error("raw sentinel in actual production OTLP wire output")
-			}
-			for _, res := range exported.ResourceSpans {
-				for _, scope := range res.ScopeSpans {
-					count += len(scope.Spans)
-					for _, span := range scope.Spans {
-						if len(span.ParentSpanId) != 0 || span.TraceState != "" || len(span.Links) != 0 || span.Status.Message != "" {
-							t.Error("client correlation or error text in OTLP")
-						}
-					}
-				}
-			}
+			spans, sentinelPresent := telemetryCheckOTLPBatch(t, data)
+			count += spans
 			bytes += len(data)
-			t.Logf("OTLP batch: spans=%d bytes=%d sha256=%x sentinel-present=%t", count, len(data), sha256.Sum256(data), strings.Contains(string(encoded), telemetrySentinel))
+			t.Logf("OTLP batch: spans=%d bytes=%d sha256=%x sentinel-present=%t", count, len(data), sha256.Sum256(data), sentinelPresent)
 		case <-ctx.Done():
 			t.Fatalf("OTLP missing spans: got %d, want %d", count, len(telemetryCases))
 		}

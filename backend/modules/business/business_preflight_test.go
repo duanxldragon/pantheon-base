@@ -39,7 +39,7 @@ func TestBusinessPreflightRegistration(t *testing.T) {
 	scopedBusinessPreflight(t)
 	var missing func(*gorm.DB) error
 	for _, preflight := range []func(*gorm.DB) error{nil, missing} {
-		if err := RegisterBusinessInitializationPreflight(preflight); err != contracts.ErrBusinessProviders {
+		if RegisterBusinessInitializationPreflight(preflight) != contracts.ErrBusinessProviders {
 			t.Fatal("nil callback must return the fixed provider error")
 		}
 	}
@@ -47,13 +47,13 @@ func TestBusinessPreflightRegistration(t *testing.T) {
 	if err := RegisterBusinessInitializationPreflight(callback); err != nil {
 		t.Fatal(err)
 	}
-	if err := RegisterBusinessInitializationPreflight(callback); err != contracts.ErrBusinessProviders {
+	if RegisterBusinessInitializationPreflight(callback) != contracts.ErrBusinessProviders {
 		t.Fatal("duplicate callback accepted")
 	}
 	if err := businessInitializationPreflight.run(nil); err != nil {
 		t.Fatal(err)
 	}
-	if err := RegisterBusinessInitializationPreflight(callback); err != contracts.ErrBusinessProviders {
+	if RegisterBusinessInitializationPreflight(callback) != contracts.ErrBusinessProviders {
 		t.Fatal("late callback accepted")
 	}
 }
@@ -65,7 +65,7 @@ func TestBusinessPreflightEmptyRunSealsRegistration(t *testing.T) {
 			t.Fatal("standalone empty preflight must retain success")
 		}
 	}
-	if err := registry.register(func(*gorm.DB) error { return nil }); err != contracts.ErrBusinessProviders {
+	if registry.register(func(*gorm.DB) error { return nil }) != contracts.ErrBusinessProviders {
 		t.Fatal("registration after empty initialization accepted")
 	}
 }
@@ -88,14 +88,14 @@ func TestBusinessPreflightRepeatsReadinessAndPreservesError(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _, want := range []error{nil, cause, nil} {
-		if got := registry.run(input); got != want {
+		if registry.run(input) != want {
 			t.Fatal("readiness result was cached/wrapped or active guard was retained after failure")
 		}
 	}
 	if calls != 3 {
 		t.Fatal("readiness was not executed on every invocation")
 	}
-	if err := registry.register(func(*gorm.DB) error { return nil }); err != contracts.ErrBusinessProviders {
+	if registry.register(func(*gorm.DB) error { return nil }) != contracts.ErrBusinessProviders {
 		t.Fatal("failed readiness unsealed registration")
 	}
 }
@@ -113,13 +113,13 @@ func TestBusinessPreflightPanicReleasesActiveGuard(t *testing.T) {
 	}); err != nil {
 		t.Fatal(err)
 	}
-	if got := capturedBusinessPreflightPanic(func() { _ = registry.run(nil) }); got != marker {
+	if capturedBusinessPreflightPanic(func() { _ = registry.run(nil) }) != marker {
 		t.Fatal("callback panic was changed or swallowed")
 	}
 	if err := registry.run(nil); err != nil || calls != 2 {
 		t.Fatal("panic retained the active guard")
 	}
-	if err := registry.register(func(*gorm.DB) error { return nil }); err != contracts.ErrBusinessProviders {
+	if registry.register(func(*gorm.DB) error { return nil }) != contracts.ErrBusinessProviders {
 		t.Fatal("panic unsealed registration")
 	}
 }
@@ -127,10 +127,10 @@ func TestBusinessPreflightPanicReleasesActiveGuard(t *testing.T) {
 func TestBusinessPreflightRunsOutsideMutexAndRejectsReentry(t *testing.T) {
 	registry := &businessInitializationPreflightRegistry{}
 	if err := registry.register(func(*gorm.DB) error {
-		if err := registry.register(func(*gorm.DB) error { return nil }); err != contracts.ErrBusinessProviders {
+		if registry.register(func(*gorm.DB) error { return nil }) != contracts.ErrBusinessProviders {
 			return errors.New("active registration accepted")
 		}
-		if err := registry.run(nil); err != contracts.ErrBusinessProviders {
+		if registry.run(nil) != contracts.ErrBusinessProviders {
 			return errors.New("recursive preflight accepted")
 		}
 		return nil
@@ -169,7 +169,7 @@ func TestBusinessPreflightRejectsOverlap(t *testing.T) {
 		t.Fatal("first callback did not start")
 	}
 	go func() { second <- registry.run(nil) }()
-	if err := waitBusinessPreflight(t, second); err != contracts.ErrBusinessProviders {
+	if waitBusinessPreflight(t, second) != contracts.ErrBusinessProviders {
 		t.Fatal("overlapping preflight did not return the fixed provider error")
 	}
 	if calls.Load() != 1 {
@@ -237,7 +237,7 @@ func TestBusinessPreflightRegistrationSealRace(t *testing.T) {
 		if err := registry.run(nil); err != nil || calls.Load() != 2*want {
 			t.Fatal("sealed callback was changed or readiness success was cached")
 		}
-		if err := registry.register(func(*gorm.DB) error { return nil }); err != contracts.ErrBusinessProviders {
+		if registry.register(func(*gorm.DB) error { return nil }) != contracts.ErrBusinessProviders {
 			t.Fatal("late registration accepted after the seal race")
 		}
 	}

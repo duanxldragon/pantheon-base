@@ -53,34 +53,13 @@ func Register(module string, bindings []Binding) error {
 	prefix := "/api/v1/business/" + domain
 	batch := make(map[string][]Route, len(bindings))
 	for _, binding := range bindings {
-		if !permissionPattern.MatchString(binding.Permission) || !strings.HasPrefix(binding.Permission, module+":") || len(binding.Routes) == 0 || len(binding.Routes) > 1000 {
-			return ErrInvalid
-		}
 		if _, duplicate := batch[binding.Permission]; duplicate {
 			return ErrInvalid
 		}
-		routes := make([]Route, 0, len(binding.Routes))
-		seen := make(map[Route]bool)
-		for _, route := range binding.Routes {
-			if (route.Path != prefix && !strings.HasPrefix(route.Path, prefix+"/")) || !validPath(route.Path) {
-				return ErrInvalid
-			}
-			switch route.Method {
-			case "GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS":
-			default:
-				return ErrInvalid
-			}
-			if !seen[route] {
-				routes = append(routes, route)
-				seen[route] = true
-			}
+		routes, err := normalizeBindingRoutes(module, prefix, binding)
+		if err != nil {
+			return err
 		}
-		sort.Slice(routes, func(i, j int) bool {
-			if routes[i].Path == routes[j].Path {
-				return routes[i].Method < routes[j].Method
-			}
-			return routes[i].Path < routes[j].Path
-		})
 		batch[binding.Permission] = routes
 	}
 	registry.Lock()
@@ -88,22 +67,72 @@ func Register(module string, bindings []Binding) error {
 	if registry.sealed {
 		return ErrSealed
 	}
-	for key, routes := range batch {
-		if existing, ok := registry.bindings[key]; ok {
-			if len(existing) != len(routes) {
-				return ErrConflict
-			}
-			for i, route := range routes {
-				if existing[i] != route {
-					return ErrConflict
-				}
-			}
-		}
+	if batchConflicts(batch) {
+		return ErrConflict
 	}
 	for key, routes := range batch {
 		registry.bindings[key] = routes
 	}
 	return nil
+}
+
+func normalizeBindingRoutes(module, prefix string, binding Binding) ([]Route, error) {
+	if !permissionPattern.MatchString(binding.Permission) || !strings.HasPrefix(binding.Permission, module+":") || len(binding.Routes) == 0 || len(binding.Routes) > 1000 {
+		return nil, ErrInvalid
+	}
+	routes := make([]Route, 0, len(binding.Routes))
+	seen := make(map[Route]bool)
+	for _, route := range binding.Routes {
+		if !validRoutePath(prefix, route) || !validRouteMethod(route.Method) {
+			return nil, ErrInvalid
+		}
+		if !seen[route] {
+			routes = append(routes, route)
+			seen[route] = true
+		}
+	}
+	sortRoutes(routes)
+	return routes, nil
+}
+
+func validRoutePath(prefix string, route Route) bool {
+	return (route.Path == prefix || strings.HasPrefix(route.Path, prefix+"/")) && validPath(route.Path)
+}
+
+func validRouteMethod(method string) bool {
+	switch method {
+	case "GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS":
+		return true
+	default:
+		return false
+	}
+}
+
+func sortRoutes(routes []Route) {
+	sort.Slice(routes, func(i, j int) bool {
+		if routes[i].Path == routes[j].Path {
+			return routes[i].Method < routes[j].Method
+		}
+		return routes[i].Path < routes[j].Path
+	})
+}
+
+func batchConflicts(batch map[string][]Route) bool {
+	for key, routes := range batch {
+		existing, ok := registry.bindings[key]
+		if !ok {
+			continue
+		}
+		if len(existing) != len(routes) {
+			return true
+		}
+		for i, route := range routes {
+			if existing[i] != route {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 // Seal freezes the registry for the rest of the process. It is called from the

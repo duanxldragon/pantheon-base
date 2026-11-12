@@ -21,44 +21,49 @@ func TestDirtyMigrationBootstrapPreservesRecordedState(t *testing.T) {
 		for _, version := range []int{37, currentRuntimeSchemaVersion, 2, 0, -1} {
 			for _, entry := range []string{"run", "bootstrap", "writer"} {
 				t.Run(fmt.Sprintf("%s/v%d/%s", shape, version, entry), func(t *testing.T) {
-					db := testmysql.Open(t)
-					dsn := migrationTestDSN(t, db)
-					seedDirtyBootstrapShape(t, db, shape)
-					seedBootstrapVersion(t, db, version, true)
-					installBootstrapWriteWitness(t, db)
-					beforeState := bootstrapStateSnapshot(t, db)
-					beforeSchema := bootstrapSchemaSnapshot(t, db)
-					sqlDB, err := db.DB()
-					if err != nil {
-						t.Fatal(err)
-					}
-					switch entry {
-					case "run":
-						err = RunMigrations(dsn)
-					case "bootstrap":
-						err = bootstrapExistingCurrentSchema(dsn)
-					case "writer":
-						err = bootstrapMigrationVersion(sqlDB, currentRuntimeSchemaVersion)
-					}
-					var dirtyErr migrate.ErrDirty
-					if !errors.As(err, &dirtyErr) || dirtyErr.Version != version {
-						t.Errorf("%s returned %v, want typed dirty version %d", entry, err, version)
-					}
-					if after := bootstrapStateSnapshot(t, db); after != beforeState {
-						t.Errorf("record rewritten: before=%s after=%s", beforeState, after)
-					}
-					if after := bootstrapSchemaSnapshot(t, db); after != beforeSchema {
-						t.Errorf("schema changed after startup refusal: before=%s after=%s", beforeSchema, after)
-					}
-					if MigrationsHealthy(db) {
-						t.Error("dirty migration state reported healthy")
-					}
-					assertBootstrapWriteCount(t, db, 0)
-					t.Logf("entry=%s shape=%s before=%s after=%s error=%v", entry, shape, beforeState, bootstrapStateSnapshot(t, db), err)
+					assertDirtyBootstrapPreservesRecordedState(t, shape, version, entry)
 				})
 			}
 		}
 	}
+}
+
+func assertDirtyBootstrapPreservesRecordedState(t *testing.T, shape string, version int, entry string) {
+	t.Helper()
+	db := testmysql.Open(t)
+	dsn := migrationTestDSN(t, db)
+	seedDirtyBootstrapShape(t, db, shape)
+	seedBootstrapVersion(t, db, version, true)
+	installBootstrapWriteWitness(t, db)
+	beforeState := bootstrapStateSnapshot(t, db)
+	beforeSchema := bootstrapSchemaSnapshot(t, db)
+	sqlDB, err := db.DB()
+	if err != nil {
+		t.Fatal(err)
+	}
+	switch entry {
+	case "run":
+		err = RunMigrations(dsn)
+	case "bootstrap":
+		err = bootstrapExistingCurrentSchema(dsn)
+	case "writer":
+		err = bootstrapMigrationVersion(sqlDB, currentRuntimeSchemaVersion)
+	}
+	var dirtyErr migrate.ErrDirty
+	if !errors.As(err, &dirtyErr) || dirtyErr.Version != version {
+		t.Errorf("%s returned %v, want typed dirty version %d", entry, err, version)
+	}
+	if after := bootstrapStateSnapshot(t, db); after != beforeState {
+		t.Errorf("record rewritten: before=%s after=%s", beforeState, after)
+	}
+	if after := bootstrapSchemaSnapshot(t, db); after != beforeSchema {
+		t.Errorf("schema changed after startup refusal: before=%s after=%s", beforeSchema, after)
+	}
+	if MigrationsHealthy(db) {
+		t.Error("dirty migration state reported healthy")
+	}
+	assertBootstrapWriteCount(t, db, 0)
+	t.Logf("entry=%s shape=%s before=%s after=%s error=%v", entry, shape, beforeState, bootstrapStateSnapshot(t, db), err)
 }
 
 func TestMigrationBootstrapRejectsUnknownState(t *testing.T) {
@@ -78,52 +83,63 @@ func TestMigrationBootstrapRejectsUnknownState(t *testing.T) {
 		for _, shape := range []string{"current", "empty"} {
 			for _, entry := range []string{"run", "bootstrap", "writer"} {
 				t.Run(tc.name+"/"+shape+"/"+entry, func(t *testing.T) {
-					db := testmysql.Open(t)
-					dsn := migrationTestDSN(t, db)
-					seedDirtyBootstrapShape(t, db, shape)
-					if err := db.Exec("CREATE TABLE schema_migrations (" + tc.ddl + ")").Error; err != nil {
-						t.Fatal(err)
-					}
-					if err := db.Exec("INSERT INTO schema_migrations VALUES " + tc.seed).Error; err != nil {
-						t.Fatal(err)
-					}
-					installBootstrapWriteWitness(t, db)
-					beforeRows := unknownBootstrapRowsSnapshot(t, db)
-					beforeSchema := bootstrapSchemaSnapshot(t, db)
-					sqlDB, err := db.DB()
-					if err != nil {
-						t.Fatal(err)
-					}
-					switch entry {
-					case "run":
-						err = RunMigrations(dsn)
-					case "bootstrap":
-						err = bootstrapExistingCurrentSchema(dsn)
-					case "writer":
-						err = bootstrapMigrationVersion(sqlDB, currentRuntimeSchemaVersion)
-					}
-					if err == nil {
-						t.Error("unknown migration state accepted")
-					}
-					if tc.name == "multiple-dirty" {
-						var dirtyErr migrate.ErrDirty
-						if !errors.As(err, &dirtyErr) || dirtyErr.Version != 37 {
-							t.Errorf("mixed records returned %v, want dirty version 37", err)
-						}
-					}
-					if after := unknownBootstrapRowsSnapshot(t, db); after != beforeRows {
-						t.Errorf("unknown state changed: before=%s after=%s", beforeRows, after)
-					}
-					if after := bootstrapSchemaSnapshot(t, db); after != beforeSchema {
-						t.Error("schema changed after unknown state refusal")
-					}
-					if MigrationsHealthy(db) {
-						t.Error("unknown migration state reported healthy")
-					}
-					assertBootstrapWriteCount(t, db, 0)
+					assertBootstrapRejectsUnknownState(t, tc.name, tc.ddl, tc.seed, shape, entry)
 				})
 			}
 		}
+	}
+}
+
+func assertBootstrapRejectsUnknownState(t *testing.T, name, ddl, seed, shape, entry string) {
+	t.Helper()
+	db := testmysql.Open(t)
+	dsn := migrationTestDSN(t, db)
+	seedDirtyBootstrapShape(t, db, shape)
+	if err := db.Exec("CREATE TABLE schema_migrations (" + ddl + ")").Error; err != nil {
+		t.Fatal(err)
+	}
+	if err := db.Exec("INSERT INTO schema_migrations VALUES " + seed).Error; err != nil {
+		t.Fatal(err)
+	}
+	installBootstrapWriteWitness(t, db)
+	beforeRows := unknownBootstrapRowsSnapshot(t, db)
+	beforeSchema := bootstrapSchemaSnapshot(t, db)
+	sqlDB, err := db.DB()
+	if err != nil {
+		t.Fatal(err)
+	}
+	switch entry {
+	case "run":
+		err = RunMigrations(dsn)
+	case "bootstrap":
+		err = bootstrapExistingCurrentSchema(dsn)
+	case "writer":
+		err = bootstrapMigrationVersion(sqlDB, currentRuntimeSchemaVersion)
+	}
+	if err == nil {
+		t.Error("unknown migration state accepted")
+	}
+	assertMixedDirtyRecord(t, name, err)
+	if after := unknownBootstrapRowsSnapshot(t, db); after != beforeRows {
+		t.Errorf("unknown state changed: before=%s after=%s", beforeRows, after)
+	}
+	if bootstrapSchemaSnapshot(t, db) != beforeSchema {
+		t.Error("schema changed after unknown state refusal")
+	}
+	if MigrationsHealthy(db) {
+		t.Error("unknown migration state reported healthy")
+	}
+	assertBootstrapWriteCount(t, db, 0)
+}
+
+func assertMixedDirtyRecord(t *testing.T, name string, err error) {
+	t.Helper()
+	if name != "multiple-dirty" {
+		return
+	}
+	var dirtyErr migrate.ErrDirty
+	if !errors.As(err, &dirtyErr) || dirtyErr.Version != 37 {
+		t.Errorf("mixed records returned %v, want dirty version 37", err)
 	}
 }
 
@@ -146,49 +162,64 @@ func TestMigrationBootstrapRetainsCleanAndAbsentState(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			db := testmysql.Open(t)
-			seedDirtyBootstrapShape(t, db, tc.shape)
-			if tc.recorded {
-				seedBootstrapVersion(t, db, tc.version, false)
-				installBootstrapWriteWitness(t, db)
-			} else if tc.emptyTable {
-				if err := db.Exec("CREATE TABLE schema_migrations (version BIGINT NOT NULL PRIMARY KEY, dirty BOOLEAN NOT NULL)").Error; err != nil {
-					t.Fatal(err)
-				}
-			}
-			if MigrationsHealthy(db) != tc.recorded {
-				t.Error("initial readiness does not match clean recorded state")
-			}
-			if err := bootstrapExistingCurrentSchema(migrationTestDSN(t, db)); err != nil {
-				t.Fatal(err)
-			}
-			sqlDB, err := db.DB()
-			if err != nil {
-				t.Fatal(err)
-			}
-			version, dirty, recorded, err := recordedMigrationVersion(sqlDB)
-			if err != nil || dirty || recorded != (tc.wantVersion >= 0) || (recorded && version != tc.wantVersion) {
-				t.Fatalf("version=%d dirty=%v recorded=%v err=%v, want clean %d", version, dirty, recorded, err, tc.wantVersion)
-			}
-			if MigrationsHealthy(db) != recorded {
-				t.Error("readiness does not match clean recorded state after bootstrap")
-			}
-			if tc.recorded && tc.version >= tc.wantVersion {
-				assertBootstrapWriteCount(t, db, 0)
-			}
-			// The real startup path must still finish fresh and legacy databases.
-			// Future versions are only a bootstrap/readiness contract: the current
-			// embedded source cannot apply an unknown future migration.
-			if tc.name != "clean-future" {
-				if err := RunMigrations(migrationTestDSN(t, db)); err != nil {
-					t.Fatal(err)
-				}
-				assertLatestMigrationVersion(t, db)
-				if !MigrationsHealthy(db) {
-					t.Error("successful startup reported unhealthy")
-				}
-			}
+			assertBootstrapRetainsCleanAndAbsentState(t, tc.name, tc.shape, tc.version, tc.recorded, tc.emptyTable, tc.wantVersion)
 		})
+	}
+}
+
+func assertBootstrapRetainsCleanAndAbsentState(t *testing.T, name, shape string, seedVersion int, isRecorded, isEmptyTable bool, wantVersion int) {
+	t.Helper()
+	db := testmysql.Open(t)
+	seedDirtyBootstrapShape(t, db, shape)
+	if isRecorded {
+		seedBootstrapVersion(t, db, seedVersion, false)
+		installBootstrapWriteWitness(t, db)
+	} else if isEmptyTable {
+		if err := db.Exec("CREATE TABLE schema_migrations (version BIGINT NOT NULL PRIMARY KEY, dirty BOOLEAN NOT NULL)").Error; err != nil {
+			t.Fatal(err)
+		}
+	}
+	if MigrationsHealthy(db) != isRecorded {
+		t.Error("initial readiness does not match clean recorded state")
+	}
+	if err := bootstrapExistingCurrentSchema(migrationTestDSN(t, db)); err != nil {
+		t.Fatal(err)
+	}
+	assertRecordedMigrationClean(t, db, wantVersion)
+	if isRecorded && seedVersion >= wantVersion {
+		assertBootstrapWriteCount(t, db, 0)
+	}
+	// The real startup path must still finish fresh and legacy databases.
+	// Future versions are only a bootstrap/readiness contract: the current
+	// embedded source cannot apply an unknown future migration.
+	if name != "clean-future" {
+		runBootstrapRealStartupPath(t, db)
+	}
+}
+
+func assertRecordedMigrationClean(t *testing.T, db *gorm.DB, wantVersion int) {
+	t.Helper()
+	sqlDB, err := db.DB()
+	if err != nil {
+		t.Fatal(err)
+	}
+	version, dirty, recorded, err := recordedMigrationVersion(sqlDB)
+	if err != nil || dirty || recorded != (wantVersion >= 0) || (recorded && version != wantVersion) {
+		t.Fatalf("version=%d dirty=%v recorded=%v err=%v, want clean %d", version, dirty, recorded, err, wantVersion)
+	}
+	if MigrationsHealthy(db) != recorded {
+		t.Error("readiness does not match clean recorded state after bootstrap")
+	}
+}
+
+func runBootstrapRealStartupPath(t *testing.T, db *gorm.DB) {
+	t.Helper()
+	if err := RunMigrations(migrationTestDSN(t, db)); err != nil {
+		t.Fatal(err)
+	}
+	assertLatestMigrationVersion(t, db)
+	if !MigrationsHealthy(db) {
+		t.Error("successful startup reported unhealthy")
 	}
 }
 

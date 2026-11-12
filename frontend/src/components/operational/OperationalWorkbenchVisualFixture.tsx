@@ -21,6 +21,18 @@ import {
 
 const stateKeys = ['loading', 'empty', 'error', 'forbidden', 'stale', 'partial'] as const;
 
+function fixtureSlot(index: number): DashboardOperationalWidget['slot'] {
+  if (index === 0) return 'attention-queue';
+  if (index === 3) return 'recent-activity';
+  return 'status-summary';
+}
+
+function fixtureTitleKey(state: string): string {
+  if (state === 'empty') return 'common.noData';
+  if (state === 'error') return 'common.loadFailed';
+  return `operational.fixture.${state}`;
+}
+
 function useOperationalLabels() {
   const { t } = useTranslation();
   return {
@@ -48,22 +60,58 @@ export default function OperationalWorkbenchVisualFixture() {
   const selectContext = (option: (typeof contextOptions)[number]) =>
     setSelectedContext((current) => [...current, option]);
 
-  const dashboardFixtures = useMemo<DashboardOperationalWidget[]>(() => ['partial', 'empty', 'error', 'ready'].map((state,index) => ({
-    key: `fixture-${state}`, slot: index === 0 ? 'attention-queue' : index === 3 ? 'recent-activity' : 'status-summary',
-    sourceDomain: 'platform', titleKey: state === 'empty' ? 'common.noData' : state === 'error' ? 'common.loadFailed' : `operational.fixture.${state}`, descriptionKey: 'operational.fixture.description',
-    path: '/__visual/operational-workbench', permission: 'visual:view', cleanupPolicy: 'platform_owned', navigationSource: 'direct',
-    metadata: { owner: 'platform', cleanupPolicy: 'platform_owned', freshness: { policy: 'snapshot', maxAgeMs: 60000 },
-      queryBudget: { maxRequestsPerMinute: 2, maxItems: 4, maxRenderItems: 4 },
-      emptyStateKey: 'common.noDataDesc', errorStateKey: 'common.loadFailedDesc', errorIsolation: 'widget' },
-    dataSource: { timeoutMs: 1000, load: async () => {
-      if (state === 'error') throw new Error('fixture failure');
-      return { updatedAt: new Date(Date.now() - (state === 'partial' ? 120000 : 0)).toISOString(), partial: state === 'partial',
-        items: state === 'empty' ? [] : [{ id: '1', label: t('operational.fixture.rowAlpha'), value: 12 },
-          { id: '2', label: t('operational.fixture.rowBeta'), value: 8, detail: t('operational.fixture.description') }] };
-    } },
-  })), [t]);
+  const dashboardFixtures = useMemo<DashboardOperationalWidget[]>(
+    () =>
+      ['partial', 'empty', 'error', 'ready'].map((state, index) => ({
+        key: `fixture-${state}`,
+        slot: fixtureSlot(index),
+        sourceDomain: 'platform',
+        titleKey: fixtureTitleKey(state),
+        descriptionKey: 'operational.fixture.description',
+        path: '/__visual/operational-workbench',
+        permission: 'visual:view',
+        cleanupPolicy: 'platform_owned',
+        navigationSource: 'direct',
+        metadata: {
+          owner: 'platform',
+          cleanupPolicy: 'platform_owned',
+          freshness: { policy: 'snapshot', maxAgeMs: 60000 },
+          queryBudget: { maxRequestsPerMinute: 2, maxItems: 4, maxRenderItems: 4 },
+          emptyStateKey: 'common.noDataDesc',
+          errorStateKey: 'common.loadFailedDesc',
+          errorIsolation: 'widget',
+        },
+        dataSource: {
+          timeoutMs: 1000,
+          load: () => {
+            if (state === 'error') return Promise.reject(new Error('fixture failure'));
+            return Promise.resolve({
+              updatedAt: new Date(Date.now() - (state === 'partial' ? 120000 : 0)).toISOString(),
+              partial: state === 'partial',
+              items:
+                state === 'empty'
+                  ? []
+                  : [
+                      { id: '1', label: t('operational.fixture.rowAlpha'), value: 12 },
+                      {
+                        id: '2',
+                        label: t('operational.fixture.rowBeta'),
+                        value: 8,
+                        detail: t('operational.fixture.description'),
+                      },
+                    ],
+            });
+          },
+        },
+      })),
+    [t],
+  );
   if (new URLSearchParams(globalThis.location.search).get('dashboard') === '1') {
-    return <main className="operational-visual-fixture"><OperationalDashboardWidgets widgets={dashboardFixtures} /></main>;
+    return (
+      <main className="operational-visual-fixture">
+        <OperationalDashboardWidgets widgets={dashboardFixtures} />
+      </main>
+    );
   }
   return (
     <main className="operational-visual-fixture" data-testid="operational-workbench-fixture">
@@ -164,10 +212,18 @@ export default function OperationalWorkbenchVisualFixture() {
           title={t('operational.fixture.conditions')}
           value={condition}
           onChange={editorMode ? setCondition : undefined}
-          editorLabels={editorMode ? {
-            field: t('operational.fixture.editor.field'), operator: t('operational.fixture.editor.operator'), value: t('operational.fixture.editor.value'),
-            remove: t('operational.fixture.editor.remove'), addGroup: t('operational.fixture.editor.addGroup'), combinator: t('operational.fixture.editor.combinator'),
-          } : undefined}
+          editorLabels={
+            editorMode
+              ? {
+                  field: t('operational.fixture.editor.field'),
+                  operator: t('operational.fixture.editor.operator'),
+                  value: t('operational.fixture.editor.value'),
+                  remove: t('operational.fixture.editor.remove'),
+                  addGroup: t('operational.fixture.editor.addGroup'),
+                  combinator: t('operational.fixture.editor.combinator'),
+                }
+              : undefined
+          }
           fields={conditionFieldFixture}
           labels={{
             ...stateLabels,

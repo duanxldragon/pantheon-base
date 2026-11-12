@@ -27,6 +27,8 @@ const (
 	CodeNotFound     = 404
 )
 
+const requestFailedMessageKey = "request.failed"
+
 var i18nKeyPattern = regexp.MustCompile(`^[a-z0-9_]+(?:\.[a-z0-9_]+)+$`)
 
 func Success(c *gin.Context, data interface{}) {
@@ -87,7 +89,7 @@ func resolveErrorMessageKey(err error, fallback string) string {
 		if strings.TrimSpace(fallback) != "" {
 			return fallback
 		}
-		return "request.failed"
+		return requestFailedMessageKey
 	}
 	message := lastMessageSegment(err.Error())
 	if isI18nMessageKey(message) {
@@ -96,13 +98,13 @@ func resolveErrorMessageKey(err error, fallback string) string {
 	if strings.TrimSpace(fallback) != "" {
 		return fallback
 	}
-	return "request.failed"
+	return requestFailedMessageKey
 }
 
 func FailWithError(c *gin.Context, code int, err error, fallback string) {
 	if _, protected := auditpolicy.Match(c); protected {
 		logging.Error("business request failed", zap.String("outcome", "denied"), zap.String("requestId", GetRequestID(c)))
-		Fail(c, code, "request.failed")
+		Fail(c, code, requestFailedMessageKey)
 		return
 	}
 	// When err carries no i18n message key, resolveErrorMessageKey replaces it
