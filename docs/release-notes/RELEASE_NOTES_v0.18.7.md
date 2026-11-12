@@ -8,7 +8,7 @@ Ops must fetch `pantheon-base-v0.18.7` from GitHub with the standard four-asset 
 
 ## Validation status
 
-Preparation validated locally on the PR branch: affected-set CGO race, vet and build; middleware sanitization test; frontend lint/type-check/build/vitest; all doc-harness gates. The immutable target commit additionally requires green push checks, Full Smoke and Release Gate, and only then the four official assets. Actual Ops consumer validation (readonly CGO full race, frontend, assembler, migration, standard smoke) will be recorded here after it happens. None of the preparation evidence implies publication or consumption.
+Preparation validated locally on the PR branch: affected-set CGO race, vet and build; middleware sanitization test; frontend lint/type-check/build/vitest; all doc-harness gates. The remaining Release Gate blockers on main were cleared by code-only SonarCloud remediation (PR #506 fixed all 63 unresolved issues; PR #507 removed the 4 residual issues from that refactor), bringing main to zero unresolved issues with no waivers, exclusions or gate changes. The immutable target commit 3203624e55438866edb951bd74e671eab38d2f16 passed GitHub required checks and the Release Gate Summary (run 43194854386), after which the annotated tag `pantheon-base-v0.18.7` and the four official assets were published and verified by `check:release-assets` locally and remotely. Actual Ops consumer validation (readonly CGO full race, frontend, assembler, migration, standard smoke) will be recorded here after it happens. None of the preparation or publication evidence implies consumption.
 
 ## Explicit residuals
 

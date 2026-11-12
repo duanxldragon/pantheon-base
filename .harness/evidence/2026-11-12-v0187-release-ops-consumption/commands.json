@@ -131,13 +131,48 @@
       "log": ".harness\\evidence\\2026-11-12-v0187-release-ops-consumption\\frontend-npm-run-type-check.log.gz",
       "sha256": "b745a6592ca45af2e1efabe22869c59d45402820a2d00f831e830a113ab3400c",
       "rawSha256": "5ebf47247dc14a635484b800d11596f249d0cdf4008716d724fcc464f81f9d1e"
+    },
+    {
+      "command": "gh api repos/duanxldragon/pantheon-base/check-runs/131113763713 (Release Gate Summary on 3203624e)",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\pantheon-base",
+      "exitCode": 0,
+      "status": "passed",
+      "log": ".harness/evidence/2026-11-12-v0187-release-ops-consumption\\gh-api-release-gate-check-run-131113763713.log.gz",
+      "sha256": "fa004d261ec5371516a57518276e09bb37bddd6b8ae40a5a9d4b8f636c2ab4dd",
+      "rawSha256": "6976eb1c1b207b49316fb9d96d3722260a30f39fc5fb35405e38cbf8e44431a5"
+    },
+    {
+      "command": "gh release view pantheon-base-v0.18.7 (four official assets on exact commit)",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\pantheon-base",
+      "exitCode": 0,
+      "status": "passed",
+      "log": ".harness/evidence/2026-11-12-v0187-release-ops-consumption\\gh-release-view-pantheon-base-v0187.log.gz",
+      "sha256": "983c21012d6fc950b0b5f8e14fbb345203e65593a3267d0bb444ee0bb20f64b3",
+      "rawSha256": "9d0db4f4c39e0d451c86b9cc3221f2b14c3fdd6018ee39896d0cc58c2de98be6"
+    },
+    {
+      "command": "npm run check:release-assets -- --release-version pantheon-base-v0.18.7",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\pantheon-base",
+      "exitCode": 0,
+      "status": "passed",
+      "log": ".harness/evidence/2026-11-12-v0187-release-ops-consumption\\npm-run-check-release-assets-v0187.log.gz",
+      "sha256": "b21870bfe98190f3987f1cf29a342e2b274f24430ae1425a7aaed8974e66355e",
+      "rawSha256": "4e45afc45036db65e97f1d9d6c2c18219039d87488c232057091dba0defb7953"
+    },
+    {
+      "command": "git ls-remote --tags origin pantheon-base-v0.18.7; git for-each-ref refs/tags/pantheon-base-v0.18.7 (annotated tag object dereferences to 3203624e)",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\pantheon-base",
+      "exitCode": 0,
+      "status": "passed",
+      "log": ".harness/evidence/2026-11-12-v0187-release-ops-consumption\\hosted-release-gate-and-release-view.log.gz",
+      "sha256": "56692e726de85ba1a5dccb8a30f19508b0b8145bd5417b2fe1a8dccbc343a596",
+      "rawSha256": "e4a7d1d7a368771a43fd9286092becb465be5fa6eead451a9edac035e5c0655d"
     }
   ],
   "knownGaps": [
-    "Hosted push checks, Release Gate and four official assets pending on the exact merged commit.",
-    "CodeQL go/log-injection alert closure depends on the new default-branch analysis after merge.",
     "Ops official acquisition/rebuild/validation belongs to the downstream consumption task.",
-    "Real S3 provider skip unwaived; maintenance freeze unsigned; FR028 deferred."
+    "Real S3 provider skip unwaived; maintenance freeze unsigned; FR028 deferred.",
+    "No new runtime metrics/traces were produced by publication; runtime signal remains the preparation-stage race logs and hosted Release Gate logs referenced by the publication evidence files."
   ],
   "linkage": {
     "taskManifest": ".harness/tasks/2026-11-12-v0187-release-ops-consumption/manifest.json",
