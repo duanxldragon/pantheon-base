@@ -226,7 +226,7 @@ func assertRefreshRejectsNilAndStoreErrors(t *testing.T, mode string) {
 	if err := StoreSession(ctx, rdb, token, data, time.Minute); err != nil {
 		t.Fatal(err)
 	}
-	tc := prepareNilAndStoreErrorCase(ctx, t, rdb, token, data, mode)
+	tc, callCtx := prepareNilAndStoreErrorCase(ctx, t, rdb, token, data, mode)
 	before, err := rdb.Dump(ctx, SessionKey(token)).Result()
 	if err != nil {
 		t.Fatal(err)
@@ -235,7 +235,7 @@ func assertRefreshRejectsNilAndStoreErrors(t *testing.T, mode string) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = RefreshSessionActivity(tc.callCtx, tc.client, token, tc.proposed)
+	err = RefreshSessionActivity(callCtx, tc.client, token, tc.proposed)
 	if err == nil || (tc.want != nil && !errors.Is(err, tc.want)) {
 		t.Errorf("expected explicit rejection, got %v", err)
 	}
@@ -251,25 +251,26 @@ func assertRefreshRejectsNilAndStoreErrors(t *testing.T, mode string) {
 
 type nilStoreCase struct {
 	client   *redis.Client
-	callCtx  context.Context
 	proposed *SessionData
 	want     error
 }
 
-func prepareNilAndStoreErrorCase(ctx context.Context, t *testing.T, rdb *redis.Client, token string, data *SessionData, mode string) nilStoreCase {
+func prepareNilAndStoreErrorCase(ctx context.Context, t *testing.T, rdb *redis.Client, token string, data *SessionData, mode string) (nilStoreCase, context.Context) {
 	t.Helper()
-	tc := nilStoreCase{client: rdb, callCtx: ctx, proposed: data, want: ErrInvalid}
+	callCtx := ctx
+	tc := nilStoreCase{client: rdb, proposed: data, want: ErrInvalid}
 	switch mode {
 	case "nil-store":
 		tc.client, tc.want = nil, ErrStoreNotInitialized
 	case "nil-data":
 		tc.proposed = nil
 	case "nil-context":
-		tc.callCtx = nil
+		callCtx = nil
 	case "canceled":
-		callCtx, cancel := context.WithCancel(ctx)
+		canceled, cancel := context.WithCancel(ctx)
 		cancel()
-		tc.callCtx, tc.want = callCtx, context.Canceled
+		callCtx = canceled
+		tc.want = context.Canceled
 	case "closed-store":
 		client := redis.NewClient(rdb.Options())
 		if err := client.Close(); err != nil {
@@ -285,7 +286,7 @@ func prepareNilAndStoreErrorCase(ctx context.Context, t *testing.T, rdb *redis.C
 		}
 		tc.want = nil
 	}
-	return tc
+	return tc, callCtx
 }
 
 // Run the mutation after the writer's GET has returned its original bytes but
@@ -335,10 +336,11 @@ func assertAtomicReadWriteInterleaving(t *testing.T, mode string) {
 	defer cancel()
 	replacement := *stale
 	replacement.SessionID = "replacement-session"
+	mutation := atomicMutation{rdb: rdb, token: token, replacement: &replacement, writer: writer, cancel: cancel}
 	fired := false
 	writer.AddHook(&activityReadHook{afterRead: func() {
 		fired = true
-		mutateDuringRead(ctx, t, rdb, token, mode, &replacement, writer, cancel)
+		mutation.apply(ctx, t, mode)
 	}})
 	stale.LastActivityAt = time.Now().Unix()
 	want := atomicExpectedErr(mode)
@@ -352,22 +354,32 @@ func assertAtomicReadWriteInterleaving(t *testing.T, mode string) {
 	assertAtomicOutcome(t, mode, current, err, &replacement, stale)
 }
 
-func mutateDuringRead(ctx context.Context, t *testing.T, rdb *redis.Client, token, mode string, replacement *SessionData, writer *redis.Client, cancel context.CancelFunc) {
+type atomicMutation struct {
+	rdb         *redis.Client
+	token       string
+	replacement *SessionData
+	writer      *redis.Client
+	cancel      context.CancelFunc
+}
+
+// apply runs the mutation after the writer's GET has returned its original
+// bytes but before its next Redis command, exercising the atomic boundary.
+func (m atomicMutation) apply(ctx context.Context, t *testing.T, mode string) {
 	t.Helper()
 	var err error
 	switch mode {
 	case "deleted":
-		err = DeleteSession(ctx, rdb, token)
+		err = DeleteSession(ctx, m.rdb, m.token)
 	case "expired":
-		err = rdb.PExpireAt(ctx, SessionKey(token), time.Unix(1, 0)).Err()
+		err = m.rdb.PExpireAt(ctx, SessionKey(m.token), time.Unix(1, 0)).Err()
 	case "persistent":
-		err = rdb.Persist(ctx, SessionKey(token)).Err()
+		err = m.rdb.Persist(ctx, SessionKey(m.token)).Err()
 	case "replaced":
-		err = StoreSession(ctx, rdb, token, replacement, time.Minute)
+		err = StoreSession(ctx, m.rdb, m.token, m.replacement, time.Minute)
 	case "canceled":
-		cancel()
+		m.cancel()
 	case "store-error":
-		err = writer.Close()
+		err = m.writer.Close()
 	}
 	if err != nil {
 		t.Fatal(err)

@@ -47,7 +47,7 @@ func resolveBusinessTenantContext(c *gin.Context, db *gorm.DB, mode tenant.ModeR
 	if currentMode == tenant.ModeMulti && identity.ClaimTenantID > 0 && !businessClaimAuthorized(ctx, db, identity) {
 		return nil, businessauth.ErrDenied
 	}
-	capable, err := businessHeaderCapability(ctx, db, c, currentMode, platformScope, identity, principal, header)
+	capable, err := businessHeaderCapability(ctx, db, c, currentMode, platformScope, principal, header)
 	if err != nil {
 		return nil, err
 	}
@@ -79,11 +79,11 @@ func businessClaimAuthorized(ctx context.Context, db *gorm.DB, identity business
 	return err == nil && count > 0
 }
 
-func businessHeaderCapability(ctx context.Context, db *gorm.DB, c *gin.Context, currentMode string, platformScope bool, identity businessauth.Identity, principal businessauth.Principal, header string) (bool, error) {
+func businessHeaderCapability(ctx context.Context, db *gorm.DB, c *gin.Context, currentMode string, platformScope bool, principal businessauth.Principal, header string) (bool, error) {
 	if currentMode != tenant.ModeMulti {
 		return false, nil
 	}
-	if header == "" && (!platformScope || identity.ClaimTenantID != 0) {
+	if header == "" && (!platformScope || principal.Identity.ClaimTenantID != 0) {
 		return false, nil
 	}
 	for _, binding := range principal.GlobalBindings {
