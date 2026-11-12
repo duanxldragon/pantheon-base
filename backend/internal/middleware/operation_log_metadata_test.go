@@ -66,7 +66,21 @@ func runMetadataAuditCase(t *testing.T, db *gorm.DB, observed *observer.Observed
 	closeCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	ShutdownOperationLog(closeCtx)
 	cancel()
-	metadataAuditAssertOutcome(t, db, observed, kind, marker, requestID, route, response, *id, *handlerCalls, body)
+	metadataAuditAssertOutcome(t, db, observed, metadataAuditCaseRun{
+		kind: kind, marker: marker, requestID: requestID, route: route,
+		response: response, id: *id, handlerCalls: *handlerCalls, body: body,
+	})
+}
+
+type metadataAuditCaseRun struct {
+	kind         string
+	marker       string
+	requestID    string
+	route        auditpolicy.Route
+	response     *httptest.ResponseRecorder
+	id           string
+	handlerCalls int
+	body         *auditReadSentinel
 }
 
 func metadataAuditEngine(t *testing.T, db *gorm.DB, route auditpolicy.Route, kind, marker, requestID string) (*gin.Engine, *string, *int) {
@@ -155,7 +169,9 @@ func metadataAuditOutcomeFailure(c *gin.Context, outcome auditpolicy.Outcome, ma
 	common.FailWithError(c, 500, errors.New(marker), marker)
 }
 
-func metadataAuditAssertOutcome(t *testing.T, db *gorm.DB, observed *observer.ObservedLogs, kind, marker, requestID string, route auditpolicy.Route, response *httptest.ResponseRecorder, id string, handlerCalls int, body *auditReadSentinel) {
+func metadataAuditAssertOutcome(t *testing.T, db *gorm.DB, observed *observer.ObservedLogs, run metadataAuditCaseRun) {
+	kind, marker, requestID, route := run.kind, run.marker, run.requestID, run.route
+	response, id, handlerCalls, body := run.response, run.id, run.handlerCalls, run.body
 	t.Helper()
 	var row SystemLogOper
 	if err := db.Where("request_id = ?", id).Take(&row).Error; err != nil {
