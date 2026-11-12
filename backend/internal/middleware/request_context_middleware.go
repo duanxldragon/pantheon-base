@@ -25,7 +25,7 @@ func MetadataAwareLogger() gin.HandlerFunc {
 		if route, protected := auditpolicy.Match(c); protected {
 			c.Next()
 			logging.LogFromContext(c.Request.Context()).Info("business request",
-				zap.String("method", route.Method), zap.String("route", route.Template), zap.Int("status", c.Writer.Status()))
+				zap.String("method", logging.SanitizeLogValue(route.Method)), zap.String("route", logging.SanitizeLogValue(route.Template)), zap.Int("status", c.Writer.Status()))
 			return
 		}
 		legacy(c)
