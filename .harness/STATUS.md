@@ -1,3 +1,9 @@
+# v0.18.7 release preparation open (2026-11-12)
+
+PR #504 merged the formal-queue foundation contracts (permission routes + seal, permission-cache revocation repair, shared operational UI/Dashboard adapters) with whole-scope local-panel CODE/ARCH approval. Task 2026-11-12-v0187-release-ops-consumption prepares VERSION 0.18.7 plus two release-blocking remediations (CodeQL go/log-injection sink sanitizer; smoke empty-state loading stall repair) because the first main push c8a71003 failed Security Gates and the operation-log smoke. Release Gate, tag, four official assets and Ops consumption are pending exact hosted evidence.
+
+Evidence: .harness/evidence/2026-11-12-v0187-release-ops-consumption/summary.md. S3 unwaived, freeze unsigned, FR028 deferred, separate Ops product-acceptance residuals remain.
+
 # Official v0.18.6 published and consumed (2026-11-07)
 
 Original12/40 accepted and mergedBasePR497/498. Official186 source5553bc0e/BasePR499 published with successful immutable Release Gate and four verified assets. OpsPR17881d64b95 consumes that exact source, fully validated and independently approved. Three repositories main-only/synchronized verified; fresh final CODE/ARCH approve closure. Inventory251total/251completed/0in-progress; final administrative PR CI/merge and final main-only recheck remain required before session completion.

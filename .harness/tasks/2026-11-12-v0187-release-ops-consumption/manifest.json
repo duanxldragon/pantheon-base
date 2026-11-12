@@ -1,0 +1,157 @@
+{
+  "taskId": "2026-11-12-v0187-release-ops-consumption",
+  "taskDoc": "docs/harness/tasks/2026-11-12-v0187-release-ops-consumption.task.md",
+  "title": "发布 Base v0.18.7 与 Ops 正式消费",
+  "goal": "Publish the immutable reviewed Base v0.18.7 that carries the closed formal-queue foundation contracts (PR #504), then consume it in pantheon-ops through official artifacts.",
+  "primaryLayer": "platform",
+  "status": "in-progress",
+  "priority": "P1",
+  "type": "release",
+  "dependencies": [
+    "2026-11-07-ops-formal-queue-foundation-gaps"
+  ],
+  "scope": {
+    "in": [
+      "VERSION 0.18.7, changelog, docs index and release notes for the PR #504 foundation contract closeout",
+      "Release-blocking CI remediations: CodeQL log-injection sink sanitization and smoke expectPageBodyReady loading-state stall repair",
+      "Standard producer Release Gate on the exact merged commit and four-asset immutable GitHub release",
+      "Official Ops lock/acquisition/rebuild/full validation/merge"
+    ],
+    "out": [
+      "Business semantics in Base or Ops shared overrides",
+      "Policy/gate weakening, solo-override, S3 waiver or freeze signature",
+      "Production databases/credentials/deployment",
+      "Historical completed acceptance artifacts"
+    ]
+  },
+  "dependencyLayers": [
+    "inheritance-sync",
+    "business/*"
+  ],
+  "contractAnchors": [
+    "docs/designs/FOUNDATION_RELEASE_MODEL.md",
+    "docs/harness/PANTHEON_BASE_DELIVERY_WORKFLOW.md",
+    "docs/harness/VERIFICATION_EVIDENCE_SPEC.md",
+    "docs/contracts/SYSTEM_IAM_CONTRACT.md"
+  ],
+  "expectedFiles": {
+    "create": [
+      "docs/harness/tasks/2026-11-12-v0187-release-ops-consumption.task.md",
+      ".harness/tasks/2026-11-12-v0187-release-ops-consumption/manifest.json",
+      ".harness/evidence/2026-11-12-v0187-release-ops-consumption/commands.json",
+      ".harness/evidence/2026-11-12-v0187-release-ops-consumption/summary.md",
+      ".harness/evidence/2026-11-12-v0187-release-ops-consumption/review.md",
+      "docs/release-notes/RELEASE_NOTES_v0.18.7.md"
+    ],
+    "modify": [
+      "VERSION",
+      "CHANGELOG.md",
+      ".harness/STATUS.md",
+      "docs/README.md",
+      "docs/README.en.md",
+      "backend/internal/middleware/request_context_middleware.go",
+      "backend/internal/middleware/request_context_middleware_test.go",
+      "frontend/tests/smoke/system/system-pages-helpers.ts"
+    ],
+    "doNotTouch": [
+      "scripts/",
+      ".github/workflows/",
+      "config/",
+      "Historical v0.18.6 release/consumption artifacts"
+    ]
+  },
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "ci-workflow",
+    "portableFailureClass": "release-consumer-handoff",
+    "ownerLayer": "foundation-source",
+    "ratchetDecision": "registry-only",
+    "coverageDimensions": [
+      "behaviour",
+      "maintainability",
+      "architecture-fitness"
+    ]
+  },
+  "executionRoles": {
+    "implementerPosture": "Dispatcher writes bounded version/governance metadata and the two release-blocking CI remediations; independent reviewers approve the preparation snapshot.",
+    "reviewerPosture": [
+      "Independent CODE reviewer on the preparation snapshot",
+      "Independent architecture reviewer on the preparation snapshot"
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "npm run check:docs-frontmatter",
+      "npm run check:task-packet-template",
+      "npm run check:task-packet",
+      "npm run check:harness-evidence",
+      "npm run check:harness-review",
+      "npm run check:harness-docs",
+      "npm run check:harness-encoding",
+      "npm run check:harness-inventory",
+      "npm run check:structure",
+      "npm run test:foundation-release",
+      "Targeted backend middleware race tests and frontend type-check/build",
+      "GitHub required CI on the preparation PR and Release Gate on the exact merged main commit",
+      "Ops official acquisition/rebuild plus readonly CGO full race/frontend/overlay/drift/smoke"
+    ],
+    "runtimeEvidence": [
+      "CodeQL go/log-injection alert must be closed by the sanitizer change in the new default-branch analysis before Security Gates can pass.",
+      "The main push c8a71003 operation-log smoke stall must be resolved by the helper repair in a fresh push run."
+    ]
+  },
+  "runtimeSensitive": true,
+  "runtimeGap": "Real S3 provider unverified; freeze unsigned; oversized audit json_result FR028 deferred; separate Ops product-acceptance residuals remain. No waivers or policy changes.",
+  "acceptanceCriteria": [
+    "Base source/version preparation is reviewed and merged with required GitHub checks passed",
+    "Immutable pantheon-base-v0.18.7 has successful Release Gate, four official assets and verified checksums",
+    "Ops consumes exact official v0.18.7 via standard rebuild; readonly CGO full race, frontend, overlay, drift and applicable smoke pass before replacement/PR/merge"
+  ],
+  "implementationNotes": [
+    "Maintainer authorized the closeout scope including official release and Ops consumption on 2026-11-12.",
+    "PR #504 whole-scope independent CODE/ARCH review is recorded in task 2026-11-07-ops-formal-queue-foundation-gaps; this manifest covers only release preparation and the two CI remediations.",
+    "No publication or consumer acceptance may be recorded until exact hosted evidence exists."
+  ],
+  "risks": [
+    "Final publication must target the exact commit whose push checks and Release Gate are green; tag/assets immutable afterwards.",
+    "Only official four-asset releases may enter Ops; hand-copied sources cannot satisfy acceptance."
+  ],
+  "humanGates": [
+    "Maintainer-authorized release/consumption scope from the 2026-11-07 review closeout; gate weakening, production operations and freeze signature remain outside scope."
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-11-12-v0187-release-ops-consumption/manifest.json",
+    "taskDoc": "docs/harness/tasks/2026-11-12-v0187-release-ops-consumption.task.md",
+    "evidenceDir": ".harness/evidence/2026-11-12-v0187-release-ops-consumption/",
+    "reviewFile": ".harness/evidence/2026-11-12-v0187-release-ops-consumption/review.md",
+    "summaryFile": ".harness/evidence/2026-11-12-v0187-release-ops-consumption/summary.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".harness/tasks/2026-11-12-v0187-release-ops-consumption/manifest.json"
+    ]
+  },
+  "implementationStatus": "preparation-reviewed-pending-merge-release-consumption",
+  "reviewStatus": "approved",
+  "verificationStatus": "local-preparation-gates-passed-hosted-pending",
+  "preparationApproval": {
+    "scope": "release187-preparation-only",
+    "snapshotSha256": "33ffbb7733fc744c3969edff3b5d21a59a99e39b2108a3cc23cc00f725e881f6",
+    "approvals": [
+      {
+        "lane": "code-reviewer",
+        "file": "preparation-code-reviewer.md",
+        "sha256": "ced79af405dc442f70916679edbc0c70e4dbf749dbf603fb0ec43f0bca7db329",
+        "verdict": "APPROVE",
+        "architecturalStatus": null
+      },
+      {
+        "lane": "architect",
+        "file": "preparation-architect.md",
+        "sha256": "6f31a26445ed291e2a39515073c5b275a9ca833fc1bc4b9b24a0334ea97808ad",
+        "verdict": "APPROVE",
+        "architecturalStatus": "CLEAR"
+      }
+    ]
+  }
+}

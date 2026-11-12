@@ -6,6 +6,13 @@ Pantheon Base 方法追踪记录。方法论本体位于 `pantheon-harness`。
 
 ---
 
+## [pantheon-base-v0.18.7] — 2026-11-12 (preparation)
+
+- Release the formal-queue foundation contract closeout merged through Base PR #504: provider-owned permission routes with fail-closed startup seal, permission-cache revocation repair verified red->green, shared operational UI/Dashboard adapter contracts and consumer artifact governance.
+- Two release-blocking remediations: audit-route log values emitted through `logging.SanitizeLogValue` closing the CodeQL go/log-injection alert, and the system smoke empty-state sampler no longer stalls on Arco's transient loading empty state (main push c8a71003 operation-log smoke failure).
+- Whole-scope independent CODE/ARCH review of PR #504 recorded in task 2026-11-07-ops-formal-queue-foundation-gaps; publication requires the exact merged-commit Release Gate and four verified official assets; Ops consumption pending.
+- S3 provider remains unverified, maintenance freeze unsigned, FR028 deferred and separate Ops product-acceptance residuals retained.
+
 ## [pantheon-base-v0.18.6] — 2026-11-07 (published and consumed)
 
 - Complete the original twelve tasks against all40 unchanged criteria, accepted through independent CODE/ARCH reviews and merged BasePR497/498.
