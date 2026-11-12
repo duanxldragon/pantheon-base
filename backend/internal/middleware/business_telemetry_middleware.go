@@ -42,14 +42,14 @@ func BusinessTelemetryMiddleware() gin.HandlerFunc {
 			trace.WithAttributes(attribute.String("http.request.method", route.Method), attribute.String("http.route", route.Template),
 				attribute.String("business.action", auditpolicy.ActionName(route)), attribute.String("request.id", requestID)))
 		c.Request = c.Request.WithContext(ctx)
-		defer finishBusinessTelemetry(c, span, savedCtx)
+		defer finishBusinessTelemetry(savedCtx, c, span)
 		c.Next()
 	}
 }
 
 // Inspect only the presence of a panic/error, never its value/string.
 // Finalize before rethrowing to the existing metadata-aware recovery.
-func finishBusinessTelemetry(c *gin.Context, span trace.Span, savedCtx context.Context) {
+func finishBusinessTelemetry(savedCtx context.Context, c *gin.Context, span trace.Span) {
 	panicked := recover()
 	metadata := auditpolicy.Metadata(c)
 	if panicked != nil {
@@ -67,7 +67,7 @@ func finishBusinessTelemetry(c *gin.Context, span trace.Span, savedCtx context.C
 		metadata.Outcome = auditpolicy.OutcomeUnknown
 	}
 	span.SetAttributes(businessTelemetryAttributes(c, metadata)...)
-	span.SetStatus(businessTelemetryStatus(c, metadata, panicked, savedCtx), "")
+	span.SetStatus(businessTelemetryStatus(savedCtx, c, metadata, panicked), "")
 	span.End()
 	c.Request = c.Request.WithContext(savedCtx)
 	if panicked != nil {
@@ -89,7 +89,7 @@ func businessTelemetryAttributes(c *gin.Context, metadata auditpolicy.SafeMetada
 	}
 }
 
-func businessTelemetryStatus(c *gin.Context, metadata auditpolicy.SafeMetadata, panicked any, savedCtx context.Context) codes.Code {
+func businessTelemetryStatus(savedCtx context.Context, c *gin.Context, metadata auditpolicy.SafeMetadata, panicked any) codes.Code {
 	if metadata.Outcome == auditpolicy.OutcomeSuccess && c.Writer.Status() < 400 && !c.IsAborted() && panicked == nil && len(c.Errors) == 0 && savedCtx.Err() == nil {
 		return codes.Ok
 	}

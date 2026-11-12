@@ -43,12 +43,12 @@ func TestBusinessTokenFreshReadOnly(t *testing.T) {
 	if calls != 1 || before != after || expiry != expiryAfter {
 		t.Fatal("fresh auth wrote payload or expiration")
 	}
-	assertBusinessTokenRevokedDespiteWarmCache(t, ctx, rdb, token, data, request, &calls)
-	assertBusinessTokenBlacklistMarkers(t, ctx, rdb, token, data, request, &calls)
-	assertBusinessTokenPersistentInvalidClosed(t, ctx, rdb, token, data, request, &calls)
+	assertBusinessTokenRevokedDespiteWarmCache(ctx, t, rdb, token, data, request, &calls)
+	assertBusinessTokenBlacklistMarkers(ctx, t, rdb, token, data, request, &calls)
+	assertBusinessTokenPersistentInvalidClosed(ctx, t, rdb, token, data, request, &calls)
 }
 
-func assertBusinessTokenRevokedDespiteWarmCache(t *testing.T, ctx context.Context, rdb *redis.Client, token string, data *authtoken.SessionData, request func(), calls *int) {
+func assertBusinessTokenRevokedDespiteWarmCache(ctx context.Context, t *testing.T, rdb *redis.Client, token string, data *authtoken.SessionData, request func(), calls *int) {
 	t.Helper()
 	// A warm legacy cache must not grant a deleted opaque session.
 	storeTokenSessionCache(token, data, time.Now().Add(time.Minute))
@@ -62,7 +62,7 @@ func assertBusinessTokenRevokedDespiteWarmCache(t *testing.T, ctx context.Contex
 	}
 }
 
-func assertBusinessTokenBlacklistMarkers(t *testing.T, ctx context.Context, rdb *redis.Client, token string, data *authtoken.SessionData, request func(), calls *int) {
+func assertBusinessTokenBlacklistMarkers(ctx context.Context, t *testing.T, rdb *redis.Client, token string, data *authtoken.SessionData, request func(), calls *int) {
 	t.Helper()
 	for _, key := range []string{authtoken.BlacklistUserKey(7), authtoken.BlacklistSessionKey(data.SessionID)} {
 		if err := authtoken.StoreSession(ctx, rdb, token, data, time.Minute); err != nil {
@@ -91,7 +91,7 @@ func assertBusinessTokenBlacklistMarkers(t *testing.T, ctx context.Context, rdb 
 	}
 }
 
-func assertBusinessTokenPersistentInvalidClosed(t *testing.T, ctx context.Context, rdb *redis.Client, token string, data *authtoken.SessionData, request func(), calls *int) {
+func assertBusinessTokenPersistentInvalidClosed(ctx context.Context, t *testing.T, rdb *redis.Client, token string, data *authtoken.SessionData, request func(), calls *int) {
 	t.Helper()
 	if err := authtoken.StoreSession(ctx, rdb, token, data, 0); err != nil {
 		t.Fatal(err)

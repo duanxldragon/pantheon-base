@@ -70,7 +70,7 @@ func assertRefreshRejectsPersistentOrInvalidPayload(t *testing.T, mode string) {
 	if err := StoreSession(ctx, rdb, token, activitySession(), time.Minute); err != nil {
 		t.Fatal(err)
 	}
-	corruptStoredSession(t, rdb, ctx, token, mode)
+	corruptStoredSession(ctx, t, rdb, token, mode)
 	before, err := rdb.Get(ctx, SessionKey(token)).Result()
 	if err != nil {
 		t.Fatal(err)
@@ -92,7 +92,7 @@ func assertRefreshRejectsPersistentOrInvalidPayload(t *testing.T, mode string) {
 	}
 }
 
-func corruptStoredSession(t *testing.T, rdb *redis.Client, ctx context.Context, token, mode string) {
+func corruptStoredSession(ctx context.Context, t *testing.T, rdb *redis.Client, token, mode string) {
 	t.Helper()
 	switch mode {
 	case "persistent":
@@ -226,7 +226,7 @@ func assertRefreshRejectsNilAndStoreErrors(t *testing.T, mode string) {
 	if err := StoreSession(ctx, rdb, token, data, time.Minute); err != nil {
 		t.Fatal(err)
 	}
-	tc := prepareNilAndStoreErrorCase(t, rdb, ctx, token, data, mode)
+	tc := prepareNilAndStoreErrorCase(ctx, t, rdb, token, data, mode)
 	before, err := rdb.Dump(ctx, SessionKey(token)).Result()
 	if err != nil {
 		t.Fatal(err)
@@ -256,7 +256,7 @@ type nilStoreCase struct {
 	want     error
 }
 
-func prepareNilAndStoreErrorCase(t *testing.T, rdb *redis.Client, ctx context.Context, token string, data *SessionData, mode string) nilStoreCase {
+func prepareNilAndStoreErrorCase(ctx context.Context, t *testing.T, rdb *redis.Client, token string, data *SessionData, mode string) nilStoreCase {
 	t.Helper()
 	tc := nilStoreCase{client: rdb, callCtx: ctx, proposed: data, want: ErrInvalid}
 	switch mode {
@@ -338,7 +338,7 @@ func assertAtomicReadWriteInterleaving(t *testing.T, mode string) {
 	fired := false
 	writer.AddHook(&activityReadHook{afterRead: func() {
 		fired = true
-		mutateDuringRead(t, rdb, ctx, token, mode, &replacement, writer, cancel)
+		mutateDuringRead(ctx, t, rdb, token, mode, &replacement, writer, cancel)
 	}})
 	stale.LastActivityAt = time.Now().Unix()
 	want := atomicExpectedErr(mode)
@@ -352,7 +352,7 @@ func assertAtomicReadWriteInterleaving(t *testing.T, mode string) {
 	assertAtomicOutcome(t, mode, current, err, &replacement, stale)
 }
 
-func mutateDuringRead(t *testing.T, rdb *redis.Client, ctx context.Context, token, mode string, replacement *SessionData, writer *redis.Client, cancel context.CancelFunc) {
+func mutateDuringRead(ctx context.Context, t *testing.T, rdb *redis.Client, token, mode string, replacement *SessionData, writer *redis.Client, cancel context.CancelFunc) {
 	t.Helper()
 	var err error
 	switch mode {

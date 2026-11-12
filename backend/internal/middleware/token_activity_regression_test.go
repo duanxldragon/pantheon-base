@@ -51,7 +51,7 @@ func runLegacyTokenActivityCase(t *testing.T, mode string) {
 	}
 	// Both a subsequent entry check and a provider-result release check
 	// must read Redis independently, even while the legacy cache is warm.
-	assertFreshValidationDeniesContinuations(t, ctx, rdb, token)
+	assertFreshValidationDeniesContinuations(ctx, t, rdb, token)
 	if n, err := rdb.Exists(ctx, authtoken.SessionKey(token)).Result(); err != nil || n != 0 {
 		t.Error("legacy activity recreated the deleted or expired key")
 	}
@@ -70,7 +70,7 @@ func invalidateTokenActivitySession(ctx context.Context, t *testing.T, rdb *redi
 	}
 }
 
-func assertFreshValidationDeniesContinuations(t *testing.T, ctx context.Context, rdb *redis.Client, token string) {
+func assertFreshValidationDeniesContinuations(ctx context.Context, t *testing.T, rdb *redis.Client, token string) {
 	t.Helper()
 	providerCalls, releaseCalls := 0, 0
 	for _, continuation := range []*int{&providerCalls, &releaseCalls} {
