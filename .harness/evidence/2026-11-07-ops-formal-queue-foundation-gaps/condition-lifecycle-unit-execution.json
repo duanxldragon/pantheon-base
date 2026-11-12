@@ -1,0 +1,7 @@
+{
+  "command": "npm.cmd run test:unit -- tests/unit/components/operational",
+  "cwd": "frontend",
+  "exitCode": 0,
+  "seconds": 3.53,
+  "artifact": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/condition-lifecycle-unit.txt"
+}

@@ -1,0 +1,9 @@
+{
+  "role": "architect",
+  "exitCode": 1,
+  "elapsedSeconds": 0.031,
+  "modelOverride": false,
+  "report": null,
+  "failure": "Sandbox CLI account could not find Codex home",
+  "nextAction": "Rerun existing CLI adapter outside sandbox through approved escalation"
+}

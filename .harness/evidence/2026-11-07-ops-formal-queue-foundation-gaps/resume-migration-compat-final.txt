@@ -1,0 +1,32 @@
+=== RUN   TestMigrationBootstrapRetainsCleanAndAbsentState
+=== RUN   TestMigrationBootstrapRetainsCleanAndAbsentState/fresh
+2026/11/09 16:58:46 INFO database migrations: all migrations applied successfully
+=== RUN   TestMigrationBootstrapRetainsCleanAndAbsentState/legacy-current
+2026/11/09 16:58:47 INFO database migrations: bootstrapped existing current schema version=24
+2026/11/09 16:58:48 INFO database migrations: all migrations applied successfully
+=== RUN   TestMigrationBootstrapRetainsCleanAndAbsentState/legacy-pre-module
+2026/11/09 16:58:48 INFO database migrations: bootstrapped existing current schema version=7
+2026/11/09 16:58:50 INFO database migrations: all migrations applied successfully
+=== RUN   TestMigrationBootstrapRetainsCleanAndAbsentState/legacy-pre-menu
+2026/11/09 16:58:51 INFO database migrations: bootstrapped existing current schema version=5
+2026/11/09 16:58:52 INFO database migrations: all migrations applied successfully
+=== RUN   TestMigrationBootstrapRetainsCleanAndAbsentState/legacy-empty-record
+2026/11/09 16:58:53 INFO database migrations: bootstrapped existing current schema version=24
+2026/11/09 16:58:53 INFO database migrations: all migrations applied successfully
+=== RUN   TestMigrationBootstrapRetainsCleanAndAbsentState/clean-lower
+2026/11/09 16:58:54 INFO database migrations: aligned current schema migration state from=2 to=24
+2026/11/09 16:58:54 INFO database migrations: all migrations applied successfully
+=== RUN   TestMigrationBootstrapRetainsCleanAndAbsentState/clean-current
+2026/11/09 16:58:55 INFO database migrations: all migrations applied successfully
+=== RUN   TestMigrationBootstrapRetainsCleanAndAbsentState/clean-future
+--- PASS: TestMigrationBootstrapRetainsCleanAndAbsentState (14.30s)
+    --- PASS: TestMigrationBootstrapRetainsCleanAndAbsentState/fresh (5.07s)
+    --- PASS: TestMigrationBootstrapRetainsCleanAndAbsentState/legacy-current (1.14s)
+    --- PASS: TestMigrationBootstrapRetainsCleanAndAbsentState/legacy-pre-module (2.23s)
+    --- PASS: TestMigrationBootstrapRetainsCleanAndAbsentState/legacy-pre-menu (2.31s)
+    --- PASS: TestMigrationBootstrapRetainsCleanAndAbsentState/legacy-empty-record (1.03s)
+    --- PASS: TestMigrationBootstrapRetainsCleanAndAbsentState/clean-lower (0.90s)
+    --- PASS: TestMigrationBootstrapRetainsCleanAndAbsentState/clean-current (0.89s)
+    --- PASS: TestMigrationBootstrapRetainsCleanAndAbsentState/clean-future (0.73s)
+PASS
+ok  	github.com/duanxldragon/pantheon-base/backend/pkg/database	14.327s

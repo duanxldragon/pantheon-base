@@ -1,0 +1,15 @@
+{
+  "status": "interrupted; superseded",
+  "reason": "contracts/module.go and module_required_test.go changed by the separate generator owner during the run; remaining full auth suite is root-owned",
+  "command": "scoped package full race",
+  "completedPackages": [
+    "tenant",
+    "contracts/businessauth",
+    "contracts",
+    "auditpolicy",
+    "database",
+    "common/http",
+    "internal/middleware"
+  ],
+  "newVerification": "final source-stable A/E matrix and legacy helper/token/audit regressions"
+}

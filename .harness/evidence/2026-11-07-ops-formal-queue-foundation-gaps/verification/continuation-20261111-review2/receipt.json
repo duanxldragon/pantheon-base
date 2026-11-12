@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "taskId": "2026-11-07-ops-formal-queue-foundation-gaps",
+  "date": "2026-11-11",
+  "status": "in-progress",
+  "previousReceipt": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/verification/continuation-20261111/receipt.json",
+  "previousReceiptSHA256": "7ba9f2736f41614a1403ebc1990b101650586593fa3f6df184ad0f446eeac07a",
+  "opsReceipt": "../pantheon-ops/.harness/evidence/2026-11-07-ops-planned-task-closeout/verification/continuation-20261111-review2/receipt.json",
+  "opsReceiptSHA256": "3054dc4d387973ae1bc4dfc6bb074f9a6e46630637903a6155354fe1eba2f566",
+  "officialPublication": false,
+  "officialConsumption": false,
+  "independentReviewApproval": false,
+  "P0ParentsClosed": 0
+}

@@ -1,0 +1,6 @@
+{
+  "command": "npm.cmd run test:unit -- tests/unit/components/operational/conditionEditing.test.tsx",
+  "cwd": "frontend",
+  "exitCode": 1,
+  "expectedFailure": true
+}

@@ -1,0 +1,25 @@
+{
+  "tool": "TypeScript LanguageService (same diagnostics implementation used by tsserver)",
+  "version": "6.0.3",
+  "checkJs": false,
+  "reason": "Existing untyped .mjs defaults; no newly imposed static-type contract",
+  "diagnostics": [
+    {
+      "file": "scripts/foundation-release/build-candidate-artifact.mjs",
+      "sha256": "646e622f2eef3ae30d29aed50272d3f4665dd54d04c2fcb1ffb41777e554d6e3",
+      "syntactic": [],
+      "semantic": [],
+      "suggestions": []
+    },
+    {
+      "file": "scripts/foundation-release/candidate-artifact.test.mjs",
+      "sha256": "17301133892fe649d7fdd2ec25ed7e0a570c45b47f7a0842ed896b0723dd9b11",
+      "syntactic": [],
+      "semantic": [],
+      "suggestions": []
+    }
+  ],
+  "sourceStable": true,
+  "errors": 0,
+  "typeSafetyApproval": false
+}

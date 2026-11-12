@@ -1,0 +1,186 @@
+
+warning: in the working copy of '.harness\evidence\2026-11-07-ops-formal-queue-foundation-gaps\resume-editor-before-ConditionBuilder.tsx.txt', CRLF will be replaced by LF the next time Git touches it
+warning: in the working copy of 'frontend/src/components/operational/ConditionBuilder.tsx', CRLF will be replaced by LF the next time Git touches it
+diff --git "a/.harness\\evidence\\2026-11-07-ops-formal-queue-foundation-gaps\\resume-editor-before-ConditionBuilder.tsx.txt" b/frontend/src/components/operational/ConditionBuilder.tsx
+index 4f99a822..3dd23c30 100644
+--- "a/.harness\\evidence\\2026-11-07-ops-formal-queue-foundation-gaps\\resume-editor-before-ConditionBuilder.tsx.txt"
++++ b/frontend/src/components/operational/ConditionBuilder.tsx
+@@ -41,6 +41,9 @@ function formatConditionValue(value: unknown, unserializableValue: React.ReactNo
+   if (typeof value === 'function') {
+     return value.name || unserializableValue;
+   }
++  if (React.isValidElement(value)) {
++    return unserializableValue;
++  }
+   try {
+     return JSON.stringify(value) ?? unserializableValue;
+   } catch {
+@@ -79,7 +82,7 @@ function renderNode(
+         options={fields.map((field) => ({ label: field.label, value: field.key }))}
+       />
+       <Tag>{labels.operatorLabels[node.operator] ?? labels.operatorLabels.unknown}</Tag>
+-      <span>{formatConditionValue(node.value, labels.unserializableValue)}</span>
++      <span>{React.isValidElement(node.value) ? node.value : formatConditionValue(node.value, labels.unserializableValue)}</span>
+       {invalidIds.has(node.id) ? <span>{labels.invalidField}</span> : null}
+     </div>
+   );
+@@ -101,7 +104,9 @@ export default function ConditionBuilder({
+   const validationSignature = JSON.stringify(validateConditionAst(value, fields));
+   const validation = React.useMemo(() => JSON.parse(validationSignature) as string[], [validationSignature]);
+   const invalidIds = new Set(validation);
+-  React.useEffect(() => { onValidationChange?.(validation); }, [onValidationChange, validation]);
++  const validationCallback = React.useRef(onValidationChange);
++  React.useEffect(() => { validationCallback.current = onValidationChange; }, [onValidationChange]);
++  React.useEffect(() => { validationCallback.current?.(validation); }, [validation]);
+   const editable = Boolean(onChange && editorLabels && state === 'ready');
+   const changeNode = (id: string, transform: (node: ConditionAstNode) => ConditionAstNode | null) => {
+     const visit = (node: ConditionAstNode): ConditionAstNode | null => {
+@@ -130,7 +135,7 @@ export default function ConditionBuilder({
+     return <div className={`condition-builder__node${invalidIds.has(node.id) ? ' condition-builder__node--invalid' : ''}`} key={node.id} aria-invalid={invalidIds.has(node.id)}>
+       <Select value={node.field} aria-label={editorLabels.field} options={fields.map((item) => ({ value: item.key, label: item.label, disabled: item.disabled }))} onChange={(key: string) => changeNode(node.id, (current) => current.type === 'rule' ? { ...current, field: key, operator: fields.find((item) => item.key === key)?.operators[0] || '' } : current)} />
+       <Select value={node.operator} aria-label={editorLabels.operator} options={(field?.operators || []).map((operator) => ({ value: operator, label: labels.operatorLabels[operator] ?? labels.operatorLabels.unknown }))} onChange={(operator: string) => changeNode(node.id, (current) => current.type === 'rule' ? { ...current, operator } : current)} />
+-      {renderValueEditor ? renderValueEditor(node, changeValue) : <Input value={formatConditionValue(node.value, '')} aria-label={editorLabels.value} onChange={changeValue} />}
++      {renderValueEditor ? renderValueEditor(node, changeValue) : React.isValidElement(node.value) ? <span>{labels.unserializableValue}</span> : <Input value={formatConditionValue(node.value, '')} aria-label={editorLabels.value} onChange={changeValue} />}
+       {invalidIds.has(node.id) && <span>{labels.invalidField}</span>}{remove}
+     </div>;
+   };
+warning: in the working copy of '.harness\evidence\2026-11-07-ops-formal-queue-foundation-gaps\resume-editor-before-ExecutionStepRail.tsx.txt', CRLF will be replaced by LF the next time Git touches it
+warning: in the working copy of 'frontend/src/components/operational/ExecutionStepRail.tsx', CRLF will be replaced by LF the next time Git touches it
+diff --git "a/.harness\\evidence\\2026-11-07-ops-formal-queue-foundation-gaps\\resume-editor-before-ExecutionStepRail.tsx.txt" b/frontend/src/components/operational/ExecutionStepRail.tsx
+index 977c6c0a..86e5d9d0 100644
+--- "a/.harness\\evidence\\2026-11-07-ops-formal-queue-foundation-gaps\\resume-editor-before-ExecutionStepRail.tsx.txt"
++++ b/frontend/src/components/operational/ExecutionStepRail.tsx
+@@ -26,11 +26,12 @@ export default function ExecutionStepRail({
+   activeStepId,
+   onStepClick,
+ }: Readonly<ExecutionStepRailProps>) {
++  const titleId = React.useId();
+   const visibleSteps = steps.slice(0, Math.max(1, maxVisibleSteps));
+   return (
+-    <section className="operational-primitive execution-step-rail" aria-label={String(title)}>
++    <section className="operational-primitive execution-step-rail" aria-labelledby={titleId}>
+       <div className="operational-primitive__header">
+-        <div className="operational-primitive__title">{title}</div>
++        <div className="operational-primitive__title" id={titleId}>{title}</div>
+       </div>
+       {state !== 'ready' ? (
+         <div className="operational-primitive__state">{labels[state]}</div>
+@@ -49,8 +50,8 @@ export default function ExecutionStepRail({
+                 <span>{step.title}</span>
+                 <span>
+                   <Tag>{statusLabels?.[step.status] ?? step.status}</Tag>
+-                  {step.attempts ? ` ${labels.attempts}: ${step.attempts}` : ''}
+-                  {step.durationMs ? ` ${labels.duration}: ${step.durationMs}ms` : ''}
++                  {step.attempts ? <> {labels.attempts}: {step.attempts}</> : null}
++                  {step.durationMs ? <> {labels.duration}: {step.durationMs}ms</> : null}
+                 </span>
+               </button>
+             </li>
+warning: in the working copy of '.harness\evidence\2026-11-07-ops-formal-queue-foundation-gaps\resume-editor-before-conditionEditing.test.tsx.txt', CRLF will be replaced by LF the next time Git touches it
+warning: in the working copy of 'frontend/tests/unit/components/operational/conditionEditing.test.tsx', CRLF will be replaced by LF the next time Git touches it
+diff --git "a/.harness\\evidence\\2026-11-07-ops-formal-queue-foundation-gaps\\resume-editor-before-conditionEditing.test.tsx.txt" b/frontend/tests/unit/components/operational/conditionEditing.test.tsx
+index 19952091..a2dd6fac 100644
+--- "a/.harness\\evidence\\2026-11-07-ops-formal-queue-foundation-gaps\\resume-editor-before-conditionEditing.test.tsx.txt"
++++ b/frontend/tests/unit/components/operational/conditionEditing.test.tsx
+@@ -1,7 +1,7 @@
+-import { useState } from 'react';
++import { isValidElement, useState } from 'react';
+ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+ import { afterEach, describe, expect, it, vi } from 'vitest';
+-import ConditionBuilder from '../../../../src/components/operational/ConditionBuilder';
++import ConditionBuilder, { type ConditionBuilderProps } from '../../../../src/components/operational/ConditionBuilder';
+ import ExecutionStepRail from '../../../../src/components/operational/ExecutionStepRail';
+ import type { ConditionAstNode } from '../../../../src/components/operational/types';
+ const states = { loading: 'loading', empty: 'empty', error: 'error', forbidden: 'forbidden', stale: 'stale', partial: 'partial', ready: 'ready' };
+@@ -10,20 +10,31 @@ const editorLabels = { field: 'field', operator: 'operator', value: 'value', rem
+ const fields = [{ key: 'status', label: 'status', operators: ['eq'] }];
+ afterEach(cleanup);
+ describe('controlled condition editing', () => {
+- it('does not retrigger parent state updates for equivalent inline field options', () => {
++ it.each(['object', 'array'] as const)('does not retrigger fresh %s parent state updates for equivalent inline field options', (shape) => {
+   const ast: ConditionAstNode = { type: 'rule', id: 'one', field: 'missing', operator: 'eq', value: 'online' };
+   const validation = vi.fn();
+   function Fixture() {
+-   const [invalid, setInvalid] = useState<string[]>([]);
+-   return <><ConditionBuilder title="conditions" value={ast} fields={[{ ...fields[0] }]} labels={labels} onValidationChange={(ids) => {
++   const [invalid, setInvalid] = useState<string[] | { ids: string[] }>([]);
++   return <><ConditionBuilder title="conditions" value={ast} fields={[{ ...fields[0], operators: [...fields[0].operators] }]} labels={labels} onValidationChange={(ids) => {
+     validation(ids);
+     if (validation.mock.calls.length > 3) throw new Error('Repeated equivalent validation updates');
+-    setInvalid(ids);
+-   }} /><span data-testid="invalid-count">{invalid.length}</span></>;
++    setInvalid(shape === 'array' ? [...ids] : { ids });
++   }} /><span data-testid="invalid-count">{Array.isArray(invalid) ? invalid.length : invalid.ids.length}</span></>;
+   }
+   render(<Fixture />);
+   expect(screen.getByTestId('invalid-count').textContent).toBe('1');
+-  expect(validation.mock.calls.length).toBeLessThanOrEqual(2);
++  expect(validation).toHaveBeenCalledExactlyOnceWith(['one']);
++ });
++ it('uses the latest callback only when semantic validation changes', () => {
++  const ast: ConditionAstNode = { type: 'rule', id: 'one', field: 'missing', operator: 'eq', value: 'online' };
++  const first = vi.fn(); const latest = vi.fn();
++  const { rerender } = render(<ConditionBuilder title="conditions" value={ast} fields={fields} labels={labels} onValidationChange={first} />);
++  expect(first).toHaveBeenCalledExactlyOnceWith(['one']);
++  rerender(<ConditionBuilder title="conditions" value={{ ...ast, value: 'offline' }} fields={[{ ...fields[0], operators: ['eq'] }]} labels={labels} onValidationChange={latest} />);
++  expect(latest).not.toHaveBeenCalled();
++  rerender(<ConditionBuilder title="conditions" value={{ ...ast, field: 'status' }} fields={fields} labels={labels} onValidationChange={latest} />);
++  expect(latest).toHaveBeenCalledExactlyOnceWith([]);
++  expect(first).toHaveBeenCalledOnce();
+  });
+  it('reports validation on mount and externally changed values and fields', () => {
+   const ast: ConditionAstNode = { type: 'rule', id: 'one', field: 'missing', operator: 'eq', value: 'online' };
+@@ -62,6 +73,31 @@ describe('controlled condition editing', () => {
+   rerender(<ConditionBuilder title={<span>structured conditions</span>} value={ast} fields={fields} labels={nodeLabels} />);
+   expect(screen.getByText('unavailable value')).toBeTruthy();
+  });
++ it('renders a real React element rule value in readonly mode', () => {
++  const ast: ConditionAstNode = { type: 'rule', id: 'one', field: 'status', operator: 'eq', value: <strong data-testid="condition-node-value">online node</strong> };
++  render(<ConditionBuilder title="conditions" value={ast} fields={fields} labels={labels} />);
++  expect(screen.getByTestId('condition-node-value').tagName).toBe('STRONG');
++  expect(screen.getByText('online node')).toBeTruthy();
++ });
++ it('keeps React element rule values out of the default editable input', () => {
++  const ast: ConditionAstNode = { type: 'rule', id: 'one', field: 'status', operator: 'eq', value: <strong>online node</strong> };
++  const change = vi.fn();
++  const { container } = render(<ConditionBuilder title="conditions" value={ast} fields={fields} labels={labels} editorLabels={editorLabels} onChange={change} />);
++  expect(screen.queryByLabelText('value')).toBeNull();
++  expect(screen.getByText('unavailable')).toBeTruthy();
++  expect(container.textContent).not.toContain('"props"');
++  expect(change).not.toHaveBeenCalled();
++ });
++ it('lets the provider edit a React element rule value without serializing it', () => {
++  const ast: ConditionAstNode = { type: 'rule', id: 'one', field: 'status', operator: 'eq', value: <strong>online node</strong> };
++  const change = vi.fn();
++  const editor = vi.fn<NonNullable<ConditionBuilderProps['renderValueEditor']>>((rule, onValueChange) => <><span data-testid="provider-value">{isValidElement(rule.value) ? rule.value : null}</span><button onClick={() => onValueChange('replacement')}>replace node</button></>);
++  render(<ConditionBuilder title="conditions" value={ast} fields={fields} labels={labels} editorLabels={editorLabels} onChange={change} renderValueEditor={editor} />);
++  expect(editor.mock.calls[0][0].value).toBe(ast.value);
++  expect(screen.getByTestId('provider-value').textContent).toBe('online node');
++  fireEvent.click(screen.getByRole('button', { name: 'replace node' }));
++  expect(change).toHaveBeenCalledExactlyOnceWith({ ...ast, value: 'replacement' });
++ });
+  it('changes a value immutably and adds/removes rules using controlled state', () => {
+   const ast: ConditionAstNode = { type: 'group', id: 'root', combinator: 'and', children: [{ type: 'rule', id: 'one', field: 'status', operator: 'eq', value: 'online' }] };
+   Object.freeze(ast); Object.freeze(ast.children); Object.freeze(ast.children[0]);
+@@ -88,4 +124,21 @@ describe('controlled condition editing', () => {
+   render(<ExecutionStepRail title="steps" steps={[{ id:'one',title:'Install',status:'running' }]} labels={{ ...states, attempts:'attempts',duration:'duration',jumpToStep:'jump' }} statusLabels={{ running:'正在执行' }} />);
+   expect(screen.getByText('正在执行')).toBeTruthy();expect(screen.queryByText('running')).toBeNull();
+  });
++ it('names each step rail using its rendered ReactNode title', () => {
++  render(<><ExecutionStepRail title={<span>execution steps</span>} steps={[]} labels={{ ...states, attempts:'attempts',duration:'duration',jumpToStep:'jump' }} />
++   <ExecutionStepRail title={<span>recovery steps</span>} steps={[]} labels={{ ...states, attempts:'attempts',duration:'duration',jumpToStep:'jump' }} /></>);
++  const execution = screen.getByRole('region', { name: 'execution steps' });
++  const recovery = screen.getByRole('region', { name: 'recovery steps' });
++  expect(document.getElementById(execution.getAttribute('aria-labelledby')!)?.textContent).toBe('execution steps');
++  expect(document.getElementById(recovery.getAttribute('aria-labelledby')!)?.textContent).toBe('recovery steps');
++  expect(execution.getAttribute('aria-labelledby')).not.toBe(recovery.getAttribute('aria-labelledby'));
++ });
++ it('renders ReactNode attempts and duration labels beside their metric values', () => {
++  render(<ExecutionStepRail title="steps" steps={[{ id:'one',title:<strong>Install</strong>,status:'running',attempts:2,durationMs:350 }]} labels={{ ...states, attempts:<em>tries</em>,duration:<em>elapsed</em>,jumpToStep:'jump' }} />);
++  expect(screen.getByText('tries').tagName).toBe('EM');
++  expect(screen.getByText('elapsed').tagName).toBe('EM');
++  expect(screen.getByRole('button', { name: 'jump 1' }).textContent).toContain('tries: 2');
++  expect(screen.getByRole('button', { name: 'jump 1' }).textContent).toContain('elapsed: 350ms');
++  expect(screen.queryByText(/\[object Object\]/)).toBeNull();
++ });
+ });

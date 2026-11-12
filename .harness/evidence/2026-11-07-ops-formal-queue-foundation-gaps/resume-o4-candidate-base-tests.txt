@@ -1,0 +1,93 @@
+✔ seals exact dirty/untracked fixture bytes with detached descriptor and genuine provenance (373.5749ms)
+✔ identical source inventory has deterministic archives; review revisions have distinct descriptor digests (352.5351ms)
+✔ descriptor tampering, archive tampering and missing pins refuse (229.2853ms)
+✔ rejects unsafe/secret/output paths, platform aliases and file/directory collisions (434.5809ms)
+✔ protected target and fixture lock remain byte-identical; write failure leaves no partial candidate (325.1174ms)
+✔ source junctions, hard links and redirected output directories refuse (299.5295ms)
+✔ capabilities require declared actual exports; comments/strings cannot fabricate an API (330.4772ms)
+▶ source edits, additions, deletion and edit/revert during sealing leave no output or staging debris
+  ✔ edit (255.0199ms)
+  ✔ add (285.5347ms)
+  ✔ delete (280.8241ms)
+  ✔ revert (275.9779ms)
+✔ source edits, additions, deletion and edit/revert during sealing leave no output or staging debris (1098.9154ms)
+✔ independently re-pinned hostile tar headers still refuse links/extensions/unsafe entries/content corruption (346.2336ms)
+✔ separate pinned executable build receipt binds descriptor identity, capabilities and actual executable bytes (304.7278ms)
+✔ build-release-bundle copies shared paths into dist/foundation-releases/<version>/bundle (725.3042ms)
+✔ build-release-bundle ships a full repo.tar snapshot with matching sha256 (521.5954ms)
+✔ build-release-bundle rejects tracked changes in shared paths (433.6423ms)
+✔ build-release-bundle rejects untracked files in shared paths (406.241ms)
+✔ build-release-bundle allows HEAD to advance outside shared release paths (627.2961ms)
+✔ build-release-bundle rejects committed changes in shared paths after baseCommit (506.3375ms)
+✔ build-release-bundle fails when a shared path is missing (559.5914ms)
+✔ build-release-bundle rejects unowned shared frontend roots (357.397ms)
+✔ build-release-bundle rejects a package-referenced smoke script omitted from frontend ownership (289.6676ms)
+✔ build-release-manifest writes release metadata files into releases/<version> (101.6362ms)
+✔ build-release-manifest fails when release version is missing (72.8271ms)
+✔ build-release-manifest rejects legacy tag names and mismatched release lines (130.3059ms)
+✔ build-release-manifest help lists the supported release metadata flags (66.4291ms)
+✔ requiredReleaseAssetNames lists the four consumable assets (2.5402ms)
+✔ evaluateReleaseAssets accepts a complete asset set (0.4576ms)
+✔ evaluateReleaseAssets reports each missing asset (0.2929ms)
+✔ evaluateReleaseAssets treats an empty release as fully missing (0.258ms)
+✔ verifyLocalBundle accepts a checksum-consistent bundle (7.2712ms)
+✔ verifyLocalBundle rejects a tampered archive (5.541ms)
+✔ verifyLocalBundle rejects a missing checksum sidecar (4.6189ms)
+✔ verifyLocalBundle reports an absent version directory as not present (1.7387ms)
+✔ checkReleaseAssets local-only accepts a valid local bundle without contacting GitHub (5.794ms)
+✔ checkReleaseAssets local-only fails when no local bundle was built (1.6705ms)
+✔ checkReleaseAssets rejects combining local-only with skip-local (1.1008ms)
+✔ checkReleaseAssets passes when the release carries every asset (0.4886ms)
+✔ checkReleaseAssets fails when the release is missing assets (0.3384ms)
+✔ checkReleaseAssets fails when the release does not exist and no wait is allowed (0.5611ms)
+✔ checkReleaseAssets retries while the release is still being published (0.687ms)
+✔ checkReleaseAssets rethrows unexpected failures instead of reporting a gate failure (0.6621ms)
+✔ parseCheckArgs rejects malformed options (0.7656ms)
+✔ parseCheckArgs accepts local-only and dist overrides (0.7308ms)
+✔ cli rejects a release version that is not pantheon-base-vX.Y.Z (0.7818ms)
+✔ cli requires an explicit release version (0.3542ms)
+✔ cli prints help without contacting GitHub (0.3671ms)
+release secret scan: clean (1 file(s) scanned)
+release secret scan found 1 credential-shaped string(s) in 2 file(s):
+  leak.txt:1 [shell-password-flag] mysql -uroot -p01********************************************ef pantheon_base
+Usage:
+  node scripts/foundation-release/check-release-secrets.mjs --path <directory>
+  node scripts/foundation-release/check-release-secrets.mjs --release-version <version> [--root <repo>]
+
+Scans a directory, or both published shapes of a release (the staged bundle and
+repo.tar), for credential shapes that must never reach an asset. Exits 1 on any
+finding.
+
+Either --path or --release-version is required.
+release secret scan could not run: directory does not exist: C:\Users\xiaolong\AppData\Local\Temp\definitely-not-here-pantheon
+✔ the rule set stays small enough to stay honest (2.4513ms)
+✔ catches the command line shape that actually leaked (1.3119ms)
+✔ catches the DSN shape that actually leaked (0.6111ms)
+✔ never reprints the secret it found (0.4674ms)
+✔ reports the line number inside a larger file (0.3339ms)
+✔ ignores the placeholders and examples a release legitimately ships (1.5953ms)
+✔ walks a directory and skips generated trees (7.0622ms)
+✔ refuses a bundle that carries a credential and passes a clean one (58.1532ms)
+✔ refuses a release whose repo.tar carries the v0.17.0 residue (56.9409ms)
+✔ fails closed when repo.tar is missing (4.1387ms)
+✔ the CLI exits non-zero on a finding and zero on a clean tree (3.6322ms)
+✔ the CLI rejects a missing target instead of scanning nothing (0.3587ms)
+✔ cut-foundation-release creates both release metadata and dist bundle outputs (1098.8335ms)
+✔ cut-foundation-release help lists the supported release metadata flags (77.7885ms)
+✔ buildGitHubReleaseBody combines release notes, upgrade notes, and consumer impact (2.6612ms)
+✔ buildGitHubReleaseTitle uses the short semver display title (0.7971ms)
+✔ release body title stripping keeps section content only (0.4509ms)
+✔ validateReleaseBodySections rejects placeholder content (1.8503ms)
+✔ validateReleaseBodySections accepts non-placeholder content (1.7ms)
+✔ validatePublishCandidate binds the release tag to the manifest commit (1.233ms)
+✔ validateReleaseGateCheckRuns fails closed unless the latest gate succeeded (19.6148ms)
+✔ GitHub release lookup only treats an explicit not-found response as absent (0.6706ms)
+✔ validateReleaseAssetChecksum rejects stale or malformed release checksums (8.0698ms)
+ℹ tests 71
+ℹ suites 0
+ℹ pass 71
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 4559.495

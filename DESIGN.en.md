@@ -48,6 +48,8 @@ The Chinese design document carries the full chapter (`DESIGN.md` section 3.4). 
 - Delivered surface, each falsifiable against the route registration in `backend/modules/system/system_modules.go`: the 8 `/system/tenant` tenant CRUD and membership routes, the 5 `/system/tenant-ops/*` platform reads and plan editor routes (contract section 2.5), tenant initialization and `Bootstrap`, login-time tenant attribution plus `POST /auth/tenants/switch`, and plan/quota storage (migration `000030`) read through `PlanStore.QuotaFor`.
 - Explicitly not delivered: quota enforcement (quotas are measured and displayed; **no write is rejected for exceeding one**, contract section 2.4.1), separate-schema isolation, cross-tenant sharing or federated queries, tenant custom domains and deployment shapes, self-service registration and billing, and - decided in `2026-10-31-audit-p1-business-route-tenant-context` - **business domains (`modules/business/*`) keep single-tenant semantics in V1**. Attaching tenant middleware to business route groups does not create isolation; in `multi` mode it only turns every business request into `TENANT_CONTEXT_MISSING`.
 
+V2.0-O4 business adoption is in progress: the maintainer authorized tenant ownership for the five registered observability tables and actor ownership for history/views. Base supplies opt-in current authorization, tenant/audit contracts and required generator bootstrap. Ops must pass reviewed candidate pairing and later official release consumption. Contract section 2.7 governs scope and acceptance; released isolation is not claimed, and other business domains retain V1 behavior.
+
 ## Guardrails
 
 - business modules consume contracts and context, not direct system internals
@@ -61,29 +63,29 @@ The Chinese design document carries the full chapter (`DESIGN.md` section 3.4). 
 Use the implemented spacing scale as the canonical contract. The 2px step is reserved for
 very tight internal spacing; normal layout starts at 4px.
 
-| Token | Value |
-| :--- | :--- |
-| `--space-2xs` | 2px |
-| `--space-xs` | 4px |
-| `--space-sm` | 8px |
-| `--space-md` | 12px |
-| `--space-lg` | 16px |
-| `--space-xl` | 24px |
-| `--space-2xl` | 32px |
-| `--space-3xl` | 48px |
+| Token         | Value |
+| :------------ | :---- |
+| `--space-2xs` | 2px   |
+| `--space-xs`  | 4px   |
+| `--space-sm`  | 8px   |
+| `--space-md`  | 12px  |
+| `--space-lg`  | 16px  |
+| `--space-xl`  | 24px  |
+| `--space-2xl` | 32px  |
+| `--space-3xl` | 48px  |
 
 Keep radii restrained and consume the semantic aliases for controls, actions, and overlays.
 
-| Token | Value |
-| :--- | :--- |
-| `--radius-xs` | 4px |
-| `--radius-sm` | 4px |
-| `--radius-md` | 6px |
-| `--radius-lg` | 8px |
-| `--radius-xl` | 12px |
-| `--radius-overlay` | 8px |
+| Token              | Value              |
+| :----------------- | :----------------- |
+| `--radius-xs`      | 4px                |
+| `--radius-sm`      | 4px                |
+| `--radius-md`      | 6px                |
+| `--radius-lg`      | 8px                |
+| `--radius-xl`      | 12px               |
+| `--radius-overlay` | 8px                |
 | `--radius-control` | `var(--radius-md)` |
-| `--radius-action` | `var(--radius-sm)` |
-| `--radius-pill` | 999px |
+| `--radius-action`  | `var(--radius-sm)` |
+| `--radius-pill`    | 999px              |
 
 Use the Chinese source document for the full design doctrine, visual constraints, roadmap status, and detailed reading order.

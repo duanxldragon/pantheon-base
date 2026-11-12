@@ -1,0 +1,14 @@
+# Dirty migration bootstrap P0 — bounded Generator execution
+
+- Parent task packet: `docs/harness/tasks/2026-11-07-ops-formal-queue-foundation-gaps.task.md`.
+- Owner layer: platform; Base-owned shared startup prerequisite; L2, runtime-sensitive/schema state.
+- Authorization: maintainer confirmed all P0 fixes; this adapter owns only `backend/pkg/database/migrate.go`, focused `migrate*_test.go`, and new `resume-migration-*` evidence here. Existing failure receipts and unrelated work remain intact.
+- Implementer: Generator adapter. Review perspectives: startup state integrity, typed error propagation, readiness, legacy compatibility. Independent reviewer routing, full shared release and paired Ops consumption remain root-owned and open; this is not approval.
+- Confirmed: `RunMigrations` bootstraps before official migrator; bootstrap excludes dirty from version guards and writes a clean inferred version. Readiness checks row count only. The old dirty-current test explicitly permits recovery.
+- Minimum viable approach: reuse recorded state reading and installed `migrate.ErrDirty`; reject dirty/read errors before marker inference, retain a guard at direct bootstrap writes, validate readiness with actual recorded state. No Force/recovery, dependencies, migration DDL, permissions, audit, i18n or menus changed.
+- Structural retrieval: CodeGraph status/context confirmed `RunMigrations -> bootstrapExistingCurrentSchema -> bootstrapMigrationVersion -> recordedMigrationVersion/writeMigrationVersion`; exact owned files were then read. CodeGraph MCP is not exposed; existing CLI index was used.
+- File plan: dedicated dirty-bootstrap regression tests first, red against original source; minimal migrate.go repair; replace old automatic-recovery test; required real MySQL regression and entire database package CGO race/vet/build; fresh receipt and source hashes.
+- Runtime: required passwordless-root isolated local MySQL at `127.0.0.1:33316` (8.0.36); `testmysql.Open` creates random test-only databases and cleans them. Set `PANTHEON_TEST_DSN_REQUIRED=1` and `DSN_REQUIRED=1`; no skipped integration test counts as green.
+- Success: typed wrapped dirty errors for future37/current24/precompat states, exact values/SQL serialization and schema preserved, no bootstrap write or official startup migration when refused; partial/current markers covered; fresh/legacy/valid clean readiness retained; unknown state/read failures close safely.
+- Ratchet: sensor-added (dirty/bootstrap regression). GitHub signal: local scoped evidence only. Full repository/release/consumer gates remain open. No publication, commit, lock, manifest, plan, Ops edit or delegated model call is authorized here.
+- Human gate: already authorized local fix/tests proceed; production/release decisions remain with root/maintainer.

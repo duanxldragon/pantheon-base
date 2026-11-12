@@ -1,0 +1,5 @@
+{
+  "seconds": 4.9338415,
+  "command": "go build ./...",
+  "exit": 0
+}

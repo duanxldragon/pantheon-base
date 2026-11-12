@@ -1,0 +1,353 @@
+--- FAIL: TestBusinessTelemetryPrivacy (11.42s)
+    business_telemetry_middleware_test.go:54: === RUN   TestBusinessTelemetryPrivacy
+        === RUN   TestBusinessTelemetryPrivacy/success
+            business_telemetry_middleware_test.go:182: client baggage or tracestate reached adopted handler
+            business_telemetry_middleware_test.go:187: server-only trace propagation lost or client metadata retained
+            business_telemetry_middleware_test.go:101: raw sentinel in exported span/event/resource/status
+            business_telemetry_middleware_test.go:101: registered action/server-only trace boundary lost
+            business_telemetry_middleware_test.go:101: route/method/action/server correlation missing
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: url.scheme
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: network.peer.address
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: network.peer.port
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: user_agent.original
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: client.address
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: url.path
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: network.protocol.version
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: http.response.body.size
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: server.address
+            business_telemetry_middleware_test.go:120: outcome = <nil>, want success
+            business_telemetry_middleware_test.go:127: span status hid failure or retained error text
+            business_telemetry_middleware_test.go:134: source-authorized metadata was lost
+        === RUN   TestBusinessTelemetryPrivacy/raw200
+            business_telemetry_middleware_test.go:182: client baggage or tracestate reached adopted handler
+            business_telemetry_middleware_test.go:187: server-only trace propagation lost or client metadata retained
+            business_telemetry_middleware_test.go:101: raw sentinel in exported span/event/resource/status
+            business_telemetry_middleware_test.go:101: registered action/server-only trace boundary lost
+            business_telemetry_middleware_test.go:101: route/method/action/server correlation missing
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: network.peer.address
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: client.address
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: network.peer.port
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: user_agent.original
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: url.path
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: network.protocol.version
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: http.response.body.size
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: server.address
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: url.scheme
+            business_telemetry_middleware_test.go:120: outcome = <nil>, want unknown
+            business_telemetry_middleware_test.go:127: span status hid failure or retained error text
+        === RUN   TestBusinessTelemetryPrivacy/business200
+            business_telemetry_middleware_test.go:182: client baggage or tracestate reached adopted handler
+            business_telemetry_middleware_test.go:187: server-only trace propagation lost or client metadata retained
+            business_telemetry_middleware_test.go:101: raw sentinel in exported span/event/resource/status
+            business_telemetry_middleware_test.go:101: registered action/server-only trace boundary lost
+            business_telemetry_middleware_test.go:101: route/method/action/server correlation missing
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: network.peer.port
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: client.address
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: network.protocol.version
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: http.response.body.size
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: network.peer.address
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: user_agent.original
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: url.path
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: server.address
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: url.scheme
+            business_telemetry_middleware_test.go:120: outcome = <nil>, want denied
+            business_telemetry_middleware_test.go:127: span status hid failure or retained error text
+        === RUN   TestBusinessTelemetryPrivacy/invalid-metadata
+            business_telemetry_middleware_test.go:182: client baggage or tracestate reached adopted handler
+            business_telemetry_middleware_test.go:187: server-only trace propagation lost or client metadata retained
+            business_telemetry_middleware_test.go:101: raw sentinel in exported span/event/resource/status
+            business_telemetry_middleware_test.go:101: registered action/server-only trace boundary lost
+            business_telemetry_middleware_test.go:101: route/method/action/server correlation missing
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: user_agent.original
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: url.path
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: server.address
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: url.scheme
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: network.peer.address
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: network.peer.port
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: client.address
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: network.protocol.version
+            business_telemetry_middleware_test.go:120: outcome = <nil>, want unknown
+            business_telemetry_middleware_test.go:127: span status hid failure or retained error text
+            business_telemetry_middleware_test.go:137: invalid typed metadata retained
+        === RUN   TestBusinessTelemetryPrivacy/provider
+            business_telemetry_middleware_test.go:182: client baggage or tracestate reached adopted handler
+            business_telemetry_middleware_test.go:187: server-only trace propagation lost or client metadata retained
+            business_telemetry_middleware_test.go:101: raw sentinel in exported span/event/resource/status
+            business_telemetry_middleware_test.go:101: registered action/server-only trace boundary lost
+            business_telemetry_middleware_test.go:101: route/method/action/server correlation missing
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: network.peer.address
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: user_agent.original
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: http.response.body.size
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: network.peer.port
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: client.address
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: url.path
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: network.protocol.version
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: server.address
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: url.scheme
+            business_telemetry_middleware_test.go:101: unbounded error event
+            business_telemetry_middleware_test.go:120: outcome = <nil>, want upstream
+            business_telemetry_middleware_test.go:127: span status hid failure or retained error text
+        === RUN   TestBusinessTelemetryPrivacy/storage
+            business_telemetry_middleware_test.go:182: client baggage or tracestate reached adopted handler
+            business_telemetry_middleware_test.go:187: server-only trace propagation lost or client metadata retained
+            business_telemetry_middleware_test.go:101: raw sentinel in exported span/event/resource/status
+            business_telemetry_middleware_test.go:101: registered action/server-only trace boundary lost
+            business_telemetry_middleware_test.go:101: route/method/action/server correlation missing
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: network.peer.port
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: url.path
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: network.protocol.version
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: url.scheme
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: network.peer.address
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: user_agent.original
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: client.address
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: http.response.body.size
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: server.address
+            business_telemetry_middleware_test.go:101: unbounded error event
+            business_telemetry_middleware_test.go:120: outcome = <nil>, want storage
+            business_telemetry_middleware_test.go:127: span status hid failure or retained error text
+        === RUN   TestBusinessTelemetryPrivacy/error
+            business_telemetry_middleware_test.go:182: client baggage or tracestate reached adopted handler
+            business_telemetry_middleware_test.go:187: server-only trace propagation lost or client metadata retained
+            business_telemetry_middleware_test.go:101: raw sentinel in exported span/event/resource/status
+            business_telemetry_middleware_test.go:101: registered action/server-only trace boundary lost
+            business_telemetry_middleware_test.go:101: route/method/action/server correlation missing
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: network.protocol.version
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: server.address
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: url.scheme
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: url.path
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: http.response.body.size
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: network.peer.address
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: network.peer.port
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: user_agent.original
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: client.address
+            business_telemetry_middleware_test.go:101: unbounded error event
+            business_telemetry_middleware_test.go:120: outcome = <nil>, want unknown
+            business_telemetry_middleware_test.go:127: span status hid failure or retained error text
+        === RUN   TestBusinessTelemetryPrivacy/panic
+            business_telemetry_middleware_test.go:182: client baggage or tracestate reached adopted handler
+            business_telemetry_middleware_test.go:187: server-only trace propagation lost or client metadata retained
+            business_telemetry_middleware_test.go:101: raw sentinel in exported span/event/resource/status
+            business_telemetry_middleware_test.go:101: registered action/server-only trace boundary lost
+            business_telemetry_middleware_test.go:101: route/method/action/server correlation missing
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: url.scheme
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: network.peer.port
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: url.path
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: network.protocol.version
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: server.address
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: network.peer.address
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: user_agent.original
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: client.address
+            business_telemetry_middleware_test.go:101: unbounded error event
+            business_telemetry_middleware_test.go:104: span lost HTTP status
+            business_telemetry_middleware_test.go:120: outcome = <nil>, want unknown
+            business_telemetry_middleware_test.go:127: span status hid failure or retained error text
+        === RUN   TestBusinessTelemetryPrivacy/panic-error
+            business_telemetry_middleware_test.go:182: client baggage or tracestate reached adopted handler
+            business_telemetry_middleware_test.go:187: server-only trace propagation lost or client metadata retained
+            business_telemetry_middleware_test.go:101: raw sentinel in exported span/event/resource/status
+            business_telemetry_middleware_test.go:101: registered action/server-only trace boundary lost
+            business_telemetry_middleware_test.go:101: route/method/action/server correlation missing
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: url.scheme
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: network.peer.address
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: network.peer.port
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: user_agent.original
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: client.address
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: network.protocol.version
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: server.address
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: url.path
+            business_telemetry_middleware_test.go:101: unbounded error event
+            business_telemetry_middleware_test.go:104: span lost HTTP status
+            business_telemetry_middleware_test.go:120: outcome = <nil>, want unknown
+            business_telemetry_middleware_test.go:127: span status hid failure or retained error text
+        === RUN   TestBusinessTelemetryPrivacy/invalid-json
+            business_telemetry_middleware_test.go:182: client baggage or tracestate reached adopted handler
+            business_telemetry_middleware_test.go:187: server-only trace propagation lost or client metadata retained
+            business_telemetry_middleware_test.go:101: raw sentinel in exported span/event/resource/status
+            business_telemetry_middleware_test.go:101: registered action/server-only trace boundary lost
+            business_telemetry_middleware_test.go:101: route/method/action/server correlation missing
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: network.peer.address
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: network.peer.port
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: user_agent.original
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: url.path
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: network.protocol.version
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: url.scheme
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: client.address
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: http.response.body.size
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: server.address
+            business_telemetry_middleware_test.go:101: unbounded error event
+            business_telemetry_middleware_test.go:120: outcome = <nil>, want invalid
+            business_telemetry_middleware_test.go:127: span status hid failure or retained error text
+        === RUN   TestBusinessTelemetryPrivacy/csrf
+            business_telemetry_middleware_test.go:101: raw sentinel in exported span/event/resource/status
+            business_telemetry_middleware_test.go:101: registered action/server-only trace boundary lost
+            business_telemetry_middleware_test.go:101: route/method/action/server correlation missing
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: server.address
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: network.peer.port
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: user_agent.original
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: client.address
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: url.path
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: http.response.body.size
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: url.scheme
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: network.peer.address
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: network.protocol.version
+            business_telemetry_middleware_test.go:120: outcome = <nil>, want denied
+            business_telemetry_middleware_test.go:127: span status hid failure or retained error text
+            business_telemetry_middleware_test.go:131: early denial consumed input or inferred ownership
+        === RUN   TestBusinessTelemetryPrivacy/rate
+        2026/11/10 08:38:31 WARN rate limit exceeded limit=100
+            business_telemetry_middleware_test.go:101: raw sentinel in exported span/event/resource/status
+            business_telemetry_middleware_test.go:101: registered action/server-only trace boundary lost
+            business_telemetry_middleware_test.go:101: route/method/action/server correlation missing
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: url.path
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: network.protocol.version
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: http.response.body.size
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: server.address
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: network.peer.port
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: user_agent.original
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: client.address
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: url.scheme
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: network.peer.address
+            business_telemetry_middleware_test.go:120: outcome = <nil>, want unknown
+            business_telemetry_middleware_test.go:127: span status hid failure or retained error text
+            business_telemetry_middleware_test.go:131: early denial consumed input or inferred ownership
+        === RUN   TestBusinessTelemetryPrivacy/auth
+            business_telemetry_middleware_test.go:101: raw sentinel in exported span/event/resource/status
+            business_telemetry_middleware_test.go:101: registered action/server-only trace boundary lost
+            business_telemetry_middleware_test.go:101: route/method/action/server correlation missing
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: client.address
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: http.response.body.size
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: network.peer.address
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: network.peer.port
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: url.path
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: network.protocol.version
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: server.address
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: url.scheme
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: user_agent.original
+            business_telemetry_middleware_test.go:120: outcome = <nil>, want denied
+            business_telemetry_middleware_test.go:127: span status hid failure or retained error text
+            business_telemetry_middleware_test.go:131: early denial consumed input or inferred ownership
+        === RUN   TestBusinessTelemetryPrivacy/tenant
+            business_telemetry_middleware_test.go:101: raw sentinel in exported span/event/resource/status
+            business_telemetry_middleware_test.go:101: registered action/server-only trace boundary lost
+            business_telemetry_middleware_test.go:101: route/method/action/server correlation missing
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: url.scheme
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: network.peer.address
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: user_agent.original
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: client.address
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: url.path
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: network.peer.port
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: network.protocol.version
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: http.response.body.size
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: server.address
+            business_telemetry_middleware_test.go:120: outcome = <nil>, want denied
+            business_telemetry_middleware_test.go:127: span status hid failure or retained error text
+            business_telemetry_middleware_test.go:131: early denial consumed input or inferred ownership
+        === RUN   TestBusinessTelemetryPrivacy/body
+            business_telemetry_middleware_test.go:98: expected one completed server span, got 0
+        === RUN   TestBusinessTelemetryPrivacy/body-stream
+            business_telemetry_middleware_test.go:182: client baggage or tracestate reached adopted handler
+            business_telemetry_middleware_test.go:187: server-only trace propagation lost or client metadata retained
+            business_telemetry_middleware_test.go:101: raw sentinel in exported span/event/resource/status
+            business_telemetry_middleware_test.go:101: registered action/server-only trace boundary lost
+            business_telemetry_middleware_test.go:101: route/method/action/server correlation missing
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: url.path
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: url.scheme
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: user_agent.original
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: client.address
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: network.protocol.version
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: http.response.body.size
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: server.address
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: network.peer.address
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: network.peer.port
+            business_telemetry_middleware_test.go:101: unbounded error event
+            business_telemetry_middleware_test.go:120: outcome = <nil>, want invalid
+            business_telemetry_middleware_test.go:127: span status hid failure or retained error text
+        === RUN   TestBusinessTelemetryPrivacy/canceled
+            business_telemetry_middleware_test.go:182: client baggage or tracestate reached adopted handler
+            business_telemetry_middleware_test.go:187: server-only trace propagation lost or client metadata retained
+            business_telemetry_middleware_test.go:101: raw sentinel in exported span/event/resource/status
+            business_telemetry_middleware_test.go:101: registered action/server-only trace boundary lost
+            business_telemetry_middleware_test.go:101: route/method/action/server correlation missing
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: url.path
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: server.address
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: user_agent.original
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: client.address
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: network.protocol.version
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: http.response.body.size
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: url.scheme
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: network.peer.address
+            business_telemetry_middleware_test.go:101: unexpected captured attribute: network.peer.port
+            business_telemetry_middleware_test.go:120: outcome = <nil>, want unknown
+            business_telemetry_middleware_test.go:127: span status hid failure or retained error text
+        === RUN   TestBusinessTelemetryPrivacy/unmatched-defaults
+        === RUN   TestBusinessTelemetryPrivacy/production-otlp
+            business_telemetry_middleware_test.go:182: client baggage or tracestate reached adopted handler
+            business_telemetry_middleware_test.go:187: server-only trace propagation lost or client metadata retained
+            business_telemetry_middleware_test.go:182: client baggage or tracestate reached adopted handler
+            business_telemetry_middleware_test.go:187: server-only trace propagation lost or client metadata retained
+            business_telemetry_middleware_test.go:182: client baggage or tracestate reached adopted handler
+            business_telemetry_middleware_test.go:187: server-only trace propagation lost or client metadata retained
+            business_telemetry_middleware_test.go:182: client baggage or tracestate reached adopted handler
+            business_telemetry_middleware_test.go:187: server-only trace propagation lost or client metadata retained
+            business_telemetry_middleware_test.go:182: client baggage or tracestate reached adopted handler
+            business_telemetry_middleware_test.go:187: server-only trace propagation lost or client metadata retained
+            business_telemetry_middleware_test.go:182: client baggage or tracestate reached adopted handler
+            business_telemetry_middleware_test.go:187: server-only trace propagation lost or client metadata retained
+            business_telemetry_middleware_test.go:182: client baggage or tracestate reached adopted handler
+            business_telemetry_middleware_test.go:187: server-only trace propagation lost or client metadata retained
+            business_telemetry_middleware_test.go:182: client baggage or tracestate reached adopted handler
+            business_telemetry_middleware_test.go:187: server-only trace propagation lost or client metadata retained
+            business_telemetry_middleware_test.go:182: client baggage or tracestate reached adopted handler
+            business_telemetry_middleware_test.go:187: server-only trace propagation lost or client metadata retained
+            business_telemetry_middleware_test.go:182: client baggage or tracestate reached adopted handler
+            business_telemetry_middleware_test.go:187: server-only trace propagation lost or client metadata retained
+        2026/11/10 08:38:32 WARN rate limit exceeded limit=100
+            business_telemetry_middleware_test.go:182: client baggage or tracestate reached adopted handler
+            business_telemetry_middleware_test.go:187: server-only trace propagation lost or client metadata retained
+            business_telemetry_middleware_test.go:182: client baggage or tracestate reached adopted handler
+            business_telemetry_middleware_test.go:187: server-only trace propagation lost or client metadata retained
+            business_telemetry_middleware_test.go:400: raw sentinel in actual production OTLP wire output
+            business_telemetry_middleware_test.go:407: client correlation or error text in OTLP
+            business_telemetry_middleware_test.go:407: client correlation or error text in OTLP
+            business_telemetry_middleware_test.go:407: client correlation or error text in OTLP
+            business_telemetry_middleware_test.go:407: client correlation or error text in OTLP
+            business_telemetry_middleware_test.go:407: client correlation or error text in OTLP
+            business_telemetry_middleware_test.go:407: client correlation or error text in OTLP
+            business_telemetry_middleware_test.go:407: client correlation or error text in OTLP
+            business_telemetry_middleware_test.go:407: client correlation or error text in OTLP
+            business_telemetry_middleware_test.go:407: client correlation or error text in OTLP
+            business_telemetry_middleware_test.go:407: client correlation or error text in OTLP
+            business_telemetry_middleware_test.go:407: client correlation or error text in OTLP
+            business_telemetry_middleware_test.go:407: client correlation or error text in OTLP
+            business_telemetry_middleware_test.go:407: client correlation or error text in OTLP
+            business_telemetry_middleware_test.go:407: client correlation or error text in OTLP
+            business_telemetry_middleware_test.go:407: client correlation or error text in OTLP
+            business_telemetry_middleware_test.go:407: client correlation or error text in OTLP
+            business_telemetry_middleware_test.go:413: OTLP batch: spans=16 bytes=11895 sha256=7d359f20b3b3b1f85c7965676ac3b4987040fb17e3784f971edb34861c17ca27 sentinel-present=true
+            business_telemetry_middleware_test.go:415: OTLP missing spans: got 16, want 17
+        --- FAIL: TestBusinessTelemetryPrivacy (11.34s)
+            --- FAIL: TestBusinessTelemetryPrivacy/success (0.01s)
+            --- FAIL: TestBusinessTelemetryPrivacy/raw200 (0.00s)
+            --- FAIL: TestBusinessTelemetryPrivacy/business200 (0.00s)
+            --- FAIL: TestBusinessTelemetryPrivacy/invalid-metadata (0.00s)
+            --- FAIL: TestBusinessTelemetryPrivacy/provider (0.00s)
+            --- FAIL: TestBusinessTelemetryPrivacy/storage (0.00s)
+            --- FAIL: TestBusinessTelemetryPrivacy/error (0.00s)
+            --- FAIL: TestBusinessTelemetryPrivacy/panic (0.00s)
+            --- FAIL: TestBusinessTelemetryPrivacy/panic-error (0.00s)
+            --- FAIL: TestBusinessTelemetryPrivacy/invalid-json (0.00s)
+            --- FAIL: TestBusinessTelemetryPrivacy/csrf (0.00s)
+            --- FAIL: TestBusinessTelemetryPrivacy/rate (0.00s)
+            --- FAIL: TestBusinessTelemetryPrivacy/auth (0.00s)
+            --- FAIL: TestBusinessTelemetryPrivacy/tenant (0.00s)
+            --- FAIL: TestBusinessTelemetryPrivacy/body (0.00s)
+            --- FAIL: TestBusinessTelemetryPrivacy/body-stream (0.66s)
+            --- FAIL: TestBusinessTelemetryPrivacy/canceled (0.00s)
+            --- PASS: TestBusinessTelemetryPrivacy/unmatched-defaults (0.00s)
+            --- FAIL: TestBusinessTelemetryPrivacy/production-otlp (10.64s)
+        FAIL
+        
+    business_telemetry_middleware_test.go:56: sealed telemetry suite: exit status 1
+FAIL
+FAIL	github.com/duanxldragon/pantheon-base/backend/internal/middleware	11.502s
+FAIL

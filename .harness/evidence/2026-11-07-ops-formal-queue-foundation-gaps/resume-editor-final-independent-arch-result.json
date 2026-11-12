@@ -1,0 +1,16 @@
+{
+  "lane": "arch",
+  "role": "architect",
+  "exitCode": 0,
+  "timedOut": false,
+  "elapsedSeconds": 77.172,
+  "report": ".harness\\evidence\\2026-11-07-ops-formal-queue-foundation-gaps\\resume-editor-final-independent-arch.md",
+  "reviewedHashes": {
+    "frontend/src/components/operational/ConditionBuilder.tsx": "0a95dec0e094a05f370cef86896e36105244ea93f7467d5d3d31fc8e37e118ed",
+    "frontend/src/components/operational/ExecutionStepRail.tsx": "3d3c72dd0d3921806b34ac590b5401cbd229feff3662c028be3cfa0b0476d6fd",
+    "frontend/tests/unit/components/operational/conditionEditing.test.tsx": "6f6a06b06bd2b647f502de1f6bc2d4bd94cdc9b8a7604f4710b7a8ce23768763"
+  },
+  "modelOverride": false,
+  "authorFallback": false,
+  "scope": "current Base ConditionBuilder and ExecutionStepRail source only"
+}

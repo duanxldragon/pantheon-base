@@ -1,0 +1,26 @@
+{
+  "command": "go test -count=1 -v -timeout 5m ./pkg/database -run ^TestDirtyMigrationBootstrapPreservesRecordedState$",
+  "startedUtc": "2026-11-09T08:52:08.7802535Z",
+  "finishedUtc": "2026-11-09T08:52:35.4190709Z",
+  "exitCode": 1,
+  "environment": {
+    "PANTHEON_TEST_DSN": "root@tcp(127.0.0.1:33316)/resume_migration?charset=utf8mb4&parseTime=true",
+    "PANTHEON_TEST_DSN_REQUIRED": "1",
+    "DSN_REQUIRED": "1",
+    "CGO_ENABLED": "1"
+  },
+  "sourceHashes": [
+    {
+      "path": "D:\\workspace\\go\\pantheon-platform\\pantheon-base\\backend\\pkg\\database\\migrate.go",
+      "sha256": "77a8e98398f3d0424ab7b06e3b88fa83a2b6e61d9e1acd1a3012ac63c9ec96f3"
+    },
+    {
+      "path": "D:\\workspace\\go\\pantheon-platform\\pantheon-base\\backend\\pkg\\database\\migrate_test.go",
+      "sha256": "c6e458243102ad8d4756dff17a095503b7e44212153fa42a0e37bbbec0c2d1a6"
+    },
+    {
+      "path": "D:\\workspace\\go\\pantheon-platform\\pantheon-base\\backend\\pkg\\database\\migrate_dirty_bootstrap_test.go",
+      "sha256": "0deb10f5cdbf9ec7105e1f78ea86e8f4b6a2a0cd57e4beb448b12d7a67c559a2"
+    }
+  ]
+}

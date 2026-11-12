@@ -1,0 +1,4 @@
+mysql_version	hostname
+8.0.36	DESKTOP-1P64N11
+remaining_task_test_databases
+0

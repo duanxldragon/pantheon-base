@@ -1,0 +1,19 @@
+{
+  "startedUtc": "2026-11-09T09:01:18.1774680Z",
+  "finishedUtc": "2026-11-09T09:01:18.7056288Z",
+  "commands": [
+    {
+      "command": "go vet ./pkg/database",
+      "exitCode": 0
+    },
+    {
+      "command": "git diff --check -- backend/pkg/database/migrate.go backend/pkg/database/migrate_test.go backend/pkg/database/migrate_dirty_bootstrap_test.go",
+      "exitCode": 0
+    },
+    {
+      "exitCode": 0,
+      "command": "gofmt -l backend/pkg/database/migrate.go backend/pkg/database/migrate_test.go backend/pkg/database/migrate_dirty_bootstrap_test.go",
+      "unformattedFiles": []
+    }
+  ]
+}

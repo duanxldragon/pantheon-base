@@ -1,0 +1,28 @@
+{
+  "surface": "Real ModuleWizard with fixture auth/API read responses; no production login or writes",
+  "screenshots": [
+    {
+      "viewport": "desktop",
+      "width": 1440,
+      "height": 900,
+      "overflow": 0,
+      "path": "resume-o4-generator-wizard-desktop.png"
+    },
+    {
+      "viewport": "mobile",
+      "width": 390,
+      "height": 844,
+      "overflow": 0,
+      "path": "resume-o4-generator-wizard-mobile.png"
+    }
+  ],
+  "errors": [],
+  "body": "系统域 / 低代码\n在受控治理约束内生成业务模块脚手架\n步骤\n1/4\n字段\n0\n文件\n0\n查看模块注册表\n1\n基础信息\n确定模块标识、显示名与所属层级。\n2\n数据模型\n配置主模型字段，决定列表与表单骨架。\n3\n菜单与权限\n确认默认生成的菜单、页面权限与动作权限。\n4\n预览与接入\n检查将要落盘的源码文件，并决定下载导出或一键注册。\n 模块名\n支持小写路径分段，例如 cmdb/host；每段仅允许小写字母、数字和下划线。\n建模来源\n手工建模\n 显示名\n英文显示名\n可选。为空时英文翻译会回退到当前显示名。\n 模块层级\n业务域 business/*\n业务上下文\n用于多表业务模块归组，默认取模块路径第一段。\n上下文中文标题\n上下文英文标题\n表角色\n主表\n决定是否生成菜单、权限和独立页面。关系表默认不生成导航。\n归属主表\n多表业务中用于标记当前表依附的主实体。\n关系字段\n仅关系表需要填写，用于描述两端关联字段。\n 模板级别\n企业级模板\n页面动作模板\n标准业务页\nP2+ 治理契约\n模板版本\nv1 稳定脚手架\n数据权限钩子\n启用\n启用后生成的列表查询会注入 common.GetDataScope 与 database.WithDataScope。\n平台工作台入口\n启用\n仅 business/* 的可导航模块可接入 platform 工作台；relation 表会强制关闭该入口。\n数据权限模式\n部门级\n列表布局\n治理面板\n启用\n搜索区\n启用\n头部操作\n启用\n批量操作\n启用\n生命周期策略\n定义这个模块是长期保留的业务模块，还是用于 QA、验收、联调的临时模块。\n标记为临时模块，彻底删除时自动回收托管数据表\n默认按标准模块处理。卸载或彻底删除时，数据表仍需人工确认是否回收。\n模块依赖\n仅登记依赖契约，不直接跨模块调用 Service。\n关系契约\n列顺序：name | type | targetModule | localField | targetField | targetLabelField | lookupApi | lookupValueField | junctionTable\n用于主从表/关联表治理预览，当前不自动生成跨表事务。\n父菜单路径\n可选。嵌套业务模块会优先按模块路径自动归入父菜单，也可在这里手动指定已存在的父菜单路径。\n负责人\n限界上下文\n模块摘要\n下一步",
+  "states": [
+    "v2 opt-in",
+    "tenant retained when DataScope disabled",
+    "v1 reset and legacy disabled control",
+    "keyboard focus"
+  ],
+  "success": true
+}

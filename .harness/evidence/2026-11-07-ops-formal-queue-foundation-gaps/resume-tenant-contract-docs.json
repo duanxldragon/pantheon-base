@@ -1,0 +1,23 @@
+{
+  "files": [
+    {
+      "file": "docs\\contracts\\TENANT_CONTRACT_V1.md",
+      "beforeSha256": "861c664832af0ff2ee3061ff850a6b86b3af0fc42fe71005eab895eca1fee0d2",
+      "afterSha256": "d1296659926b52610bd8a71a82605628a4c3fef9ee5351114b769d26ace8b0c6"
+    },
+    {
+      "file": "docs\\contracts\\TENANT_CONTRACT_V1.en.md",
+      "beforeSha256": "6ae85369e5125e52b1c5d7d30844a08157a11dafdfa906488f987bac19f3ba8f",
+      "afterSha256": "e44f90d4d7865844e5ed3e9065e98140c207760840272cda5d6398eb6f73cae2"
+    },
+    {
+      "file": "docs\\designs\\TENANT_RESOURCE_SCOPE_MATRIX.md",
+      "afterSha256": "558b28edae305d491457fc20754cf06ad1cdcd2afa17f08a1420a7626741a04b"
+    },
+    {
+      "file": "docs\\designs\\TENANT_RESOURCE_SCOPE_MATRIX.en.md",
+      "afterSha256": "cebcc004a5370d663c8109e5899c95df3f525600de73b408b1774f4a42ba9ebc"
+    }
+  ],
+  "implementationStatus": "in-progress; no current runtime or official consumption claim"
+}

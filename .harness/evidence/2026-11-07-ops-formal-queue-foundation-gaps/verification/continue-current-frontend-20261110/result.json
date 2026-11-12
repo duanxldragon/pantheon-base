@@ -1,0 +1,36 @@
+{
+  "exitCode": 0,
+  "checks": [
+    {
+      "name": "lint",
+      "command": "npm.cmd run lint",
+      "exitCode": 0,
+      "elapsedSeconds": 23.156
+    },
+    {
+      "name": "unit",
+      "command": "npm.cmd run test:unit -- --maxWorkers=2",
+      "exitCode": 0,
+      "elapsedSeconds": 42.922
+    },
+    {
+      "name": "generator-quality",
+      "command": "npm.cmd run test:generator:quality",
+      "exitCode": 0,
+      "elapsedSeconds": 6.594
+    },
+    {
+      "name": "build",
+      "command": "npm.cmd run build",
+      "exitCode": 0,
+      "elapsedSeconds": 24.0
+    }
+  ],
+  "sourceHashesStable": true,
+  "hashedFiles": 491,
+  "elapsedSeconds": 96.781,
+  "visualQualitySkill": "impeccable",
+  "renderedEvidence": "not produced by these static/unit/build checks; actual page acceptance remains open",
+  "officialConsumption": false,
+  "P0Approved": false
+}

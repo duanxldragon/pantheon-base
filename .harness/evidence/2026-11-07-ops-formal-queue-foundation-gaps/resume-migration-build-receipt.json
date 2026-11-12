@@ -1,0 +1,7 @@
+{
+  "command": "go build ./pkg/database",
+  "startedUtc": "2026-11-09T08:56:59.1471311Z",
+  "finishedUtc": "2026-11-09T08:56:59.7175182Z",
+  "exitCode": 0,
+  "CGO_ENABLED": "1"
+}

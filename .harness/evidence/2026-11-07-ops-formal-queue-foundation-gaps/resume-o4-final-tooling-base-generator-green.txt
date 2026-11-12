@@ -1,0 +1,41 @@
+✔ seals exact dirty/untracked fixture bytes with detached descriptor and genuine provenance (513.7105ms)
+✔ identical source inventory has deterministic archives; review revisions have distinct descriptor digests (321.9314ms)
+✔ descriptor tampering, archive tampering and missing pins refuse (246.254ms)
+✔ rejects unsafe/secret/output paths, platform aliases and file/directory collisions (657.6749ms)
+✔ protected target and fixture lock remain byte-identical; write failure leaves no partial candidate (344.0367ms)
+✔ source junctions, hard links and redirected output directories refuse (387.1479ms)
+▶ exported producer preserves directory replacements and original write/verification failures
+  ✔ write/stage (562.479ms)
+  ✔ write/ancestor (247.7137ms)
+  ✔ write/nested (360.9362ms)
+  ✔ verification/stage (680.2475ms)
+  ✔ verification/ancestor (317.5927ms)
+  ✔ verification/nested (226.0205ms)
+✔ exported producer preserves directory replacements and original write/verification failures (2397.5891ms)
+▶ exported producer refuses stage/ancestor replacement before the successful seal rename
+  ✔ stage (303.6408ms)
+  ✔ ancestor (428.5801ms)
+✔ exported producer refuses stage/ancestor replacement before the successful seal rename (732.8519ms)
+▶ exported producer refuses unknown stage entries before cleaning known files
+  ✔ unknown file (277.168ms)
+  ✔ unknown nested directory (311.8127ms)
+✔ exported producer refuses unknown stage entries before cleaning known files (589.5768ms)
+✔ exported producer retains the stage when its directory identity is unavailable (314.8754ms)
+✔ exported producer rechecks stage identity after an owned unlink (267.8175ms)
+✔ capabilities require declared actual exports; comments/strings cannot fabricate an API (496.1793ms)
+▶ source edits, additions, deletion and edit/revert during sealing leave no output or staging debris
+  ✔ edit (366.2399ms)
+  ✔ add (304.2676ms)
+  ✔ delete (349.6573ms)
+  ✔ revert (351.0763ms)
+✔ source edits, additions, deletion and edit/revert during sealing leave no output or staging debris (1372.5738ms)
+✔ independently re-pinned hostile tar headers still refuse links/extensions/unsafe entries/content corruption (391.3904ms)
+✔ separate pinned executable build receipt binds descriptor identity, capabilities and actual executable bytes (412.5768ms)
+ℹ tests 29
+ℹ suites 0
+ℹ pass 29
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 9630.8071

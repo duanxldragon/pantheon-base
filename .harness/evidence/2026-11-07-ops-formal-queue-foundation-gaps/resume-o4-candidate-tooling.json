@@ -1,0 +1,149 @@
+{
+  "schemaVersion": 1,
+  "taskId": "2026-11-07-ops-formal-queue-foundation-gaps",
+  "recordedAt": "2026-11-09T09:39:42.349Z",
+  "status": "base-tooling-verified-ops-write-blocked",
+  "planPath": ".harness/tasks/2026-11-07-ops-formal-queue-foundation-gaps/o4-tenant-implementation-plan.md",
+  "planSha256": "9aaa0e53b43c040a4d04949693d3ef6ab4b086336fe953c3e04105400e4caaf7",
+  "linkage": {
+    "baseParent": ".harness/tasks/2026-11-07-ops-formal-queue-foundation-gaps/manifest.json",
+    "opsParent": "../pantheon-ops/.harness/tasks/2026-11-07-ops-planned-task-closeout/manifest.json"
+  },
+  "hashes": [
+    {
+      "path": "scripts/foundation-release/build-candidate-artifact.mjs",
+      "sha256": "2485c4da242967777d2c0b1d352f82684dbfa65343b6be229cb440b9322bb55f"
+    },
+    {
+      "path": "scripts/foundation-release/candidate-descriptor.mjs",
+      "sha256": "a9b242e4b6d787344f16357b6c7397ab4a7ffda633e21556138e240ccece71a6"
+    },
+    {
+      "path": "scripts/foundation-release/candidate-artifact.test.mjs",
+      "sha256": "ceaddf4deb94ef6b16bcaac28bee4525fbdeec8dbc76e3dc7a61440782e02417"
+    },
+    {
+      "path": "scripts/foundation-release/build-release-bundle.mjs",
+      "sha256": "3715c789337cc1b9ed8764fcc469e8ce7869e391ac67d50fe83341f5da8c8207"
+    },
+    {
+      "path": "scripts/foundation-release/build-release-manifest.mjs",
+      "sha256": "abd1ca92f4d6d0f8fc7a40ce2dbe708dca13fee84804c86a0fa46c50331aafa2"
+    },
+    {
+      "path": "../pantheon-ops/scripts/business-overlay/foundation-release.mjs",
+      "sha256": "e6a9de8d5afcbcfbfb949f8cdb6da78395cb33b0e88ea158443062608b99175b"
+    },
+    {
+      "path": "../pantheon-ops/scripts/business-overlay/rebuild-from-base.mjs",
+      "sha256": "5706de2dcd8d2334b374fa8dd1f621a9c4ddeb4b8b1a075172f4395e4ae2fdbd"
+    },
+    {
+      "path": "../pantheon-ops/scripts/business-overlay/check-shared-drift.mjs",
+      "sha256": "b60ceb39cb309761d928252da22442e4c05ee507f85f199cc7a17b92b469c085"
+    },
+    {
+      "path": "../pantheon-ops/foundation-release.lock.json",
+      "sha256": "95de1a87270e15c0d4c672418a5df906818a88652f8a3e6c480f1484ee9fa70c"
+    }
+  ],
+  "exports": {
+    "scripts/foundation-release/build-candidate-artifact.mjs": [
+      "assertCandidateExports",
+      "buildCandidateArtifact",
+      "captureCandidateSources"
+    ],
+    "scripts/foundation-release/candidate-descriptor.mjs": [
+      "CAPABILITY_EXPORTS",
+      "LIMITS",
+      "aggregateSha256",
+      "assertCandidatePath",
+      "assertInventory",
+      "assertRealPath",
+      "candidateExports",
+      "encodeCandidateArchive",
+      "readCandidateDescriptor",
+      "sha256",
+      "validateCandidateDescriptor",
+      "verifyCandidateArchive",
+      "verifyCandidateExecutable"
+    ],
+    "../pantheon-ops/scripts/business-overlay/rebuild-from-base.mjs": [
+      "assembleConsumerTree",
+      "assertSafeManifest",
+      "normalizeGoDependencies",
+      "planBusinessMigrations",
+      "projectConsumerReviewRegistry",
+      "rebuildFromBase",
+      "validateReleaseBundleChecksum"
+    ],
+    "../pantheon-ops/scripts/business-overlay/check-shared-drift.mjs": [
+      "checkSharedDrift"
+    ]
+  },
+  "tools": {
+    "nodeVersion": "v24.14.0",
+    "nodeExecutable": "D:\\nodejs\\node.exe",
+    "nodeExecutableSha256": "63c259c81e5d472b5f11c8d506070130cb04a1ecf84b80377a34ed6ec9048088"
+  },
+  "protectedBeforeAfter": {
+    "scripts/foundation-release/build-release-bundle.mjs": "3715c789337cc1b9ed8764fcc469e8ce7869e391ac67d50fe83341f5da8c8207",
+    "scripts/foundation-release/build-release-manifest.mjs": "abd1ca92f4d6d0f8fc7a40ce2dbe708dca13fee84804c86a0fa46c50331aafa2",
+    "../pantheon-ops/scripts/business-overlay/foundation-release.mjs": "e6a9de8d5afcbcfbfb949f8cdb6da78395cb33b0e88ea158443062608b99175b",
+    "../pantheon-ops/scripts/business-overlay/rebuild-from-base.mjs": "5706de2dcd8d2334b374fa8dd1f621a9c4ddeb4b8b1a075172f4395e4ae2fdbd",
+    "../pantheon-ops/scripts/business-overlay/check-shared-drift.mjs": "b60ceb39cb309761d928252da22442e4c05ee507f85f199cc7a17b92b469c085",
+    "../pantheon-ops/foundation-release.lock.json": "95de1a87270e15c0d4c672418a5df906818a88652f8a3e6c480f1484ee9fa70c"
+  },
+  "protectedBytesUnchanged": true,
+  "commands": [
+    {
+      "command": "node --test scripts/foundation-release/candidate-artifact.test.mjs tests/scripts/foundation-release/*.test.mjs",
+      "exitCode": 0,
+      "tests": 71,
+      "passed": 71,
+      "skipped": 0,
+      "durationMs": 4559.495
+    },
+    {
+      "command": "npm run test:business-overlay",
+      "cwd": "../pantheon-ops",
+      "exitCode": 0,
+      "tests": 62,
+      "passed": 62,
+      "skipped": 0,
+      "durationMs": 13956.9738
+    },
+    {
+      "command": "node --check scripts/foundation-release/build-candidate-artifact.mjs",
+      "exitCode": 0
+    },
+    {
+      "command": "node --check scripts/foundation-release/candidate-descriptor.mjs",
+      "exitCode": 0
+    },
+    {
+      "command": "node --check scripts/foundation-release/candidate-artifact.test.mjs",
+      "exitCode": 0
+    },
+    {
+      "command": "npm run check:docs-frontmatter",
+      "exitCode": 0
+    },
+    {
+      "command": "npm run check:task-packet-template",
+      "exitCode": 0
+    },
+    {
+      "command": "git -c core.safecrlf=false diff --check -- scripts/foundation-release",
+      "exitCode": 0
+    }
+  ],
+  "runtimeEvidence": "Explicit dirty/untracked fixtures only. No current product seal, Ops candidate assembly or supported startup performed.",
+  "gaps": [
+    "Ops is outside sandbox writable root; its three assigned files and second-parent evidence are not created.",
+    "Independent concrete tooling CODE/ARCH review and paired runtime remain for root.",
+    "Root-owned canonical manifests/planRefs need J reconciliation; no ledger edits made.",
+    "Source export presence and pinned digests establish integrity/interface identity, not API behavior or capability acceptance.",
+    "Formal release and official consumer lock remain unchanged and unaccepted as new candidate identity."
+  ]
+}
