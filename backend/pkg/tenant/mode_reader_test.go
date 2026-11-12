@@ -26,20 +26,7 @@ func (s *strictFlagStub) GetByKey(key string) (string, error) {
 func TestStrictModeReader(t *testing.T) {
 	for _, value := range []string{"compat", "multi", `"compat"`, `"multi"`, "", "garbage", "COMPAT", `"compat`} {
 		t.Run(value, func(t *testing.T) {
-			stub := &strictFlagStub{value: value}
-			reader := NewStrictSettingModeReader(stub)
-			mode, err := reader.ReadMode(context.Background())
-			valid := value == "compat" || value == "multi" || value == `"compat"` || value == `"multi"`
-			if (err == nil) != valid {
-				t.Fatal("strict mode accepted an unknown/missing value")
-			}
-			if valid && mode != NormalizeFlagValue(value) {
-				t.Fatal("wrong mode")
-			}
-			stub.value = "multi"
-			if got, err := reader.ReadMode(context.Background()); got != "multi" || err != nil || stub.calls != 2 {
-				t.Fatal("mode reader cached authority")
-			}
+			assertStrictModeReaderValue(t, value)
 		})
 	}
 	var nilStub *strictFlagStub
@@ -57,5 +44,23 @@ func TestStrictModeReader(t *testing.T) {
 	ctx, cancel = context.WithCancel(context.Background())
 	if _, err := NewStrictSettingModeReader(&strictFlagStub{value: "compat", cancel: cancel}).ReadMode(ctx); err == nil {
 		t.Fatal("cancellation after read accepted")
+	}
+}
+
+func assertStrictModeReaderValue(t *testing.T, value string) {
+	t.Helper()
+	stub := &strictFlagStub{value: value}
+	reader := NewStrictSettingModeReader(stub)
+	mode, err := reader.ReadMode(context.Background())
+	valid := value == "compat" || value == "multi" || value == `"compat"` || value == `"multi"`
+	if (err == nil) != valid {
+		t.Fatal("strict mode accepted an unknown/missing value")
+	}
+	if valid && mode != NormalizeFlagValue(value) {
+		t.Fatal("wrong mode")
+	}
+	stub.value = "multi"
+	if got, err := reader.ReadMode(context.Background()); got != "multi" || err != nil || stub.calls != 2 {
+		t.Fatal("mode reader cached authority")
 	}
 }

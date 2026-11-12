@@ -129,43 +129,86 @@ func (r *businessAuthorizationReader) Authorize(ctx context.Context, input busin
 			return deny, businessauth.ErrDenied
 		}
 	case tenant.ModeMulti:
-		// Validate the originating claim even for a header override. An override
-		// changes resource scope; it cannot revive a revoked claim/session.
-		if input.Identity.ClaimTenantID > 0 && !validBusinessMembership(db, input.Identity.ClaimTenantID, input.Identity.ActorID) {
-			return deny, businessauth.ErrDenied
-		}
-		if input.Identity.ClaimTenantID > 0 {
-			origin, err := r.readBindings(ctx, input.Identity.ActorID, input.Identity.ClaimTenantID)
-			if err != nil || len(origin) == 0 {
-				return deny, businessauth.ErrDenied
-			}
-		}
-		switch input.Resolution.ResolvedBy {
-		case tenant.ResolvedBySubject:
-			if input.Identity.ClaimTenantID == 0 || input.Resolution.TenantID != input.Identity.ClaimTenantID {
-				return deny, businessauth.ErrDenied
-			}
-			local, err := r.readBindings(ctx, input.Identity.ActorID, input.Resolution.TenantID)
-			if err != nil || len(local) == 0 {
-				return deny, businessauth.ErrDenied
-			}
-			bindings = append(bindings, local...)
-		case tenant.ResolvedByHeader:
-			if input.Resolution.TenantID > 0 && tenant.EnsureTenantLoginable(db, input.Resolution.TenantID) != nil {
-				return deny, businessauth.ErrDenied
-			}
-			// Header scope keeps only real global bindings; target roles are not acquired.
-		case tenant.ResolvedByPlatformFallback:
-			population, failed := tenant.IsPlatformPopulationUser(db, input.Identity.ActorID)
-			if input.Identity.ClaimTenantID != 0 || input.Resolution.TenantID != 0 || failed || !population {
-				return deny, businessauth.ErrDenied
-			}
-		default:
-			return deny, businessauth.ErrDenied
+		bindings, err = r.authorizeMultiMode(ctx, db, input, bindings)
+		if err != nil {
+			return deny, err
 		}
 	default:
 		return deny, businessauth.ErrDenied
 	}
+	return r.grantBusinessAuthorization(ctx, db, input, bindings)
+}
+
+func (r *businessAuthorizationReader) authorizeMultiMode(ctx context.Context, db *gorm.DB, input businessauth.Input, bindings []businessauth.RoleBinding) ([]businessauth.RoleBinding, error) {
+	// Validate the originating claim even for a header override. An override
+	// changes resource scope; it cannot revive a revoked claim/session.
+	if input.Identity.ClaimTenantID > 0 {
+		if err := r.validateBusinessClaimOrigin(ctx, db, input.Identity); err != nil {
+			return bindings, err
+		}
+	}
+	switch input.Resolution.ResolvedBy {
+	case tenant.ResolvedBySubject:
+		local, err := r.authorizeSubjectBindings(ctx, db, input)
+		if err != nil {
+			return bindings, err
+		}
+		return append(bindings, local...), nil
+	case tenant.ResolvedByHeader:
+		// Header scope keeps only real global bindings; target roles are not acquired.
+		if err := authorizeHeaderResolution(db, input); err != nil {
+			return bindings, err
+		}
+		return bindings, nil
+	case tenant.ResolvedByPlatformFallback:
+		if err := authorizePlatformFallbackResolution(db, input); err != nil {
+			return bindings, err
+		}
+		return bindings, nil
+	default:
+		return bindings, businessauth.ErrDenied
+	}
+}
+
+func (r *businessAuthorizationReader) validateBusinessClaimOrigin(ctx context.Context, db *gorm.DB, identity businessauth.Identity) error {
+	if !validBusinessMembership(db, identity.ClaimTenantID, identity.ActorID) {
+		return businessauth.ErrDenied
+	}
+	origin, err := r.readBindings(ctx, identity.ActorID, identity.ClaimTenantID)
+	if err != nil || len(origin) == 0 {
+		return businessauth.ErrDenied
+	}
+	return nil
+}
+
+func (r *businessAuthorizationReader) authorizeSubjectBindings(ctx context.Context, db *gorm.DB, input businessauth.Input) ([]businessauth.RoleBinding, error) {
+	if input.Identity.ClaimTenantID == 0 || input.Resolution.TenantID != input.Identity.ClaimTenantID {
+		return nil, businessauth.ErrDenied
+	}
+	local, err := r.readBindings(ctx, input.Identity.ActorID, input.Resolution.TenantID)
+	if err != nil || len(local) == 0 {
+		return nil, businessauth.ErrDenied
+	}
+	return local, nil
+}
+
+func authorizeHeaderResolution(db *gorm.DB, input businessauth.Input) error {
+	if input.Resolution.TenantID > 0 && tenant.EnsureTenantLoginable(db, input.Resolution.TenantID) != nil {
+		return businessauth.ErrDenied
+	}
+	return nil
+}
+
+func authorizePlatformFallbackResolution(db *gorm.DB, input businessauth.Input) error {
+	population, failed := tenant.IsPlatformPopulationUser(db, input.Identity.ActorID)
+	if input.Identity.ClaimTenantID != 0 || input.Resolution.TenantID != 0 || failed || !population {
+		return businessauth.ErrDenied
+	}
+	return nil
+}
+
+func (r *businessAuthorizationReader) grantBusinessAuthorization(ctx context.Context, db *gorm.DB, input businessauth.Input, bindings []businessauth.RoleBinding) (businessauth.Authorization, error) {
+	deny := businessauth.Authorization{}
 	policy, err := database.ReadBusinessPolicy(ctx, db)
 	if err != nil {
 		return deny, businessauth.ErrDenied

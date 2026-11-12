@@ -68,13 +68,15 @@ function goImportPath(subpath: string): string {
  * 这样条件导入不再留下纯制表符行。
  */
 function normalizeGoImportPaths(importPaths: Array<string | false | null | undefined>): string[] {
-  return importPaths
-    .map((importPath) =>
-      typeof importPath === 'string' ? importPath.trim().replace(/^"|"$/g, '') : '',
-    )
-    .filter((importPath) => importPath.length > 0)
-    // Go import paths use byte order, keeping emitted blocks gofmt-stable.
-    .sort((left, right) => (left < right ? -1 : Number(left > right)));
+  return (
+    importPaths
+      .map((importPath) =>
+        typeof importPath === 'string' ? importPath.trim().replace(/^"|"$/g, '') : '',
+      )
+      .filter((importPath) => importPath.length > 0)
+      // Go import paths use byte order, keeping emitted blocks gofmt-stable.
+      .sort((left, right) => (left < right ? -1 : Number(left > right)))
+  );
 }
 
 function buildGoImportBlock(importPaths: Array<string | false | null | undefined>): string {
@@ -174,11 +176,23 @@ export class BackendGenerator {
           ]
         : [['CreatedAt', 'time.Time', '`json:"createdAt"`']];
 
+    const tenantMode = isTenantTemplate(this.schema);
+    const tenantIndexSuffix = tenantMode ? `;index:idx_${tableName}_tenant_id,priority:2` : '';
+    const idColumnTag = `\`gorm:"primaryKey;autoIncrement${tenantIndexSuffix}" json:"id"\``;
+    const tenantUniqueSuffix = tenantMode
+      ? this.schema.model.fields
+          .filter((field) => field.validation?.unique)
+          .map(
+            (field) =>
+              `;uniqueIndex:uidx_${tableName}_tenant_${this.toDBColumn(field.name)},priority:1`,
+          )
+          .join('')
+      : '';
+    const tenantIdColumnTag = `\`gorm:"type:bigint unsigned;not null;default:0;index:idx_${tableName}_tenant_id,priority:1${tenantUniqueSuffix}" json:"-"\``;
+
     const structRows: string[][] = [
-      ['ID', 'uint64', `\`gorm:"primaryKey;autoIncrement${isTenantTemplate(this.schema) ? `;index:idx_${tableName}_tenant_id,priority:2` : ''}" json:"id"\``],
-      ...(isTenantTemplate(this.schema) ? [[
-        'TenantID', 'uint64', `\`gorm:"type:bigint unsigned;not null;default:0;index:idx_${tableName}_tenant_id,priority:1${this.schema.model.fields.filter((field) => field.validation?.unique).map((field) => `;uniqueIndex:uidx_${tableName}_tenant_${this.toDBColumn(field.name)},priority:1`).join('')}" json:"-"\``,
-      ]] : []),
+      ['ID', 'uint64', idColumnTag],
+      ...(tenantMode ? [['TenantID', 'uint64', tenantIdColumnTag]] : []),
       ...this.generateModelRows(),
       ...auditRows,
     ];
@@ -234,7 +248,10 @@ ${junctionModels ? `\n${junctionModels}` : ''}
 
         let tags = generateStructTags(field.name, field.type, options);
         if (isTenantTemplate(this.schema) && field.validation?.unique) {
-          tags = tags.replace('gorm:"', `gorm:"uniqueIndex:uidx_${this.schema.model.tableName}_tenant_${this.toDBColumn(field.name)},priority:2;`);
+          tags = tags.replace(
+            'gorm:"',
+            `gorm:"uniqueIndex:uidx_${this.schema.model.tableName}_tenant_${this.toDBColumn(field.name)},priority:2;`,
+          );
         }
         return [this.capitalize(field.name), mapping.go, `\`${tags}\``];
       });
@@ -406,8 +423,10 @@ ${buildGoImportBlock(Array.from(dtoImports))}
     const hasDataScope = this.schema.enableDataScope ?? templateLevel === 'enterprise';
     const tenantMode = isTenantTemplate(this.schema);
     const readDB = tenantMode ? 's.scopedDB()' : 's.db';
-    const guard = (result = 'nil, '): string => tenantMode
-      ? `\tif err := s.requireTenant(); err != nil {\n\t\treturn ${result}err\n\t}\n` : '';
+    const guard = (result = 'nil, '): string =>
+      tenantMode
+        ? `\tif err := s.requireTenant(); err != nil {\n\t\treturn ${result}err\n\t}\n`
+        : '';
     // UpdatedAt 只存在于 enterprise 层级的模型里，DTO 与转换方法必须同步收敛，
     // 否则 basic 层级会引用不存在的列。
     const hasAudit = templateLevel === 'enterprise';
@@ -415,17 +434,7 @@ ${buildGoImportBlock(Array.from(dtoImports))}
     const relationServices = this.generateManyToManyServiceMethods();
     const requiresStrconv =
       this.getManyToManyRelations().length > 0 || this.resolveOptionLabelField() === null;
-    const importBlock = buildGoImportBlock([
-      'errors',
-      tenantMode && 'context',
-      tenantMode && goImportPath('pkg/tenant'),
-      hasDataScope && goImportPath('pkg/common'),
-      hasDataScope && goImportPath('pkg/database'),
-      requiresStrconv && 'strconv',
-      'strings',
-      'time',
-      'gorm.io/gorm',
-    ]);
+    const importBlock = this.generateServiceImportBlock(tenantMode, hasDataScope, requiresStrconv);
     return normalizeGoWhitespace(`package ${this.packageName}
 
 import (
@@ -433,81 +442,16 @@ ${importBlock}
 )
 
 type ${modelName}Service struct {
-${alignGoBlock([...(tenantMode ? [['tenant.Scoper']] : []), ...(tenantMode && hasDataScope ? [['dataScope', '*common.DataScopeReq']] : []), ['db', '*gorm.DB']], '\t')}
+${this.generateServiceStructFields(tenantMode, hasDataScope)}
 }
 
 // New${modelName}Service 构造函数
 func New${modelName}Service(db *gorm.DB) *${modelName}Service {
 \treturn &${modelName}Service{db: db}
 }
-${tenantMode ? `
-// WithTenantContext owns a snapshot without mutating the shared service.
-func (s *${modelName}Service) WithTenantContext(ctx *tenant.Context) *${modelName}Service {
-\tclone := *s
-\tclone.TenantCtx = nil
-\tif ctx != nil {
-\t\towned := *ctx
-\t\tclone.TenantCtx = &owned
-\t}
-\treturn &clone
-}
+${this.generateServiceTenantMethods(modelName, structName, tenantMode, hasDataScope)}
 
-func (s *${modelName}Service) WithContext(ctx context.Context) *${modelName}Service {
-\tclone := *s
-\tif clone.db != nil {
-\t\tclone.db = clone.db.WithContext(ctx)
-\t}
-\treturn &clone
-}
-${hasDataScope ? `
-func (s *${modelName}Service) WithDataScope(scope *common.DataScopeReq) *${modelName}Service {
-\tclone := *s
-\tclone.dataScope = nil
-\tif scope != nil {
-\t\towned := *scope
-\t\towned.DeptIDs = append([]uint64(nil), scope.DeptIDs...)
-\t\towned.RoleKeys = append([]string(nil), scope.RoleKeys...)
-\t\tclone.dataScope = &owned
-\t}
-\treturn &clone
-}
-` : ''}
-func (s *${modelName}Service) requireTenant() error {
-\tif s.TenantCtx == nil {
-\t\treturn tenant.ErrTenantContextMissing
-\t}
-\tif s.db == nil {
-\t\treturn errors.New("database.not_initialized")
-\t}
-\treturn nil
-}
-
-func (s *${modelName}Service) scopedDB() *gorm.DB {
-\treturn s.db.Model(&${structName}{}).Scopes(s.Scope()${hasDataScope ? ', database.WithDataScope(s.dataScope)' : ''})
-}
-` : ''}
-
-// Migrate 数据库迁移
-func (s *${modelName}Service) Migrate() error {
-\tif s.db == nil {
-\t\treturn errors.New("database.not_initialized")
-\t}
-${tenantMode ? `\t// Existing tables must already satisfy the opted-in tenant contract.
-\tif s.db.Migrator().HasTable(&${structName}{}) {
-\t\tif err := s.verifyTenantSchema(); err != nil {
-\t\t\treturn err
-\t\t}
-\t}
-` : ''}\tif err := s.db.AutoMigrate(&${structName}{}${relationMigrations}); err != nil {
-\t\treturn err
-\t}
-\treturn ${tenantMode ? 's.verifyTenantSchema()' : 'nil'}
-}
-${tenantMode ? `
-func (s *${modelName}Service) verifyTenantSchema() error {
-${this.generateTenantSchemaVerification(structName)}\treturn nil
-}
-` : ''}
+${this.generateServiceMigrate(modelName, structName, tenantMode, relationMigrations)}
 
 // List${modelName}s 分页列表查询
 func (s *${modelName}Service) List${modelName}s(query *${modelName}ListQuery${hasDataScope ? ', dataScope *common.DataScopeReq' : ''}) (*${modelName}ListPageResp, error) {
@@ -620,7 +564,9 @@ ${guard()}\tvar item ${structName}
 \t// 更新字段
 ${this.generateUpdateFields()}
 
-${tenantMode ? `\t// Updates never use Save's unscoped upsert fallback.
+${
+  tenantMode
+    ? `\t// Updates never use Save's unscoped upsert fallback.
 \tresult := s.scopedDB().Where("id = ?", id).Select("*").Omit("id", "tenant_id", "created_at").Updates(&item)
 \tif result.Error != nil {
 \t\treturn nil, result.Error
@@ -630,10 +576,12 @@ ${tenantMode ? `\t// Updates never use Save's unscoped upsert fallback.
 \t\t\treturn nil, err
 \t\t}
 \t}
-` : `\tif err := s.db.Save(&item).Error; err != nil {
+`
+    : `\tif err := s.db.Save(&item).Error; err != nil {
 \t\treturn nil, err
 \t}
-`}\tresp := s.toListResp(item)
+`
+}\tresp := s.toListResp(item)
 \treturn &resp, nil
 }
 
@@ -670,6 +618,132 @@ ${alignGoBlock(this.fromCreateReqRows(), '\t\t')}
 }
 ${relationServices ? `\n${relationServices}` : ''}
 `);
+  }
+
+  private generateServiceImportBlock(
+    tenantMode: boolean,
+    hasDataScope: boolean,
+    requiresStrconv: boolean,
+  ): string {
+    const importPaths: Array<string | false> = ['errors', 'strings', 'time', 'gorm.io/gorm'];
+    if (tenantMode) {
+      importPaths.push('context', goImportPath('pkg/tenant'));
+    }
+    if (hasDataScope) {
+      importPaths.push(goImportPath('pkg/common'), goImportPath('pkg/database'));
+    }
+    if (requiresStrconv) {
+      importPaths.push('strconv');
+    }
+    return buildGoImportBlock(importPaths);
+  }
+
+  private generateServiceStructFields(tenantMode: boolean, hasDataScope: boolean): string {
+    const rows: string[][] = [];
+    if (tenantMode) {
+      rows.push(['tenant.Scoper']);
+      if (hasDataScope) {
+        rows.push(['dataScope', '*common.DataScopeReq']);
+      }
+    }
+    rows.push(['db', '*gorm.DB']);
+    return alignGoBlock(rows, '\t');
+  }
+
+  private generateServiceTenantMethods(
+    modelName: string,
+    structName: string,
+    tenantMode: boolean,
+    hasDataScope: boolean,
+  ): string {
+    if (!tenantMode) {
+      return '';
+    }
+    const dataScopeMethod = hasDataScope
+      ? `
+func (s *${modelName}Service) WithDataScope(scope *common.DataScopeReq) *${modelName}Service {
+\tclone := *s
+\tclone.dataScope = nil
+\tif scope != nil {
+\t\towned := *scope
+\t\towned.DeptIDs = append([]uint64(nil), scope.DeptIDs...)
+\t\towned.RoleKeys = append([]string(nil), scope.RoleKeys...)
+\t\tclone.dataScope = &owned
+\t}
+\treturn &clone
+}
+`
+      : '';
+    const scopedDBDataScope = hasDataScope ? ', database.WithDataScope(s.dataScope)' : '';
+    return `
+// WithTenantContext owns a snapshot without mutating the shared service.
+func (s *${modelName}Service) WithTenantContext(ctx *tenant.Context) *${modelName}Service {
+\tclone := *s
+\tclone.TenantCtx = nil
+\tif ctx != nil {
+\t\towned := *ctx
+\t\tclone.TenantCtx = &owned
+\t}
+\treturn &clone
+}
+
+func (s *${modelName}Service) WithContext(ctx context.Context) *${modelName}Service {
+\tclone := *s
+\tif clone.db != nil {
+\t\tclone.db = clone.db.WithContext(ctx)
+\t}
+\treturn &clone
+}
+${dataScopeMethod}
+func (s *${modelName}Service) requireTenant() error {
+\tif s.TenantCtx == nil {
+\t\treturn tenant.ErrTenantContextMissing
+\t}
+\tif s.db == nil {
+\t\treturn errors.New("database.not_initialized")
+\t}
+\treturn nil
+}
+
+func (s *${modelName}Service) scopedDB() *gorm.DB {
+\treturn s.db.Model(&${structName}{}).Scopes(s.Scope()${scopedDBDataScope})
+}
+`;
+  }
+
+  private generateServiceMigrate(
+    modelName: string,
+    structName: string,
+    tenantMode: boolean,
+    relationMigrations: string,
+  ): string {
+    const tenantSchemaCheck = tenantMode
+      ? `\t// Existing tables must already satisfy the opted-in tenant contract.
+\tif s.db.Migrator().HasTable(&${structName}{}) {
+\t\tif err := s.verifyTenantSchema(); err != nil {
+\t\t\treturn err
+\t\t}
+\t}
+`
+      : '';
+    const verifyMethod = tenantMode
+      ? `
+func (s *${modelName}Service) verifyTenantSchema() error {
+${this.generateTenantSchemaVerification(structName)}\treturn nil
+}
+`
+      : '';
+    return `// Migrate 数据库迁移
+func (s *${modelName}Service) Migrate() error {
+\tif s.db == nil {
+\t\treturn errors.New("database.not_initialized")
+\t}
+${tenantSchemaCheck}\tif err := s.db.AutoMigrate(&${structName}{}${relationMigrations}); err != nil {
+\t\treturn err
+\t}
+\treturn ${tenantMode ? 's.verifyTenantSchema()' : 'nil'}
+}
+${verifyMethod}`;
   }
 
   /**
@@ -823,8 +897,12 @@ ${alignGoBlock(indexRows, '\t\t')}
     return this.schema.model.fields
       .filter((f) => f.visibleInForm !== false)
       .map((field) => {
-        const dereference = field.required && this.goTypeFromField(field.type) === 'bool' ? '*' : '';
-        return [`${this.capitalize(field.name)}:`, `${dereference}req.${this.capitalize(field.name)},`];
+        const dereference =
+          field.required && this.goTypeFromField(field.type) === 'bool' ? '*' : '';
+        return [
+          `${this.capitalize(field.name)}:`,
+          `${dereference}req.${this.capitalize(field.name)},`,
+        ];
       });
   }
 
@@ -840,12 +918,15 @@ ${alignGoBlock(indexRows, '\t\t')}
     const hasDataScope = this.schema.enableDataScope ?? templateLevel === 'enterprise';
     const tenantMode = isTenantTemplate(this.schema);
     const service = tenantMode ? 'service' : 'h.service';
-    const bindService = tenantMode ? `\tif tenant.FromGin(c) == nil {
+    const dataScopeChain = hasDataScope ? '.WithDataScope(common.GetDataScope(c))' : '';
+    const bindService = tenantMode
+      ? `\tif tenant.FromGin(c) == nil {
 \t\tcommon.Fail(c, common.CodeForbidden, "tenant.context.missing")
 \t\treturn
 \t}
-\tservice := h.service.WithTenantContext(tenant.FromGin(c)).WithContext(c.Request.Context())${hasDataScope ? '.WithDataScope(common.GetDataScope(c))' : ''}
-` : '';
+\tservice := h.service.WithTenantContext(tenant.FromGin(c)).WithContext(c.Request.Context())${dataScopeChain}
+`
+      : '';
     const relationHandlers = this.generateManyToManyHandlerMethods();
     // 审计埋点是可选整行：换行必须一起放进条件里，否则 basic 模板会在 `{` 后
     // 留下一个空行，而 gofmt 会删掉块首空行——生成物因此不干净（AUD-001b）。
@@ -995,6 +1076,10 @@ ${relationHandlers ? `\n${relationHandlers}` : ''}
       `var generated${typeName}Seeds = []generated${typeName}Seed{${
         entries ? `\n${entries}\n` : ''
       }}`;
+    const protectedGroupCall = hasDataScope
+      ? `contracts.DataScopedGroup(r, "${routePath}", db)`
+      : `contracts.ProtectedGroup(r, "${routePath}")`;
+    const routeProtection = tenantMode ? '' : `\t\t\tprotected := ${protectedGroupCall}\n`;
 
     return normalizeGoWhitespace(`package ${this.packageName}
 
@@ -1048,7 +1133,9 @@ func Init${modelName}Module(r *gin.RouterGroup, db *gorm.DB) {
 \tservice := New${modelName}Service(db)
 \thandler := New${modelName}Handler(service)
 
-${tenantMode ? `\tvar protected gin.IRoutes
+${
+  tenantMode
+    ? `\tvar protected gin.IRoutes
 \tbootstrap := func(_ *gorm.DB) error {
 \t\tif err := service.Migrate(); err != nil {
 \t\t\treturn err
@@ -1063,19 +1150,27 @@ ${tenantMode ? `\tvar protected gin.IRoutes
 \t\treturn nil
 \t}
 
-\tif err := contracts.RegisterRequiredBackendModules(r, db, contracts.FuncModule{` : '\tcontracts.RegisterBackendModules(r, db, contracts.FuncModule{'}
+\tif err := contracts.RegisterRequiredBackendModules(r, db, contracts.FuncModule{`
+    : '\tcontracts.RegisterBackendModules(r, db, contracts.FuncModule{'
+}
 ${alignGoBlock(
   [
     ['ModuleName:', `"${moduleName}",`],
-    ['MigrateFunc:', tenantMode ? 'bootstrap,' : 'func(_ *gorm.DB) error { return service.Migrate() },'],
-    ['BootstrapFunc:', tenantMode ? 'bootstrap,' : 'func(_ *gorm.DB) error { return service.Migrate() },'],
+    [
+      'MigrateFunc:',
+      tenantMode ? 'bootstrap,' : 'func(_ *gorm.DB) error { return service.Migrate() },',
+    ],
+    [
+      'BootstrapFunc:',
+      tenantMode ? 'bootstrap,' : 'func(_ *gorm.DB) error { return service.Migrate() },',
+    ],
     ['SeedMenusFunc:', `seed${modelName}Menus,`],
     ['SeedI18nFunc:', `seed${modelName}I18n,`],
   ],
   '\t\t',
 )}
 \t\tRegister: func(r *gin.RouterGroup) {
-${tenantMode ? '' : `\t\t\tprotected := ${hasDataScope ? `contracts.DataScopedGroup(r, "${routePath}", db)` : `contracts.ProtectedGroup(r, "${routePath}")`}\n`}\t\t\t{
+${routeProtection}\t\t\t{
 \t\t\t\tprotected.GET("/list", handler.Get${modelName}List)
 \t\t\t\tprotected.GET("/options", handler.Get${modelName}Options)
 \t\t\t\tprotected.GET("/:id", handler.Get${modelName}Detail)

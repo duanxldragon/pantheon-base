@@ -14,40 +14,45 @@ func TestRequiredModulesFailBeforeAnyRoutes(t *testing.T) {
 	for _, mode := range []string{"", "false", "true"} {
 		for _, failedStage := range []string{"prepare", "menus", "perms", "i18n"} {
 			t.Run(mode+"/"+failedStage, func(t *testing.T) {
-				t.Setenv("PANTHEON_AUTO_MIGRATE", mode)
-				r := gin.New()
-				cause := errors.New("required stage failed")
-				stage := func(name string) func(*gorm.DB) error {
-					return func(*gorm.DB) error {
-						if name == failedStage {
-							return cause
-						}
-						return nil
-					}
-				}
-				registered := 0
-				first := FuncModule{ModuleName: "first", Register: func(r *gin.RouterGroup) {
-					registered++
-					r.GET("/ready", func(c *gin.Context) { c.Status(http.StatusOK) })
-				}}
-				second := FuncModule{ModuleName: "second", MigrateFunc: stage("prepare"), BootstrapFunc: stage("prepare"),
-					SeedMenusFunc: stage("menus"), SeedPermsFunc: stage("perms"), SeedI18nFunc: stage("i18n"),
-					Register: func(*gin.RouterGroup) { registered++ },
-				}
-				err := RegisterRequiredBackendModules(r.Group("/api"), &gorm.DB{}, first, second)
-				if !errors.Is(err, cause) {
-					t.Fatalf("lost cause: %v", err)
-				}
-				if registered != 0 || len(r.Routes()) != 0 {
-					t.Fatal("routes registered on failed readiness")
-				}
-				response := httptest.NewRecorder()
-				r.ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/api/ready", nil))
-				if response.Code != http.StatusNotFound {
-					t.Fatal("failed module reported ready")
-				}
+				assertRequiredModulesFailBeforeAnyRoutes(t, mode, failedStage)
 			})
 		}
+	}
+}
+
+func assertRequiredModulesFailBeforeAnyRoutes(t *testing.T, mode, failedStage string) {
+	t.Helper()
+	t.Setenv("PANTHEON_AUTO_MIGRATE", mode)
+	r := gin.New()
+	cause := errors.New("required stage failed")
+	stage := func(name string) func(*gorm.DB) error {
+		return func(*gorm.DB) error {
+			if name == failedStage {
+				return cause
+			}
+			return nil
+		}
+	}
+	registered := 0
+	first := FuncModule{ModuleName: "first", Register: func(r *gin.RouterGroup) {
+		registered++
+		r.GET("/ready", func(c *gin.Context) { c.Status(http.StatusOK) })
+	}}
+	second := FuncModule{ModuleName: "second", MigrateFunc: stage("prepare"), BootstrapFunc: stage("prepare"),
+		SeedMenusFunc: stage("menus"), SeedPermsFunc: stage("perms"), SeedI18nFunc: stage("i18n"),
+		Register: func(*gin.RouterGroup) { registered++ },
+	}
+	err := RegisterRequiredBackendModules(r.Group("/api"), &gorm.DB{}, first, second)
+	if !errors.Is(err, cause) {
+		t.Fatalf("lost cause: %v", err)
+	}
+	if registered != 0 || len(r.Routes()) != 0 {
+		t.Fatal("routes registered on failed readiness")
+	}
+	response := httptest.NewRecorder()
+	r.ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/api/ready", nil))
+	if response.Code != http.StatusNotFound {
+		t.Fatal("failed module reported ready")
 	}
 }
 

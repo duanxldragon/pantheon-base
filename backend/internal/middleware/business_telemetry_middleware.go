@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"context"
 	"math"
 	"net/http"
 
@@ -41,47 +42,58 @@ func BusinessTelemetryMiddleware() gin.HandlerFunc {
 			trace.WithAttributes(attribute.String("http.request.method", route.Method), attribute.String("http.route", route.Template),
 				attribute.String("business.action", auditpolicy.ActionName(route)), attribute.String("request.id", requestID)))
 		c.Request = c.Request.WithContext(ctx)
-		defer func() {
-			// Inspect only the presence of a panic/error, never its value/string.
-			// Finalize before rethrowing to the existing metadata-aware recovery.
-			panicked := recover()
-			metadata := auditpolicy.Metadata(c)
-			if panicked != nil {
-				metadata.Outcome = auditpolicy.OutcomeUnknown
-				c.AbortWithStatus(http.StatusInternalServerError)
-				span.AddEvent("business.request.panic")
-			}
-			if len(c.Errors) > 0 {
-				span.AddEvent("business.request.error")
-				if metadata.Outcome == auditpolicy.OutcomeSuccess {
-					metadata.Outcome = auditpolicy.OutcomeUnknown
-				}
-			}
-			if savedCtx.Err() != nil {
-				metadata.Outcome = auditpolicy.OutcomeUnknown
-			}
-			span.SetAttributes(attribute.Int("http.response.status_code", c.Writer.Status()),
-				attribute.String("business.outcome", auditpolicy.OutcomeName(metadata.Outcome)),
-				attribute.Int64("business.actor_id", businessTelemetryID(metadata.ActorID)),
-				attribute.Int64("business.tenant_id", businessTelemetryID(metadata.TenantID)),
-				attribute.Int64("business.datasource_id", businessTelemetryID(metadata.DatasourceID)),
-				attribute.Int64("business.history_id", businessTelemetryID(metadata.HistoryID)),
-				attribute.Int64("business.view_id", businessTelemetryID(metadata.ViewID)),
-				attribute.Int64("business.count", int64(metadata.Count)),
-				attribute.Int64("business.catalog_version", int64(metadata.CatalogVersion)))
-			status := codes.Error
-			if metadata.Outcome == auditpolicy.OutcomeSuccess && c.Writer.Status() < 400 && !c.IsAborted() && panicked == nil && len(c.Errors) == 0 && savedCtx.Err() == nil {
-				status = codes.Ok
-			}
-			span.SetStatus(status, "")
-			span.End()
-			c.Request = c.Request.WithContext(savedCtx)
-			if panicked != nil {
-				panic(panicked)
-			}
-		}()
+		defer finishBusinessTelemetry(c, span, savedCtx)
 		c.Next()
 	}
+}
+
+// Inspect only the presence of a panic/error, never its value/string.
+// Finalize before rethrowing to the existing metadata-aware recovery.
+func finishBusinessTelemetry(c *gin.Context, span trace.Span, savedCtx context.Context) {
+	panicked := recover()
+	metadata := auditpolicy.Metadata(c)
+	if panicked != nil {
+		metadata.Outcome = auditpolicy.OutcomeUnknown
+		c.AbortWithStatus(http.StatusInternalServerError)
+		span.AddEvent("business.request.panic")
+	}
+	if len(c.Errors) > 0 {
+		span.AddEvent("business.request.error")
+		if metadata.Outcome == auditpolicy.OutcomeSuccess {
+			metadata.Outcome = auditpolicy.OutcomeUnknown
+		}
+	}
+	if savedCtx.Err() != nil {
+		metadata.Outcome = auditpolicy.OutcomeUnknown
+	}
+	span.SetAttributes(businessTelemetryAttributes(c, metadata)...)
+	span.SetStatus(businessTelemetryStatus(c, metadata, panicked, savedCtx), "")
+	span.End()
+	c.Request = c.Request.WithContext(savedCtx)
+	if panicked != nil {
+		panic(panicked)
+	}
+}
+
+func businessTelemetryAttributes(c *gin.Context, metadata auditpolicy.SafeMetadata) []attribute.KeyValue {
+	return []attribute.KeyValue{
+		attribute.Int("http.response.status_code", c.Writer.Status()),
+		attribute.String("business.outcome", auditpolicy.OutcomeName(metadata.Outcome)),
+		attribute.Int64("business.actor_id", businessTelemetryID(metadata.ActorID)),
+		attribute.Int64("business.tenant_id", businessTelemetryID(metadata.TenantID)),
+		attribute.Int64("business.datasource_id", businessTelemetryID(metadata.DatasourceID)),
+		attribute.Int64("business.history_id", businessTelemetryID(metadata.HistoryID)),
+		attribute.Int64("business.view_id", businessTelemetryID(metadata.ViewID)),
+		attribute.Int64("business.count", int64(metadata.Count)),
+		attribute.Int64("business.catalog_version", int64(metadata.CatalogVersion)),
+	}
+}
+
+func businessTelemetryStatus(c *gin.Context, metadata auditpolicy.SafeMetadata, panicked any, savedCtx context.Context) codes.Code {
+	if metadata.Outcome == auditpolicy.OutcomeSuccess && c.Writer.Status() < 400 && !c.IsAborted() && panicked == nil && len(c.Errors) == 0 && savedCtx.Err() == nil {
+		return codes.Ok
+	}
+	return codes.Error
 }
 
 // LegacyTelemetryMiddleware stays at the original otelgin position. The frozen

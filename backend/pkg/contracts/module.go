@@ -22,18 +22,8 @@ func RegisterRequiredBackendModules(r *gin.RouterGroup, db *gorm.DB, modules ...
 		if module == nil || (reflect.ValueOf(module).Kind() == reflect.Ptr && reflect.ValueOf(module).IsNil()) {
 			return fmt.Errorf("required modules: nil module")
 		}
-		stage := "migrate"
-		prepare := module.Migrate
-		if !autoMigrate {
-			stage = "bootstrap"
-			bootstrapper, ok := module.(interface{ Bootstrap(*gorm.DB) error })
-			if !ok {
-				return fmt.Errorf("required module %s: missing bootstrap", module.Name())
-			}
-			prepare = bootstrapper.Bootstrap
-		}
-		if err := prepare(db); err != nil {
-			return fmt.Errorf("required module %s %s: %w", module.Name(), stage, err)
+		if err := prepareRequiredModule(module, db, autoMigrate); err != nil {
+			return err
 		}
 	}
 	for _, stage := range []struct {
@@ -52,6 +42,23 @@ func RegisterRequiredBackendModules(r *gin.RouterGroup, db *gorm.DB, modules ...
 	}
 	for _, module := range modules {
 		module.RegisterRoutes(r)
+	}
+	return nil
+}
+
+func prepareRequiredModule(module BackendModule, db *gorm.DB, autoMigrate bool) error {
+	stage := "migrate"
+	prepare := module.Migrate
+	if !autoMigrate {
+		stage = "bootstrap"
+		bootstrapper, ok := module.(interface{ Bootstrap(*gorm.DB) error })
+		if !ok {
+			return fmt.Errorf("required module %s: missing bootstrap", module.Name())
+		}
+		prepare = bootstrapper.Bootstrap
+	}
+	if err := prepare(db); err != nil {
+		return fmt.Errorf("required module %s %s: %w", module.Name(), stage, err)
 	}
 	return nil
 }

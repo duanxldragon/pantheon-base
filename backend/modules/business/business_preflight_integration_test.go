@@ -118,13 +118,13 @@ func TestBusinessInitializationPreflightStandaloneCompatibility(t *testing.T) {
 			if name == "healthy_cleanup" {
 				db = newBusinessPreflightRetirementFixture(t)
 			}
-			if value := capturedBusinessPreflightPanic(func() { initializeBusinessLifecycle(db) }); value != nil {
+			if capturedBusinessPreflightPanic(func() { initializeBusinessLifecycle(db) }) != nil {
 				t.Fatal("standalone Base lifecycle behavior changed")
 			}
 			if db != nil {
 				checkBusinessPreflightRetirementRows(t, db, 0)
 			}
-			if err := RegisterBusinessInitializationPreflight(func(*gorm.DB) error { return nil }); err != contracts.ErrBusinessProviders {
+			if RegisterBusinessInitializationPreflight(func(*gorm.DB) error { return nil }) != contracts.ErrBusinessProviders {
 				t.Fatal("standalone lifecycle did not seal registration")
 			}
 		})

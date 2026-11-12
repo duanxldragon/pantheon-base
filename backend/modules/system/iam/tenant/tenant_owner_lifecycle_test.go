@@ -24,75 +24,100 @@ type lifecycleWriterKey struct{}
 func TestTenantOwnerLifecycleDelayedActivationCannotRevive(t *testing.T) {
 	for _, writers := range []int{1, 6} {
 		t.Run(fmt.Sprintf("writers_%d", writers), func(t *testing.T) {
-			db := setupTestDB(t)
-			row := Tenant{Code: "lifecycle-race", Name: "Lifecycle Race", Status: "suspended", Metadata: `{"retained":true}`}
-			require.NoError(t, db.Create(&row).Error)
-			loaded, release := make(chan struct{}), make(chan struct{})
-			var once, releaseOnce sync.Once
-			unblock := func() { releaseOnce.Do(func() { close(release) }) }
-			var wg sync.WaitGroup
-			t.Cleanup(func() { unblock(); wg.Wait() })
-			require.NoError(t, db.Callback().Query().After("gorm:query").Register("test:pause-lifecycle-read", func(tx *gorm.DB) {
-				if tx.Statement.Table == "tenants" && tx.Statement.Context.Value(lifecycleWriterKey{}) == true && tx.Error == nil {
-					once.Do(func() { close(loaded); <-release })
-				}
-			}))
-			active, archived := "active", "archived"
-			updater := NewService(db.WithContext(context.WithValue(context.Background(), lifecycleWriterKey{}, true)))
-			results := make(chan error, writers)
-			wg.Add(1)
-			go func() { defer wg.Done(); results <- updater.UpdateTenant(row.ID, UpdateTenantDTO{Status: &active}) }()
-			select {
-			case <-loaded:
-			case <-time.After(10 * time.Second):
-				t.Fatal("updater did not reach controlled status-read barrier")
-			}
-			for i := 1; i < writers; i++ {
-				wg.Add(1)
-				go func() { defer wg.Done(); results <- updater.UpdateTenant(row.ID, UpdateTenantDTO{Status: &active}) }()
-			}
-			// Probe the real InnoDB row, without a timing-based lock assumption.
-			probe := db.Transaction(func(tx *gorm.DB) error {
-				var id uint64
-				return tx.Table("tenants").Select("id").Where("id = ?", row.ID).
-					Clauses(clause.Locking{Strength: "UPDATE", Options: "NOWAIT"}).Scan(&id).Error
-			})
-			retire := func() error {
-				service := NewService(db)
-				if err := service.UpdateTenant(row.ID, UpdateTenantDTO{Status: &archived}); err != nil {
-					return err
-				}
-				return service.DeleteTenant(row.ID)
-			}
-			if probe == nil {
-				// Regression path: archive and delete while the stale read is held.
-				require.NoError(t, retire())
-				unblock()
-			} else {
-				var sqlErr *mysqlDriver.MySQLError
-				require.True(t, errors.As(probe, &sqlErr))
-				require.Equal(t, uint16(3572), sqlErr.Number)
-				testmysql.AssertRowLocked(t, db, "tenants", row.ID)
-				done := make(chan error, 1)
-				wg.Add(1)
-				go func() { defer wg.Done(); done <- retire() }()
-				unblock()
-				require.NoError(t, <-done)
-			}
-			for i := 0; i < writers; i++ {
-				err := <-results
-				if err != nil {
-					require.True(t, errors.Is(err, ErrTenantNotFound) || errors.Is(err, common.ErrConflict), "unexpected update error: %v", err)
-				}
-			}
-			var tombstone Tenant
-			require.NoError(t, db.Where("id = ?", row.ID).Take(&tombstone).Error)
-			require.Equal(t, tenantStatusDeleted, tombstone.Status, "delayed activation revived a deleted tenant")
-			require.NotEqual(t, row.Code, tombstone.Code)
-			require.Equal(t, row.Metadata, tombstone.Metadata)
-			_, err := NewService(db).GetTenantByID(row.ID)
-			require.ErrorIs(t, err, ErrTenantNotFound)
+			runDelayedActivationCannotRevive(t, writers)
 		})
+	}
+}
+
+func runDelayedActivationCannotRevive(t *testing.T, writers int) {
+	t.Helper()
+	db := setupTestDB(t)
+	row := Tenant{Code: "lifecycle-race", Name: "Lifecycle Race", Status: "suspended", Metadata: `{"retained":true}`}
+	require.NoError(t, db.Create(&row).Error)
+	loaded, release := make(chan struct{}), make(chan struct{})
+	var releaseOnce sync.Once
+	unblock := func() { releaseOnce.Do(func() { close(release) }) }
+	var wg sync.WaitGroup
+	t.Cleanup(func() { unblock(); wg.Wait() })
+	registerLifecycleReadPause(t, db, loaded, release)
+	active, archived := "active", "archived"
+	updater := NewService(db.WithContext(context.WithValue(context.Background(), lifecycleWriterKey{}, true)))
+	results := make(chan error, writers)
+	wg.Add(1)
+	go func() { defer wg.Done(); results <- updater.UpdateTenant(row.ID, UpdateTenantDTO{Status: &active}) }()
+	select {
+	case <-loaded:
+	case <-time.After(10 * time.Second):
+		t.Fatal("updater did not reach controlled status-read barrier")
+	}
+	for i := 1; i < writers; i++ {
+		wg.Add(1)
+		go func() { defer wg.Done(); results <- updater.UpdateTenant(row.ID, UpdateTenantDTO{Status: &active}) }()
+	}
+	retire := func() error {
+		service := NewService(db)
+		if err := service.UpdateTenant(row.ID, UpdateTenantDTO{Status: &archived}); err != nil {
+			return err
+		}
+		return service.DeleteTenant(row.ID)
+	}
+	// Probe the real InnoDB row, without a timing-based lock assumption.
+	probe := probeTenantRowForUpdate(db, row.ID)
+	if probe == nil {
+		// Regression path: archive and delete while the stale read is held.
+		require.NoError(t, retire())
+		unblock()
+	} else {
+		requireLifecycleRowLocked(t, probe, db, row.ID)
+		done := make(chan error, 1)
+		wg.Add(1)
+		go func() { defer wg.Done(); done <- retire() }()
+		unblock()
+		require.NoError(t, <-done)
+	}
+	requireLifecycleActivatorsDenied(t, results, writers)
+	var tombstone Tenant
+	require.NoError(t, db.Where("id = ?", row.ID).Take(&tombstone).Error)
+	require.Equal(t, tenantStatusDeleted, tombstone.Status, "delayed activation revived a deleted tenant")
+	require.NotEqual(t, row.Code, tombstone.Code)
+	require.Equal(t, row.Metadata, tombstone.Metadata)
+	_, err := NewService(db).GetTenantByID(row.ID)
+	require.ErrorIs(t, err, ErrTenantNotFound)
+}
+
+func registerLifecycleReadPause(t *testing.T, db *gorm.DB, loaded, release chan struct{}) {
+	t.Helper()
+	var once sync.Once
+	require.NoError(t, db.Callback().Query().After("gorm:query").Register("test:pause-lifecycle-read", func(tx *gorm.DB) {
+		if tx.Statement.Table == "tenants" && tx.Statement.Context.Value(lifecycleWriterKey{}) == true && tx.Error == nil {
+			once.Do(func() { close(loaded); <-release })
+		}
+	}))
+}
+
+func probeTenantRowForUpdate(db *gorm.DB, id uint64) error {
+	return db.Transaction(func(tx *gorm.DB) error {
+		var probedID uint64
+		return tx.Table("tenants").Select("id").Where("id = ?", id).
+			Clauses(clause.Locking{Strength: "UPDATE", Options: "NOWAIT"}).Scan(&probedID).Error
+	})
+}
+
+func requireLifecycleRowLocked(t *testing.T, probeErr error, db *gorm.DB, id uint64) {
+	t.Helper()
+	var sqlErr *mysqlDriver.MySQLError
+	require.True(t, errors.As(probeErr, &sqlErr))
+	require.Equal(t, uint16(3572), sqlErr.Number)
+	testmysql.AssertRowLocked(t, db, "tenants", id)
+}
+
+func requireLifecycleActivatorsDenied(t *testing.T, results <-chan error, writers int) {
+	t.Helper()
+	for i := 0; i < writers; i++ {
+		err := <-results
+		if err != nil {
+			require.True(t, errors.Is(err, ErrTenantNotFound) || errors.Is(err, common.ErrConflict), "unexpected update error: %v", err)
+		}
 	}
 }
 
