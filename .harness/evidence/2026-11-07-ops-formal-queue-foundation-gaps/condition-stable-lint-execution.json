@@ -1,0 +1,7 @@
+{
+  "command": "npm.cmd run lint",
+  "cwd": "frontend",
+  "exitCode": 0,
+  "seconds": 18.75,
+  "artifact": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/condition-stable-lint.txt"
+}

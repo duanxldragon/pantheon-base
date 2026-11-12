@@ -1,0 +1,356 @@
+{
+  "review2SourceFiles": 69,
+  "unchangedFiles": 65,
+  "changedFiles": [
+    {
+      "path": "../pantheon-ops/scripts/business-overlay/foundation-candidate.test.mjs",
+      "before": "aeeabfebbdd19bb9c09d18552601beb6ace20697e4ae268256c56a45912df151",
+      "after": "4590052710de1c1d283400cf7ef9784cb2095722154a265523360e55e578e32b"
+    },
+    {
+      "path": "../pantheon-ops/scripts/business-overlay/rebuild-from-candidate.mjs",
+      "before": "1a05b6247bfb4d9d460e928ba53fb4ca4805fd440f093a0440b2a32cfd186828",
+      "after": "cbcf32ed8246736eb78469eabffa9d80145c67bfaf96d4a9928d660cabc74e32"
+    },
+    {
+      "path": "scripts/foundation-release/build-candidate-artifact.mjs",
+      "before": "2485c4da242967777d2c0b1d352f82684dbfa65343b6be229cb440b9322bb55f",
+      "after": "9ba91562d0854701cc1eacc58e854fcc122af096721c3ec83fe914a171932352"
+    },
+    {
+      "path": "scripts/foundation-release/candidate-artifact.test.mjs",
+      "before": "ceaddf4deb94ef6b16bcaac28bee4525fbdeec8dbc76e3dc7a61440782e02417",
+      "after": "1c5869e4c0f4670ccacf89333e9010607a0aca1c14cccf0eedb5926c2cea8a8f"
+    }
+  ],
+  "unchangedInventory": [
+    {
+      "path": "../pantheon-ops/scripts/business-overlay/foundation-candidate.mjs",
+      "before": "da8a8eeeb0a9f52514b157353475a75d43675711f264731cd8564398d7610161",
+      "after": "da8a8eeeb0a9f52514b157353475a75d43675711f264731cd8564398d7610161"
+    },
+    {
+      "path": "../pantheon-ops/scripts/business-overlay/append-legacy-locales.cjs",
+      "before": "a28a6d7929b306e962f708fff8ee18294b8e2dd34a7f1555d1a5b809d30a85f8",
+      "after": "a28a6d7929b306e962f708fff8ee18294b8e2dd34a7f1555d1a5b809d30a85f8"
+    },
+    {
+      "path": "../pantheon-ops/scripts/business-overlay/check-business-overlay.mjs",
+      "before": "89149cdf554b6f10b3b4d79cf734938127ca3438c543eb83c8184cb8d1c66730",
+      "after": "89149cdf554b6f10b3b4d79cf734938127ca3438c543eb83c8184cb8d1c66730"
+    },
+    {
+      "path": "../pantheon-ops/scripts/business-overlay/check-shared-drift.mjs",
+      "before": "b60ceb39cb309761d928252da22442e4c05ee507f85f199cc7a17b92b469c085",
+      "after": "b60ceb39cb309761d928252da22442e4c05ee507f85f199cc7a17b92b469c085"
+    },
+    {
+      "path": "../pantheon-ops/scripts/business-overlay/extract-v12-locales.cjs",
+      "before": "5e25b32b815ea693e86d609e34b716d71e8383a6915ac2e2fcb7617404a6ba76",
+      "after": "5e25b32b815ea693e86d609e34b716d71e8383a6915ac2e2fcb7617404a6ba76"
+    },
+    {
+      "path": "../pantheon-ops/scripts/business-overlay/foundation-release.mjs",
+      "before": "e6a9de8d5afcbcfbfb949f8cdb6da78395cb33b0e88ea158443062608b99175b",
+      "after": "e6a9de8d5afcbcfbfb949f8cdb6da78395cb33b0e88ea158443062608b99175b"
+    },
+    {
+      "path": "../pantheon-ops/scripts/business-overlay/rebuild-from-base.mjs",
+      "before": "5706de2dcd8d2334b374fa8dd1f621a9c4ddeb4b8b1a075172f4395e4ae2fdbd",
+      "after": "5706de2dcd8d2334b374fa8dd1f621a9c4ddeb4b8b1a075172f4395e4ae2fdbd"
+    },
+    {
+      "path": "backend/cmd/server/business_startup_test.go",
+      "before": "2b043fbc30bafc00729ff55883795eabd76b1554de4854ef6f30f05fca838e21",
+      "after": "2b043fbc30bafc00729ff55883795eabd76b1554de4854ef6f30f05fca838e21"
+    },
+    {
+      "path": "backend/cmd/server/main.go",
+      "before": "df1e3ea0d0f89cc1faf2db495e875832df2f280ff4d25be6f919957ed9180998",
+      "after": "df1e3ea0d0f89cc1faf2db495e875832df2f280ff4d25be6f919957ed9180998"
+    },
+    {
+      "path": "backend/go.mod",
+      "before": "e275137d9a027ff2c3d73e17ed9a8dd2d70157a57f356eb4c675f460be0c8753",
+      "after": "e275137d9a027ff2c3d73e17ed9a8dd2d70157a57f356eb4c675f460be0c8753"
+    },
+    {
+      "path": "backend/go.sum",
+      "before": "3c9804a1441c4df7b7e8defd0d6c7a1db542884857535f680c517ed2a2796f8a",
+      "after": "3c9804a1441c4df7b7e8defd0d6c7a1db542884857535f680c517ed2a2796f8a"
+    },
+    {
+      "path": "backend/internal/middleware/business_authorization_test.go",
+      "before": "5d9f181d83fb2e066bd9ace3ba6b607193e0006593d6ad2875907edc6dc0a141",
+      "after": "5d9f181d83fb2e066bd9ace3ba6b607193e0006593d6ad2875907edc6dc0a141"
+    },
+    {
+      "path": "backend/internal/middleware/business_authorization.go",
+      "before": "261afa640740845215149a0e1195d17f37c758d0987284e04ca9602f943fa3de",
+      "after": "261afa640740845215149a0e1195d17f37c758d0987284e04ca9602f943fa3de"
+    },
+    {
+      "path": "backend/internal/middleware/business_telemetry_middleware_test.go",
+      "before": "11d8295ff2a12fccc32239cd7e9d0d9ab439662264c264fd60ccdf267bb9c6c3",
+      "after": "11d8295ff2a12fccc32239cd7e9d0d9ab439662264c264fd60ccdf267bb9c6c3"
+    },
+    {
+      "path": "backend/internal/middleware/business_telemetry_middleware.go",
+      "before": "b7b896bedf4e5263005727759ee77c52f09934f7a6e46bb31b5b57f689693170",
+      "after": "b7b896bedf4e5263005727759ee77c52f09934f7a6e46bb31b5b57f689693170"
+    },
+    {
+      "path": "backend/internal/middleware/business_tenant_context_test.go",
+      "before": "59e1065607036b50d985757770d5ac20e9da209d6ce488c711c8024df6c015b3",
+      "after": "59e1065607036b50d985757770d5ac20e9da209d6ce488c711c8024df6c015b3"
+    },
+    {
+      "path": "backend/internal/middleware/business_tenant_context.go",
+      "before": "f7b19e42ee68ee3c297c844c2b742a2bb0e3afc71f251c75bc134141dd387ba6",
+      "after": "f7b19e42ee68ee3c297c844c2b742a2bb0e3afc71f251c75bc134141dd387ba6"
+    },
+    {
+      "path": "backend/internal/middleware/business_token_middleware_test.go",
+      "before": "692566b29c96b9201b6bdf453067664a66e38571ced2f927e31e6baac08404dd",
+      "after": "692566b29c96b9201b6bdf453067664a66e38571ced2f927e31e6baac08404dd"
+    },
+    {
+      "path": "backend/internal/middleware/business_token_middleware.go",
+      "before": "539a5ddcf7dc52d5ef870a2186b01ff289e1a9a8bfdf45c3eec1770d02bd4848",
+      "after": "539a5ddcf7dc52d5ef870a2186b01ff289e1a9a8bfdf45c3eec1770d02bd4848"
+    },
+    {
+      "path": "backend/internal/middleware/operation_log_metadata_test.go",
+      "before": "40a94c6155d14a86749c968698ebd2bc9b331d53a8f1cdb28badb757e36d9362",
+      "after": "40a94c6155d14a86749c968698ebd2bc9b331d53a8f1cdb28badb757e36d9362"
+    },
+    {
+      "path": "backend/internal/middleware/operation_log_middleware.go",
+      "before": "8ff2f1a5a900d241987729a86a702b0258626e2d38c535f544bd56452aa66386",
+      "after": "8ff2f1a5a900d241987729a86a702b0258626e2d38c535f544bd56452aa66386"
+    },
+    {
+      "path": "backend/internal/middleware/request_context_business_test.go",
+      "before": "0ef0202b2ce13ae586f1e7487e4964e0c588a29d8c098c095985a74a9bc84caf",
+      "after": "0ef0202b2ce13ae586f1e7487e4964e0c588a29d8c098c095985a74a9bc84caf"
+    },
+    {
+      "path": "backend/internal/middleware/request_context_middleware.go",
+      "before": "d72f7d1df950f1eb0239414dfc4e7896b7e8831913740f4ec1d84a344d47dd55",
+      "after": "d72f7d1df950f1eb0239414dfc4e7896b7e8831913740f4ec1d84a344d47dd55"
+    },
+    {
+      "path": "backend/internal/middleware/token_activity_regression_test.go",
+      "before": "2f795baf9e8f905b455c0c96dc6f4801a01bccb1297c456b6e7a31df37fee844",
+      "after": "2f795baf9e8f905b455c0c96dc6f4801a01bccb1297c456b6e7a31df37fee844"
+    },
+    {
+      "path": "backend/internal/middleware/token_middleware.go",
+      "before": "2e4e02e8be0e2f9fe909de5253ef1b8e5ea106af696f7421d28047570fdb0e0b",
+      "after": "2e4e02e8be0e2f9fe909de5253ef1b8e5ea106af696f7421d28047570fdb0e0b"
+    },
+    {
+      "path": "backend/modules/auth/login/business_authorization_test.go",
+      "before": "559b921339d693da162f006077f03ded44f0fe5b9f3390f286ec15d68629e037",
+      "after": "559b921339d693da162f006077f03ded44f0fe5b9f3390f286ec15d68629e037"
+    },
+    {
+      "path": "backend/modules/auth/login/business_authorization.go",
+      "before": "c3eca93387a5d73c9cc06a2dd1d1a13d32cd2a4f50c053c5d6b686c6a7585a37",
+      "after": "c3eca93387a5d73c9cc06a2dd1d1a13d32cd2a4f50c053c5d6b686c6a7585a37"
+    },
+    {
+      "path": "backend/modules/auth/login/login_runtime_types.go",
+      "before": "9548be5a7a1287ad633f8b4583abb6b938e99f5d1a6cd9d0967e366417bbea62",
+      "after": "9548be5a7a1287ad633f8b4583abb6b938e99f5d1a6cd9d0967e366417bbea62"
+    },
+    {
+      "path": "backend/modules/auth/login/login_runtime.go",
+      "before": "c99d4a3725305bf4efa87d4d9a4a19177ebc53c8e28f0f122ff5fcea0d99fb8a",
+      "after": "c99d4a3725305bf4efa87d4d9a4a19177ebc53c8e28f0f122ff5fcea0d99fb8a"
+    },
+    {
+      "path": "backend/modules/auth/module.go",
+      "before": "319e5aa2cf1758f90957029af5fd7140d624f1127d9966892e146d2cfdff418a",
+      "after": "319e5aa2cf1758f90957029af5fd7140d624f1127d9966892e146d2cfdff418a"
+    },
+    {
+      "path": "backend/modules/system/system_modules.go",
+      "before": "b7662f4c505c352ec14cf1466ad65dd74a31d0b28d9e1569bde706f849304f2a",
+      "after": "b7662f4c505c352ec14cf1466ad65dd74a31d0b28d9e1569bde706f849304f2a"
+    },
+    {
+      "path": "backend/pkg/auditpolicy/policy_test.go",
+      "before": "429010a266121cd43fcd6925d56fd0888c2d3ff4f4517f439fd3dbbbfd73bfde",
+      "after": "429010a266121cd43fcd6925d56fd0888c2d3ff4f4517f439fd3dbbbfd73bfde"
+    },
+    {
+      "path": "backend/pkg/auditpolicy/policy.go",
+      "before": "beefa9757b2c11e3c60f93a94558259dd56071de6927bf96c59fafa7ddff06c3",
+      "after": "beefa9757b2c11e3c60f93a94558259dd56071de6927bf96c59fafa7ddff06c3"
+    },
+    {
+      "path": "backend/pkg/authsession/session_scope.go",
+      "before": "a5f7e250e9a966f92c941ea79a7126fbee2c45392a2792daf194ab70a365bb87",
+      "after": "a5f7e250e9a966f92c941ea79a7126fbee2c45392a2792daf194ab70a365bb87"
+    },
+    {
+      "path": "backend/pkg/authtoken/token_activity_test.go",
+      "before": "f0e5266009dbdb4ee413006c6b50fa9d145b83410aa11c236fd6591657756a23",
+      "after": "f0e5266009dbdb4ee413006c6b50fa9d145b83410aa11c236fd6591657756a23"
+    },
+    {
+      "path": "backend/pkg/authtoken/token.go",
+      "before": "faf9db702f30d3a75af75fb9f5d5bbbb91dde582f2150a4340006520770aac13",
+      "after": "faf9db702f30d3a75af75fb9f5d5bbbb91dde582f2150a4340006520770aac13"
+    },
+    {
+      "path": "backend/pkg/common/http/response_business_test.go",
+      "before": "58a884e1e86efabf57803647e3dc08756d9cb025739dd4ffd4361d0126bd1858",
+      "after": "58a884e1e86efabf57803647e3dc08756d9cb025739dd4ffd4361d0126bd1858"
+    },
+    {
+      "path": "backend/pkg/common/http/response.go",
+      "before": "e29cca9bb940b22fec8d8dd0127d6b75604e92a411cf80ee0fdfdc898b3ef288",
+      "after": "e29cca9bb940b22fec8d8dd0127d6b75604e92a411cf80ee0fdfdc898b3ef288"
+    },
+    {
+      "path": "backend/pkg/contracts/business_tenant_groups_test.go",
+      "before": "b9c6ebfe98d87d974f3ccea448011b550d4f01f286b28ae9ef5752845d9d60b8",
+      "after": "b9c6ebfe98d87d974f3ccea448011b550d4f01f286b28ae9ef5752845d9d60b8"
+    },
+    {
+      "path": "backend/pkg/contracts/business_tenant_groups.go",
+      "before": "1708fa753d56bf79b76df8dbeec7208b35a2ff44b1ca3300f9640d0ca2a96e6a",
+      "after": "1708fa753d56bf79b76df8dbeec7208b35a2ff44b1ca3300f9640d0ca2a96e6a"
+    },
+    {
+      "path": "backend/pkg/contracts/businessauth/businessauth_test.go",
+      "before": "e814cc620cb20ce21506b10b74c9ef7c8af0e449e5567a857939aa0c57ecb492",
+      "after": "e814cc620cb20ce21506b10b74c9ef7c8af0e449e5567a857939aa0c57ecb492"
+    },
+    {
+      "path": "backend/pkg/contracts/businessauth/businessauth.go",
+      "before": "1ac1cc33dbaa21910a4a3dedaf168b0aa2e022ca0b9d339ae82690f26c9d6ade",
+      "after": "1ac1cc33dbaa21910a4a3dedaf168b0aa2e022ca0b9d339ae82690f26c9d6ade"
+    },
+    {
+      "path": "backend/pkg/contracts/module_required_test.go",
+      "before": "73633fba4aec9ab74d04d29e621bbef546f53b4e0567fb4a2a50929146df8caa",
+      "after": "73633fba4aec9ab74d04d29e621bbef546f53b4e0567fb4a2a50929146df8caa"
+    },
+    {
+      "path": "backend/pkg/contracts/module.go",
+      "before": "54855f519b669c10d72281ba37c604858414312e973bc5b8eee356aa5222c9dd",
+      "after": "54855f519b669c10d72281ba37c604858414312e973bc5b8eee356aa5222c9dd"
+    },
+    {
+      "path": "backend/pkg/contracts/route_groups.go",
+      "before": "499db195eb028dda27768245dd0c27e8f101e827464a69a8099bd5fe3f050303",
+      "after": "499db195eb028dda27768245dd0c27e8f101e827464a69a8099bd5fe3f050303"
+    },
+    {
+      "path": "backend/pkg/database/business_policy_test.go",
+      "before": "b2c0eab1088073103e8477496ad81aa6577110d58e14387d655f0e11a78c595f",
+      "after": "b2c0eab1088073103e8477496ad81aa6577110d58e14387d655f0e11a78c595f"
+    },
+    {
+      "path": "backend/pkg/database/business_policy.go",
+      "before": "fdafd8c8cf27099e971cec0f8ed89527f79e92bed0c3766bc88fa46671d2f8d8",
+      "after": "fdafd8c8cf27099e971cec0f8ed89527f79e92bed0c3766bc88fa46671d2f8d8"
+    },
+    {
+      "path": "backend/pkg/telemetry/tracer_test.go",
+      "before": "80ca12c12d8489b472433c90ecce54660cb0937e3051b38e13baf59407a69a85",
+      "after": "80ca12c12d8489b472433c90ecce54660cb0937e3051b38e13baf59407a69a85"
+    },
+    {
+      "path": "backend/pkg/telemetry/tracer.go",
+      "before": "04de2c0f375b61bec48c435aaceb0b44a2b7077c6ad7ee553ac5576b85c15373",
+      "after": "04de2c0f375b61bec48c435aaceb0b44a2b7077c6ad7ee553ac5576b85c15373"
+    },
+    {
+      "path": "backend/pkg/tenant/authz.go",
+      "before": "f100ecba09cffc65d44010a4392f736bb4e23669e55fcdcb64415d5c4d69fbd1",
+      "after": "f100ecba09cffc65d44010a4392f736bb4e23669e55fcdcb64415d5c4d69fbd1"
+    },
+    {
+      "path": "backend/pkg/tenant/membership.go",
+      "before": "15efc6c120162e173b2790be663c773aaccbfc48249c37754a9a21a69bf1ec1e",
+      "after": "15efc6c120162e173b2790be663c773aaccbfc48249c37754a9a21a69bf1ec1e"
+    },
+    {
+      "path": "backend/pkg/tenant/mode_reader_test.go",
+      "before": "f4eb937f1adbdba6a618888e412402af4d7d6ce9e28fd07120ce5273aa445cfd",
+      "after": "f4eb937f1adbdba6a618888e412402af4d7d6ce9e28fd07120ce5273aa445cfd"
+    },
+    {
+      "path": "backend/pkg/tenant/mode_reader.go",
+      "before": "df9baff9f808827070747384388064a9aa15757c18fd9131430aa91ebe580748",
+      "after": "df9baff9f808827070747384388064a9aa15757c18fd9131430aa91ebe580748"
+    },
+    {
+      "path": "backend/pkg/tenant/platform_scope.go",
+      "before": "8927c756eee0b77156e32d6922acffac12a01e8a629db1988d8c29a47c8670e2",
+      "after": "8927c756eee0b77156e32d6922acffac12a01e8a629db1988d8c29a47c8670e2"
+    },
+    {
+      "path": "backend/pkg/tenant/tenant.go",
+      "before": "2bb49b52f3fcc0ef1ea12d2bf87957b5dd04ae5ec959dc3240b921a3e3631cd5",
+      "after": "2bb49b52f3fcc0ef1ea12d2bf87957b5dd04ae5ec959dc3240b921a3e3631cd5"
+    },
+    {
+      "path": "config/foundation-consumer-artifacts.json",
+      "before": "1d3cc1e52d3a5e5fba00a70c2d84467ad8c279ad5d66f3f9f92de238df7f1161",
+      "after": "1d3cc1e52d3a5e5fba00a70c2d84467ad8c279ad5d66f3f9f92de238df7f1161"
+    },
+    {
+      "path": "scripts/foundation-release/candidate-descriptor.mjs",
+      "before": "a9b242e4b6d787344f16357b6c7397ab4a7ffda633e21556138e240ccece71a6",
+      "after": "a9b242e4b6d787344f16357b6c7397ab4a7ffda633e21556138e240ccece71a6"
+    },
+    {
+      "path": "scripts/foundation-release/build-release-bundle.mjs",
+      "before": "3715c789337cc1b9ed8764fcc469e8ce7869e391ac67d50fe83341f5da8c8207",
+      "after": "3715c789337cc1b9ed8764fcc469e8ce7869e391ac67d50fe83341f5da8c8207"
+    },
+    {
+      "path": "scripts/foundation-release/build-release-manifest.mjs",
+      "before": "abd1ca92f4d6d0f8fc7a40ce2dbe708dca13fee84804c86a0fa46c50331aafa2",
+      "after": "abd1ca92f4d6d0f8fc7a40ce2dbe708dca13fee84804c86a0fa46c50331aafa2"
+    },
+    {
+      "path": "scripts/foundation-release/check-release-assets.mjs",
+      "before": "83f70497e6270074a97a9594fe6028aa41d8459645b02844d49d1246472b1503",
+      "after": "83f70497e6270074a97a9594fe6028aa41d8459645b02844d49d1246472b1503"
+    },
+    {
+      "path": "scripts/foundation-release/check-release-secrets.mjs",
+      "before": "b771f8e5e8f32e8bcaccd3a84e31171f96e76212fff7311954ea83eb0a180ec5",
+      "after": "b771f8e5e8f32e8bcaccd3a84e31171f96e76212fff7311954ea83eb0a180ec5"
+    },
+    {
+      "path": "scripts/foundation-release/cut-foundation-release.mjs",
+      "before": "baedf969f8a8f02f9db7ffc3d9bb2a9ee87da8eb8395ae86dcdb04838c8d5b26",
+      "after": "baedf969f8a8f02f9db7ffc3d9bb2a9ee87da8eb8395ae86dcdb04838c8d5b26"
+    },
+    {
+      "path": "scripts/foundation-release/frontend-ownership.mjs",
+      "before": "8fe420128ee0797eba07ba7a591119902726225a338cdad71ee9a23ea5d744a8",
+      "after": "8fe420128ee0797eba07ba7a591119902726225a338cdad71ee9a23ea5d744a8"
+    },
+    {
+      "path": "scripts/foundation-release/publish-foundation-release.mjs",
+      "before": "f6bd698a212fb49fbf41e32e2e82e78543be45ecf4f96a1dc2c7a6f529dbef42",
+      "after": "f6bd698a212fb49fbf41e32e2e82e78543be45ecf4f96a1dc2c7a6f529dbef42"
+    },
+    {
+      "path": "scripts/foundation-release/release-cli.mjs",
+      "before": "8e6733885a6e3694aa462d52f7354d6f6a529f61b78044c3c49278ddfa191888",
+      "after": "8e6733885a6e3694aa462d52f7354d6f6a529f61b78044c3c49278ddfa191888"
+    }
+  ],
+  "priorReviewSHA256": "8e171b900cbc53ee7a076044e4ba52fba47e1d39f95d9772005be81df00aa58a",
+  "sourceScope": "Exactly final four-file candidate repair; prior auth/tenant/audit/telemetry bytes unchanged",
+  "independentReviewApproval": false
+}

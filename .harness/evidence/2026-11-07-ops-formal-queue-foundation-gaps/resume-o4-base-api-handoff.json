@@ -1,0 +1,47 @@
+{
+  "sourceStable": true,
+  "role": "Base Generator/executor",
+  "skippedTests": 0,
+  "planSHA256": "9aaa0e53b43c040a4d04949693d3ef6ab4b086336fe953c3e04105400e4caaf7",
+  "sourceFileCount": 525,
+  "implementationApproval": "not claimed",
+  "passingTestAndSubtestEvents": 100,
+  "scope": "O4 A/E public fresh auth and metadata-only audit",
+  "runtimeGaps": [
+    "executable Base/Ops composition startup",
+    "generated v2 default/dev",
+    "Ops hostile tenant/actor CRUD and compiler/provider/storage runtime",
+    "candidate paired runtime and official consumption",
+    "root full race and independent implementation review"
+  ],
+  "artifacts": [
+    {
+      "sha256": "5d4dea9f45ee5758f715ecd485bfa05db8b91b458a8a940a55aeca1ee1d397cc",
+      "path": "resume-o4-base-api-final-race-receipt.json"
+    },
+    {
+      "sha256": "3d975dfce901087e79a9533a521adcb8d73279aaf3d99862e41c33a99a95bc0e",
+      "path": "resume-o4-base-api-final-vet-receipt.json"
+    },
+    {
+      "sha256": "7338fadea4af62b5c0177a7a26f2a9886583c57faf89c540d639bc2ea1318a5a",
+      "path": "resume-o4-base-api-final-build-receipt.json"
+    },
+    {
+      "sha256": "dfd964fa092c18517bbd69af02ffae0458d3824cfd2496f8260b38554b740e30",
+      "path": "resume-o4-base-api-final-test-summary.json"
+    },
+    {
+      "sha256": "51fce77449c0ba9444868adea541b8792ee01ad72a7d12a8d585b6c4ce90ed85",
+      "path": "resume-o4-base-api-source-stability.json"
+    },
+    {
+      "sha256": "66522350ee1f392212a5ce51dc7aab7806e6dd5e095be7b64d42bfcfa7e91f3c",
+      "path": "resume-o4-base-api-owned-source-hashes.json"
+    },
+    {
+      "sha256": "3d7369d178067147efb5355d16646d3211865285faf5a610f2b208d48bf537d1",
+      "path": "resume-o4-base-api-handoff.md"
+    }
+  ]
+}

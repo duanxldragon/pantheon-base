@@ -1,13 +1,60 @@
 package contracts
 
 import (
+	"fmt"
 	"log/slog"
 	"os"
+	"reflect"
 	"strings"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
+
+// RegisterRequiredBackendModules prepares every required module before exposing
+// any route. Unlike the legacy runner, startup failures are returned to callers.
+func RegisterRequiredBackendModules(r *gin.RouterGroup, db *gorm.DB, modules ...BackendModule) error {
+	if r == nil || db == nil {
+		return fmt.Errorf("required modules: router and database are required")
+	}
+	autoMigrate := strings.EqualFold(strings.TrimSpace(os.Getenv("PANTHEON_AUTO_MIGRATE")), "true")
+	for _, module := range modules {
+		if module == nil || (reflect.ValueOf(module).Kind() == reflect.Ptr && reflect.ValueOf(module).IsNil()) {
+			return fmt.Errorf("required modules: nil module")
+		}
+		stage := "migrate"
+		prepare := module.Migrate
+		if !autoMigrate {
+			stage = "bootstrap"
+			bootstrapper, ok := module.(interface{ Bootstrap(*gorm.DB) error })
+			if !ok {
+				return fmt.Errorf("required module %s: missing bootstrap", module.Name())
+			}
+			prepare = bootstrapper.Bootstrap
+		}
+		if err := prepare(db); err != nil {
+			return fmt.Errorf("required module %s %s: %w", module.Name(), stage, err)
+		}
+	}
+	for _, stage := range []struct {
+		name string
+		run  func(BackendModule, *gorm.DB) error
+	}{
+		{"menus", BackendModule.SeedMenus},
+		{"perms", BackendModule.SeedPerms},
+		{"i18n", BackendModule.SeedI18n},
+	} {
+		for _, module := range modules {
+			if err := stage.run(module, db); err != nil {
+				return fmt.Errorf("required module %s %s: %w", module.Name(), stage.name, err)
+			}
+		}
+	}
+	for _, module := range modules {
+		module.RegisterRoutes(r)
+	}
+	return nil
+}
 
 type BackendModule interface {
 	Name() string

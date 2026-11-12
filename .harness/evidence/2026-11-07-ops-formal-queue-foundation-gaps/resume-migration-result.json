@@ -1,0 +1,24 @@
+{
+  "totalPassedIncludingParentTests": 185,
+  "failureOrSkipEvents": 0,
+  "dirtyMatrixPassed": 75,
+  "unknownStateMatrixPassed": 48,
+  "compatibilityMatrixPassed": 8,
+  "packagePass": 1,
+  "elapsedSeconds": 161.787,
+  "mysqlCleanupExitCode": 0,
+  "sourceHashes": [
+    {
+      "sha256": "61aaeb220b8abdf08b9485c49347abbbbb9d09fbe4ab3ebde51ad0348677e936",
+      "path": "D:\\workspace\\go\\pantheon-platform\\pantheon-base\\backend\\pkg\\database\\migrate.go"
+    },
+    {
+      "sha256": "df36e2014d21370c7b345e399492bf964dbec148908862abf0757cebccc146e9",
+      "path": "D:\\workspace\\go\\pantheon-platform\\pantheon-base\\backend\\pkg\\database\\migrate_test.go"
+    },
+    {
+      "sha256": "ebcec2c5cfac245ddb7eee2d491ca402e642cdcdf3f238b5c8e13798eb69fb5c",
+      "path": "D:\\workspace\\go\\pantheon-platform\\pantheon-base\\backend\\pkg\\database\\migrate_dirty_bootstrap_test.go"
+    }
+  ]
+}

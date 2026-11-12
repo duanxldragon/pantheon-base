@@ -1,0 +1,18 @@
+{
+  "testPassCount": 529,
+  "elapsedSeconds": 217.8245121,
+  "packagePassCount": 6,
+  "sourceFileCount": 103,
+  "exitCode": 0,
+  "mysqlRequired": true,
+  "skipCount": 1,
+  "redisRequired": true,
+  "sourceStable": true,
+  "CC": "D:\\msys64\\mingw64\\bin\\gcc.exe",
+  "command": "go test -race -json -count=1 ./pkg/authtoken ./internal/middleware ./modules/auth/...",
+  "CGO_ENABLED": "1",
+  "testSkipCount": 0,
+  "packagesWithoutTests": [
+    "github.com/duanxldragon/pantheon-base/backend/modules/auth"
+  ]
+}

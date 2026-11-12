@@ -1,0 +1,5 @@
+
+> check:harness-docs
+> node scripts/harness/check-doc-links.mjs --root . --strict
+
+Docs link check (strict): 0 finding(s)

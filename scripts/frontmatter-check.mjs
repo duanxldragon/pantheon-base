@@ -296,9 +296,16 @@ export function parseContractBodyReferences(source) {
   for (let i = 0; i < lines.length; i += 1) {
     const relation = CONTRACT_RELATION_FIELDS.find(({ heading }) => heading === lines[i].trim());
     if (!relation) continue;
+    let sawBlank = false;
     for (let j = i + 1; j < lines.length; j += 1) {
       const line = lines[j].trim();
-      if (!line) break;
+      if (!line) {
+        // Prettier inserts a blank line between a heading and its list;
+        // tolerate it only before the first item.
+        if (sawBlank || byField[relation.field].length > 0) break;
+        sawBlank = true;
+        continue;
+      }
       const match = line.match(/^-\s+`([^`]+)`$/);
       if (!match) break;
       refs.push(match[1]);

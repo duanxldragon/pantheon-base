@@ -1,0 +1,17 @@
+{
+  "command": [
+    "npm.cmd",
+    "run",
+    "type-check"
+  ],
+  "exitCode": 0,
+  "elapsedSeconds": 52.515,
+  "sourceStable": true,
+  "filesCaptured": 461,
+  "sourceBeforeSHA256": "45571fce0c811135a3841d37304bc9ab5235e21275d60abaa5f2f92e7484235d",
+  "sourceAfterSHA256": "45571fce0c811135a3841d37304bc9ab5235e21275d60abaa5f2f92e7484235d",
+  "logSHA256": "5ebf47247dc14a635484b800d11596f249d0cdf4008716d724fcc464f81f9d1e",
+  "cgoEnabled": null,
+  "runtimeAcceptance": false,
+  "P0Approved": false
+}

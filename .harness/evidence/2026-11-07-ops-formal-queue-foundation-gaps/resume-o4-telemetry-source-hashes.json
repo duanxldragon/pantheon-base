@@ -1,0 +1,19 @@
+{
+  "files": [
+    {
+      "path": "backend/cmd/server/main.go",
+      "sha256": "df1e3ea0d0f89cc1faf2db495e875832df2f280ff4d25be6f919957ed9180998",
+      "change": "Preserve existing wiring; add safe adapter before body, replace default OTel call with filtered legacy adapter and remove obsolete import."
+    },
+    {
+      "path": "backend/internal/middleware/business_telemetry_middleware.go",
+      "sha256": "b7b896bedf4e5263005727759ee77c52f09934f7a6e46bb31b5b57f689693170",
+      "change": "new"
+    },
+    {
+      "path": "backend/internal/middleware/business_telemetry_middleware_test.go",
+      "sha256": "11d8295ff2a12fccc32239cd7e9d0d9ab439662264c264fd60ccdf267bb9c6c3",
+      "change": "new"
+    }
+  ]
+}

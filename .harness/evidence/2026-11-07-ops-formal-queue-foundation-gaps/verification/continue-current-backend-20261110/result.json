@@ -1,0 +1,36 @@
+{
+  "exitCode": 0,
+  "command": [
+    "go",
+    "test",
+    "-json",
+    "-mod=readonly",
+    "-race",
+    "-p",
+    "2",
+    "-timeout",
+    "30m",
+    "./..."
+  ],
+  "CGO_ENABLED": "1",
+  "MinGW": "D:/msys64/mingw64/bin",
+  "requiredMySQL": 33316,
+  "requiredRedis": 26317,
+  "ownedDatabase": "base_p0_continue_20261110t054126543682",
+  "officialConsumption": false,
+  "P0Approved": false,
+  "ownedRedisPID": 28056,
+  "sourceHashesStable": true,
+  "hashedFiles": 527,
+  "counts": {
+    "testPassEvents": 2154,
+    "testFailEvents": 0,
+    "testSkipEvents": 1,
+    "packagePassEvents": 50,
+    "packageFailEvents": 0
+  },
+  "failures": [],
+  "ownedRedisStopped": true,
+  "ownedDatabaseAbsent": true,
+  "elapsedSeconds": 1606.406
+}

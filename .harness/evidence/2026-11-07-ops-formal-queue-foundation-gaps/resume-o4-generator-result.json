@@ -1,0 +1,260 @@
+{
+  "status": "generator-scope-verified",
+  "capturedUTC": "2026-11-09T10:09:42.481Z",
+  "planSHA256": "9aaa0e53b43c040a4d04949693d3ef6ab4b086336fe953c3e04105400e4caaf7",
+  "summary": ".harness\\evidence\\2026-11-07-ops-formal-queue-foundation-gaps\\resume-o4-generator-summary.md",
+  "sourceHashes": ".harness\\evidence\\2026-11-07-ops-formal-queue-foundation-gaps\\resume-o4-generator-source-hashes.json",
+  "runtimeReceipt": ".harness\\evidence\\2026-11-07-ops-formal-queue-foundation-gaps\\resume-o4-generator-exports\\aa8e9a85-0851-4a0e-b572-61d4fdd54e63\\receipt.json",
+  "runtimePassed": true,
+  "runtimeSourceStable": true,
+  "emittedExports": [
+    {
+      "fixture": "frontend/tests/generator/fixtures/tenantv2-flat.json",
+      "schemaSHA256": "ccca8dcb218d533e663631c2b7e51c43f6109ce5350000981174b3079285493c",
+      "exportPath": "D:\\workspace\\go\\pantheon-platform\\pantheon-base\\.harness\\evidence\\2026-11-07-ops-formal-queue-foundation-gaps\\resume-o4-generator-exports\\aa8e9a85-0851-4a0e-b572-61d4fdd54e63\\tenantv2-flat-export.json",
+      "exportSHA256": "aea314d1c6d2bbff8dc064ec9b3102fe11319ea57f62b203de5d00cf48cf0de2",
+      "files": [
+        {
+          "path": "backend/modules/business/tenantfixture/item/item_model.go",
+          "emittedPath": "D:\\workspace\\go\\pantheon-platform\\pantheon-base\\.harness\\evidence\\2026-11-07-ops-formal-queue-foundation-gaps\\resume-o4-generator-exports\\aa8e9a85-0851-4a0e-b572-61d4fdd54e63\\workspace\\backend\\modules\\business\\tenantfixture\\item\\item_model.go",
+          "sha256": "f1f2bdeb98eaf91bf2cfb0d95d06ae526e25a6eb1459f7256428a90ccc44ac07"
+        },
+        {
+          "path": "backend/modules/business/tenantfixture/item/item_dto.go",
+          "emittedPath": "D:\\workspace\\go\\pantheon-platform\\pantheon-base\\.harness\\evidence\\2026-11-07-ops-formal-queue-foundation-gaps\\resume-o4-generator-exports\\aa8e9a85-0851-4a0e-b572-61d4fdd54e63\\workspace\\backend\\modules\\business\\tenantfixture\\item\\item_dto.go",
+          "sha256": "681481e08e9482dc50b19777454fb5ef36b58b50351c018dc4ffb3ae5fcd1932"
+        },
+        {
+          "path": "backend/modules/business/tenantfixture/item/item_service.go",
+          "emittedPath": "D:\\workspace\\go\\pantheon-platform\\pantheon-base\\.harness\\evidence\\2026-11-07-ops-formal-queue-foundation-gaps\\resume-o4-generator-exports\\aa8e9a85-0851-4a0e-b572-61d4fdd54e63\\workspace\\backend\\modules\\business\\tenantfixture\\item\\item_service.go",
+          "sha256": "4d7c029bb4f8801f7e2da145fb9d48451aa0a66a771f054ca8ac4ba86034f088"
+        },
+        {
+          "path": "backend/modules/business/tenantfixture/item/item_handler.go",
+          "emittedPath": "D:\\workspace\\go\\pantheon-platform\\pantheon-base\\.harness\\evidence\\2026-11-07-ops-formal-queue-foundation-gaps\\resume-o4-generator-exports\\aa8e9a85-0851-4a0e-b572-61d4fdd54e63\\workspace\\backend\\modules\\business\\tenantfixture\\item\\item_handler.go",
+          "sha256": "0d2974e85f2060d9953f9bf3ef429b97163d58ac0a0ac3d2e791f735caf6363f"
+        },
+        {
+          "path": "backend/modules/business/tenantfixture/item/module.go",
+          "emittedPath": "D:\\workspace\\go\\pantheon-platform\\pantheon-base\\.harness\\evidence\\2026-11-07-ops-formal-queue-foundation-gaps\\resume-o4-generator-exports\\aa8e9a85-0851-4a0e-b572-61d4fdd54e63\\workspace\\backend\\modules\\business\\tenantfixture\\item\\module.go",
+          "sha256": "e0c60963fcfaa326c15f9dfd15fec0fe2ff23ab87a368883ef23236d789fc8d6"
+        },
+        {
+          "path": "frontend/src/modules/business/tenantfixture/item/index.ts",
+          "emittedPath": "D:\\workspace\\go\\pantheon-platform\\pantheon-base\\.harness\\evidence\\2026-11-07-ops-formal-queue-foundation-gaps\\resume-o4-generator-exports\\aa8e9a85-0851-4a0e-b572-61d4fdd54e63\\workspace\\frontend\\src\\modules\\business\\tenantfixture\\item\\index.ts",
+          "sha256": "264d2ba32b54614aea17973a3e66876afcbac534c78af8413fff862a1e4cae80"
+        },
+        {
+          "path": "frontend/src/modules/business/tenantfixture/item/api.ts",
+          "emittedPath": "D:\\workspace\\go\\pantheon-platform\\pantheon-base\\.harness\\evidence\\2026-11-07-ops-formal-queue-foundation-gaps\\resume-o4-generator-exports\\aa8e9a85-0851-4a0e-b572-61d4fdd54e63\\workspace\\frontend\\src\\modules\\business\\tenantfixture\\item\\api.ts",
+          "sha256": "d69e4afa0d3063f88dbe4034883c59b97d75b8a1ae90069a0f933a07c3f0df7c"
+        },
+        {
+          "path": "frontend/src/modules/business/tenantfixture/item/TenantItemList.tsx",
+          "emittedPath": "D:\\workspace\\go\\pantheon-platform\\pantheon-base\\.harness\\evidence\\2026-11-07-ops-formal-queue-foundation-gaps\\resume-o4-generator-exports\\aa8e9a85-0851-4a0e-b572-61d4fdd54e63\\workspace\\frontend\\src\\modules\\business\\tenantfixture\\item\\TenantItemList.tsx",
+          "sha256": "5118175f46121ae19902881da56521b13ce33f1dcde3a5edfa4a8979cf55a25f"
+        },
+        {
+          "path": "frontend/src/modules/business/tenantfixture/item/TenantItemForm.tsx",
+          "emittedPath": "D:\\workspace\\go\\pantheon-platform\\pantheon-base\\.harness\\evidence\\2026-11-07-ops-formal-queue-foundation-gaps\\resume-o4-generator-exports\\aa8e9a85-0851-4a0e-b572-61d4fdd54e63\\workspace\\frontend\\src\\modules\\business\\tenantfixture\\item\\TenantItemForm.tsx",
+          "sha256": "ee03a0640952f9c0a31240c68f5b003ca53bd0d0cbf8d597e55d03becd3ef185"
+        },
+        {
+          "path": "frontend/src/modules/business/tenantfixture/item/TenantItemDetail.tsx",
+          "emittedPath": "D:\\workspace\\go\\pantheon-platform\\pantheon-base\\.harness\\evidence\\2026-11-07-ops-formal-queue-foundation-gaps\\resume-o4-generator-exports\\aa8e9a85-0851-4a0e-b572-61d4fdd54e63\\workspace\\frontend\\src\\modules\\business\\tenantfixture\\item\\TenantItemDetail.tsx",
+          "sha256": "b818db2877b944a183215b75f1b0d77b1e0f46e1c639a621a0767a09b49aa61f"
+        }
+      ],
+      "runtimeTestPath": "D:\\workspace\\go\\pantheon-platform\\pantheon-base\\.harness\\evidence\\2026-11-07-ops-formal-queue-foundation-gaps\\resume-o4-generator-exports\\aa8e9a85-0851-4a0e-b572-61d4fdd54e63\\workspace\\backend\\modules\\business\\tenantfixture\\item\\generated_runtime_test.go",
+      "runtimeTestSHA256": "7b181f086597487ec02ce46877b644fcb83c6dafa4344d696ed7abb5320557b4"
+    },
+    {
+      "fixture": "frontend/tests/generator/fixtures/legacyv1-flat.json",
+      "schemaSHA256": "72cb239ed08826b3648ce1db87cc6e8e591cac88d5015123bcfdb24e11419e2e",
+      "exportPath": "D:\\workspace\\go\\pantheon-platform\\pantheon-base\\.harness\\evidence\\2026-11-07-ops-formal-queue-foundation-gaps\\resume-o4-generator-exports\\aa8e9a85-0851-4a0e-b572-61d4fdd54e63\\legacyv1-flat-export.json",
+      "exportSHA256": "60a28c81351a383562114741d33f3873f98b315e278cd931c70b529eee326ecf",
+      "files": [
+        {
+          "path": "backend/modules/business/legacyfixture/item/item_model.go",
+          "emittedPath": "D:\\workspace\\go\\pantheon-platform\\pantheon-base\\.harness\\evidence\\2026-11-07-ops-formal-queue-foundation-gaps\\resume-o4-generator-exports\\aa8e9a85-0851-4a0e-b572-61d4fdd54e63\\workspace\\backend\\modules\\business\\legacyfixture\\item\\item_model.go",
+          "sha256": "74b6e9c975ffc5dadadea1092f4853fc03a85f676e78b91f390cfc07cd570899"
+        },
+        {
+          "path": "backend/modules/business/legacyfixture/item/item_dto.go",
+          "emittedPath": "D:\\workspace\\go\\pantheon-platform\\pantheon-base\\.harness\\evidence\\2026-11-07-ops-formal-queue-foundation-gaps\\resume-o4-generator-exports\\aa8e9a85-0851-4a0e-b572-61d4fdd54e63\\workspace\\backend\\modules\\business\\legacyfixture\\item\\item_dto.go",
+          "sha256": "3d002a2eeb03263a7ea7a1e4a2ca6844ed1a97345a035297f54f07ecad2e4800"
+        },
+        {
+          "path": "backend/modules/business/legacyfixture/item/item_service.go",
+          "emittedPath": "D:\\workspace\\go\\pantheon-platform\\pantheon-base\\.harness\\evidence\\2026-11-07-ops-formal-queue-foundation-gaps\\resume-o4-generator-exports\\aa8e9a85-0851-4a0e-b572-61d4fdd54e63\\workspace\\backend\\modules\\business\\legacyfixture\\item\\item_service.go",
+          "sha256": "b657ad35d55c0d64b7499a691af23861454f699d37706f032a1b4798ca0f57ca"
+        },
+        {
+          "path": "backend/modules/business/legacyfixture/item/item_handler.go",
+          "emittedPath": "D:\\workspace\\go\\pantheon-platform\\pantheon-base\\.harness\\evidence\\2026-11-07-ops-formal-queue-foundation-gaps\\resume-o4-generator-exports\\aa8e9a85-0851-4a0e-b572-61d4fdd54e63\\workspace\\backend\\modules\\business\\legacyfixture\\item\\item_handler.go",
+          "sha256": "07e59127d24889382a87df366cb70516a88ba65c66407e59e6200e7cecfb2fc0"
+        },
+        {
+          "path": "backend/modules/business/legacyfixture/item/module.go",
+          "emittedPath": "D:\\workspace\\go\\pantheon-platform\\pantheon-base\\.harness\\evidence\\2026-11-07-ops-formal-queue-foundation-gaps\\resume-o4-generator-exports\\aa8e9a85-0851-4a0e-b572-61d4fdd54e63\\workspace\\backend\\modules\\business\\legacyfixture\\item\\module.go",
+          "sha256": "1fccc07682f16ef7e815e3e566ad18a942260fb08ea0849652ef1e0a0a6aa8d8"
+        },
+        {
+          "path": "frontend/src/modules/business/legacyfixture/item/index.ts",
+          "emittedPath": "D:\\workspace\\go\\pantheon-platform\\pantheon-base\\.harness\\evidence\\2026-11-07-ops-formal-queue-foundation-gaps\\resume-o4-generator-exports\\aa8e9a85-0851-4a0e-b572-61d4fdd54e63\\workspace\\frontend\\src\\modules\\business\\legacyfixture\\item\\index.ts",
+          "sha256": "f6f6ff4f569b15a98f7c7beb289774735373cadda9f900ee4907aa08f752b89d"
+        },
+        {
+          "path": "frontend/src/modules/business/legacyfixture/item/api.ts",
+          "emittedPath": "D:\\workspace\\go\\pantheon-platform\\pantheon-base\\.harness\\evidence\\2026-11-07-ops-formal-queue-foundation-gaps\\resume-o4-generator-exports\\aa8e9a85-0851-4a0e-b572-61d4fdd54e63\\workspace\\frontend\\src\\modules\\business\\legacyfixture\\item\\api.ts",
+          "sha256": "b4c7aedb985d0c7103060e156f0b260920c200f064fe645a4bf4545188b85a98"
+        },
+        {
+          "path": "frontend/src/modules/business/legacyfixture/item/LegacyItemList.tsx",
+          "emittedPath": "D:\\workspace\\go\\pantheon-platform\\pantheon-base\\.harness\\evidence\\2026-11-07-ops-formal-queue-foundation-gaps\\resume-o4-generator-exports\\aa8e9a85-0851-4a0e-b572-61d4fdd54e63\\workspace\\frontend\\src\\modules\\business\\legacyfixture\\item\\LegacyItemList.tsx",
+          "sha256": "50fac705db79b63892f6975541c024513e8a0c2454aa5a2fc90d521c7737da0b"
+        },
+        {
+          "path": "frontend/src/modules/business/legacyfixture/item/LegacyItemForm.tsx",
+          "emittedPath": "D:\\workspace\\go\\pantheon-platform\\pantheon-base\\.harness\\evidence\\2026-11-07-ops-formal-queue-foundation-gaps\\resume-o4-generator-exports\\aa8e9a85-0851-4a0e-b572-61d4fdd54e63\\workspace\\frontend\\src\\modules\\business\\legacyfixture\\item\\LegacyItemForm.tsx",
+          "sha256": "efe91efa1db01b9af3dd56b61a7241de90ba19f0b2a6c135ff67cfa361630666"
+        },
+        {
+          "path": "frontend/src/modules/business/legacyfixture/item/LegacyItemDetail.tsx",
+          "emittedPath": "D:\\workspace\\go\\pantheon-platform\\pantheon-base\\.harness\\evidence\\2026-11-07-ops-formal-queue-foundation-gaps\\resume-o4-generator-exports\\aa8e9a85-0851-4a0e-b572-61d4fdd54e63\\workspace\\frontend\\src\\modules\\business\\legacyfixture\\item\\LegacyItemDetail.tsx",
+          "sha256": "ac4410d8546f1d80e6e818e75a09a530d2160fe64c882ec6e69c7ca8b20d328e"
+        }
+      ],
+      "runtimeTestPath": "D:\\workspace\\go\\pantheon-platform\\pantheon-base\\.harness\\evidence\\2026-11-07-ops-formal-queue-foundation-gaps\\resume-o4-generator-exports\\aa8e9a85-0851-4a0e-b572-61d4fdd54e63\\workspace\\backend\\modules\\business\\legacyfixture\\item\\generated_runtime_test.go",
+      "runtimeTestSHA256": "7e5ea4da7ed05867533d886f3e388e4eca43ad26b5ae08bc8e474f3ea3110587"
+    },
+    {
+      "fixture": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/resume-o4-generator-exports/aa8e9a85-0851-4a0e-b572-61d4fdd54e63/tenantv2-flat-no-datascope-schema.json",
+      "schemaSHA256": "1e51d2d2f2814c4ed941262d4f40380270dac87eb6517edc7e7b615620bb3f4a",
+      "exportPath": "D:\\workspace\\go\\pantheon-platform\\pantheon-base\\.harness\\evidence\\2026-11-07-ops-formal-queue-foundation-gaps\\resume-o4-generator-exports\\aa8e9a85-0851-4a0e-b572-61d4fdd54e63\\tenantv2-flat-no-datascope-export.json",
+      "exportSHA256": "24925622680556620a6e443af20c0ea79ecdc658ecb3cad213dd8ed09f2a76e6",
+      "files": [
+        {
+          "path": "backend/modules/business/tenantfixture/nodata/nodata_model.go",
+          "emittedPath": "D:\\workspace\\go\\pantheon-platform\\pantheon-base\\.harness\\evidence\\2026-11-07-ops-formal-queue-foundation-gaps\\resume-o4-generator-exports\\aa8e9a85-0851-4a0e-b572-61d4fdd54e63\\workspace\\backend\\modules\\business\\tenantfixture\\nodata\\nodata_model.go",
+          "sha256": "6c99276ed2ac17ff725daec286401dc8665c18c3cffb641c300922e4dbfdca88"
+        },
+        {
+          "path": "backend/modules/business/tenantfixture/nodata/nodata_dto.go",
+          "emittedPath": "D:\\workspace\\go\\pantheon-platform\\pantheon-base\\.harness\\evidence\\2026-11-07-ops-formal-queue-foundation-gaps\\resume-o4-generator-exports\\aa8e9a85-0851-4a0e-b572-61d4fdd54e63\\workspace\\backend\\modules\\business\\tenantfixture\\nodata\\nodata_dto.go",
+          "sha256": "1d1941e46d199feffd5f3d29b2651aecd1ced7ea38fee876a49031ebfa7bab6a"
+        },
+        {
+          "path": "backend/modules/business/tenantfixture/nodata/nodata_service.go",
+          "emittedPath": "D:\\workspace\\go\\pantheon-platform\\pantheon-base\\.harness\\evidence\\2026-11-07-ops-formal-queue-foundation-gaps\\resume-o4-generator-exports\\aa8e9a85-0851-4a0e-b572-61d4fdd54e63\\workspace\\backend\\modules\\business\\tenantfixture\\nodata\\nodata_service.go",
+          "sha256": "a28508a0c427f9707ea41656a3f03d2f2c59dbf4b60d75c94334b6b9b9e99301"
+        },
+        {
+          "path": "backend/modules/business/tenantfixture/nodata/nodata_handler.go",
+          "emittedPath": "D:\\workspace\\go\\pantheon-platform\\pantheon-base\\.harness\\evidence\\2026-11-07-ops-formal-queue-foundation-gaps\\resume-o4-generator-exports\\aa8e9a85-0851-4a0e-b572-61d4fdd54e63\\workspace\\backend\\modules\\business\\tenantfixture\\nodata\\nodata_handler.go",
+          "sha256": "ff3464e5b26e95cc592f30bfae42e3a91cc391eac27ecdab8f5261090704edf5"
+        },
+        {
+          "path": "backend/modules/business/tenantfixture/nodata/module.go",
+          "emittedPath": "D:\\workspace\\go\\pantheon-platform\\pantheon-base\\.harness\\evidence\\2026-11-07-ops-formal-queue-foundation-gaps\\resume-o4-generator-exports\\aa8e9a85-0851-4a0e-b572-61d4fdd54e63\\workspace\\backend\\modules\\business\\tenantfixture\\nodata\\module.go",
+          "sha256": "f70a7ca4d7fa355deee2e9de08618dc255a741ad497b533f6f239ea1bf555a6c"
+        },
+        {
+          "path": "frontend/src/modules/business/tenantfixture/nodata/index.ts",
+          "emittedPath": "D:\\workspace\\go\\pantheon-platform\\pantheon-base\\.harness\\evidence\\2026-11-07-ops-formal-queue-foundation-gaps\\resume-o4-generator-exports\\aa8e9a85-0851-4a0e-b572-61d4fdd54e63\\workspace\\frontend\\src\\modules\\business\\tenantfixture\\nodata\\index.ts",
+          "sha256": "4c8fc6a8e0706289b5bb2dcd7eedb4d506a7c2b711cd83d9d99e4650276e40ba"
+        },
+        {
+          "path": "frontend/src/modules/business/tenantfixture/nodata/api.ts",
+          "emittedPath": "D:\\workspace\\go\\pantheon-platform\\pantheon-base\\.harness\\evidence\\2026-11-07-ops-formal-queue-foundation-gaps\\resume-o4-generator-exports\\aa8e9a85-0851-4a0e-b572-61d4fdd54e63\\workspace\\frontend\\src\\modules\\business\\tenantfixture\\nodata\\api.ts",
+          "sha256": "4409769c52ed0d930cc0cf8e9693639d7e9e487589b3a2ecd124c8110612c1ef"
+        },
+        {
+          "path": "frontend/src/modules/business/tenantfixture/nodata/TenantNoDataItemList.tsx",
+          "emittedPath": "D:\\workspace\\go\\pantheon-platform\\pantheon-base\\.harness\\evidence\\2026-11-07-ops-formal-queue-foundation-gaps\\resume-o4-generator-exports\\aa8e9a85-0851-4a0e-b572-61d4fdd54e63\\workspace\\frontend\\src\\modules\\business\\tenantfixture\\nodata\\TenantNoDataItemList.tsx",
+          "sha256": "4cd4343278b764926fce95350783ae613971811cacd30d2d465a6610043b20f2"
+        },
+        {
+          "path": "frontend/src/modules/business/tenantfixture/nodata/TenantNoDataItemForm.tsx",
+          "emittedPath": "D:\\workspace\\go\\pantheon-platform\\pantheon-base\\.harness\\evidence\\2026-11-07-ops-formal-queue-foundation-gaps\\resume-o4-generator-exports\\aa8e9a85-0851-4a0e-b572-61d4fdd54e63\\workspace\\frontend\\src\\modules\\business\\tenantfixture\\nodata\\TenantNoDataItemForm.tsx",
+          "sha256": "11b1b8f583778e5325c808c6626f194e0f1f66b62935690f8eb6343e36c30153"
+        },
+        {
+          "path": "frontend/src/modules/business/tenantfixture/nodata/TenantNoDataItemDetail.tsx",
+          "emittedPath": "D:\\workspace\\go\\pantheon-platform\\pantheon-base\\.harness\\evidence\\2026-11-07-ops-formal-queue-foundation-gaps\\resume-o4-generator-exports\\aa8e9a85-0851-4a0e-b572-61d4fdd54e63\\workspace\\frontend\\src\\modules\\business\\tenantfixture\\nodata\\TenantNoDataItemDetail.tsx",
+          "sha256": "ab35a1d2862ffd23d13fbdbfa273a3070286efb03221a902e78fbc569dd2f117"
+        }
+      ],
+      "runtimeTestPath": "D:\\workspace\\go\\pantheon-platform\\pantheon-base\\.harness\\evidence\\2026-11-07-ops-formal-queue-foundation-gaps\\resume-o4-generator-exports\\aa8e9a85-0851-4a0e-b572-61d4fdd54e63\\workspace\\backend\\modules\\business\\tenantfixture\\nodata\\generated_runtime_test.go",
+      "runtimeTestSHA256": "5c0dab017a72bd149c708dc45e9c27b83d09417dce1ac2b6fff6159fb5c13441"
+    }
+  ],
+  "commands": [
+    {
+      "command": "go test -race -count=1 -v ./pkg/contracts ./internal/scaffold",
+      "cwd": "backend",
+      "exitCode": 0,
+      "log": ".harness\\evidence\\2026-11-07-ops-formal-queue-foundation-gaps\\resume-o4-generator-scoped-race.txt",
+      "logSHA256": "60f3ab47f4ff2a288a9e4db9fe05eff7dcf551a9da114ff9c63c52d69d530d26"
+    },
+    {
+      "command": "go vet ./pkg/contracts ./internal/scaffold",
+      "cwd": "backend",
+      "exitCode": 0,
+      "log": ".harness\\evidence\\2026-11-07-ops-formal-queue-foundation-gaps\\resume-o4-generator-scoped-vet.txt",
+      "logSHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "command": "go build ./pkg/contracts ./internal/scaffold",
+      "cwd": "backend",
+      "exitCode": 0,
+      "log": ".harness\\evidence\\2026-11-07-ops-formal-queue-foundation-gaps\\resume-o4-generator-scoped-build.txt",
+      "logSHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "command": "npm run test:generator:smoke",
+      "cwd": "frontend",
+      "exitCode": 0,
+      "log": ".harness\\evidence\\2026-11-07-ops-formal-queue-foundation-gaps\\resume-o4-generator-smoke.txt",
+      "logSHA256": "22c56ed9393554853003297da0a4ecdae9e0860be4b1281d7d46e494a896b69d"
+    },
+    {
+      "command": "npm run lint",
+      "cwd": "frontend",
+      "exitCode": 0,
+      "log": ".harness\\evidence\\2026-11-07-ops-formal-queue-foundation-gaps\\resume-o4-generator-lint.txt",
+      "logSHA256": "5f62e7cf7cdd69c014ca18d1c493431139fcbda108704552679bc84c360fd025"
+    },
+    {
+      "command": "npm run type-check",
+      "cwd": "frontend",
+      "exitCode": 0,
+      "log": ".harness\\evidence\\2026-11-07-ops-formal-queue-foundation-gaps\\resume-o4-generator-typecheck.txt",
+      "logSHA256": "94d7e0ba308969aef5be19127663f1eb2c0b1e8d9e4f8781561cc44a964b7281"
+    },
+    {
+      "command": "npm run build",
+      "cwd": "frontend",
+      "exitCode": 0,
+      "log": ".harness\\evidence\\2026-11-07-ops-formal-queue-foundation-gaps\\resume-o4-generator-build.txt",
+      "logSHA256": "f8b42ed1bb16cd2fe8799586382b3065bc0871d34a69814330b51533a78c721e"
+    },
+    {
+      "command": "git diff --check (owned files)",
+      "cwd": ".",
+      "exitCode": 0,
+      "log": ".harness\\evidence\\2026-11-07-ops-formal-queue-foundation-gaps\\resume-o4-generator-diffcheck.txt",
+      "logSHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "visualReceipt": ".harness\\evidence\\2026-11-07-ops-formal-queue-foundation-gaps\\resume-o4-generator-visual-receipt.json",
+  "rootRemaining": [
+    "locale projection for two new wizard keys",
+    "canonical docs/manifests/ledger fixture inventory",
+    "full backend race",
+    "independent CODE/ARCH and candidate paired acceptance",
+    "final human function/visual gate"
+  ],
+  "independentApproval": false,
+  "releaseApproval": false
+}

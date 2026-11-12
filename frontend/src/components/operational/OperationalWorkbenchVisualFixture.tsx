@@ -8,6 +8,9 @@ import ConditionBuilder from './ConditionBuilder';
 import ContextSelector from './ContextSelector';
 import ExecutionStepRail from './ExecutionStepRail';
 import TaskLogViewer from './TaskLogViewer';
+import type { ConditionAstNode } from './types';
+import type { DashboardOperationalWidget } from '../../core/router/types';
+import OperationalDashboardWidgets from '../../modules/platform/OperationalDashboardWidgets';
 import {
   conditionAstFixture,
   conditionFieldFixture,
@@ -36,6 +39,8 @@ export default function OperationalWorkbenchVisualFixture() {
   const stateLabels = useOperationalLabels();
   const [submitState, setSubmitState] = useState<'dirty' | 'submitting' | 'error'>('dirty');
   const [logPaused, setLogPaused] = useState(false);
+  const [condition, setCondition] = useState<ConditionAstNode>(conditionAstFixture);
+  const editorMode = new URLSearchParams(globalThis.location.search).get('editor') === '1';
   const [selectedContext, setSelectedContext] = useState(
     [] as ReturnType<typeof createContextSelectorFixture>,
   );
@@ -43,6 +48,23 @@ export default function OperationalWorkbenchVisualFixture() {
   const selectContext = (option: (typeof contextOptions)[number]) =>
     setSelectedContext((current) => [...current, option]);
 
+  const dashboardFixtures = useMemo<DashboardOperationalWidget[]>(() => ['partial', 'empty', 'error', 'ready'].map((state,index) => ({
+    key: `fixture-${state}`, slot: index === 0 ? 'attention-queue' : index === 3 ? 'recent-activity' : 'status-summary',
+    sourceDomain: 'platform', titleKey: state === 'empty' ? 'common.noData' : state === 'error' ? 'common.loadFailed' : `operational.fixture.${state}`, descriptionKey: 'operational.fixture.description',
+    path: '/__visual/operational-workbench', permission: 'visual:view', cleanupPolicy: 'platform_owned', navigationSource: 'direct',
+    metadata: { owner: 'platform', cleanupPolicy: 'platform_owned', freshness: { policy: 'snapshot', maxAgeMs: 60000 },
+      queryBudget: { maxRequestsPerMinute: 2, maxItems: 4, maxRenderItems: 4 },
+      emptyStateKey: 'common.noDataDesc', errorStateKey: 'common.loadFailedDesc', errorIsolation: 'widget' },
+    dataSource: { timeoutMs: 1000, load: async () => {
+      if (state === 'error') throw new Error('fixture failure');
+      return { updatedAt: new Date(Date.now() - (state === 'partial' ? 120000 : 0)).toISOString(), partial: state === 'partial',
+        items: state === 'empty' ? [] : [{ id: '1', label: t('operational.fixture.rowAlpha'), value: 12 },
+          { id: '2', label: t('operational.fixture.rowBeta'), value: 8, detail: t('operational.fixture.description') }] };
+    } },
+  })), [t]);
+  if (new URLSearchParams(globalThis.location.search).get('dashboard') === '1') {
+    return <main className="operational-visual-fixture"><OperationalDashboardWidgets widgets={dashboardFixtures} /></main>;
+  }
   return (
     <main className="operational-visual-fixture" data-testid="operational-workbench-fixture">
       <Typography.Title heading={3}>{t('operational.fixture.title')}</Typography.Title>
@@ -140,7 +162,12 @@ export default function OperationalWorkbenchVisualFixture() {
         />
         <ConditionBuilder
           title={t('operational.fixture.conditions')}
-          value={conditionAstFixture}
+          value={condition}
+          onChange={editorMode ? setCondition : undefined}
+          editorLabels={editorMode ? {
+            field: t('operational.fixture.editor.field'), operator: t('operational.fixture.editor.operator'), value: t('operational.fixture.editor.value'),
+            remove: t('operational.fixture.editor.remove'), addGroup: t('operational.fixture.editor.addGroup'), combinator: t('operational.fixture.editor.combinator'),
+          } : undefined}
           fields={conditionFieldFixture}
           labels={{
             ...stateLabels,

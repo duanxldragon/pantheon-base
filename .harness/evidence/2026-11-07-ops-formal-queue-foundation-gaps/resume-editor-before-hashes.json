@@ -1,0 +1,14 @@
+[
+  {
+    "path": "frontend/src/components/operational/ConditionBuilder.tsx",
+    "sha256": "365AAD5A579C7B3013EB23DDDC8E0DEB33E4CBD92127EA3FAC54531FBE3D240C"
+  },
+  {
+    "path": "frontend/src/components/operational/ExecutionStepRail.tsx",
+    "sha256": "110A79743E886BAC2B2A214440F13026F0C97D1D0C2834F5B391970AFCDC49C5"
+  },
+  {
+    "path": "frontend/tests/unit/components/operational/conditionEditing.test.tsx",
+    "sha256": "80EE988DC4B85E1B9E72ED21AFB4D8FF7F290A788502F8CB27963F95FBC98E59"
+  }
+]

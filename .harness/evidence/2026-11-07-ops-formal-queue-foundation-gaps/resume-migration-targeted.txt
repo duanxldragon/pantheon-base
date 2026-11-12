@@ -1,0 +1,550 @@
+=== RUN   TestDirtyMigrationBootstrapPreservesRecordedState
+=== RUN   TestDirtyMigrationBootstrapPreservesRecordedState/current/v37/run
+    migrate_dirty_bootstrap_test.go:57: entry=run shape=current before=37:1:3337:31 after=37:1:3337:31 error=failed to bootstrap existing current schema: Dirty database version 37. Fix and force version.
+=== RUN   TestDirtyMigrationBootstrapPreservesRecordedState/current/v37/bootstrap
+    migrate_dirty_bootstrap_test.go:57: entry=bootstrap shape=current before=37:1:3337:31 after=37:1:3337:31 error=Dirty database version 37. Fix and force version.
+=== RUN   TestDirtyMigrationBootstrapPreservesRecordedState/current/v37/writer
+    migrate_dirty_bootstrap_test.go:57: entry=writer shape=current before=37:1:3337:31 after=37:1:3337:31 error=Dirty database version 37. Fix and force version.
+=== RUN   TestDirtyMigrationBootstrapPreservesRecordedState/current/v24/run
+    migrate_dirty_bootstrap_test.go:57: entry=run shape=current before=24:1:3234:31 after=24:1:3234:31 error=failed to bootstrap existing current schema: Dirty database version 24. Fix and force version.
+=== RUN   TestDirtyMigrationBootstrapPreservesRecordedState/current/v24/bootstrap
+    migrate_dirty_bootstrap_test.go:57: entry=bootstrap shape=current before=24:1:3234:31 after=24:1:3234:31 error=Dirty database version 24. Fix and force version.
+=== RUN   TestDirtyMigrationBootstrapPreservesRecordedState/current/v24/writer
+    migrate_dirty_bootstrap_test.go:57: entry=writer shape=current before=24:1:3234:31 after=24:1:3234:31 error=Dirty database version 24. Fix and force version.
+=== RUN   TestDirtyMigrationBootstrapPreservesRecordedState/current/v2/run
+    migrate_dirty_bootstrap_test.go:57: entry=run shape=current before=2:1:32:31 after=2:1:32:31 error=failed to bootstrap existing current schema: Dirty database version 2. Fix and force version.
+=== RUN   TestDirtyMigrationBootstrapPreservesRecordedState/current/v2/bootstrap
+    migrate_dirty_bootstrap_test.go:57: entry=bootstrap shape=current before=2:1:32:31 after=2:1:32:31 error=Dirty database version 2. Fix and force version.
+=== RUN   TestDirtyMigrationBootstrapPreservesRecordedState/current/v2/writer
+    migrate_dirty_bootstrap_test.go:57: entry=writer shape=current before=2:1:32:31 after=2:1:32:31 error=Dirty database version 2. Fix and force version.
+=== RUN   TestDirtyMigrationBootstrapPreservesRecordedState/current/v0/run
+    migrate_dirty_bootstrap_test.go:57: entry=run shape=current before=0:1:30:31 after=0:1:30:31 error=failed to bootstrap existing current schema: Dirty database version 0. Fix and force version.
+=== RUN   TestDirtyMigrationBootstrapPreservesRecordedState/current/v0/bootstrap
+    migrate_dirty_bootstrap_test.go:57: entry=bootstrap shape=current before=0:1:30:31 after=0:1:30:31 error=Dirty database version 0. Fix and force version.
+=== RUN   TestDirtyMigrationBootstrapPreservesRecordedState/current/v0/writer
+    migrate_dirty_bootstrap_test.go:57: entry=writer shape=current before=0:1:30:31 after=0:1:30:31 error=Dirty database version 0. Fix and force version.
+=== RUN   TestDirtyMigrationBootstrapPreservesRecordedState/current/v-1/run
+    migrate_dirty_bootstrap_test.go:57: entry=run shape=current before=-1:1:2D31:31 after=-1:1:2D31:31 error=failed to bootstrap existing current schema: Dirty database version -1. Fix and force version.
+=== RUN   TestDirtyMigrationBootstrapPreservesRecordedState/current/v-1/bootstrap
+    migrate_dirty_bootstrap_test.go:57: entry=bootstrap shape=current before=-1:1:2D31:31 after=-1:1:2D31:31 error=Dirty database version -1. Fix and force version.
+=== RUN   TestDirtyMigrationBootstrapPreservesRecordedState/current/v-1/writer
+    migrate_dirty_bootstrap_test.go:57: entry=writer shape=current before=-1:1:2D31:31 after=-1:1:2D31:31 error=Dirty database version -1. Fix and force version.
+=== RUN   TestDirtyMigrationBootstrapPreservesRecordedState/pre-module/v37/run
+    migrate_dirty_bootstrap_test.go:57: entry=run shape=pre-module before=37:1:3337:31 after=37:1:3337:31 error=failed to bootstrap existing current schema: Dirty database version 37. Fix and force version.
+=== RUN   TestDirtyMigrationBootstrapPreservesRecordedState/pre-module/v37/bootstrap
+    migrate_dirty_bootstrap_test.go:57: entry=bootstrap shape=pre-module before=37:1:3337:31 after=37:1:3337:31 error=Dirty database version 37. Fix and force version.
+=== RUN   TestDirtyMigrationBootstrapPreservesRecordedState/pre-module/v37/writer
+    migrate_dirty_bootstrap_test.go:57: entry=writer shape=pre-module before=37:1:3337:31 after=37:1:3337:31 error=Dirty database version 37. Fix and force version.
+=== RUN   TestDirtyMigrationBootstrapPreservesRecordedState/pre-module/v24/run
+    migrate_dirty_bootstrap_test.go:57: entry=run shape=pre-module before=24:1:3234:31 after=24:1:3234:31 error=failed to bootstrap existing current schema: Dirty database version 24. Fix and force version.
+=== RUN   TestDirtyMigrationBootstrapPreservesRecordedState/pre-module/v24/bootstrap
+    migrate_dirty_bootstrap_test.go:57: entry=bootstrap shape=pre-module before=24:1:3234:31 after=24:1:3234:31 error=Dirty database version 24. Fix and force version.
+=== RUN   TestDirtyMigrationBootstrapPreservesRecordedState/pre-module/v24/writer
+    migrate_dirty_bootstrap_test.go:57: entry=writer shape=pre-module before=24:1:3234:31 after=24:1:3234:31 error=Dirty database version 24. Fix and force version.
+=== RUN   TestDirtyMigrationBootstrapPreservesRecordedState/pre-module/v2/run
+    migrate_dirty_bootstrap_test.go:57: entry=run shape=pre-module before=2:1:32:31 after=2:1:32:31 error=failed to bootstrap existing current schema: Dirty database version 2. Fix and force version.
+=== RUN   TestDirtyMigrationBootstrapPreservesRecordedState/pre-module/v2/bootstrap
+    migrate_dirty_bootstrap_test.go:57: entry=bootstrap shape=pre-module before=2:1:32:31 after=2:1:32:31 error=Dirty database version 2. Fix and force version.
+=== RUN   TestDirtyMigrationBootstrapPreservesRecordedState/pre-module/v2/writer
+    migrate_dirty_bootstrap_test.go:57: entry=writer shape=pre-module before=2:1:32:31 after=2:1:32:31 error=Dirty database version 2. Fix and force version.
+=== RUN   TestDirtyMigrationBootstrapPreservesRecordedState/pre-module/v0/run
+    migrate_dirty_bootstrap_test.go:57: entry=run shape=pre-module before=0:1:30:31 after=0:1:30:31 error=failed to bootstrap existing current schema: Dirty database version 0. Fix and force version.
+=== RUN   TestDirtyMigrationBootstrapPreservesRecordedState/pre-module/v0/bootstrap
+    migrate_dirty_bootstrap_test.go:57: entry=bootstrap shape=pre-module before=0:1:30:31 after=0:1:30:31 error=Dirty database version 0. Fix and force version.
+=== RUN   TestDirtyMigrationBootstrapPreservesRecordedState/pre-module/v0/writer
+    migrate_dirty_bootstrap_test.go:57: entry=writer shape=pre-module before=0:1:30:31 after=0:1:30:31 error=Dirty database version 0. Fix and force version.
+=== RUN   TestDirtyMigrationBootstrapPreservesRecordedState/pre-module/v-1/run
+    migrate_dirty_bootstrap_test.go:57: entry=run shape=pre-module before=-1:1:2D31:31 after=-1:1:2D31:31 error=failed to bootstrap existing current schema: Dirty database version -1. Fix and force version.
+=== RUN   TestDirtyMigrationBootstrapPreservesRecordedState/pre-module/v-1/bootstrap
+    migrate_dirty_bootstrap_test.go:57: entry=bootstrap shape=pre-module before=-1:1:2D31:31 after=-1:1:2D31:31 error=Dirty database version -1. Fix and force version.
+=== RUN   TestDirtyMigrationBootstrapPreservesRecordedState/pre-module/v-1/writer
+    migrate_dirty_bootstrap_test.go:57: entry=writer shape=pre-module before=-1:1:2D31:31 after=-1:1:2D31:31 error=Dirty database version -1. Fix and force version.
+=== RUN   TestDirtyMigrationBootstrapPreservesRecordedState/pre-menu/v37/run
+
+2026/11/09 16:55:51 [32mD:/workspace/go/pantheon-platform/pantheon-base/backend/pkg/database/migrate_test.go:952 [33mSLOW SQL >= 200ms
+[0m[31;1m[228.271ms] [33m[rows:0][35m CREATE TABLE system_role_data_scope (
+			id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+			role_key VARCHAR(64) NOT NULL,
+			mode VARCHAR(32) NOT NULL DEFAULT 'all',
+			dept_ids TEXT,
+			PRIMARY KEY (id),
+			UNIQUE KEY idx_system_role_data_scope_role_key (role_key)
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4[0m
+
+2026/11/09 16:55:52 [32mD:/workspace/go/pantheon-platform/pantheon-base/backend/pkg/database/migrate_test.go:952 [33mSLOW SQL >= 200ms
+[0m[31;1m[205.220ms] [33m[rows:0][35m CREATE TABLE system_generator_datasource (
+			id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+			name VARCHAR(128) NOT NULL,
+			driver VARCHAR(32) NOT NULL DEFAULT 'mysql',
+			host VARCHAR(255) NOT NULL DEFAULT '',
+			port INT NOT NULL DEFAULT 3306,
+			database_name VARCHAR(128) NOT NULL DEFAULT '',
+			username VARCHAR(128) NOT NULL DEFAULT '',
+			password_encrypted VARCHAR(1024) DEFAULT '',
+			status TINYINT DEFAULT 1,
+			readonly_scope VARCHAR(32) NOT NULL DEFAULT 'metadata_only',
+			remark VARCHAR(255) DEFAULT '',
+			last_checked_at DATETIME(3) DEFAULT NULL,
+			last_check_status VARCHAR(32) DEFAULT '',
+			last_check_error VARCHAR(255) DEFAULT '',
+			created_at DATETIME(3) DEFAULT NULL,
+			updated_at DATETIME(3) DEFAULT NULL,
+			PRIMARY KEY (id)
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4[0m
+
+2026/11/09 16:55:52 [32mD:/workspace/go/pantheon-platform/pantheon-base/backend/pkg/database/migrate_test.go:952 [33mSLOW SQL >= 200ms
+[0m[31;1m[252.873ms] [33m[rows:0][35m CREATE TABLE permission_workbench_remediation_event (
+			id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+			role_key VARCHAR(64) NOT NULL,
+			issue_type VARCHAR(32) NOT NULL,
+			issue_key VARCHAR(255) NOT NULL,
+			before_state VARCHAR(32) NOT NULL,
+			after_state VARCHAR(32) NOT NULL,
+			action VARCHAR(32) NOT NULL,
+			created_count INT DEFAULT 0,
+			skipped_count INT DEFAULT 0,
+			created_at DATETIME(3) DEFAULT NULL,
+			PRIMARY KEY (id),
+			INDEX idx_permission_remediation_role_created (role_key, created_at),
+			INDEX idx_permission_remediation_issue_type (issue_type),
+			INDEX idx_permission_remediation_action (action)
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4[0m
+    migrate_dirty_bootstrap_test.go:57: entry=run shape=pre-menu before=37:1:3337:31 after=37:1:3337:31 error=failed to bootstrap existing current schema: Dirty database version 37. Fix and force version.
+=== RUN   TestDirtyMigrationBootstrapPreservesRecordedState/pre-menu/v37/bootstrap
+    migrate_dirty_bootstrap_test.go:57: entry=bootstrap shape=pre-menu before=37:1:3337:31 after=37:1:3337:31 error=Dirty database version 37. Fix and force version.
+=== RUN   TestDirtyMigrationBootstrapPreservesRecordedState/pre-menu/v37/writer
+    migrate_dirty_bootstrap_test.go:57: entry=writer shape=pre-menu before=37:1:3337:31 after=37:1:3337:31 error=Dirty database version 37. Fix and force version.
+=== RUN   TestDirtyMigrationBootstrapPreservesRecordedState/pre-menu/v24/run
+    migrate_dirty_bootstrap_test.go:57: entry=run shape=pre-menu before=24:1:3234:31 after=24:1:3234:31 error=failed to bootstrap existing current schema: Dirty database version 24. Fix and force version.
+=== RUN   TestDirtyMigrationBootstrapPreservesRecordedState/pre-menu/v24/bootstrap
+    migrate_dirty_bootstrap_test.go:57: entry=bootstrap shape=pre-menu before=24:1:3234:31 after=24:1:3234:31 error=Dirty database version 24. Fix and force version.
+=== RUN   TestDirtyMigrationBootstrapPreservesRecordedState/pre-menu/v24/writer
+    migrate_dirty_bootstrap_test.go:57: entry=writer shape=pre-menu before=24:1:3234:31 after=24:1:3234:31 error=Dirty database version 24. Fix and force version.
+=== RUN   TestDirtyMigrationBootstrapPreservesRecordedState/pre-menu/v2/run
+    migrate_dirty_bootstrap_test.go:57: entry=run shape=pre-menu before=2:1:32:31 after=2:1:32:31 error=failed to bootstrap existing current schema: Dirty database version 2. Fix and force version.
+=== RUN   TestDirtyMigrationBootstrapPreservesRecordedState/pre-menu/v2/bootstrap
+    migrate_dirty_bootstrap_test.go:57: entry=bootstrap shape=pre-menu before=2:1:32:31 after=2:1:32:31 error=Dirty database version 2. Fix and force version.
+=== RUN   TestDirtyMigrationBootstrapPreservesRecordedState/pre-menu/v2/writer
+    migrate_dirty_bootstrap_test.go:57: entry=writer shape=pre-menu before=2:1:32:31 after=2:1:32:31 error=Dirty database version 2. Fix and force version.
+=== RUN   TestDirtyMigrationBootstrapPreservesRecordedState/pre-menu/v0/run
+    migrate_dirty_bootstrap_test.go:57: entry=run shape=pre-menu before=0:1:30:31 after=0:1:30:31 error=failed to bootstrap existing current schema: Dirty database version 0. Fix and force version.
+=== RUN   TestDirtyMigrationBootstrapPreservesRecordedState/pre-menu/v0/bootstrap
+    migrate_dirty_bootstrap_test.go:57: entry=bootstrap shape=pre-menu before=0:1:30:31 after=0:1:30:31 error=Dirty database version 0. Fix and force version.
+=== RUN   TestDirtyMigrationBootstrapPreservesRecordedState/pre-menu/v0/writer
+    migrate_dirty_bootstrap_test.go:57: entry=writer shape=pre-menu before=0:1:30:31 after=0:1:30:31 error=Dirty database version 0. Fix and force version.
+=== RUN   TestDirtyMigrationBootstrapPreservesRecordedState/pre-menu/v-1/run
+    migrate_dirty_bootstrap_test.go:57: entry=run shape=pre-menu before=-1:1:2D31:31 after=-1:1:2D31:31 error=failed to bootstrap existing current schema: Dirty database version -1. Fix and force version.
+=== RUN   TestDirtyMigrationBootstrapPreservesRecordedState/pre-menu/v-1/bootstrap
+    migrate_dirty_bootstrap_test.go:57: entry=bootstrap shape=pre-menu before=-1:1:2D31:31 after=-1:1:2D31:31 error=Dirty database version -1. Fix and force version.
+=== RUN   TestDirtyMigrationBootstrapPreservesRecordedState/pre-menu/v-1/writer
+    migrate_dirty_bootstrap_test.go:57: entry=writer shape=pre-menu before=-1:1:2D31:31 after=-1:1:2D31:31 error=Dirty database version -1. Fix and force version.
+=== RUN   TestDirtyMigrationBootstrapPreservesRecordedState/partial/v37/run
+    migrate_dirty_bootstrap_test.go:57: entry=run shape=partial before=37:1:3337:31 after=37:1:3337:31 error=failed to bootstrap existing current schema: Dirty database version 37. Fix and force version.
+=== RUN   TestDirtyMigrationBootstrapPreservesRecordedState/partial/v37/bootstrap
+    migrate_dirty_bootstrap_test.go:57: entry=bootstrap shape=partial before=37:1:3337:31 after=37:1:3337:31 error=Dirty database version 37. Fix and force version.
+=== RUN   TestDirtyMigrationBootstrapPreservesRecordedState/partial/v37/writer
+    migrate_dirty_bootstrap_test.go:57: entry=writer shape=partial before=37:1:3337:31 after=37:1:3337:31 error=Dirty database version 37. Fix and force version.
+=== RUN   TestDirtyMigrationBootstrapPreservesRecordedState/partial/v24/run
+    migrate_dirty_bootstrap_test.go:57: entry=run shape=partial before=24:1:3234:31 after=24:1:3234:31 error=failed to bootstrap existing current schema: Dirty database version 24. Fix and force version.
+=== RUN   TestDirtyMigrationBootstrapPreservesRecordedState/partial/v24/bootstrap
+    migrate_dirty_bootstrap_test.go:57: entry=bootstrap shape=partial before=24:1:3234:31 after=24:1:3234:31 error=Dirty database version 24. Fix and force version.
+=== RUN   TestDirtyMigrationBootstrapPreservesRecordedState/partial/v24/writer
+    migrate_dirty_bootstrap_test.go:57: entry=writer shape=partial before=24:1:3234:31 after=24:1:3234:31 error=Dirty database version 24. Fix and force version.
+=== RUN   TestDirtyMigrationBootstrapPreservesRecordedState/partial/v2/run
+    migrate_dirty_bootstrap_test.go:57: entry=run shape=partial before=2:1:32:31 after=2:1:32:31 error=failed to bootstrap existing current schema: Dirty database version 2. Fix and force version.
+=== RUN   TestDirtyMigrationBootstrapPreservesRecordedState/partial/v2/bootstrap
+    migrate_dirty_bootstrap_test.go:57: entry=bootstrap shape=partial before=2:1:32:31 after=2:1:32:31 error=Dirty database version 2. Fix and force version.
+=== RUN   TestDirtyMigrationBootstrapPreservesRecordedState/partial/v2/writer
+    migrate_dirty_bootstrap_test.go:57: entry=writer shape=partial before=2:1:32:31 after=2:1:32:31 error=Dirty database version 2. Fix and force version.
+=== RUN   TestDirtyMigrationBootstrapPreservesRecordedState/partial/v0/run
+    migrate_dirty_bootstrap_test.go:57: entry=run shape=partial before=0:1:30:31 after=0:1:30:31 error=failed to bootstrap existing current schema: Dirty database version 0. Fix and force version.
+=== RUN   TestDirtyMigrationBootstrapPreservesRecordedState/partial/v0/bootstrap
+    migrate_dirty_bootstrap_test.go:57: entry=bootstrap shape=partial before=0:1:30:31 after=0:1:30:31 error=Dirty database version 0. Fix and force version.
+=== RUN   TestDirtyMigrationBootstrapPreservesRecordedState/partial/v0/writer
+    migrate_dirty_bootstrap_test.go:57: entry=writer shape=partial before=0:1:30:31 after=0:1:30:31 error=Dirty database version 0. Fix and force version.
+=== RUN   TestDirtyMigrationBootstrapPreservesRecordedState/partial/v-1/run
+    migrate_dirty_bootstrap_test.go:57: entry=run shape=partial before=-1:1:2D31:31 after=-1:1:2D31:31 error=failed to bootstrap existing current schema: Dirty database version -1. Fix and force version.
+=== RUN   TestDirtyMigrationBootstrapPreservesRecordedState/partial/v-1/bootstrap
+    migrate_dirty_bootstrap_test.go:57: entry=bootstrap shape=partial before=-1:1:2D31:31 after=-1:1:2D31:31 error=Dirty database version -1. Fix and force version.
+=== RUN   TestDirtyMigrationBootstrapPreservesRecordedState/partial/v-1/writer
+    migrate_dirty_bootstrap_test.go:57: entry=writer shape=partial before=-1:1:2D31:31 after=-1:1:2D31:31 error=Dirty database version -1. Fix and force version.
+=== RUN   TestDirtyMigrationBootstrapPreservesRecordedState/empty/v37/run
+    migrate_dirty_bootstrap_test.go:57: entry=run shape=empty before=37:1:3337:31 after=37:1:3337:31 error=failed to bootstrap existing current schema: Dirty database version 37. Fix and force version.
+=== RUN   TestDirtyMigrationBootstrapPreservesRecordedState/empty/v37/bootstrap
+    migrate_dirty_bootstrap_test.go:57: entry=bootstrap shape=empty before=37:1:3337:31 after=37:1:3337:31 error=Dirty database version 37. Fix and force version.
+=== RUN   TestDirtyMigrationBootstrapPreservesRecordedState/empty/v37/writer
+    migrate_dirty_bootstrap_test.go:57: entry=writer shape=empty before=37:1:3337:31 after=37:1:3337:31 error=Dirty database version 37. Fix and force version.
+=== RUN   TestDirtyMigrationBootstrapPreservesRecordedState/empty/v24/run
+    migrate_dirty_bootstrap_test.go:57: entry=run shape=empty before=24:1:3234:31 after=24:1:3234:31 error=failed to bootstrap existing current schema: Dirty database version 24. Fix and force version.
+=== RUN   TestDirtyMigrationBootstrapPreservesRecordedState/empty/v24/bootstrap
+    migrate_dirty_bootstrap_test.go:57: entry=bootstrap shape=empty before=24:1:3234:31 after=24:1:3234:31 error=Dirty database version 24. Fix and force version.
+=== RUN   TestDirtyMigrationBootstrapPreservesRecordedState/empty/v24/writer
+    migrate_dirty_bootstrap_test.go:57: entry=writer shape=empty before=24:1:3234:31 after=24:1:3234:31 error=Dirty database version 24. Fix and force version.
+=== RUN   TestDirtyMigrationBootstrapPreservesRecordedState/empty/v2/run
+    migrate_dirty_bootstrap_test.go:57: entry=run shape=empty before=2:1:32:31 after=2:1:32:31 error=failed to bootstrap existing current schema: Dirty database version 2. Fix and force version.
+=== RUN   TestDirtyMigrationBootstrapPreservesRecordedState/empty/v2/bootstrap
+    migrate_dirty_bootstrap_test.go:57: entry=bootstrap shape=empty before=2:1:32:31 after=2:1:32:31 error=Dirty database version 2. Fix and force version.
+=== RUN   TestDirtyMigrationBootstrapPreservesRecordedState/empty/v2/writer
+    migrate_dirty_bootstrap_test.go:57: entry=writer shape=empty before=2:1:32:31 after=2:1:32:31 error=Dirty database version 2. Fix and force version.
+=== RUN   TestDirtyMigrationBootstrapPreservesRecordedState/empty/v0/run
+    migrate_dirty_bootstrap_test.go:57: entry=run shape=empty before=0:1:30:31 after=0:1:30:31 error=failed to bootstrap existing current schema: Dirty database version 0. Fix and force version.
+=== RUN   TestDirtyMigrationBootstrapPreservesRecordedState/empty/v0/bootstrap
+    migrate_dirty_bootstrap_test.go:57: entry=bootstrap shape=empty before=0:1:30:31 after=0:1:30:31 error=Dirty database version 0. Fix and force version.
+=== RUN   TestDirtyMigrationBootstrapPreservesRecordedState/empty/v0/writer
+    migrate_dirty_bootstrap_test.go:57: entry=writer shape=empty before=0:1:30:31 after=0:1:30:31 error=Dirty database version 0. Fix and force version.
+=== RUN   TestDirtyMigrationBootstrapPreservesRecordedState/empty/v-1/run
+    migrate_dirty_bootstrap_test.go:57: entry=run shape=empty before=-1:1:2D31:31 after=-1:1:2D31:31 error=failed to bootstrap existing current schema: Dirty database version -1. Fix and force version.
+=== RUN   TestDirtyMigrationBootstrapPreservesRecordedState/empty/v-1/bootstrap
+    migrate_dirty_bootstrap_test.go:57: entry=bootstrap shape=empty before=-1:1:2D31:31 after=-1:1:2D31:31 error=Dirty database version -1. Fix and force version.
+=== RUN   TestDirtyMigrationBootstrapPreservesRecordedState/empty/v-1/writer
+    migrate_dirty_bootstrap_test.go:57: entry=writer shape=empty before=-1:1:2D31:31 after=-1:1:2D31:31 error=Dirty database version -1. Fix and force version.
+--- PASS: TestDirtyMigrationBootstrapPreservesRecordedState (60.69s)
+    --- PASS: TestDirtyMigrationBootstrapPreservesRecordedState/current/v37/run (0.69s)
+    --- PASS: TestDirtyMigrationBootstrapPreservesRecordedState/current/v37/bootstrap (0.71s)
+    --- PASS: TestDirtyMigrationBootstrapPreservesRecordedState/current/v37/writer (0.65s)
+    --- PASS: TestDirtyMigrationBootstrapPreservesRecordedState/current/v24/run (0.70s)
+    --- PASS: TestDirtyMigrationBootstrapPreservesRecordedState/current/v24/bootstrap (0.61s)
+    --- PASS: TestDirtyMigrationBootstrapPreservesRecordedState/current/v24/writer (0.70s)
+    --- PASS: TestDirtyMigrationBootstrapPreservesRecordedState/current/v2/run (0.67s)
+    --- PASS: TestDirtyMigrationBootstrapPreservesRecordedState/current/v2/bootstrap (0.72s)
+    --- PASS: TestDirtyMigrationBootstrapPreservesRecordedState/current/v2/writer (0.65s)
+    --- PASS: TestDirtyMigrationBootstrapPreservesRecordedState/current/v0/run (0.62s)
+    --- PASS: TestDirtyMigrationBootstrapPreservesRecordedState/current/v0/bootstrap (0.68s)
+    --- PASS: TestDirtyMigrationBootstrapPreservesRecordedState/current/v0/writer (0.61s)
+    --- PASS: TestDirtyMigrationBootstrapPreservesRecordedState/current/v-1/run (0.63s)
+    --- PASS: TestDirtyMigrationBootstrapPreservesRecordedState/current/v-1/bootstrap (0.74s)
+    --- PASS: TestDirtyMigrationBootstrapPreservesRecordedState/current/v-1/writer (0.67s)
+    --- PASS: TestDirtyMigrationBootstrapPreservesRecordedState/pre-module/v37/run (0.72s)
+    --- PASS: TestDirtyMigrationBootstrapPreservesRecordedState/pre-module/v37/bootstrap (0.64s)
+    --- PASS: TestDirtyMigrationBootstrapPreservesRecordedState/pre-module/v37/writer (0.56s)
+    --- PASS: TestDirtyMigrationBootstrapPreservesRecordedState/pre-module/v24/run (0.60s)
+    --- PASS: TestDirtyMigrationBootstrapPreservesRecordedState/pre-module/v24/bootstrap (0.70s)
+    --- PASS: TestDirtyMigrationBootstrapPreservesRecordedState/pre-module/v24/writer (0.72s)
+    --- PASS: TestDirtyMigrationBootstrapPreservesRecordedState/pre-module/v2/run (0.66s)
+    --- PASS: TestDirtyMigrationBootstrapPreservesRecordedState/pre-module/v2/bootstrap (0.65s)
+    --- PASS: TestDirtyMigrationBootstrapPreservesRecordedState/pre-module/v2/writer (0.81s)
+    --- PASS: TestDirtyMigrationBootstrapPreservesRecordedState/pre-module/v0/run (0.72s)
+    --- PASS: TestDirtyMigrationBootstrapPreservesRecordedState/pre-module/v0/bootstrap (0.74s)
+    --- PASS: TestDirtyMigrationBootstrapPreservesRecordedState/pre-module/v0/writer (0.74s)
+    --- PASS: TestDirtyMigrationBootstrapPreservesRecordedState/pre-module/v-1/run (0.76s)
+    --- PASS: TestDirtyMigrationBootstrapPreservesRecordedState/pre-module/v-1/bootstrap (0.79s)
+    --- PASS: TestDirtyMigrationBootstrapPreservesRecordedState/pre-module/v-1/writer (0.82s)
+    --- PASS: TestDirtyMigrationBootstrapPreservesRecordedState/pre-menu/v37/run (3.02s)
+    --- PASS: TestDirtyMigrationBootstrapPreservesRecordedState/pre-menu/v37/bootstrap (2.06s)
+    --- PASS: TestDirtyMigrationBootstrapPreservesRecordedState/pre-menu/v37/writer (1.94s)
+    --- PASS: TestDirtyMigrationBootstrapPreservesRecordedState/pre-menu/v24/run (2.21s)
+    --- PASS: TestDirtyMigrationBootstrapPreservesRecordedState/pre-menu/v24/bootstrap (2.19s)
+    --- PASS: TestDirtyMigrationBootstrapPreservesRecordedState/pre-menu/v24/writer (2.13s)
+    --- PASS: TestDirtyMigrationBootstrapPreservesRecordedState/pre-menu/v2/run (1.92s)
+    --- PASS: TestDirtyMigrationBootstrapPreservesRecordedState/pre-menu/v2/bootstrap (1.95s)
+    --- PASS: TestDirtyMigrationBootstrapPreservesRecordedState/pre-menu/v2/writer (2.02s)
+    --- PASS: TestDirtyMigrationBootstrapPreservesRecordedState/pre-menu/v0/run (1.89s)
+    --- PASS: TestDirtyMigrationBootstrapPreservesRecordedState/pre-menu/v0/bootstrap (3.24s)
+    --- PASS: TestDirtyMigrationBootstrapPreservesRecordedState/pre-menu/v0/writer (2.27s)
+    --- PASS: TestDirtyMigrationBootstrapPreservesRecordedState/pre-menu/v-1/run (2.06s)
+    --- PASS: TestDirtyMigrationBootstrapPreservesRecordedState/pre-menu/v-1/bootstrap (2.08s)
+    --- PASS: TestDirtyMigrationBootstrapPreservesRecordedState/pre-menu/v-1/writer (2.00s)
+    --- PASS: TestDirtyMigrationBootstrapPreservesRecordedState/partial/v37/run (0.30s)
+    --- PASS: TestDirtyMigrationBootstrapPreservesRecordedState/partial/v37/bootstrap (0.36s)
+    --- PASS: TestDirtyMigrationBootstrapPreservesRecordedState/partial/v37/writer (0.33s)
+    --- PASS: TestDirtyMigrationBootstrapPreservesRecordedState/partial/v24/run (0.26s)
+    --- PASS: TestDirtyMigrationBootstrapPreservesRecordedState/partial/v24/bootstrap (0.30s)
+    --- PASS: TestDirtyMigrationBootstrapPreservesRecordedState/partial/v24/writer (0.27s)
+    --- PASS: TestDirtyMigrationBootstrapPreservesRecordedState/partial/v2/run (0.28s)
+    --- PASS: TestDirtyMigrationBootstrapPreservesRecordedState/partial/v2/bootstrap (0.25s)
+    --- PASS: TestDirtyMigrationBootstrapPreservesRecordedState/partial/v2/writer (0.34s)
+    --- PASS: TestDirtyMigrationBootstrapPreservesRecordedState/partial/v0/run (0.26s)
+    --- PASS: TestDirtyMigrationBootstrapPreservesRecordedState/partial/v0/bootstrap (0.27s)
+    --- PASS: TestDirtyMigrationBootstrapPreservesRecordedState/partial/v0/writer (0.29s)
+    --- PASS: TestDirtyMigrationBootstrapPreservesRecordedState/partial/v-1/run (0.27s)
+    --- PASS: TestDirtyMigrationBootstrapPreservesRecordedState/partial/v-1/bootstrap (0.21s)
+    --- PASS: TestDirtyMigrationBootstrapPreservesRecordedState/partial/v-1/writer (0.29s)
+    --- PASS: TestDirtyMigrationBootstrapPreservesRecordedState/empty/v37/run (0.17s)
+    --- PASS: TestDirtyMigrationBootstrapPreservesRecordedState/empty/v37/bootstrap (0.24s)
+    --- PASS: TestDirtyMigrationBootstrapPreservesRecordedState/empty/v37/writer (0.15s)
+    --- PASS: TestDirtyMigrationBootstrapPreservesRecordedState/empty/v24/run (0.16s)
+    --- PASS: TestDirtyMigrationBootstrapPreservesRecordedState/empty/v24/bootstrap (0.17s)
+    --- PASS: TestDirtyMigrationBootstrapPreservesRecordedState/empty/v24/writer (0.17s)
+    --- PASS: TestDirtyMigrationBootstrapPreservesRecordedState/empty/v2/run (0.17s)
+    --- PASS: TestDirtyMigrationBootstrapPreservesRecordedState/empty/v2/bootstrap (0.26s)
+    --- PASS: TestDirtyMigrationBootstrapPreservesRecordedState/empty/v2/writer (0.17s)
+    --- PASS: TestDirtyMigrationBootstrapPreservesRecordedState/empty/v0/run (0.19s)
+    --- PASS: TestDirtyMigrationBootstrapPreservesRecordedState/empty/v0/bootstrap (0.15s)
+    --- PASS: TestDirtyMigrationBootstrapPreservesRecordedState/empty/v0/writer (0.15s)
+    --- PASS: TestDirtyMigrationBootstrapPreservesRecordedState/empty/v-1/run (0.26s)
+    --- PASS: TestDirtyMigrationBootstrapPreservesRecordedState/empty/v-1/bootstrap (0.19s)
+    --- PASS: TestDirtyMigrationBootstrapPreservesRecordedState/empty/v-1/writer (0.20s)
+=== RUN   TestMigrationBootstrapRejectsUnknownState
+=== RUN   TestMigrationBootstrapRejectsUnknownState/multiple-clean/current/run
+=== RUN   TestMigrationBootstrapRejectsUnknownState/multiple-clean/current/bootstrap
+=== RUN   TestMigrationBootstrapRejectsUnknownState/multiple-clean/current/writer
+=== RUN   TestMigrationBootstrapRejectsUnknownState/multiple-clean/empty/run
+=== RUN   TestMigrationBootstrapRejectsUnknownState/multiple-clean/empty/bootstrap
+=== RUN   TestMigrationBootstrapRejectsUnknownState/multiple-clean/empty/writer
+=== RUN   TestMigrationBootstrapRejectsUnknownState/multiple-dirty/current/run
+=== RUN   TestMigrationBootstrapRejectsUnknownState/multiple-dirty/current/bootstrap
+=== RUN   TestMigrationBootstrapRejectsUnknownState/multiple-dirty/current/writer
+=== RUN   TestMigrationBootstrapRejectsUnknownState/multiple-dirty/empty/run
+=== RUN   TestMigrationBootstrapRejectsUnknownState/multiple-dirty/empty/bootstrap
+=== RUN   TestMigrationBootstrapRejectsUnknownState/multiple-dirty/empty/writer
+=== RUN   TestMigrationBootstrapRejectsUnknownState/invalid-dirty/current/run
+=== RUN   TestMigrationBootstrapRejectsUnknownState/invalid-dirty/current/bootstrap
+=== RUN   TestMigrationBootstrapRejectsUnknownState/invalid-dirty/current/writer
+=== RUN   TestMigrationBootstrapRejectsUnknownState/invalid-dirty/empty/run
+=== RUN   TestMigrationBootstrapRejectsUnknownState/invalid-dirty/empty/bootstrap
+=== RUN   TestMigrationBootstrapRejectsUnknownState/invalid-dirty/empty/writer
+=== RUN   TestMigrationBootstrapRejectsUnknownState/null-dirty/current/run
+=== RUN   TestMigrationBootstrapRejectsUnknownState/null-dirty/current/bootstrap
+=== RUN   TestMigrationBootstrapRejectsUnknownState/null-dirty/current/writer
+=== RUN   TestMigrationBootstrapRejectsUnknownState/null-dirty/empty/run
+=== RUN   TestMigrationBootstrapRejectsUnknownState/null-dirty/empty/bootstrap
+=== RUN   TestMigrationBootstrapRejectsUnknownState/null-dirty/empty/writer
+=== RUN   TestMigrationBootstrapRejectsUnknownState/null-version/current/run
+=== RUN   TestMigrationBootstrapRejectsUnknownState/null-version/current/bootstrap
+=== RUN   TestMigrationBootstrapRejectsUnknownState/null-version/current/writer
+=== RUN   TestMigrationBootstrapRejectsUnknownState/null-version/empty/run
+=== RUN   TestMigrationBootstrapRejectsUnknownState/null-version/empty/bootstrap
+=== RUN   TestMigrationBootstrapRejectsUnknownState/null-version/empty/writer
+=== RUN   TestMigrationBootstrapRejectsUnknownState/invalid-version/current/run
+=== RUN   TestMigrationBootstrapRejectsUnknownState/invalid-version/current/bootstrap
+=== RUN   TestMigrationBootstrapRejectsUnknownState/invalid-version/current/writer
+=== RUN   TestMigrationBootstrapRejectsUnknownState/invalid-version/empty/run
+=== RUN   TestMigrationBootstrapRejectsUnknownState/invalid-version/empty/bootstrap
+=== RUN   TestMigrationBootstrapRejectsUnknownState/invalid-version/empty/writer
+=== RUN   TestMigrationBootstrapRejectsUnknownState/negative-clean/current/run
+
+2026/11/09 16:57:11 [32mD:/workspace/go/pantheon-platform/pantheon-base/backend/pkg/database/migrate_test.go:952 [33mSLOW SQL >= 200ms
+[0m[31;1m[201.339ms] [33m[rows:0][35m CREATE TABLE permission_workbench_remediation_event (
+			id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+			role_key VARCHAR(64) NOT NULL,
+			issue_type VARCHAR(32) NOT NULL,
+			issue_key VARCHAR(255) NOT NULL,
+			before_state VARCHAR(32) NOT NULL,
+			after_state VARCHAR(32) NOT NULL,
+			action VARCHAR(32) NOT NULL,
+			created_count INT DEFAULT 0,
+			skipped_count INT DEFAULT 0,
+			created_at DATETIME(3) DEFAULT NULL,
+			PRIMARY KEY (id),
+			INDEX idx_permission_remediation_role_created (role_key, created_at),
+			INDEX idx_permission_remediation_issue_type (issue_type),
+			INDEX idx_permission_remediation_action (action)
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4[0m
+=== RUN   TestMigrationBootstrapRejectsUnknownState/negative-clean/current/bootstrap
+
+2026/11/09 16:57:12 [32mD:/workspace/go/pantheon-platform/pantheon-base/backend/pkg/database/migrate_test.go:952 [33mSLOW SQL >= 200ms
+[0m[31;1m[201.278ms] [33m[rows:0][35m CREATE TABLE permission_workbench_remediation_event (
+			id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+			role_key VARCHAR(64) NOT NULL,
+			issue_type VARCHAR(32) NOT NULL,
+			issue_key VARCHAR(255) NOT NULL,
+			before_state VARCHAR(32) NOT NULL,
+			after_state VARCHAR(32) NOT NULL,
+			action VARCHAR(32) NOT NULL,
+			created_count INT DEFAULT 0,
+			skipped_count INT DEFAULT 0,
+			created_at DATETIME(3) DEFAULT NULL,
+			PRIMARY KEY (id),
+			INDEX idx_permission_remediation_role_created (role_key, created_at),
+			INDEX idx_permission_remediation_issue_type (issue_type),
+			INDEX idx_permission_remediation_action (action)
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4[0m
+=== RUN   TestMigrationBootstrapRejectsUnknownState/negative-clean/current/writer
+=== RUN   TestMigrationBootstrapRejectsUnknownState/negative-clean/empty/run
+=== RUN   TestMigrationBootstrapRejectsUnknownState/negative-clean/empty/bootstrap
+=== RUN   TestMigrationBootstrapRejectsUnknownState/negative-clean/empty/writer
+=== RUN   TestMigrationBootstrapRejectsUnknownState/missing-dirty-column/current/run
+=== RUN   TestMigrationBootstrapRejectsUnknownState/missing-dirty-column/current/bootstrap
+=== RUN   TestMigrationBootstrapRejectsUnknownState/missing-dirty-column/current/writer
+=== RUN   TestMigrationBootstrapRejectsUnknownState/missing-dirty-column/empty/run
+=== RUN   TestMigrationBootstrapRejectsUnknownState/missing-dirty-column/empty/bootstrap
+=== RUN   TestMigrationBootstrapRejectsUnknownState/missing-dirty-column/empty/writer
+--- PASS: TestMigrationBootstrapRejectsUnknownState (52.30s)
+    --- PASS: TestMigrationBootstrapRejectsUnknownState/multiple-clean/current/run (1.94s)
+    --- PASS: TestMigrationBootstrapRejectsUnknownState/multiple-clean/current/bootstrap (1.96s)
+    --- PASS: TestMigrationBootstrapRejectsUnknownState/multiple-clean/current/writer (1.96s)
+    --- PASS: TestMigrationBootstrapRejectsUnknownState/multiple-clean/empty/run (0.16s)
+    --- PASS: TestMigrationBootstrapRejectsUnknownState/multiple-clean/empty/bootstrap (0.21s)
+    --- PASS: TestMigrationBootstrapRejectsUnknownState/multiple-clean/empty/writer (0.23s)
+    --- PASS: TestMigrationBootstrapRejectsUnknownState/multiple-dirty/current/run (1.97s)
+    --- PASS: TestMigrationBootstrapRejectsUnknownState/multiple-dirty/current/bootstrap (2.05s)
+    --- PASS: TestMigrationBootstrapRejectsUnknownState/multiple-dirty/current/writer (1.80s)
+    --- PASS: TestMigrationBootstrapRejectsUnknownState/multiple-dirty/empty/run (0.21s)
+    --- PASS: TestMigrationBootstrapRejectsUnknownState/multiple-dirty/empty/bootstrap (0.29s)
+    --- PASS: TestMigrationBootstrapRejectsUnknownState/multiple-dirty/empty/writer (0.22s)
+    --- PASS: TestMigrationBootstrapRejectsUnknownState/invalid-dirty/current/run (2.03s)
+    --- PASS: TestMigrationBootstrapRejectsUnknownState/invalid-dirty/current/bootstrap (1.85s)
+    --- PASS: TestMigrationBootstrapRejectsUnknownState/invalid-dirty/current/writer (2.00s)
+    --- PASS: TestMigrationBootstrapRejectsUnknownState/invalid-dirty/empty/run (0.20s)
+    --- PASS: TestMigrationBootstrapRejectsUnknownState/invalid-dirty/empty/bootstrap (0.23s)
+    --- PASS: TestMigrationBootstrapRejectsUnknownState/invalid-dirty/empty/writer (0.18s)
+    --- PASS: TestMigrationBootstrapRejectsUnknownState/null-dirty/current/run (2.13s)
+    --- PASS: TestMigrationBootstrapRejectsUnknownState/null-dirty/current/bootstrap (1.92s)
+    --- PASS: TestMigrationBootstrapRejectsUnknownState/null-dirty/current/writer (1.97s)
+    --- PASS: TestMigrationBootstrapRejectsUnknownState/null-dirty/empty/run (0.24s)
+    --- PASS: TestMigrationBootstrapRejectsUnknownState/null-dirty/empty/bootstrap (0.20s)
+    --- PASS: TestMigrationBootstrapRejectsUnknownState/null-dirty/empty/writer (0.20s)
+    --- PASS: TestMigrationBootstrapRejectsUnknownState/null-version/current/run (1.86s)
+    --- PASS: TestMigrationBootstrapRejectsUnknownState/null-version/current/bootstrap (1.93s)
+    --- PASS: TestMigrationBootstrapRejectsUnknownState/null-version/current/writer (1.93s)
+    --- PASS: TestMigrationBootstrapRejectsUnknownState/null-version/empty/run (0.19s)
+    --- PASS: TestMigrationBootstrapRejectsUnknownState/null-version/empty/bootstrap (0.18s)
+    --- PASS: TestMigrationBootstrapRejectsUnknownState/null-version/empty/writer (0.17s)
+    --- PASS: TestMigrationBootstrapRejectsUnknownState/invalid-version/current/run (1.99s)
+    --- PASS: TestMigrationBootstrapRejectsUnknownState/invalid-version/current/bootstrap (1.88s)
+    --- PASS: TestMigrationBootstrapRejectsUnknownState/invalid-version/current/writer (1.82s)
+    --- PASS: TestMigrationBootstrapRejectsUnknownState/invalid-version/empty/run (0.20s)
+    --- PASS: TestMigrationBootstrapRejectsUnknownState/invalid-version/empty/bootstrap (0.17s)
+    --- PASS: TestMigrationBootstrapRejectsUnknownState/invalid-version/empty/writer (0.27s)
+    --- PASS: TestMigrationBootstrapRejectsUnknownState/negative-clean/current/run (2.11s)
+    --- PASS: TestMigrationBootstrapRejectsUnknownState/negative-clean/current/bootstrap (2.08s)
+    --- PASS: TestMigrationBootstrapRejectsUnknownState/negative-clean/current/writer (2.02s)
+    --- PASS: TestMigrationBootstrapRejectsUnknownState/negative-clean/empty/run (0.19s)
+    --- PASS: TestMigrationBootstrapRejectsUnknownState/negative-clean/empty/bootstrap (0.20s)
+    --- PASS: TestMigrationBootstrapRejectsUnknownState/negative-clean/empty/writer (0.22s)
+    --- PASS: TestMigrationBootstrapRejectsUnknownState/missing-dirty-column/current/run (1.97s)
+    --- PASS: TestMigrationBootstrapRejectsUnknownState/missing-dirty-column/current/bootstrap (2.02s)
+    --- PASS: TestMigrationBootstrapRejectsUnknownState/missing-dirty-column/current/writer (1.94s)
+    --- PASS: TestMigrationBootstrapRejectsUnknownState/missing-dirty-column/empty/run (0.37s)
+    --- PASS: TestMigrationBootstrapRejectsUnknownState/missing-dirty-column/empty/bootstrap (0.21s)
+    --- PASS: TestMigrationBootstrapRejectsUnknownState/missing-dirty-column/empty/writer (0.24s)
+=== RUN   TestMigrationBootstrapRetainsCleanAndAbsentState
+=== RUN   TestMigrationBootstrapRetainsCleanAndAbsentState/fresh
+2026/11/09 16:57:35 INFO database migrations: all migrations applied successfully
+=== RUN   TestMigrationBootstrapRetainsCleanAndAbsentState/legacy-current
+2026/11/09 16:57:37 INFO database migrations: bootstrapped existing current schema version=24
+2026/11/09 16:57:38 INFO database migrations: all migrations applied successfully
+=== RUN   TestMigrationBootstrapRetainsCleanAndAbsentState/legacy-pre-module
+2026/11/09 16:57:40 INFO database migrations: bootstrapped existing current schema version=7
+    migrate_dirty_bootstrap_test.go:184: migration failed: migration failed in line 0: -- Indexes on system_user org columns. The dept/post delete guards count users
+        -- via WHERE dept_id = ? / post_id IN ? (dept_service.DeleteDept,
+        -- post_service.ensurePostsNotAssignedToUsers); without these indexes each
+        -- guard is a full scan of system_user.
+        -- Guarded via information_schema so the migration is idempotent and safe on
+        -- bootstrapped/partial schemas (same pattern as 000009).
+        
+        SET @user_dept_idx := (
+          SELECT COUNT(*)
+          FROM information_schema.statistics
+          WHERE table_schema = DATABASE()
+            AND table_name = 'system_user'
+            AND index_name = 'idx_system_user_dept_id'
+        );
+        SET @user_table_exists := (
+          SELECT COUNT(*)
+          FROM information_schema.tables
+          WHERE table_schema = DATABASE()
+            AND table_name = 'system_user'
+        );
+        SET @user_dept_stmt := IF(
+          @user_table_exists > 0 AND @user_dept_idx = 0,
+          'ALTER TABLE system_user ADD INDEX idx_system_user_dept_id (dept_id)',
+          'SELECT 1'
+        );
+        PREPARE user_dept_stmt FROM @user_dept_stmt;
+        EXECUTE user_dept_stmt;
+        DEALLOCATE PREPARE user_dept_stmt;
+        
+        SET @user_post_idx := (
+          SELECT COUNT(*)
+          FROM information_schema.statistics
+          WHERE table_schema = DATABASE()
+            AND table_name = 'system_user'
+            AND index_name = 'idx_system_user_post_id'
+        );
+        SET @user_post_stmt := IF(
+          @user_table_exists > 0 AND @user_post_idx = 0,
+          'ALTER TABLE system_user ADD INDEX idx_system_user_post_id (post_id)',
+          'SELECT 1'
+        );
+        PREPARE user_post_stmt FROM @user_post_stmt;
+        EXECUTE user_post_stmt;
+        DEALLOCATE PREPARE user_post_stmt;
+         (details: Error 1072 (42000): Key column 'dept_id' doesn't exist in table)
+=== RUN   TestMigrationBootstrapRetainsCleanAndAbsentState/legacy-pre-menu
+2026/11/09 16:57:43 INFO database migrations: bootstrapped existing current schema version=5
+    migrate_dirty_bootstrap_test.go:184: migration failed: migration failed in line 0: -- Indexes on system_user org columns. The dept/post delete guards count users
+        -- via WHERE dept_id = ? / post_id IN ? (dept_service.DeleteDept,
+        -- post_service.ensurePostsNotAssignedToUsers); without these indexes each
+        -- guard is a full scan of system_user.
+        -- Guarded via information_schema so the migration is idempotent and safe on
+        -- bootstrapped/partial schemas (same pattern as 000009).
+        
+        SET @user_dept_idx := (
+          SELECT COUNT(*)
+          FROM information_schema.statistics
+          WHERE table_schema = DATABASE()
+            AND table_name = 'system_user'
+            AND index_name = 'idx_system_user_dept_id'
+        );
+        SET @user_table_exists := (
+          SELECT COUNT(*)
+          FROM information_schema.tables
+          WHERE table_schema = DATABASE()
+            AND table_name = 'system_user'
+        );
+        SET @user_dept_stmt := IF(
+          @user_table_exists > 0 AND @user_dept_idx = 0,
+          'ALTER TABLE system_user ADD INDEX idx_system_user_dept_id (dept_id)',
+          'SELECT 1'
+        );
+        PREPARE user_dept_stmt FROM @user_dept_stmt;
+        EXECUTE user_dept_stmt;
+        DEALLOCATE PREPARE user_dept_stmt;
+        
+        SET @user_post_idx := (
+          SELECT COUNT(*)
+          FROM information_schema.statistics
+          WHERE table_schema = DATABASE()
+            AND table_name = 'system_user'
+            AND index_name = 'idx_system_user_post_id'
+        );
+        SET @user_post_stmt := IF(
+          @user_table_exists > 0 AND @user_post_idx = 0,
+          'ALTER TABLE system_user ADD INDEX idx_system_user_post_id (post_id)',
+          'SELECT 1'
+        );
+        PREPARE user_post_stmt FROM @user_post_stmt;
+        EXECUTE user_post_stmt;
+        DEALLOCATE PREPARE user_post_stmt;
+         (details: Error 1072 (42000): Key column 'dept_id' doesn't exist in table)
+=== RUN   TestMigrationBootstrapRetainsCleanAndAbsentState/legacy-empty-record
+2026/11/09 16:57:45 INFO database migrations: bootstrapped existing current schema version=24
+2026/11/09 16:57:46 INFO database migrations: all migrations applied successfully
+=== RUN   TestMigrationBootstrapRetainsCleanAndAbsentState/clean-lower
+2026/11/09 16:57:48 INFO database migrations: aligned current schema migration state from=2 to=24
+2026/11/09 16:57:48 INFO database migrations: all migrations applied successfully
+=== RUN   TestMigrationBootstrapRetainsCleanAndAbsentState/clean-current
+
+2026/11/09 16:57:50 [32mD:/workspace/go/pantheon-platform/pantheon-base/backend/pkg/database/migrate_test.go:952 [33mSLOW SQL >= 200ms
+[0m[31;1m[202.516ms] [33m[rows:0][35m CREATE TABLE system_dict_type (
+			id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+			dict_code VARCHAR(64) NOT NULL,
+			dict_name VARCHAR(64) NOT NULL,
+			module VARCHAR(64) NOT NULL DEFAULT 'system',
+			status TINYINT DEFAULT 1,
+			remark VARCHAR(255) DEFAULT NULL,
+			created_at DATETIME(3) DEFAULT NULL,
+			updated_at DATETIME(3) DEFAULT NULL,
+			deleted_at DATETIME(3) DEFAULT NULL,
+			PRIMARY KEY (id),
+			UNIQUE KEY idx_system_dict_type_dict_code (dict_code)
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4[0m
+2026/11/09 16:57:51 INFO database migrations: all migrations applied successfully
+=== RUN   TestMigrationBootstrapRetainsCleanAndAbsentState/clean-future
+--- FAIL: TestMigrationBootstrapRetainsCleanAndAbsentState (30.97s)
+    --- PASS: TestMigrationBootstrapRetainsCleanAndAbsentState/fresh (12.90s)
+    --- PASS: TestMigrationBootstrapRetainsCleanAndAbsentState/legacy-current (2.91s)
+    --- FAIL: TestMigrationBootstrapRetainsCleanAndAbsentState/legacy-pre-module (2.20s)
+    --- FAIL: TestMigrationBootstrapRetainsCleanAndAbsentState/legacy-pre-menu (2.24s)
+    --- PASS: TestMigrationBootstrapRetainsCleanAndAbsentState/legacy-empty-record (2.73s)
+    --- PASS: TestMigrationBootstrapRetainsCleanAndAbsentState/clean-lower (2.89s)
+    --- PASS: TestMigrationBootstrapRetainsCleanAndAbsentState/clean-current (3.00s)
+    --- PASS: TestMigrationBootstrapRetainsCleanAndAbsentState/clean-future (2.11s)
+=== RUN   TestMigrationStateReadFailureClosesSafely
+--- PASS: TestMigrationStateReadFailureClosesSafely (0.14s)
+=== RUN   TestRunMigrationsRejectsDirtyCurrentSchemaVersion
+--- PASS: TestRunMigrationsRejectsDirtyCurrentSchemaVersion (1.67s)
+FAIL
+FAIL	github.com/duanxldragon/pantheon-base/backend/pkg/database	145.810s
+FAIL

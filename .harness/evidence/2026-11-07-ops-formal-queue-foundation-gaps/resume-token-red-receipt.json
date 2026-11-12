@@ -1,0 +1,10 @@
+{
+  "CGO_ENABLED": "1",
+  "exitCode": 1,
+  "CC": "D:\\msys64\\mingw64\\bin\\gcc.exe",
+  "redisVersion": "7.4.2",
+  "elapsedSeconds": 2.3655019,
+  "sourceHash": "028F5E94D06113CB5F13294F3D484352B13A9118DFD31B8E5DD28A7A5919BAF0",
+  "redisRequired": true,
+  "command": "go test -json -count=1 ./pkg/authtoken ./internal/middleware -run 'TestRefreshSessionActivity|TestLegacyTokenActivity'"
+}

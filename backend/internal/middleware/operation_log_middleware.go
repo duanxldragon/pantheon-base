@@ -15,6 +15,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/duanxldragon/pantheon-base/backend/pkg/auditpolicy"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/common"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/metrics"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/tenant"
@@ -223,8 +224,41 @@ func ShutdownOperationLog(ctx context.Context) {
 // OperationLogMiddleware 异步记录操作日志。
 func OperationLogMiddleware(db *gorm.DB) gin.HandlerFunc {
 	store := newOperationLogAsyncStore(db)
+	metadataRecovery := MetadataAwareRecovery()
 	opLogStore = store
 	return func(c *gin.Context) {
+		if route, protected := auditpolicy.Match(c); protected {
+			start := time.Now()
+			// Never read the body or install a response buffer on opted routes,
+			// including failures before identity/binding/security middleware.
+			metadataRecovery(c)
+			metadata := auditpolicy.Metadata(c)
+			status := common.OperationStatusFailure
+			if metadata.Outcome == auditpolicy.OutcomeSuccess {
+				status = common.OperationStatusSuccess
+			}
+			encoded := auditpolicy.Encode(metadata)
+			category := auditpolicy.OutcomeName(metadata.Outcome)
+			if c.Writer.Status() >= 500 {
+				category = "http_5xx"
+			} else if c.Writer.Status() >= 400 {
+				category = "http_4xx"
+			}
+			common.SetAuditParam(c, encoded)
+			common.SetAuditResult(c, encoded)
+			common.SetAuditErrorMsg(c, auditpolicy.OutcomeName(metadata.Outcome))
+			store.enqueue(SystemLogOper{
+				TenantID: metadata.TenantID, RequestID: common.GetRequestID(c),
+				Title: "business metadata", Method: route.Method, OperURL: route.Template,
+				SourceDomain: DetectOperationLogSourceDomain(route.Template),
+				SourcePage:   DetectOperationLogSourcePage(route.Template),
+				OperParam:    encoded, JsonResult: encoded, Status: status,
+				FailureCategory: category,
+				ErrorMsg:        auditpolicy.OutcomeName(metadata.Outcome), OperTime: start,
+				CostTime: time.Since(start).Milliseconds(),
+			})
+			return
+		}
 		if db == nil || c.Request.Method == http.MethodGet {
 			c.Next()
 			return

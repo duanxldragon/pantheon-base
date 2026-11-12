@@ -1,0 +1,7 @@
+{
+  "changed": [],
+  "scope": "all backend Go/SQL/mod/sum before and after final scoped race/vet/build",
+  "stable": true,
+  "supersedes": "earlier interrupted source-drift race",
+  "fileCount": 525
+}

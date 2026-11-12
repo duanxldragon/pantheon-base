@@ -1,0 +1,8 @@
+{
+  "command": "npx.cmd playwright test tests/visual/operational-editor.spec.ts -c playwright.visual.config.ts --project=desktop-light --workers=1 --output=../.harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/condition-lifecycle-browser",
+  "cwd": "frontend",
+  "exitCode": 0,
+  "seconds": 8.89,
+  "webBaseUrl": "http://127.0.0.1:5175",
+  "artifact": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/condition-lifecycle-runtime.txt"
+}

@@ -1,0 +1,67 @@
+=== RUN   TestBusinessTelemetryPrivacy
+    business_telemetry_middleware_test.go:53: === RUN   TestBusinessTelemetryPrivacy
+        === RUN   TestBusinessTelemetryPrivacy/success
+            business_telemetry_middleware_test.go:139: safe receipt: case=success spans=1 raw-sentinel=0 outcome=success status=200
+        === RUN   TestBusinessTelemetryPrivacy/raw200
+            business_telemetry_middleware_test.go:139: safe receipt: case=raw200 spans=1 raw-sentinel=0 outcome=unknown status=200
+        === RUN   TestBusinessTelemetryPrivacy/business200
+            business_telemetry_middleware_test.go:139: safe receipt: case=business200 spans=1 raw-sentinel=0 outcome=denied status=200
+        === RUN   TestBusinessTelemetryPrivacy/invalid-metadata
+            business_telemetry_middleware_test.go:139: safe receipt: case=invalid-metadata spans=1 raw-sentinel=0 outcome=unknown status=200
+        === RUN   TestBusinessTelemetryPrivacy/provider
+            business_telemetry_middleware_test.go:139: safe receipt: case=provider spans=1 raw-sentinel=0 outcome=upstream status=200
+        === RUN   TestBusinessTelemetryPrivacy/storage
+            business_telemetry_middleware_test.go:139: safe receipt: case=storage spans=1 raw-sentinel=0 outcome=storage status=200
+        === RUN   TestBusinessTelemetryPrivacy/error
+            business_telemetry_middleware_test.go:139: safe receipt: case=error spans=1 raw-sentinel=0 outcome=unknown status=200
+        === RUN   TestBusinessTelemetryPrivacy/panic
+            business_telemetry_middleware_test.go:139: safe receipt: case=panic spans=1 raw-sentinel=0 outcome=unknown status=500
+        === RUN   TestBusinessTelemetryPrivacy/panic-error
+            business_telemetry_middleware_test.go:139: safe receipt: case=panic-error spans=1 raw-sentinel=0 outcome=unknown status=500
+        === RUN   TestBusinessTelemetryPrivacy/invalid-json
+            business_telemetry_middleware_test.go:139: safe receipt: case=invalid-json spans=1 raw-sentinel=0 outcome=invalid status=200
+        === RUN   TestBusinessTelemetryPrivacy/csrf
+            business_telemetry_middleware_test.go:139: safe receipt: case=csrf spans=1 raw-sentinel=0 outcome=denied status=200
+        === RUN   TestBusinessTelemetryPrivacy/rate
+        2026/11/10 08:42:02 WARN rate limit exceeded limit=100
+            business_telemetry_middleware_test.go:139: safe receipt: case=rate spans=1 raw-sentinel=0 outcome=unknown status=429
+        === RUN   TestBusinessTelemetryPrivacy/auth
+            business_telemetry_middleware_test.go:139: safe receipt: case=auth spans=1 raw-sentinel=0 outcome=denied status=200
+        === RUN   TestBusinessTelemetryPrivacy/tenant
+            business_telemetry_middleware_test.go:139: safe receipt: case=tenant spans=1 raw-sentinel=0 outcome=denied status=200
+        === RUN   TestBusinessTelemetryPrivacy/body
+            business_telemetry_middleware_test.go:139: safe receipt: case=body spans=1 raw-sentinel=0 outcome=unknown status=413
+        === RUN   TestBusinessTelemetryPrivacy/body-stream
+            business_telemetry_middleware_test.go:139: safe receipt: case=body-stream spans=1 raw-sentinel=0 outcome=invalid status=200
+        === RUN   TestBusinessTelemetryPrivacy/canceled
+            business_telemetry_middleware_test.go:139: safe receipt: case=canceled spans=1 raw-sentinel=0 outcome=unknown status=200
+        === RUN   TestBusinessTelemetryPrivacy/unmatched-defaults
+        === RUN   TestBusinessTelemetryPrivacy/production-otlp
+        2026/11/10 08:42:03 WARN rate limit exceeded limit=100
+            business_telemetry_middleware_test.go:415: OTLP batch: spans=17 bytes=10321 sha256=eecc1379bcd21a373291ce070f89a95b6f5c3df6bbf60778630a30f65d5ca819 sentinel-present=false
+            business_telemetry_middleware_test.go:421: production OTLP receipt: spans=17 bytes=10321 raw-sentinel=0
+        --- PASS: TestBusinessTelemetryPrivacy (1.28s)
+            --- PASS: TestBusinessTelemetryPrivacy/success (0.02s)
+            --- PASS: TestBusinessTelemetryPrivacy/raw200 (0.00s)
+            --- PASS: TestBusinessTelemetryPrivacy/business200 (0.00s)
+            --- PASS: TestBusinessTelemetryPrivacy/invalid-metadata (0.00s)
+            --- PASS: TestBusinessTelemetryPrivacy/provider (0.00s)
+            --- PASS: TestBusinessTelemetryPrivacy/storage (0.00s)
+            --- PASS: TestBusinessTelemetryPrivacy/error (0.00s)
+            --- PASS: TestBusinessTelemetryPrivacy/panic (0.00s)
+            --- PASS: TestBusinessTelemetryPrivacy/panic-error (0.00s)
+            --- PASS: TestBusinessTelemetryPrivacy/invalid-json (0.00s)
+            --- PASS: TestBusinessTelemetryPrivacy/csrf (0.00s)
+            --- PASS: TestBusinessTelemetryPrivacy/rate (0.00s)
+            --- PASS: TestBusinessTelemetryPrivacy/auth (0.00s)
+            --- PASS: TestBusinessTelemetryPrivacy/tenant (0.00s)
+            --- PASS: TestBusinessTelemetryPrivacy/body (0.00s)
+            --- PASS: TestBusinessTelemetryPrivacy/body-stream (0.61s)
+            --- PASS: TestBusinessTelemetryPrivacy/canceled (0.00s)
+            --- PASS: TestBusinessTelemetryPrivacy/unmatched-defaults (0.00s)
+            --- PASS: TestBusinessTelemetryPrivacy/production-otlp (0.63s)
+        PASS
+        
+--- PASS: TestBusinessTelemetryPrivacy (2.34s)
+PASS
+ok  	github.com/duanxldragon/pantheon-base/backend/internal/middleware	3.411s

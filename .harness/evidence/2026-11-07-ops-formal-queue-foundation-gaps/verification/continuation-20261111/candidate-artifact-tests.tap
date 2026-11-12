@@ -1,0 +1,244 @@
+TAP version 13
+# Subtest: seals exact dirty/untracked fixture bytes with detached descriptor and genuine provenance
+ok 1 - seals exact dirty/untracked fixture bytes with detached descriptor and genuine provenance
+  ---
+  duration_ms: 500.0688
+  type: 'test'
+  ...
+# Subtest: identical source inventory has deterministic archives; review revisions have distinct descriptor digests
+ok 2 - identical source inventory has deterministic archives; review revisions have distinct descriptor digests
+  ---
+  duration_ms: 358.775
+  type: 'test'
+  ...
+# Subtest: descriptor tampering, archive tampering and missing pins refuse
+ok 3 - descriptor tampering, archive tampering and missing pins refuse
+  ---
+  duration_ms: 348.9863
+  type: 'test'
+  ...
+# Subtest: rejects unsafe/secret/output paths, platform aliases and file/directory collisions
+ok 4 - rejects unsafe/secret/output paths, platform aliases and file/directory collisions
+  ---
+  duration_ms: 462.538
+  type: 'test'
+  ...
+# Subtest: protected target and fixture lock remain byte-identical; write failure leaves no partial candidate
+ok 5 - protected target and fixture lock remain byte-identical; write failure leaves no partial candidate
+  ---
+  duration_ms: 397.7286
+  type: 'test'
+  ...
+# Subtest: source junctions, hard links and redirected output directories refuse
+ok 6 - source junctions, hard links and redirected output directories refuse
+  ---
+  duration_ms: 409.5953
+  type: 'test'
+  ...
+# Subtest: exported producer preserves directory replacements and original write/verification failures
+    # Subtest: write/stage
+    ok 1 - write/stage
+      ---
+      duration_ms: 302.1183
+      type: 'test'
+      ...
+    # Subtest: write/ancestor
+    ok 2 - write/ancestor
+      ---
+      duration_ms: 395.9274
+      type: 'test'
+      ...
+    # Subtest: write/nested
+    ok 3 - write/nested
+      ---
+      duration_ms: 358.8012
+      type: 'test'
+      ...
+    # Subtest: verification/stage
+    ok 4 - verification/stage
+      ---
+      duration_ms: 300.4201
+      type: 'test'
+      ...
+    # Subtest: verification/ancestor
+    ok 5 - verification/ancestor
+      ---
+      duration_ms: 322.3671
+      type: 'test'
+      ...
+    # Subtest: verification/nested
+    ok 6 - verification/nested
+      ---
+      duration_ms: 324.9592
+      type: 'test'
+      ...
+    1..6
+ok 7 - exported producer preserves directory replacements and original write/verification failures
+  ---
+  duration_ms: 2007.9371
+  type: 'test'
+  ...
+# Subtest: exported producer refuses stage/ancestor replacement before the successful seal rename
+    # Subtest: stage
+    ok 1 - stage
+      ---
+      duration_ms: 284.6332
+      type: 'test'
+      ...
+    # Subtest: ancestor
+    ok 2 - ancestor
+      ---
+      duration_ms: 471.4749
+      type: 'test'
+      ...
+    1..2
+ok 8 - exported producer refuses stage/ancestor replacement before the successful seal rename
+  ---
+  duration_ms: 757.4254
+  type: 'test'
+  ...
+# Subtest: exported producer refuses unknown stage entries before cleaning known files
+    # Subtest: unknown file
+    ok 1 - unknown file
+      ---
+      duration_ms: 473.5354
+      type: 'test'
+      ...
+    # Subtest: unknown nested directory
+    ok 2 - unknown nested directory
+      ---
+      duration_ms: 460.0943
+      type: 'test'
+      ...
+    1..2
+ok 9 - exported producer refuses unknown stage entries before cleaning known files
+  ---
+  duration_ms: 934.9835
+  type: 'test'
+  ...
+# Subtest: exported producer retains the stage when its directory identity is unavailable
+ok 10 - exported producer retains the stage when its directory identity is unavailable
+  ---
+  duration_ms: 357.3782
+  type: 'test'
+  ...
+# Subtest: exported producer rechecks stage identity after an owned unlink
+ok 11 - exported producer rechecks stage identity after an owned unlink
+  ---
+  duration_ms: 311.6209
+  type: 'test'
+  ...
+# Subtest: capabilities require declared actual exports; comments/strings cannot fabricate an API
+ok 12 - capabilities require declared actual exports; comments/strings cannot fabricate an API
+  ---
+  duration_ms: 460.5996
+  type: 'test'
+  ...
+# Subtest: source edits, additions, deletion and edit/revert during sealing leave no output or staging debris
+    # Subtest: edit
+    ok 1 - edit
+      ---
+      duration_ms: 437.5532
+      type: 'test'
+      ...
+    # Subtest: add
+    ok 2 - add
+      ---
+      duration_ms: 315.3063
+      type: 'test'
+      ...
+    # Subtest: delete
+    ok 3 - delete
+      ---
+      duration_ms: 382.2836
+      type: 'test'
+      ...
+    # Subtest: revert
+    ok 4 - revert
+      ---
+      duration_ms: 265.3828
+      type: 'test'
+      ...
+    1..4
+ok 13 - source edits, additions, deletion and edit/revert during sealing leave no output or staging debris
+  ---
+  duration_ms: 1402.3683
+  type: 'test'
+  ...
+# Subtest: independently re-pinned hostile tar headers still refuse links/extensions/unsafe entries/content corruption
+ok 14 - independently re-pinned hostile tar headers still refuse links/extensions/unsafe entries/content corruption
+  ---
+  duration_ms: 287.7924
+  type: 'test'
+  ...
+# Subtest: separate pinned executable build receipt binds descriptor identity, capabilities and actual executable bytes
+ok 15 - separate pinned executable build receipt binds descriptor identity, capabilities and actual executable bytes
+  ---
+  duration_ms: 460.8956
+  type: 'test'
+  ...
+# Subtest: exported producer refuses changed saved bytes in the final seal window with stable sources/directories
+    # Subtest: descriptor/newline after write
+    ok 1 - descriptor/newline after write
+      ---
+      duration_ms: 328.1142
+      type: 'test'
+      ...
+    # Subtest: archive/append after early validation
+    ok 2 - archive/append after early validation
+      ---
+      duration_ms: 277.2579
+      type: 'test'
+      ...
+    # Subtest: descriptor/same-size replacement
+    ok 3 - descriptor/same-size replacement
+      ---
+      duration_ms: 332.549
+      type: 'test'
+      ...
+    # Subtest: archive/same-size replacement
+    ok 4 - archive/same-size replacement
+      ---
+      duration_ms: 423.8132
+      type: 'test'
+      ...
+    1..4
+ok 16 - exported producer refuses changed saved bytes in the final seal window with stable sources/directories
+  ---
+  duration_ms: 1364.0262
+  type: 'test'
+  ...
+# Subtest: exported producer refuses byte-identical file rename/recreate during its final saved-file read
+    # Subtest: descriptor
+    ok 1 - descriptor
+      ---
+      duration_ms: 520.5085
+      type: 'test'
+      ...
+    # Subtest: archive
+    ok 2 - archive
+      ---
+      duration_ms: 542.744
+      type: 'test'
+      ...
+    1..2
+ok 17 - exported producer refuses byte-identical file rename/recreate during its final saved-file read
+  ---
+  duration_ms: 1064.6775
+  type: 'test'
+  ...
+# Subtest: curated public archive leaves survive sealed packaging; registry mismatches refuse
+ok 18 - curated public archive leaves survive sealed packaging; registry mismatches refuse
+  ---
+  duration_ms: 1282.3528
+  type: 'test'
+  ...
+1..18
+# tests 38
+# suites 0
+# pass 38
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 13394.553

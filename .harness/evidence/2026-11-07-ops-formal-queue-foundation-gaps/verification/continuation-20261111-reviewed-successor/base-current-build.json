@@ -1,0 +1,23 @@
+{
+  "command": [
+    "go",
+    "build",
+    "-mod=readonly",
+    "./..."
+  ],
+  "exitCode": 0,
+  "elapsedSeconds": 11.016,
+  "sourceStable": true,
+  "filesCaptured": 526,
+  "sourceBeforeSHA256": "3c35be447bc240742aa999abb70d3d9ab52c72f5ed7895f953ac18402a21a4aa",
+  "sourceAfterSHA256": "3c35be447bc240742aa999abb70d3d9ab52c72f5ed7895f953ac18402a21a4aa",
+  "logSHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "cgoEnabled": "1",
+  "temporaryDirectory": "D:\\workspace\\go\\pantheon-platform\\pantheon-base\\.local\\continuation-20261111-gates\\go-build-c507992ce3c1\\temp",
+  "environmentScope": "this subprocess only",
+  "optionalViteLookupAdapter": null,
+  "adapterAndViteHashes": {},
+  "adapterAndViteStable": true,
+  "runtimeAcceptance": false,
+  "P0Approved": false
+}
