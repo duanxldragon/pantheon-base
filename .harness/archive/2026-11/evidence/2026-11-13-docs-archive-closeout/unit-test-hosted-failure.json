@@ -1,0 +1,15 @@
+{
+  "run": 43432817954,
+  "job": 131910312426,
+  "head": "2e42531975e9430401e88725577aaab64f76a499",
+  "workflow": "CI",
+  "step": "Run npm script tests",
+  "tests": 209,
+  "passed": 208,
+  "failed": 1,
+  "log": "unit-test-hosted-failure.log.gz",
+  "sha256": "ad67a991a8405f2deb70dc0fdb7b66c1f95170f72ad31f545574887eab9b2716",
+  "rawSha256": "d92e49bd7488d7dca93c9f9695ed27eefd6569371bcd5072f6b1317d80984a88",
+  "failure": "task-manifest-status.test.mjs: expected at least one task manifest",
+  "rootCause": "Live-only manifest inventory becomes empty after all completed tasks are archived."
+}

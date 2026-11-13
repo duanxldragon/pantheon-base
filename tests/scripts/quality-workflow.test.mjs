@@ -6,6 +6,32 @@ import test from 'node:test';
 const workflowPath = path.resolve('.github/workflows/quality.yml');
 const workflowSource = fs.readFileSync(workflowPath, 'utf8');
 
+test('large governance archives avoid oversized smoke resolver environments; mixed changes still resolve', () => {
+  const step = workflowSource.match(/- name: Resolve touched smoke modules[\s\S]*?(?=\n  [a-z-]+:)/)[0];
+  const expression = step.match(/if:\s*\$\{\{\s*(.*?)\s*\}\}/)[1];
+  const changedPaths = Array.from({ length: 1500 }, (_, i) =>
+    `.harness/archive/2026-11/evidence/2026-11-07-ops-formal-queue-foundation-gaps/verification/retained-original-checkpoint-${i}/summary.json`,
+  );
+  assert.ok(Buffer.byteLength(JSON.stringify(changedPaths)) > 128 * 1024,
+    'the archive fixture must exceed Linux single-environment-string capacity');
+  const runs = (event, all, governance) => {
+    const values = {
+      'github.event_name': event,
+      'steps.scope.outputs.all_count': String(all),
+      'steps.scope.outputs.governance_only_count': String(governance),
+    };
+    const expanded = expression.replace(/github\.event_name|steps\.scope\.outputs\.(?:all_count|governance_only_count)/g,
+      key => JSON.stringify(values[key]));
+    return Function(`return (${expanded});`)();
+  };
+  for (const event of ['pull_request', 'push']) {
+    assert.equal(runs(event, 1500, 1500), false, 'governance-only archives do not need runtime-module resolution');
+    assert.equal(runs(event, 1501, 1500), true, 'one application change must retain runtime-module resolution');
+    assert.equal(runs(event, 17, 0), true, 'ordinary application changes still resolve');
+  }
+  assert.equal(runs('merge_group', 1501, 1500), false, 'merge-group behavior remains unchanged');
+});
+
 test('governance-only changes can skip runtime gates without failing Quality Gates', () => {
   assert.match(
     workflowSource,

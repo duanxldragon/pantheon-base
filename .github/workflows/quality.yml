@@ -92,7 +92,9 @@ jobs:
 
       - name: Resolve touched smoke modules
         id: smoke
-        if: ${{ github.event_name == 'pull_request' || github.event_name == 'push' }}
+        # Governance-only changes already skip runtime gates. Large archives can
+        # exceed Linux's environment-string limit before this process can start.
+        if: ${{ (github.event_name == 'pull_request' || github.event_name == 'push') && steps.scope.outputs.all_count != steps.scope.outputs.governance_only_count }}
         env:
           CHANGED_FILES_JSON: ${{ steps.scope.outputs.all_files }}
         run: node scripts/resolve-smoke-modules.mjs

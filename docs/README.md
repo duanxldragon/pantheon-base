@@ -2,7 +2,7 @@
 
 English version: [README.en.md](./README.en.md)
 
-当前正式发行 **v0.18.8** 已于 2026-11-13 发布，tag `pantheon-base-v0.18.8` 绑定提交 `34428814a9efc997fd93d4434406a53df6460323`。[发行说明](./release-notes/RELEASE_NOTES_v0.18.8.md) · [GitHub Release 与四个不可变资产](https://github.com/duanxldragon/pantheon-base/releases/tag/pantheon-base-v0.18.8) · [正式发行证据](../.harness/evidence/2026-11-13-docs-archive-closeout/publication-summary.json)。PR #510 已合并；最终提交的 CI、Quality、Security、Smoke、Release Gate 和资产验证均通过，Linux foundation 测试 125/125、零跳过；CodeQL #100–108 自动关闭，零 dismissals。
+当前正式发行 **v0.18.8** 已于 2026-11-13 发布，tag `pantheon-base-v0.18.8` 绑定提交 `34428814a9efc997fd93d4434406a53df6460323`。[发行说明](./release-notes/RELEASE_NOTES_v0.18.8.md) · [GitHub Release 与四个不可变资产](https://github.com/duanxldragon/pantheon-base/releases/tag/pantheon-base-v0.18.8) · [正式发行证据](../.harness/archive/2026-11/evidence/2026-11-13-docs-archive-closeout/publication-summary.json)。PR #510 已合并；最终提交的 CI、Quality、Security、Smoke、Release Gate 和资产验证均通过，Linux foundation 测试 125/125、零跳过；CodeQL #100–108 自动关闭，零 dismissals。
 
 Ops 已通过 [PR #183](https://github.com/duanxldragon/pantheon-ops/pull/183) 正式消费 v0.18.7；**v0.18.8 的正式消费升级另行跟踪**。维护冻结未签署、真实 S3 provider 验证未豁免、FR028 延期，生产迁移/旧认证退役与独立业务验收继续保留，见[当前状态](../.harness/STATUS.md)。
 

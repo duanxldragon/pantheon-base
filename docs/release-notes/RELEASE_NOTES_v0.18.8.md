@@ -32,3 +32,7 @@ Completed task/evidence directories were moved into the monthly archive after pu
 
 - [Archived publication checkpoint 1](../../.harness/archive/2026-11/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/summary.md) (original path: `../../.harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/summary.md`).
 - [Archived publication checkpoint 2](../../.harness/archive/2026-11/evidence/2026-11-13-v0188-release-preparation/summary.md) (original path: `../../.harness/evidence/2026-11-13-v0188-release-preparation/summary.md`).
+
+## Documentation closeout archive — 2026-11-13
+
+After documentation PR #511 merged, its completed task/evidence moved into the monthly archive. Earlier canonical links retain their original spelling. Use the physical [publication receipt](../../.harness/archive/2026-11/evidence/2026-11-13-docs-archive-closeout/publication-summary.json), [exact-main checks](../../.harness/archive/2026-11/evidence/2026-11-13-docs-archive-closeout/published-main-checks.json) and [documentation/CI review](../../.harness/archive/2026-11/evidence/2026-11-13-docs-archive-closeout/review.md) on GitHub. This maintenance change does not replace the immutable v0.18.8 release or assert official v0.18.8 consumer adoption.
