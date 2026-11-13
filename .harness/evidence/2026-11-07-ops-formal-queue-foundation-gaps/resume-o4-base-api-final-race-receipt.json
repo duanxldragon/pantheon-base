@@ -1,0 +1,9 @@
+{
+  "redisRequired": true,
+  "command": "go test -race -json -count=1 -p 1 ./pkg/tenant ./pkg/contracts/businessauth ./pkg/contracts ./pkg/auditpolicy ./pkg/database ./pkg/common/http ./internal/middleware ./modules/auth/login ./modules/auth ./modules/system ./cmd/server -run TestStrictMode|TestEphemeral|TestBusiness|TestMetadata|TestExactSealed|TestSafeOutcome|TestProtectedGroup|TestDataScoped|TestSystem.*Group|TestToken|TestOperationLog|TestRequestContext|TestResolve|TestModeLoader",
+  "exit": 0,
+  "mysqlRequired": true,
+  "compiler": "MinGW",
+  "CGO_ENABLED": "1",
+  "seconds": 176.6905177
+}

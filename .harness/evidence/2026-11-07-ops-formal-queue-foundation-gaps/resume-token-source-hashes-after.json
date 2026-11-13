@@ -1,0 +1,414 @@
+[
+  {
+    "path": "go.mod",
+    "sha256": "E275137D9A027FF2C3D73E17ED9A8DD2D70157A57F356EB4C675F460BE0C8753"
+  },
+  {
+    "path": "go.sum",
+    "sha256": "3C9804A1441C4DF7B7E8DEFD0D6C7A1DB542884857535F680C517ED2A2796F8A"
+  },
+  {
+    "path": "internal\\middleware\\body_limit_middleware.go",
+    "sha256": "97932164EE4FA2C2E1974205144EA239D790AF99A9B63521029EBCF8F3F05BCA"
+  },
+  {
+    "path": "internal\\middleware\\casbin_middleware_test.go",
+    "sha256": "D43E4D6F41678A40659544E0FC5A8B55A7B394D21B0124AEDB1F56342AB26FCE"
+  },
+  {
+    "path": "internal\\middleware\\casbin_middleware.go",
+    "sha256": "09F2A7816EDE32899ABC395229D82B4253B7D3C3DAF0E25C16D28259FB4E2339"
+  },
+  {
+    "path": "internal\\middleware\\casbin_tenant_domain_test.go",
+    "sha256": "4DB47926B62431BF17AC78FBC847F69956622EF2A20C7043EEE9E83CBCCE2D33"
+  },
+  {
+    "path": "internal\\middleware\\cors_middleware_test.go",
+    "sha256": "6B24108C83AE09F55735AFB1211C6D4FE694179FAB1852D7D9E5A51493D36BB4"
+  },
+  {
+    "path": "internal\\middleware\\cors_middleware.go",
+    "sha256": "86C1B0FC77B7807176600401D58BF41A640BA29F5B3E1E4EF9AB15F1A1EE4790"
+  },
+  {
+    "path": "internal\\middleware\\csp_middleware_test.go",
+    "sha256": "006F2C279A11A17BC2841D85B40F9B7316E558C54A9935553159FF99B303F926"
+  },
+  {
+    "path": "internal\\middleware\\csp_middleware.go",
+    "sha256": "E3356D00AE5A9A9094A114BD0C832DFB85597AB7B8EF26F869D96E4EE289F3DA"
+  },
+  {
+    "path": "internal\\middleware\\csp_nonce_middleware_test.go",
+    "sha256": "0F2366C3FD7B91F8708AF9BB15D336CBB11DC2BA4F6AC46A58BB7BEF53B21D0D"
+  },
+  {
+    "path": "internal\\middleware\\csp_nonce_middleware.go",
+    "sha256": "AE912DB08D57E04B9434371637E250543E0F21B4ABBAE7BD26A17F676B78E535"
+  },
+  {
+    "path": "internal\\middleware\\csrf_middleware.go",
+    "sha256": "D43BF9747121323F2EF119DE8F141F4E053F4D94247E451AE64E28A01DE21108"
+  },
+  {
+    "path": "internal\\middleware\\data_scope_failclosed_test.go",
+    "sha256": "2FE3CEA8D4DDF7293256CE98217D77C6B84C962F4A040111DA407CF47D4207C5"
+  },
+  {
+    "path": "internal\\middleware\\data_scope_middleware_test.go",
+    "sha256": "094E2F03666C778B29DA40DBED0A592E038CED43E5D08B75F36E5BC76639F136"
+  },
+  {
+    "path": "internal\\middleware\\data_scope_middleware.go",
+    "sha256": "8626D7F257F9901D63B686F976BA12AC2EF805D2CB6209D758632A9FD78FCC6B"
+  },
+  {
+    "path": "internal\\middleware\\data_scope_schema_test.go",
+    "sha256": "B46B1792C62B3CBC27241C8D55D06B639766CC4C16920AA6B7067705C9023851"
+  },
+  {
+    "path": "internal\\middleware\\data_scope_tenant_test.go",
+    "sha256": "FE6302CF57FEA7F10883CB0B37F127CC2D5414B0E5257B5420DC8F11086EAD9A"
+  },
+  {
+    "path": "internal\\middleware\\operation_log_middleware_test.go",
+    "sha256": "EF8832372E98591D24D6DCD21D785BDC45D34280F0539CD915A8F76E457CDF5F"
+  },
+  {
+    "path": "internal\\middleware\\operation_log_middleware.go",
+    "sha256": "D94F5B5A5CF5DAF47D39D3BA1006A8E74DE1A7D7FD3032B3131983F191B7DE01"
+  },
+  {
+    "path": "internal\\middleware\\operation_log_request_body_guard_test.go",
+    "sha256": "3097421491C38B2540A6054B7EB7183624C512653E46D91A76F79C00A7914BFE"
+  },
+  {
+    "path": "internal\\middleware\\operation_log_tenant_test.go",
+    "sha256": "E91867E41F6C5541207F7796DF3304743C44B375DBDC445A5A498E2F4606B0D4"
+  },
+  {
+    "path": "internal\\middleware\\platform_capability_middleware_test.go",
+    "sha256": "03B1D83568B89824BF29040C77576EDC4AFF1A26E0FD5E8D07C5188FE3C5E30E"
+  },
+  {
+    "path": "internal\\middleware\\prometheus_middleware.go",
+    "sha256": "7508E0B9ACE5C428A340083C1F1DE8EB4488CD3E52125E509A7BE98ED63BDA3F"
+  },
+  {
+    "path": "internal\\middleware\\rate_limit_middleware_test.go",
+    "sha256": "B1452AE8E53E480ACBE89D536C0FF3F655ECC05419813D2D131618AAB74D4E7C"
+  },
+  {
+    "path": "internal\\middleware\\rate_limit_middleware.go",
+    "sha256": "097EE7CEA2CB6898D4F1E67E98C0DAD10A3DD22DA2AE550D965A190ADC18CFC4"
+  },
+  {
+    "path": "internal\\middleware\\rate_limit_presets.go",
+    "sha256": "3AD5D2975EF4DE82BF954A8214CABCA8BE10C62F255414A82EE3AED145A03F49"
+  },
+  {
+    "path": "internal\\middleware\\request_context_middleware_test.go",
+    "sha256": "51FD75327A342F96208EB7BDFD87FA713BA17A279FF045EC1C89AE4D92B4E7EF"
+  },
+  {
+    "path": "internal\\middleware\\request_context_middleware.go",
+    "sha256": "B6F207018269D35F340BF9FEBDDFA25BBBC3D1D6951F7626604E1AC61A5764D5"
+  },
+  {
+    "path": "internal\\middleware\\secure_action_middleware_test.go",
+    "sha256": "BBE5B83FA6D4276B3091DAC494FE85596B7DD133131A077554BE5E32ACC52057"
+  },
+  {
+    "path": "internal\\middleware\\secure_action_middleware.go",
+    "sha256": "D4B54827BCC9FF29298B5D7F61391F766F9E1150548FEA3E0FE3346D50176FC9"
+  },
+  {
+    "path": "internal\\middleware\\security_headers_middleware_test.go",
+    "sha256": "966D439A937D421A60657115E603F8EF50460BC8BE5E1443A862015E2F4AB195"
+  },
+  {
+    "path": "internal\\middleware\\security_headers_middleware.go",
+    "sha256": "C4840062B658431991938B84CEF95611F19BC7B23752F725682DFA7CE9DF2921"
+  },
+  {
+    "path": "internal\\middleware\\tenant_context_middleware.go",
+    "sha256": "15B87DFB86D58075B2777664280E1E50E7F75DE4DC7D8CAD387F7AA0A5D3F910"
+  },
+  {
+    "path": "internal\\middleware\\tenant_hostile_smoke_test.go",
+    "sha256": "BEA6F4B5D0D644CAE745227D7CB2E4F56B160CE1154480CA3C1964243773D73B"
+  },
+  {
+    "path": "internal\\middleware\\tenant_platform_scope_test.go",
+    "sha256": "B7B1F871F66083F57B984F7A4AAFCEBF23965029087D4514A6012D6720EA7A86"
+  },
+  {
+    "path": "internal\\middleware\\token_activity_regression_test.go",
+    "sha256": "2F795BAF9E8F905B455C0C96DC6F4801A01BCCB1297C456B6E7A31DF37FEE844"
+  },
+  {
+    "path": "internal\\middleware\\token_middleware_auth_test.go",
+    "sha256": "F3B32D50FBB0C06F60BEA93A94BF87BDDA8BDE4CFA11FFBF4FA53E4CBB0299E2"
+  },
+  {
+    "path": "internal\\middleware\\token_middleware_test.go",
+    "sha256": "6138F08CA044C9DD16A1518C825CCC9ACC837938829DC906EA2AA513F8DA43E7"
+  },
+  {
+    "path": "internal\\middleware\\token_middleware.go",
+    "sha256": "2E4E02E8BE0E2F9FE909DE5253EF1B8E5EA106AF696F7421D28047570FDB0E0B"
+  },
+  {
+    "path": "internal\\middleware\\token_session_cache_race_test.go",
+    "sha256": "6DE14CD1672B44001B3FA037EB6E0FDC4277A559DA34DAA91EA160A81E667811"
+  },
+  {
+    "path": "modules\\auth\\login\\login_blacklist_test.go",
+    "sha256": "96CFE8E885DE3FF4E36E59BD81391BD5E7331AE58FE46286B5AD4A6287DCFDF6"
+  },
+  {
+    "path": "modules\\auth\\login\\login_dto.go",
+    "sha256": "3A971B58D6B98A6589447E48CB8673F424F4D6DA4DA2404202F841DE6CCE1403"
+  },
+  {
+    "path": "modules\\auth\\login\\login_handler_service_test.go",
+    "sha256": "0FB7BDB73C81654AA47E9B2998256499FEB623F14C26CC5277F6D6111FCF01C9"
+  },
+  {
+    "path": "modules\\auth\\login\\login_handler_test_helpers_test.go",
+    "sha256": "08CB01272198CE7E09ACC80BA47024AB1DFE7FA73217E2E20DD8582896BB130F"
+  },
+  {
+    "path": "modules\\auth\\login\\login_handler_test.go",
+    "sha256": "7673556999D320F8CEE8E05DAF43B92F6F42CCB2EF990D4C3BE9E0F903B7D8F5"
+  },
+  {
+    "path": "modules\\auth\\login\\login_handler.go",
+    "sha256": "749E497662FB18A9057A2D543D2BE6194655634CED8980F49B646A313443BE67"
+  },
+  {
+    "path": "modules\\auth\\login\\login_keyword_test.go",
+    "sha256": "4D43DA04E275F4D731C317246418D83F888D12955AF69F92CCE05D6FBB7E4646"
+  },
+  {
+    "path": "modules\\auth\\login\\login_log_identity_test.go",
+    "sha256": "429559D358BBD9C4746A40E145295FF42939DEEF0C60C7F039DAEEB4AAE88FC9"
+  },
+  {
+    "path": "modules\\auth\\login\\login_log_tenant_attribution_test.go",
+    "sha256": "D9346F3219B8E12200441E17F0BCCD3052C2719DA2913854CFA3945B4787462E"
+  },
+  {
+    "path": "modules\\auth\\login\\login_menu_test.go",
+    "sha256": "DC49BA29173B3D170758C539847B6AA6E67E93B77565890DBD61714E46758D4E"
+  },
+  {
+    "path": "modules\\auth\\login\\login_menu.go",
+    "sha256": "E61343B57DEFF6F6BE74D379D837C8138851D5FEA6E2CF43BAEDFB77141163DC"
+  },
+  {
+    "path": "modules\\auth\\login\\login_model.go",
+    "sha256": "BC231C6DD92C52A4B8CBB3E3BC3FDD51EFF81607D8E611FBB82182D6F7A15FC9"
+  },
+  {
+    "path": "modules\\auth\\login\\login_preferences_contract_test.go",
+    "sha256": "E03C4FA000E90E521E28F2D1631509E6B250FD540A6B018E4B7841B7C00388B6"
+  },
+  {
+    "path": "modules\\auth\\login\\login_runtime_test.go",
+    "sha256": "E5390C95B9E64A2FB935F64F43BC6144FA5FF2B6A2F7F7DFC9D8FC20511270E2"
+  },
+  {
+    "path": "modules\\auth\\login\\login_runtime_types.go",
+    "sha256": "9548BE5A7A1287AD633F8B4583ABB6B938E99F5D1A6CD9D0967E366417BBEA62"
+  },
+  {
+    "path": "modules\\auth\\login\\login_runtime.go",
+    "sha256": "C99D4A3725305BF4EFA87D4D9A4A19177EBC53C8E28F0F122FF5FCEA0D99FB8A"
+  },
+  {
+    "path": "modules\\auth\\login\\login_service_pure_test.go",
+    "sha256": "8FA10949D3743DF04BC46A4B6F007765FDD9FA607656F48E83CBD2A1A53D491B"
+  },
+  {
+    "path": "modules\\auth\\login\\login_service_throttle_test.go",
+    "sha256": "59E366045A251452833B38EA702814E38A804EA56971D2E1E06051FB3412B0FD"
+  },
+  {
+    "path": "modules\\auth\\login\\login_service.go",
+    "sha256": "AE852557B0AD345068A2F59DC19329C27EF075D927BE71DACC49E2897AC01547"
+  },
+  {
+    "path": "modules\\auth\\login\\login_status_regression_test.go",
+    "sha256": "6F4F85274B3F8A76A8BDF515345430B863793F2042EEB357D7CE5B4749456022"
+  },
+  {
+    "path": "modules\\auth\\login\\login_tenant_audit.go",
+    "sha256": "19E1151F034C2408C7E2E3081057D1F3C7675535A0B5738257DBF4A65022B498"
+  },
+  {
+    "path": "modules\\auth\\login\\login_tenant_candidates.go",
+    "sha256": "C2CE027B86F3A903BB6F7B90F6785DB2FA8A21EC825B0C8CDD6086AE86797C2A"
+  },
+  {
+    "path": "modules\\auth\\login\\login_tenant_gate_test.go",
+    "sha256": "BC6A170D46A45308DB299DC0E5F5837A93FAE4BBC4C0791C67638982D44C02E6"
+  },
+  {
+    "path": "modules\\auth\\login\\login_tenant_isolation_test.go",
+    "sha256": "ACAAEF02D406A67723E432074E0FF96D9022E56FC92FD23CA42EF63BE30EA1E3"
+  },
+  {
+    "path": "modules\\auth\\login\\login_tenant_picker_handler_test.go",
+    "sha256": "51EAC0F0C6F624A49266776A662C08B7C491EF2210809754F22E58286BCFAEED"
+  },
+  {
+    "path": "modules\\auth\\login\\login_tenant_switch_test.go",
+    "sha256": "7B62CD6B07C174DF89B9BF1388346DBFC6B99492F42D7F29B96B182B81BB1990"
+  },
+  {
+    "path": "modules\\auth\\login\\login_tenant_switch.go",
+    "sha256": "8F8D3E75065ABD1851A6F6140555CB8C4B17451289D8260B32E2AA8022A648CA"
+  },
+  {
+    "path": "modules\\auth\\login\\login_test_support_test.go",
+    "sha256": "CE8EEAD50E9BD64F7B709DBB560FB1A2CB5CF4AB13FBFC7D2DDA8C2C14D23034"
+  },
+  {
+    "path": "modules\\auth\\login\\login_throttle.go",
+    "sha256": "A7120F3FBBE59BDF05133463A596A615E78506717482A9109494B54672EFF540"
+  },
+  {
+    "path": "modules\\auth\\login\\refresh_rotation_test.go",
+    "sha256": "0D7C4452F0CF5EDD3955CF5F027113E236B77D85847E143D481B943A50C40E33"
+  },
+  {
+    "path": "modules\\auth\\mfa\\mfa_crypto.go",
+    "sha256": "91770971A52B1048A68D8786C4434FC85B3DD6E33B7BE1716C51BBEE8BF3D386"
+  },
+  {
+    "path": "modules\\auth\\mfa\\mfa_model.go",
+    "sha256": "F9CA235352BBD8CDC83F373544A3E455E47845390FBE9B1274229C27DCED0029"
+  },
+  {
+    "path": "modules\\auth\\mfa\\mfa_service.go",
+    "sha256": "582A19370B0DDE888DE6E1DC015A14285CE94C400A41B7735632A4120DEEF01B"
+  },
+  {
+    "path": "modules\\auth\\mfa\\mfa_totp_test.go",
+    "sha256": "24140C4EDFD41F887EBE7B540F95D0E66D97BC68688B9EF7E480599D8E2F65BC"
+  },
+  {
+    "path": "modules\\auth\\mfa\\mfa_totp.go",
+    "sha256": "B0822BDB4A5610151BB286DB0186BC4AACD75BD5EDDD0F128D123A3815425CD7"
+  },
+  {
+    "path": "modules\\auth\\module.go",
+    "sha256": "033DAC2AAC63259F63F959DDFFC1019B596726D8F4691101910169158DEDD6E8"
+  },
+  {
+    "path": "modules\\auth\\security\\profile_dto.go",
+    "sha256": "8C897FC85D8952A37ABD3BB7F8399DF29DB36F4970C990B528D176F93AF266F3"
+  },
+  {
+    "path": "modules\\auth\\security\\security_event_governance_test.go",
+    "sha256": "19E36D8E834595DBF74A9D5833FF10BC42DD9E3555135B97794B986343AA70FC"
+  },
+  {
+    "path": "modules\\auth\\security\\security_model.go",
+    "sha256": "B312055A07C016B65EFECE4AA28231ADB563B315116017AECFB10B9FECA39860"
+  },
+  {
+    "path": "modules\\auth\\security\\security_service_test.go",
+    "sha256": "C174D4076FF6721E4B5688ED08B53A4D79E62450A018FD2A951B35BA88424CBF"
+  },
+  {
+    "path": "modules\\auth\\security\\security_service.go",
+    "sha256": "512EF4AEDBDC7EC31D2AA4FB4B13828C2607D51B763924BB45B967BF3360952E"
+  },
+  {
+    "path": "modules\\auth\\security\\security_tenant_isolation_test.go",
+    "sha256": "90A0635E34BDF7F39D7640381C5FF5005106A9EBC3B4A74B4DFA52B0582DFA74"
+  },
+  {
+    "path": "modules\\auth\\session\\refresh_race_test.go",
+    "sha256": "6628F15499D527294118192A40D55B55667A1DBE75B6F5DB51532D612468EB02"
+  },
+  {
+    "path": "modules\\auth\\session\\session_client_filter_sql_test.go",
+    "sha256": "4B52CC5FA3BF87A8DEE022DC8608F95257DC710176AF30A8054A19DED5AA9418"
+  },
+  {
+    "path": "modules\\auth\\session\\session_dto.go",
+    "sha256": "9C9897A8E4BF3260FA5725EAD8FE81AF7E50CF0012A78A5925A4B6590777040C"
+  },
+  {
+    "path": "modules\\auth\\session\\session_helpers.go",
+    "sha256": "765E05C55949A8332D7A9B18AD94EE655C8BEA6A67E980B06CFC003E197A0E1E"
+  },
+  {
+    "path": "modules\\auth\\session\\session_lifecycle_service_test.go",
+    "sha256": "D6099676C0B373715EDE8844BDFCFC2478C804D38FDA7A0CC27CC5AB14A6C781"
+  },
+  {
+    "path": "modules\\auth\\session\\session_lifecycle_service.go",
+    "sha256": "5ACC3C3C1F456F027A622EA74A1C8523E7D80CEB132171F62F71F30A3905E470"
+  },
+  {
+    "path": "modules\\auth\\session\\session_model.go",
+    "sha256": "B8B30B38A908B728F1AD8C993BE859228F344B319D224AF6898AE070E9283B58"
+  },
+  {
+    "path": "modules\\auth\\session\\session_pagination_test.go",
+    "sha256": "505533D122AFADED4D8743E3AD8AD214C6CF7BCB1285D82C72E1A88310F9420C"
+  },
+  {
+    "path": "modules\\auth\\session\\session_revocation_closure_test.go",
+    "sha256": "CECDAFA7D2968AC34A2939985F42E2FC5B1E7B2B2E5FBA71DA3E5B6E6EFF4950"
+  },
+  {
+    "path": "modules\\auth\\session\\session_service_test.go",
+    "sha256": "E16C190CD76042A183D1C0F1461B924191300C13DB9DDF2C15C220F0EA71E133"
+  },
+  {
+    "path": "modules\\auth\\session\\session_service.go",
+    "sha256": "0DF8CD0221C5F426BF5CE60557A5E8AFDFE56F071028411E227ADB0D460CDB1E"
+  },
+  {
+    "path": "modules\\auth\\session\\session_tenant_scope_test.go",
+    "sha256": "9B4F852B03DA25C1F5E1326DB8DE9C177603F7495457796D1F5D0D85B8EC2C9B"
+  },
+  {
+    "path": "modules\\auth\\session\\session_user_agent_test.go",
+    "sha256": "978B47BA38970CD8A06B822B86F8E44BA4C3C164E9E5CC2EB29A078A4BFF945F"
+  },
+  {
+    "path": "modules\\auth\\session\\session_user_agent.go",
+    "sha256": "7119ADED64F7ED4CCBB40F66E59F8D4CD6CE26E42865778A97422FAE7547F6D3"
+  },
+  {
+    "path": "modules\\auth\\session\\session_utils_test.go",
+    "sha256": "082B078C6AA966965EAB921E13B50B82C55AC1CD08B1144A5D605BC74E4DFE16"
+  },
+  {
+    "path": "modules\\auth\\session\\session_utils.go",
+    "sha256": "97CFE03F9F5D858A7549CD7AC8FB9DE2D585FABA45BDF7F4CB4731FA94753863"
+  },
+  {
+    "path": "pkg\\authtoken\\consume_refresh_test.go",
+    "sha256": "F14B07D0A5ED23600BE8E374EB677FAF15B02C15A84C6E2A4FA95D3F28871F6E"
+  },
+  {
+    "path": "pkg\\authtoken\\token_activity_test.go",
+    "sha256": "F0E5266009DBDB4EE413006C6B50FA9D145B83410AA11C236FD6591657756A23"
+  },
+  {
+    "path": "pkg\\authtoken\\token_test.go",
+    "sha256": "18506BAED2E0533CA95E96B55D09418FD9F6EF3AB6B2311927A50A501011861A"
+  },
+  {
+    "path": "pkg\\authtoken\\token.go",
+    "sha256": "FAF9DB702F30D3A75AF75FB9F5D5BBBB91DDE582F2150A4340006520770AAC13"
+  }
+]

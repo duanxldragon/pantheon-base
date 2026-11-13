@@ -1,0 +1,14 @@
+[
+  {
+    "sha256": "FAF9DB702F30D3A75AF75FB9F5D5BBBB91DDE582F2150A4340006520770AAC13",
+    "path": "backend/pkg/authtoken/token.go"
+  },
+  {
+    "sha256": "F0E5266009DBDB4EE413006C6B50FA9D145B83410AA11C236FD6591657756A23",
+    "path": "backend/pkg/authtoken/token_activity_test.go"
+  },
+  {
+    "sha256": "2F795BAF9E8F905B455C0C96DC6F4801A01BCCB1297C456B6E7A31DF37FEE844",
+    "path": "backend/internal/middleware/token_activity_regression_test.go"
+  }
+]

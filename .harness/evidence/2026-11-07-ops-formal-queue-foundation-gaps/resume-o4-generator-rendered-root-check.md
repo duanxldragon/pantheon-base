@@ -1,0 +1,7 @@
+# Generator rendered check — 2026-11-09
+
+Scope: real Base ModuleWizard, fixture auth/API reads, no real login or generation writes. Intended feel: a calm, dense Arco form with explicit tenant opt-in controls. Applied the global impeccable visual-quality checklist; this is a bounded root observation, not final independent visual or P0 acceptance.
+
+Inspected `resume-o4-generator-wizard-desktop.png` (1440×900) and `resume-o4-generator-wizard-mobile.png` (390×844), plus the owner's `resume-o4-generator-visual-receipt.json`. Both rendered the new v2/tenant controls in light mode, without observed overlap or clipping. The mobile controls stack in one column; the desktop uses three aligned columns. Receipt reports zero horizontal overflow and zero browser errors, with v2 opt-in, tenancy retained when DataScope is disabled, v1 reset and keyboard-focus assertions.
+
+Open visual/i18n finding: Chinese rendering still shows `v2 · Tenant flat CRUD` and `Tenant` from fallback text. The two new locale keys in the generator handoff must be projected into all supported resources by the owning frontend Generator, then re-rendered. Screenshots show a scrolled control region; full-page navigation/primary-action, dark mode and validation/failure states have not been reviewed here. Fixtures do not prove actual server auth/tenant behavior or the remote115.190.251.143 acceptance matrix. No UI polish or complete visual acceptance claimed.

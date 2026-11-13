@@ -1,0 +1,210 @@
+{
+  "task": "resume-o4-telemetry",
+  "selfApproval": false,
+  "parentStatus": "OPEN",
+  "productionDefaultRED": {
+    "command": "go test -race ./internal/middleware -run '^TestBusinessTelemetryPrivacy$' -count=1 -timeout=90s",
+    "exitCode": 1,
+    "evidence": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/resume-o4-telemetry-red.txt",
+    "mainBaselineSHA256": "f420438509293437abac5228c343b7d52af0e66b606a8b2ea9a3e14dcc606950",
+    "redTestHash": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/resume-o4-telemetry-red-test-hash.json",
+    "observed": [
+      "Raw url.path/user_agent.original/client.address/server.address in real SDK exported spans.",
+      "Provider/Gin error sentinel in span events/status and actual production OTLP output.",
+      "Inherited/HTTP baggage and remote trace correlation retained.",
+      "Oversized-body denial produced no span; production OTLP emitted 16 of 17 adopted request spans."
+    ]
+  },
+  "safeSDK": {
+    "realSDKRecordingExporter": "tracetest.NewInMemoryExporter + sdktrace.WithSyncer",
+    "preCaptureCheck": "SpanProcessor.OnStart snapshots (capture then sanitize cannot satisfy assertion)",
+    "registeredRoutes": "Exact POST + Gin parameter templates, actual tested Gin route tables validated then startup-sealed; late mutation refused.",
+    "cases": [
+      {
+        "name": "success",
+        "outcome": "success",
+        "httpStatus": 200,
+        "completedSpans": 1,
+        "sdkStartSnapshots": 1,
+        "rawSentinelMatches": 0
+      },
+      {
+        "name": "raw200",
+        "outcome": "unknown",
+        "httpStatus": 200,
+        "completedSpans": 1,
+        "sdkStartSnapshots": 1,
+        "rawSentinelMatches": 0
+      },
+      {
+        "name": "business200",
+        "outcome": "denied",
+        "httpStatus": 200,
+        "completedSpans": 1,
+        "sdkStartSnapshots": 1,
+        "rawSentinelMatches": 0
+      },
+      {
+        "name": "invalid-metadata",
+        "outcome": "unknown",
+        "httpStatus": 200,
+        "completedSpans": 1,
+        "sdkStartSnapshots": 1,
+        "rawSentinelMatches": 0
+      },
+      {
+        "name": "provider",
+        "outcome": "upstream",
+        "httpStatus": 200,
+        "completedSpans": 1,
+        "sdkStartSnapshots": 1,
+        "rawSentinelMatches": 0
+      },
+      {
+        "name": "storage",
+        "outcome": "storage",
+        "httpStatus": 200,
+        "completedSpans": 1,
+        "sdkStartSnapshots": 1,
+        "rawSentinelMatches": 0
+      },
+      {
+        "name": "error",
+        "outcome": "unknown",
+        "httpStatus": 200,
+        "completedSpans": 1,
+        "sdkStartSnapshots": 1,
+        "rawSentinelMatches": 0
+      },
+      {
+        "name": "panic",
+        "outcome": "unknown",
+        "httpStatus": 500,
+        "completedSpans": 1,
+        "sdkStartSnapshots": 1,
+        "rawSentinelMatches": 0
+      },
+      {
+        "name": "panic-error",
+        "outcome": "unknown",
+        "httpStatus": 500,
+        "completedSpans": 1,
+        "sdkStartSnapshots": 1,
+        "rawSentinelMatches": 0
+      },
+      {
+        "name": "invalid-json",
+        "outcome": "invalid",
+        "httpStatus": 200,
+        "completedSpans": 1,
+        "sdkStartSnapshots": 1,
+        "rawSentinelMatches": 0
+      },
+      {
+        "name": "csrf",
+        "outcome": "denied",
+        "httpStatus": 200,
+        "completedSpans": 1,
+        "sdkStartSnapshots": 1,
+        "rawSentinelMatches": 0
+      },
+      {
+        "name": "rate",
+        "outcome": "unknown",
+        "httpStatus": 429,
+        "completedSpans": 1,
+        "sdkStartSnapshots": 1,
+        "rawSentinelMatches": 0
+      },
+      {
+        "name": "auth",
+        "outcome": "denied",
+        "httpStatus": 200,
+        "completedSpans": 1,
+        "sdkStartSnapshots": 1,
+        "rawSentinelMatches": 0
+      },
+      {
+        "name": "tenant",
+        "outcome": "denied",
+        "httpStatus": 200,
+        "completedSpans": 1,
+        "sdkStartSnapshots": 1,
+        "rawSentinelMatches": 0
+      },
+      {
+        "name": "body",
+        "outcome": "unknown",
+        "httpStatus": 413,
+        "completedSpans": 1,
+        "sdkStartSnapshots": 1,
+        "rawSentinelMatches": 0
+      },
+      {
+        "name": "body-stream",
+        "outcome": "invalid",
+        "httpStatus": 200,
+        "completedSpans": 1,
+        "sdkStartSnapshots": 1,
+        "rawSentinelMatches": 0
+      },
+      {
+        "name": "canceled",
+        "outcome": "unknown",
+        "httpStatus": 200,
+        "completedSpans": 1,
+        "sdkStartSnapshots": 1,
+        "rawSentinelMatches": 0
+      }
+    ],
+    "attributes": [
+      "http.request.method",
+      "http.route",
+      "http.response.status_code",
+      "business.action",
+      "business.outcome",
+      "request.id",
+      "business.actor_id",
+      "business.tenant_id",
+      "business.datasource_id",
+      "business.history_id",
+      "business.view_id",
+      "business.count",
+      "business.catalog_version"
+    ],
+    "exceptionEvents": [
+      "business.request.panic",
+      "business.request.error"
+    ],
+    "exceptionEventAttributes": 0,
+    "statusDescription": "",
+    "parentValid": false,
+    "traceState": "",
+    "links": 0,
+    "incomingBaggageRetained": false,
+    "incomingCorrelationRetained": false,
+    "outboundServerTracePropagationVerified": true,
+    "cancellationAndDeadlinePreserved": true
+  },
+  "productionOTLP": {
+    "initializer": "pkg/telemetry.InitTracer",
+    "transport": "Installed OTLP HTTP exporter -> local httptest receiver; original protobuf bytes and protojson inspected.",
+    "spans": 17,
+    "bytes": 10321,
+    "sha256": "97232ea98dbc7c6f6f0e1b4e3036aed29f3952ff60446b7e1b32d69bbfc8358f",
+    "rawSentinelMatches": 0,
+    "parentSpanIdBytes": 0,
+    "traceState": "",
+    "links": 0,
+    "statusMessage": ""
+  },
+  "unmatchedDefaults": {
+    "legacyParameterRoutePreserved": true,
+    "unknown404TracingPreserved": true,
+    "sameTemplateDifferentMethodPreserved": true,
+    "clientHeaderCannotChooseStrategy": true,
+    "legacyOversizedBodyRemainsUntraced": true,
+    "legacyRawCaptureAndRemotePropagationRetained": true
+  },
+  "evidence": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/resume-o4-telemetry-scoped-race.jsonl"
+}

@@ -1,0 +1,38 @@
+{
+  "command": [
+    "node",
+    "scripts/foundation-release/build-candidate-artifact.mjs",
+    "--inventory",
+    "D:\\workspace\\go\\pantheon-platform\\pantheon-base\\.local\\base-permission-legacy-key-20261111\\candidate-successor-c6477861a46b\\input.json",
+    "--output",
+    "D:\\workspace\\go\\pantheon-platform\\pantheon-base\\.tmp\\foundation-candidates\\permission-tail-successor-4215d10fdfc8498b80a8c6658f2102a1"
+  ],
+  "exitCode": 0,
+  "sourceStable": true,
+  "originalDescriptorSHA256": "2f105d76e38c82e8c301d816269ea26669a7a0291a5860be74d6ca71281a9ce6",
+  "changedFiles": {
+    "backend/pkg/permissionroutes/registry.go": {
+      "before": "0c07c2a03dabbe924c22d246b7623a4f96b74d208f3b9b311a1dfb86fd5299c1",
+      "current": "18d5714e63a0a3630de2e8649000a9bbcfb9634c03b991238388b6c8b7b262fb"
+    },
+    "backend/pkg/permissionroutes/registry_test.go": {
+      "before": "7aee0c318ad365288e950f3df2da303bdc0b3653fc4e6bf2ca453b5a07a843e5",
+      "current": "a966a5922fbca3f86cbfb588e87252b597554d798d80a2966bdd02944466cb56"
+    }
+  },
+  "sourceFileCount": 1141,
+  "reviewHashes": {
+    "CODE": "20be08b385f376f85be605d4f1f7fad02b285c70ee44c37d89a0c36293be34c2",
+    "ARCH": "fc759ebc0d7552aa41f098342fd153ba260ac087f9989b786d9c7bba8f6ee2c5"
+  },
+  "producerLogSHA256": "c2d97c47b6f6df5f1eb7f30a7ca2e654c67e89cec285ad83bab56f192051e79b",
+  "outputRoot": "D:\\workspace\\go\\pantheon-platform\\pantheon-base\\.tmp\\foundation-candidates\\permission-tail-successor-4215d10fdfc8498b80a8c6658f2102a1",
+  "officialConsumption": false,
+  "officialLockChanged": false,
+  "P0Approved": false,
+  "descriptorPath": "D:\\workspace\\go\\pantheon-platform\\pantheon-base\\.tmp\\foundation-candidates\\permission-tail-successor-4215d10fdfc8498b80a8c6658f2102a1\\candidate-descriptor.json",
+  "descriptorSHA256": "ecc49316f92a22c30b893f63a118fa08b572fbb116cd56926e54aa78a8e4327d",
+  "artifactPath": "D:\\workspace\\go\\pantheon-platform\\pantheon-base\\.tmp\\foundation-candidates\\permission-tail-successor-4215d10fdfc8498b80a8c6658f2102a1\\candidate-12718df8652cadf756932feba559fb4012a5dc270e60906bad9df9d189ac4ef0.tar",
+  "artifactSHA256": "246f71ab94586c653278ca0d7c808264099694000371698e345de5c8d01244eb",
+  "candidateIdentity": "candidate-12718df8652cadf756932feba559fb4012a5dc270e60906bad9df9d189ac4ef0"
+}

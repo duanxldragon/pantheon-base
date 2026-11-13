@@ -1,0 +1,3 @@
+ok  	github.com/duanxldragon/pantheon-base/backend/pkg/permissionroutes	1.032s
+ok  	github.com/duanxldragon/pantheon-base/backend/modules/system/iam/permission	1.100s
+ok  	github.com/duanxldragon/pantheon-base/backend/modules/system/iam/role	1.100s [no tests to run]

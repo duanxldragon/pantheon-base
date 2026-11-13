@@ -6,8 +6,15 @@ import (
 )
 
 func InitBusinessModules(r *gin.RouterGroup, db *gorm.DB) {
+	initializeBusinessLifecycle(db)
+	InitGeneratedBusinessModules(r, db)
+}
+
+func initializeBusinessLifecycle(db *gorm.DB) {
+	if err := businessInitializationPreflight.run(db); err != nil {
+		panic(err)
+	}
 	if err := cleanupRetiredBusinessModules(db); err != nil {
 		panic(err)
 	}
-	InitGeneratedBusinessModules(r, db)
 }

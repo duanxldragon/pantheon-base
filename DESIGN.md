@@ -86,16 +86,16 @@ Pantheon Base 应定位为“**模块化单体 + 企业后台底座**”，适�
 
 审计（AUD-004）指出本节把已交付与未实现混排成一份「未来清单」，读者无法据此判断现状。现改为逐项现状表：每行的判据都是目录或 `grep` 能复核的，不是叙述。
 
-| 能力 | 现状 | 判据（可复核） |
-| :--- | :--- | :--- |
-| 多租户 | **已交付**（`compat` / `multi` 双模；配额只度量与展示） | 见 §3.4 与 [租户合同 V1](./docs/contracts/TENANT_CONTRACT_V1.md)；代码在 `backend/pkg/tenant/`、`backend/modules/system/iam/tenant/`；路由见 `backend/modules/system/system_modules.go` |
-| MFA / TOTP 与高敏二次验证 | **已交付** | `backend/modules/auth/`（login / security 路径）；安全中心页面；§8「当前实现状态判断」与 §9 P0 第 1 条 |
-| 数据权限 | **已交付** | 角色数据范围策略 + `dept_and_children` 部门树展开（§9 P2 第 8 条）；`backend/modules/system/iam/permission/`；`docs/designs/DATA_PERMISSION_HOOK.md` |
-| 可视化工作台 | **已交付**（跨系统域摘要，非低代码搭建） | `frontend/src/components/operational/`、`backend/modules/platform/`；`docs/designs/PLATFORM_DASHBOARD_DESIGN.md`、`OPERATIONAL_WORKBENCH_COMPONENTS_DESIGN.md` |
-| 主题（四主题 + 暗色） | **已交付** | §7.7 色彩体系；`docs/designs/THEME_TOKENS_REFERENCE.md`、`DARK_MODE_DESIGN.md` |
-| SSO / OAuth2 / OIDC | **未实现** | 无 OIDC 登录路由在册：`backend/modules/auth/oidc/` 除测试与迁移 `000029` 外无引用者（不可达实现，处置见整改包 `2026-10-31-audit-p2-oidc-scaffold-decision`）；设计稿 `docs/designs/SSO_OIDC_DESIGN.md` 仍是设计 |
-| 登录风控（设备指纹 / 异地识别） | **未实现** | `git grep -il "fingerprint\|riskcontrol" backend/modules/auth` 命中 0；设计稿 `docs/designs/LOGIN_RISK_CONTROL_DESIGN.md` |
-| 品牌配置（租户 branding） | **未实现** | `git grep -i "branding" backend/modules` 命中 0；合同 §1 Out（自定义域名与租户级品牌归 Out） |
+| 能力                            | 现状                                                    | 判据（可复核）                                                                                                                                                                                                  |
+| :------------------------------ | :------------------------------------------------------ | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 多租户                          | **已交付**（`compat` / `multi` 双模；配额只度量与展示） | 见 §3.4 与 [租户合同 V1](./docs/contracts/TENANT_CONTRACT_V1.md)；代码在 `backend/pkg/tenant/`、`backend/modules/system/iam/tenant/`；路由见 `backend/modules/system/system_modules.go`                         |
+| MFA / TOTP 与高敏二次验证       | **已交付**                                              | `backend/modules/auth/`（login / security 路径）；安全中心页面；§8「当前实现状态判断」与 §9 P0 第 1 条                                                                                                          |
+| 数据权限                        | **已交付**                                              | 角色数据范围策略 + `dept_and_children` 部门树展开（§9 P2 第 8 条）；`backend/modules/system/iam/permission/`；`docs/designs/DATA_PERMISSION_HOOK.md`                                                            |
+| 可视化工作台                    | **已交付**（跨系统域摘要，非低代码搭建）                | `frontend/src/components/operational/`、`backend/modules/platform/`；`docs/designs/PLATFORM_DASHBOARD_DESIGN.md`、`OPERATIONAL_WORKBENCH_COMPONENTS_DESIGN.md`                                                  |
+| 主题（四主题 + 暗色）           | **已交付**                                              | §7.7 色彩体系；`docs/designs/THEME_TOKENS_REFERENCE.md`、`DARK_MODE_DESIGN.md`                                                                                                                                  |
+| SSO / OAuth2 / OIDC             | **未实现**                                              | 无 OIDC 登录路由在册：`backend/modules/auth/oidc/` 除测试与迁移 `000029` 外无引用者（不可达实现，处置见整改包 `2026-10-31-audit-p2-oidc-scaffold-decision`）；设计稿 `docs/designs/SSO_OIDC_DESIGN.md` 仍是设计 |
+| 登录风控（设备指纹 / 异地识别） | **未实现**                                              | `git grep -il "fingerprint\|riskcontrol" backend/modules/auth` 命中 0；设计稿 `docs/designs/LOGIN_RISK_CONTROL_DESIGN.md`                                                                                       |
+| 品牌配置（租户 branding）       | **未实现**                                              | `git grep -i "branding" backend/modules` 命中 0；合同 §1 Out（自定义域名与租户级品牌归 Out）                                                                                                                    |
 
 ### 3.4 多租户现状（已交付面与明确未做面）
 
@@ -132,6 +132,8 @@ Pantheon Base 应定位为“**模块化单体 + 企业后台底座**”，适�
 - 租户级自定义域名、独立部署形态
 - 自助注册、计费与套餐的商业化售卖（下单、升降级、账期）
 - **业务域（`modules/business/*`）在 V1 内是单租户语义**，不参与租户隔离（合同 §2.6，整改包 `2026-10-31-audit-p1-business-route-tenant-context`）。给业务路由组挂租户中间件**不会产生隔离**，只会让 `multi` 模式下所有业务请求变成 `TENANT_CONTEXT_MISSING`——这不是可用的加固方向。
+
+**V2.0-O4 业务增量正在实施**：维护者已授权首批五张 observability 表采用租户归属，并对历史和保存视图增加用户归属。Base 提供显式当前鉴权、租户和审计合同及 required 生成器；Ops 通过审查后的 candidate 配对验证，再走正式 release 消费。范围及完整验收以租户合同 §2.7 为准，当前不声明已发行隔离；其他业务域沿用 V1。
 
 ## 4. 认证与授权设计
 
@@ -331,30 +333,30 @@ border/background，避免交互态被高特异性规则压掉）。机械门禁
 
 **间距基准：** 使用实现中的完整 token 阶梯；2px 只用于极紧密的内部微间距，常规布局从 4px 起。
 
-| Token          | 值   | 典型用途                   |
-| :------------- | :--- | :------------------------- |
-| `--space-2xs`  | 2px  | 紧密文本或图标内部微间距   |
-| `--space-xs`   | 4px  | 表内标签、紧密图标间距     |
-| `--space-sm`   | 8px  | 同类控件与紧凑表单间距     |
-| `--space-md`   | 12px | 工具栏、表单行与局部区段   |
-| `--space-lg`   | 16px | 卡片内边距、标准区段间距   |
-| `--space-xl`   | 24px | 页面内容区 padding         |
-| `--space-2xl`  | 32px | 大区块间隔                 |
-| `--space-3xl`  | 48px | 页面级分区或宽松留白       |
+| Token         | 值   | 典型用途                 |
+| :------------ | :--- | :----------------------- |
+| `--space-2xs` | 2px  | 紧密文本或图标内部微间距 |
+| `--space-xs`  | 4px  | 表内标签、紧密图标间距   |
+| `--space-sm`  | 8px  | 同类控件与紧凑表单间距   |
+| `--space-md`  | 12px | 工具栏、表单行与局部区段 |
+| `--space-lg`  | 16px | 卡片内边距、标准区段间距 |
+| `--space-xl`  | 24px | 页面内容区 padding       |
+| `--space-2xl` | 32px | 大区块间隔               |
+| `--space-3xl` | 48px | 页面级分区或宽松留白     |
 
 **圆角体系：** 工具型后台使用克制圆角。
 
-| Token              | 值                 | 适用                             |
-| :----------------- | :----------------- | :------------------------------- |
-| `--radius-xs`      | 4px                | 标签、徽章、小开关               |
-| `--radius-sm`      | 4px                | 紧凑按钮、动作入口               |
-| `--radius-md`      | 6px                | 输入控件、卡片与常规面板         |
-| `--radius-lg`      | 8px                | 较大面板和分组表面               |
-| `--radius-xl`      | 12px               | 需要更强分组感的大型表面         |
-| `--radius-overlay` | 8px                | 弹窗、抽屉等浮层                 |
-| `--radius-control` | `var(--radius-md)` | 输入框、选择器等控件             |
-| `--radius-action`  | `var(--radius-sm)` | 按钮、分页与动作控件             |
-| `--radius-pill`    | 999px              | 胶囊标签、状态指示点             |
+| Token              | 值                 | 适用                     |
+| :----------------- | :----------------- | :----------------------- |
+| `--radius-xs`      | 4px                | 标签、徽章、小开关       |
+| `--radius-sm`      | 4px                | 紧凑按钮、动作入口       |
+| `--radius-md`      | 6px                | 输入控件、卡片与常规面板 |
+| `--radius-lg`      | 8px                | 较大面板和分组表面       |
+| `--radius-xl`      | 12px               | 需要更强分组感的大型表面 |
+| `--radius-overlay` | 8px                | 弹窗、抽屉等浮层         |
+| `--radius-control` | `var(--radius-md)` | 输入框、选择器等控件     |
+| `--radius-action`  | `var(--radius-sm)` | 按钮、分页与动作控件     |
+| `--radius-pill`    | 999px              | 胶囊标签、状态指示点     |
 
 ### 7.9 视觉反模式（禁止清单）
 

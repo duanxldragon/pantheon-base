@@ -1,0 +1,13 @@
+{
+  "revision": 3,
+  "beforeSha256": "a338352f99779d8c1635a2aafa6939dc6e628389ee83aa6e64c032669c4a9da5",
+  "afterSha256": "aaa4544cc80ae351b9fd499cd8e8d644f5e0413877708e273b493427d41399c0",
+  "v2Preserved": true,
+  "resolvedDecisions": [
+    "opt-in fresh token auth with no activity writes/no resurrection",
+    "server-owned correlation ID before matched audit/denial",
+    "generated v2 required runner vs legacy v1 runner",
+    "Base dirty bootstrap guard and unhealthy dirty readiness"
+  ],
+  "status": "requires independent CODE and ARCH review; not implementation approval"
+}

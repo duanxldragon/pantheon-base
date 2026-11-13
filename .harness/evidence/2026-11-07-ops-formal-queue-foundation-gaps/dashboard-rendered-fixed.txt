@@ -1,0 +1,80 @@
+
+Running 2 tests using 1 worker
+
+(node:13908) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  x  1 tests\visual\operational-dashboard.spec.ts:4:2 › operational dashboard partial error isolation light (11.7s)
+(node:19276) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  x  2 tests\visual\operational-dashboard.spec.ts:4:2 › operational dashboard partial error isolation dark (11.4s)
+
+
+  1) tests\visual\operational-dashboard.spec.ts:4:2 › operational dashboard partial error isolation light 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByText('数据已过期')
+    Expected: visible
+    Timeout: 10000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" getByText('数据已过期') with timeout 10000ms
+      - waiting for getByText('数据已过期')
+
+
+       6 |   await page.goto('/__visual/operational-workbench?dashboard=1');
+       7 |   await expect(page.locator('.operational-dashboard-widget')).toHaveCount(4);
+    >  8 |   await expect(page.getByText('数据已过期')).toBeVisible();await expect(page.getByText('部分结果')).toBeVisible();
+         |                                         ^
+       9 |   await expect(page.getByRole('button',{name:'重试'})).toBeVisible();
+      10 |   await expect(page.locator('.operational-dashboard-widget__items')).toHaveCount(2);
+      11 |   await page.getByRole('button',{name:'重试'}).focus();await expect(page.getByRole('button',{name:'重试'})).toBeFocused();
+        at D:\workspace\go\pantheon-platform\pantheon-base\frontend\tests\visual\operational-dashboard.spec.ts:8:41
+
+    Error Context: ..\.harness\evidence\2026-11-07-ops-formal-queue-foundation-gaps\dashboard-rendered-fixed\visual-operational-dashboa-b7a68-rtial-error-isolation-light\error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ..\.harness\evidence\2026-11-07-ops-formal-queue-foundation-gaps\dashboard-rendered-fixed\visual-operational-dashboa-b7a68-rtial-error-isolation-light\trace.zip
+    Usage:
+
+        npx playwright show-trace ..\.harness\evidence\2026-11-07-ops-formal-queue-foundation-gaps\dashboard-rendered-fixed\visual-operational-dashboa-b7a68-rtial-error-isolation-light\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2) tests\visual\operational-dashboard.spec.ts:4:2 › operational dashboard partial error isolation dark 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByText('数据已过期')
+    Expected: visible
+    Timeout: 10000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" getByText('数据已过期') with timeout 10000ms
+      - waiting for getByText('数据已过期')
+
+
+       6 |   await page.goto('/__visual/operational-workbench?dashboard=1');
+       7 |   await expect(page.locator('.operational-dashboard-widget')).toHaveCount(4);
+    >  8 |   await expect(page.getByText('数据已过期')).toBeVisible();await expect(page.getByText('部分结果')).toBeVisible();
+         |                                         ^
+       9 |   await expect(page.getByRole('button',{name:'重试'})).toBeVisible();
+      10 |   await expect(page.locator('.operational-dashboard-widget__items')).toHaveCount(2);
+      11 |   await page.getByRole('button',{name:'重试'}).focus();await expect(page.getByRole('button',{name:'重试'})).toBeFocused();
+        at D:\workspace\go\pantheon-platform\pantheon-base\frontend\tests\visual\operational-dashboard.spec.ts:8:41
+
+    Error Context: ..\.harness\evidence\2026-11-07-ops-formal-queue-foundation-gaps\dashboard-rendered-fixed\visual-operational-dashboa-5741a-artial-error-isolation-dark\error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ..\.harness\evidence\2026-11-07-ops-formal-queue-foundation-gaps\dashboard-rendered-fixed\visual-operational-dashboa-5741a-artial-error-isolation-dark\trace.zip
+    Usage:
+
+        npx playwright show-trace ..\.harness\evidence\2026-11-07-ops-formal-queue-foundation-gaps\dashboard-rendered-fixed\visual-operational-dashboa-5741a-artial-error-isolation-dark\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2 failed
+    tests\visual\operational-dashboard.spec.ts:4:2 › operational dashboard partial error isolation light 
+    tests\visual\operational-dashboard.spec.ts:4:2 › operational dashboard partial error isolation dark 

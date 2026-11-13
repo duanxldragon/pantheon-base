@@ -1,0 +1,242 @@
+=== RUN   TestBusinessGroupFailsClosedAndHasAdditiveChain
+[GIN-debug] [WARNING] Running in "debug" mode. Switch to "release" mode in production.
+ - using env:	export GIN_MODE=release
+ - using code:	gin.SetMode(gin.ReleaseMode)
+
+--- PASS: TestBusinessGroupFailsClosedAndHasAdditiveChain (0.00s)
+=== RUN   TestBusinessProviderRegistryStartupOnly
+--- PASS: TestBusinessProviderRegistryStartupOnly (0.00s)
+=== RUN   TestRequiredModulesFailBeforeAnyRoutes
+=== RUN   TestRequiredModulesFailBeforeAnyRoutes//prepare
+[GIN-debug] [WARNING] Running in "debug" mode. Switch to "release" mode in production.
+ - using env:	export GIN_MODE=release
+ - using code:	gin.SetMode(gin.ReleaseMode)
+
+=== RUN   TestRequiredModulesFailBeforeAnyRoutes//menus
+[GIN-debug] [WARNING] Running in "debug" mode. Switch to "release" mode in production.
+ - using env:	export GIN_MODE=release
+ - using code:	gin.SetMode(gin.ReleaseMode)
+
+=== RUN   TestRequiredModulesFailBeforeAnyRoutes//perms
+[GIN-debug] [WARNING] Running in "debug" mode. Switch to "release" mode in production.
+ - using env:	export GIN_MODE=release
+ - using code:	gin.SetMode(gin.ReleaseMode)
+
+=== RUN   TestRequiredModulesFailBeforeAnyRoutes//i18n
+[GIN-debug] [WARNING] Running in "debug" mode. Switch to "release" mode in production.
+ - using env:	export GIN_MODE=release
+ - using code:	gin.SetMode(gin.ReleaseMode)
+
+=== RUN   TestRequiredModulesFailBeforeAnyRoutes/false/prepare
+[GIN-debug] [WARNING] Running in "debug" mode. Switch to "release" mode in production.
+ - using env:	export GIN_MODE=release
+ - using code:	gin.SetMode(gin.ReleaseMode)
+
+=== RUN   TestRequiredModulesFailBeforeAnyRoutes/false/menus
+[GIN-debug] [WARNING] Running in "debug" mode. Switch to "release" mode in production.
+ - using env:	export GIN_MODE=release
+ - using code:	gin.SetMode(gin.ReleaseMode)
+
+=== RUN   TestRequiredModulesFailBeforeAnyRoutes/false/perms
+[GIN-debug] [WARNING] Running in "debug" mode. Switch to "release" mode in production.
+ - using env:	export GIN_MODE=release
+ - using code:	gin.SetMode(gin.ReleaseMode)
+
+=== RUN   TestRequiredModulesFailBeforeAnyRoutes/false/i18n
+[GIN-debug] [WARNING] Running in "debug" mode. Switch to "release" mode in production.
+ - using env:	export GIN_MODE=release
+ - using code:	gin.SetMode(gin.ReleaseMode)
+
+=== RUN   TestRequiredModulesFailBeforeAnyRoutes/true/prepare
+[GIN-debug] [WARNING] Running in "debug" mode. Switch to "release" mode in production.
+ - using env:	export GIN_MODE=release
+ - using code:	gin.SetMode(gin.ReleaseMode)
+
+=== RUN   TestRequiredModulesFailBeforeAnyRoutes/true/menus
+[GIN-debug] [WARNING] Running in "debug" mode. Switch to "release" mode in production.
+ - using env:	export GIN_MODE=release
+ - using code:	gin.SetMode(gin.ReleaseMode)
+
+=== RUN   TestRequiredModulesFailBeforeAnyRoutes/true/perms
+[GIN-debug] [WARNING] Running in "debug" mode. Switch to "release" mode in production.
+ - using env:	export GIN_MODE=release
+ - using code:	gin.SetMode(gin.ReleaseMode)
+
+=== RUN   TestRequiredModulesFailBeforeAnyRoutes/true/i18n
+[GIN-debug] [WARNING] Running in "debug" mode. Switch to "release" mode in production.
+ - using env:	export GIN_MODE=release
+ - using code:	gin.SetMode(gin.ReleaseMode)
+
+--- PASS: TestRequiredModulesFailBeforeAnyRoutes (0.01s)
+    --- PASS: TestRequiredModulesFailBeforeAnyRoutes//prepare (0.00s)
+    --- PASS: TestRequiredModulesFailBeforeAnyRoutes//menus (0.00s)
+    --- PASS: TestRequiredModulesFailBeforeAnyRoutes//perms (0.00s)
+    --- PASS: TestRequiredModulesFailBeforeAnyRoutes//i18n (0.00s)
+    --- PASS: TestRequiredModulesFailBeforeAnyRoutes/false/prepare (0.00s)
+    --- PASS: TestRequiredModulesFailBeforeAnyRoutes/false/menus (0.00s)
+    --- PASS: TestRequiredModulesFailBeforeAnyRoutes/false/perms (0.00s)
+    --- PASS: TestRequiredModulesFailBeforeAnyRoutes/false/i18n (0.00s)
+    --- PASS: TestRequiredModulesFailBeforeAnyRoutes/true/prepare (0.00s)
+    --- PASS: TestRequiredModulesFailBeforeAnyRoutes/true/menus (0.00s)
+    --- PASS: TestRequiredModulesFailBeforeAnyRoutes/true/perms (0.00s)
+    --- PASS: TestRequiredModulesFailBeforeAnyRoutes/true/i18n (0.00s)
+=== RUN   TestRequiredModulesPhasedExecution
+=== RUN   TestRequiredModulesPhasedExecution/#00
+[GIN-debug] [WARNING] Running in "debug" mode. Switch to "release" mode in production.
+ - using env:	export GIN_MODE=release
+ - using code:	gin.SetMode(gin.ReleaseMode)
+
+=== RUN   TestRequiredModulesPhasedExecution/true
+[GIN-debug] [WARNING] Running in "debug" mode. Switch to "release" mode in production.
+ - using env:	export GIN_MODE=release
+ - using code:	gin.SetMode(gin.ReleaseMode)
+
+--- PASS: TestRequiredModulesPhasedExecution (0.00s)
+    --- PASS: TestRequiredModulesPhasedExecution/#00 (0.00s)
+    --- PASS: TestRequiredModulesPhasedExecution/true (0.00s)
+=== RUN   TestRequiredModulesRejectMissingDependencies
+[GIN-debug] [WARNING] Running in "debug" mode. Switch to "release" mode in production.
+ - using env:	export GIN_MODE=release
+ - using code:	gin.SetMode(gin.ReleaseMode)
+
+--- PASS: TestRequiredModulesRejectMissingDependencies (0.00s)
+=== RUN   TestLegacyModulesStillServeAfterBootstrapFailure
+[GIN-debug] [WARNING] Running in "debug" mode. Switch to "release" mode in production.
+ - using env:	export GIN_MODE=release
+ - using code:	gin.SetMode(gin.ReleaseMode)
+
+2026/11/09 17:50:19 INFO versioned migrations mode: module Migrate() skipped, runtime bootstraps run instead note="generated business modules create their own tables via AutoMigrate inside Bootstrap; see docs/DEPLOYMENT_GUIDE.md §3"
+2026/11/09 17:50:19 WARN module seed error module=legacy seed=bootstrap error="legacy failure"
+--- PASS: TestLegacyModulesStillServeAfterBootstrapFailure (0.01s)
+=== RUN   TestRegisterBackendModules_PhasedExecution
+[GIN-debug] [WARNING] Running in "debug" mode. Switch to "release" mode in production.
+ - using env:	export GIN_MODE=release
+ - using code:	gin.SetMode(gin.ReleaseMode)
+
+2026/11/09 17:50:19 INFO versioned migrations mode: module Migrate() skipped, runtime bootstraps run instead note="generated business modules create their own tables via AutoMigrate inside Bootstrap; see docs/DEPLOYMENT_GUIDE.md §3"
+--- PASS: TestRegisterBackendModules_PhasedExecution (0.00s)
+=== RUN   TestRegisterBackendModules_RunsMigrateWhenAutoMigrateEnabled
+[GIN-debug] [WARNING] Running in "debug" mode. Switch to "release" mode in production.
+ - using env:	export GIN_MODE=release
+ - using code:	gin.SetMode(gin.ReleaseMode)
+
+--- PASS: TestRegisterBackendModules_RunsMigrateWhenAutoMigrateEnabled (0.00s)
+=== RUN   TestRegisterBackendModules_DefaultModeRunsBootstrapForGeneratedModules
+[GIN-debug] [WARNING] Running in "debug" mode. Switch to "release" mode in production.
+ - using env:	export GIN_MODE=release
+ - using code:	gin.SetMode(gin.ReleaseMode)
+
+2026/11/09 17:50:19 INFO versioned migrations mode: module Migrate() skipped, runtime bootstraps run instead note="generated business modules create their own tables via AutoMigrate inside Bootstrap; see docs/DEPLOYMENT_GUIDE.md §3"
+--- PASS: TestRegisterBackendModules_DefaultModeRunsBootstrapForGeneratedModules (0.00s)
+=== RUN   TestSystemTokenGroupChain
+--- PASS: TestSystemTokenGroupChain (0.00s)
+=== RUN   TestSystemAuthGroupChain
+--- PASS: TestSystemAuthGroupChain (0.00s)
+=== RUN   TestSystemProtectedGroupChain
+=== RUN   TestSystemProtectedGroupChain/base
+=== RUN   TestSystemProtectedGroupChain/platform_capability
+=== RUN   TestSystemProtectedGroupChain/data_scope
+=== RUN   TestSystemProtectedGroupChain/refresh_sync
+=== RUN   TestSystemProtectedGroupChain/data_scope_and_refresh_sync
+=== RUN   TestSystemProtectedGroupChain/capability_and_refresh_sync
+--- PASS: TestSystemProtectedGroupChain (0.00s)
+    --- PASS: TestSystemProtectedGroupChain/base (0.00s)
+    --- PASS: TestSystemProtectedGroupChain/platform_capability (0.00s)
+    --- PASS: TestSystemProtectedGroupChain/data_scope (0.00s)
+    --- PASS: TestSystemProtectedGroupChain/refresh_sync (0.00s)
+    --- PASS: TestSystemProtectedGroupChain/data_scope_and_refresh_sync (0.00s)
+    --- PASS: TestSystemProtectedGroupChain/capability_and_refresh_sync (0.00s)
+=== RUN   TestSystemGroupOptionsReturnsCopies
+--- PASS: TestSystemGroupOptionsReturnsCopies (0.00s)
+=== RUN   TestProtectedGroupChain
+--- PASS: TestProtectedGroupChain (0.00s)
+=== RUN   TestDataScopedGroupChain
+--- PASS: TestDataScopedGroupChain (0.00s)
+=== RUN   TestRuntimeSettingReloadersNotifyInNameOrder
+--- PASS: TestRuntimeSettingReloadersNotifyInNameOrder (0.00s)
+=== RUN   TestRuntimeSettingReloadersReturnsReloadErrors
+--- PASS: TestRuntimeSettingReloadersReturnsReloadErrors (0.00s)
+PASS
+ok  	github.com/duanxldragon/pantheon-base/backend/pkg/contracts	1.766s
+=== RUN   TestValidateRegisterRequestHonorsScopeSpecificModuleNameRules
+=== RUN   TestValidateRegisterRequestHonorsScopeSpecificModuleNameRules/business_scope_allows_nested_path
+=== RUN   TestValidateRegisterRequestHonorsScopeSpecificModuleNameRules/system_scope_rejects_nested_path
+--- PASS: TestValidateRegisterRequestHonorsScopeSpecificModuleNameRules (0.00s)
+    --- PASS: TestValidateRegisterRequestHonorsScopeSpecificModuleNameRules/business_scope_allows_nested_path (0.00s)
+    --- PASS: TestValidateRegisterRequestHonorsScopeSpecificModuleNameRules/system_scope_rejects_nested_path (0.00s)
+=== RUN   TestValidateRegisterRequestRejectsUnsafeManagedTableName
+--- PASS: TestValidateRegisterRequestRejectsUnsafeManagedTableName (0.00s)
+=== RUN   TestValidateRegisterRequestRejectsInvalidGovernanceContract
+=== RUN   TestValidateRegisterRequestRejectsInvalidGovernanceContract/unsupported_template_version
+=== RUN   TestValidateRegisterRequestRejectsInvalidGovernanceContract/invalid_data_scope_mode
+=== RUN   TestValidateRegisterRequestRejectsInvalidGovernanceContract/tenant_data_scope_mode_requires_explicit_v2
+=== RUN   TestValidateRegisterRequestRejectsInvalidGovernanceContract/module_cannot_depend_on_itself
+=== RUN   TestValidateRegisterRequestRejectsInvalidGovernanceContract/duplicate_dependency
+=== RUN   TestValidateRegisterRequestRejectsInvalidGovernanceContract/relation_target_module_must_be_valid
+=== RUN   TestValidateRegisterRequestRejectsInvalidGovernanceContract/many_to_many_relation_requires_junction_table
+=== RUN   TestValidateRegisterRequestRejectsInvalidGovernanceContract/lookup_api_must_start_with_slash
+=== RUN   TestValidateRegisterRequestRejectsInvalidGovernanceContract/relation_metadata_fields_must_be_identifiers
+=== RUN   TestValidateRegisterRequestRejectsInvalidGovernanceContract/relation_metadata_fields_reject_boundary_whitespace
+=== RUN   TestValidateRegisterRequestRejectsInvalidGovernanceContract/relation_metadata_fields_reject_whitespace_only_values
+--- PASS: TestValidateRegisterRequestRejectsInvalidGovernanceContract (0.00s)
+    --- PASS: TestValidateRegisterRequestRejectsInvalidGovernanceContract/unsupported_template_version (0.00s)
+    --- PASS: TestValidateRegisterRequestRejectsInvalidGovernanceContract/invalid_data_scope_mode (0.00s)
+    --- PASS: TestValidateRegisterRequestRejectsInvalidGovernanceContract/tenant_data_scope_mode_requires_explicit_v2 (0.00s)
+    --- PASS: TestValidateRegisterRequestRejectsInvalidGovernanceContract/module_cannot_depend_on_itself (0.00s)
+    --- PASS: TestValidateRegisterRequestRejectsInvalidGovernanceContract/duplicate_dependency (0.00s)
+    --- PASS: TestValidateRegisterRequestRejectsInvalidGovernanceContract/relation_target_module_must_be_valid (0.00s)
+    --- PASS: TestValidateRegisterRequestRejectsInvalidGovernanceContract/many_to_many_relation_requires_junction_table (0.00s)
+    --- PASS: TestValidateRegisterRequestRejectsInvalidGovernanceContract/lookup_api_must_start_with_slash (0.00s)
+    --- PASS: TestValidateRegisterRequestRejectsInvalidGovernanceContract/relation_metadata_fields_must_be_identifiers (0.00s)
+    --- PASS: TestValidateRegisterRequestRejectsInvalidGovernanceContract/relation_metadata_fields_reject_boundary_whitespace (0.00s)
+    --- PASS: TestValidateRegisterRequestRejectsInvalidGovernanceContract/relation_metadata_fields_reject_whitespace_only_values (0.00s)
+=== RUN   TestTenantGeneratorContract
+=== RUN   TestTenantGeneratorContract/flat_v2_without_DataScope
+=== RUN   TestTenantGeneratorContract/flat_v2_with_DataScope
+=== RUN   TestTenantGeneratorContract/omitted_version
+=== RUN   TestTenantGeneratorContract/legacy_v1
+=== RUN   TestTenantGeneratorContract/system
+=== RUN   TestTenantGeneratorContract/reserved_camel_field
+=== RUN   TestTenantGeneratorContract/reserved_snake_field
+=== RUN   TestTenantGeneratorContract/relation_field
+=== RUN   TestTenantGeneratorContract/lookup
+=== RUN   TestTenantGeneratorContract/one_to_many
+=== RUN   TestTenantGeneratorContract/many_to_many
+=== RUN   TestTenantGeneratorContract/detail_metadata
+=== RUN   TestTenantGeneratorContract/relation_metadata
+--- PASS: TestTenantGeneratorContract (0.00s)
+    --- PASS: TestTenantGeneratorContract/flat_v2_without_DataScope (0.00s)
+    --- PASS: TestTenantGeneratorContract/flat_v2_with_DataScope (0.00s)
+    --- PASS: TestTenantGeneratorContract/omitted_version (0.00s)
+    --- PASS: TestTenantGeneratorContract/legacy_v1 (0.00s)
+    --- PASS: TestTenantGeneratorContract/system (0.00s)
+    --- PASS: TestTenantGeneratorContract/reserved_camel_field (0.00s)
+    --- PASS: TestTenantGeneratorContract/reserved_snake_field (0.00s)
+    --- PASS: TestTenantGeneratorContract/relation_field (0.00s)
+    --- PASS: TestTenantGeneratorContract/lookup (0.00s)
+    --- PASS: TestTenantGeneratorContract/one_to_many (0.00s)
+    --- PASS: TestTenantGeneratorContract/many_to_many (0.00s)
+    --- PASS: TestTenantGeneratorContract/detail_metadata (0.00s)
+    --- PASS: TestTenantGeneratorContract/relation_metadata (0.00s)
+=== RUN   TestValidateRegisterRequestAcceptsP2GovernanceContract
+--- PASS: TestValidateRegisterRequestAcceptsP2GovernanceContract (0.00s)
+=== RUN   TestWriteGeneratedFallbackResourcesBuildsGeneratedLocaleFiles
+--- PASS: TestWriteGeneratedFallbackResourcesBuildsGeneratedLocaleFiles (0.01s)
+=== RUN   TestWriteGeneratedModuleSourceBuildsFilesServerSideWhenFilesOmitted
+--- PASS: TestWriteGeneratedModuleSourceBuildsFilesServerSideWhenFilesOmitted (0.10s)
+=== RUN   TestWriteGeneratedModuleSourceRejectsEscapingGeneratedFilePath
+--- PASS: TestWriteGeneratedModuleSourceRejectsEscapingGeneratedFilePath (0.00s)
+=== RUN   TestResolveWorkspaceRootHonorsConfiguredEnvWhenStartIsEmpty
+--- PASS: TestResolveWorkspaceRootHonorsConfiguredEnvWhenStartIsEmpty (0.00s)
+=== RUN   TestResolveWorkspaceRootIgnoresEnvWhenExplicitStartProvided
+--- PASS: TestResolveWorkspaceRootIgnoresEnvWhenExplicitStartProvided (0.01s)
+=== RUN   TestResolveWorkspaceRootFallsBackToSourceTreeWhenCwdIsNotWorkspace
+--- PASS: TestResolveWorkspaceRootFallsBackToSourceTreeWhenCwdIsNotWorkspace (0.00s)
+=== RUN   TestResolveNodeBinaryUsesAbsoluteEnvOverride
+--- PASS: TestResolveNodeBinaryUsesAbsoluteEnvOverride (0.00s)
+=== RUN   TestResolveNodeBinaryRejectsRelativeEnvOverride
+--- PASS: TestResolveNodeBinaryRejectsRelativeEnvOverride (0.00s)
+=== RUN   TestWriteGeneratedRegistriesProducesEmptyButCompilableArtifacts
+--- PASS: TestWriteGeneratedRegistriesProducesEmptyButCompilableArtifacts (0.07s)
+PASS
+ok  	github.com/duanxldragon/pantheon-base/backend/internal/scaffold	1.843s

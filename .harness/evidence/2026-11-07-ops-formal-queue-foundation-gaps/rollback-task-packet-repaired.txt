@@ -1,0 +1,6 @@
+Task packet check: 1 file(s), 0 error(s), 3 warning(s)
+
+[PASS] docs/harness/tasks/2026-11-07-ops-formal-queue-foundation-gaps.task.md
+  warning: Section "## Linkage" is missing recommended item: OpenSpec Change.
+  warning: Section "## Linkage" is missing recommended item: Superpowers Plan.
+  warning: Section "## Linkage" is missing recommended item: Plan References.

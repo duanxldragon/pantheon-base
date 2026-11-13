@@ -1,0 +1,14 @@
+Task packet check: 1 file(s), 10 error(s), 1 warning(s)
+
+[FAIL] docs/harness/tasks/2026-11-07-ops-formal-queue-foundation-gaps.task.md
+  error: Missing required section "## Harness Profile".
+  error: Missing required section "## Implementation Notes".
+  error: Missing required section "## Verification Plan".
+  error: Missing required section "## Linkage".
+  error: Missing required section "## Evidence Required".
+  error: Missing required section "## Human Gates".
+  error: Missing required section "## Completion Checklist".
+  error: Missing required subsection under "## Expected Files": "### Create".
+  error: Missing required subsection under "## Expected Files": "### Modify".
+  error: Missing required subsection under "## Expected Files": "### Do Not Touch".
+  warning: Contract anchors should be listed as backticked file paths.

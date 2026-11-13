@@ -1,0 +1,32 @@
+
+> @duanxldragon/pantheon-base-ui@0.11.2 test:generator:quality
+> node ./scripts/run-generator-quality-contract-test.mjs
+
+✔ every exported file carries the generated marker on its first line (18.9256ms)
+✔ the generated marker matches the sentence the check:generated gate looks for (0.1772ms)
+✔ the generated marker is applied exactly once per file (1.884ms)
+✔ generated file paths only use extensions where a line comment is valid (1.8848ms)
+✔ exports a complete business module contract for a main table schema (5.1375ms)
+✔ omits routes, menus, permissions, and widgets for relation tables (3.7105ms)
+✔ serializes and rejects unsafe relation governance field metadata (2.2033ms)
+✔ emits many-to-many and master-detail runtime contracts (6.1873ms)
+✔ the generated List page uses SearchToolbar and never emits FilterPanel (1.8583ms)
+✔ GO_MODULE_PATH stays in sync with backend/go.mod (0.6669ms)
+✔ generated Go imports are all derived from GO_MODULE_PATH (1.7239ms)
+✔ generated module wires BootstrapFunc for the default versioned-migration mode (1.6351ms)
+✔ generated routes use contracts route-group helpers instead of assembling middleware chains (2.2817ms)
+✔ generated routes stay outside tenant isolation (1.6156ms)
+✔ generated list connects real create/update forms and preserves recoverable submission state (1.7334ms)
+✔ list editor respects action/layout switches and row-only delete imports (4.3908ms)
+✔ generated required boolean create DTO preserves presence and both boolean values (1480.9796ms)
+✔ tenant v2 admission agrees across completeness and direct export (2.5265ms)
+✔ tenant v2 emits strict bootstrap, tenant-owned clones and tenant-leading unique keys (3.0979ms)
+✔ actual server export rejects unsupported tenant input and exports v1/v2 fixtures (2029.0899ms)
+ℹ tests 20
+ℹ suites 0
+ℹ pass 20
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3613.4778

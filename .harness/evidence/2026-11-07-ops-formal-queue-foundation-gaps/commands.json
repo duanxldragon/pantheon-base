@@ -1,0 +1,676 @@
+{
+  "taskId": "2026-11-07-ops-formal-queue-foundation-gaps",
+  "repo": "pantheon-base",
+  "agent": {
+    "tool": "codex",
+    "adapter": "Bounded Generator fallback after installed executors returned 503; scoped local Claude source reviews and findings-first synthesis"
+  },
+  "commands": [
+    {
+      "command": "npm run lint",
+      "cwd": "frontend",
+      "status": "passed",
+      "exitCode": 0,
+      "artifact": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/lint.txt",
+      "notes": ""
+    },
+    {
+      "command": "npm run build",
+      "cwd": "frontend",
+      "status": "passed",
+      "exitCode": 0,
+      "artifact": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/build.txt",
+      "notes": "Full frontend prebuild/types/production bundle."
+    },
+    {
+      "command": "npm run check:harness-docs",
+      "cwd": ".",
+      "status": "passed",
+      "exitCode": 0,
+      "artifact": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/docs-links.txt",
+      "notes": "Zero findings after 19 canonical link repairs."
+    },
+    {
+      "command": "go test -mod=readonly -race ./...",
+      "cwd": "backend",
+      "artifact": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/full-race.txt",
+      "status": "failed",
+      "exitCode": 1,
+      "notes": "Default concurrent run exceeded 10m; bounded full suite rerun."
+    },
+    {
+      "command": "go test -mod=readonly -race -p 2 -timeout 30m ./...",
+      "cwd": "backend",
+      "artifact": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/full-race-bounded.txt",
+      "status": "passed",
+      "exitCode": 0,
+      "notes": "Complete suite; CGO=1, MinGW, isolated required MySQL."
+    },
+    {
+      "command": "npx vitest run tests/unit/platform/operational-dashboard.test.tsx",
+      "cwd": "frontend",
+      "artifact": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/dashboard-unit.txt",
+      "status": "passed",
+      "exitCode": 0,
+      "notes": "Initial six cases before StrictMode regression."
+    },
+    {
+      "command": "npx vitest run tests/unit/platform/operational-dashboard.test.tsx tests/unit/modules/platform/widgets.test.ts",
+      "cwd": "frontend",
+      "artifact": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/dashboard-unit-strictmode.txt",
+      "status": "failed",
+      "exitCode": 1,
+      "notes": "Fake-timer test needed to await deferred request microtask; repaired."
+    },
+    {
+      "command": "npx vitest run tests/unit/platform/operational-dashboard.test.tsx tests/unit/modules/platform/widgets.test.ts",
+      "cwd": "frontend",
+      "artifact": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/dashboard-unit-final.txt",
+      "status": "passed",
+      "exitCode": 0,
+      "notes": "11 tests including StrictMode initial request budget regression."
+    },
+    {
+      "command": "npm run build",
+      "cwd": "frontend",
+      "artifact": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/dashboard-build.txt",
+      "status": "failed",
+      "exitCode": 2,
+      "notes": "Duplicate locale key placement before inherited fallback spread; repaired."
+    },
+    {
+      "command": "npm run build",
+      "cwd": "frontend",
+      "artifact": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/dashboard-build-fixed.txt",
+      "status": "passed",
+      "exitCode": 0,
+      "notes": "Full prebuild/types/bundle after locale fix."
+    },
+    {
+      "command": "npm run build",
+      "cwd": "frontend",
+      "artifact": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/dashboard-build-final.txt",
+      "status": "passed",
+      "exitCode": 0,
+      "notes": "Latest fixture and request lifecycle included."
+    },
+    {
+      "command": "npm run lint",
+      "cwd": "frontend",
+      "artifact": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/dashboard-lint-final.txt",
+      "status": "passed",
+      "exitCode": 0,
+      "notes": ""
+    },
+    {
+      "command": "npx playwright test tests/visual/operational-dashboard.spec.ts --workers=1 --output=../.harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/dashboard-rendered-final",
+      "cwd": "frontend",
+      "artifact": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/dashboard-rendered-final.txt",
+      "status": "passed",
+      "exitCode": 0,
+      "notes": "PANTHEON_WEB_BASE_URL=5175; 2 light/dark checks, 4 desktop/mobile screenshots; partial/error/stale/keyboard/overflow."
+    },
+    {
+      "command": "node scripts/harness/check-evidence.mjs --root . --strict .harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/commands.json",
+      "cwd": ".",
+      "artifact": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/evidence-schema-initial.txt",
+      "status": "failed",
+      "exitCode": 1,
+      "notes": "New evidence file was missing knownGaps/linkage; completed before final gate."
+    },
+    {
+      "command": "node scripts/harness/check-evidence.mjs --root . --strict .harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/commands.json",
+      "cwd": ".",
+      "artifact": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/continuation-final-evidence-gate.txt",
+      "status": "passed",
+      "exitCode": 0,
+      "notes": "Scoped/current governance gate."
+    },
+    {
+      "command": "node scripts/harness/check-review.mjs --root . --strict .harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/review.md",
+      "cwd": ".",
+      "artifact": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/continuation-final-review-gate.txt",
+      "status": "passed",
+      "exitCode": 0,
+      "notes": "Scoped/current governance gate."
+    },
+    {
+      "command": "node scripts/harness/check-ui-quality-gate.mjs --root . --strict",
+      "cwd": ".",
+      "artifact": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/continuation-final-ui-gate.txt",
+      "status": "passed",
+      "exitCode": 0,
+      "notes": "Scoped/current governance gate."
+    },
+    {
+      "command": "node scripts/harness/check-doc-inventory.mjs --root . --strict",
+      "cwd": ".",
+      "artifact": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/continuation-final-inventory-gate.txt",
+      "status": "passed",
+      "exitCode": 0,
+      "notes": "Scoped/current governance gate."
+    },
+    {
+      "command": "node scripts/harness/check-doc-links.mjs --root . --strict",
+      "cwd": ".",
+      "artifact": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/continuation-final-docs-gate.txt",
+      "status": "passed",
+      "exitCode": 0,
+      "notes": "Scoped/current governance gate."
+    },
+    {
+      "command": "node scripts/harness/check-adoption.mjs --root . --strict",
+      "cwd": ".",
+      "artifact": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/continuation-final-adoption-gate.txt",
+      "status": "passed",
+      "exitCode": 0,
+      "notes": "Scoped/current governance gate."
+    },
+    {
+      "command": "node scripts/harness/check-evidence.mjs --root . --strict .harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/commands.json",
+      "cwd": ".",
+      "status": "passed",
+      "exitCode": 0,
+      "artifact": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/rollback-final-evidence-gate.txt",
+      "notes": "Current scoped/full governance. Existing Ops inherited docs/review findings remain visible; no exemption."
+    },
+    {
+      "command": "node scripts/harness/check-review.mjs --root . --strict .harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/review.md",
+      "cwd": ".",
+      "status": "passed",
+      "exitCode": 0,
+      "artifact": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/rollback-final-review-gate.txt",
+      "notes": "Current scoped/full governance. Existing Ops inherited docs/review findings remain visible; no exemption."
+    },
+    {
+      "command": "node scripts/harness/check-doc-links.mjs --root . --strict",
+      "cwd": ".",
+      "status": "passed",
+      "exitCode": 0,
+      "artifact": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/rollback-final-docs-gate.txt",
+      "notes": "Current scoped/full governance. Existing Ops inherited docs/review findings remain visible; no exemption."
+    },
+    {
+      "command": "node scripts/harness/check-doc-inventory.mjs --root . --strict",
+      "cwd": ".",
+      "status": "passed",
+      "exitCode": 0,
+      "artifact": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/rollback-final-inventory-gate.txt",
+      "notes": "Current scoped/full governance. Existing Ops inherited docs/review findings remain visible; no exemption."
+    },
+    {
+      "command": "node scripts/harness/check-ui-quality-gate.mjs --root . --strict",
+      "cwd": ".",
+      "status": "passed",
+      "exitCode": 0,
+      "artifact": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/rollback-final-ui-gate.txt",
+      "notes": "Current scoped/full governance. Existing Ops inherited docs/review findings remain visible; no exemption."
+    },
+    {
+      "command": "node scripts/harness/check-adoption.mjs --root . --strict",
+      "cwd": ".",
+      "status": "passed",
+      "exitCode": 0,
+      "artifact": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/rollback-final-adoption-gate.txt",
+      "notes": "Current scoped/full governance. Existing Ops inherited docs/review findings remain visible; no exemption."
+    },
+    {
+      "command": "node scripts/harness/check-task-packet.mjs --root . docs/harness/tasks/2026-11-07-ops-formal-queue-foundation-gaps.task.md",
+      "cwd": ".",
+      "status": "failed",
+      "exitCode": 1,
+      "artifact": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/rollback-final-task-gate.txt",
+      "notes": "Current scoped/full governance. Existing Ops inherited docs/review findings remain visible; no exemption."
+    },
+    {
+      "command": "node scripts/harness/check-task-packet.mjs --root . docs/harness/tasks/2026-11-07-ops-formal-queue-foundation-gaps.task.md",
+      "cwd": ".",
+      "status": "passed",
+      "exitCode": 0,
+      "artifact": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/rollback-task-packet-repaired-final.txt",
+      "notes": "Required canonical sections and exact manifest ownership references supplied; zero errors/warnings. Original rollback-final-task-gate failure retained. Review/release/acceptance checkboxes remain open."
+    },
+    {
+      "command": "node scripts/harness/check-evidence.mjs --root . --strict .harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/commands.json",
+      "cwd": ".",
+      "status": "passed",
+      "exitCode": 0,
+      "artifact": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/rollback-current-evidence-gate.txt",
+      "notes": "Current scoped/full governance. Existing Ops inherited docs/review findings remain visible; no exemption."
+    },
+    {
+      "command": "node scripts/harness/check-review.mjs --root . --strict .harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/review.md",
+      "cwd": ".",
+      "status": "passed",
+      "exitCode": 0,
+      "artifact": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/rollback-current-review-gate.txt",
+      "notes": "Current scoped/full governance. Existing Ops inherited docs/review findings remain visible; no exemption."
+    },
+    {
+      "command": "node scripts/harness/check-doc-links.mjs --root . --strict",
+      "cwd": ".",
+      "status": "passed",
+      "exitCode": 0,
+      "artifact": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/rollback-current-docs-gate.txt",
+      "notes": "Current scoped/full governance. Existing Ops inherited docs/review findings remain visible; no exemption."
+    },
+    {
+      "command": "node scripts/harness/check-doc-inventory.mjs --root . --strict",
+      "cwd": ".",
+      "status": "passed",
+      "exitCode": 0,
+      "artifact": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/rollback-current-inventory-gate.txt",
+      "notes": "Current scoped/full governance. Existing Ops inherited docs/review findings remain visible; no exemption."
+    },
+    {
+      "command": "node scripts/harness/check-ui-quality-gate.mjs --root . --strict",
+      "cwd": ".",
+      "status": "passed",
+      "exitCode": 0,
+      "artifact": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/rollback-current-ui-gate.txt",
+      "notes": "Current scoped/full governance. Existing Ops inherited docs/review findings remain visible; no exemption."
+    },
+    {
+      "command": "node scripts/harness/check-adoption.mjs --root . --strict",
+      "cwd": ".",
+      "status": "passed",
+      "exitCode": 0,
+      "artifact": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/rollback-current-adoption-gate.txt",
+      "notes": "Current scoped/full governance. Existing Ops inherited docs/review findings remain visible; no exemption."
+    },
+    {
+      "command": "node scripts/harness/check-task-packet.mjs --root . docs/harness/tasks/2026-11-07-ops-formal-queue-foundation-gaps.task.md",
+      "cwd": ".",
+      "status": "passed",
+      "exitCode": 0,
+      "artifact": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/rollback-current-task-gate.txt",
+      "notes": "Current scoped/full governance. Existing Ops inherited docs/review findings remain visible; no exemption."
+    },
+    {
+      "command": "npm.cmd run test:unit -- tests/unit/components/operational/conditionEditing.test.tsx",
+      "cwd": "frontend",
+      "status": "failed",
+      "exitCode": 1,
+      "artifact": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/condition-lifecycle-red.txt",
+      "notes": "Current Base-first condition editor correction; no official release/consumer approval. Three regression failures reproduce the identified defects."
+    },
+    {
+      "command": "npm.cmd run test:unit -- tests/unit/components/operational",
+      "cwd": "frontend",
+      "status": "passed",
+      "exitCode": 0,
+      "artifact": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/condition-lifecycle-unit.txt",
+      "notes": "Current Base-first condition editor correction; no official release/consumer approval."
+    },
+    {
+      "command": "npm.cmd run lint",
+      "cwd": "frontend",
+      "status": "passed",
+      "exitCode": 0,
+      "artifact": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/condition-lifecycle-lint.txt",
+      "notes": "Current Base-first condition editor correction; no official release/consumer approval."
+    },
+    {
+      "command": "npm.cmd run build",
+      "cwd": "frontend",
+      "status": "passed",
+      "exitCode": 0,
+      "artifact": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/condition-lifecycle-build.txt",
+      "notes": "Current Base-first condition editor correction; no official release/consumer approval."
+    },
+    {
+      "command": "npx.cmd playwright test tests/visual/operational-editor.spec.ts -c playwright.visual.config.ts --project=desktop-light --workers=1 --output=../.harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/condition-lifecycle-browser",
+      "cwd": "frontend",
+      "status": "passed",
+      "exitCode": 0,
+      "artifact": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/condition-lifecycle-runtime.txt",
+      "notes": "Current Base-first condition editor correction; no official release/consumer approval."
+    },
+    {
+      "command": "claude.exe -p --tools \"\" --output-format text; exact prompt on stdin",
+      "cwd": ".",
+      "status": "failed",
+      "exitCode": 1,
+      "artifact": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/condition-lifecycle-review-output.txt",
+      "notes": "Current Base-first condition editor correction; no official release/consumer approval. Follow-up120s timeout supplies no approval."
+    },
+    {
+      "command": "node scripts/harness/check-task-packet.mjs --root . docs/harness/tasks/2026-11-07-ops-formal-queue-foundation-gaps.task.md",
+      "cwd": ".",
+      "status": "passed",
+      "exitCode": 0,
+      "artifact": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/condition-current-task-gate.txt",
+      "notes": "Current scoped/full governance; inherited consumer docs/review failures remain explicit; no waiver.",
+      "seconds": 0.08
+    },
+    {
+      "command": "node scripts/harness/check-evidence.mjs --root . --strict .harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/commands.json",
+      "cwd": ".",
+      "status": "passed",
+      "exitCode": 0,
+      "artifact": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/condition-current-evidence-gate.txt",
+      "notes": "Current scoped/full governance; inherited consumer docs/review failures remain explicit; no waiver.",
+      "seconds": 0.06
+    },
+    {
+      "command": "node scripts/harness/check-review.mjs --root . --strict .harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/review.md",
+      "cwd": ".",
+      "status": "passed",
+      "exitCode": 0,
+      "artifact": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/condition-current-review-gate.txt",
+      "notes": "Current scoped/full governance; inherited consumer docs/review failures remain explicit; no waiver.",
+      "seconds": 0.06
+    },
+    {
+      "command": "node scripts/harness/check-doc-inventory.mjs --root . --strict",
+      "cwd": ".",
+      "status": "passed",
+      "exitCode": 0,
+      "artifact": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/condition-current-inventory-gate.txt",
+      "notes": "Current scoped/full governance; inherited consumer docs/review failures remain explicit; no waiver.",
+      "seconds": 0.07
+    },
+    {
+      "command": "node scripts/harness/check-ui-quality-gate.mjs --root . --strict",
+      "cwd": ".",
+      "status": "passed",
+      "exitCode": 0,
+      "artifact": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/condition-current-ui-gate.txt",
+      "notes": "Current scoped/full governance; inherited consumer docs/review failures remain explicit; no waiver.",
+      "seconds": 0.07
+    },
+    {
+      "command": "node scripts/harness/check-adoption.mjs --root . --strict",
+      "cwd": ".",
+      "status": "passed",
+      "exitCode": 0,
+      "artifact": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/condition-current-adoption-gate.txt",
+      "notes": "Current scoped/full governance; inherited consumer docs/review failures remain explicit; no waiver.",
+      "seconds": 0.21
+    },
+    {
+      "command": "node scripts/harness/check-doc-links.mjs --root . --strict",
+      "cwd": ".",
+      "status": "passed",
+      "exitCode": 0,
+      "artifact": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/condition-current-docs-gate.txt",
+      "notes": "Current scoped/full governance; inherited consumer docs/review failures remain explicit; no waiver.",
+      "seconds": 0.15
+    },
+    {
+      "command": "npm.cmd run test:unit -- tests/unit/components/operational/conditionEditing.test.tsx",
+      "cwd": "frontend",
+      "status": "failed",
+      "exitCode": 1,
+      "artifact": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/condition-equivalent-options-red.txt",
+      "notes": "Final stable-equivalent validation regression and verification; red reproduces parent update loop. Runtime preserves source hash and terminates its exact launched Vite child handle."
+    },
+    {
+      "command": "npm.cmd run test:unit -- tests/unit/components/operational",
+      "cwd": "frontend",
+      "status": "passed",
+      "exitCode": 0,
+      "artifact": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/condition-stable-unit.txt",
+      "notes": "Final stable-equivalent validation regression and verification; red reproduces parent update loop. Runtime preserves source hash and terminates its exact launched Vite child handle."
+    },
+    {
+      "command": "npm.cmd run lint",
+      "cwd": "frontend",
+      "status": "passed",
+      "exitCode": 0,
+      "artifact": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/condition-stable-lint.txt",
+      "notes": "Final stable-equivalent validation regression and verification; red reproduces parent update loop. Runtime preserves source hash and terminates its exact launched Vite child handle."
+    },
+    {
+      "command": "npm.cmd run build",
+      "cwd": "frontend",
+      "status": "passed",
+      "exitCode": 0,
+      "artifact": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/condition-stable-build.txt",
+      "notes": "Final stable-equivalent validation regression and verification; red reproduces parent update loop. Runtime preserves source hash and terminates its exact launched Vite child handle."
+    },
+    {
+      "command": "npx.cmd playwright test tests/visual/operational-editor.spec.ts -c playwright.visual.config.ts --project=desktop-light --workers=1 --output=../.harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/condition-stable-browser",
+      "cwd": "frontend",
+      "status": "passed",
+      "exitCode": 0,
+      "artifact": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/condition-stable-runtime.txt",
+      "notes": "Final stable-equivalent validation regression and verification; red reproduces parent update loop. Runtime preserves source hash and terminates its exact launched Vite child handle."
+    },
+    {
+      "command": "node scripts/harness/check-evidence.mjs --root . --strict .harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/commands.json",
+      "cwd": ".",
+      "status": "passed",
+      "exitCode": 0,
+      "artifact": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/condition-stable-final-evidence-gate.txt",
+      "notes": "Final Base condition stability source/evidence gate; no independent release or full acceptance approval."
+    },
+    {
+      "command": "node scripts/harness/check-review.mjs --root . --strict .harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/review.md",
+      "cwd": ".",
+      "status": "passed",
+      "exitCode": 0,
+      "artifact": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/condition-stable-final-review-gate.txt",
+      "notes": "Final Base condition stability source/evidence gate; no independent release or full acceptance approval."
+    },
+    {
+      "command": "node scripts/harness/check-task-packet.mjs --root . docs/harness/tasks/2026-11-07-ops-formal-queue-foundation-gaps.task.md",
+      "cwd": ".",
+      "status": "passed",
+      "exitCode": 0,
+      "artifact": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/condition-stable-final-task-gate.txt",
+      "notes": "Final Base condition stability source/evidence gate; no independent release or full acceptance approval."
+    },
+    {
+      "command": "node scripts/harness/check-ui-quality-gate.mjs --root . --strict",
+      "cwd": ".",
+      "status": "passed",
+      "exitCode": 0,
+      "artifact": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/condition-stable-final-ui-gate.txt",
+      "notes": "Final Base condition stability source/evidence gate; no independent release or full acceptance approval."
+    },
+    {
+      "command": "node scripts/harness/check-doc-links.mjs --root . --strict",
+      "cwd": ".",
+      "status": "passed",
+      "exitCode": 0,
+      "artifact": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/condition-stable-final-docs-gate.txt",
+      "notes": "Canonical shared ConditionBuilder accepted-value, stable-validation and accessible/default-input semantics synchronized."
+    },
+    {
+      "command": "npm run test:unit -- tests/unit/components/operational/conditionEditing.test.tsx",
+      "cwd": "frontend",
+      "status": "failed",
+      "exitCode": 1,
+      "artifact": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/resume-editor-red.log",
+      "notes": "7 failed / 7 passed; fresh object and array guards failed; real React element, accessible title and metric node regressions failed"
+    },
+    {
+      "command": "npm run test:unit -- tests/unit/components/operational",
+      "cwd": "frontend",
+      "status": "failed",
+      "exitCode": 1,
+      "artifact": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/resume-editor-green-attempt-1.log",
+      "notes": "23 passed / 1 failed; test queried title child ID instead of labelled wrapper; corrected only test assertion"
+    },
+    {
+      "command": "npm run test:unit -- tests/unit/components/operational",
+      "cwd": "frontend",
+      "status": "passed",
+      "exitCode": 0,
+      "artifact": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/resume-editor-green.log",
+      "notes": "2 files / 24 tests passed"
+    },
+    {
+      "command": "npm run lint",
+      "cwd": "frontend",
+      "status": "passed",
+      "exitCode": 0,
+      "artifact": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/resume-editor-lint.log",
+      "notes": "full frontend lint clean"
+    },
+    {
+      "command": "npm run type-check",
+      "cwd": "frontend",
+      "status": "passed",
+      "exitCode": 0,
+      "artifact": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/resume-editor-typecheck.log",
+      "notes": "tsc -b passed"
+    },
+    {
+      "command": "npm run build",
+      "cwd": "frontend",
+      "status": "passed",
+      "exitCode": 0,
+      "artifact": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/resume-editor-build.log",
+      "notes": "prebuild contracts + tsc -b + vite build passed"
+    },
+    {
+      "command": "npm run test:visual -- tests/visual/operational-editor.spec.ts --output ../.harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/resume-editor-visual",
+      "cwd": "frontend",
+      "status": "passed",
+      "exitCode": 0,
+      "artifact": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/resume-editor-visual.log",
+      "notes": "2 tests passed; existing self-starting playwright.visual.config.ts; 8 original PNG captures; no shared fixture/test changes"
+    },
+    {
+      "command": "git diff --check -- frontend/src/components/operational/ConditionBuilder.tsx frontend/src/components/operational/ExecutionStepRail.tsx frontend/tests/unit/components/operational/conditionEditing.test.tsx",
+      "cwd": ".",
+      "status": "passed",
+      "exitCode": 0,
+      "artifact": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/resume-editor-diffcheck.log",
+      "notes": "no whitespace errors"
+    },
+    {
+      "command": "local reviewer panel: whole-scope CODE review of git diff main...06925edf (121 source files, evidence/tasks excluded)",
+      "cwd": ".",
+      "status": "passed",
+      "exitCode": 0,
+      "artifact": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/verification/independent-wholescope-20261112/code-review.md",
+      "notes": "Verdict APPROVE WITH FINDINGS; six P2 follow-ups (C1-C6); permission-cache repair, registry atomicity, tenant lifecycle and authtoken atomicity confirmed clean."
+    },
+    {
+      "command": "local reviewer panel: whole-scope ARCH review of git diff main...06925edf against contracts/designs and plan In/Out",
+      "cwd": ".",
+      "status": "passed",
+      "exitCode": 0,
+      "artifact": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/verification/independent-wholescope-20261112/arch-review.md",
+      "notes": "Verdict APPROVE WITH FINDINGS, overall CLEAR; one P1 (A-1 permissionroutes Seal symmetry) scheduled for pre-release closure; A-2..A-5 P2 follow-ups."
+    },
+    {
+      "command": "go test -race -count=1 ./pkg/permissionroutes/ ./pkg/contracts/ ./cmd/server/ ./internal/middleware/ ./modules/system/iam/... && go vet (permissionroutes/contracts/cmd) && go build ./... && gofmt -l pkg cmd modules",
+      "cwd": "backend",
+      "status": "passed",
+      "exitCode": 0,
+      "artifact": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/continue-closeout-seal-20261112-race.log",
+      "notes": "A-1 closure: permissionroutes.Seal() fail-closed after startup registration point, wired at backend/cmd/server/main.go:155 before contracts.SealBusinessTenantProviders; SYSTEM_IAM_CONTRACT §7.4 A-4 pointer added."
+    },
+    {
+      "command": "npm run check:task-packet check:docs-frontmatter check:harness-encoding check:harness-evidence check:harness-review (sequential)",
+      "cwd": ".",
+      "status": "passed",
+      "exitCode": 0,
+      "artifact": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/continue-closeout-docgates-20261112.log",
+      "notes": "All six doc-harness gates green after task-packet/review.md/contract edits."
+    }
+  ],
+  "linkage": {
+    "taskId": "2026-11-07-ops-formal-queue-foundation-gaps",
+    "taskManifest": ".harness/tasks/2026-11-07-ops-formal-queue-foundation-gaps/manifest.json",
+    "taskPacket": "docs/harness/tasks/2026-11-07-ops-formal-queue-foundation-gaps.task.md",
+    "evidenceDir": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/",
+    "reviewFile": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/review.md",
+    "summaryFile": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/summary.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".harness/tasks/2026-11-07-ops-formal-queue-foundation-gaps/plan.md"
+    ]
+  },
+  "knownGaps": [
+    "A-2 contracts runtime split",
+    "A-3 auditpolicy 5xx classification",
+    "A-5 candidate tooling release orchestration wiring (handled by the official release batch)",
+    "C1 capacity budget for per-request policy reload",
+    "C3/C4 audit outcome and i18n error-key follow-ups",
+    "C6 pkg/contracts->internal/middleware layering sink",
+    "Full zoom/reduced-motion/long-label/mixed-permission rendered matrix is open.",
+    "Independent revised approval and maintainer visual/function acceptance remain pending.",
+    "Official Base release/consumer synchronization is pending.",
+    "maintainer final visual/functional acceptance",
+    "ops-side composition-root Seal after foundation consumption"
+  ],
+  "supplementalPriorEvidence": [
+    {
+      "artifact": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/provider-reviewed-race.txt",
+      "status": "passed",
+      "observation": "Registry strict routes and actual grant/revoke; extra filtered permission package ran zero tests.",
+      "provenance": "Preserved pre-compaction transcript; full invocation is not retained, so no reconstructed command is asserted."
+    },
+    {
+      "artifact": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/ui-unit.txt",
+      "status": "passed",
+      "observation": "13 tests before localized fixture label update.",
+      "provenance": "Preserved pre-compaction transcript; full invocation is not retained, so no reconstructed command is asserted."
+    },
+    {
+      "artifact": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/editor-rendered-fixed.txt",
+      "status": "passed",
+      "observation": "2 light/dark interaction checks; eight desktop/mobile screenshots inspected.",
+      "provenance": "Preserved pre-compaction transcript; full invocation is not retained, so no reconstructed command is asserted."
+    },
+    {
+      "artifact": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/dashboard-retry-unit.txt",
+      "status": "passed",
+      "observation": "8/8 Dashboard runtime/budget unit tests pass.",
+      "provenance": "Continuation terminal transcript retained; original complete shell invocation is not re-created as an executed command."
+    },
+    {
+      "artifact": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/dashboard-retry-lint.txt",
+      "status": "passed",
+      "observation": "Scoped Dashboard source/unit/visual lint passes.",
+      "provenance": "Continuation terminal transcript retained; original complete shell invocation is not re-created as an executed command."
+    },
+    {
+      "artifact": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/dashboard-retry-build.txt",
+      "status": "passed",
+      "observation": "Full frontend prebuild/type-check/build passes.",
+      "provenance": "Continuation terminal transcript retained; original complete shell invocation is not re-created as an executed command."
+    },
+    {
+      "artifact": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/dashboard-retry-runtime.txt",
+      "status": "passed",
+      "observation": "2/2 light/dark browser checks with desktop/mobile retry-waiting capture.",
+      "provenance": "Continuation terminal transcript retained; original complete shell invocation is not re-created as an executed command."
+    },
+    {
+      "artifact": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/final-consumer-archive-projection-output.txt",
+      "status": "passed",
+      "observation": "APPROVE for projection function/config and supplied hostile tests. Helper normalization/call ordering and checker internals omitted. Full 62 overlay tests independently cover integration.",
+      "provenance": "Linked Ops advisor execution; exact prompt and hashes retained in Ops adapters/rollback-and-foundation-review-provenance.json."
+    },
+    {
+      "artifact": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/final-base-iam-consumers-output.txt",
+      "status": "failed",
+      "observation": "360-second timeout; no verdict, approval or waived gap.",
+      "provenance": "Linked Ops advisor execution; exact prompt and hashes retained in Ops adapters/rollback-and-foundation-review-provenance.json."
+    },
+    {
+      "artifact": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/final-base-condition-editor-output.txt",
+      "status": "failed",
+      "observation": "360-second timeout; no verdict, approval or waived gap.",
+      "provenance": "Linked Ops advisor execution; exact prompt and hashes retained in Ops adapters/rollback-and-foundation-review-provenance.json."
+    },
+    {
+      "artifact": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/base-iam-registration-delta-output.txt",
+      "status": "passed",
+      "observation": "APPROVE for discovery/API route composition delta. Registry already reviewed; full role sync omitted from this delta. Existing grant/revoke tests remain separate evidence.",
+      "provenance": "Linked Ops advisor execution; exact prompt and hashes retained in Ops adapters/rollback-and-foundation-review-provenance.json."
+    },
+    {
+      "artifact": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/base-condition-change-delta-output.txt",
+      "status": "failed",
+      "observation": "360-second timeout; no verdict. ConditionBuilder final independent source review remains open.",
+      "provenance": "Linked Ops advisor execution; exact prompt and hashes retained in Ops adapters/rollback-and-foundation-review-provenance.json."
+    }
+  ]
+}

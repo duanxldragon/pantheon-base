@@ -1,0 +1,7 @@
+{
+  "command": "go vet ./pkg/database",
+  "startedUtc": "2026-11-09T08:56:59.1476915Z",
+  "finishedUtc": "2026-11-09T08:56:59.8218765Z",
+  "exitCode": 0,
+  "CGO_ENABLED": "1"
+}

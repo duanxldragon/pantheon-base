@@ -1,0 +1,389 @@
+{
+  "taskId": "2026-11-07-ops-formal-queue-foundation-gaps",
+  "taskDoc": "docs/harness/tasks/2026-11-07-ops-formal-queue-foundation-gaps.task.md",
+  "title": "Base-first contracts for formal Ops queue completion",
+  "goal": "Repair shared operational UI, business permission-route extensibility, dashboard adapters and consumer documentation packaging, and implement maintainer-authorized opt-in business tenancy contracts for paired Ops O4 tenant/actor isolation.",
+  "primaryLayer": "platform",
+  "status": "completed",
+  "priority": "P0",
+  "type": "feature",
+  "dependencies": [],
+  "scope": {
+    "in": [
+      "Shared ExecutionStepRail theme/status labels",
+      "Editable ConditionBuilder public contract",
+      "Provider-owned typed permission-route registration",
+      "Operational Dashboard public render/data extension",
+      "Consumer-safe documentation/review registry packaging",
+      "Maintainer-authorized O4 business tenant contract extension and actor/tenant-isolated history/saved-view adoption; same-batch Base/consumer and real acceptance required"
+    ],
+    "out": [
+      "Business logic in Base",
+      "Shared source overrides in Ops",
+      "Production mutation",
+      "Gate exemptions",
+      "Publication before verified review"
+    ]
+  },
+  "dependencyLayers": [
+    "inheritance-sync",
+    "business/*"
+  ],
+  "contractAnchors": [
+    "docs/designs/FOUNDATION_RELEASE_MODEL.md",
+    "docs/harness/PANTHEON_BASE_DELIVERY_WORKFLOW.md",
+    "docs/harness/VERIFICATION_EVIDENCE_SPEC.md",
+    "docs/contracts/TENANT_CONTRACT_V1.md",
+    "docs/designs/TENANT_RESOURCE_SCOPE_MATRIX.md"
+  ],
+  "expectedFiles": {
+    "create": [
+      ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/commands.json",
+      ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/review.md",
+      ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/summary.md",
+      ".harness/tasks/2026-11-07-ops-formal-queue-foundation-gaps/manifest.json",
+      "backend/pkg/permissionroutes/registry.go",
+      "backend/pkg/permissionroutes/registry_test.go",
+      "docs/harness/tasks/2026-11-07-ops-formal-queue-foundation-gaps.task.md",
+      "frontend/tests/unit/components/operational/conditionEditing.test.tsx",
+      "frontend/tests/visual/operational-editor.spec.ts",
+      "config/foundation-consumer-artifacts.json",
+      "frontend/src/modules/platform/OperationalDashboardWidgets.tsx",
+      "frontend/src/modules/platform/operational-dashboard.css",
+      "frontend/tests/unit/platform/operational-dashboard.test.tsx",
+      "frontend/tests/visual/operational-dashboard.spec.ts",
+      "backend/internal/middleware/business_authorization.go",
+      "backend/internal/middleware/business_authorization_test.go",
+      "backend/internal/middleware/business_tenant_context.go",
+      "backend/internal/middleware/business_tenant_context_test.go",
+      "backend/internal/middleware/business_token_middleware.go",
+      "backend/internal/middleware/business_token_middleware_test.go",
+      "backend/internal/middleware/business_telemetry_middleware.go",
+      "backend/internal/middleware/business_telemetry_middleware_test.go",
+      "backend/internal/middleware/token_activity_regression_test.go",
+      "backend/internal/scaffold/contract_test.go",
+      "backend/internal/scaffold/types_test.go",
+      "backend/modules/auth/login/business_authorization.go",
+      "backend/modules/auth/login/business_authorization_test.go",
+      "backend/modules/auth/module_test.go",
+      "backend/modules/system/system_modules_test.go",
+      "backend/pkg/auditpolicy/policy.go",
+      "backend/pkg/auditpolicy/policy_test.go",
+      "backend/pkg/authtoken/token_activity_test.go",
+      "backend/pkg/contracts/business_tenant_groups.go",
+      "backend/pkg/contracts/business_tenant_groups_test.go",
+      "backend/pkg/contracts/businessauth/businessauth.go",
+      "backend/pkg/contracts/businessauth/businessauth_test.go",
+      "backend/pkg/contracts/module_required_test.go",
+      "backend/pkg/database/business_policy.go",
+      "backend/pkg/database/business_policy_test.go",
+      "backend/pkg/database/migrate_dirty_bootstrap_test.go",
+      "backend/pkg/tenant/mode_reader.go",
+      "backend/pkg/tenant/mode_reader_test.go",
+      "frontend/tests/generator/fixtures/tenantv2-flat.json",
+      "frontend/tests/generator/fixtures/legacyv1-flat.json",
+      "scripts/foundation-release/build-candidate-artifact.mjs",
+      "scripts/foundation-release/candidate-artifact.test.mjs",
+      "scripts/foundation-release/candidate-descriptor.mjs",
+      "scripts/testing/verify-tenant-generated-runtime.mjs"
+    ],
+    "modify": [
+      "backend/modules/system/iam/permission/permission_workbench.go",
+      "backend/modules/system/iam/role/role_policy_sync_test.go",
+      "docs/TENANT_INITIALIZATION_GUIDE.md",
+      "DESIGN.md",
+      "DESIGN.en.md",
+      "docs/designs/LOWCODE_GENERATOR_GUIDE.md",
+      "docs/designs/LOWCODE_GENERATOR_GUIDE.en.md",
+      "docs/contracts/SYSTEM_CONFIG_CONTRACT.md",
+      "docs/contracts/SYSTEM_CONFIG_CONTRACT.en.md",
+      "docs/acceptances/SYSTEM_CONFIG_GOVERNANCE_ACCEPTANCE.md",
+      "docs/acceptances/SYSTEM_CONFIG_GOVERNANCE_ACCEPTANCE.en.md",
+      "docs/designs/OPERATIONAL_WORKBENCH_COMPONENTS_DESIGN.md",
+      "docs/designs/PERMISSION_WORKBENCH_GOVERNANCE_DESIGN.md",
+      "docs/designs/TENANT_RESOURCE_SCOPE_MATRIX.md",
+      "docs/release-notes/RELEASE_NOTES_v0.18.3.md",
+      "docs/reviews/ENTERPRISE_RELEASE_READINESS_REVIEW_2026-10-07.md",
+      "docs/reviews/PANTHEON_BASE_FINAL_ACCEPTANCE_REVIEW_2026-10-21.md",
+      "docs/reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-11-04_FULL.md",
+      "docs/reviews/PANTHEON_BASE_ISSUES_AND_REMEDIATION_2026-10-21.md",
+      "docs/reviews/PANTHEON_BASE_MAINTENANCE_FREEZE_DECLARATION.md",
+      "docs/reviews/PANTHEON_BASE_TEST_AND_ACCEPTANCE_REPORT_2026-10-21.md",
+      "docs/reviews/TENANT_MULTI_MEMBERSHIP_DECISION_2026-10-27.md",
+      "docs/reviews/TENANT_PLAN_LADDER_DECISION_2026-10-28.md",
+      "docs/runbooks/TENANT_MIGRATION_RUNBOOK.md",
+      "docs/testing-quick-start.md",
+      "frontend/src/components/operational/ConditionBuilder.tsx",
+      "frontend/src/components/operational/ExecutionStepRail.tsx",
+      "frontend/src/components/operational/OperationalWorkbenchVisualFixture.tsx",
+      "frontend/src/components/operational/operational.css",
+      "frontend/src/i18n/resources/en-US.ts",
+      "frontend/src/i18n/resources/fr-FR.ts",
+      "frontend/src/i18n/resources/ja-JP.ts",
+      "frontend/src/i18n/resources/ko-KR.ts",
+      "frontend/src/i18n/resources/zh-CN.ts",
+      "docs/designs/FOUNDATION_RELEASE_MODEL.md",
+      "docs/designs/PLATFORM_DASHBOARD_DESIGN.md",
+      "frontend/src/core/router/types.ts",
+      "frontend/src/modules/platform/Dashboard.tsx",
+      "frontend/src/modules/platform/widgets.tsx",
+      "backend/cmd/server/main.go",
+      "backend/internal/middleware/operation_log_middleware.go",
+      "backend/internal/middleware/operation_log_middleware_test.go",
+      "backend/internal/middleware/request_context_middleware.go",
+      "backend/internal/middleware/request_context_middleware_test.go",
+      "backend/internal/scaffold/contract.go",
+      "backend/internal/scaffold/types.go",
+      "backend/internal/scaffold/workspace_test.go",
+      "backend/modules/auth/module.go",
+      "backend/modules/system/system_modules.go",
+      "backend/pkg/authtoken/token.go",
+      "backend/pkg/authtoken/token_test.go",
+      "backend/pkg/common/http/response.go",
+      "backend/pkg/common/http/response_test.go",
+      "backend/pkg/contracts/module.go",
+      "backend/pkg/contracts/module_test.go",
+      "backend/pkg/database/migrate.go",
+      "backend/pkg/database/migrate_test.go",
+      "docs/contracts/TENANT_CONTRACT_V1.en.md",
+      "docs/contracts/TENANT_CONTRACT_V1.md",
+      "docs/designs/TENANT_RESOURCE_SCOPE_MATRIX.en.md",
+      "frontend/scripts/export-generated-module.mjs",
+      "frontend/src/modules/lowcode/generator/backendGenerator.ts",
+      "frontend/src/modules/lowcode/generator/exporter.ts",
+      "frontend/src/modules/lowcode/generator/pages/ModuleWizard.tsx",
+      "frontend/src/modules/lowcode/generator/schema.ts",
+      "frontend/tests/generator/generator-quality-contract.test.ts"
+    ],
+    "doNotTouch": [
+      "Production data",
+      "pantheon-ops shared inherited source",
+      "Historical completed acceptance artifacts"
+    ]
+  },
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "ci-workflow",
+    "portableFailureClass": "release-consumer-handoff",
+    "ownerLayer": "foundation-source",
+    "ratchetDecision": "registry-only",
+    "coverageDimensions": [
+      "behaviour",
+      "maintainability",
+      "architecture-fitness"
+    ]
+  },
+  "executionRoles": {
+    "implementerPosture": "Installed executor roles own narrowly assigned source paths; dispatcher owns governance and integration.",
+    "reviewerPosture": [
+      "Independent code review",
+      "Independent architecture review",
+      "UI rendered quality gate"
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "frontend lint/type-check/build",
+      "Operational UI unit and rendered browser tests",
+      "Backend full CGO race/vet after permission changes",
+      "Producer and consumer packaging tests",
+      "Task/evidence/review contracts"
+    ],
+    "runtimeEvidence": [
+      "Shared UI rendered in local fixture",
+      "Permission mapping registrations with grant/revoke and fail-closed coverage",
+      "Official consumption remains pending until new immutable release",
+      "Fresh tenant/user/session/action/provenance isolation and audit-before-capture sentinel matrix",
+      "Real generated tenant v2 default/dev bootstrap and A/B CRUD with legacy v1 regression",
+      "Source-stable sealed candidate producer/consumer tamper and paired runtime; lock bytes unchanged",
+      "Actual official migrator dirty preservation/exclusive recovery/retained-down/supported old-process stop",
+      "Authorized115.190.251.143 provider and desktop/mobile light/dark private history/view restore without auto-run"
+    ]
+  },
+  "runtimeSensitive": true,
+  "runtimeGap": "Real external environment and production drill evidence remain pending. No independent approval or official consumption is asserted in advance.",
+  "acceptanceCriteria": [
+    "Shared UI fixes have unit and rendered evidence",
+    "Provider-owned routes participate in synchronization and coverage without importing business in system",
+    "Dashboard extension has bounded permission-aware data contract",
+    "Consumer governance artifacts pass without dropping actual quality findings",
+    "Changes pass required checks and independent review before official release consumption"
+  ],
+  "implementationNotes": [
+    "Continuation of user instruction to complete the formal Ops task queue; workspace Base-first rule owns shared repairs. No inherited Ops overrides."
+  ],
+  "risks": [
+    "Permission registration must fail closed and remain module-owned",
+    "History/config packaging must preserve strict checks",
+    "Release and lock changes require verified concrete result"
+  ],
+  "humanGates": [
+    "Final visual/function acceptance",
+    "Production and policy exception decisions remain outside local implementation"
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-11-07-ops-formal-queue-foundation-gaps/manifest.json",
+    "taskDoc": "docs/harness/tasks/2026-11-07-ops-formal-queue-foundation-gaps.task.md",
+    "evidenceDir": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/",
+    "reviewFile": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/review.md",
+    "summaryFile": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/summary.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".harness/tasks/2026-11-07-ops-formal-queue-foundation-gaps/plan.md",
+      ".harness/tasks/2026-11-07-ops-formal-queue-foundation-gaps/o4-tenant-authorization.md",
+      ".harness/tasks/2026-11-07-ops-formal-queue-foundation-gaps/o4-tenant-implementation-plan.md",
+      ".harness/tasks/2026-11-07-ops-formal-queue-foundation-gaps/o4-tenant-implementation-plan-v1.md",
+      ".harness/tasks/2026-11-07-ops-formal-queue-foundation-gaps/o4-tenant-implementation-plan-v2.md",
+      ".harness/tasks/2026-11-07-ops-formal-queue-foundation-gaps/o4-tenant-implementation-plan-v3.md"
+    ]
+  },
+  "implementationStatus": "Locally complete: provider-owned permission-route registry consumed by role sync and workbench coverage, shared operational UI editing/theme contracts, bounded Dashboard extension, consumer governance packaging, opt-in business tenant contracts, and the permission-cache revocation repair",
+  "reviewStatus": "Independent CODE/ARCH lanes unavailable (provider 503); prior design-r3 approvals cover design only; no implementation or release approval inferred",
+  "verificationStatus": "Local gates passed 2026-11-12: full affected-set CGO race 17 packages exit 0 with no data race, non-race set, vet, go build ./... , frontend eslint/tsc/vitest 240 passed/vite build, and all six doc-harness checkers; no independent review, candidate assembly, release or consumption",
+  "lastReconciled": "2026-11-12",
+  "currentCheckpoint": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/verification/continuation-20261111-lifecycle-gates/checkpoint.md",
+  "continuation20261111": {
+    "receipt": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/verification/continuation-20261111/receipt.json",
+    "o2": {
+      "exitCode": 0,
+      "cases": 12,
+      "passedCases": 12,
+      "positivePassed": 152,
+      "negativePassed": 31,
+      "failed": 0,
+      "driverFailures": 0,
+      "sourceStable": true,
+      "ownedDirectoriesAbsent": true,
+      "databasesRetained": true
+    },
+    "baseCandidateTests": {
+      "tests": 38,
+      "pass": 38,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0,
+      "duration_ms": 13394.553
+    },
+    "opsCandidateTests": {
+      "tests": 207,
+      "pass": 206,
+      "fail": 1,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0,
+      "duration_ms": 470756.3848
+    },
+    "independentO4VeleroReview": "unavailable; no approval",
+    "P0ParentsClosed": 0,
+    "officialLockChanged": false
+  },
+  "continuation20261111Review2": {
+    "receipt": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/verification/continuation-20261111-review2/receipt.json",
+    "independentReview": "unavailable; no approval",
+    "sourceBindingsVerified": 11,
+    "linuxSymlinkReplayPrepared": true,
+    "linuxSymlinkReplayExecuted": false,
+    "P0ParentsClosed": 0
+  },
+  "continuation20261111PostConfig": {
+    "receipt": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/verification/continuation-20261111-post-config/receipt.json",
+    "O4Tooling": "CODE APPROVE / ARCH CLEAR",
+    "LinuxActualSymlinkPassed": true,
+    "Velero7ActualDiagnostic": "failed live-policy-field-missing; COMPLETE inspection; no replay",
+    "P0ParentsClosed": 0,
+    "officialLockChanged": false
+  },
+  "continuation20261111AssemblySuccess": {
+    "receipt": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/verification/continuation-20261111-assembly-success/receipt.json",
+    "O4AssemblyExitCode": 0,
+    "O4AssemblySourceStable": true,
+    "O4BackendCF": "implementation in progress",
+    "Velero8": "sealed; final review/live phases pending",
+    "P0ParentsClosed": 0,
+    "officialLockChanged": false
+  },
+  "continuation20261111ReviewedSuccessor": {
+    "receipt": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/verification/continuation-20261111-reviewed-successor/receipt.json",
+    "baseCurrentGatesPassed": true,
+    "newBaseCandidateDescriptorSHA256": "ecc49316f92a22c30b893f63a118fa08b572fbb116cd56926e54aa78a8e4327d",
+    "velero9ActualDiagnosticExitCode": 1,
+    "velero9InspectionComplete": true,
+    "velero10ReadonlyStatusExitCode": 0,
+    "originalHelperApprovalWithdrawn": true,
+    "velero10ReadonlyProjectionExitCode": 0,
+    "velero10ProjectionProductionBudgetChanged": false,
+    "helperV2ActualBuildPassed": true,
+    "P0ParentsClosed": 0,
+    "officialLockChanged": false
+  },
+  "continuation20261111RuntimeFindings": {
+    "receipt": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/verification/continuation-20261111-runtime-findings/receipt.json",
+    "cmdbReviewSynthesis": "COMMENT",
+    "velero10FailureInspected": true,
+    "velero11ReadOnlyExitCode": 0,
+    "velero11ReadCount": 110,
+    "previousBaseBackendGatesAreHistorical": true,
+    "P0ParentsClosed": 0,
+    "officialLockChanged": false
+  },
+  "continuation20261111LifecycleGates": {
+    "receipt": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/verification/continuation-20261111-lifecycle-gates/receipt.json",
+    "baseFullBackendPassed": true,
+    "candidateGuardReviewPending": true,
+    "consumerImplementationApproved": false,
+    "veleroSevenReadObserved": true,
+    "veleroEventOwnershipApproved": false,
+    "P0ParentsClosed": 0,
+    "officialLockChanged": false
+  },
+  "continuation20261112": {
+    "recordedAt": "2026-11-12",
+    "sourceCheckpoint": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/verification/continuation-20261111-lifecycle-gates/checkpoint.md",
+    "o2SharedPermissionRepair": {
+      "designReview": "CODE design APPROVE + ARCH design APPROVE/CLEAR, design only",
+      "baseOwnership": "registered-literal classifier, shared PolicyCoversRoute, StaticRouteMatcherFor, public guard, role sync and workbench adapter",
+      "state": "implementation and native tests pending the new normal candidate"
+    },
+    "authPermissionCacheRepair20261112": {
+      "plan": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/verification/auth-permission-cache-repair-20261112/plan.md",
+      "result": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/verification/auth-permission-cache-repair-20261112/result.json",
+      "trigger": "consumed CMDB R3 original-session revocation assertion failed",
+      "minimalDesign": "remove Redis permission-array reads/writes from Runtime.GetUserPerms; authoritative owning-tenant database read only",
+      "state": "implemented and locally verified red->green; full ./... race, independent CODE/ARCH review, normal candidate, official release and Ops consumption remain open"
+    },
+    "candidate74d43c72": "normal generation, 1166 sources verified, full CGO race 50 packages/2197 tests, 1 explicit unconfigured-S3 skip; not consumed",
+    "allSixP0ParentsOpen": true,
+    "P0ParentsClosed": 0,
+    "officialLockChanged": false
+  },
+  "completion": {
+    "recordedAt": "2026-11-12",
+    "scope": "Base-owned local implementation, tests and local gates",
+    "checkpoint": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/verification/continuation-20261112-closeout/checkpoint.md",
+    "permissionCacheRepair": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/verification/auth-permission-cache-repair-20261112/result.json",
+    "consolidatedCoverage": {
+      "tenantGeneratorContract": "backend/internal/scaffold/workspace_test.go:227",
+      "providerRegistry": "backend/pkg/contracts/business_tenant_groups_test.go",
+      "requiredModules": "backend/pkg/contracts/module_required_test.go"
+    },
+    "gates": {
+      "backendRace": "17 packages exit 0 (no data race)",
+      "backendTests": "affected set exit 0",
+      "vet": "exit 0",
+      "build": "go build ./... exit 0",
+      "frontendLint": "exit 0",
+      "frontendTypeCheck": "exit 0",
+      "frontendUnit": "240 passed",
+      "frontendBuild": "exit 0"
+    }
+  },
+  "residuals": [
+    "Independent CODE/ARCH review unavailable; no independent approval inferred",
+    "No normal combined candidate, official immutable release or Ops consumption; official lock unchanged at v0.18.6",
+    "Final visual/functional maintainer acceptance not performed",
+    "Ops-side CMDB key-only, O2/O3/O4 and D2 product acceptance remain open; consumed CMDB R3 not replayed",
+    "Real S3 provider skip unwaived; maintenance freeze unsigned"
+  ]
+}

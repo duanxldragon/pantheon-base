@@ -1,0 +1,62 @@
+{
+  "taskId": "2026-11-07-ops-formal-queue-foundation-gaps",
+  "scope": "current Base frontend and menu-contract inputs",
+  "exitCode": 0,
+  "sourceHashesStable": true,
+  "currentSourceMatches": true,
+  "hashedFiles": 491,
+  "resultSHA256": "bc070136c70da1ff10308d15bb78c5f40e6a68d381727aee6fcbc3d3e7ac0c41",
+  "commandLogHashes": {
+    "lint.log": "5818a930434cb0d8d2d2a02064c773ab6a83550e85cc5b74a35fec5534551fa9",
+    "unit.log": "5995f6684f9193c43e2017d0b1dff0f555798766fa3584d814f68cd155ffb8d5",
+    "generator-quality.log": "9f6b6421d91c77c7d39d83221ddda2cbbabe8429efb10b55e4c21d63d5a26f7f",
+    "build.log": "d43f6a822af2d1d2414daaf8b23544da379ed1e0afb56172a0b2bafd0c02436e"
+  },
+  "unitTests": {
+    "passed": 240,
+    "filesPassed": 35,
+    "failed": 0
+  },
+  "generatorQualityTests": {
+    "passed": 20,
+    "failed": 0,
+    "skipped": 0
+  },
+  "rawLogsLocation": ".local/ops-acceptance/continue-base-frontend-20261110T055216410976",
+  "checks": [
+    {
+      "name": "lint",
+      "command": "npm.cmd run lint",
+      "exitCode": 0,
+      "elapsedSeconds": 23.156
+    },
+    {
+      "name": "unit",
+      "command": "npm.cmd run test:unit -- --maxWorkers=2",
+      "exitCode": 0,
+      "elapsedSeconds": 42.922
+    },
+    {
+      "name": "generator-quality",
+      "command": "npm.cmd run test:generator:quality",
+      "exitCode": 0,
+      "elapsedSeconds": 6.594
+    },
+    {
+      "name": "build",
+      "command": "npm.cmd run build",
+      "exitCode": 0,
+      "elapsedSeconds": 24.0
+    }
+  ],
+  "visualQualitySkill": "impeccable",
+  "renderedEvidenceProduced": false,
+  "remaining": [
+    "rendered real product UI acceptance",
+    "current backend full CGO race result",
+    "paired candidate/official release-consumption",
+    "independent final acceptance"
+  ],
+  "officialConsumption": false,
+  "P0Approved": false
+}

@@ -1,0 +1,51 @@
+{
+  "taskId": "2026-11-07-ops-formal-queue-foundation-gaps",
+  "scope": "current Base complete backend CGO race",
+  "exitCode": 0,
+  "sourceHashesStable": true,
+  "currentSourceMatches": true,
+  "hashedFiles": 527,
+  "counts": {
+    "testPassEvents": 2154,
+    "testFailEvents": 0,
+    "testSkipEvents": 1,
+    "packagePassEvents": 50,
+    "packageFailEvents": 0
+  },
+  "skippedTests": [
+    {
+      "package": "github.com/duanxldragon/pantheon-base/backend/pkg/upload",
+      "test": "TestServiceStoreUsesRealS3WhenConfigured"
+    }
+  ],
+  "command": [
+    "go",
+    "test",
+    "-json",
+    "-mod=readonly",
+    "-race",
+    "-p",
+    "2",
+    "-timeout",
+    "30m",
+    "./..."
+  ],
+  "CGO_ENABLED": "1",
+  "MinGW": "D:/msys64/mingw64/bin",
+  "requiredMySQL": 33316,
+  "requiredRedis": 26317,
+  "resultSHA256": "c093f5a439400c1a2bfcb94d486eebca23566db27836cc6eac7188b249499dd5",
+  "commandLogSHA256": "cdb6e0b9a0794dc866bdd717bff5a5f54677bd0cb570bcf864c41af4fdf3a903",
+  "rawLogsLocation": ".local/ops-acceptance/continue-base-race-20261110T054126543682",
+  "ownedRedisStopped": true,
+  "ownedDatabaseAbsent": true,
+  "officialConsumption": false,
+  "P0Approved": false,
+  "remaining": [
+    "real S3 test configuration and execution",
+    "current Ops complete race after remaining source changes",
+    "public product authority/network/runtime acceptance",
+    "official release and consumption",
+    "independent final acceptance"
+  ]
+}
