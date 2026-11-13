@@ -6,6 +6,14 @@ Pantheon Base 方法追踪记录。方法论本体位于 `pantheon-harness`。
 
 ---
 
+## [pantheon-base-v0.18.8] — 2026-11-13 (preparation)
+
+- Integrate the reviewed root Playwright 1.65.0 update (#501), frontend dependency update (#502) and consistently pinned CodeQL v4.39.3 init/analyze actions (#503). PR #502 merged at 1cc4d6fb after its strict CSSOM compatibility correction passed independent CODE/ARCH review and all final hosted gates, including Smoke Sanity and PR Smoke Modules.
+- Reconcile the November 7 continuation with completed Base work, official v0.18.7 publication and the separately verified Ops handoff; Ops PR #183 merged at fc3fa867630580f7bcf1d40082a77f6b2548ac56 after official v0.18.7 validation and successful GitHub Actions.
+- Keep the existing Node 24.15.0 frontend test minimum; jsdom 30.1.3 and 31.0.0 declare the same engine range.
+- Source-bound dependency scripts/foundation/frontend checks and operational fixture evidence are recorded in the linked preparation task. Sealed candidate43be57 consumer readonly CGO backend build and supported Node 24.22.3 frontend installation/lint/type-check/build passed with stable source hashes. Final clean-main candidate binding, independent preparation review and exact-commit hosted gates remain required before publication.
+- FR028 deferred, S3 unwaived, maintenance freeze unsigned and separate operational/business residuals retained.
+
 ## [pantheon-base-v0.18.7] — 2026-11-12 (published)
 
 - Release the formal-queue foundation contract closeout merged through Base PR #504: provider-owned permission routes with fail-closed startup seal, permission-cache revocation repair verified red->green, shared operational UI/Dashboard adapter contracts and consumer artifact governance.

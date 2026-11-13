@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "kind": "candidate-effective-go-toolchain-clarification",
+  "checkedAt": "2026-11-13T05:33:02.8652190Z",
+  "candidateIdentity": "candidate-43be57e28ef949b68b1d145fdd5fb0d82d03272950be37772a05b3fe10ae8ec4",
+  "cwd": "D:/workspace/go/pantheon-platform/.wt-ops-v0187/.tmp/foundation-candidates/candidate-43be57e28ef949b68b1d145fdd5fb0d82d03272950be37772a05b3fe10ae8ec4/assembled/backend",
+  "bootstrapExecutable": "D:/Go/bin/go.exe",
+  "bootstrapVersionPreviouslyCaptured": "go version go1.26.5 windows/amd64",
+  "moduleDirectives": [
+    "go 1.26.10"
+  ],
+  "effectiveGoVersionOutput": "go version go1.26.10 windows/amd64",
+  "effectiveGoversion": "go1.26.10",
+  "effectiveGotoolchain": "auto",
+  "cgoEnabled": "1",
+  "compilerPath": "D:/msys64/mingw64/bin/gcc.exe",
+  "processPathPrefix": [
+    "D:/Git/mingw64/bin",
+    "D:/Go/bin",
+    "D:/msys64/mingw64/bin"
+  ],
+  "commands": [
+    {
+      "command": "D:/Go/bin/go.exe version",
+      "exitCode": 0,
+      "log": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\candidate188-validation\\effective-go-version.log",
+      "logSha256": "58bb5fbd259c65572e7ab9c2e276fc052ce58db3d6c64b23399a993ebaa83182"
+    },
+    {
+      "command": "D:/Go/bin/go.exe env GOVERSION GOTOOLCHAIN",
+      "exitCode": 0,
+      "log": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\candidate188-validation\\effective-go-env.log",
+      "logSha256": "5d23b7e21bd073d6e95ae11815f5b213a6c18928920b6ae1191242eca3b776b7"
+    }
+  ],
+  "originalFinalBuildReceiptSha256": "a677d1fc7083c372c77e2626b644d3b6a6813cf2d810cc1c77bd901bdedf83f7",
+  "originalFinalBuildReceiptUnchanged": true,
+  "newBuildPerformed": false,
+  "sealedFilesChanged": false,
+  "clarification": "Previously captured build-environment Go1.26.5 is the bootstrap executable version outside the module. These readonly commands run in the exact candidate backend and show automatic selection of the module-required effective compiler; this is appended provenance, not a new build."
+}

@@ -1,0 +1,29 @@
+{
+  "candidateIdentity": "candidate-43be57e28ef949b68b1d145fdd5fb0d82d03272950be37772a05b3fe10ae8ec4",
+  "checkedAt": "2026-11-13T05:20:02.793Z",
+  "baseHead": "1cc4d6fb320113865eac8226af4f6f499b74f455",
+  "sourceRoot": "D:/workspace/go/pantheon-platform/pantheon-base",
+  "sourceKind": "Actual Base working tree on merged source HEAD; dirty governance VERSION explicitly recorded by git status and independently selected/hash-compared.",
+  "selectedFiles": 1176,
+  "matchedFiles": 1176,
+  "allSelectedBytesMatch": true,
+  "mismatches": [],
+  "trackedWorktreeStatus": [
+    "M .harness/STATUS.md",
+    " M .harness/evidence/2026-11-12-v0187-release-ops-consumption/commands.json",
+    " M .harness/evidence/2026-11-12-v0187-release-ops-consumption/summary.md",
+    " M .harness/tasks/2026-11-07-ops-formal-queue-foundation-gaps/manifest.json",
+    " M .harness/tasks/2026-11-12-v0187-release-ops-consumption/manifest.json",
+    " M CHANGELOG.md",
+    " M VERSION",
+    " M docs/README.en.md",
+    " M docs/README.md",
+    " M docs/harness/tasks/2026-11-07-ops-formal-queue-foundation-gaps.task.md",
+    " M docs/harness/tasks/2026-11-12-v0187-release-ops-consumption.task.md",
+    " M docs/release-notes/README.en.md",
+    " M docs/release-notes/README.md"
+  ],
+  "actualSelectedFilesSha256": "43be57e28ef949b68b1d145fdd5fb0d82d03272950be37772a05b3fe10ae8ec4",
+  "finalReleaseCommitBindingPending": true,
+  "officialConsumption": false
+}

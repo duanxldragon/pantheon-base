@@ -1,0 +1,141 @@
+{
+  "browser": "158.0.8127.18",
+  "results": [
+    {
+      "route": "editor",
+      "mode": "light",
+      "viewport": {
+        "name": "desktop",
+        "width": 1440,
+        "height": 900
+      },
+      "url": "http://127.0.0.1:25278/__visual/operational-workbench?editor=1",
+      "layout": {
+        "scrollWidth": 1440,
+        "viewportWidth": 1440,
+        "overflow": 0
+      },
+      "consoleErrors": [],
+      "pageErrors": []
+    },
+    {
+      "route": "editor",
+      "mode": "light",
+      "viewport": {
+        "name": "mobile",
+        "width": 390,
+        "height": 844
+      },
+      "url": "http://127.0.0.1:25278/__visual/operational-workbench?editor=1",
+      "layout": {
+        "scrollWidth": 390,
+        "viewportWidth": 390,
+        "overflow": 0
+      },
+      "consoleErrors": [],
+      "pageErrors": []
+    },
+    {
+      "route": "editor",
+      "mode": "dark",
+      "viewport": {
+        "name": "desktop",
+        "width": 1440,
+        "height": 900
+      },
+      "url": "http://127.0.0.1:25278/__visual/operational-workbench?editor=1",
+      "layout": {
+        "scrollWidth": 1440,
+        "viewportWidth": 1440,
+        "overflow": 0
+      },
+      "consoleErrors": [],
+      "pageErrors": []
+    },
+    {
+      "route": "editor",
+      "mode": "dark",
+      "viewport": {
+        "name": "mobile",
+        "width": 390,
+        "height": 844
+      },
+      "url": "http://127.0.0.1:25278/__visual/operational-workbench?editor=1",
+      "layout": {
+        "scrollWidth": 390,
+        "viewportWidth": 390,
+        "overflow": 0
+      },
+      "consoleErrors": [],
+      "pageErrors": []
+    },
+    {
+      "route": "dashboard",
+      "mode": "light",
+      "viewport": {
+        "name": "desktop",
+        "width": 1440,
+        "height": 900
+      },
+      "url": "http://127.0.0.1:25278/__visual/operational-workbench?dashboard=1",
+      "layout": {
+        "scrollWidth": 1440,
+        "viewportWidth": 1440,
+        "overflow": 0
+      },
+      "consoleErrors": [],
+      "pageErrors": []
+    },
+    {
+      "route": "dashboard",
+      "mode": "light",
+      "viewport": {
+        "name": "mobile",
+        "width": 390,
+        "height": 844
+      },
+      "url": "http://127.0.0.1:25278/__visual/operational-workbench?dashboard=1",
+      "layout": {
+        "scrollWidth": 390,
+        "viewportWidth": 390,
+        "overflow": 0
+      },
+      "consoleErrors": [],
+      "pageErrors": []
+    },
+    {
+      "route": "dashboard",
+      "mode": "dark",
+      "viewport": {
+        "name": "desktop",
+        "width": 1440,
+        "height": 900
+      },
+      "url": "http://127.0.0.1:25278/__visual/operational-workbench?dashboard=1",
+      "layout": {
+        "scrollWidth": 1440,
+        "viewportWidth": 1440,
+        "overflow": 0
+      },
+      "consoleErrors": [],
+      "pageErrors": []
+    },
+    {
+      "route": "dashboard",
+      "mode": "dark",
+      "viewport": {
+        "name": "mobile",
+        "width": 390,
+        "height": 844
+      },
+      "url": "http://127.0.0.1:25278/__visual/operational-workbench?dashboard=1",
+      "layout": {
+        "scrollWidth": 390,
+        "viewportWidth": 390,
+        "overflow": 0
+      },
+      "consoleErrors": [],
+      "pageErrors": []
+    }
+  ]
+}

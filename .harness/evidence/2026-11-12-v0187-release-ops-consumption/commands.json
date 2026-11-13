@@ -167,6 +167,16 @@
       "log": ".harness/evidence/2026-11-12-v0187-release-ops-consumption\\hosted-release-gate-and-release-view.log.gz",
       "sha256": "56692e726de85ba1a5dccb8a30f19508b0b8145bd5417b2fe1a8dccbc343a596",
       "rawSha256": "e4a7d1d7a368771a43fd9286092becb465be5fa6eead451a9edac035e5c0655d"
+    },
+    {
+      "command": "gh pr view 183 --repo duanxldragon/pantheon-ops --json state,mergedAt,mergeCommit,headRefOid,url,statusCheckRollup",
+      "cwd": "D:/workspace/go/pantheon-platform/pantheon-base",
+      "exitCode": 0,
+      "status": "passed",
+      "log": ".harness/evidence/2026-11-12-v0187-release-ops-consumption/ops183-merged.json.gz",
+      "sha256": "80f38fb56b280d6f42df2fd92970285070db194e7c0bad6b85277a572eda806e",
+      "rawSha256": "223f165fa4dc56d3d5083ed53a2565d78de0a2d5ea37f9cbe852159c76f4bf99",
+      "notes": "Actual Writer read-only hosted receipt: MERGED at 2026-11-13T04:44:42Z, merge commit fc3fa867630580f7bcf1d40082a77f6b2548ac56. GitHub Actions successful; non-required external Vercel preview failure is retained separately."
     }
   ],
   "knownGaps": [
@@ -183,5 +193,6 @@
     "planRefs": [
       ".harness/tasks/2026-11-12-v0187-release-ops-consumption/manifest.json"
     ]
-  }
+  },
+  "completedAt": "2026-11-13T04:44:42Z"
 }

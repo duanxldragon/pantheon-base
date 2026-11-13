@@ -1,6 +1,6 @@
 # Pantheon Base Documentation Index
 
-Official `pantheon-base-v0.18.6` remains published and consumed. `pantheon-base-v0.18.7` preparation is open on task 2026-11-12-v0187-release-ops-consumption: VERSION 0.18.7, release notes and the two release-blocking CI remediations (CodeQL log-injection sink sanitizer, smoke empty-state stall repair) ride with PR #504's formal-queue foundation contracts. Publication and Ops consumption stay unclaimed until the exact merged commit has green push checks, Release Gate and four verified official assets. See [evidence](../.harness/evidence/2026-11-12-v0187-release-ops-consumption/summary.md).
+VERSION `0.18.8` contains the verified dependency updates and November 7 delivery closeout; see [v0.18.8 release notes](./release-notes/RELEASE_NOTES_v0.18.8.md) and [preparation checkpoint evidence](../.harness/evidence/2026-11-13-v0188-release-preparation/summary.md). The [GitHub Release](https://github.com/duanxldragon/pantheon-base/releases/tag/pantheon-base-v0.18.8) establishes official publication, its commit and four immutable assets. Predecessor v0.18.7 was published at `3203624e55438866edb951bd74e671eab38d2f16` and officially consumed through [Ops #183](https://github.com/duanxldragon/pantheon-ops/pull/183); see [v0.18.7 delivery evidence](../.harness/evidence/2026-11-12-v0187-release-ops-consumption/summary.md).
 
 ## Historical checkpoints
 

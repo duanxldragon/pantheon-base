@@ -1,0 +1,300 @@
+{
+  "timestamp": "2026-11-13T04:44:14.519Z",
+  "chromium": "158.0.8127.18",
+  "sourceAssertions": 4,
+  "transpileErrors": 0,
+  "oldExactAssertionRejected": true,
+  "correctedAssertionPassed": true,
+  "accepted": [
+    "flex-end",
+    "flow-end"
+  ],
+  "rejected": [
+    "center",
+    "flex-start",
+    "flow-start",
+    "end",
+    "space-between",
+    "",
+    "flex-end-extra",
+    " flow-end",
+    "flow-end "
+  ],
+  "samples": [
+    {
+      "direction": "row",
+      "authored": "flex-end",
+      "computed": "flow-end",
+      "geometry": {
+        "x": 221,
+        "y": 1,
+        "width": 40,
+        "height": 30
+      }
+    },
+    {
+      "direction": "row",
+      "authored": "flow-end",
+      "computed": "flow-end",
+      "geometry": {
+        "x": 221,
+        "y": 1,
+        "width": 40,
+        "height": 30
+      }
+    },
+    {
+      "direction": "row",
+      "authored": "center",
+      "computed": "center",
+      "geometry": {
+        "x": 111,
+        "y": 1,
+        "width": 40,
+        "height": 30
+      }
+    },
+    {
+      "direction": "row",
+      "authored": "flex-start",
+      "computed": "flow-start",
+      "geometry": {
+        "x": 1,
+        "y": 1,
+        "width": 40,
+        "height": 30
+      }
+    },
+    {
+      "direction": "row",
+      "authored": "flow-start",
+      "computed": "flow-start",
+      "geometry": {
+        "x": 1,
+        "y": 1,
+        "width": 40,
+        "height": 30
+      }
+    },
+    {
+      "direction": "row",
+      "authored": "end",
+      "computed": "end",
+      "geometry": {
+        "x": 221,
+        "y": 1,
+        "width": 40,
+        "height": 30
+      }
+    },
+    {
+      "direction": "row-reverse",
+      "authored": "flex-end",
+      "computed": "flow-end",
+      "geometry": {
+        "x": 1,
+        "y": 1,
+        "width": 40,
+        "height": 30
+      }
+    },
+    {
+      "direction": "row-reverse",
+      "authored": "flow-end",
+      "computed": "flow-end",
+      "geometry": {
+        "x": 1,
+        "y": 1,
+        "width": 40,
+        "height": 30
+      }
+    },
+    {
+      "direction": "row-reverse",
+      "authored": "center",
+      "computed": "center",
+      "geometry": {
+        "x": 111,
+        "y": 1,
+        "width": 40,
+        "height": 30
+      }
+    },
+    {
+      "direction": "row-reverse",
+      "authored": "flex-start",
+      "computed": "flow-start",
+      "geometry": {
+        "x": 221,
+        "y": 1,
+        "width": 40,
+        "height": 30
+      }
+    },
+    {
+      "direction": "row-reverse",
+      "authored": "flow-start",
+      "computed": "flow-start",
+      "geometry": {
+        "x": 221,
+        "y": 1,
+        "width": 40,
+        "height": 30
+      }
+    },
+    {
+      "direction": "row-reverse",
+      "authored": "end",
+      "computed": "end",
+      "geometry": {
+        "x": 221,
+        "y": 1,
+        "width": 40,
+        "height": 30
+      }
+    },
+    {
+      "direction": "column",
+      "authored": "flex-end",
+      "computed": "flow-end",
+      "geometry": {
+        "x": 1,
+        "y": 151,
+        "width": 40,
+        "height": 30
+      }
+    },
+    {
+      "direction": "column",
+      "authored": "flow-end",
+      "computed": "flow-end",
+      "geometry": {
+        "x": 1,
+        "y": 151,
+        "width": 40,
+        "height": 30
+      }
+    },
+    {
+      "direction": "column",
+      "authored": "center",
+      "computed": "center",
+      "geometry": {
+        "x": 1,
+        "y": 76,
+        "width": 40,
+        "height": 30
+      }
+    },
+    {
+      "direction": "column",
+      "authored": "flex-start",
+      "computed": "flow-start",
+      "geometry": {
+        "x": 1,
+        "y": 1,
+        "width": 40,
+        "height": 30
+      }
+    },
+    {
+      "direction": "column",
+      "authored": "flow-start",
+      "computed": "flow-start",
+      "geometry": {
+        "x": 1,
+        "y": 1,
+        "width": 40,
+        "height": 30
+      }
+    },
+    {
+      "direction": "column",
+      "authored": "end",
+      "computed": "end",
+      "geometry": {
+        "x": 1,
+        "y": 151,
+        "width": 40,
+        "height": 30
+      }
+    },
+    {
+      "direction": "column-reverse",
+      "authored": "flex-end",
+      "computed": "flow-end",
+      "geometry": {
+        "x": 1,
+        "y": 1,
+        "width": 40,
+        "height": 30
+      }
+    },
+    {
+      "direction": "column-reverse",
+      "authored": "flow-end",
+      "computed": "flow-end",
+      "geometry": {
+        "x": 1,
+        "y": 1,
+        "width": 40,
+        "height": 30
+      }
+    },
+    {
+      "direction": "column-reverse",
+      "authored": "center",
+      "computed": "center",
+      "geometry": {
+        "x": 1,
+        "y": 76,
+        "width": 40,
+        "height": 30
+      }
+    },
+    {
+      "direction": "column-reverse",
+      "authored": "flex-start",
+      "computed": "flow-start",
+      "geometry": {
+        "x": 1,
+        "y": 151,
+        "width": 40,
+        "height": 30
+      }
+    },
+    {
+      "direction": "column-reverse",
+      "authored": "flow-start",
+      "computed": "flow-start",
+      "geometry": {
+        "x": 1,
+        "y": 151,
+        "width": 40,
+        "height": 30
+      }
+    },
+    {
+      "direction": "column-reverse",
+      "authored": "end",
+      "computed": "end",
+      "geometry": {
+        "x": 1,
+        "y": 151,
+        "width": 40,
+        "height": 30
+      }
+    }
+  ],
+  "geometryEquivalentDirections": [
+    "row",
+    "row-reverse",
+    "column",
+    "column-reverse"
+  ],
+  "note": "Real browser CSSOM and layout probe; authenticated application smoke remains hosted-CI verification.",
+  "finalSourceVerifiedAt": "2026-11-13T04:46:14.614Z",
+  "baselinePrettierIssue": true,
+  "targetedEslint": "passed",
+  "finalLineWrappingOnly": true
+}

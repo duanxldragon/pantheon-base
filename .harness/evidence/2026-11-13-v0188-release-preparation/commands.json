@@ -1,0 +1,362 @@
+{
+  "taskId": "2026-11-13-v0188-release-preparation",
+  "repo": "pantheon-base",
+  "agent": {
+    "tool": "codex",
+    "adapter": "Dispatcher with independent dependency verification and Writer governance preparation"
+  },
+  "commands": [
+    {
+      "command": "npm ci --registry=https://registry.npmjs.org",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\dependency-validation\\source",
+      "exitCode": 0,
+      "status": "passed",
+      "log": ".harness/evidence/2026-11-13-v0188-release-preparation/logs/npm-ci-root.log.gz",
+      "sha256": "65f9a45d664c49aa6ec0a0cede4b83d08346b2992cee09ba9d66c12e23784693",
+      "rawSha256": "6a54096970d02489cc65c8882bd71b0d6347eed54053d4e749c2c3164a0d5144",
+      "notes": "Source binding: PR502 e4312f609f91bfcc5034569af52242823ab6c9a8; root package files PR501 ce7d382dbc71305fb76ddf5319e464226671c0a6; this does not certify the subsequent smoke correction or preparation snapshot."
+    },
+    {
+      "command": "npm ci --registry=https://registry.npmjs.org",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\dependency-validation\\source\\frontend",
+      "exitCode": 0,
+      "status": "passed",
+      "log": ".harness/evidence/2026-11-13-v0188-release-preparation/logs/npm-ci-frontend.log.gz",
+      "sha256": "b311b811be5c0082bbc9e351767cf1d602a6a8f91f12482c9757e7da6af7574f",
+      "rawSha256": "ff5d73de1068a48c70e257b71ecd2bb97fa004c42314340accf406bb9e407ec4",
+      "notes": "initial Node24.14 unsupportedengine warnings; older jsdom30 has sameengines, no version31 regression Source binding: PR502 e4312f609f91bfcc5034569af52242823ab6c9a8; root package files PR501 ce7d382dbc71305fb76ddf5319e464226671c0a6; this does not certify the subsequent smoke correction or preparation snapshot."
+    },
+    {
+      "command": "npm run test:scripts",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\dependency-validation\\source",
+      "exitCode": 0,
+      "status": "passed",
+      "log": ".harness/evidence/2026-11-13-v0188-release-preparation/logs/root-script-tests-supported.log.gz",
+      "sha256": "84f55c236608f09da8c3edaa2e7d4658e2f62e5d974527c5a34483abe0ca5c79",
+      "rawSha256": "ea432ed43b34ff3826809d916ab095c7ccae55da2ed0f8d1898bc08a53c8a91d",
+      "notes": "Source binding: PR502 e4312f609f91bfcc5034569af52242823ab6c9a8; root package files PR501 ce7d382dbc71305fb76ddf5319e464226671c0a6; this does not certify the subsequent smoke correction or preparation snapshot."
+    },
+    {
+      "command": "npm run test:foundation-release",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\dependency-validation\\source",
+      "exitCode": 0,
+      "status": "passed",
+      "log": ".harness/evidence/2026-11-13-v0188-release-preparation/logs/test-foundation-release-supported.log.gz",
+      "sha256": "5c1a664ee95988bda04c28e86bcaa324de4eb5295a1d8292aa1226d300a60552",
+      "rawSha256": "8f65dc83205ad898e081896e0f35859e675c32774eb519619d7589fb40bd2a1b",
+      "notes": "Source binding: PR502 e4312f609f91bfcc5034569af52242823ab6c9a8; root package files PR501 ce7d382dbc71305fb76ddf5319e464226671c0a6; this does not certify the subsequent smoke correction or preparation snapshot."
+    },
+    {
+      "command": "npm run lint",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\dependency-validation\\source\\frontend",
+      "exitCode": 0,
+      "status": "passed",
+      "log": ".harness/evidence/2026-11-13-v0188-release-preparation/logs/frontend-lint-supported.log.gz",
+      "sha256": "016a821771af341985e890ad6a780d6dbd2b0b641ab43f500ed5941582a0b9fc",
+      "rawSha256": "5f62e7cf7cdd69c014ca18d1c493431139fcbda108704552679bc84c360fd025",
+      "notes": "Source binding: PR502 e4312f609f91bfcc5034569af52242823ab6c9a8; root package files PR501 ce7d382dbc71305fb76ddf5319e464226671c0a6; this does not certify the subsequent smoke correction or preparation snapshot."
+    },
+    {
+      "command": "npm run type-check",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\dependency-validation\\source\\frontend",
+      "exitCode": 0,
+      "status": "passed",
+      "log": ".harness/evidence/2026-11-13-v0188-release-preparation/logs/frontend-type-check-supported.log.gz",
+      "sha256": "17a66d4f9d721873779ab5b49de8bf79c247724ccff09105bd4bf3eb65089a36",
+      "rawSha256": "94d7e0ba308969aef5be19127663f1eb2c0b1e8d9e4f8781561cc44a964b7281",
+      "notes": "Source binding: PR502 e4312f609f91bfcc5034569af52242823ab6c9a8; root package files PR501 ce7d382dbc71305fb76ddf5319e464226671c0a6; this does not certify the subsequent smoke correction or preparation snapshot."
+    },
+    {
+      "command": "npm run test:unit",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\dependency-validation\\source\\frontend",
+      "exitCode": 0,
+      "status": "passed",
+      "log": ".harness/evidence/2026-11-13-v0188-release-preparation/logs/frontend-unit-supported.log.gz",
+      "sha256": "5c56f6021e971da1b31032882564a89875a559d47d7b4b1fdf814f1bae8bccd2",
+      "rawSha256": "a7c950b5c38df06ccf76f5e0c18b892fa6a65d835f3e4aa5a5cd667db9fcc0ac",
+      "notes": "Source binding: PR502 e4312f609f91bfcc5034569af52242823ab6c9a8; root package files PR501 ce7d382dbc71305fb76ddf5319e464226671c0a6; this does not certify the subsequent smoke correction or preparation snapshot."
+    },
+    {
+      "command": "npm run build",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\dependency-validation\\source\\frontend",
+      "exitCode": 0,
+      "status": "passed",
+      "log": ".harness/evidence/2026-11-13-v0188-release-preparation/logs/frontend-build-supported.log.gz",
+      "sha256": "67b35d22e0959c5aca33f4e91c6dd09c40886d16a61cacd6ab4528c26cdbf48a",
+      "rawSha256": "fe24bc04998bee6f72cea4e6229402a9239571f61fba8734f18dcdc57c659a53",
+      "notes": "Source binding: PR502 e4312f609f91bfcc5034569af52242823ab6c9a8; root package files PR501 ce7d382dbc71305fb76ddf5319e464226671c0a6; this does not certify the subsequent smoke correction or preparation snapshot."
+    },
+    {
+      "command": "npm audit --registry=https://registry.npmjs.org --audit-level=high --json",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\dependency-validation\\source\\frontend",
+      "exitCode": 0,
+      "status": "passed",
+      "log": ".harness/evidence/2026-11-13-v0188-release-preparation/logs/frontend-audit-supported.json.gz",
+      "sha256": "de003f5e7c9762836263e886ef077402c0b867e2f9a048975298d42930701f06",
+      "rawSha256": "0828f29343013ceaaa28cd9fc8447bd1fc1344c339ade037353d651ac146765f",
+      "notes": "Source binding: PR502 e4312f609f91bfcc5034569af52242823ab6c9a8; root package files PR501 ce7d382dbc71305fb76ddf5319e464226671c0a6; this does not certify the subsequent smoke correction or preparation snapshot."
+    },
+    {
+      "command": "node node_modules/@playwright/test/cli.js test tests/visual/operational-editor.spec.ts tests/visual/operational-dashboard.spec.ts -c playwright.config.ts --workers=1 --output ../../visual-results-final",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\dependency-validation\\source\\frontend",
+      "exitCode": 0,
+      "status": "passed",
+      "log": ".harness/evidence/2026-11-13-v0188-release-preparation/logs/operational-visual-final.log.gz",
+      "sha256": "8054c1992e84001b5f92a64ddbf0e00cfa919f079e3a1d8de7bcfdd2ee6d389e",
+      "rawSha256": "f9904717378f597853c78d0464db888e9ec07b0546ec7fa8624aa31a6a697d9e",
+      "notes": "Source binding: PR502 e4312f609f91bfcc5034569af52242823ab6c9a8; root package files PR501 ce7d382dbc71305fb76ddf5319e464226671c0a6; this does not certify the subsequent smoke correction or preparation snapshot."
+    },
+    {
+      "command": "node collect-browser-console.cjs",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\dependency-validation",
+      "exitCode": 0,
+      "status": "passed",
+      "log": ".harness/evidence/2026-11-13-v0188-release-preparation/logs/browser-console-final.log.gz",
+      "sha256": "7bf422ee621cb6a1b466d0476d325d65a5e664e70967776f9e1feb084d41f099",
+      "rawSha256": "cab81f0cf062ec563fb9c492ebfa2d48c2ffbdbe95e1bffe417d7f7b2672e0e5",
+      "notes": "Source binding: PR502 e4312f609f91bfcc5034569af52242823ab6c9a8; root package files PR501 ce7d382dbc71305fb76ddf5319e464226671c0a6; this does not certify the subsequent smoke correction or preparation snapshot."
+    },
+    {
+      "command": "npm run check:docs-frontmatter",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\pantheon-base",
+      "exitCode": 0,
+      "status": "passed",
+      "log": ".harness/evidence/2026-11-13-v0188-release-preparation/preparation-checks/check-docs-frontmatter.log.gz",
+      "sha256": "9aea0e37e7718ee6fe9049914c4515aa5f8d19521708fcc468d713bc96c8045c",
+      "rawSha256": "a980ae5379b74ae49a75bf35c8667a17480366151f9f85390e4ef748d3c52277",
+      "notes": "Dispatcher reported all nine local preparation-draft commands exited 0; original logs retained. These checks precede final freeze and independent preparation review, and are not exact-commit hosted CI or review approval."
+    },
+    {
+      "command": "npm run check:task-packet-template",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\pantheon-base",
+      "exitCode": 0,
+      "status": "passed",
+      "log": ".harness/evidence/2026-11-13-v0188-release-preparation/preparation-checks/check-task-packet-template.log.gz",
+      "sha256": "f88e7647cb7a6dac9fdf3ccd9b813588d1155f62677c4344348b297ac0b03938",
+      "rawSha256": "3adf394a58969f2ff6c463b3288b461879ea88400a554f7716649302e17f905f",
+      "notes": "Dispatcher reported all nine local preparation-draft commands exited 0; original logs retained. These checks precede final freeze and independent preparation review, and are not exact-commit hosted CI or review approval."
+    },
+    {
+      "command": "npm run check:task-packet",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\pantheon-base",
+      "exitCode": 0,
+      "status": "passed",
+      "log": ".harness/evidence/2026-11-13-v0188-release-preparation/preparation-checks/check-task-packet.log.gz",
+      "sha256": "25d3482a2022fdcfbd5ba47399bc3090103fd3fd2d49cbc0b86a389757d0557b",
+      "rawSha256": "c833af03d7addd2fd72b5b6f6e7bd0888c149a64433fd108974e36da04c67d66",
+      "notes": "Dispatcher reported all nine local preparation-draft commands exited 0; original logs retained. These checks precede final freeze and independent preparation review, and are not exact-commit hosted CI or review approval."
+    },
+    {
+      "command": "npm run check:harness-evidence",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\pantheon-base",
+      "exitCode": 0,
+      "status": "passed",
+      "log": ".harness/evidence/2026-11-13-v0188-release-preparation/preparation-checks/check-harness-evidence.log.gz",
+      "sha256": "16f1e5c11cae94c9259365cc59b45348798e70fc6b63f6a3de33d5ed3ca5e36d",
+      "rawSha256": "5081e789a59765de1e633fd8d40a49163b7a9efedcea1f6142f9e013b2d2549b",
+      "notes": "Dispatcher reported all nine local preparation-draft commands exited 0; original logs retained. These checks precede final freeze and independent preparation review, and are not exact-commit hosted CI or review approval."
+    },
+    {
+      "command": "npm run check:harness-review",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\pantheon-base",
+      "exitCode": 0,
+      "status": "passed",
+      "log": ".harness/evidence/2026-11-13-v0188-release-preparation/preparation-checks/check-harness-review.log.gz",
+      "sha256": "252ce16327aa5a51400ba6f737fafb857871d5f08a7f9c39f541749de1312e91",
+      "rawSha256": "023aa16fbc618e2f5a7c788cf969d609bc6cc6cda3a8f1fae28ae307ab4070ba",
+      "notes": "Dispatcher reported all nine local preparation-draft commands exited 0; original logs retained. These checks precede final freeze and independent preparation review, and are not exact-commit hosted CI or review approval."
+    },
+    {
+      "command": "npm run check:harness-docs",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\pantheon-base",
+      "exitCode": 0,
+      "status": "passed",
+      "log": ".harness/evidence/2026-11-13-v0188-release-preparation/preparation-checks/check-harness-docs.log.gz",
+      "sha256": "1f350c3a22ad57817e72cea2f4c8cabde0759e7217677fce5f4a67eb50ba9ac8",
+      "rawSha256": "d8e6ad7f1b15451eb8df6f7941b2f1b57d2701468fa6364c70f7b1db72b1b89d",
+      "notes": "Dispatcher reported all nine local preparation-draft commands exited 0; original logs retained. These checks precede final freeze and independent preparation review, and are not exact-commit hosted CI or review approval."
+    },
+    {
+      "command": "npm run check:harness-encoding",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\pantheon-base",
+      "exitCode": 0,
+      "status": "passed",
+      "log": ".harness/evidence/2026-11-13-v0188-release-preparation/preparation-checks/check-harness-encoding.log.gz",
+      "sha256": "2e6e414368a14c5e45883d7bafd19b963dd2c813e5946aa718dbfa07831b955a",
+      "rawSha256": "d73622abe3d8181e3c97415acbf471c2a1f710cb2db020b516b93b25e2d4acc6",
+      "notes": "Dispatcher reported all nine local preparation-draft commands exited 0; original logs retained. These checks precede final freeze and independent preparation review, and are not exact-commit hosted CI or review approval."
+    },
+    {
+      "command": "npm run check:harness-inventory",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\pantheon-base",
+      "exitCode": 0,
+      "status": "passed",
+      "log": ".harness/evidence/2026-11-13-v0188-release-preparation/preparation-checks/check-harness-inventory.log.gz",
+      "sha256": "7b4bc5ca911b6d71df4bf13d8a26faf0ee6794a2a1a83c9a080d12b3a4e5e676",
+      "rawSha256": "d1caba25eea042d2284099796b5e6905a216198e41b147fe4f4c4347b25d6bb1",
+      "notes": "Dispatcher reported all nine local preparation-draft commands exited 0; original logs retained. These checks precede final freeze and independent preparation review, and are not exact-commit hosted CI or review approval."
+    },
+    {
+      "command": "npm run check:structure",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\pantheon-base",
+      "exitCode": 0,
+      "status": "passed",
+      "log": ".harness/evidence/2026-11-13-v0188-release-preparation/preparation-checks/check-structure.log.gz",
+      "sha256": "fdbe814009419c41b11b551f34ba7d58bd0dc2eef3b988c345b53e6bf4cb1ce3",
+      "rawSha256": "736ed1fe643efdb383ba64cd679125da4dcef24cdc2831ff999704a25cce4eaa",
+      "notes": "Dispatcher reported all nine local preparation-draft commands exited 0; original logs retained. These checks precede final freeze and independent preparation review, and are not exact-commit hosted CI or review approval."
+    },
+    {
+      "command": "gh pr view 502 --repo duanxldragon/pantheon-base --json headRefOid,state,mergeCommit,mergedAt,statusCheckRollup",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\pantheon-base",
+      "exitCode": 0,
+      "status": "passed",
+      "log": ".harness/evidence/2026-11-13-v0188-release-preparation/pr502-merged.json.gz",
+      "sha256": "283d91717473d049a4823d04e5a47ad5c09c81234884cef0411046b309e2b1e4",
+      "rawSha256": "0f6c5eace57e3247a5eec1e24cb4f49fda9e382adf66cdd7d623c2b4943f626e",
+      "notes": "Writer directly revalidated merged PR502 and all 29 final head checks: 27 SUCCESS, 2 conditional SKIPPED, 0 unsuccessful. This binds tested head 44188eff and squash merge 1cc4d6fb; it is not the final preparation or exact-main release gate."
+    },
+    {
+      "command": "D:/Go/bin/go.exe build -buildvcs=false -mod=readonly ./...",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\.wt-ops-v0187\\.tmp\\foundation-candidates\\candidate-43be57e28ef949b68b1d145fdd5fb0d82d03272950be37772a05b3fe10ae8ec4\\assembled\\backend",
+      "exitCode": 0,
+      "status": "passed",
+      "log": ".harness/evidence/2026-11-13-v0188-release-preparation/consumer-candidate/candidate-go-build.log.gz",
+      "sha256": "9e72928e7a01615b4cf090daa617b4ca9d68531748f887f323f695eb4ca3ef63",
+      "rawSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "startedAt": "2026-11-13T05:14:09.0076081Z",
+      "finishedAt": "2026-11-13T05:14:40.8208237Z",
+      "notes": "Independent consumer candidate compatibility verification: candidate-43be57e28ef949b68b1d145fdd5fb0d82d03272950be37772a05b3fe10ae8ec4, 1176 Base inputs match merged 1cc4d6fb plus explicit VERSION0.18.8; 2113 assembled sources stable. Final clean-main binding and official release consumption remain separate."
+    },
+    {
+      "command": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\dependency-validation\\toolchain\\node-v24.22.3-win-x64\\node.exe D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\dependency-validation\\toolchain\\node-v24.22.3-win-x64\\node_modules\\npm\\bin\\npm-cli.js ci",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\.wt-ops-v0187\\.tmp\\foundation-candidates\\candidate-43be57e28ef949b68b1d145fdd5fb0d82d03272950be37772a05b3fe10ae8ec4\\assembled\\frontend",
+      "exitCode": 0,
+      "status": "passed",
+      "log": ".harness/evidence/2026-11-13-v0188-release-preparation/consumer-candidate/candidate-npm-ci-supported.log.gz",
+      "sha256": "052ddf924144f97a1fab9d212cb044d625b6ee285993b9df63d48d7ae9acfd68",
+      "rawSha256": "67f06a74e6e07a92808fd79c3c34d746ee25a8c6d817ab7c02416a3da4b5c7a1",
+      "startedAt": "2026-11-13T05:19:23.5143834Z",
+      "finishedAt": "2026-11-13T05:19:52.1497174Z",
+      "notes": "Independent consumer candidate compatibility verification: candidate-43be57e28ef949b68b1d145fdd5fb0d82d03272950be37772a05b3fe10ae8ec4, 1176 Base inputs match merged 1cc4d6fb plus explicit VERSION0.18.8; 2113 assembled sources stable. Final clean-main binding and official release consumption remain separate."
+    },
+    {
+      "command": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\dependency-validation\\toolchain\\node-v24.22.3-win-x64\\node.exe D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\dependency-validation\\toolchain\\node-v24.22.3-win-x64\\node_modules\\npm\\bin\\npm-cli.js run lint",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\.wt-ops-v0187\\.tmp\\foundation-candidates\\candidate-43be57e28ef949b68b1d145fdd5fb0d82d03272950be37772a05b3fe10ae8ec4\\assembled\\frontend",
+      "exitCode": 0,
+      "status": "passed",
+      "log": ".harness/evidence/2026-11-13-v0188-release-preparation/consumer-candidate/candidate-frontend-lint-supported.log.gz",
+      "sha256": "016a821771af341985e890ad6a780d6dbd2b0b641ab43f500ed5941582a0b9fc",
+      "rawSha256": "5f62e7cf7cdd69c014ca18d1c493431139fcbda108704552679bc84c360fd025",
+      "startedAt": "2026-11-13T05:19:52.2392722Z",
+      "finishedAt": "2026-11-13T05:20:56.7425349Z",
+      "notes": "Independent consumer candidate compatibility verification: candidate-43be57e28ef949b68b1d145fdd5fb0d82d03272950be37772a05b3fe10ae8ec4, 1176 Base inputs match merged 1cc4d6fb plus explicit VERSION0.18.8; 2113 assembled sources stable. Final clean-main binding and official release consumption remain separate."
+    },
+    {
+      "command": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\dependency-validation\\toolchain\\node-v24.22.3-win-x64\\node.exe D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\dependency-validation\\toolchain\\node-v24.22.3-win-x64\\node_modules\\npm\\bin\\npm-cli.js run type-check",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\.wt-ops-v0187\\.tmp\\foundation-candidates\\candidate-43be57e28ef949b68b1d145fdd5fb0d82d03272950be37772a05b3fe10ae8ec4\\assembled\\frontend",
+      "exitCode": 0,
+      "status": "passed",
+      "log": ".harness/evidence/2026-11-13-v0188-release-preparation/consumer-candidate/candidate-frontend-type-check-supported.log.gz",
+      "sha256": "17a66d4f9d721873779ab5b49de8bf79c247724ccff09105bd4bf3eb65089a36",
+      "rawSha256": "94d7e0ba308969aef5be19127663f1eb2c0b1e8d9e4f8781561cc44a964b7281",
+      "startedAt": "2026-11-13T05:20:56.7823101Z",
+      "finishedAt": "2026-11-13T05:21:26.7785171Z",
+      "notes": "Independent consumer candidate compatibility verification: candidate-43be57e28ef949b68b1d145fdd5fb0d82d03272950be37772a05b3fe10ae8ec4, 1176 Base inputs match merged 1cc4d6fb plus explicit VERSION0.18.8; 2113 assembled sources stable. Final clean-main binding and official release consumption remain separate."
+    },
+    {
+      "command": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\dependency-validation\\toolchain\\node-v24.22.3-win-x64\\node.exe D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\dependency-validation\\toolchain\\node-v24.22.3-win-x64\\node_modules\\npm\\bin\\npm-cli.js run build",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\.wt-ops-v0187\\.tmp\\foundation-candidates\\candidate-43be57e28ef949b68b1d145fdd5fb0d82d03272950be37772a05b3fe10ae8ec4\\assembled\\frontend",
+      "exitCode": 0,
+      "status": "passed",
+      "log": ".harness/evidence/2026-11-13-v0188-release-preparation/consumer-candidate/candidate-frontend-build-supported.log.gz",
+      "sha256": "ee952177393372752081b1112993bfcc654dbcbbe57fea714c99f30db9d39bd7",
+      "rawSha256": "5403eaf34c014c7a3bb0d0dfd785e894232fe8335572faf97806fc5bb3e1c25a",
+      "startedAt": "2026-11-13T05:21:26.7849071Z",
+      "finishedAt": "2026-11-13T05:22:06.7367072Z",
+      "notes": "Independent consumer candidate compatibility verification: candidate-43be57e28ef949b68b1d145fdd5fb0d82d03272950be37772a05b3fe10ae8ec4, 1176 Base inputs match merged 1cc4d6fb plus explicit VERSION0.18.8; 2113 assembled sources stable. Final clean-main binding and official release consumption remain separate."
+    },
+    {
+      "command": "D:/Go/bin/go.exe version",
+      "cwd": "D:/workspace/go/pantheon-platform/.wt-ops-v0187/.tmp/foundation-candidates/candidate-43be57e28ef949b68b1d145fdd5fb0d82d03272950be37772a05b3fe10ae8ec4/assembled/backend",
+      "exitCode": 0,
+      "status": "passed",
+      "log": ".harness/evidence/2026-11-13-v0188-release-preparation/consumer-candidate/effective-go-version.log.gz",
+      "sha256": "7eebdd56c2a255f8a0b24671d63656c34ac66415935bc659cc46d475c533d065",
+      "rawSha256": "58bb5fbd259c65572e7ab9c2e276fc052ce58db3d6c64b23399a993ebaa83182",
+      "notes": "Readonly provenance check in the exact assembled candidate backend under original native PATH and CGO_ENABLED1: effective Go1.26.10, GOTOOLCHAINauto; earlier Go1.26.5 denotes bootstrap outside module. No new build or sealed-source edit."
+    },
+    {
+      "command": "D:/Go/bin/go.exe env GOVERSION GOTOOLCHAIN",
+      "cwd": "D:/workspace/go/pantheon-platform/.wt-ops-v0187/.tmp/foundation-candidates/candidate-43be57e28ef949b68b1d145fdd5fb0d82d03272950be37772a05b3fe10ae8ec4/assembled/backend",
+      "exitCode": 0,
+      "status": "passed",
+      "log": ".harness/evidence/2026-11-13-v0188-release-preparation/consumer-candidate/effective-go-env.log.gz",
+      "sha256": "c431a55c27e8f1287ccb00fb025565bce35c6eb81b0900c99de04773c4087eb2",
+      "rawSha256": "5d23b7e21bd073d6e95ae11815f5b213a6c18928920b6ae1191242eca3b776b7",
+      "notes": "Readonly provenance check in the exact assembled candidate backend under original native PATH and CGO_ENABLED1: effective Go1.26.10, GOTOOLCHAINauto; earlier Go1.26.5 denotes bootstrap outside module. No new build or sealed-source edit."
+    }
+  ],
+  "graphChecks": {
+    "usedCodeGraph": false,
+    "affectedSubgraph": [
+      "version metadata -> foundation release -> consumer rebuild"
+    ],
+    "checks": [],
+    "findings": [],
+    "notes": "Documentation draft changes no application call graph; prior CodeGraph source index is authoritative for unrelated code."
+  },
+  "sessionEconomics": {
+    "responseMode": "terse",
+    "costSensitivity": "medium",
+    "notes": "Delegated bounded Writer draft; no cost/token figures fabricated."
+  },
+  "browserEvidence": [
+    {
+      "viewport": "desktop 1440x900 and mobile 390x844; light/dark",
+      "url": "http://127.0.0.1:25278/__visual/operational-workbench?editor=1",
+      "screenshot": ".harness/evidence/2026-11-13-v0188-release-preparation/screenshots/editor-contact-sheet.png",
+      "consoleErrors": [],
+      "checkedStates": [
+        "controlled add/edit/remove",
+        "rail focus",
+        "dark button"
+      ],
+      "notes": "Independent QA inspected source-bound captures; fixture URLs/routes are recorded in the original local browser evidence."
+    },
+    {
+      "viewport": "desktop 1440x900 and mobile 390x844; light/dark",
+      "url": "http://127.0.0.1:25278/__visual/operational-workbench?dashboard=1",
+      "screenshot": ".harness/evidence/2026-11-13-v0188-release-preparation/screenshots/dashboard-contact-sheet.png",
+      "consoleErrors": [],
+      "checkedStates": [
+        "empty",
+        "error",
+        "partial",
+        "stale",
+        "retry waiting"
+      ],
+      "notes": "Four existing visual specs passed; eight console/overflow checks had zero errors. Desktop condition grid height and mobile rail partial visibility remain known fixture limitations."
+    }
+  ],
+  "runtimeSensitive": true,
+  "runtimeGap": "Candidate backend/frontend compatibility builds passed on sealed candidate43be57 inputs matching merged source1cc plus explicit VERSION0.18.8. Independent preparation review approved; final-tree confirmation and hosted checks, actual clean-main candidate input binding and official v0.18.8 publication remain pending. FR028 deferred, real S3 provider unwaived, maintenance freeze unsigned, separate Ops product acceptance open.",
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-11-13-v0188-release-preparation/manifest.json",
+    "taskDoc": "docs/harness/tasks/2026-11-13-v0188-release-preparation.task.md",
+    "evidenceDir": ".harness/evidence/2026-11-13-v0188-release-preparation/",
+    "reviewFile": ".harness/evidence/2026-11-13-v0188-release-preparation/review.md",
+    "summaryFile": ".harness/evidence/2026-11-13-v0188-release-preparation/summary.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".harness/tasks/2026-11-13-v0188-release-preparation/manifest.json"
+    ]
+  },
+  "knownGaps": [
+    "FR028 oversized audit json_result storage remediation remains explicitly deferred.",
+    "Real S3 provider skip is unwaived; maintenance freeze remains unsigned.",
+    "Production migration, December 31 legacy-auth retirement and separate Ops product acceptance are outside this preparation.",
+    "v0.18.8 publication requires successful hosted checks and Release Gate on the exact merged commit, then verification of all four immutable assets.",
+    "Existing fixture limitations: desktop condition grid stretch, mobile rail only initial visible steps; no full production-page, 200% zoom, reduced-motion or full state-matrix claim."
+  ]
+}

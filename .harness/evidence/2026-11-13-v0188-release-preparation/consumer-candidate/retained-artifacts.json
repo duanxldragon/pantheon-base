@@ -1,0 +1,84 @@
+{
+  "candidate": "candidate-43be57e28ef949b68b1d145fdd5fb0d82d03272950be37772a05b3fe10ae8ec4",
+  "scope": "Original retained consumer receipts and logs; raw bytes unchanged. Diagnostic Node24.14 warnings are preserved, final frontend pass binds supported Node24.22.3.",
+  "artifacts": [
+    {
+      "file": ".harness/evidence/2026-11-13-v0188-release-preparation/consumer-candidate/final-build-receipt.json",
+      "sha256": "a677d1fc7083c372c77e2626b644d3b6a6813cf2d810cc1c77bd901bdedf83f7",
+      "rawSha256": "a677d1fc7083c372c77e2626b644d3b6a6813cf2d810cc1c77bd901bdedf83f7"
+    },
+    {
+      "file": ".harness/evidence/2026-11-13-v0188-release-preparation/consumer-candidate/summary.md.gz",
+      "sha256": "c0f026c244f4cbc1d26e306d4781de8dc41449999fc8df0487c712169893736b",
+      "rawSha256": "c6c2b76947e6804efe45b6384d2c9830f318728c5f6f6222b6b755507d362de3"
+    },
+    {
+      "file": ".harness/evidence/2026-11-13-v0188-release-preparation/consumer-candidate/final-candidate-assembly-receipt.json.gz",
+      "sha256": "727f75934b9f46f02ce9f0d2a5af6f4b0305aebfa7b0e28a489b6d01b82a81f4",
+      "rawSha256": "5a35296a1a7284eb6bf35263c04728c0976ab6ef0c5625285f877c3ce15b5578"
+    },
+    {
+      "file": ".harness/evidence/2026-11-13-v0188-release-preparation/consumer-candidate/merged-main-working-version-byte-comparison.json",
+      "sha256": "e6c9a2a3e3eb6f56180b80884bb1e511e0c6a6ebb0dbc8bf56e8d4016d2f24b8",
+      "rawSha256": "e6c9a2a3e3eb6f56180b80884bb1e511e0c6a6ebb0dbc8bf56e8d4016d2f24b8"
+    },
+    {
+      "file": ".harness/evidence/2026-11-13-v0188-release-preparation/consumer-candidate/candidate-go-build.log.gz",
+      "sha256": "9e72928e7a01615b4cf090daa617b4ca9d68531748f887f323f695eb4ca3ef63",
+      "rawSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": ".harness/evidence/2026-11-13-v0188-release-preparation/consumer-candidate/candidate-npm-ci-supported.log.gz",
+      "sha256": "052ddf924144f97a1fab9d212cb044d625b6ee285993b9df63d48d7ae9acfd68",
+      "rawSha256": "67f06a74e6e07a92808fd79c3c34d746ee25a8c6d817ab7c02416a3da4b5c7a1"
+    },
+    {
+      "file": ".harness/evidence/2026-11-13-v0188-release-preparation/consumer-candidate/candidate-frontend-lint-supported.log.gz",
+      "sha256": "016a821771af341985e890ad6a780d6dbd2b0b641ab43f500ed5941582a0b9fc",
+      "rawSha256": "5f62e7cf7cdd69c014ca18d1c493431139fcbda108704552679bc84c360fd025"
+    },
+    {
+      "file": ".harness/evidence/2026-11-13-v0188-release-preparation/consumer-candidate/candidate-frontend-type-check-supported.log.gz",
+      "sha256": "17a66d4f9d721873779ab5b49de8bf79c247724ccff09105bd4bf3eb65089a36",
+      "rawSha256": "94d7e0ba308969aef5be19127663f1eb2c0b1e8d9e4f8781561cc44a964b7281"
+    },
+    {
+      "file": ".harness/evidence/2026-11-13-v0188-release-preparation/consumer-candidate/candidate-frontend-build-supported.log.gz",
+      "sha256": "ee952177393372752081b1112993bfcc654dbcbbe57fea714c99f30db9d39bd7",
+      "rawSha256": "5403eaf34c014c7a3bb0d0dfd785e894232fe8335572faf97806fc5bb3e1c25a"
+    },
+    {
+      "file": ".harness/evidence/2026-11-13-v0188-release-preparation/consumer-candidate/diagnostic-node2414-npm-ci.log.gz",
+      "sha256": "886c986dc5c10162ee4748f65270b751f7e2eb161d2bc4f7db21742688beb1c1",
+      "rawSha256": "a0dc8fce4140bdb9a673311d441162168c622630caf243c0544dfa8ff2e5e3a2"
+    },
+    {
+      "file": ".harness/evidence/2026-11-13-v0188-release-preparation/consumer-candidate/effective-go-toolchain-receipt.json.gz",
+      "sha256": "0339b85e0268140efa980adcadc24e55defba64fc70f7cf5763605a0140e1af1",
+      "rawSha256": "1805da3646927f8670c7d14566f3ad52d5558e56ca0cc23f11794e48396cf2f3",
+      "derivedJson": ".harness/evidence/2026-11-13-v0188-release-preparation/consumer-candidate/effective-go-toolchain-receipt.json",
+      "derivedSha256": "e7dfad8d7f851e6a0bf6ffc9c720c6f4f2c904f443099247039abd8c4af2c898",
+      "notes": "Plain JSON is LF-normalized convenience data; original CRLF byte evidence is retained in gzip."
+    },
+    {
+      "file": ".harness/evidence/2026-11-13-v0188-release-preparation/consumer-candidate/source-before-build.json.gz",
+      "sha256": "97329dce8f9eb7507af4da319565615657df7352a7b08eaad584ada771c6f540",
+      "rawSha256": "027ae40ec5d8fffb703ab21a88c60665f33d8a319a353e69ae947b5a46a2ebfc"
+    },
+    {
+      "file": ".harness/evidence/2026-11-13-v0188-release-preparation/consumer-candidate/effective-go-toolchain-clarification.md.gz",
+      "sha256": "8ccd4cf93bf6e41c1fbee6ee0cc3dfb2c4149b0531d0f2f8f0aed3b465475763",
+      "rawSha256": "2eb86397c007d10055a7c302a093e0b49e06315fc7ae4ae55244a23f2cdfa963"
+    },
+    {
+      "file": ".harness/evidence/2026-11-13-v0188-release-preparation/consumer-candidate/effective-go-version.log.gz",
+      "sha256": "7eebdd56c2a255f8a0b24671d63656c34ac66415935bc659cc46d475c533d065",
+      "rawSha256": "58bb5fbd259c65572e7ab9c2e276fc052ce58db3d6c64b23399a993ebaa83182"
+    },
+    {
+      "file": ".harness/evidence/2026-11-13-v0188-release-preparation/consumer-candidate/effective-go-env.log.gz",
+      "sha256": "c431a55c27e8f1287ccb00fb025565bce35c6eb81b0900c99de04773c4087eb2",
+      "rawSha256": "5d23b7e21bd073d6e95ae11815f5b213a6c18928920b6ae1191242eca3b776b7"
+    }
+  ]
+}

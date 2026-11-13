@@ -4,7 +4,7 @@
   "title": "发布 Base v0.18.7 与 Ops 正式消费",
   "goal": "Publish the immutable reviewed Base v0.18.7 that carries the closed formal-queue foundation contracts (PR #504), then consume it in pantheon-ops through official artifacts.",
   "primaryLayer": "platform",
-  "status": "in-progress",
+  "status": "completed",
   "priority": "P1",
   "type": "release",
   "dependencies": [
@@ -131,9 +131,9 @@
       ".harness/tasks/2026-11-12-v0187-release-ops-consumption/manifest.json"
     ]
   },
-  "implementationStatus": "preparation-reviewed-pending-merge-release-consumption",
+  "implementationStatus": "base-published-official-consumer-validated-and-merged",
   "reviewStatus": "approved",
-  "verificationStatus": "local-preparation-gates-passed-hosted-pending",
+  "verificationStatus": "base-hosted-release-assets-and-official-consumer-gates-passed",
   "preparationApproval": {
     "scope": "release187-preparation-only",
     "snapshotSha256": "33ffbb7733fc744c3969edff3b5d21a59a99e39b2108a3cc23cc00f725e881f6",
@@ -153,5 +153,32 @@
         "architecturalStatus": "CLEAR"
       }
     ]
+  },
+  "currentDelivery20261113": {
+    "recordedAt": "2026-11-13",
+    "baseRelease": "pantheon-base-v0.18.7",
+    "baseCommit": "3203624e55438866edb951bd74e671eab38d2f16",
+    "releaseGateRun": 43194854386,
+    "consumerPR": 183,
+    "consumerHead": "4404cfde5394557626967dc40669c30a0adba4e2",
+    "consumerEvidence": "https://github.com/duanxldragon/pantheon-ops/blob/4404cfde5394557626967dc40669c30a0adba4e2/.harness/evidence/2026-11-13-base-v0187-consumption/summary.md",
+    "state": "completed by official consumer validation and merge",
+    "consumerMergeCommit": "fc3fa867630580f7bcf1d40082a77f6b2548ac56",
+    "consumerMergedAt": "2026-11-13T04:44:42Z"
+  },
+  "completion": {
+    "recordedAt": "2026-11-13",
+    "scope": "All original Base preparation/publication and official v0.18.7 Ops consumer acceptance criteria",
+    "baseRelease": "pantheon-base-v0.18.7",
+    "baseCommit": "3203624e55438866edb951bd74e671eab38d2f16",
+    "consumerPR": 183,
+    "consumerTestedHead": "4404cfde5394557626967dc40669c30a0adba4e2",
+    "consumerMergeCommit": "fc3fa867630580f7bcf1d40082a77f6b2548ac56",
+    "consumerMergedAt": "2026-11-13T04:44:42Z",
+    "consumerSourceEvidence": "https://github.com/duanxldragon/pantheon-ops/blob/4404cfde5394557626967dc40669c30a0adba4e2/.harness/evidence/2026-11-13-base-v0187-consumption/summary.md",
+    "hostedReceipt": ".harness/evidence/2026-11-12-v0187-release-ops-consumption/ops183-merged.json.gz",
+    "githubActions": "Quality, Security, Smoke, Sonar and Automation successful on the source-bound consumer head",
+    "externalPreview": "Non-required Vercel preview failure retained; no deployment success or production acceptance inferred",
+    "remaining": "FR028 explicitly deferred; real S3 provider skip unwaived; maintenance freeze unsigned; separate Ops product acceptance and production/scheduled legacy-auth work remain independently scoped"
   }
 }

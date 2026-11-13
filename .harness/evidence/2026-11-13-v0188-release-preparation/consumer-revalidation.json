@@ -1,0 +1,97 @@
+{
+  "recordedAt": "2026-11-13T04:22:17.4122308Z",
+  "taskId": "2026-11-13-base-v0187-consumption",
+  "repository": "pantheon-ops",
+  "branch": "consume/base-v0.18.7",
+  "head": "4404cfde5394557626967dc40669c30a0adba4e2",
+  "worktree": "D:\\workspace\\go\\pantheon-platform\\.wt-ops-v0187",
+  "modifiedScope": "two commands.json receipt paths only",
+  "officialRelease": "pantheon-base-v0.18.7",
+  "baseCommit": "3203624e55438866edb951bd74e671eab38d2f16",
+  "bundleSHA256": "1daa3e7f2eb7c243d51e417aa651be2feeb045dfc875ac3556038c2df74e380a",
+  "repoTarSHA256": "6149f9e923102c247696cf761038402267e8a52173931e45cfb6ab4a2a526976",
+  "commandLogProof": [
+    {
+      "log": ".harness/evidence/2026-11-13-base-v0187-consumption/ops187-official-acquire.log.gz",
+      "exists": true,
+      "hashMatches": true
+    },
+    {
+      "log": ".harness/evidence/2026-11-13-base-v0187-consumption/ops187-staging-and-tree-gates.log.gz",
+      "exists": true,
+      "hashMatches": true
+    },
+    {
+      "log": ".harness/evidence/2026-11-13-base-v0187-consumption/ops187-business-foundation.log.gz",
+      "exists": true,
+      "hashMatches": true
+    },
+    {
+      "log": ".harness/evidence/2026-11-13-base-v0187-consumption/ops187-backend-full-race.log.gz",
+      "exists": true,
+      "hashMatches": true
+    },
+    {
+      "log": ".harness/evidence/2026-11-13-base-v0187-consumption/ops187-frontend-suite.log.gz",
+      "exists": true,
+      "hashMatches": true
+    },
+    {
+      "log": ".harness/evidence/2026-11-13-base-v0187-consumption/ops187-standard-smoke-suites.log.gz",
+      "exists": true,
+      "hashMatches": true
+    },
+    {
+      "log": ".harness/evidence/2026-11-13-base-v0187-consumption/ops187-runtime-backend-log.log.gz",
+      "exists": true,
+      "hashMatches": true
+    },
+    {
+      "log": ".harness/evidence/2026-11-13-base-v0187-consumption/ops187-fresh-migration-state.log.gz",
+      "exists": true,
+      "hashMatches": true
+    },
+    {
+      "log": ".harness/evidence/2026-11-13-base-v0187-consumption/ops187-docgates-final.log.gz",
+      "exists": true,
+      "hashMatches": true
+    },
+    {
+      "log": ".harness/evidence/2026-11-13-base-v0187-consumption/ops187-checker-sync.log.gz",
+      "exists": true,
+      "hashMatches": true
+    },
+    {
+      "log": ".harness/evidence/2026-11-13-base-v0187-consumption/ops187-codearch-panel.log.gz",
+      "exists": true,
+      "hashMatches": true
+    },
+    {
+      "log": ".harness/evidence/2026-11-13-base-v0187-consumption/official187-release-metadata.json",
+      "exists": true,
+      "hashMatches": true
+    }
+  ],
+  "freshChecks": [
+    "evidence scoped PASS",
+    "task packet scoped PASS",
+    "review task PASS (8 legacy global errors)",
+    "business overlay53 PASS",
+    "shared drift866/856/10;164 business;2 migrations PASS",
+    "git diff --check PASS"
+  ],
+  "priorExactSourceChecks": [
+    "CGO full race67 packages/exit0/no data races",
+    "frontend lint/typecheck/build/unit240",
+    "standard generator4 smoke suites exit0",
+    "CODE/ARCH round2 APPROVE/CLEAR on9b51415;later deltas evidence-only"
+  ],
+  "pending": [
+    "root to review/push4404cfd metadata commit",
+    "PR183 current GitHub check refresh after push",
+    "unresolved CodeQL thread PRRT_kwDOSZ2aAc627IxR",
+    "Vercel external FAILURE",
+    "root merge and main-only cleanup/parent task closure"
+  ],
+  "protectedPrimary": "Primary pantheon-ops main untouched; existing staged/unstaged business work not copied or committed"
+}

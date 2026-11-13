@@ -1,0 +1,173 @@
+{
+  "recordedAt": "2026-11-13T12:31:31.7727765+08:00",
+  "sourceRoot": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\dependency-validation\\source",
+  "frontendPR": 502,
+  "frontendHead": "e4312f609f91bfcc5034569af52242823ab6c9a8",
+  "rootPR": 501,
+  "rootHead": "ce7d382dbc71305fb76ddf5319e464226671c0a6",
+  "source": "git archive PR502 with exact root package files archived from PR501",
+  "node": "v24.22.3",
+  "packageHashes": "source-package-sha256.json",
+  "nodeReceipt": "node-runtime-receipt.json",
+  "results": [
+    {
+      "command": "npm ci --registry=https://registry.npmjs.org",
+      "cwd": "source",
+      "exitCode": 0,
+      "log": "npm-ci-root.log"
+    },
+    {
+      "command": "npm ci --registry=https://registry.npmjs.org",
+      "cwd": "source/frontend",
+      "exitCode": 0,
+      "log": "npm-ci-frontend.log",
+      "notes": "initial Node24.14 unsupportedengine warnings; older jsdom30 has sameengines, no version31 regression"
+    },
+    {
+      "command": "npm run test:scripts",
+      "cwd": "source",
+      "exitCode": 0,
+      "passed": 208,
+      "failed": 0,
+      "log": "root-script-tests-supported.log"
+    },
+    {
+      "command": "npm run test:foundation-release",
+      "cwd": "source",
+      "exitCode": 0,
+      "passed": 57,
+      "failed": 0,
+      "log": "test-foundation-release-supported.log"
+    },
+    {
+      "command": "npm run lint",
+      "cwd": "source/frontend",
+      "exitCode": 0,
+      "log": "frontend-lint-supported.log"
+    },
+    {
+      "command": "npm run type-check",
+      "cwd": "source/frontend",
+      "exitCode": 0,
+      "log": "frontend-type-check-supported.log"
+    },
+    {
+      "command": "npm run test:unit",
+      "cwd": "source/frontend",
+      "exitCode": 0,
+      "files": 35,
+      "passed": 240,
+      "failed": 0,
+      "log": "frontend-unit-supported.log"
+    },
+    {
+      "command": "npm run build",
+      "cwd": "source/frontend",
+      "exitCode": 0,
+      "log": "frontend-build-supported.log"
+    },
+    {
+      "command": "npm audit --registry=https://registry.npmjs.org --audit-level=high --json",
+      "cwd": "source/frontend",
+      "exitCode": 0,
+      "moderate": 5,
+      "high": 0,
+      "critical": 0,
+      "log": "frontend-audit-supported.json"
+    },
+    {
+      "command": "node node_modules/@playwright/test/cli.js test tests/visual/operational-editor.spec.ts tests/visual/operational-dashboard.spec.ts -c playwright.config.ts --workers=1 --output ../../visual-results-final",
+      "cwd": "source/frontend",
+      "exitCode": 0,
+      "passed": 4,
+      "failed": 0,
+      "durationSeconds": 16.8,
+      "log": "operational-visual-final.log"
+    },
+    {
+      "command": "node collect-browser-console.cjs",
+      "cwd": ".",
+      "exitCode": 0,
+      "scenarios": 8,
+      "consoleErrors": 0,
+      "pageErrors": 0,
+      "overflowScenarios": 0,
+      "log": "browser-console-final.log",
+      "data": "browser-console.json"
+    }
+  ],
+  "visualStatus": "passed",
+  "runtimeOwned": {
+    "viteSession": 91546,
+    "vitePort": 25278
+  },
+  "notes": [
+    "No new tests or source changes; exact dependency regressions assessed with existing suites",
+    "Initial unsupportedNodeunitrun cancelled and retained; no pass inferred",
+    "Only task directory changed; no Git worktree registration"
+  ],
+  "browserReceipt": "browser-runtime-receipt.json",
+  "visualEvidence": {
+    "states": [
+      "editor controlled add/edit/remove",
+      "rail focus and dark button",
+      "dashboard empty/error/partial/stale",
+      "dashboard retry waiting"
+    ],
+    "viewports": [
+      "1440x900",
+      "390x844"
+    ],
+    "screenshots": 16,
+    "inspected": true,
+    "contactSheets": [
+      "editor-contact-sheet.png",
+      "steps-contact-sheet.png",
+      "dashboard-contact-sheet.png"
+    ],
+    "colorModes": [
+      "light",
+      "dark"
+    ],
+    "directory": "visual-results-final",
+    "limitations": [
+      "Existing visualfixture desktop condition grid stretches container to4710px; prior known, not dependency regression",
+      "Mobile rail capture shows initial visible steps in scrollcontainer",
+      "No full production system page,200%zoom,reducedmotion or full state matrix claim"
+    ]
+  },
+  "failedAttempts": [
+    {
+      "traceDirectory": "visual-results",
+      "log": "operational-visual.log",
+      "exitCode": 1,
+      "reason": "Build prebuild Arco patch cleared Vite cache while dev server was already running; trace shows504 Outdated Optimize Dep",
+      "remediation": "Build completed, restarted onlyowneddevserver; same4specs thenpasswithoutcodechanges/retries",
+      "failed": 4
+    },
+    {
+      "log": "browser-console-red.json",
+      "scenarios": 8,
+      "readinessFailures": 8,
+      "reason": "Same staleViteoptimizer cache",
+      "consoleErrors": 40
+    },
+    {
+      "log": "playwright-install.log",
+      "reason": "Node installer zero download progress; officialHTTPSarchiveacquired viaPowerShell",
+      "result": "cancelled"
+    },
+    {
+      "log": "playwright-install-headless.log",
+      "reason": "Node installer zero download progress; officialHTTPSarchiveacquired viaPowerShell",
+      "result": "cancelled"
+    }
+  ],
+  "runtimeCleanup": {
+    "before": "vite-before-stop.json",
+    "after": "vite-after-stop.json",
+    "viteStopped": true,
+    "registeredGitWorktrees": 0,
+    "browserPreservedFor": "smoke_css_fix"
+  }
+}
