@@ -1,0 +1,17 @@
+{
+  "command": "npm run test:foundation-release",
+  "exitCode": 0,
+  "tests": 125,
+  "passed": 122,
+  "failed": 0,
+  "skipped": 3,
+  "durationMs": 30057.2725,
+  "toolReceipt": "root functions.exec chunk642df0/session57189",
+  "sourceTree": "93b617c283b20866f3b209047e931246dbf9b009",
+  "parentCommit": "ae2fa81d9903d63b4bec8f01d61082f48a999e2f",
+  "packageSha256": "aeacce2b72366bc648943d7860355efecab431d28e0d9dacc573bb7bea260a3c",
+  "resolvedScript": "node --test tests/scripts/foundation-release/*.test.mjs scripts/foundation-release/*.test.mjs",
+  "ciWiring": ".github/workflows/ci.yml:187 already runs npm run test:foundation-release; no workflow edit",
+  "skipScope": "Three direct leaf-symlink cases skip only when Windows cannot create symlinks; existing Linux CI must execute them.",
+  "log": ".harness/evidence/2026-11-13-candidate-filesystem-security/wired-foundation-tests.txt.gz"
+}

@@ -1,0 +1,278 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-11-13T07:08:06.9310374Z",
+  "kind": "manual-security-threat-boundary-diff-review",
+  "author": "candidate_security_fix executor; independent review owned by parent",
+  "ownerLayer": "platform / foundation candidate tooling",
+  "parentPacket": "docs/harness/tasks/2026-11-13-candidate-filesystem-security.task.md",
+  "scopeFiles": [
+    "scripts/foundation-release/build-candidate-artifact.mjs",
+    "scripts/foundation-release/candidate-descriptor.mjs",
+    "scripts/foundation-release/candidate-artifact.test.mjs"
+  ],
+  "sourceHashes": [
+    {
+      "file": "scripts/foundation-release/build-candidate-artifact.mjs",
+      "sha256": "6196730755893349e7d42088c0e4a03ebd2064cac3924d52e8f456d7b501dc9e"
+    },
+    {
+      "file": "scripts/foundation-release/candidate-descriptor.mjs",
+      "sha256": "2cd4c0e7b61b5b920c9c5e0e070a0a292621dc5397624c4c92d7a0468c0b594c"
+    },
+    {
+      "file": "scripts/foundation-release/candidate-artifact.test.mjs",
+      "sha256": "341fb61709eed19b24feaa65778b1548bbc7738d0edc4159c0c1f118cbe44ff3"
+    }
+  ],
+  "triage": [
+    {
+      "alert": 100,
+      "rule": "js/file-system-race",
+      "securitySeverity": "high",
+      "beforeState": "open",
+      "beforeCommit": "ae2fa81d9903d63b4bec8f01d61082f48a999e2f",
+      "file": "scripts/foundation-release/build-candidate-artifact.mjs",
+      "beforeLine": 38,
+      "beforeSource": "      const fd = fs.openSync(absolute, fs.constants.O_RDONLY | (fs.constants.O_NOFOLLOW ?? 0));",
+      "afterLine": 37,
+      "rationale": "Source capture uses an open-first bounded fd read; bigint/nanosecond stamps still reject source identity/content changes.",
+      "verificationState": "source-remediated-awaiting-hosted-CodeQL"
+    },
+    {
+      "alert": 101,
+      "rule": "js/file-system-race",
+      "securitySeverity": "high",
+      "beforeState": "open",
+      "beforeCommit": "ae2fa81d9903d63b4bec8f01d61082f48a999e2f",
+      "file": "scripts/foundation-release/build-candidate-artifact.mjs",
+      "beforeLine": 137,
+      "beforeSource": "        const fd = fs.openSync(absolute, fs.constants.O_RDONLY | (fs.constants.O_NOFOLLOW ?? 0));",
+      "afterLine": 123,
+      "rationale": "Saved descriptor and archive use paired open handles, exact sizes and byte/hash pins, with final observed file and ancestor checks.",
+      "verificationState": "source-remediated-awaiting-hosted-CodeQL"
+    },
+    {
+      "alert": 102,
+      "rule": "js/file-system-race",
+      "securitySeverity": "high",
+      "beforeState": "open",
+      "beforeCommit": "ae2fa81d9903d63b4bec8f01d61082f48a999e2f",
+      "file": "scripts/foundation-release/build-candidate-artifact.mjs",
+      "beforeLine": 204,
+      "beforeSource": "      const options = JSON.parse(fs.readFileSync(inventory, 'utf8'));",
+      "afterLine": 179,
+      "rationale": "Actual sink is CLI inventory JSON read, not archive read. The bounded handle reader replaces stat-then-path-read.",
+      "verificationState": "source-remediated-awaiting-hosted-CodeQL"
+    },
+    {
+      "alert": 103,
+      "rule": "js/file-system-race",
+      "securitySeverity": "high",
+      "beforeState": "open",
+      "beforeCommit": "ae2fa81d9903d63b4bec8f01d61082f48a999e2f",
+      "file": "scripts/foundation-release/candidate-descriptor.mjs",
+      "beforeLine": 176,
+      "beforeSource": "  const bytes = fs.readFileSync(descriptorPath);",
+      "afterLine": 235,
+      "rationale": "Pinned descriptor is read via the bounded handle reader before SHA256/schema validation.",
+      "verificationState": "source-remediated-awaiting-hosted-CodeQL"
+    },
+    {
+      "alert": 104,
+      "rule": "js/file-system-race",
+      "securitySeverity": "high",
+      "beforeState": "open",
+      "beforeCommit": "ae2fa81d9903d63b4bec8f01d61082f48a999e2f",
+      "file": "scripts/foundation-release/candidate-descriptor.mjs",
+      "beforeLine": 257,
+      "beforeSource": "  const bytes = fs.readFileSync(buildReceiptPath);",
+      "afterLine": 317,
+      "rationale": "Build receipt belongs to the three-handle pinned verification set; limit and hash are checked on the opened file.",
+      "verificationState": "source-remediated-awaiting-hosted-CodeQL"
+    },
+    {
+      "alert": 105,
+      "rule": "js/file-system-race",
+      "securitySeverity": "high",
+      "beforeState": "open",
+      "beforeCommit": "ae2fa81d9903d63b4bec8f01d61082f48a999e2f",
+      "file": "scripts/foundation-release/candidate-descriptor.mjs",
+      "beforeLine": 262,
+      "beforeSource": "  const executable = fs.readFileSync(executablePath);",
+      "afterLine": 317,
+      "rationale": "Executable belongs to the same three-handle set; actual bounded bytes, hash and receipt size remain required.",
+      "verificationState": "source-remediated-awaiting-hosted-CodeQL"
+    },
+    {
+      "alert": 106,
+      "rule": "js/file-system-race",
+      "securitySeverity": "high",
+      "beforeState": "open",
+      "beforeCommit": "ae2fa81d9903d63b4bec8f01d61082f48a999e2f",
+      "file": "scripts/foundation-release/candidate-artifact.test.mjs",
+      "beforeLine": 396,
+      "beforeSource": "    return { relative, stamp: [stat.dev, stat.ino, stat.size, stat.mtimeNs, stat.ctimeNs, stat.mode, stat.nlink], digest: stat.isFile() ? sha256(fs.readFileSync(absolute)) : null };",
+      "afterLine": 544,
+      "rationale": "Fixture source-state content uses readFixtureFile: open first, readFileSync(fd), close. Path checks do not authorize pathname content reads.",
+      "verificationState": "source-remediated-awaiting-hosted-CodeQL"
+    },
+    {
+      "alert": 107,
+      "rule": "js/file-system-race",
+      "securitySeverity": "high",
+      "beforeState": "open",
+      "beforeCommit": "ae2fa81d9903d63b4bec8f01d61082f48a999e2f",
+      "file": "scripts/foundation-release/candidate-artifact.test.mjs",
+      "beforeLine": 496,
+      "beforeSource": "        fs.renameSync(target, retained); originalWrite(target, expected);",
+      "afterLine": 642,
+      "rationale": "Actual sink is recreated fixture write after lstat, not a read. recreateFixtureFile uses exclusive creation and fd-backed write.",
+      "verificationState": "source-remediated-awaiting-hosted-CodeQL"
+    },
+    {
+      "alert": 108,
+      "rule": "js/file-system-race",
+      "securitySeverity": "high",
+      "beforeState": "open",
+      "beforeCommit": "ae2fa81d9903d63b4bec8f01d61082f48a999e2f",
+      "file": "scripts/foundation-release/candidate-artifact.test.mjs",
+      "beforeLine": 499,
+      "beforeSource": "        assert.deepEqual(fs.readFileSync(target), expected, 'replacement preserves exact bytes and size');",
+      "afterLine": 645,
+      "rationale": "Byte-identical target replacement is verified by fd-backed readFixtureFile. Renamed original verification at line661 is hardened likewise.",
+      "verificationState": "source-remediated-awaiting-hosted-CodeQL"
+    }
+  ],
+  "additionalHardening": [
+    "Early saved-archive verification at builder140 uses bounded fd bytes and observed stage identity.",
+    "CLI inventory file now rejects hard links, unsupported type, unstable identity, symlinks/junctions and oversize before read.",
+    "All close operations are attempted, even if an earlier close throws; original validation failures are preserved."
+  ],
+  "boundaries": [
+    "Open-first reader validates actual fstat bigint file identity, regular-file type, link count1 and per-input limit before allocation.",
+    "Reads use explicit offsets and at most64KiB per call, stop at initial fstat size and probe exact EOF; post-read fstat catches growth, truncation, metadata or inode changes.",
+    "Observed file path and every ancestor are rechecked; source capture additionally compares original bigint/nanosecond stamps.",
+    "Both saved handles and all three descriptor/receipt/executable handles stay open through validation and final observed-path checks.",
+    "Exact descriptor pin, receipt pin, executable pin, candidate identity, capabilities and executable byte size are preserved.",
+    "Exclusive recreated fixture write cannot overwrite an existing path; underlying saved byte and rename/recreate refusal assertions are retained.",
+    "Producer non-recursive owned-stage cleanup and ancestor ownership checks remain; foreign content is preserved on refusal."
+  ],
+  "limitations": [
+    "Path observations are separate syscalls, not atomic namespace locking on Windows or other platforms. Final producer handles close before seal rename, matching the existing observed-path threat boundary.",
+    "No security-diff-scan or CodeQL CLI is installed. This artifact is a manual diff/threat-boundary review, not a completed automated scan. Hosted same-rule CodeQL on the exact final main commit and automatic closure of all9 alerts remain required.",
+    "Three direct leaf-symlink tests skip only when Windows denies symlink creation with EPERM/EACCES. Linux CI must execute them; real junction redirection cases for all three inputs and the late same-inode ancestor attack run locally.",
+    "CodeGraph tools/CLI unavailable to this executor. Scoped supplied files were inspected directly; no index was initialized or modified."
+  ],
+  "ruleReference": {
+    "url": "https://raw.githubusercontent.com/github/codeql/codeql-cli/v2.27.4/javascript/ql/src/Security/CWE-367/FileSystemRace.ql",
+    "localFile": "FileSystemRace-codeql-2.27.4.ql",
+    "sha256": "6bd3beed90bf9ab935edf9d7cc37e78c4ba78aaea3545cdc7bdc5a90cba6512e",
+    "executed": false,
+    "review": "Same-version query models same-CFG check-before-use and excludes values tracked from open as file descriptors. Changes replace pathname sinks with actual fd operations and open before file observations, without suppression."
+  },
+  "verification": {
+    "toolchain": "Node24.22.3",
+    "candidate": {
+      "command": "node --test scripts/foundation-release/candidate-artifact.test.mjs",
+      "exitCode": 0,
+      "tests": 68,
+      "passed": 65,
+      "failed": 0,
+      "skipped": 3,
+      "log": "candidate-tests.txt",
+      "durationMs": 26083.3671
+    },
+    "foundation": {
+      "command": "npm run test:foundation-release",
+      "exitCode": 0,
+      "tests": 57,
+      "passed": 57,
+      "failed": 0,
+      "skipped": 0,
+      "toolReceipt": "functions.exec chunk20a1be"
+    },
+    "diagnostics": [
+      {
+        "command": "node --check scripts/foundation-release/build-candidate-artifact.mjs",
+        "exitCode": 0
+      },
+      {
+        "command": "node --check scripts/foundation-release/candidate-descriptor.mjs",
+        "exitCode": 0
+      },
+      {
+        "command": "node --check scripts/foundation-release/candidate-artifact.test.mjs",
+        "exitCode": 0
+      }
+    ],
+    "diffCheck": {
+      "command": "git diff --check",
+      "exitCode": 0
+    },
+    "securityPatterns": {
+      "command": "npm run check:security-patterns",
+      "exitCode": 0,
+      "newViolations": 0,
+      "acceptedBaseline": 46,
+      "toolReceipt": "functions.exec chunk3a78b9"
+    },
+    "tddBefore": {
+      "command": "node --test --test-name-pattern=\"pinned descriptor|pinned verification\" scripts/foundation-release/candidate-artifact.test.mjs",
+      "log": "tdd-red.txt",
+      "tests": 19,
+      "passed": 3,
+      "failed": 16,
+      "note": "Initial regression result includes failing parent nodes; existing oversize checks passed, while pinned swap/hardlink/growth/ancestor negative behavior was absent."
+    }
+  },
+  "diff": {
+    "file": "source-diff.patch",
+    "sha256": "f57cb9e60c5274bc4d451949e5831a57baf3f23aa077944d5915ac5240cf9ee5"
+  },
+  "governance": {
+    "committed": false,
+    "pushed": false,
+    "merged": false,
+    "alertsDismissed": false,
+    "querySuppressionAdded": false,
+    "gatesWeakened": false,
+    "soloOverrideAdded": false,
+    "independentReview": "Parent owns CODE and ARCH review",
+    "hostedCodeQL": "Pending parent execution"
+  },
+  "expectedSecurityReviewFiles": [
+    "scripts/foundation-release/build-candidate-artifact.mjs",
+    "scripts/foundation-release/candidate-descriptor.mjs",
+    "scripts/foundation-release/candidate-artifact.test.mjs",
+    "package.json"
+  ],
+  "relatedRootChange": {
+    "file": "package.json",
+    "owner": "root coordinator",
+    "change": "test:foundation-release now includes scripts/foundation-release/*.test.mjs so existing Linux CI job executes the candidate suite and all leaf-symlink tests",
+    "workflowChange": false,
+    "dependencyChange": false,
+    "verification": "Parent owns wired combined suite and exact hosted CI receipt; sec509/wired-foundation-tests.txt"
+  },
+  "realCandidateProducerProof": {
+    "owner": "candidate_refresh_validation",
+    "sourceFiles": 1176,
+    "sourceStable": true,
+    "descriptorSha256": "3fc7cd245c52df263be136a6e3e0132b2d635600487fb232d0d19e577b3038d8",
+    "evidence": "../cd509/sealed",
+    "status": "Successful provisional integration; parent reseals after package CI wiring",
+    "failureRetained": "Attempt001 correctly refused concurrent candidate test rewrite a9a0b2 to341fb617; subsequent production source captures had zero file/stamp deltas"
+  },
+  "alternateLinuxChecks": [
+    {
+      "command": "wsl --list --quiet",
+      "exitCode": 1,
+      "reason": "Wsl/EnumerateDistros/Service/E_ACCESSDENIED"
+    },
+    {
+      "command": "docker image ls",
+      "exitCode": 1,
+      "reason": "dockerDesktopLinuxEngine named pipe unavailable"
+    }
+  ]
+}

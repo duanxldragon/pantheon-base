@@ -1,0 +1,111 @@
+{
+  "taskId": "2026-11-13-v0188-release-preparation",
+  "stage": "source-preparation-approved-consumer-builds-passed",
+  "candidateIdentity": "candidate-af7b5e4ba7e5b086df902b3190c5daf9f0cbc757ae0fe6d91208a329ed6e7a61",
+  "descriptorSha256": "fa1d30d65ee38ecf067d2fbaa17bce3b345696efb986da7a182891313014927f",
+  "artifactSha256": "69e67550b3c49b729586e7258faaea64c9f76b90895c75d89037fd8ba5026151",
+  "selectedSourceFileCount": 1176,
+  "sourceStable": true,
+  "sourceTree": "93b617c283b20866f3b209047e931246dbf9b009",
+  "parentCommit": "ae2fa81d9903d63b4bec8f01d61082f48a999e2f",
+  "sourceHashes": [
+    {
+      "path": "frontend/tests/smoke/system/system-pages-helpers.ts",
+      "sha256": "0e2c20882e7fb20ad5884c64dc85388ca8acd2ecdab074e8887520dc19a59981"
+    },
+    {
+      "path": "scripts/foundation-release/candidate-descriptor.mjs",
+      "sha256": "2cd4c0e7b61b5b920c9c5e0e070a0a292621dc5397624c4c92d7a0468c0b594c"
+    },
+    {
+      "path": "scripts/foundation-release/candidate-artifact.test.mjs",
+      "sha256": "341fb61709eed19b24feaa65778b1548bbc7738d0edc4159c0c1f118cbe44ff3"
+    },
+    {
+      "path": "scripts/foundation-release/build-candidate-artifact.mjs",
+      "sha256": "6196730755893349e7d42088c0e4a03ebd2064cac3924d52e8f456d7b501dc9e"
+    },
+    {
+      "path": "package.json",
+      "sha256": "aeacce2b72366bc648943d7860355efecab431d28e0d9dacc573bb7bea260a3c"
+    }
+  ],
+  "inputComparison": {
+    "newCandidate": "candidate-af7b5e4ba7e5b086df902b3190c5daf9f0cbc757ae0fe6d91208a329ed6e7a61",
+    "oldCandidate": "candidate-43be57e28ef949b68b1d145fdd5fb0d82d03272950be37772a05b3fe10ae8ec4",
+    "selectedLeaves": 1176,
+    "pathInventoryIdentical": true,
+    "changedLeaves": 5,
+    "unchangedLeaves": 1171,
+    "changes": [
+      {
+        "path": "frontend/tests/smoke/system/system-pages-helpers.ts",
+        "oldSha256": "cd48c97db3925e9a67f15e1209e7a7c3d440aac9ae4da7b4d71b863298baf79f",
+        "newSha256": "0e2c20882e7fb20ad5884c64dc85388ca8acd2ecdab074e8887520dc19a59981"
+      },
+      {
+        "path": "package.json",
+        "oldSha256": "f9b3463f3259017554218bd3a547bd73e0e0c35ea79d8201ac76820125028492",
+        "newSha256": "aeacce2b72366bc648943d7860355efecab431d28e0d9dacc573bb7bea260a3c"
+      },
+      {
+        "path": "scripts/foundation-release/build-candidate-artifact.mjs",
+        "oldSha256": "6df8e50aebfd1bd2b5be2ec80bfd3b51a41279a6c5a3f1b2ba31b3e94d102525",
+        "newSha256": "6196730755893349e7d42088c0e4a03ebd2064cac3924d52e8f456d7b501dc9e"
+      },
+      {
+        "path": "scripts/foundation-release/candidate-artifact.test.mjs",
+        "oldSha256": "f7dfecd2ade669ad264e3aa7a6a26fadec8bad53b83b97dacd0d9ba4bd6907eb",
+        "newSha256": "341fb61709eed19b24feaa65778b1548bbc7738d0edc4159c0c1f118cbe44ff3"
+      },
+      {
+        "path": "scripts/foundation-release/candidate-descriptor.mjs",
+        "oldSha256": "d0602231061a28717cae154908ffffa7b31ca10fffd4b6687eab5364ea463666",
+        "newSha256": "2cd4c0e7b61b5b920c9c5e0e070a0a292621dc5397624c4c92d7a0468c0b594c"
+      }
+    ]
+  },
+  "retainedArtifacts": [
+    {
+      "file": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/candidate-seal-final.json.gz",
+      "sha256": "208fe10f7fa2b91d5d6a50949a814658134540d3578f00d738c8a771bb505840",
+      "rawSha256": "af3abbeb461fccdb3340069f82a8521209644b9bf6251b7540921ed9800f655c",
+      "source": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\cd509\\candidate-seal-final.json"
+    },
+    {
+      "file": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/final-prior-candidate-leaf-deltas.json.gz",
+      "sha256": "42a05f756264034ee058b44556b5ef856d5fe1e4d0e0ca82bd4ccc79c4e3c9d7",
+      "rawSha256": "0624a08149a914ff08d408271aa32c530794815db61b3a47af287c962573aa4e",
+      "source": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\cd509\\final-prior-candidate-leaf-deltas.json"
+    },
+    {
+      "file": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/producer-final-command.json.gz",
+      "sha256": "3dce7e9ceb8afce92ccf4fe33a3179654a227262d681e185a94d49922c8a11a5",
+      "rawSha256": "1a6afc5a2f5d640cc9a36fc4ca1a2e7ab3754644f833f1fb380d824c57da90c8",
+      "source": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\cd509\\producer-final-command.json"
+    },
+    {
+      "file": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/producer-final.log.gz",
+      "sha256": "cc593d88bb3a17ec60a05ea5cd781ce8bd9965137f61e376b3a5fc38088b6c60",
+      "rawSha256": "6ada49ecbac1ac226b0745698d050a5e0ceafb31dcf802c9ce10ec937335c4fb",
+      "source": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\cd509\\producer-final.log"
+    },
+    {
+      "file": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/frozen-source-hashes-final.json.gz",
+      "sha256": "ea52d06697902eaea8e6012785e2129bd1cd36e9cd12397d435e06c0cdd77ceb",
+      "rawSha256": "980d05056fbb50cf3a53792b26983cbf42a35dadca2c7cff3158f479f0702e51",
+      "source": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\cd509\\frozen-source-hashes-final.json"
+    },
+    {
+      "file": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/proposed-source-byte-binding.json.gz",
+      "sha256": "90a11ee3920e53e54d5177ae5e648dae6fd020874282cfc28d9b07c1d8bbeda1",
+      "rawSha256": "0c452a87a8e9d749768aa4dd07d9e6eecc3fbd23785e25b36849d16b7ca08ec3",
+      "source": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\cd509\\proposed-source-byte-binding.json"
+    }
+  ],
+  "descriptorAndTarByteHashes": "Writer independently verified exact original descriptor and tar hashes from cd509/sealed-final; sealed assets remain external and untouched.",
+  "compatibilityBuilds": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/final-consumer-build-receipt.json",
+  "independentReview": ".harness/evidence/2026-11-13-candidate-filesystem-security/source-review-artifacts.json; exact five-source SOURCE/CODE-security APPROVE and ARCH APPROVE/CLEAR; final whole-tree confirmation pending",
+  "officialConsumption": false,
+  "finalMainBinding": "Downstream actual clean main/local HEAD equals remote SHA/all candidate input bytes match merged commit; proposed-tree binding is not that final condition."
+}

@@ -3,7 +3,7 @@ import path from 'node:path';
 import process from 'node:process';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { aggregateSha256, assertPublicReviewPackaging, assertCandidatePath, assertInventory, assertRealPath, candidateExports, encodeCandidateArchive, LIMITS, sha256, validateCandidateDescriptor, verifyCandidateArchive } from './candidate-descriptor.mjs';
+import { aggregateSha256, assertPublicReviewPackaging, assertCandidatePath, assertInventory, assertRealPath, candidateExports, encodeCandidateArchive, LIMITS, sha256, validateCandidateDescriptor, verifyCandidateArchive, withCandidateFiles } from './candidate-descriptor.mjs';
 
 const within = (child, parent) => {
   const relative = path.relative(parent, child);
@@ -23,28 +23,21 @@ export function captureCandidateSources(root, sourcePaths) {
   if (!Array.isArray(sourcePaths) || !sourcePaths.length || new Set(sourcePaths).size !== sourcePaths.length) throw new Error('Explicit candidate sourcePaths inventory is required');
   const entries = new Map();
   const stamps = new Map();
-  const stamp = (stat) => [stat.dev, stat.ino, stat.size, stat.mtimeMs, stat.ctimeMs, stat.mode, stat.nlink];
+  const stamp = (stat) => [stat.dev, stat.ino, stat.size, stat.mtimeNs, stat.ctimeNs, stat.mode, stat.nlink].map(String);
   const visit = (relative) => {
     assertCandidatePath(relative);
     const absolute = assertRealPath(path.join(root, relative), { directory: fs.lstatSync(path.join(root, relative)).isDirectory() });
-    const stat = fs.lstatSync(absolute);
+    const stat = fs.lstatSync(absolute, { bigint: true });
     stamps.set(relative, stamp(stat));
     if (stat.isDirectory()) {
       if (relative.startsWith('.harness/')) throw new Error('Public review sources must be explicitly selected regular leaves');
       if (relative === 'config' || relative.endsWith('/config')) throw new Error('Candidate config inputs must be explicitly declared files');
       for (const name of fs.readdirSync(absolute).sort()) visit(`${relative}/${name}`);
     } else {
-      if (stat.nlink !== 1 || stat.size > LIMITS.fileBytes) throw new Error('Candidate sources must be bounded regular files without hard links');
-      const fd = fs.openSync(absolute, fs.constants.O_RDONLY | (fs.constants.O_NOFOLLOW ?? 0));
-      let bytes;
-      try {
-        const opened = fs.fstatSync(fd);
-        if (!opened.isFile() || JSON.stringify(stamp(opened)) !== JSON.stringify(stamp(stat))) throw new Error('Candidate source changed while opening');
-        bytes = fs.readFileSync(fd);
-        if (JSON.stringify(stamp(opened)) !== JSON.stringify(stamp(fs.fstatSync(fd)))) throw new Error('Candidate source changed while reading');
-      } finally { fs.closeSync(fd); }
-      assertRealPath(absolute);
-      if (JSON.stringify(stamp(fs.lstatSync(absolute))) !== JSON.stringify(stamp(stat))) throw new Error('Candidate source path changed while reading');
+      const bytes = withCandidateFiles([{ path: absolute, maxBytes: LIMITS.fileBytes, label: 'Candidate source' }], ([opened]) => {
+        if (JSON.stringify(stamp(opened.stat)) !== JSON.stringify(stamp(stat))) throw new Error('Candidate source changed while opening');
+        return opened.bytes;
+      });
       entries.set(relative, { path: relative, bytes });
       if (entries.size > LIMITS.files) throw new Error('Candidate source file count exceeds limit');
     }
@@ -126,33 +119,14 @@ export function buildCandidateArtifact({ root, baseCommit, sourcePaths, sharedPa
     return names;
   };
   const assertSavedStageBytes = () => {
-    const opened = [];
-    const same = (actual, expected) => ['dev', 'ino', 'size', 'mtimeNs', 'ctimeNs', 'mode', 'nlink'].every((key) => actual[key] === expected[key]);
-    try {
-      for (const [name, expected, pin] of [['candidate-descriptor.json', descriptorBytes, descriptorSha256], [descriptor.artifact.assetName, archive, descriptor.artifact.sha256]]) {
-        assertStage();
-        const absolute = path.join(stage, name);
-        const stat = fs.lstatSync(absolute, { bigint: true });
-        if (!stat.isFile() || stat.isSymbolicLink() || stat.nlink !== 1n || stat.size !== BigInt(expected.length) || stat.dev < 0n || stat.ino <= 0n) throw new Error(`Candidate saved file shape/size mismatch: ${name}`);
-        const fd = fs.openSync(absolute, fs.constants.O_RDONLY | (fs.constants.O_NOFOLLOW ?? 0));
-        opened.push({ fd, absolute, stat, name });
-        if (!same(fs.fstatSync(fd, { bigint: true }), stat)) throw new Error(`Candidate saved file changed while opening: ${name}`);
-        const bytes = Buffer.alloc(expected.length);
-        let offset = 0;
-        while (offset < bytes.length) {
-          const count = fs.readSync(fd, bytes, offset, bytes.length - offset, offset);
-          if (count === 0) throw new Error(`Candidate saved file short read: ${name}`);
-          offset += count;
-        }
-        if (!bytes.equals(expected) || sha256(bytes) !== pin) throw new Error(`Candidate saved bytes/digest mismatch: ${name}`);
-      }
-      // Keep both descriptors open until the paired read completes: a known
-      // pathname replaced during either read cannot stand in for its fd.
-      for (const { fd, absolute, stat, name } of opened) {
-        if (!same(fs.fstatSync(fd, { bigint: true }), stat) || !same(fs.lstatSync(absolute, { bigint: true }), stat)) throw new Error(`Candidate saved file/path changed while reading: ${name}`);
-      }
+    assertStage();
+    withCandidateFiles([
+      { path: path.join(stage, 'candidate-descriptor.json'), maxBytes: LIMITS.descriptorBytes, expectedBytes: descriptorBytes.length, label: 'Candidate saved' },
+      { path: path.join(stage, descriptor.artifact.assetName), maxBytes: LIMITS.archiveBytes, expectedBytes: archive.length, label: 'Candidate saved' },
+    ], ([savedDescriptor, savedArchive]) => {
+      if (!savedDescriptor.bytes.equals(descriptorBytes) || sha256(savedDescriptor.bytes) !== descriptorSha256 || !savedArchive.bytes.equals(archive) || sha256(savedArchive.bytes) !== descriptor.artifact.sha256) throw new Error('Candidate saved bytes/digest mismatch');
       assertStage();
-    } finally { for (const { fd } of opened) fs.closeSync(fd); }
+    });
   };
   try {
     // mkdtemp and lstat are separate syscalls; capture immediately. No atomic
@@ -163,7 +137,10 @@ export function buildCandidateArtifact({ root, baseCommit, sourcePaths, sharedPa
     assertStage();
     fs.writeFileSync(path.join(stage, 'candidate-descriptor.json'), descriptorBytes, { flag: 'wx' });
     assertStage();
-    verifyCandidateArchive(fs.readFileSync(path.join(stage, descriptor.artifact.assetName)), descriptor);
+    withCandidateFiles([{ path: path.join(stage, descriptor.artifact.assetName), maxBytes: LIMITS.archiveBytes, label: 'Candidate saved archive' }], ([{ bytes }]) => {
+      verifyCandidateArchive(bytes, descriptor);
+      assertStage();
+    });
     const after = captureCandidateSources(root, sourcePaths);
     if (JSON.stringify(before.files) !== JSON.stringify(after.files) || JSON.stringify(before.stamps) !== JSON.stringify(after.stamps)) throw new Error('Candidate source changed during sealing; retry with stable sources');
     assertRealPath(output, { directory: true, missing: true });
@@ -199,9 +176,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
       console.log('Usage: node scripts/foundation-release/build-candidate-artifact.mjs --inventory <reviewed-candidate-input.json> --output <new-directory>');
     } else {
       if (args.length !== 4 || args[0] !== '--inventory' || args[2] !== '--output') throw new Error('Expected --inventory <json> --output <new-directory>');
-      const inventory = assertRealPath(path.resolve(args[1]));
-      if (fs.statSync(inventory).size > LIMITS.descriptorBytes) throw new Error('Candidate input exceeds limit');
-      const options = JSON.parse(fs.readFileSync(inventory, 'utf8'));
+      const options = withCandidateFiles([{ path: args[1], maxBytes: LIMITS.descriptorBytes, label: 'Candidate input' }], ([{ bytes }]) => JSON.parse(bytes.toString('utf8')));
       const result = buildCandidateArtifact({ ...options, outputRoot: args[3] });
       console.log(JSON.stringify({ kind: result.descriptor.kind, candidateIdentity: result.descriptor.candidateIdentity, descriptorPath: result.descriptorPath, artifactPath: result.artifactPath, descriptorSha256: result.descriptorSha256, sourceStable: result.sourceStable }, null, 2));
     }

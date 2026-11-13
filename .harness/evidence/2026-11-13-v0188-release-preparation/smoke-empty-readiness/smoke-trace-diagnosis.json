@@ -1,0 +1,332 @@
+[
+  {
+    "artifact": "ci509\\pantheon-base\\pantheon-base\\frontend\\test-results\\smoke-system-system-routes-system-smoke-system-login-log\\trace.zip",
+    "sha256": "dd449b9b8e38054d21fa097a78824e4d89e27f6917ff78635bfcb36f28835741",
+    "hostedPlaywrightVersion": "1.65.0",
+    "browserTrace": [
+      {
+        "entry": 74,
+        "record": {
+          "type": "before",
+          "callId": "oxkt@1321",
+          "startTime": 22355.293,
+          "class": "Frame",
+          "method": "isVisible",
+          "params": {
+            "selector": ".arco-empty >> nth=0",
+            "strict": true
+          }
+        }
+      },
+      {
+        "entry": 80,
+        "record": {
+          "type": "after",
+          "callId": "oxkt@1321",
+          "endTime": 22394.032,
+          "result": {
+            "value": true
+          }
+        }
+      },
+      {
+        "entry": 89,
+        "record": {
+          "type": "before",
+          "callId": "oxkt@1323",
+          "startTime": 22503.922,
+          "title": "Evaluate",
+          "class": "Frame",
+          "method": "waitForSelector",
+          "params": {
+            "selector": ".arco-empty >> nth=0",
+            "strict": true,
+            "state": "attached"
+          }
+        }
+      }
+    ],
+    "testErrors": [
+      {
+        "entry": 54,
+        "record": {
+          "type": "after",
+          "callId": "oxkt@1320",
+          "endTime": 50397.924,
+          "annotations": [],
+          "error": {
+            "name": "",
+            "message": "Error: Test timeout of 30000ms exceeded",
+            "stack": "Error: Test timeout of 30000ms exceeded\n    at expectPageBodyReady (/home/runner/work/pantheon-base/pantheon-base/frontend/tests/smoke/system/system-pages-helpers.ts:779:6)\n    at /home/runner/work/pantheon-base/pantheon-base/frontend/tests/smoke/system/system-routes.spec.ts:31:5"
+          }
+        }
+      },
+      {
+        "entry": 55,
+        "record": {
+          "type": "error",
+          "message": "Error: Test timeout of 30000ms exceeded",
+          "stack": [
+            {
+              "file": "/home/runner/work/pantheon-base/pantheon-base/frontend/tests/smoke/system/system-pages-helpers.ts",
+              "line": 779,
+              "column": 6,
+              "function": "expectPageBodyReady"
+            },
+            {
+              "file": "/home/runner/work/pantheon-base/pantheon-base/frontend/tests/smoke/system/system-routes.spec.ts",
+              "line": 31,
+              "column": 5
+            }
+          ]
+        }
+      },
+      {
+        "entry": 63,
+        "record": {
+          "type": "after",
+          "callId": "oxkt@1323",
+          "endTime": 50559.295,
+          "annotations": [],
+          "error": {
+            "name": "",
+            "message": "Error: locator.evaluate: Test ended.\nCall log:\n\u001b[2m  - waiting for locator('.arco-empty').first()\u001b[22m\n",
+            "stack": "Error: locator.evaluate: Test ended.\nCall log:\n\u001b[2m  - waiting for locator('.arco-empty').first()\u001b[22m\n\n    at /home/runner/work/pantheon-base/pantheon-base/frontend/tests/smoke/system/system-pages-helpers.ts:775:39\n    at expectPageBodyReady (/home/runner/work/pantheon-base/pantheon-base/frontend/tests/smoke/system/system-pages-helpers.ts:770:3)\n    at /home/runner/work/pantheon-base/pantheon-base/frontend/tests/smoke/system/system-routes.spec.ts:31:5"
+          }
+        }
+      }
+    ],
+    "network": [
+      {
+        "entry": 297,
+        "url": "http://127.0.0.1:5173/api/v1/system/login-log/list?keyword=&username=&startedAt=&endedAt=&page=1&pageSize=10",
+        "status": 200,
+        "payloadCode": 200,
+        "items": 10,
+        "total": 31,
+        "durationMs": 22.395,
+        "startedAt": "2026-11-13T06:23:13.228Z"
+      }
+    ]
+  },
+  {
+    "artifact": "ci509\\pantheon-base\\pantheon-base\\frontend\\test-results\\smoke-system-system-routes-system-smoke-system-login-log-retry1\\trace.zip",
+    "sha256": "463a93ad8b458fc3d2e9f160ef69c8b48708e904bd0560dcde93ff5f13e93632",
+    "hostedPlaywrightVersion": "1.65.0",
+    "browserTrace": [
+      {
+        "entry": 75,
+        "record": {
+          "type": "before",
+          "callId": "rvnl@86",
+          "startTime": 53096.309,
+          "class": "Frame",
+          "method": "isVisible",
+          "params": {
+            "selector": ".arco-empty >> nth=0",
+            "strict": true
+          }
+        }
+      },
+      {
+        "entry": 80,
+        "record": {
+          "type": "after",
+          "callId": "rvnl@86",
+          "endTime": 53149.931,
+          "result": {
+            "value": true
+          }
+        }
+      },
+      {
+        "entry": 91,
+        "record": {
+          "type": "before",
+          "callId": "rvnl@88",
+          "startTime": 53290.507,
+          "title": "Evaluate",
+          "class": "Frame",
+          "method": "waitForSelector",
+          "params": {
+            "selector": ".arco-empty >> nth=0",
+            "strict": true,
+            "state": "attached"
+          }
+        }
+      }
+    ],
+    "testErrors": [
+      {
+        "entry": 58,
+        "record": {
+          "type": "after",
+          "callId": "rvnl@85",
+          "endTime": 81065.836,
+          "annotations": [],
+          "error": {
+            "name": "",
+            "message": "Error: Test timeout of 30000ms exceeded",
+            "stack": "Error: Test timeout of 30000ms exceeded\n    at expectPageBodyReady (/home/runner/work/pantheon-base/pantheon-base/frontend/tests/smoke/system/system-pages-helpers.ts:779:6)\n    at /home/runner/work/pantheon-base/pantheon-base/frontend/tests/smoke/system/system-routes.spec.ts:31:5"
+          }
+        }
+      },
+      {
+        "entry": 59,
+        "record": {
+          "type": "error",
+          "message": "Error: Test timeout of 30000ms exceeded",
+          "stack": [
+            {
+              "file": "/home/runner/work/pantheon-base/pantheon-base/frontend/tests/smoke/system/system-pages-helpers.ts",
+              "line": 779,
+              "column": 6,
+              "function": "expectPageBodyReady"
+            },
+            {
+              "file": "/home/runner/work/pantheon-base/pantheon-base/frontend/tests/smoke/system/system-routes.spec.ts",
+              "line": 31,
+              "column": 5
+            }
+          ]
+        }
+      },
+      {
+        "entry": 67,
+        "record": {
+          "type": "after",
+          "callId": "rvnl@88",
+          "endTime": 81207.4,
+          "annotations": [],
+          "error": {
+            "name": "",
+            "message": "Error: locator.evaluate: Test ended.\nCall log:\n\u001b[2m  - waiting for locator('.arco-empty').first()\u001b[22m\n",
+            "stack": "Error: locator.evaluate: Test ended.\nCall log:\n\u001b[2m  - waiting for locator('.arco-empty').first()\u001b[22m\n\n    at /home/runner/work/pantheon-base/pantheon-base/frontend/tests/smoke/system/system-pages-helpers.ts:775:39\n    at expectPageBodyReady (/home/runner/work/pantheon-base/pantheon-base/frontend/tests/smoke/system/system-pages-helpers.ts:770:3)\n    at /home/runner/work/pantheon-base/pantheon-base/frontend/tests/smoke/system/system-routes.spec.ts:31:5"
+          }
+        }
+      }
+    ],
+    "network": [
+      {
+        "entry": 297,
+        "url": "http://127.0.0.1:5173/api/v1/system/login-log/list?keyword=&username=&startedAt=&endedAt=&page=1&pageSize=10",
+        "status": 200,
+        "payloadCode": 200,
+        "items": 10,
+        "total": 32,
+        "durationMs": 20.702,
+        "startedAt": "2026-11-13T06:23:44.001Z"
+      }
+    ]
+  },
+  {
+    "artifact": "ci509\\pantheon-base\\pantheon-base\\frontend\\test-results\\smoke-system-system-routes-system-smoke-system-operation-log\\trace.zip",
+    "sha256": "6d157d3baaa39fa9604b69d83c69ba72b9fad4d801c1fb40caab861c2fb45f39",
+    "hostedPlaywrightVersion": "1.65.0",
+    "browserTrace": [
+      {
+        "entry": 73,
+        "record": {
+          "type": "before",
+          "callId": "cbgy@209",
+          "startTime": 85695.099,
+          "class": "Frame",
+          "method": "isVisible",
+          "params": {
+            "selector": ".arco-empty >> nth=0",
+            "strict": true
+          }
+        }
+      },
+      {
+        "entry": 76,
+        "record": {
+          "type": "after",
+          "callId": "cbgy@209",
+          "endTime": 85771.868,
+          "result": {
+            "value": true
+          }
+        }
+      },
+      {
+        "entry": 87,
+        "record": {
+          "type": "before",
+          "callId": "cbgy@211",
+          "startTime": 85938.083,
+          "title": "Evaluate",
+          "class": "Frame",
+          "method": "waitForSelector",
+          "params": {
+            "selector": ".arco-empty >> nth=0",
+            "strict": true,
+            "state": "attached"
+          }
+        }
+      }
+    ],
+    "testErrors": [
+      {
+        "entry": 54,
+        "record": {
+          "type": "after",
+          "callId": "cbgy@208",
+          "endTime": 113777.567,
+          "annotations": [],
+          "error": {
+            "name": "",
+            "message": "Error: Test timeout of 30000ms exceeded",
+            "stack": "Error: Test timeout of 30000ms exceeded\n    at expectPageBodyReady (/home/runner/work/pantheon-base/pantheon-base/frontend/tests/smoke/system/system-pages-helpers.ts:779:6)\n    at /home/runner/work/pantheon-base/pantheon-base/frontend/tests/smoke/system/system-routes.spec.ts:31:5"
+          }
+        }
+      },
+      {
+        "entry": 55,
+        "record": {
+          "type": "error",
+          "message": "Error: Test timeout of 30000ms exceeded",
+          "stack": [
+            {
+              "file": "/home/runner/work/pantheon-base/pantheon-base/frontend/tests/smoke/system/system-pages-helpers.ts",
+              "line": 779,
+              "column": 6,
+              "function": "expectPageBodyReady"
+            },
+            {
+              "file": "/home/runner/work/pantheon-base/pantheon-base/frontend/tests/smoke/system/system-routes.spec.ts",
+              "line": 31,
+              "column": 5
+            }
+          ]
+        }
+      },
+      {
+        "entry": 63,
+        "record": {
+          "type": "after",
+          "callId": "cbgy@211",
+          "endTime": 113934.891,
+          "annotations": [],
+          "error": {
+            "name": "",
+            "message": "Error: locator.evaluate: Test ended.\nCall log:\n\u001b[2m  - waiting for locator('.arco-empty').first()\u001b[22m\n",
+            "stack": "Error: locator.evaluate: Test ended.\nCall log:\n\u001b[2m  - waiting for locator('.arco-empty').first()\u001b[22m\n\n    at /home/runner/work/pantheon-base/pantheon-base/frontend/tests/smoke/system/system-pages-helpers.ts:775:39\n    at expectPageBodyReady (/home/runner/work/pantheon-base/pantheon-base/frontend/tests/smoke/system/system-pages-helpers.ts:770:3)\n    at /home/runner/work/pantheon-base/pantheon-base/frontend/tests/smoke/system/system-routes.spec.ts:31:5"
+          }
+        }
+      }
+    ],
+    "network": [
+      {
+        "entry": 296,
+        "url": "http://127.0.0.1:5173/api/v1/system/operation-log/list?keyword=&title=&operName=&page=1&pageSize=10",
+        "status": 200,
+        "payloadCode": 200,
+        "items": 10,
+        "total": 41,
+        "durationMs": 12.688,
+        "startedAt": "2026-11-13T06:24:16.653Z"
+      }
+    ]
+  }
+]

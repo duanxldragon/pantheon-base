@@ -1,0 +1,222 @@
+{
+  "taskId": "2026-11-13-v0188-release-preparation",
+  "phase": "2026-11-13-pending-continuation-governance-draft",
+  "commands": [
+    {
+      "command": "npm run check:docs-frontmatter",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\.wt-base-smoke-readiness",
+      "status": "passed",
+      "exitCode": 0,
+      "durationMs": 750,
+      "startedAt": "2026-11-13T06:53:08.489801+00:00",
+      "finishedAt": "2026-11-13T06:53:09.247356+00:00",
+      "log": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/governance-check-docs-frontmatter.log.gz",
+      "sha256": "d1724ae58d45a67e1c0b1c94bc5fd4d79796fd441c0a81bab282627ff1531dd5",
+      "rawSha256": "ca13b29ede28c9a39d6eef5963271a0ed6d50082d8d61d23dcf6331b045ab7af",
+      "notes": "Draft governance checks cover both preparation and new security packets; schema success does not imply independent source approval. Source executor work is concurrent, so these results do not bind the final frozen tree."
+    },
+    {
+      "command": "npm run check:task-packet-template",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\.wt-base-smoke-readiness",
+      "status": "passed",
+      "exitCode": 0,
+      "durationMs": 531,
+      "startedAt": "2026-11-13T06:53:08.489801+00:00",
+      "finishedAt": "2026-11-13T06:53:09.022371+00:00",
+      "log": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/governance-check-task-packet-template.log.gz",
+      "sha256": "6d503e9ad1a2097bc1b1637fc8ab7b7231f5d6640ccf7f77739a366a39917962",
+      "rawSha256": "c906367e2b043848d360d0c2a68d087d528861349348bf101a37c09439d98fc7",
+      "notes": "Draft governance checks cover both preparation and new security packets; schema success does not imply independent source approval. Source executor work is concurrent, so these results do not bind the final frozen tree."
+    },
+    {
+      "command": "npm run check:task-packet",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\.wt-base-smoke-readiness",
+      "status": "failed",
+      "exitCode": 1,
+      "durationMs": 797,
+      "startedAt": "2026-11-13T06:53:08.490800+00:00",
+      "finishedAt": "2026-11-13T06:53:09.289636+00:00",
+      "log": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/governance-check-task-packet.log.gz",
+      "sha256": "4eb7910989dca8950900f0da805c27dacf7f80cc9e0ad27d92f4c4e5566a648a",
+      "rawSha256": "46acb1093390e1b97f7973a2e834ec461995b3754a1d0574c2b0fd4ce83caf2e",
+      "notes": "Draft governance checks cover both preparation and new security packets; schema success does not imply independent source approval. Source executor work is concurrent, so these results do not bind the final frozen tree."
+    },
+    {
+      "command": "npm run check:harness-evidence",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\.wt-base-smoke-readiness",
+      "status": "failed",
+      "exitCode": 1,
+      "durationMs": 875,
+      "startedAt": "2026-11-13T06:53:08.490800+00:00",
+      "finishedAt": "2026-11-13T06:53:09.376871+00:00",
+      "log": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/governance-check-harness-evidence.log.gz",
+      "sha256": "47ac7a091f3ac9bcde40fa71283715b5baba2520a854d6d3c184c600b24e0a46",
+      "rawSha256": "b4325575aec49df78e05b90122dc261a3f83d4bb231917fa7ffd6c551b62fa78",
+      "notes": "Draft governance checks cover both preparation and new security packets; schema success does not imply independent source approval. Source executor work is concurrent, so these results do not bind the final frozen tree."
+    },
+    {
+      "command": "npm run check:harness-review",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\.wt-base-smoke-readiness",
+      "status": "failed",
+      "exitCode": 1,
+      "durationMs": 797,
+      "startedAt": "2026-11-13T06:53:08.491805+00:00",
+      "finishedAt": "2026-11-13T06:53:09.293642+00:00",
+      "log": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/governance-check-harness-review.log.gz",
+      "sha256": "688e2fcdb6d56700769c4d68474962dc8f8d5e64c8eb66d718256922337dc7fe",
+      "rawSha256": "6b9e4e8715c0f62b73fc1ed15d4ef1cb6d3c229da431de0fa20cb67999a6536f",
+      "notes": "Draft governance checks cover both preparation and new security packets; schema success does not imply independent source approval. Source executor work is concurrent, so these results do not bind the final frozen tree."
+    },
+    {
+      "command": "npm run check:harness-docs",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\.wt-base-smoke-readiness",
+      "status": "passed",
+      "exitCode": 0,
+      "durationMs": 516,
+      "startedAt": "2026-11-13T06:53:09.022371+00:00",
+      "finishedAt": "2026-11-13T06:53:09.539657+00:00",
+      "log": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/governance-check-harness-docs.log.gz",
+      "sha256": "a4a55b83efeb77443c020450e25a03f4ba4459306d2dd1b5cceaa56dc556bb00",
+      "rawSha256": "aff38ef831fbdaa9304137101838cff74335ea77c6b19a3eb5400fa047a464b6",
+      "notes": "Draft governance checks cover both preparation and new security packets; schema success does not imply independent source approval. Source executor work is concurrent, so these results do not bind the final frozen tree."
+    },
+    {
+      "command": "npm run check:harness-encoding",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\.wt-base-smoke-readiness",
+      "status": "failed",
+      "exitCode": 1,
+      "durationMs": 391,
+      "startedAt": "2026-11-13T06:53:09.247356+00:00",
+      "finishedAt": "2026-11-13T06:53:09.641201+00:00",
+      "log": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/governance-check-harness-encoding.log.gz",
+      "sha256": "0b5d284647a3067233891ccbce3732073b30c40c488e7c1aace586bb069d1a4d",
+      "rawSha256": "3b443452ad68e6bab813299d87f4b05dd75ab6a5c2f809402a450d9006bec2fc",
+      "notes": "Draft governance checks cover both preparation and new security packets; schema success does not imply independent source approval. Source executor work is concurrent, so these results do not bind the final frozen tree."
+    },
+    {
+      "command": "npm run check:harness-inventory",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\.wt-base-smoke-readiness",
+      "status": "passed",
+      "exitCode": 0,
+      "durationMs": 406,
+      "startedAt": "2026-11-13T06:53:09.289636+00:00",
+      "finishedAt": "2026-11-13T06:53:09.699686+00:00",
+      "log": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/governance-check-harness-inventory.log.gz",
+      "sha256": "2b53fdbb858cc71051a8a6a5b98ad9938394ae7c68aa4f88fa72bf86b4241945",
+      "rawSha256": "dbf43926f0c41a7c788b9c9cb48f7677e9ddafdcf3a9cdfc0480874099f1bf4a",
+      "notes": "Draft governance checks cover both preparation and new security packets; schema success does not imply independent source approval. Source executor work is concurrent, so these results do not bind the final frozen tree."
+    },
+    {
+      "command": "npm run check:structure",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\.wt-base-smoke-readiness",
+      "status": "failed",
+      "exitCode": 1,
+      "durationMs": 391,
+      "startedAt": "2026-11-13T06:53:09.293642+00:00",
+      "finishedAt": "2026-11-13T06:53:09.685118+00:00",
+      "log": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/governance-check-structure.log.gz",
+      "sha256": "ba578768c4b52e6862c3dcfcc38b24e403da632a43a5936a768f03421bb0f95d",
+      "rawSha256": "cd5b4662577eb7a9a0f1a763cc2fa4c24bfa8d492f5727f6cd459f2c95f46152",
+      "notes": "Draft governance checks cover both preparation and new security packets; schema success does not imply independent source approval. Source executor work is concurrent, so these results do not bind the final frozen tree."
+    },
+    {
+      "command": "npm run check:task-packet",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\.wt-base-smoke-readiness",
+      "status": "passed",
+      "exitCode": 0,
+      "durationMs": 1302,
+      "log": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/governance-check-task-packet-corrected-draft.log.gz",
+      "sha256": "f4a6ebe4844f4418d2d35ab190b759a2591980fa24e96809d13e109b31f5ac50",
+      "rawSha256": "a4e27b7712d186f92c2290fa6e4d78acdfe65fbea2c3f0293a2f98eba615d622",
+      "notes": "Direct PowerShell invocation. Earlier draft schema failures corrected by using canonical in-progress task status; earlier Python nested-run git EPERM is environment-only. Prior failed logs retained. Current approval remains pending; these checks do not bind a final frozen source."
+    },
+    {
+      "command": "npm run check:harness-evidence",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\.wt-base-smoke-readiness",
+      "status": "passed",
+      "exitCode": 0,
+      "durationMs": 1452,
+      "log": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/governance-check-harness-evidence-corrected-draft.log.gz",
+      "sha256": "5528730d2a47245eeda9f45187b2b849bc9512453f1118fbff2cd6bb0ec89434",
+      "rawSha256": "be4d54ce734b522125a35a8fba91faf4c721726b9dffcdb9ee310eb562a90ff0",
+      "notes": "Direct PowerShell invocation. Earlier draft schema failures corrected by using canonical in-progress task status; earlier Python nested-run git EPERM is environment-only. Prior failed logs retained. Current approval remains pending; these checks do not bind a final frozen source."
+    },
+    {
+      "command": "npm run check:harness-review",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\.wt-base-smoke-readiness",
+      "status": "passed",
+      "exitCode": 0,
+      "durationMs": 1293,
+      "log": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/governance-check-harness-review-corrected-draft.log.gz",
+      "sha256": "e028492d2f70d10882a5164189ed510b35bb41cae9057a5aa5ccc18ced04d4f0",
+      "rawSha256": "3fe8e667ad53b7d58b8655c1ddc5873952e0a8bf2b8c0f7e6377a598cb739f1b",
+      "notes": "Direct PowerShell invocation. Earlier draft schema failures corrected by using canonical in-progress task status; earlier Python nested-run git EPERM is environment-only. Prior failed logs retained. Current approval remains pending; these checks do not bind a final frozen source."
+    },
+    {
+      "command": "npm run check:harness-encoding",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\.wt-base-smoke-readiness",
+      "status": "passed",
+      "exitCode": 0,
+      "durationMs": 1610,
+      "log": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/governance-check-harness-encoding-corrected-draft.log.gz",
+      "sha256": "c06eeb85a9f6cd8566f83c19996beb1c8012fc298af2a241a73847b0cecc8bc0",
+      "rawSha256": "852fda3f9cf5384866839535e646bcda8b49cde1a5956cee0977771ab4293f3d",
+      "notes": "Direct PowerShell invocation. Earlier draft schema failures corrected by using canonical in-progress task status; earlier Python nested-run git EPERM is environment-only. Prior failed logs retained. Current approval remains pending; these checks do not bind a final frozen source."
+    },
+    {
+      "command": "npm run check:structure",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\.wt-base-smoke-readiness",
+      "status": "passed",
+      "exitCode": 0,
+      "durationMs": 1048,
+      "log": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/governance-check-structure-corrected-draft.log.gz",
+      "sha256": "71f8717612e0385eb9bf3e4abbd66ffe576361c376e417d7fc4fa220d36c7c30",
+      "rawSha256": "a3bb4290905efbb22ea09f178d4192ef94233ba6f00f42fce8679eacccd8cc35",
+      "notes": "Direct PowerShell invocation. Earlier draft schema failures corrected by using canonical in-progress task status; earlier Python nested-run git EPERM is environment-only. Prior failed logs retained. Current approval remains pending; these checks do not bind a final frozen source."
+    },
+    {
+      "command": "npm run check:task-packet",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\.wt-base-smoke-readiness",
+      "status": "passed",
+      "exitCode": 0,
+      "log": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/governance-check-task-packet-proof-imported-draft.log.gz",
+      "sha256": "f4a6ebe4844f4418d2d35ab190b759a2591980fa24e96809d13e109b31f5ac50",
+      "rawSha256": "a4e27b7712d186f92c2290fa6e4d78acdfe65fbea2c3f0293a2f98eba615d622",
+      "notes": "Direct PowerShell final draft check after smoke proof import and current-readout reconciliation; independent approval, security proof and candidate still pending. Actual tool exit zero."
+    },
+    {
+      "command": "npm run check:harness-evidence",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\.wt-base-smoke-readiness",
+      "status": "passed",
+      "exitCode": 0,
+      "log": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/governance-check-harness-evidence-proof-imported-draft.log.gz",
+      "sha256": "5528730d2a47245eeda9f45187b2b849bc9512453f1118fbff2cd6bb0ec89434",
+      "rawSha256": "be4d54ce734b522125a35a8fba91faf4c721726b9dffcdb9ee310eb562a90ff0",
+      "notes": "Direct PowerShell final draft check after smoke proof import and current-readout reconciliation; independent approval, security proof and candidate still pending. Actual tool exit zero."
+    },
+    {
+      "command": "npm run check:harness-review",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\.wt-base-smoke-readiness",
+      "status": "passed",
+      "exitCode": 0,
+      "log": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/governance-check-harness-review-proof-imported-draft.log.gz",
+      "sha256": "e028492d2f70d10882a5164189ed510b35bb41cae9057a5aa5ccc18ced04d4f0",
+      "rawSha256": "3fe8e667ad53b7d58b8655c1ddc5873952e0a8bf2b8c0f7e6377a598cb739f1b",
+      "notes": "Direct PowerShell final draft check after smoke proof import and current-readout reconciliation; independent approval, security proof and candidate still pending. Actual tool exit zero."
+    },
+    {
+      "command": "npm run check:harness-docs",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\.wt-base-smoke-readiness",
+      "status": "passed",
+      "exitCode": 0,
+      "log": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/governance-check-harness-docs-proof-imported-draft.log.gz",
+      "sha256": "c654550181e1d9e742728cc390835d69bffbd4159236be82e9a8bd8edb6a2729",
+      "rawSha256": "d8e6ad7f1b15451eb8df6f7941b2f1b57d2701468fa6364c70f7b1db72b1b89d",
+      "notes": "Direct PowerShell final draft check after smoke proof import and current-readout reconciliation; independent approval, security proof and candidate still pending. Actual tool exit zero."
+    }
+  ],
+  "knownGaps": [
+    "Current security executor proof, refreshed candidate, final frozen tree and independent CODE/ARCH approval remain pending."
+  ],
+  "latestOutcome": "All nine draft governance commands passed across initial and corrected direct runs; historical failed runs retained."
+}

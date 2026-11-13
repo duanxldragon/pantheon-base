@@ -1,0 +1,201 @@
+{
+  "taskId": "2026-11-13-candidate-filesystem-security",
+  "parentCommit": "ae2fa81d9903d63b4bec8f01d61082f48a999e2f",
+  "sourceTreeBeforePackageWiring": "e5933880b5fc4f7b7a419c0b8b36e5490f2acddb",
+  "fiveSourceTree": "93b617c283b20866f3b209047e931246dbf9b009",
+  "state": "source-remediated-awaiting-hosted-CodeQL; no alert dismissal or automatic closure inferred",
+  "alerts": [
+    {
+      "alert": 100,
+      "rule": "js/file-system-race",
+      "securitySeverity": "high",
+      "beforeState": "open",
+      "beforeCommit": "ae2fa81d9903d63b4bec8f01d61082f48a999e2f",
+      "file": "scripts/foundation-release/build-candidate-artifact.mjs",
+      "beforeLine": 38,
+      "beforeSource": "      const fd = fs.openSync(absolute, fs.constants.O_RDONLY | (fs.constants.O_NOFOLLOW ?? 0));",
+      "afterLine": 37,
+      "rationale": "Source capture uses an open-first bounded fd read; bigint/nanosecond stamps still reject source identity/content changes.",
+      "verificationState": "source-remediated-awaiting-hosted-CodeQL"
+    },
+    {
+      "alert": 101,
+      "rule": "js/file-system-race",
+      "securitySeverity": "high",
+      "beforeState": "open",
+      "beforeCommit": "ae2fa81d9903d63b4bec8f01d61082f48a999e2f",
+      "file": "scripts/foundation-release/build-candidate-artifact.mjs",
+      "beforeLine": 137,
+      "beforeSource": "        const fd = fs.openSync(absolute, fs.constants.O_RDONLY | (fs.constants.O_NOFOLLOW ?? 0));",
+      "afterLine": 123,
+      "rationale": "Saved descriptor and archive use paired open handles, exact sizes and byte/hash pins, with final observed file and ancestor checks.",
+      "verificationState": "source-remediated-awaiting-hosted-CodeQL"
+    },
+    {
+      "alert": 102,
+      "rule": "js/file-system-race",
+      "securitySeverity": "high",
+      "beforeState": "open",
+      "beforeCommit": "ae2fa81d9903d63b4bec8f01d61082f48a999e2f",
+      "file": "scripts/foundation-release/build-candidate-artifact.mjs",
+      "beforeLine": 204,
+      "beforeSource": "      const options = JSON.parse(fs.readFileSync(inventory, 'utf8'));",
+      "afterLine": 179,
+      "rationale": "Actual sink is CLI inventory JSON read, not archive read. The bounded handle reader replaces stat-then-path-read.",
+      "verificationState": "source-remediated-awaiting-hosted-CodeQL"
+    },
+    {
+      "alert": 103,
+      "rule": "js/file-system-race",
+      "securitySeverity": "high",
+      "beforeState": "open",
+      "beforeCommit": "ae2fa81d9903d63b4bec8f01d61082f48a999e2f",
+      "file": "scripts/foundation-release/candidate-descriptor.mjs",
+      "beforeLine": 176,
+      "beforeSource": "  const bytes = fs.readFileSync(descriptorPath);",
+      "afterLine": 235,
+      "rationale": "Pinned descriptor is read via the bounded handle reader before SHA256/schema validation.",
+      "verificationState": "source-remediated-awaiting-hosted-CodeQL"
+    },
+    {
+      "alert": 104,
+      "rule": "js/file-system-race",
+      "securitySeverity": "high",
+      "beforeState": "open",
+      "beforeCommit": "ae2fa81d9903d63b4bec8f01d61082f48a999e2f",
+      "file": "scripts/foundation-release/candidate-descriptor.mjs",
+      "beforeLine": 257,
+      "beforeSource": "  const bytes = fs.readFileSync(buildReceiptPath);",
+      "afterLine": 317,
+      "rationale": "Build receipt belongs to the three-handle pinned verification set; limit and hash are checked on the opened file.",
+      "verificationState": "source-remediated-awaiting-hosted-CodeQL"
+    },
+    {
+      "alert": 105,
+      "rule": "js/file-system-race",
+      "securitySeverity": "high",
+      "beforeState": "open",
+      "beforeCommit": "ae2fa81d9903d63b4bec8f01d61082f48a999e2f",
+      "file": "scripts/foundation-release/candidate-descriptor.mjs",
+      "beforeLine": 262,
+      "beforeSource": "  const executable = fs.readFileSync(executablePath);",
+      "afterLine": 317,
+      "rationale": "Executable belongs to the same three-handle set; actual bounded bytes, hash and receipt size remain required.",
+      "verificationState": "source-remediated-awaiting-hosted-CodeQL"
+    },
+    {
+      "alert": 106,
+      "rule": "js/file-system-race",
+      "securitySeverity": "high",
+      "beforeState": "open",
+      "beforeCommit": "ae2fa81d9903d63b4bec8f01d61082f48a999e2f",
+      "file": "scripts/foundation-release/candidate-artifact.test.mjs",
+      "beforeLine": 396,
+      "beforeSource": "    return { relative, stamp: [stat.dev, stat.ino, stat.size, stat.mtimeNs, stat.ctimeNs, stat.mode, stat.nlink], digest: stat.isFile() ? sha256(fs.readFileSync(absolute)) : null };",
+      "afterLine": 544,
+      "rationale": "Fixture source-state content uses readFixtureFile: open first, readFileSync(fd), close. Path checks do not authorize pathname content reads.",
+      "verificationState": "source-remediated-awaiting-hosted-CodeQL"
+    },
+    {
+      "alert": 107,
+      "rule": "js/file-system-race",
+      "securitySeverity": "high",
+      "beforeState": "open",
+      "beforeCommit": "ae2fa81d9903d63b4bec8f01d61082f48a999e2f",
+      "file": "scripts/foundation-release/candidate-artifact.test.mjs",
+      "beforeLine": 496,
+      "beforeSource": "        fs.renameSync(target, retained); originalWrite(target, expected);",
+      "afterLine": 642,
+      "rationale": "Actual sink is recreated fixture write after lstat, not a read. recreateFixtureFile uses exclusive creation and fd-backed write.",
+      "verificationState": "source-remediated-awaiting-hosted-CodeQL"
+    },
+    {
+      "alert": 108,
+      "rule": "js/file-system-race",
+      "securitySeverity": "high",
+      "beforeState": "open",
+      "beforeCommit": "ae2fa81d9903d63b4bec8f01d61082f48a999e2f",
+      "file": "scripts/foundation-release/candidate-artifact.test.mjs",
+      "beforeLine": 499,
+      "beforeSource": "        assert.deepEqual(fs.readFileSync(target), expected, 'replacement preserves exact bytes and size');",
+      "afterLine": 645,
+      "rationale": "Byte-identical target replacement is verified by fd-backed readFixtureFile. Renamed original verification at line661 is hardened likewise.",
+      "verificationState": "source-remediated-awaiting-hosted-CodeQL"
+    }
+  ],
+  "sourceHashes": [
+    {
+      "file": "scripts/foundation-release/build-candidate-artifact.mjs",
+      "sha256": "6196730755893349e7d42088c0e4a03ebd2064cac3924d52e8f456d7b501dc9e"
+    },
+    {
+      "file": "scripts/foundation-release/candidate-descriptor.mjs",
+      "sha256": "2cd4c0e7b61b5b920c9c5e0e070a0a292621dc5397624c4c92d7a0468c0b594c"
+    },
+    {
+      "file": "scripts/foundation-release/candidate-artifact.test.mjs",
+      "sha256": "341fb61709eed19b24feaa65778b1548bbc7738d0edc4159c0c1f118cbe44ff3"
+    }
+  ],
+  "packageSha256": "aeacce2b72366bc648943d7860355efecab431d28e0d9dacc573bb7bea260a3c",
+  "sourceReceiptOriginalSha256": "35adb6407f2401a8bfa7f9ca1d97621fa29231beee0622bbf05d51b6618b0641",
+  "retainedArtifacts": [
+    {
+      "file": ".harness/evidence/2026-11-13-candidate-filesystem-security/security-source-evidence.json.gz",
+      "sha256": "3c31f3696e098e1086cb2b538a34c4ec664f2b847f5003b28db1e13c0dd1f3cd",
+      "rawSha256": "35adb6407f2401a8bfa7f9ca1d97621fa29231beee0622bbf05d51b6618b0641",
+      "source": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\sec509\\security-source-evidence.json",
+      "role": "source-bound executor/runtime evidence"
+    },
+    {
+      "file": ".harness/evidence/2026-11-13-candidate-filesystem-security/source-diff.patch.gz",
+      "sha256": "dd29d2d6e09486a27065fbb2c659bbcfd3caaa666bbee44a2a690fbd6bf01847",
+      "rawSha256": "f57cb9e60c5274bc4d451949e5831a57baf3f23aa077944d5915ac5240cf9ee5",
+      "source": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\sec509\\source-diff.patch",
+      "role": "source-bound executor/runtime evidence"
+    },
+    {
+      "file": ".harness/evidence/2026-11-13-candidate-filesystem-security/candidate-tests.txt.gz",
+      "sha256": "6f9d98f912d576ad0037db46137127553896fc0e0a775be3087b970d94e516b7",
+      "rawSha256": "12c4339d1f43a08a784b7c65c403f243b7d60384f024e085aa8055f57a2431dd",
+      "source": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\sec509\\candidate-tests.txt",
+      "role": "source-bound executor/runtime evidence"
+    },
+    {
+      "file": ".harness/evidence/2026-11-13-candidate-filesystem-security/wired-foundation-tests.txt.gz",
+      "sha256": "73bb0198a2580a91cb5b2ad427a48a5c4e551e6c191979f775e64b2f315eae57",
+      "rawSha256": "eeb086d7b187dd09c8d3ac878c5a72e3eb57e325fd29fd36a393e65f39d8ff03",
+      "source": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\sec509\\wired-foundation-tests.txt",
+      "role": "source-bound executor/runtime evidence"
+    },
+    {
+      "file": ".harness/evidence/2026-11-13-candidate-filesystem-security/tdd-red.txt.gz",
+      "sha256": "4ab7578a3a2fb1b4a18fe565ea18d075152feaa545af199717e5848633b85c38",
+      "rawSha256": "f1eb440bcd6aa0bd679a6779a70a5691e3b2529e9c72d90c151095f1469a790a",
+      "source": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\sec509\\tdd-red.txt",
+      "role": "historical initial failing regression"
+    },
+    {
+      "file": ".harness/evidence/2026-11-13-candidate-filesystem-security/tdd-green.txt.gz",
+      "sha256": "c787df688d510830bfcd50d310b1249b8f6e2f88b4eb5d0b0ba25425377ee6a4",
+      "rawSha256": "05b10ec2d360e6ba86919542a58f499f38bc73fe9480a91696456b42ad99cbda",
+      "source": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\sec509\\tdd-green.txt",
+      "role": "source-bound executor/runtime evidence"
+    },
+    {
+      "file": ".harness/evidence/2026-11-13-candidate-filesystem-security/focused-tests.txt.gz",
+      "sha256": "976fe57df6af84d7f5026aaec4d7107e8d2c314aa1fa9df14e47916da3c2008c",
+      "rawSha256": "653fa2e1c2f3d52ae3ca4c566715972dc5c13849a8d1bda18b7cc54b0792dbdb",
+      "source": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\sec509\\focused-tests.txt",
+      "role": "source-bound executor/runtime evidence"
+    },
+    {
+      "file": ".harness/evidence/2026-11-13-candidate-filesystem-security/FileSystemRace-codeql-2.27.4.ql.gz",
+      "sha256": "eaca724511886dca7d3c2be625d01b4443526cbf30c73e8e8d780d2e7de172eb",
+      "rawSha256": "6bd3beed90bf9ab935edf9d7cc37e78c4ba78aaea3545cdc7bdc5a90cba6512e",
+      "source": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\sec509\\FileSystemRace-codeql-2.27.4.ql",
+      "role": "official same-version query reference; not executed"
+    }
+  ],
+  "manualRuleReferenceExecuted": false
+}

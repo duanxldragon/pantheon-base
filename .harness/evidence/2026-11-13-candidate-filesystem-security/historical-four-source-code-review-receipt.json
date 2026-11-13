@@ -1,0 +1,16 @@
+{
+  "file": ".harness/evidence/2026-11-13-candidate-filesystem-security/historical-four-source-code-review.md.gz",
+  "sha256": "661238f821e6ba27cca94617829e0f6bc2b5898df006567925efada52a96daea",
+  "rawPreservedAs": ".harness/evidence/2026-11-13-candidate-filesystem-security/historical-four-source-code-review.md.gz",
+  "compressedSha256": "661238f821e6ba27cca94617829e0f6bc2b5898df006567925efada52a96daea",
+  "reviewer": "/root/final_security_code_review",
+  "verdict": "COMMENT",
+  "sourceFindings": 0,
+  "reviewedSourceTree": "e5933880b5fc4f7b7a419c0b8b36e5490f2acddb",
+  "parentCommit": "ae2fa81d9903d63b4bec8f01d61082f48a999e2f",
+  "scopeLimit": "Historical four-source review before package wiring; not fifth-source or final combined-tree approval.",
+  "toolGap": "Mandatory lsp_diagnostics unavailable; real syntax/AST/strict type/runtime checks are separate evidence.",
+  "rawSha256": "69efd17160e805b228f8d5842b6e0aa6de669094aca6eaac69436fd500cc8ef0",
+  "readingCopy": ".harness/evidence/2026-11-13-candidate-filesystem-security/historical-four-source-code-review.md",
+  "readingCopySha256": "300d6523539256cd83e0a15c68b04ba56f4b177922a36b7e603c941246440c60"
+}
