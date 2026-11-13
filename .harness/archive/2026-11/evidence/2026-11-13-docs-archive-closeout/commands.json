@@ -852,6 +852,156 @@
       "log": ".harness/archive/2026-11/evidence/2026-11-13-docs-archive-closeout/check-harness-evidence-84.log.gz",
       "sha256": "ceaaea02324dcb5af43ec7183f4f2800815239c1f805df956e879bfcca222c74",
       "rawSha256": "d9e40deac2330a0a9a299489af5cd4198a4f8b60ec490d820fd0ba64fffa9f48"
+    },
+    {
+      "command": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\dependency-validation\\toolchain\\node-v24.22.3-win-x64\\node.exe D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\dependency-validation\\toolchain\\node-v24.22.3-win-x64\\node_modules\\npm\\bin\\npm-cli.js run check:docs-frontmatter",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\pantheon-base",
+      "exitCode": 1,
+      "status": "failed",
+      "durationMs": 1128,
+      "log": ".harness/archive/2026-11/evidence/2026-11-13-docs-archive-closeout/check-docs-frontmatter-85.log.gz",
+      "sha256": "a4b7a7973d85e4ae630d393fe952c813aae0dd2d8c2efce69c6af8985c036998",
+      "rawSha256": "7f9d9cbb8b5e2088dd2beaf0fbfdb32183c67563cf657f1beb6acea947020314"
+    },
+    {
+      "command": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\dependency-validation\\toolchain\\node-v24.22.3-win-x64\\node.exe D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\dependency-validation\\toolchain\\node-v24.22.3-win-x64\\node_modules\\npm\\bin\\npm-cli.js run check:task-packet-template",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\pantheon-base",
+      "exitCode": 0,
+      "status": "passed",
+      "durationMs": 314,
+      "log": ".harness/archive/2026-11/evidence/2026-11-13-docs-archive-closeout/check-task-packet-template-86.log.gz",
+      "sha256": "133f2fb739aa521382f19bfbf30c8b4fd4784663e9f44cb9b99414fc96b7d92d",
+      "rawSha256": "c906367e2b043848d360d0c2a68d087d528861349348bf101a37c09439d98fc7"
+    },
+    {
+      "command": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\dependency-validation\\toolchain\\node-v24.22.3-win-x64\\node.exe D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\dependency-validation\\toolchain\\node-v24.22.3-win-x64\\node_modules\\npm\\bin\\npm-cli.js run check:task-packet",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\pantheon-base",
+      "exitCode": 0,
+      "status": "passed",
+      "durationMs": 627,
+      "log": ".harness/archive/2026-11/evidence/2026-11-13-docs-archive-closeout/check-task-packet-87.log.gz",
+      "sha256": "ea237289263a2112b0ed997a1663e0132ecd5d4dd128aeb67e71ef07c7c435f1",
+      "rawSha256": "b94def7448fb862001db384c60c8d5b2f8f76f380ef82cea7375444ebf950d21"
+    },
+    {
+      "command": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\dependency-validation\\toolchain\\node-v24.22.3-win-x64\\node.exe D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\dependency-validation\\toolchain\\node-v24.22.3-win-x64\\node_modules\\npm\\bin\\npm-cli.js run check:harness-docs",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\pantheon-base",
+      "exitCode": 0,
+      "status": "passed",
+      "durationMs": 422,
+      "log": ".harness/archive/2026-11/evidence/2026-11-13-docs-archive-closeout/check-harness-docs-88.log.gz",
+      "sha256": "b00ff62fedb40658015e62f37eb53914ef6b306e2b5b15f10a7c70b8d4bedd5b",
+      "rawSha256": "aff38ef831fbdaa9304137101838cff74335ea77c6b19a3eb5400fa047a464b6"
+    },
+    {
+      "command": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\dependency-validation\\toolchain\\node-v24.22.3-win-x64\\node.exe D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\dependency-validation\\toolchain\\node-v24.22.3-win-x64\\node_modules\\npm\\bin\\npm-cli.js run check:harness-inventory",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\pantheon-base",
+      "exitCode": 0,
+      "status": "passed",
+      "durationMs": 281,
+      "log": ".harness/archive/2026-11/evidence/2026-11-13-docs-archive-closeout/check-harness-inventory-89.log.gz",
+      "sha256": "29a4223bb40324f4e4aee8ba587bc2d0fb2f83fe4db83594a429336301721deb",
+      "rawSha256": "dbf43926f0c41a7c788b9c9cb48f7677e9ddafdcf3a9cdfc0480874099f1bf4a"
+    },
+    {
+      "command": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\dependency-validation\\toolchain\\node-v24.22.3-win-x64\\node.exe D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\dependency-validation\\toolchain\\node-v24.22.3-win-x64\\node_modules\\npm\\bin\\npm-cli.js run check:harness-encoding",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\pantheon-base",
+      "exitCode": 0,
+      "status": "passed",
+      "durationMs": 1733,
+      "log": ".harness/archive/2026-11/evidence/2026-11-13-docs-archive-closeout/check-harness-encoding-90.log.gz",
+      "sha256": "af4fdc2b947a2f696350798ce571ba8204dc296967798da312b5eee6548b01dc",
+      "rawSha256": "45adf6df36a6d30eb7e95875e64cde9bdf9becbe5efde816303258f11a7343a4"
+    },
+    {
+      "command": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\dependency-validation\\toolchain\\node-v24.22.3-win-x64\\node.exe D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\dependency-validation\\toolchain\\node-v24.22.3-win-x64\\node_modules\\npm\\bin\\npm-cli.js run check:structure",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\pantheon-base",
+      "exitCode": 0,
+      "status": "passed",
+      "durationMs": 498,
+      "log": ".harness/archive/2026-11/evidence/2026-11-13-docs-archive-closeout/check-structure-91.log.gz",
+      "sha256": "1768a7e2b0c69c57dec4d1613aa77dc91614585d8fb0bfa18567a01cc8f7e82b",
+      "rawSha256": "6aaca16313fa025b18e110aa283a47a59c83e4d2e3870fb64f48f08516e14340"
+    },
+    {
+      "command": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\dependency-validation\\toolchain\\node-v24.22.3-win-x64\\node.exe D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\dependency-validation\\toolchain\\node-v24.22.3-win-x64\\node_modules\\npm\\bin\\npm-cli.js run check:harness-evidence",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\pantheon-base",
+      "exitCode": 0,
+      "status": "passed",
+      "durationMs": 732,
+      "log": ".harness/archive/2026-11/evidence/2026-11-13-docs-archive-closeout/check-harness-evidence-92.log.gz",
+      "sha256": "ceaaea02324dcb5af43ec7183f4f2800815239c1f805df956e879bfcca222c74",
+      "rawSha256": "d9e40deac2330a0a9a299489af5cd4198a4f8b60ec490d820fd0ba64fffa9f48"
+    },
+    {
+      "command": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\dependency-validation\\toolchain\\node-v24.22.3-win-x64\\node.exe D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\dependency-validation\\toolchain\\node-v24.22.3-win-x64\\node_modules\\npm\\bin\\npm-cli.js run check:harness-review",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\pantheon-base",
+      "exitCode": 0,
+      "status": "passed",
+      "durationMs": 608,
+      "log": ".harness/archive/2026-11/evidence/2026-11-13-docs-archive-closeout/check-harness-review-93.log.gz",
+      "sha256": "8a8dfc01d497c4b777d0de00dcf452937c0b57e8fbcf86ee6ac3d796977e649c",
+      "rawSha256": "b094157f0e659073eede4301bdc8ad0aa480a5906b5294eabb588d61111fb170"
+    },
+    {
+      "command": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\dependency-validation\\toolchain\\node-v24.22.3-win-x64\\node.exe D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\dependency-validation\\toolchain\\node-v24.22.3-win-x64\\node_modules\\npm\\bin\\npm-cli.js run check:harness-runtime-evidence",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\pantheon-base",
+      "exitCode": 0,
+      "status": "passed",
+      "durationMs": 465,
+      "log": ".harness/archive/2026-11/evidence/2026-11-13-docs-archive-closeout/check-harness-runtime-evidence-94.log.gz",
+      "sha256": "c81511f8248454ab4881140123db17df2711b7194b3043ef84d540c656041a8e",
+      "rawSha256": "24902ff3e389ae3d358be63520255bc6be744af148d8a115071a47efa2af0ebb"
+    },
+    {
+      "command": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\dependency-validation\\toolchain\\node-v24.22.3-win-x64\\node.exe D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\dependency-validation\\toolchain\\node-v24.22.3-win-x64\\node_modules\\npm\\bin\\npm-cli.js run check:duplication",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\pantheon-base",
+      "exitCode": 0,
+      "status": "passed",
+      "durationMs": 1566,
+      "log": ".harness/archive/2026-11/evidence/2026-11-13-docs-archive-closeout/check-duplication-95.log.gz",
+      "sha256": "b7249cb844a45d7e20df1fac77f95e5d2b8f53632d26ecf87b250bfbed327075",
+      "rawSha256": "533e9f2f3d376c6bf6a275def66eaca5d8d647b6a9d4978a3582c5dcd9a48188"
+    },
+    {
+      "command": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\dependency-validation\\toolchain\\node-v24.22.3-win-x64\\node.exe D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\dependency-validation\\toolchain\\node-v24.22.3-win-x64\\node_modules\\npm\\bin\\npm-cli.js run check:docs-frontmatter",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\pantheon-base",
+      "exitCode": 1,
+      "status": "failed",
+      "durationMs": 506,
+      "log": ".harness/archive/2026-11/evidence/2026-11-13-docs-archive-closeout/check-docs-frontmatter-96.log.gz",
+      "sha256": "bcbd8e35cfc8145b7e99c823be5e390001490454c56ccbca02af7a0848524f47",
+      "rawSha256": "2979d4bba5dd2cc30e051ad5016ab45cfe89b5c187d5e6a207a937135ee90c11"
+    },
+    {
+      "command": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\dependency-validation\\toolchain\\node-v24.22.3-win-x64\\node.exe D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\dependency-validation\\toolchain\\node-v24.22.3-win-x64\\node_modules\\npm\\bin\\npm-cli.js run check:docs-frontmatter",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\pantheon-base",
+      "exitCode": 0,
+      "status": "passed",
+      "durationMs": 459,
+      "log": ".harness/archive/2026-11/evidence/2026-11-13-docs-archive-closeout/check-docs-frontmatter-97.log.gz",
+      "sha256": "a350d8ab3014d9a537f520168e8851ff03fae6d329b7e45e8bbae34ffdf4542e",
+      "rawSha256": "e01842ca48c5c1da9dc989f46248bfbced114c64cc8ce87366f16b23305ec4f4"
+    },
+    {
+      "command": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\dependency-validation\\toolchain\\node-v24.22.3-win-x64\\node.exe D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\dependency-validation\\toolchain\\node-v24.22.3-win-x64\\node_modules\\npm\\bin\\npm-cli.js run check:harness-evidence",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\pantheon-base",
+      "exitCode": 0,
+      "status": "passed",
+      "durationMs": 813,
+      "log": ".harness/archive/2026-11/evidence/2026-11-13-docs-archive-closeout/check-harness-evidence-98.log.gz",
+      "sha256": "ceaaea02324dcb5af43ec7183f4f2800815239c1f805df956e879bfcca222c74",
+      "rawSha256": "d9e40deac2330a0a9a299489af5cd4198a4f8b60ec490d820fd0ba64fffa9f48"
+    },
+    {
+      "command": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\dependency-validation\\toolchain\\node-v24.22.3-win-x64\\node.exe D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\dependency-validation\\toolchain\\node-v24.22.3-win-x64\\node_modules\\npm\\bin\\npm-cli.js run check:harness-review",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\pantheon-base",
+      "exitCode": 0,
+      "status": "passed",
+      "durationMs": 749,
+      "log": ".harness/archive/2026-11/evidence/2026-11-13-docs-archive-closeout/check-harness-review-99.log.gz",
+      "sha256": "8a8dfc01d497c4b777d0de00dcf452937c0b57e8fbcf86ee6ac3d796977e649c",
+      "rawSha256": "b094157f0e659073eede4301bdc8ad0aa480a5906b5294eabb588d61111fb170"
     }
   ],
   "graphChecks": {

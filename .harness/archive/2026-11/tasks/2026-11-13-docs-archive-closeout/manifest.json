@@ -196,5 +196,23 @@
         "sha256": "4e10cf9dc3f2d131df3c967b2b251d9553f86863daa9528f3d4b6123e8a827ed"
       }
     ]
-  }
+  },
+  "continuations": [
+    {
+      "date": "2026-11-13",
+      "request": "Move Ops-owned planned task files to Ops; remove historical remediation declaration from README; assess release need.",
+      "scope": [
+        "Ops task packet, manifest and plan migration with local ownership and shared Base contract references",
+        "README dated September22 checkpoint moved to docs/archive/baselines, bilingual current-status/archive navigation",
+        "Read-only release/tag comparison; no VERSION or immutable assets changed"
+      ],
+      "risk": "standard documentation followup; no runtime, UI, contract, workflow or dependency changes",
+      "status": "Independent CODE/delta and ARCH approved; normal hosted PR replay and merge required",
+      "evidenceFiles": [
+        ".harness/archive/2026-11/evidence/2026-11-13-docs-archive-closeout/ops-task-migration.json",
+        ".harness/archive/2026-11/evidence/2026-11-13-docs-archive-closeout/readme-history-migration.json",
+        ".harness/archive/2026-11/evidence/2026-11-13-docs-archive-closeout/pr-body-readme-followup.md"
+      ]
+    }
+  ]
 }

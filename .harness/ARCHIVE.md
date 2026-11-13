@@ -14,6 +14,10 @@
 - 执行证据 (summary.md, review.md, commands.json)
 - 相关产物和附件
 
+## README 历史检查点
+
+- [2026-09-22 企业级整改当轮记录](../docs/archive/baselines/ENTERPRISE_REMEDIATION_2026-09-22.md)：2026-11-13 从 README 首页移入，保留原读数与当轮范围。当前状态以 STATUS.md 为准。
+
 ## 归档统计
 
 | 月份     | 任务数  | Evidence 数 | 关键轮次                                                                                                                                                                    |

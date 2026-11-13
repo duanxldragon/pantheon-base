@@ -1,0 +1,23 @@
+{
+  "source": "README.md",
+  "archive": "docs/archive/baselines/ENTERPRISE_REMEDIATION_2026-09-22.md",
+  "originalBlockSha256": "e6b4e46b94a585642dfbaf157754aa51e55a06b638154452245510113d5a4ed0",
+  "archiveChanges": "Relative Markdown links adjusted for the new directory only; original dated claims retained.",
+  "releaseAssessment": {
+    "published": "pantheon-base-v0.18.8",
+    "publishedCommit": "34428814a9efc997fd93d4434406a53df6460323",
+    "assessedHead": "8ad2c4c659cc818bd0998340bb9c3df809ed6a56",
+    "productPathsCompared": [
+      "backend",
+      "frontend",
+      "schema",
+      "VERSION",
+      "CHANGELOG.md",
+      "scripts/foundation-release"
+    ],
+    "productDifferences": [],
+    "sinceRelease": "Documentation archives, quality.yml guard and test-only manifest status regression",
+    "decision": "No mandatory new foundation release; substantive remediation already published in v0.18.8. Subsequent doc/CI maintenance may be included in a future patch.",
+    "versionPolicy": "docs/VERSION_MANAGEMENT_GUIDE.md section2.4 permits doc/fix patches; it does not require a release for every docs change."
+  }
+}
