@@ -1,0 +1,18 @@
+[
+  {
+    "Path": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\dependency-validation\\source\\package.json",
+    "Hash": "F9B3463F3259017554218BD3A547BD73E0E0C35EA79D8201AC76820125028492"
+  },
+  {
+    "Path": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\dependency-validation\\source\\package-lock.json",
+    "Hash": "EB162DC8079C3ED2C58FA4A4F71D3DA89B4415D563D39C1641859663DD184D9B"
+  },
+  {
+    "Path": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\dependency-validation\\source\\frontend\\package.json",
+    "Hash": "64FA18B8B4FD8D304053F850A2732DC4BE62183CF5B8B468313F86503C793A12"
+  },
+  {
+    "Path": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\dependency-validation\\source\\frontend\\package-lock.json",
+    "Hash": "7040C9EBE03EDD673D94D55A475E2A9B83479AC1C20B7F3828D962972AA8F629"
+  }
+]

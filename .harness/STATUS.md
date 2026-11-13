@@ -1,3 +1,13 @@
+# v0.18.8 preparation approved; official v0.18.7 published and consumed (2026-11-13)
+
+The November 4 review/November 7 original scope remains closed. PR #504 delivered the shared foundation continuation; official v0.18.7 is published at immutable 3203624e with four verified assets. Ops PR #183 merged at fc3fa867630580f7bcf1d40082a77f6b2548ac56 after source-bound official acquisition/rebuild/full validation and successful final GitHub Actions. The original v0.18.7 release/consumer task is complete.
+
+PR #501, #502 and #503 are merged. PR #502 passed all 29 final-head checks (27 SUCCESS, 2 conditional SKIPPED, zero unsuccessful), including Smoke Sanity and PR Smoke Modules, and merged at 1cc4d6fb320113865eac8226af4f6f499b74f455. Sealed v0.18.8 candidate43be57 passed readonly CGO backend build and supported Node 24.22.3 frontend installation/lint/type-check/build; all 1176 Base inputs match the merged source plus explicit VERSION 0.18.8, and 2113 assembled source leaves stayed unchanged. VERSION 0.18.8 and task 2026-11-13-v0188-release-preparation prepare the final patch; independent CODE/ARCH preparation approval is recorded and the preparation task is complete. Mechanical final-tree confirmation, actual preparation PR checks/merge, main-only cleanup, clean-main/remote-SHA input binding and exact-commit Release Gate remain required before publication. No new application capability is claimed.
+
+Evidence: .harness/evidence/2026-11-13-v0188-release-preparation/summary.md and .harness/evidence/2026-11-12-v0187-release-ops-consumption/summary.md. FR028 remains explicitly deferred, S3 unwaived, maintenance freeze unsigned and separate Ops product acceptance open. Historical statements below preserve their original checkpoint scope.
+
+## Historical delivery checkpoints
+
 # v0.18.7 published; Ops consumption pending (2026-11-12)
 
 PR #504 merged the formal-queue foundation contracts (permission routes + seal, permission-cache revocation repair, shared operational UI/Dashboard adapters) with whole-scope local-panel CODE/ARCH approval. Task 2026-11-12-v0187-release-ops-consumption carries VERSION 0.18.7 plus two release-blocking remediations (CodeQL go/log-injection sink sanitizer; smoke empty-state loading stall repair) because the first main push c8a71003 failed Security Gates and the operation-log smoke. Remaining Release Gate blockers were cleared by code-only SonarCloud remediation on main (PR #506 63->0, PR #507 residual 4->0, no waivers or gate changes). The annotated tag `pantheon-base-v0.18.7` was published at immutable 3203624e after Release Gate Summary run 43194854386 success, with all four official assets verified by `check:release-assets` locally and remotely. Ops consumption of the exact tag is pending.

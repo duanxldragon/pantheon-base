@@ -1,0 +1,290 @@
+{
+  "taskId": "2026-11-13-v0188-release-preparation",
+  "taskDoc": "docs/harness/tasks/2026-11-13-v0188-release-preparation.task.md",
+  "title": "Prepare Base v0.18.8 and close the November 7 delivery continuation",
+  "goal": "Reconcile completed planned work and official v0.18.7 consumption, verify and integrate dependency updates, and prepare an immutable v0.18.8 patch for publication after exact-commit hosted gates.",
+  "primaryLayer": "platform",
+  "status": "completed",
+  "priority": "P1",
+  "type": "release",
+  "dependencies": [
+    "2026-11-12-v0187-release-ops-consumption"
+  ],
+  "scope": {
+    "in": [
+      "Accurate closure of the November 7 review continuation and the existing v0.18.7 consumer handoff",
+      "Reviewed dependency updates from PR #501, #502 and #503",
+      "VERSION 0.18.8, release notes, changelog and current documentation/status indexes",
+      "Preparation evidence, independent review and candidate consumer build evidence"
+    ],
+    "out": [
+      "New product or business features",
+      "Production databases, deployment or credentials",
+      "Gate weakening, solo-override, S3 waiver or maintenance-freeze signature",
+      "FR028 implementation or premature legacy endpoint retirement",
+      "Rewriting historical failed evidence or completed acceptance records"
+    ]
+  },
+  "dependencyLayers": [
+    "inheritance-sync"
+  ],
+  "contractAnchors": [
+    "docs/designs/FOUNDATION_RELEASE_MODEL.md",
+    "docs/harness/AI_QUALITY_GOVERNANCE.md",
+    "docs/harness/VERIFICATION_EVIDENCE_SPEC.md",
+    "docs/contracts/PLATFORM_CONTRACT.md"
+  ],
+  "expectedFiles": {
+    "create": [
+      "docs/harness/tasks/2026-11-13-v0188-release-preparation.task.md",
+      ".harness/tasks/2026-11-13-v0188-release-preparation/manifest.json",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/commands.json",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/summary.md",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/review.md",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/pr-body.md",
+      "docs/release-notes/RELEASE_NOTES_v0.18.8.md",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/dependencies-review.md",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/consumer-revalidation.json",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/receipt.json",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/browser-runtime-receipt.json",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/source-package-sha256.json",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/node-runtime-receipt.json",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/screenshots/editor-contact-sheet.png",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/screenshots/steps-contact-sheet.png",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/screenshots/dashboard-contact-sheet.png",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/logs/npm-ci-root.log.gz",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/logs/npm-ci-frontend.log.gz",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/logs/root-script-tests-supported.log.gz",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/logs/test-foundation-release-supported.log.gz",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/logs/frontend-lint-supported.log.gz",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/logs/frontend-type-check-supported.log.gz",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/logs/frontend-unit-supported.log.gz",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/logs/frontend-build-supported.log.gz",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/logs/frontend-audit-supported.json.gz",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/logs/operational-visual-final.log.gz",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/logs/browser-console-final.log.gz",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/browser-console.json",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/ops183-merged.json",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-css/verification.md",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-css/browser-receipt.json",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-css/ask-claude-pr502-cssom-alignment-20261113.md",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-css/cssom-code-review.md",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-css/cssom-architecture-review.md",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/preparation-checks/check-docs-frontmatter.log.gz",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/preparation-checks/check-task-packet-template.log.gz",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/preparation-checks/check-task-packet.log.gz",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/preparation-checks/check-harness-evidence.log.gz",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/preparation-checks/check-harness-review.log.gz",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/preparation-checks/check-harness-docs.log.gz",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/preparation-checks/check-harness-encoding.log.gz",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/preparation-checks/check-harness-inventory.log.gz",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/preparation-checks/check-structure.log.gz",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/pr502-merged.json.gz",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/pr502-final-checks.json.gz",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/consumer-candidate/final-build-receipt.json",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/consumer-candidate/summary.md",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/consumer-candidate/final-candidate-assembly-receipt.json.gz",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/consumer-candidate/merged-main-working-version-byte-comparison.json",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/consumer-candidate/candidate-go-build.log.gz",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/consumer-candidate/candidate-npm-ci-supported.log.gz",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/consumer-candidate/candidate-frontend-lint-supported.log.gz",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/consumer-candidate/candidate-frontend-type-check-supported.log.gz",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/consumer-candidate/candidate-frontend-build-supported.log.gz",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/consumer-candidate/diagnostic-node2414-npm-ci.log.gz",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/consumer-candidate/retained-artifacts.json",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/consumer-candidate/summary.md.gz",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/consumer-candidate/effective-go-toolchain-receipt.json",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/consumer-candidate/source-before-build.json.gz",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/consumer-candidate/effective-go-toolchain-clarification.md.gz",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/consumer-candidate/effective-go-version.log.gz",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/consumer-candidate/effective-go-env.log.gz",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/consumer-candidate/effective-go-toolchain-clarification.md",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/browser-runtime-receipt.json.gz",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/consumer-candidate/effective-go-toolchain-receipt.json.gz",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/consumer-revalidation.json.gz",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/node-runtime-receipt.json.gz",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/receipt.json.gz",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/source-package-sha256.json.gz",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/raw-json-artifacts.json",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/preparation-code-review.md",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/preparation-architecture-review.md"
+    ],
+    "modify": [
+      "VERSION",
+      "CHANGELOG.md",
+      ".harness/STATUS.md",
+      "docs/README.md",
+      "docs/README.en.md",
+      "docs/release-notes/README.md",
+      "docs/release-notes/README.en.md",
+      ".harness/tasks/2026-11-07-ops-formal-queue-foundation-gaps/manifest.json",
+      ".harness/tasks/2026-11-12-v0187-release-ops-consumption/manifest.json",
+      "docs/harness/tasks/2026-11-12-v0187-release-ops-consumption.task.md",
+      ".harness/evidence/2026-11-12-v0187-release-ops-consumption/summary.md",
+      "docs/harness/tasks/2026-11-07-ops-formal-queue-foundation-gaps.task.md",
+      ".harness/evidence/2026-11-12-v0187-release-ops-consumption/commands.json"
+    ],
+    "doNotTouch": [
+      "backend/",
+      "frontend/src/",
+      "scripts/",
+      ".github/workflows/",
+      "config/",
+      "Historical released notes and failed evidence"
+    ]
+  },
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "ci-workflow",
+    "portableFailureClass": "release-consumer-handoff",
+    "ownerLayer": "foundation-source",
+    "ratchetDecision": "registry-only",
+    "coverageDimensions": [
+      "behaviour",
+      "maintainability",
+      "architecture-fitness"
+    ]
+  },
+  "executionRoles": {
+    "implementerPosture": "Writer/Dispatcher owns bounded documentation and version metadata; dependency implementers own their separate reviewed PRs.",
+    "reviewerPosture": [
+      "Independent code review on the exact preparation snapshot",
+      "Independent architecture review and consumer boundary verification"
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "npm run check:docs-frontmatter",
+      "npm run check:task-packet-template",
+      "npm run check:task-packet",
+      "npm run check:harness-evidence",
+      "npm run check:harness-review",
+      "npm run check:harness-docs",
+      "npm run check:harness-encoding",
+      "npm run check:harness-inventory",
+      "npm run check:structure",
+      "npm run test:foundation-release",
+      "Frontend dependency lint/type-check/unit/build and rendered evidence",
+      "Consumer backend/frontend builds from the target candidate",
+      "Exact-commit hosted CI, quality, security, smoke and Release Gate before publication"
+    ],
+    "runtimeEvidence": [
+      "Official v0.18.7 consumer acquisition/asset/rebuild/validation/merge receipt",
+      "Dependency runtime/rendered evidence or explicit visual gap",
+      "v0.18.8 candidate consumer backend/frontend build receipt"
+    ]
+  },
+  "runtimeSensitive": true,
+  "runtimeGap": "FR028 oversized audit json_result storage remediation remains explicitly deferred. Real S3 provider skip is unwaived; maintenance freeze remains unsigned. Production migration, December 31 legacy-auth retirement and separate Ops product acceptance are outside this preparation. v0.18.8 publication requires successful hosted checks and Release Gate on the exact merged commit, then verification of all four immutable assets.",
+  "acceptanceCriteria": [
+    "The existing v0.18.7 release/consumer task is closed by actual official consumer validation and merge evidence",
+    "Dependency updates have current-source local/hosted verification and independent CODE/ARCH review",
+    "Version and current documentation indexes reflect delivered facts while preserving historical limitations",
+    "Candidate consumer backend/frontend build evidence and linked task/evidence/review are complete",
+    "Preparation is independently approved and ready for normal required-check PR merge; actual merge/publication remain downstream delivery conditions"
+  ],
+  "implementationNotes": [
+    "The user explicitly authorized completion, GitHub merges, unused Base branch/worktree cleanup and a new release after successful CI.",
+    "Minimum Complexity Rung: reuse existing producer, consumer verifier and governance templates.",
+    "No business-code modification is introduced by this governance preparation."
+  ],
+  "risks": [
+    "Publication and consumption cannot be inferred from preparation or predecessor checks.",
+    "Node 24.15.0 remains the existing frontend test minimum on the Node 24 line; the jsdom engine range is unchanged."
+  ],
+  "humanGates": [
+    "Release/merge/cleanup authorization is already supplied; production, policy exemptions and freeze signature remain outside scope."
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-11-13-v0188-release-preparation/manifest.json",
+    "taskDoc": "docs/harness/tasks/2026-11-13-v0188-release-preparation.task.md",
+    "evidenceDir": ".harness/evidence/2026-11-13-v0188-release-preparation/",
+    "reviewFile": ".harness/evidence/2026-11-13-v0188-release-preparation/review.md",
+    "summaryFile": ".harness/evidence/2026-11-13-v0188-release-preparation/summary.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".harness/tasks/2026-11-13-v0188-release-preparation/manifest.json"
+    ]
+  },
+  "implementationStatus": "version-and-governance-preparation-complete",
+  "reviewStatus": "approved",
+  "verificationStatus": "preparation-checks-dependency-gates-and-candidate-builds-passed",
+  "predecessorDelivery": {
+    "baseRelease": "pantheon-base-v0.18.7",
+    "baseCommit": "3203624e55438866edb951bd74e671eab38d2f16",
+    "consumer": {
+      "pr": 183,
+      "testedHead": "4404cfde5394557626967dc40669c30a0adba4e2",
+      "mergeCommit": "fc3fa867630580f7bcf1d40082a77f6b2548ac56",
+      "mergedAt": "2026-11-13T04:44:42Z"
+    }
+  },
+  "dependencyMerges": [
+    {
+      "number": 501,
+      "mergeCommit": "5beb3aa24af4dc1b72c6ac53fb6153d4d58e1558"
+    },
+    {
+      "number": 503,
+      "mergeCommit": "bbd8a5e29b7658fb16c5741c3ffa6f6d7459dd8b"
+    },
+    {
+      "number": 502,
+      "testedHead": "44188eff3e8618736b495043c6655a1538ce6857",
+      "mergeCommit": "1cc4d6fb320113865eac8226af4f6f499b74f455",
+      "mergedAt": "2026-11-13T05:06:08Z",
+      "receipt": ".harness/evidence/2026-11-13-v0188-release-preparation/pr502-merged.json.gz"
+    }
+  ],
+  "dependencyVerification": {
+    "receipt": ".harness/evidence/2026-11-13-v0188-release-preparation/receipt.json.gz",
+    "review": ".harness/evidence/2026-11-13-v0188-release-preparation/dependencies-review.md",
+    "sourceLimit": "PR502 e4312f60 and exact root package files PR501 ce7d382d; later smoke fix and preparation snapshot require their own verification.",
+    "readableReceipt": ".harness/evidence/2026-11-13-v0188-release-preparation/receipt.json"
+  },
+  "smokeCorrection": {
+    "owner": "Separate PR #502; this preparation records evidence only",
+    "sourceFile": "frontend/tests/smoke/platform/shell-visual-contract.spec.ts",
+    "commit": "44188eff3e8618736b495043c6655a1538ce6857",
+    "parent": "e4312f609f91bfcc5034569af52242823ab6c9a8",
+    "scope": "Four strict canonical CSSOM value assertions; production CSS, visual thresholds and other checks unchanged",
+    "receipt": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-css/browser-receipt.json",
+    "verification": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-css/verification.md",
+    "generator": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-css/ask-claude-pr502-cssom-alignment-20261113.md",
+    "codeReview": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-css/cssom-code-review.md",
+    "architectureReview": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-css/cssom-architecture-review.md",
+    "state": "Exact-delta independent CODE APPROVE and ARCH APPROVE/CLEAR; hosted Smoke Sanity and PR Smoke Modules SUCCESS; PR502 merged after all final head gates",
+    "hostedReceipt": ".harness/evidence/2026-11-13-v0188-release-preparation/pr502-merged.json.gz"
+  },
+  "candidateConsumerVerification": {
+    "result": "PASS",
+    "candidateIdentity": "candidate-43be57e28ef949b68b1d145fdd5fb0d82d03272950be37772a05b3fe10ae8ec4",
+    "receipt": ".harness/evidence/2026-11-13-v0188-release-preparation/consumer-candidate/final-build-receipt.json",
+    "receiptSha256": "a677d1fc7083c372c77e2626b644d3b6a6813cf2d810cc1c77bd901bdedf83f7",
+    "summary": ".harness/evidence/2026-11-13-v0188-release-preparation/consumer-candidate/summary.md",
+    "retainedArtifacts": ".harness/evidence/2026-11-13-v0188-release-preparation/consumer-candidate/retained-artifacts.json",
+    "baseInputFiles": 1176,
+    "assembledSourceFiles": 2113,
+    "assembledSourceSha256": "9c5f0877b04ec392be60c01dacd941cf3161198393b81af544bb98ebad571c05",
+    "sourceBinding": "All selected input bytes match actual merged Base HEAD1cc4d6fb plus explicitly planned VERSION0.18.8; final clean-main release commit binding remains pending.",
+    "officialConsumption": false,
+    "effectiveGoToolchain": {
+      "version": "go1.26.10",
+      "selection": "GOTOOLCHAIN=auto",
+      "bootstrap": "go1.26.5 captured outside module",
+      "receipt": ".harness/evidence/2026-11-13-v0188-release-preparation/consumer-candidate/effective-go-toolchain-receipt.json.gz",
+      "readableReceipt": ".harness/evidence/2026-11-13-v0188-release-preparation/consumer-candidate/effective-go-toolchain-receipt.json"
+    },
+    "beforeBackendBuildSourceReceipt": ".harness/evidence/2026-11-13-v0188-release-preparation/consumer-candidate/source-before-build.json.gz",
+    "finalReleaseBindingRequirement": "Root must independently verify actual branch main, zero staged/unstaged/untracked files, local HEAD equals current remote main SHA, and all selected candidate inputs match that actual commit. Comparison phase labels alone are insufficient."
+  },
+  "rawJsonEvidence": {
+    "index": ".harness/evidence/2026-11-13-v0188-release-preparation/raw-json-artifacts.json",
+    "normalization": "Original CRLF JSON retained as gzip; convenience JSON normalized to LF without changing parsed values."
+  },
+  "completedAt": "2026-11-13",
+  "reviewedSourceTree": "a9d8ba825b7b6f05e9dc14b70d995cc2cc0b73fe",
+  "reviewedParent": "1cc4d6fb320113865eac8226af4f6f499b74f455",
+  "approvalScope": "v0188-release-preparation-only"
+}

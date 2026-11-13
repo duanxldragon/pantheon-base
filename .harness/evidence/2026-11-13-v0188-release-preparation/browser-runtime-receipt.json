@@ -1,0 +1,7 @@
+{
+  "revision": 1254,
+  "browserVersion": "158.0.8127.18",
+  "source": "official Chrome-for-Testing HTTPS archive via PowerShell; Node installer downloads cancelled with zero progress",
+  "archiveSHA256": "fdd3721ad0299ddd419d170ce8ab89aecf8631d157b85215474b4a70c8dcd061",
+  "executable": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\dependency-validation\\browsers\\chromium_headless_shell-1254/chrome-headless-shell-win64/chrome-headless-shell.exe"
+}

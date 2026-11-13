@@ -4,8 +4,8 @@ doc_type: Remediation
 layer: platform
 linked_contracts:
   - docs/contracts/PLATFORM_CONTRACT.md
-status: Active
-updated_at: 2026-11-12
+status: Archived
+updated_at: 2026-11-13
 ---
 
 # Task Packet: 2026-11-12-v0187-release-ops-consumption
@@ -159,8 +159,16 @@ platform
 - [x] Review completed
 - [x] Base source/version preparation reviewed and merged with required GitHub checks passed
 - [x] Immutable pantheon-base-v0.18.7 has successful Release Gate, four official assets and verified checksums
-- [ ] Ops consumes exact official v0.18.7 via standard rebuild with full validation before replacement/merge
+- [x] Ops consumes exact official v0.18.7 via standard rebuild with full validation before replacement/merge
 
 ## Status
 
 published at immutable 3203624e55438866edb951bd74e671eab38d2f16: Release Gate Summary run 43194854386 success on the exact commit, annotated tag `pantheon-base-v0.18.7` pushed, GitHub release carries all four official assets verified by `check:release-assets`. Release-blocking SonarCloud blockers were cleared by code-only remediation on main (PR #506: 63->0; PR #507: 4 residual refactor issues->0, main remains 0 unresolved). No consumption is claimed until the Ops exact-tag rebuild and full validation evidence exists.
+
+## Consumer continuation — 2026-11-13
+
+Ops PR #183 carries official v0.18.7 acquisition, exact asset hashes, standard rebuild, full CGO race/frontend/overlay/drift/smoke evidence and source-bound reviews. Its current head is 4404cfde5394557626967dc40669c30a0adba4e2; the last change repairs two evidence paths without source changes. Final hosted smoke and merge remain pending, so the consumer completion criterion stays unchecked and the task stays in-progress.
+
+## Official consumer completion — 2026-11-13
+
+Ops [PR #183](https://github.com/duanxldragon/pantheon-ops/pull/183) merged at 2026-11-13T04:44:42Z as fc3fa867630580f7bcf1d40082a77f6b2548ac56. The tested head 4404cfde5394557626967dc40669c30a0adba4e2 consumes the official immutable v0.18.7 source 3203624e and has validated acquisition/asset hashes, standard rebuild, full CGO race, frontend, overlay/drift and applicable smoke evidence. Final GitHub Actions checks succeeded before merge. All original task criteria are complete. Earlier pending paragraphs retain their historical checkpoint. Non-required external Vercel preview failure remains explicit; no production deployment, freeze signature, S3 waiver or unrelated Ops product acceptance is inferred.

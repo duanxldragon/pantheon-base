@@ -1,0 +1,329 @@
+{
+  "schemaVersion": 1,
+  "kind": "pantheon-ops-candidate-build-compatibility",
+  "createdAt": "2026-11-13T05:24:33.101Z",
+  "result": "PASS",
+  "scope": "Sealed v0.18.8 Base candidate assembled with already-merged Ops business overlay; readonly backend compilation and supported frontend CI installation/lint/type-check/production build. No deployment or official release consumption claim.",
+  "candidate": {
+    "candidateIdentity": "candidate-43be57e28ef949b68b1d145fdd5fb0d82d03272950be37772a05b3fe10ae8ec4",
+    "artifact": {
+      "assetName": "candidate-43be57e28ef949b68b1d145fdd5fb0d82d03272950be37772a05b3fe10ae8ec4.tar",
+      "sha256": "5f2d1862cc1b6aa1f37720ee36e4aea0843bf611139a0440b01cb2b30f31b1bc"
+    },
+    "descriptorSha256": "8e99ab6dd69fe675af508f06ebcb1faac4617b7845a8a91b2d1b42c72d0f5ee3",
+    "selectedSourceFileCount": 1176,
+    "versionFile": [
+      {
+        "path": "VERSION",
+        "bytes": 7,
+        "sha256": "5fa9f83fb0135ac28a82dd70f1bfab91944955eecbb98b8c176c30c06ea89612"
+      }
+    ],
+    "officialConsumption": false
+  },
+  "sourceProvenance": {
+    "archiveSourceTree": "d208e69e84eb18a6f170dfb9c9e028bc875fdeb4",
+    "archiveMergeParents": [
+      "bbd8a5e29b7658fb16c5741c3ffa6f6d7459dd8b",
+      "44188eff3e8618736b495043c6655a1538ce6857"
+    ],
+    "actualMergedDependencyCommit": "1cc4d6fb320113865eac8226af4f6f499b74f455",
+    "explicitVersionAdjustment": {
+      "path": "VERSION",
+      "originalSourceTree": "d208e69e84eb18a6f170dfb9c9e028bc875fdeb4",
+      "oldSha256": "6e70bba3c46b7472eba79c76dd55ac51c2315fc607b23810767ee870fc582a9c",
+      "newSha256": "5fa9f83fb0135ac28a82dd70f1bfab91944955eecbb98b8c176c30c06ea89612",
+      "source": "explicit final release VERSION bytes from Base governance staging",
+      "binding": "Final main must match before release; no descriptor/archive editing"
+    },
+    "actualBaseWorkingSourceComparison": {
+      "candidateIdentity": "candidate-43be57e28ef949b68b1d145fdd5fb0d82d03272950be37772a05b3fe10ae8ec4",
+      "checkedAt": "2026-11-13T05:20:02.793Z",
+      "baseHead": "1cc4d6fb320113865eac8226af4f6f499b74f455",
+      "sourceRoot": "D:/workspace/go/pantheon-platform/pantheon-base",
+      "sourceKind": "Actual Base working tree on merged source HEAD; dirty governance VERSION explicitly recorded by git status and independently selected/hash-compared.",
+      "selectedFiles": 1176,
+      "matchedFiles": 1176,
+      "allSelectedBytesMatch": true,
+      "mismatches": [],
+      "trackedWorktreeStatus": [
+        "M .harness/STATUS.md",
+        " M .harness/evidence/2026-11-12-v0187-release-ops-consumption/commands.json",
+        " M .harness/evidence/2026-11-12-v0187-release-ops-consumption/summary.md",
+        " M .harness/tasks/2026-11-07-ops-formal-queue-foundation-gaps/manifest.json",
+        " M .harness/tasks/2026-11-12-v0187-release-ops-consumption/manifest.json",
+        " M CHANGELOG.md",
+        " M VERSION",
+        " M docs/README.en.md",
+        " M docs/README.md",
+        " M docs/harness/tasks/2026-11-07-ops-formal-queue-foundation-gaps.task.md",
+        " M docs/harness/tasks/2026-11-12-v0187-release-ops-consumption.task.md",
+        " M docs/release-notes/README.en.md",
+        " M docs/release-notes/README.md"
+      ],
+      "actualSelectedFilesSha256": "43be57e28ef949b68b1d145fdd5fb0d82d03272950be37772a05b3fe10ae8ec4",
+      "finalReleaseCommitBindingPending": true,
+      "officialConsumption": false
+    },
+    "opsMergedSource": {
+      "consumerHead": "4404cfde5394557626967dc40669c30a0adba4e2",
+      "actualMergedMain": "fc3fa867630580f7bcf1d40082a77f6b2548ac56",
+      "pr": "https://github.com/duanxldragon/pantheon-ops/pull/183",
+      "diffExitCode": 0,
+      "diffLogBytes": 0,
+      "treeIdentityResult": "identical git trees",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "assembly": {
+    "receipt": "final-candidate-assembly-receipt.json",
+    "sha256": "5a35296a1a7284eb6bf35263c04728c0976ab6ef0c5625285f877c3ce15b5578",
+    "sourceStable": true,
+    "checks": [
+      {
+        "operation": "assembleConsumerTree",
+        "result": "passed"
+      },
+      {
+        "operation": "checkSharedDrift",
+        "exitCode": 0
+      },
+      {
+        "operation": "source-stability-before-and-after",
+        "result": "passed"
+      }
+    ],
+    "sharedDrift": "856 shared files compared, 856 identical, 0 allowlisted drift, 164 business files skipped, 2 derived business migrations verified",
+    "selectedSourceFiles": 2113,
+    "sourceSha256": "9c5f0877b04ec392be60c01dacd941cf3161198393b81af544bb98ebad571c05",
+    "officialLockSha256Before": "19b145bcc94f5c7b280dd98085a2ca5037900848a6a942db625a88f8674006a6",
+    "officialLockSha256After": "19b145bcc94f5c7b280dd98085a2ca5037900848a6a942db625a88f8674006a6"
+  },
+  "verification": {
+    "backend": [
+      {
+        "command": "D:/Go/bin/go.exe build -buildvcs=false -mod=readonly ./...",
+        "cwd": "D:\\workspace\\go\\pantheon-platform\\.wt-ops-v0187\\.tmp\\foundation-candidates\\candidate-43be57e28ef949b68b1d145fdd5fb0d82d03272950be37772a05b3fe10ae8ec4\\assembled\\backend",
+        "startedAt": "2026-11-13T05:14:09.0076081Z",
+        "finishedAt": "2026-11-13T05:14:40.8208237Z",
+        "exitCode": 0,
+        "log": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\candidate188-validation\\candidate-go-build.log",
+        "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    ],
+    "frontend": [
+      {
+        "command": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\dependency-validation\\toolchain\\node-v24.22.3-win-x64\\node.exe D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\dependency-validation\\toolchain\\node-v24.22.3-win-x64\\node_modules\\npm\\bin\\npm-cli.js ci",
+        "nodePath": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\dependency-validation\\toolchain\\node-v24.22.3-win-x64\\node.exe",
+        "nodeVersion": "v24.22.3",
+        "npmCliPath": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\dependency-validation\\toolchain\\node-v24.22.3-win-x64\\node_modules\\npm\\bin\\npm-cli.js",
+        "cwd": "D:\\workspace\\go\\pantheon-platform\\.wt-ops-v0187\\.tmp\\foundation-candidates\\candidate-43be57e28ef949b68b1d145fdd5fb0d82d03272950be37772a05b3fe10ae8ec4\\assembled\\frontend",
+        "startedAt": "2026-11-13T05:19:23.5143834Z",
+        "finishedAt": "2026-11-13T05:19:52.1497174Z",
+        "exitCode": 0,
+        "log": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\candidate188-validation\\candidate-npm-ci-supported.log",
+        "logSha256": "67f06a74e6e07a92808fd79c3c34d746ee25a8c6d817ab7c02416a3da4b5c7a1"
+      },
+      {
+        "command": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\dependency-validation\\toolchain\\node-v24.22.3-win-x64\\node.exe D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\dependency-validation\\toolchain\\node-v24.22.3-win-x64\\node_modules\\npm\\bin\\npm-cli.js run lint",
+        "nodePath": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\dependency-validation\\toolchain\\node-v24.22.3-win-x64\\node.exe",
+        "nodeVersion": "v24.22.3",
+        "npmCliPath": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\dependency-validation\\toolchain\\node-v24.22.3-win-x64\\node_modules\\npm\\bin\\npm-cli.js",
+        "cwd": "D:\\workspace\\go\\pantheon-platform\\.wt-ops-v0187\\.tmp\\foundation-candidates\\candidate-43be57e28ef949b68b1d145fdd5fb0d82d03272950be37772a05b3fe10ae8ec4\\assembled\\frontend",
+        "startedAt": "2026-11-13T05:19:52.2392722Z",
+        "finishedAt": "2026-11-13T05:20:56.7425349Z",
+        "exitCode": 0,
+        "log": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\candidate188-validation\\candidate-frontend-lint-supported.log",
+        "logSha256": "5f62e7cf7cdd69c014ca18d1c493431139fcbda108704552679bc84c360fd025"
+      },
+      {
+        "command": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\dependency-validation\\toolchain\\node-v24.22.3-win-x64\\node.exe D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\dependency-validation\\toolchain\\node-v24.22.3-win-x64\\node_modules\\npm\\bin\\npm-cli.js run type-check",
+        "nodePath": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\dependency-validation\\toolchain\\node-v24.22.3-win-x64\\node.exe",
+        "nodeVersion": "v24.22.3",
+        "npmCliPath": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\dependency-validation\\toolchain\\node-v24.22.3-win-x64\\node_modules\\npm\\bin\\npm-cli.js",
+        "cwd": "D:\\workspace\\go\\pantheon-platform\\.wt-ops-v0187\\.tmp\\foundation-candidates\\candidate-43be57e28ef949b68b1d145fdd5fb0d82d03272950be37772a05b3fe10ae8ec4\\assembled\\frontend",
+        "startedAt": "2026-11-13T05:20:56.7823101Z",
+        "finishedAt": "2026-11-13T05:21:26.7785171Z",
+        "exitCode": 0,
+        "log": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\candidate188-validation\\candidate-frontend-type-check-supported.log",
+        "logSha256": "94d7e0ba308969aef5be19127663f1eb2c0b1e8d9e4f8781561cc44a964b7281"
+      },
+      {
+        "command": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\dependency-validation\\toolchain\\node-v24.22.3-win-x64\\node.exe D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\dependency-validation\\toolchain\\node-v24.22.3-win-x64\\node_modules\\npm\\bin\\npm-cli.js run build",
+        "nodePath": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\dependency-validation\\toolchain\\node-v24.22.3-win-x64\\node.exe",
+        "nodeVersion": "v24.22.3",
+        "npmCliPath": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\dependency-validation\\toolchain\\node-v24.22.3-win-x64\\node_modules\\npm\\bin\\npm-cli.js",
+        "cwd": "D:\\workspace\\go\\pantheon-platform\\.wt-ops-v0187\\.tmp\\foundation-candidates\\candidate-43be57e28ef949b68b1d145fdd5fb0d82d03272950be37772a05b3fe10ae8ec4\\assembled\\frontend",
+        "startedAt": "2026-11-13T05:21:26.7849071Z",
+        "finishedAt": "2026-11-13T05:22:06.7367072Z",
+        "exitCode": 0,
+        "log": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\candidate188-validation\\candidate-frontend-build-supported.log",
+        "logSha256": "5403eaf34c014c7a3bb0d0dfd785e894232fe8335572faf97806fc5bb3e1c25a"
+      }
+    ],
+    "supportedRuntime": {
+      "version": "v24.22.3",
+      "nodePath": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\dependency-validation\\toolchain\\node-v24.22.3-win-x64\\node.exe",
+      "npmCliPath": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\dependency-validation\\toolchain\\node-v24.22.3-win-x64\\node_modules\\npm\\bin\\npm-cli.js",
+      "upstreamValidatedReceipt": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\dependency-validation\\node-runtime-receipt.json",
+      "archivePath": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\dependency-validation\\node-v24.22.3-win-x64.zip",
+      "expectedArchiveSha256": "e612af99f626ab415ea225af6bce5c971feb448cb5cae250bb1c3fa50c5f7d9f",
+      "actualArchiveSha256": "e612af99f626ab415ea225af6bce5c971feb448cb5cae250bb1c3fa50c5f7d9f",
+      "verified": true,
+      "runtimeLeaves": [
+        {
+          "path": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\dependency-validation\\toolchain\\node-v24.22.3-win-x64\\node.exe",
+          "archiveMemberSha256": "86fc4785327db5f5c7558dc6156c543b433c313e813a222e088086222ab4afa6",
+          "extractedSha256": "86fc4785327db5f5c7558dc6156c543b433c313e813a222e088086222ab4afa6"
+        },
+        {
+          "path": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\dependency-validation\\toolchain\\node-v24.22.3-win-x64\\node_modules\\npm\\bin\\npm-cli.js",
+          "archiveMemberSha256": "3ce7cba6f5128dd5f54c98b6a5036b0f850496878cc2e21044b675fe3c594e3e",
+          "extractedSha256": "3ce7cba6f5128dd5f54c98b6a5036b0f850496878cc2e21044b675fe3c594e3e"
+        }
+      ]
+    },
+    "backendEnvironment": {
+      "os": "Windows",
+      "go": "go version go1.26.5 windows/amd64",
+      "node": "v24.14.0",
+      "npm": "11.9.0",
+      "git": "git version 2.47.0.windows.1",
+      "gcc": "gcc.exe (Rev5, Built by MSYS2 project) 16.1.0",
+      "cgoEnabled": "1",
+      "goBuildFlags": [
+        "-buildvcs=false",
+        "-mod=readonly"
+      ]
+    },
+    "sourceBefore": {
+      "candidateIdentity": "candidate-43be57e28ef949b68b1d145fdd5fb0d82d03272950be37772a05b3fe10ae8ec4",
+      "checkedAt": "2026-11-13T05:18:46.688Z",
+      "phase": "before-supported-build",
+      "assembledRoot": "D:\\workspace\\go\\pantheon-platform\\.wt-ops-v0187\\.tmp\\foundation-candidates\\candidate-43be57e28ef949b68b1d145fdd5fb0d82d03272950be37772a05b3fe10ae8ec4\\assembled",
+      "assemblyReceiptSha256": "5a35296a1a7284eb6bf35263c04728c0976ab6ef0c5625285f877c3ce15b5578",
+      "selectedAssembledSources": 2113,
+      "expectedAssembledSourceSha256": "9c5f0877b04ec392be60c01dacd941cf3161198393b81af544bb98ebad571c05",
+      "actualAssembledSourceSha256": "9c5f0877b04ec392be60c01dacd941cf3161198393b81af544bb98ebad571c05",
+      "baseStagingSelectedFiles": 1176,
+      "descriptorSha256": "8e99ab6dd69fe675af508f06ebcb1faac4617b7845a8a91b2d1b42c72d0f5ee3",
+      "artifactSha256": "5f2d1862cc1b6aa1f37720ee36e4aea0843bf611139a0440b01cb2b30f31b1bc",
+      "officialLockSha256Before": "19b145bcc94f5c7b280dd98085a2ca5037900848a6a942db625a88f8674006a6",
+      "officialLockSha256After": "19b145bcc94f5c7b280dd98085a2ca5037900848a6a942db625a88f8674006a6",
+      "adapterFiles": [
+        {
+          "path": "scripts/business-overlay/rebuild-from-candidate.mjs",
+          "sha256": "0d310bdcaffd8f961835737faf8aa6d1db1242bbdfa6ae10147e5e7871ed85c8",
+          "sha256After": "0d310bdcaffd8f961835737faf8aa6d1db1242bbdfa6ae10147e5e7871ed85c8"
+        },
+        {
+          "path": "scripts/business-overlay/foundation-candidate.mjs",
+          "sha256": "54dcbaf0addebc5523d3ffdfde07839412f2b7bb94d005d9313aac5e13a0d4d8",
+          "sha256After": "54dcbaf0addebc5523d3ffdfde07839412f2b7bb94d005d9313aac5e13a0d4d8"
+        },
+        {
+          "path": "scripts/business-overlay/rebuild-from-base.mjs",
+          "sha256": "838c2c379c679d27cadd8a46f61f002df2cec89569abf5dbbb2de53e95e69bb3",
+          "sha256After": "838c2c379c679d27cadd8a46f61f002df2cec89569abf5dbbb2de53e95e69bb3"
+        },
+        {
+          "path": "scripts/business-overlay/check-shared-drift.mjs",
+          "sha256": "a6ee2b769c1d27167c7f426ad913981c28b99f462054342e826dc194a1c4302b",
+          "sha256After": "a6ee2b769c1d27167c7f426ad913981c28b99f462054342e826dc194a1c4302b"
+        }
+      ],
+      "sourceStable": true,
+      "sourceFailures": [],
+      "scope": "Original selected assembled leaves and staged candidate input leaves; node_modules/dist/cache build outputs are not source leaves.",
+      "officialConsumption": false
+    },
+    "sourceAfter": {
+      "candidateIdentity": "candidate-43be57e28ef949b68b1d145fdd5fb0d82d03272950be37772a05b3fe10ae8ec4",
+      "checkedAt": "2026-11-13T05:23:04.389Z",
+      "phase": "after-supported-build",
+      "assembledRoot": "D:\\workspace\\go\\pantheon-platform\\.wt-ops-v0187\\.tmp\\foundation-candidates\\candidate-43be57e28ef949b68b1d145fdd5fb0d82d03272950be37772a05b3fe10ae8ec4\\assembled",
+      "assemblyReceiptSha256": "5a35296a1a7284eb6bf35263c04728c0976ab6ef0c5625285f877c3ce15b5578",
+      "selectedAssembledSources": 2113,
+      "expectedAssembledSourceSha256": "9c5f0877b04ec392be60c01dacd941cf3161198393b81af544bb98ebad571c05",
+      "actualAssembledSourceSha256": "9c5f0877b04ec392be60c01dacd941cf3161198393b81af544bb98ebad571c05",
+      "baseStagingSelectedFiles": 1176,
+      "descriptorSha256": "8e99ab6dd69fe675af508f06ebcb1faac4617b7845a8a91b2d1b42c72d0f5ee3",
+      "artifactSha256": "5f2d1862cc1b6aa1f37720ee36e4aea0843bf611139a0440b01cb2b30f31b1bc",
+      "officialLockSha256Before": "19b145bcc94f5c7b280dd98085a2ca5037900848a6a942db625a88f8674006a6",
+      "officialLockSha256After": "19b145bcc94f5c7b280dd98085a2ca5037900848a6a942db625a88f8674006a6",
+      "adapterFiles": [
+        {
+          "path": "scripts/business-overlay/rebuild-from-candidate.mjs",
+          "sha256": "0d310bdcaffd8f961835737faf8aa6d1db1242bbdfa6ae10147e5e7871ed85c8",
+          "sha256After": "0d310bdcaffd8f961835737faf8aa6d1db1242bbdfa6ae10147e5e7871ed85c8"
+        },
+        {
+          "path": "scripts/business-overlay/foundation-candidate.mjs",
+          "sha256": "54dcbaf0addebc5523d3ffdfde07839412f2b7bb94d005d9313aac5e13a0d4d8",
+          "sha256After": "54dcbaf0addebc5523d3ffdfde07839412f2b7bb94d005d9313aac5e13a0d4d8"
+        },
+        {
+          "path": "scripts/business-overlay/rebuild-from-base.mjs",
+          "sha256": "838c2c379c679d27cadd8a46f61f002df2cec89569abf5dbbb2de53e95e69bb3",
+          "sha256After": "838c2c379c679d27cadd8a46f61f002df2cec89569abf5dbbb2de53e95e69bb3"
+        },
+        {
+          "path": "scripts/business-overlay/check-shared-drift.mjs",
+          "sha256": "a6ee2b769c1d27167c7f426ad913981c28b99f462054342e826dc194a1c4302b",
+          "sha256After": "a6ee2b769c1d27167c7f426ad913981c28b99f462054342e826dc194a1c4302b"
+        }
+      ],
+      "sourceStable": true,
+      "sourceFailures": [],
+      "scope": "Original selected assembled leaves and staged candidate input leaves; node_modules/dist/cache build outputs are not source leaves.",
+      "officialConsumption": false
+    }
+  },
+  "diagnosticFirstFrontendAttempt": {
+    "node": "v24.14.0",
+    "commands": [
+      {
+        "command": "npm.cmd ci",
+        "cwd": "D:\\workspace\\go\\pantheon-platform\\.wt-ops-v0187\\.tmp\\foundation-candidates\\candidate-43be57e28ef949b68b1d145fdd5fb0d82d03272950be37772a05b3fe10ae8ec4\\assembled\\frontend",
+        "startedAt": "2026-11-13T05:14:08.9621647Z",
+        "finishedAt": "2026-11-13T05:14:44.9226032Z",
+        "exitCode": 0,
+        "log": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\candidate188-validation\\candidate-npm-ci.log",
+        "logSha256": "a0dc8fce4140bdb9a673311d441162168c622630caf243c0544dfa8ff2e5e3a2"
+      },
+      {
+        "command": "npm.cmd run lint",
+        "cwd": "D:\\workspace\\go\\pantheon-platform\\.wt-ops-v0187\\.tmp\\foundation-candidates\\candidate-43be57e28ef949b68b1d145fdd5fb0d82d03272950be37772a05b3fe10ae8ec4\\assembled\\frontend",
+        "startedAt": "2026-11-13T05:14:45.0442379Z",
+        "finishedAt": "2026-11-13T05:15:49.6150332Z",
+        "exitCode": 0,
+        "log": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\candidate188-validation\\candidate-frontend-lint.log",
+        "logSha256": "5f62e7cf7cdd69c014ca18d1c493431139fcbda108704552679bc84c360fd025"
+      },
+      {
+        "command": "npm.cmd run type-check",
+        "cwd": "D:\\workspace\\go\\pantheon-platform\\.wt-ops-v0187\\.tmp\\foundation-candidates\\candidate-43be57e28ef949b68b1d145fdd5fb0d82d03272950be37772a05b3fe10ae8ec4\\assembled\\frontend",
+        "startedAt": "2026-11-13T05:15:49.6393920Z",
+        "finishedAt": "2026-11-13T05:16:17.6071520Z",
+        "exitCode": 0,
+        "log": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\candidate188-validation\\candidate-frontend-type-check.log",
+        "logSha256": "94d7e0ba308969aef5be19127663f1eb2c0b1e8d9e4f8781561cc44a964b7281"
+      },
+      {
+        "command": "npm.cmd run build",
+        "cwd": "D:\\workspace\\go\\pantheon-platform\\.wt-ops-v0187\\.tmp\\foundation-candidates\\candidate-43be57e28ef949b68b1d145fdd5fb0d82d03272950be37772a05b3fe10ae8ec4\\assembled\\frontend",
+        "startedAt": "2026-11-13T05:16:17.6137104Z",
+        "finishedAt": "2026-11-13T05:16:57.0337310Z",
+        "exitCode": 0,
+        "log": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\candidate188-validation\\candidate-frontend-build.log",
+        "logSha256": "4fd8debe341327e48dc5a8d8f7ca6213d09ae6f39f912c95e64b1d37a6a8fe46"
+      }
+    ],
+    "outcome": "All commands exited zero, but Node engine warnings mean this is diagnostic evidence only. Final supported validation repeated npm ci/lint/type-check/build under v24.22.3; original warning logs remain intact."
+  },
+  "finalReleaseCommitBindingPending": true,
+  "requiredFinalBinding": "After governance lands on main, rerun compare-base-working-sources.mjs final-release-main and verify the selected 1176 candidate input bytes/aggregate on the actual clean main release commit. No reseal/build repeat is needed if all bytes remain identical.",
+  "integrityDoesNotConstituteIndependentReviewApproval": true,
+  "officialConsumption": false,
+  "failures": []
+}

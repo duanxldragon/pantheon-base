@@ -385,5 +385,26 @@
     "Final visual/functional maintainer acceptance not performed",
     "Ops-side CMDB key-only, O2/O3/O4 and D2 product acceptance remain open; consumed CMDB R3 not replayed",
     "Real S3 provider skip unwaived; maintenance freeze unsigned"
-  ]
+  ],
+  "currentDelivery20261113": {
+    "recordedAt": "2026-11-13",
+    "supersedes": "Historical residual statements about unavailable whole-scope review and absent Base publication; original checkpoints remain unchanged.",
+    "baseScope": "completed",
+    "baseMergedPR": 504,
+    "independentReview": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/review.md",
+    "officialRelease": "pantheon-base-v0.18.7",
+    "baseCommit": "3203624e55438866edb951bd74e671eab38d2f16",
+    "officialReleaseEvidence": ".harness/evidence/2026-11-12-v0187-release-ops-consumption/summary.md",
+    "consumerPR": 183,
+    "consumerHead": "4404cfde5394557626967dc40669c30a0adba4e2",
+    "consumerStatus": "official acquisition/rebuild/validation and merge completed",
+    "remaining": [
+      "Final maintainer functional/visual acceptance not performed",
+      "Separate Ops product acceptance open",
+      "Real S3 provider unwaived; maintenance freeze unsigned",
+      "FR028 explicitly deferred"
+    ],
+    "consumerMergeCommit": "fc3fa867630580f7bcf1d40082a77f6b2548ac56",
+    "consumerMergedAt": "2026-11-13T04:44:42Z"
+  }
 }

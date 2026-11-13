@@ -1,0 +1,53 @@
+{
+  "scope": "Authoritative original JSON receipts are retained as binary gzip to survive Git EOL normalization. Plain JSON is derived convenience content; its SHA refers only to normalized LF bytes.",
+  "artifacts": [
+    {
+      "rawArtifact": ".harness/evidence/2026-11-13-v0188-release-preparation/browser-runtime-receipt.json.gz",
+      "sha256": "a5f2564dd01aee4b51ba5a62c1d22e84e795bf6cf31d8736000ca40119e85aa5",
+      "rawSha256": "69049fdd81856ad77e70859e32dbb764ac5b9562a7629e40914cbe8a8e11af3f",
+      "derivedJson": ".harness/evidence/2026-11-13-v0188-release-preparation/browser-runtime-receipt.json",
+      "derivedSha256": "7487c92d3c2c9c6eb63469553082997c202bd32518c4ca9227269c46b4af22c9",
+      "derivation": "CRLF to LF only; values unchanged. Plain JSON is a normalized convenience view. Verify original byte evidence by decompressing rawArtifact."
+    },
+    {
+      "rawArtifact": ".harness/evidence/2026-11-13-v0188-release-preparation/consumer-candidate/effective-go-toolchain-receipt.json.gz",
+      "sha256": "0339b85e0268140efa980adcadc24e55defba64fc70f7cf5763605a0140e1af1",
+      "rawSha256": "1805da3646927f8670c7d14566f3ad52d5558e56ca0cc23f11794e48396cf2f3",
+      "derivedJson": ".harness/evidence/2026-11-13-v0188-release-preparation/consumer-candidate/effective-go-toolchain-receipt.json",
+      "derivedSha256": "e7dfad8d7f851e6a0bf6ffc9c720c6f4f2c904f443099247039abd8c4af2c898",
+      "derivation": "CRLF to LF only; values unchanged. Plain JSON is a normalized convenience view. Verify original byte evidence by decompressing rawArtifact."
+    },
+    {
+      "rawArtifact": ".harness/evidence/2026-11-13-v0188-release-preparation/consumer-revalidation.json.gz",
+      "sha256": "b389b792e308a7783982a6b6f35315563bb80a4a0b1a4cbc7186de7c11d72fed",
+      "rawSha256": "6a85e5b2c866c0f44bacb4d1dbfefd7fae83ebab7f280bc79fd37f0ccee2bb43",
+      "derivedJson": ".harness/evidence/2026-11-13-v0188-release-preparation/consumer-revalidation.json",
+      "derivedSha256": "3cb83a1b68d3de68ac9d614f2e3c82a70377bd27f8614752cc585230fc502169",
+      "derivation": "CRLF to LF only; values unchanged. Plain JSON is a normalized convenience view. Verify original byte evidence by decompressing rawArtifact."
+    },
+    {
+      "rawArtifact": ".harness/evidence/2026-11-13-v0188-release-preparation/node-runtime-receipt.json.gz",
+      "sha256": "279816a1a7f6d91e3eb9ed4e1872fec3e7ddaf48971b9f3430e2e01e1095378a",
+      "rawSha256": "b95822b13923e4ec0bc16c91db09f150df4d30993ee77ae00f40033ea4947312",
+      "derivedJson": ".harness/evidence/2026-11-13-v0188-release-preparation/node-runtime-receipt.json",
+      "derivedSha256": "441395a2b5bf2d66fdeb39ee39900fc8ed9452ca8d370828c454efa8e067e451",
+      "derivation": "CRLF to LF only; values unchanged. Plain JSON is a normalized convenience view. Verify original byte evidence by decompressing rawArtifact."
+    },
+    {
+      "rawArtifact": ".harness/evidence/2026-11-13-v0188-release-preparation/receipt.json.gz",
+      "sha256": "170a3857d0624c378ea449533e6ab5a2181a1981c1a666fbf27761b7cfc85750",
+      "rawSha256": "e35609e2793d48944215526e5e4250ff3ffa4a498be893983be37b173bd37574",
+      "derivedJson": ".harness/evidence/2026-11-13-v0188-release-preparation/receipt.json",
+      "derivedSha256": "9edb4549c96b0aab23af4171c111de3466395c9e2c18833373cfc8d53d039132",
+      "derivation": "CRLF to LF only; values unchanged. Plain JSON is a normalized convenience view. Verify original byte evidence by decompressing rawArtifact."
+    },
+    {
+      "rawArtifact": ".harness/evidence/2026-11-13-v0188-release-preparation/source-package-sha256.json.gz",
+      "sha256": "717f545338297c4d1e2acb2c1f476a47b83cfe98828300afbf8b2893d057f556",
+      "rawSha256": "3432ac2321f4b72a48e309b6bca6f47967f21c1e48dd1f2773f295ff4a06755f",
+      "derivedJson": ".harness/evidence/2026-11-13-v0188-release-preparation/source-package-sha256.json",
+      "derivedSha256": "bfb5b1b0b411bce539bb76027ce78131c1e1fa40747046740c4149fd3f4797c5",
+      "derivation": "CRLF to LF only; values unchanged. Plain JSON is a normalized convenience view. Verify original byte evidence by decompressing rawArtifact."
+    }
+  ]
+}

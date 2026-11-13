@@ -1,6 +1,6 @@
 # Pantheon Base 文档索引
 
-Official `pantheon-base-v0.18.6` remains published and consumed. `pantheon-base-v0.18.7` preparation is open on task 2026-11-12-v0187-release-ops-consumption: VERSION 0.18.7, release notes and the two release-blocking CI remediations (CodeQL log-injection sink sanitizer, smoke empty-state stall repair) ride with PR #504's formal-queue foundation contracts. Publication and Ops consumption stay unclaimed until the exact merged commit has green push checks, Release Gate and four verified official assets. See [evidence](../.harness/evidence/2026-11-12-v0187-release-ops-consumption/summary.md).
+当前 VERSION 为 `0.18.8`，包含已验证的依赖升级与 11 月 7 日交付收尾；见 [v0.18.8 发行说明](./release-notes/RELEASE_NOTES_v0.18.8.md) 和 [准备检查点证据](../.harness/evidence/2026-11-13-v0188-release-preparation/summary.md)。正式发行身份、提交和四个不可变资产以 [GitHub Release](https://github.com/duanxldragon/pantheon-base/releases/tag/pantheon-base-v0.18.8) 为准。前一版本 v0.18.7 在 `3203624e55438866edb951bd74e671eab38d2f16` 发布并通过 [Ops #183](https://github.com/duanxldragon/pantheon-ops/pull/183) 完成正式消费；见 [v0.18.7 交付证据](../.harness/evidence/2026-11-12-v0187-release-ops-consumption/summary.md)。
 
 ## Historical checkpoints
 
