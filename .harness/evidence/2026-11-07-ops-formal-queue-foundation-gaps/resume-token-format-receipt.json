@@ -1,0 +1,9 @@
+{
+  "gofmtExitCode": 0,
+  "unformatted": [],
+  "commands": [
+    "gofmt -l <owned files>",
+    "git diff --check -- <owned files>"
+  ],
+  "diffCheckExitCode": 0
+}

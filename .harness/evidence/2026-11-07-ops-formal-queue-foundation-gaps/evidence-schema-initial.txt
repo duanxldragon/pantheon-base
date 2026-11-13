@@ -1,0 +1,5 @@
+Evidence check (strict): 1 file(s), 2 error(s), 0 warning(s)
+
+[FAIL] .harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/commands.json
+  error: root.knownGaps must be an array.
+  error: root.linkage must be an object.

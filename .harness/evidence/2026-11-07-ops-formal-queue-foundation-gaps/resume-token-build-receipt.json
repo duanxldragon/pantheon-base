@@ -1,0 +1,7 @@
+{
+  "command": "go build ./pkg/authtoken ./internal/middleware ./modules/auth/...",
+  "CC": "D:\\msys64\\mingw64\\bin\\gcc.exe",
+  "elapsedSeconds": 1.9048756,
+  "exitCode": 0,
+  "CGO_ENABLED": "1"
+}

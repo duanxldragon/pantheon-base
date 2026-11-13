@@ -1,0 +1,12 @@
+{
+  "opsReceipt": "pantheon-ops/.harness/evidence/2026-11-07-ops-planned-task-closeout/verification/continuation-20261111-post-config/receipt.json",
+  "opsReceiptSHA256": "3c7caf26552a6c8aba3af4bf18c43f409a5ce25f7b5ee85bd33f5cc1bc7695b3",
+  "sourceHashes": {
+    "scripts/business-overlay/foundation-candidate.mjs": "54dcbaf0addebc5523d3ffdfde07839412f2b7bb94d005d9313aac5e13a0d4d8",
+    "scripts/business-overlay/rebuild-from-candidate.mjs": "0d310bdcaffd8f961835737faf8aa6d1db1242bbdfa6ae10147e5e7871ed85c8",
+    "scripts/business-overlay/candidate-copy-binding.test.mjs": "8e462b763f7588d2062230d7f3828e4e46f91b338c4b0c927f8c71c3a377f382",
+    "scripts/business-overlay/candidate-retained-evidence.test.mjs": "329730e585a3a8fb8dca716003c86c2a6656bca9407c6a55cd321743ee55b09f"
+  },
+  "P0ParentsClosed": 0,
+  "officialConsumption": false
+}

@@ -1,0 +1,6 @@
+{"type":"thread.started","thread_id":"01a1bf67-e985-7c53-944c-8c8bec1b97ed"}
+{"type":"item.completed","item":{"id":"item_0","type":"error","message":"Codex is ignoring 2 unrecognized configuration settings. Check for typos or deprecated settings.\n  user (C:\\Users\\xiaolong\\.codex\\config.toml): `disable_response_storage` is ignored.\n  user (C:\\Users\\xiaolong\\.codex\\config.toml): `mcp_servers.pencil.type` is ignored."}}
+{"type":"item.completed","item":{"id":"item_1","type":"error","message":"Codex is ignoring 2 unrecognized configuration settings. Check for typos or deprecated settings.\n  user (C:\\Users\\xiaolong\\.codex\\config.toml): `disable_response_storage` is ignored.\n  user (C:\\Users\\xiaolong\\.codex\\config.toml): `mcp_servers.pencil.type` is ignored."}}
+{"type":"turn.started"}
+{"type":"error","message":"<html>\r\n<head><title>400 Bad Request</title></head>\r\n<body bgcolor=\"white\">\r\n<center><h1>400 Bad Request</h1></center>\r\n<hr><center>alb</center>\r\n</body>\r\n</html>\r\n"}
+{"type":"turn.failed","error":{"message":"<html>\r\n<head><title>400 Bad Request</title></head>\r\n<body bgcolor=\"white\">\r\n<center><h1>400 Bad Request</h1></center>\r\n<hr><center>alb</center>\r\n</body>\r\n</html>\r\n"}}

@@ -1,0 +1,6 @@
+{
+  "pid": 4852,
+  "scope": "dedicated local test Redis; persistence disabled",
+  "version": "7.4.2",
+  "port": 16389
+}

@@ -1,0 +1,243 @@
+{
+  "status": "scoped-implementation-verified",
+  "approval": "not-claimed; independent CODE/ARCH and full release/paired Ops consumption remain root-owned and open",
+  "createdUtc": "2026-11-09T09:05:14.5328942Z",
+  "linkage": {
+    "taskId": "2026-11-07-ops-formal-queue-foundation-gaps",
+    "parentTaskPacket": "docs/harness/tasks/2026-11-07-ops-formal-queue-foundation-gaps.task.md",
+    "reviewNotes": "resume-migration-review-notes.md",
+    "summary": "resume-migration-summary.md",
+    "scope": "resume-migration-scope.md"
+  },
+  "sourceFiles": [
+    {
+      "path": "backend/pkg/database/migrate.go",
+      "sha256": "61aaeb220b8abdf08b9485c49347abbbbb9d09fbe4ab3ebde51ad0348677e936"
+    },
+    {
+      "path": "backend/pkg/database/migrate_test.go",
+      "sha256": "df36e2014d21370c7b345e399492bf964dbec148908862abf0757cebccc146e9"
+    },
+    {
+      "path": "backend/pkg/database/migrate_dirty_bootstrap_test.go",
+      "sha256": "ebcec2c5cfac245ddb7eee2d491ca402e642cdcdf3f238b5c8e13798eb69fb5c"
+    }
+  ],
+  "originalReproductionHashes": [
+    {
+      "path": "D:\\workspace\\go\\pantheon-platform\\pantheon-base\\backend\\pkg\\database\\migrate.go",
+      "sha256": "77a8e98398f3d0424ab7b06e3b88fa83a2b6e61d9e1acd1a3012ac63c9ec96f3"
+    },
+    {
+      "path": "D:\\workspace\\go\\pantheon-platform\\pantheon-base\\backend\\pkg\\database\\migrate_test.go",
+      "sha256": "c6e458243102ad8d4756dff17a095503b7e44212153fa42a0e37bbbec0c2d1a6"
+    },
+    {
+      "path": "D:\\workspace\\go\\pantheon-platform\\pantheon-base\\backend\\pkg\\database\\migrate_dirty_bootstrap_test.go",
+      "sha256": "0deb10f5cdbf9ec7105e1f78ea86e8f4b6a2a0cd57e4beb448b12d7a67c559a2"
+    }
+  ],
+  "environment": {
+    "processPathPrefix": "D:\\msys64\\mingw64\\bin",
+    "PANTHEON_TEST_DSN": "root@tcp(127.0.0.1:33316)/resume_migration?charset=utf8mb4&parseTime=true",
+    "CGO_ENABLED": "1",
+    "PANTHEON_TEST_DSN_REQUIRED": "1",
+    "CC": "D:\\msys64\\mingw64\\bin\\gcc.exe",
+    "DSN_REQUIRED": "1"
+  },
+  "mysqlVersion": "8.0.36",
+  "verification": {
+    "totalPassedIncludingParentTests": 185,
+    "failureOrSkipEvents": 0,
+    "dirtyMatrixPassed": 75,
+    "unknownStateMatrixPassed": 48,
+    "compatibilityMatrixPassed": 8,
+    "packagePass": 1,
+    "elapsedSeconds": 161.787,
+    "mysqlCleanupExitCode": 0,
+    "sourceHashes": [
+      {
+        "sha256": "61aaeb220b8abdf08b9485c49347abbbbb9d09fbe4ab3ebde51ad0348677e936",
+        "path": "D:\\workspace\\go\\pantheon-platform\\pantheon-base\\backend\\pkg\\database\\migrate.go"
+      },
+      {
+        "sha256": "df36e2014d21370c7b345e399492bf964dbec148908862abf0757cebccc146e9",
+        "path": "D:\\workspace\\go\\pantheon-platform\\pantheon-base\\backend\\pkg\\database\\migrate_test.go"
+      },
+      {
+        "sha256": "ebcec2c5cfac245ddb7eee2d491ca402e642cdcdf3f238b5c8e13798eb69fb5c",
+        "path": "D:\\workspace\\go\\pantheon-platform\\pantheon-base\\backend\\pkg\\database\\migrate_dirty_bootstrap_test.go"
+      }
+    ]
+  },
+  "commands": [
+    {
+      "command": "go test -count=1 -v -timeout 5m ./pkg/database -run ^TestDirtyMigrationBootstrapPreservesRecordedState$",
+      "exitCode": 1,
+      "finishedUtc": "2026-11-09T08:52:35.4190709Z",
+      "receipt": "resume-migration-red-receipt.json",
+      "startedUtc": "2026-11-09T08:52:08.7802535Z"
+    },
+    {
+      "command": "go test -count=1 -v -timeout 5m ./pkg/database -run ^(TestDirtyMigrationBootstrapPreservesRecordedState|TestMigrationBootstrap.*|TestMigrationStateReadFailureClosesSafely|TestRunMigrationsRejectsDirtyCurrentSchemaVersion)$",
+      "exitCode": 1,
+      "finishedUtc": "2026-11-09T08:57:56.4513885Z",
+      "receipt": "resume-migration-targeted-receipt.json",
+      "startedUtc": "2026-11-09T08:55:28.5749183Z"
+    },
+    {
+      "command": "go test -count=1 -v -timeout 5m ./pkg/database -run ^TestMigrationBootstrapRetainsCleanAndAbsentState$",
+      "exitCode": 0,
+      "finishedUtc": "2026-11-09T08:58:56.411748Z",
+      "receipt": "resume-migration-compat-final-receipt.json",
+      "startedUtc": "2026-11-09T08:58:40.0801162Z"
+    },
+    {
+      "command": "go test -race -count=1 -json -timeout 10m ./pkg/database",
+      "exitCode": 1,
+      "finishedUtc": "2026-11-09T08:59:40.2532151Z",
+      "receipt": "resume-migration-race-receipt.json",
+      "startedUtc": "2026-11-09T08:59:37.0063245Z"
+    },
+    {
+      "command": "go test -race -count=1 -json -timeout 10m ./pkg/database",
+      "exitCode": 0,
+      "finishedUtc": "2026-11-09T09:03:01.5100596Z",
+      "receipt": "resume-migration-race-final-receipt.json",
+      "startedUtc": "2026-11-09T09:00:16.4073819Z"
+    },
+    {
+      "command": "go vet ./pkg/database",
+      "exitCode": 0,
+      "finishedUtc": "2026-11-09T08:56:59.8218765Z",
+      "receipt": "resume-migration-vet-receipt.json",
+      "startedUtc": "2026-11-09T08:56:59.1476915Z"
+    },
+    {
+      "command": "go build ./pkg/database",
+      "exitCode": 0,
+      "finishedUtc": "2026-11-09T08:56:59.7175182Z",
+      "receipt": "resume-migration-build-receipt.json",
+      "startedUtc": "2026-11-09T08:56:59.1471311Z"
+    }
+  ],
+  "diagnostics": {
+    "startedUtc": "2026-11-09T09:01:18.177468Z",
+    "finishedUtc": "2026-11-09T09:01:18.7056288Z",
+    "commands": [
+      {
+        "command": "go vet ./pkg/database",
+        "exitCode": 0
+      },
+      {
+        "command": "git diff --check -- backend/pkg/database/migrate.go backend/pkg/database/migrate_test.go backend/pkg/database/migrate_dirty_bootstrap_test.go",
+        "exitCode": 0
+      },
+      {
+        "exitCode": 0,
+        "command": "gofmt -l backend/pkg/database/migrate.go backend/pkg/database/migrate_test.go backend/pkg/database/migrate_dirty_bootstrap_test.go",
+        "unformattedFiles": []
+      }
+    ]
+  },
+  "evidenceFiles": [
+    {
+      "path": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/resume-migration-build-receipt.json",
+      "sha256": "566e6a7af4675624b298a50d681a465ff51e2e93ccc2238d5f3d075dc7c75679"
+    },
+    {
+      "path": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/resume-migration-build.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/resume-migration-compat-final-receipt.json",
+      "sha256": "b0d5cf83d1effc0dcb025e7ffb0648fbfa7ec5824e49077d306e82f194dd611e"
+    },
+    {
+      "path": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/resume-migration-compat-final.txt",
+      "sha256": "919ed389d6f24f493b2ff3dce6603b9b3a294fbb5e1c697bcd6265ce52cc1e4d"
+    },
+    {
+      "path": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/resume-migration-diagnostics-receipt.json",
+      "sha256": "780995c89a6e9349f0863c5b964be7be7fbbf2a0a9913b88d6e7251a092ff7f1"
+    },
+    {
+      "path": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/resume-migration-diff-check.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/resume-migration-mysql-cleanup.txt",
+      "sha256": "5793ec2950953ff7a213f20b2c1d94b235692c5b3dcb446a761705b1f1a0ae63"
+    },
+    {
+      "path": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/resume-migration-race-final-receipt.json",
+      "sha256": "a3eb6f66c54ad9deafcfc53c5fa474a7c83d63b3d30e8751de21e5856355a71e"
+    },
+    {
+      "path": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/resume-migration-race-final.jsonl",
+      "sha256": "9de842fecb9a8bfbcf79f9c2932368d0baa5c337e02f62bd33d5efbbc0a419b0"
+    },
+    {
+      "path": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/resume-migration-race-receipt.json",
+      "sha256": "4b006bebfd06b1a763490e28f519ace23d2e6762592c014ec97120aa234cdede"
+    },
+    {
+      "path": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/resume-migration-race.jsonl",
+      "sha256": "f9fb9f552bea0780fb9c65c58da9cdda7a86ccfd135ec2eb5db1b416e3d41525"
+    },
+    {
+      "path": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/resume-migration-red-receipt.json",
+      "sha256": "8b3a02da38d405ebc700e7e1658edfd4ec8f99f5e9f670ebb02b90cd4737fb6c"
+    },
+    {
+      "path": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/resume-migration-red.txt",
+      "sha256": "231406bcf2a1c6a5418cca158dedb357d84eb26da83e1c710b6bcb42a3f2a436"
+    },
+    {
+      "path": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/resume-migration-result.json",
+      "sha256": "5e738067def5ebdbb9b65352fc2136be478d01901073fd87a803953f30fa0929"
+    },
+    {
+      "path": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/resume-migration-review-notes.md",
+      "sha256": "91ed411241c008b31a84b02c94feb9a4e3d12d7b885b61693069d77220e48834"
+    },
+    {
+      "path": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/resume-migration-scope.md",
+      "sha256": "0cee8d230e718911fc8bc19e239708e2ae6d873bf895878aae2ca76758dbdaaf"
+    },
+    {
+      "path": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/resume-migration-summary.md",
+      "sha256": "545049b259fa086bc74cd70cbbbfd695ef020aebb129e07aa42ad57496f791e8"
+    },
+    {
+      "path": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/resume-migration-targeted-receipt.json",
+      "sha256": "d38816b7a4af267c2e7e7d8a29cf3af21767501a7f5619be2ec2536ee79caa31"
+    },
+    {
+      "path": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/resume-migration-targeted.txt",
+      "sha256": "294427a640561e90559f02359d4434946c1ff5892d071fbc745a04ade4bd6347"
+    },
+    {
+      "path": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/resume-migration-vet-final.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/resume-migration-vet-receipt.json",
+      "sha256": "73fbf95a6f555e8167df24a551ad57e6f0cb7b9afceb784ebe154ec744f629d4"
+    },
+    {
+      "path": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/resume-migration-vet.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "graphChecks": {
+    "scope": "RunMigrations -> bootstrapExistingCurrentSchema -> bootstrapMigrationVersion -> recordedMigrationVersion/writeMigrationVersion; readiness reuses recordedMigrationVersion",
+    "updatedIndexSync": "not performed; no new production function; source inspection checked guards and added readiness reuse",
+    "baselineTool": "codegraph CLI status/context/impact"
+  },
+  "remainingGaps": [
+    "Independent source review belongs to root",
+    "Full shared release and paired Ops consumption remain open",
+    "No separate concurrent actor or server/HTTP readiness matrix claimed"
+  ]
+}

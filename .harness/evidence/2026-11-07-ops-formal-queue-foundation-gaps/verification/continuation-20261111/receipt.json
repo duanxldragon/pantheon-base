@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "taskId": "2026-11-07-ops-formal-queue-foundation-gaps",
+  "date": "2026-11-11",
+  "status": "in-progress",
+  "producerTests": {
+    "tests": 38,
+    "pass": 38,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0,
+    "todo": 0,
+    "duration_ms": 13394.553
+  },
+  "artifacts": [
+    {
+      "path": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/verification/continuation-20261111/candidate-artifact-tests.tap",
+      "sha256": "2e6fcf05018f5804691f67c4100d744b5e8feca64ef7b951d1a27cb96bffcfcd",
+      "bytes": 7373
+    },
+    {
+      "path": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/verification/continuation-20261111/frontmatter.log",
+      "sha256": "7970cb5fb1c9dd55ddc010ca8959fc42bbf07802c2b2da9f2cd2cb03f1c83614",
+      "bytes": 388
+    }
+  ],
+  "opsReceipt": "../pantheon-ops/.harness/evidence/2026-11-07-ops-planned-task-closeout/verification/continuation-20261111/receipt.json",
+  "opsReceiptSHA256": "42cadfba15bd6ebb4ae183b6e03f24ef40b4d52a22b9ac36e24420ed1f963664",
+  "baseSourceHashes": {
+    "scripts/foundation-release/build-candidate-artifact.mjs": "6df8e50aebfd1bd2b5be2ec80bfd3b51a41279a6c5a3f1b2ba31b3e94d102525",
+    "scripts/foundation-release/candidate-artifact.test.mjs": "f7dfecd2ade669ad264e3aa7a6a26fadec8bad53b83b97dacd0d9ba4bd6907eb",
+    "scripts/foundation-release/candidate-descriptor.mjs": "d0602231061a28717cae154908ffffa7b31ca10fffd4b6687eab5364ea463666"
+  },
+  "officialPublication": false,
+  "officialConsumption": false,
+  "P0ParentsClosed": 0,
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-11-07-ops-formal-queue-foundation-gaps/manifest.json",
+    "taskPacket": "docs/harness/tasks/2026-11-07-ops-formal-queue-foundation-gaps.task.md",
+    "parentReview": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/review.md"
+  }
+}

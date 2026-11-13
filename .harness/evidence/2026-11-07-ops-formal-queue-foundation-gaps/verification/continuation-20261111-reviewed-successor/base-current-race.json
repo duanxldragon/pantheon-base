@@ -1,0 +1,26 @@
+{
+  "command": [
+    "go",
+    "test",
+    "-mod=readonly",
+    "-race",
+    "-p",
+    "1",
+    "./..."
+  ],
+  "exitCode": 0,
+  "elapsedSeconds": 199.906,
+  "sourceStable": true,
+  "filesCaptured": 526,
+  "sourceBeforeSHA256": "3c35be447bc240742aa999abb70d3d9ab52c72f5ed7895f953ac18402a21a4aa",
+  "sourceAfterSHA256": "3c35be447bc240742aa999abb70d3d9ab52c72f5ed7895f953ac18402a21a4aa",
+  "logSHA256": "38896e9e4c757830ef0164fe56795c8f7c82a8281e65ef04d95a4daf1db51a2a",
+  "cgoEnabled": "1",
+  "temporaryDirectory": "D:\\workspace\\go\\pantheon-platform\\pantheon-base\\.local\\continuation-20261111-gates\\go-race-workspace-temp-31946609f2e0\\temp",
+  "environmentScope": "this subprocess only",
+  "optionalViteLookupAdapter": null,
+  "adapterAndViteHashes": {},
+  "adapterAndViteStable": true,
+  "runtimeAcceptance": false,
+  "P0Approved": false
+}

@@ -1,0 +1,290 @@
+
+> @duanxldragon/pantheon-base-ui@0.11.2 test:unit
+> vitest run tests/unit/components/operational/conditionEditing.test.tsx
+
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - `__dirname` (vitest.config.ts:10:25). Use `import.meta.dirname` instead
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+ RUN  v5.0.5 D:/workspace/go/pantheon-platform/pantheon-base/frontend
+
+ ❯ tests/unit/components/operational/conditionEditing.test.tsx (6 tests | 3 failed) 353ms
+   ❯ controlled condition editing (6)
+     × reports validation on mount and externally changed values and fields 107ms
+     × keeps validation tied to the rendered controlled value when an edit is rejected 16ms
+     × labels ReactNode titles and avoids coercing a ReactNode fallback into editable data 155ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/components/operational/conditionEditing.test.tsx > controlled condition editing > reports validation on mount and externally changed values and fields
+AssertionError: expected last "vi.fn()" call to have been called with [ [ 'one' ] ]
+
+- Expected:
+[
+  [
+    "one",
+  ],
+]
+
++ Received:
+undefined
+
+ ❯ tests/unit/components/operational/conditionEditing.test.tsx:17:22
+     15|   const validation = vi.fn();
+     16|   const { rerender } = render(<ConditionBuilder title="conditions" val…
+     17|   expect(validation).toHaveBeenLastCalledWith(['one']);
+       |                      ^
+     18|   const valid: ConditionAstNode = { ...ast, field: 'status' };
+     19|   rerender(<ConditionBuilder title="conditions" value={valid} fields={…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  tests/unit/components/operational/conditionEditing.test.tsx > controlled condition editing > keeps validation tied to the rendered controlled value when an edit is rejected
+AssertionError: expected "vi.fn()" to be called with arguments: [ [] ]
+
+Number of calls: 0
+
+ ❯ tests/unit/components/operational/conditionEditing.test.tsx:29:22
+     27|   const change = vi.fn();
+     28|   render(<ConditionBuilder title="conditions" value={ast} fields={fiel…
+     29|   expect(validation).toHaveBeenCalledWith([]);
+       |                      ^
+     30|   validation.mockClear();
+     31|   fireEvent.click(screen.getByText('add rule'));
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  tests/unit/components/operational/conditionEditing.test.tsx > controlled condition editing > labels ReactNode titles and avoids coercing a ReactNode fallback into editable data
+TestingLibraryElementError: Unable to find an accessible element with the role "region" and name "structured conditions"
+
+Here are the accessible roles:
+
+  region:
+
+  Name "[object Object]":
+  [36m<section[39m
+    [33maria-label[39m=[32m"[object Object]"[39m
+    [33mclass[39m=[32m"operational-primitive condition-builder"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  button:
+
+  Name "add rule":
+  [36m<button[39m
+    [33mclass[39m=[32m"arco-btn arco-btn-secondary arco-btn-size-default arco-btn-shape-square"[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  combobox:
+
+  Name "field":
+  [36m<div[39m
+    [33maria-autocomplete[39m=[32m"list"[39m
+    [33maria-controls[39m=[32m"arco-select-popup-3"[39m
+    [33maria-expanded[39m=[32m"false"[39m
+    [33maria-haspopup[39m=[32m"listbox"[39m
+    [33maria-label[39m=[32m"field"[39m
+    [33mclass[39m=[32m"arco-select arco-select-single arco-select-size-default"[39m
+    [33mrole[39m=[32m"combobox"[39m
+    [33mtabindex[39m=[32m"0"[39m
+  [36m/>[39m
+
+  Name "operator":
+  [36m<div[39m
+    [33maria-autocomplete[39m=[32m"list"[39m
+    [33maria-controls[39m=[32m"arco-select-popup-4"[39m
+    [33maria-expanded[39m=[32m"false"[39m
+    [33maria-haspopup[39m=[32m"listbox"[39m
+    [33maria-label[39m=[32m"operator"[39m
+    [33mclass[39m=[32m"arco-select arco-select-single arco-select-size-default"[39m
+    [33mrole[39m=[32m"combobox"[39m
+    [33mtabindex[39m=[32m"0"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  textbox:
+
+  Name "value":
+  [36m<input[39m
+    [33maria-label[39m=[32m"value"[39m
+    [33mclass[39m=[32m"arco-input arco-input-size-default"[39m
+    [33mvalue[39m=[32m"[object Object]"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<section[39m
+      [33maria-label[39m=[32m"[object Object]"[39m
+      [33mclass[39m=[32m"operational-primitive condition-builder"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"operational-primitive__header"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"operational-primitive__title"[39m
+        [36m>[39m
+          [36m<span>[39m
+            [0mstructured conditions[0m
+          [36m</span>[39m
+        [36m</div>[39m
+        [36m<button[39m
+          [33mclass[39m=[32m"arco-btn arco-btn-secondary arco-btn-size-default arco-btn-shape-square"[39m
+          [33mtype[39m=[32m"button"[39m
+        [36m>[39m
+          [36m<span>[39m
+            [0madd rule[0m
+          [36m</span>[39m
+        [36m</button>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"operational-primitive__body condition-builder__tree"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33maria-invalid[39m=[32m"false"[39m
+          [33mclass[39m=[32m"condition-builder__node"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33maria-autocomplete[39m=[32m"list"[39m
+            [33maria-controls[39m=[32m"arco-select-popup-3"[39m
+            [33maria-expanded[39m=[32m"false"[39m
+            [33maria-haspopup[39m=[32m"listbox"[39m
+            [33maria-label[39m=[32m"field"[39m
+            [33mclass[39m=[32m"arco-select arco-select-single arco-select-size-default"[39m
+            [33mrole[39m=[32m"combobox"[39m
+            [33mtabindex[39m=[32m"0"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"arco-select-view"[39m
+              [33mtitle[39m=[32m"status"[39m
+            [36m>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"arco-select-view-selector"[39m
+              [36m>[39m
+                [36m<input[39m
+                  [33maria-hidden[39m=[32m"true"[39m
+                  [33mautocomplete[39m=[32m"off"[39m
+                  [33mclass[39m=[32m"arco-select-view-input arco-select-hidden"[39m
+                  [33mstyle[39m=[32m"width: 100%; pointer-events: none;"[39m
+                  [33mtabindex[39m=[32m"-1"[39m
+                  [33mvalue[39m=[32m""[39m
+                [36m/>[39m
+                [36m<span[39m
+                  [33mclass[39m=[32m"arco-select-view-value"[39m
+                [36m>[39m
+                  [0mstatus[0m
+                [36m</span>[39m
+              [36m</span>[39m
+              [36m<div[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"arco-select-suffix"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"arco-select-arrow-icon"[39m
+                [36m>[39m
+                  [36m<svg[39m
+                    [33maria-hidden[39m=[32m"true"[39m
+                    [33mclass[39m=[32m"arco-icon arco-icon-down"[39m
+                    [33mfill[39m=[32m"none"[39m
+                    [33mfocusable[39m=[32m"false"[39m
+                    [33mstroke[39m=[32m"currentColor"[39m
+                    [33mstroke-width[39m=[32m"4"[39m
+                    [33mviewBox[39m=[32m"0 0 48 48"[39m
+                  [36m>[39m
+                    [36m<path[39m
+                      [33md[39m=[32m"M39.6 17.443 24.043 33 8.487 17.443"[39m
+                    [36m/>[39m
+                  [36m</svg>[39m
+                [36m</div>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33maria-autocomplete[39m=[32m"list"[39m
+            [33maria-controls[39m=[32m"arco-select-popup-4"[39m
+            [33maria-expanded[39m=[32m"false"[39m
+            [33maria-haspopup[39m=[32m"listbox"[39m
+            [33maria-label[39m=[32m"operator"[39m
+            [33mclass[39m=[32m"arco-select arco-select-single arco-select-size-default"[39m
+            [33mrole[39m=[32m"combobox"[39m
+            [33mtabindex[39m=[32m"0"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"arco-select-view"[39m
+              [33mtitle[39m=[32m"equals"[39m
+            [36m>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"arco-select-view-selector"[39m
+              [36m>[39m
+                [36m<input[39m
+                  [33maria-hidden[39m=[32m"true"[39m
+                  [33mautocomplete[39m=[32m"off"[39m
+                  [33mclass[39m=[32m"arco-select-view-input arco-select-hidden"[39m
+                  [33mstyle[39m=[32m"width: 100%; pointer-events: none;"[39m
+                  [33mtabindex[39m=[32m"-1"[39m
+                  [33mvalue[39m=[32m""[39m
+                [36m/>[39m
+                [36m<span[39m
+                  [33mclass[39m=[32m"arco-select-view-value"[39m
+                [36m>[39m
+                  [0mequals[0m
+                [36m</span>[39m
+              [36m</span>[39m
+              [36m<div[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"arco-select-suffix"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"arco-select-arrow-icon"[39m
+                [36m>[39m
+                  [36m<svg[39m
+                    [33maria-hidden[39m=[32m"true"[39m
+                    [33mclass[39m=[32m"arco-icon arco-icon-down"[39m
+                    [33mfill[39m=[32m"none"[39m
+                    [33mfocusable[39m=[32m"false"[39m
+                    [33mstroke[39m=[32m"currentColor"[39m
+                    [33mstroke-width[39m=[32m"4"[39m
+                    [33mviewBox[39m=[32m"0 0 48 48"[39m
+                  [36m>[39m
+                    [36m<path[39m
+                      [33md[39m=[32m"M39.6 17.443 24.043 33 8.487 17.443"[39m
+                    [36m/>[39m
+                  [36m</svg>[39m
+                [36m</div>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+          [36m<input[39m
+            [33maria-label[39m=[32m"value"[39m
+            [33mclass[39m=[32m"arco-input arco-input-size-default"[39m
+            [33mvalue[39m=[32m"[object Object]"[39m
+          [36m/>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</section>[39m
+  [36m</div>[39m
+[36m</body>[39m
+ ❯ Object.getElementError node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ tests/unit/components/operational/conditionEditing.test.tsx:42:17
+     40|   const nodeLabels = { ...labels, unserializableValue: <span>unavailab…
+     41|   const { rerender } = render(<ConditionBuilder title={<span>structure…
+     42|   expect(screen.getByRole('region', { name: 'structured conditions' })…
+       |                 ^
+     43|   expect((screen.getByLabelText('value') as HTMLInputElement).value).t…
+     44|   expect(change).not.toHaveBeenCalled();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed | 3 passed (6)
+   Start at  23:17:13
+   Duration  4.21s (environment 45%, import 43%, tests 9%, transform 3%)
+

@@ -1,0 +1,63 @@
+{
+  "task": "resume-o4-telemetry",
+  "role": "Generator",
+  "selfApproval": false,
+  "parentStatus": "OPEN",
+  "parentTask": "docs/harness/tasks/2026-11-07-ops-formal-queue-foundation-gaps.task.md",
+  "plan": ".harness/tasks/2026-11-07-ops-formal-queue-foundation-gaps/o4-tenant-implementation-plan.md",
+  "handoff": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/resume-o4-telemetry-handoff.md",
+  "environment": {
+    "cwd": "backend",
+    "CGO_ENABLED": "1",
+    "CC": "D:\\msys64\\mingw64\\bin\\gcc.exe",
+    "pathPrefix": "D:\\msys64\\mingw64\\bin"
+  },
+  "checks": [
+    {
+      "kind": "race",
+      "command": "go test -race ./internal/middleware ./cmd/server ./pkg/auditpolicy ./pkg/telemetry -count=1 -timeout=180s -json",
+      "exitCode": 0,
+      "evidence": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/resume-o4-telemetry-scoped-race.jsonl",
+      "packageElapsedSeconds": {
+        "internal/middleware": 4.619,
+        "cmd/server": 1.18,
+        "pkg/auditpolicy": 1.08,
+        "pkg/telemetry": 1.08
+      },
+      "testEventsPassed": 121,
+      "testEventsSkipped": 43,
+      "failures": 0
+    },
+    {
+      "kind": "vet",
+      "command": "go vet ./internal/middleware ./cmd/server ./pkg/auditpolicy ./pkg/telemetry",
+      "exitCode": 0,
+      "wallSeconds": 5.7937292,
+      "stdout": ""
+    },
+    {
+      "kind": "build",
+      "command": "go build ./cmd/server ./internal/middleware ./pkg/auditpolicy ./pkg/telemetry",
+      "exitCode": 0,
+      "wallSeconds": 9.217829,
+      "stdout": ""
+    },
+    {
+      "kind": "diagnostics",
+      "command": "gopls check cmd/server/main.go internal/middleware/business_telemetry_middleware.go internal/middleware/business_telemetry_middleware_test.go",
+      "exitCode": 0,
+      "wallSeconds": 8.162908,
+      "stdout": ""
+    }
+  ],
+  "sourceStability": {
+    "files": 526,
+    "stable": true,
+    "before": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/resume-o4-telemetry-verification-before-hashes.json",
+    "after": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/resume-o4-telemetry-verification-after-hashes.json"
+  },
+  "gaps": [
+    "43 pre-existing credentialed MySQL/Redis test events skipped; new telemetry suite has no skips.",
+    "Full repository checks, independent CODE/ARCH reruns, candidate repair, paired/runtime/privacy/official gates remain root-owned."
+  ]
+}

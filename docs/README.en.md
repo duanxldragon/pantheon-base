@@ -1,8 +1,10 @@
 # Pantheon Base Documentation Index
 
-Official `pantheon-base-v0.18.6` is published at5553bc0e after exact Release Gate; Ops official consumption passed and merged[PR178](https://github.com/duanxldragon/pantheon-ops/pull/178). Three repositories verified main-only; final factual documentation closeout is independently approved; current administrative CI/merge/main-only recheck remain required. Original12/40 remain accepted; unwaived residuals retained. See [evidence](../.harness/evidence/2026-11-07-v0186-release-ops-consumption/summary.md).
+Official `pantheon-base-v0.18.6` remains published and consumed. `pantheon-base-v0.18.7` preparation is open on task 2026-11-12-v0187-release-ops-consumption: VERSION 0.18.7, release notes and the two release-blocking CI remediations (CodeQL log-injection sink sanitizer, smoke empty-state stall repair) ride with PR #504's formal-queue foundation contracts. Publication and Ops consumption stay unclaimed until the exact merged commit has green push checks, Release Gate and four verified official assets. See [evidence](../.harness/evidence/2026-11-12-v0187-release-ops-consumption/summary.md).
 
 ## Historical checkpoints
+
+Official `pantheon-base-v0.18.6` is published at5553bc0e after exact Release Gate; Ops official consumption passed and merged[PR178](https://github.com/duanxldragon/pantheon-ops/pull/178). Three repositories verified main-only; final factual documentation closeout is independently approved; current administrative CI/merge/main-only recheck remain required. Original12/40 remain accepted; unwaived residuals retained. See [evidence](../.harness/evidence/2026-11-07-v0186-release-ops-consumption/summary.md).
 
 Current (2026-11-07): all40 original criteria for12 tasks retained and independently approved. Seven closures merged throughPR497; final five governance projection awaits its own PR gates. Official Base v0.18.5 released and OpsPR177 consumption merged. Full no-overlay race/frontend/scripts/migration/four standard smoke passed. Freeze unsigned, S3 unwaived; business/policy residuals explicit. See [evidence](../.harness/evidence/2026-11-05-base-freeze-release/resume11-five-task-applied.json).
 

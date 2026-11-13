@@ -1,0 +1,5 @@
+{
+  "pid": 4896,
+  "stopped": true,
+  "scope": "only the dedicated Redis process created for this scoped runner"
+}

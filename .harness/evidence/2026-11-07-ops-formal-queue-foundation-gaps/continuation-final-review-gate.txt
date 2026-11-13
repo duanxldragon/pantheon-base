@@ -1,0 +1,3 @@
+Review check (strict): 1 file(s), 0 error(s)
+
+[PASS] .harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/review.md

@@ -1,0 +1,7 @@
+{
+  "command": "npm.cmd run build",
+  "cwd": "frontend",
+  "exitCode": 0,
+  "seconds": 20.74,
+  "artifact": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/condition-stable-build.txt"
+}

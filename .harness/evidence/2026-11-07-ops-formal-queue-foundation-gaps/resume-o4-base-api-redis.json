@@ -1,0 +1,5 @@
+{
+  "pid": 4896,
+  "port": 16389,
+  "scope": "dedicated loopback test Redis; persistence disabled"
+}

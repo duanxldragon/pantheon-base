@@ -1,0 +1,57 @@
+{
+  "recordedAt": "2026-11-12",
+  "parentTask": ".harness/tasks/2026-11-07-ops-formal-queue-foundation-gaps/manifest.json",
+  "plan": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/verification/auth-permission-cache-repair-20261112/plan.md",
+  "trigger": "Consumed CMDB R3 public run failed its original-session /auth/me assertion after a public empty-role update; the permission-array cache had no invalidation caller on role or user updates.",
+  "change": {
+    "files": [
+      "backend/modules/auth/login/login_runtime.go",
+      "backend/modules/auth/login/permission_cache_revocation_test.go"
+    ],
+    "implementation": "Runtime.GetUserPerms reads the authoritative owning-tenant database query on every call; the Redis user_perms:<id> read, its five-minute write and dropStalePlatformOnlyPerms were removed. InvalidateUserPermCache remains only as a compatibility surface that clears legacy leftovers and never grants authority.",
+    "notChanged": "Tenant/platform-only filtering, distinct role join, database error propagation, session/token/CSRF/DataScope contracts, schema and dependencies."
+  },
+  "redWitness": {
+    "source": "git HEAD backend/modules/auth/login/login_runtime.go restored into place for one run, then restored to the repaired file",
+    "test": "TestGetUserPermsIgnoresStalePermissionCache",
+    "result": "FAIL: revoked permission survived through the cache: [system:user:list system:user:delete]",
+    "env": "real MySQL 127.0.0.1:33316 isolated testmysql schema, task-owned Redis 127.0.0.1:26317, seeded stale user_perms entry, grant deleted in database before the read"
+  },
+  "greenWitness": {
+    "test": "TestGetUserPermsIgnoresStalePermissionCache",
+    "result": "PASS",
+    "assertions": [
+      "revoked key absent from current permissions",
+      "the pre-existing stale cache entry is neither read nor rewritten",
+      "regrant is visible immediately without waiting for a TTL"
+    ]
+  },
+  "checks": {
+    "goTest": {
+      "command": "go test ./modules/auth/login/ ./pkg/permissionroutes/ ./modules/system/iam/role/ ./modules/system/iam/permission/ ./pkg/contracts/ ./modules/auth/ -count=1 -timeout 600s",
+      "exitCode": 0,
+      "results": {
+        "modules/auth/login": "ok 254.286s",
+        "pkg/permissionroutes": "ok 0.051s",
+        "modules/system/iam/role": "ok 42.532s",
+        "modules/system/iam/permission": "ok 25.328s",
+        "pkg/contracts": "ok 0.063s",
+        "modules/auth": "no test files"
+      }
+    },
+    "goVet": "go vet ./modules/auth/... ./modules/system/iam/... ./pkg/permissionroutes/ ./pkg/contracts/... exit 0",
+    "goBuild": "go build ./... exit 0"
+  },
+  "environment": {
+    "go": "go1.26.10 windows/amd64",
+    "cgo": 1,
+    "mysql": "authorized task adapter 127.0.0.1:33316, isolated per-test schema created and cleaned by testmysql",
+    "redis": "task-owned 127.0.0.1:26317 logical DB 3; shared preview Redis 6379 and shared Redis 26316 untouched"
+  },
+  "limits": [
+    "Full ./... CGO race was not rerun in this pass; only the affected packages were executed.",
+    "Independent CODE and ARCH lanes have not reviewed this repair; no approval is inferred.",
+    "No normal combined candidate was assembled, no official release was published and Ops consumption was not performed.",
+    "The CMDB R3 run is not replayed; product-versus-oracle classification of that original failure remains open."
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "recordedWorkingDirectory": "D:\\workspace\\go\\pantheon-platform\\pantheon-base\\frontend",
+  "toolSession": 66830,
+  "parentPid": 14200,
+  "ownershipVerified": true,
+  "pid": 25056,
+  "method": "Exact captured listener/launcher PID, node binary and tool-shell parent command verified",
+  "commandLine": "\"D:\\nodejs\\node.exe\" scripts/start-smoke-vite.mjs --host 127.0.0.1 --port 5175"
+}

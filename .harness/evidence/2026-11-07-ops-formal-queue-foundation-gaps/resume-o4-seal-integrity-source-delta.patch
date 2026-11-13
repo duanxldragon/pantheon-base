@@ -1,0 +1,198 @@
+diff --git "a/C:\\Users\\xiaolong\\AppData\\Local\\Temp\\pantheon-seal-diff-mu63wc\\build-candidate-artifact.mjs" "b/D:\\workspace\\go\\pantheon-platform\\pantheon-base\\scripts\\foundation-release\\build-candidate-artifact.mjs"
+index fb136fef..c5f8b438 100644
+--- "a/C:\\Users\\xiaolong\\AppData\\Local\\Temp\\pantheon-seal-diff-mu63wc\\build-candidate-artifact.mjs"
++++ "b/D:\\workspace\\go\\pantheon-platform\\pantheon-base\\scripts\\foundation-release\\build-candidate-artifact.mjs"
+@@ -93,6 +93,7 @@ export function buildCandidateArtifact({ root, baseCommit, sourcePaths, sharedPa
+   verifyCandidateArchive(archive, descriptor);
+   const descriptorBytes = Buffer.from(`${JSON.stringify(descriptor, null, 2)}\n`);
+   if (descriptorBytes.length > LIMITS.descriptorBytes) throw new Error('Candidate descriptor size exceeds limit');
++  const descriptorSha256 = sha256(descriptorBytes);
+   const parent = path.dirname(output);
+   fs.mkdirSync(parent, { recursive: true });
+   assertRealPath(parent, { directory: true });
+@@ -122,6 +123,35 @@ export function buildCandidateArtifact({ root, baseCommit, sourcePaths, sharedPa
+     }
+     return names;
+   };
++  const assertSavedStageBytes = () => {
++    const opened = [];
++    const same = (actual, expected) => ['dev', 'ino', 'size', 'mtimeNs', 'ctimeNs', 'mode', 'nlink'].every((key) => actual[key] === expected[key]);
++    try {
++      for (const [name, expected, pin] of [['candidate-descriptor.json', descriptorBytes, descriptorSha256], [descriptor.artifact.assetName, archive, descriptor.artifact.sha256]]) {
++        assertStage();
++        const absolute = path.join(stage, name);
++        const stat = fs.lstatSync(absolute, { bigint: true });
++        if (!stat.isFile() || stat.isSymbolicLink() || stat.nlink !== 1n || stat.size !== BigInt(expected.length) || stat.dev < 0n || stat.ino <= 0n) throw new Error(`Candidate saved file shape/size mismatch: ${name}`);
++        const fd = fs.openSync(absolute, fs.constants.O_RDONLY | (fs.constants.O_NOFOLLOW ?? 0));
++        opened.push({ fd, absolute, stat, name });
++        if (!same(fs.fstatSync(fd, { bigint: true }), stat)) throw new Error(`Candidate saved file changed while opening: ${name}`);
++        const bytes = Buffer.alloc(expected.length);
++        let offset = 0;
++        while (offset < bytes.length) {
++          const count = fs.readSync(fd, bytes, offset, bytes.length - offset, offset);
++          if (count === 0) throw new Error(`Candidate saved file short read: ${name}`);
++          offset += count;
++        }
++        if (!bytes.equals(expected) || sha256(bytes) !== pin) throw new Error(`Candidate saved bytes/digest mismatch: ${name}`);
++      }
++      // Keep both descriptors open until the paired read completes: a known
++      // pathname replaced during either read cannot stand in for its fd.
++      for (const { fd, absolute, stat, name } of opened) {
++        if (!same(fs.fstatSync(fd, { bigint: true }), stat) || !same(fs.lstatSync(absolute, { bigint: true }), stat)) throw new Error(`Candidate saved file/path changed while reading: ${name}`);
++      }
++      assertStage();
++    } finally { for (const { fd } of opened) fs.closeSync(fd); }
++  };
+   try {
+     // mkdtemp and lstat are separate syscalls; capture immediately. No atomic
+     // namespace locking guarantee is provided by these pathname checks.
+@@ -137,9 +167,10 @@ export function buildCandidateArtifact({ root, baseCommit, sourcePaths, sharedPa
+     assertRealPath(output, { directory: true, missing: true });
+     if (fs.existsSync(output)) throw new Error('Candidate output was created concurrently');
+     if (assertStageContents().length !== stageFiles.length) throw new Error('Candidate stage files changed before sealing');
++    assertSavedStageBytes();
+     assertStage();
+     fs.renameSync(stage, output);
+-    return { outputRoot: output, artifactPath: path.join(output, descriptor.artifact.assetName), descriptorPath: path.join(output, 'candidate-descriptor.json'), descriptorSha256: sha256(descriptorBytes), descriptor, sourceStable: true };
++    return { outputRoot: output, artifactPath: path.join(output, descriptor.artifact.assetName), descriptorPath: path.join(output, 'candidate-descriptor.json'), descriptorSha256, descriptor, sourceStable: true };
+   } catch (error) {
+     try {
+       // There are only two possible files. Preflight all content before any
+
+diff --git "a/C:\\Users\\xiaolong\\AppData\\Local\\Temp\\pantheon-seal-diff-DzvT4j\\candidate-artifact.test.mjs" "b/D:\\workspace\\go\\pantheon-platform\\pantheon-base\\scripts\\foundation-release\\candidate-artifact.test.mjs"
+index 54dfecab..45252ba3 100644
+--- "a/C:\\Users\\xiaolong\\AppData\\Local\\Temp\\pantheon-seal-diff-DzvT4j\\candidate-artifact.test.mjs"
++++ "b/D:\\workspace\\go\\pantheon-platform\\pantheon-base\\scripts\\foundation-release\\candidate-artifact.test.mjs"
+@@ -388,3 +388,132 @@ test('separate pinned executable build receipt binds descriptor identity, capabi
+   assert.throws(() => verifyCandidateExecutable(options), /receipt digest/);
+   assert.throws(() => verifyCandidateExecutable({ ...options, expectedBuildReceiptSha256: sha256(fs.readFileSync(buildReceiptPath)) }), /capability/);
+ });
++
++function sealSourceState(root) {
++  return ['', ...fs.readdirSync(root, { recursive: true }).sort()].map((relative) => {
++    const absolute = path.join(root, relative);
++    const stat = fs.lstatSync(absolute, { bigint: true });
++    return { relative, stamp: [stat.dev, stat.ino, stat.size, stat.mtimeNs, stat.ctimeNs, stat.mode, stat.nlink], digest: stat.isFile() ? sha256(fs.readFileSync(absolute)) : null };
++  });
++}
++
++test('exported producer refuses changed saved bytes in the final seal window with stable sources/directories', async (t) => {
++  for (const [kind, mode] of [['descriptor', 'newline after write'], ['archive', 'append after early validation'], ['descriptor', 'same-size replacement'], ['archive', 'same-size replacement']]) await t.test(`${kind}/${mode}`, (t) => {
++    const f = fixture(t); const sourceState = sealSourceState(f.root);
++    const originalWrite = fs.writeFileSync; const originalRead = fs.readFileSync; const originalExists = fs.existsSync;
++    const saved = new Map();
++    let stage; let earlyArchiveRead = false; let finalWindow = false; let fired = false; let directoryIDs;
++    const ids = () => [stage, path.dirname(stage)].map((directory) => {
++      const stat = fs.lstatSync(directory, { bigint: true }); return [stat.dev, stat.ino];
++    });
++    const mutate = () => {
++      directoryIDs = ids();
++      const [file, bytes] = [...saved].find(([file]) => kind === 'descriptor' ? file.endsWith('.json') : file.endsWith('.tar'));
++      const changed = mode === 'same-size replacement' ? Buffer.from(bytes) : Buffer.concat([bytes, Buffer.from('\n')]);
++      if (mode === 'same-size replacement') changed[0] ^= 1;
++      assert.notEqual(sha256(changed), sha256(bytes));
++      if (mode === 'same-size replacement') assert.equal(changed.length, bytes.length);
++      originalWrite(file, changed);
++      fired = true;
++      assert.deepEqual(ids(), directoryIDs, 'original stage and parent instances remain stable');
++    };
++    t.mock.method(fs, 'writeFileSync', function (file, ...args) {
++      const result = originalWrite.call(this, file, ...args);
++      if (typeof file === 'string' && path.basename(path.dirname(file)).startsWith('.candidate-seal-')) {
++        stage = path.dirname(file); saved.set(file, Buffer.from(args[0]));
++        if (file.endsWith('candidate-descriptor.json') && mode === 'newline after write') mutate();
++      }
++      return result;
++    });
++    t.mock.method(fs, 'readFileSync', function (file, ...args) {
++      const bytes = originalRead.call(this, file, ...args);
++      if (saved.has(file) && file.endsWith('.tar')) {
++        assert.equal(sha256(bytes), sha256(saved.get(file)), 'early archive read is still valid');
++        earlyArchiveRead = true;
++      }
++      return bytes;
++    });
++    t.mock.method(fs, 'existsSync', function (file) {
++      if (!finalWindow && stage && file === f.options.outputRoot) {
++        finalWindow = true;
++        assert.equal(earlyArchiveRead, true, 'mutation window follows real archive validation and source scan');
++        if (!fired) mutate();
++      }
++      return originalExists.call(this, file);
++    });
++    let failure;
++    try { f.build(); } catch (error) { failure = error; } finally { t.mock.restoreAll(); }
++    assert.equal(fired, true, 'real saved file mutation ran');
++    assert.equal(finalWindow, true, 'actual producer reached final preflight');
++    assert.deepEqual(sealSourceState(f.root), sourceState, 'source bytes and file/directory stamps remain stable');
++    const parentStat = fs.lstatSync(path.dirname(stage), { bigint: true });
++    assert.deepEqual([parentStat.dev, parentStat.ino], directoryIDs[1]);
++    assert.ok(failure, 'producer must refuse altered saved bytes instead of returning success');
++    assert.match(failure.message, /Candidate saved (?:bytes\/digest|file shape\/size) mismatch/);
++    assert.equal(fs.existsSync(f.options.outputRoot), false);
++    assert.equal(fs.existsSync(stage), false, 'bounded owned-file cleanup completes');
++  });
++});
++
++test('exported producer refuses byte-identical file rename/recreate during its final saved-file read', async (t) => {
++  for (const kind of ['descriptor', 'archive']) await t.test(kind, (t) => {
++    const f = fixture(t); const sourceState = sealSourceState(f.root);
++    const originalWrite = fs.writeFileSync; const originalRead = fs.readFileSync; const originalExists = fs.existsSync;
++    const originalOpen = fs.openSync; const originalReadSync = fs.readSync;
++    const retained = path.join(f.temporary, 'retained-original-file');
++    let stage; let target; let targetFD; let expected; let earlyArchiveRead = false; let finalWindow = false; let fired = false; let directoryIDs;
++    t.mock.method(fs, 'writeFileSync', function (file, ...args) {
++      const result = originalWrite.call(this, file, ...args);
++      if (typeof file === 'string' && path.basename(path.dirname(file)).startsWith('.candidate-seal-')) {
++        stage = path.dirname(file);
++        if (kind === 'descriptor' ? file.endsWith('.json') : file.endsWith('.tar')) { target = file; expected = Buffer.from(args[0]); }
++      }
++      return result;
++    });
++    t.mock.method(fs, 'readFileSync', function (file, ...args) {
++      const bytes = originalRead.call(this, file, ...args);
++      if (typeof file === 'string' && file.endsWith('.tar') && path.dirname(file) === stage) earlyArchiveRead = true;
++      return bytes;
++    });
++    t.mock.method(fs, 'existsSync', function (file) {
++      if (!finalWindow && stage && file === f.options.outputRoot) {
++        finalWindow = true; assert.equal(earlyArchiveRead, true);
++      }
++      return originalExists.call(this, file);
++    });
++    t.mock.method(fs, 'openSync', function (file, ...args) {
++      const fd = originalOpen.call(this, file, ...args);
++      if (finalWindow && file === target) targetFD = fd;
++      return fd;
++    });
++    t.mock.method(fs, 'readSync', function (fd, ...args) {
++      const count = originalReadSync.call(this, fd, ...args);
++      if (!fired && finalWindow && fd === targetFD && count > 0) {
++        directoryIDs = [stage, path.dirname(stage)].map((directory) => {
++          const stat = fs.lstatSync(directory, { bigint: true }); return [stat.dev, stat.ino];
++        });
++        const originalID = fs.lstatSync(target, { bigint: true }).ino;
++        fs.renameSync(target, retained); originalWrite(target, expected);
++        fired = true;
++        assert.notEqual(fs.lstatSync(target, { bigint: true }).ino, originalID, 'known path now names a different regular file');
++        assert.deepEqual(fs.readFileSync(target), expected, 'replacement preserves exact bytes and size');
++        assert.deepEqual([stage, path.dirname(stage)].map((directory) => {
++          const stat = fs.lstatSync(directory, { bigint: true }); return [stat.dev, stat.ino];
++        }), directoryIDs, 'original stage and parent instances remain stable');
++      }
++      return count;
++    });
++    let failure;
++    try { f.build(); } catch (error) { failure = error; } finally { t.mock.restoreAll(); }
++    assert.equal(finalWindow, true);
++    assert.equal(fired, true, 'actual final fd read was exercised');
++    assert.deepEqual(sealSourceState(f.root), sourceState);
++    const parentStat = fs.lstatSync(path.dirname(stage), { bigint: true });
++    assert.deepEqual([parentStat.dev, parentStat.ino], directoryIDs[1]);
++    assert.ok(failure, 'producer must refuse a saved pathname replacement');
++    assert.match(failure.message, /Candidate saved file\/path changed while reading/);
++    assert.deepEqual(fs.readFileSync(retained), expected, 'renamed original survives non-recursive cleanup');
++    assert.equal(fs.existsSync(f.options.outputRoot), false);
++    assert.equal(fs.existsSync(stage), false);
++  });
++});

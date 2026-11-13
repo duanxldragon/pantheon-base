@@ -1,0 +1,7 @@
+{
+  "command": "go vet ./pkg/authtoken ./internal/middleware ./modules/auth/...",
+  "exitCode": 0,
+  "CC": "D:\\msys64\\mingw64\\bin\\gcc.exe",
+  "elapsedSeconds": 2.1863434,
+  "CGO_ENABLED": "1"
+}

@@ -1,0 +1,18 @@
+[
+  {
+    "Path": "D:\\workspace\\go\\pantheon-platform\\pantheon-base\\backend\\cmd\\server\\main.go",
+    "Hash": "F420438509293437ABAC5228C343B7D52AF0E66B606A8B2EA9A3E14DCC606950"
+  },
+  {
+    "Path": "D:\\workspace\\go\\pantheon-platform\\pantheon-base\\backend\\internal\\middleware\\request_context_middleware.go",
+    "Hash": "D72F7D1DF950F1EB0239414DFC4E7896B7E8831913740F4EC1D84A344D47DD55"
+  },
+  {
+    "Path": "D:\\workspace\\go\\pantheon-platform\\pantheon-base\\backend\\pkg\\auditpolicy\\policy.go",
+    "Hash": "BEEFA9757B2C11E3C60F93A94558259DD56071DE6927BF96C59FAFA7DDFF06C3"
+  },
+  {
+    "Path": "D:\\workspace\\go\\pantheon-platform\\pantheon-base\\backend\\pkg\\telemetry\\tracer.go",
+    "Hash": "04DE2C0F375B61BEC48C435AACEB0B44A2B7077C6AD7EE553AC5576B85C15373"
+  }
+]

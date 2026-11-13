@@ -1,0 +1,100 @@
+{
+  "capturedUTC": "2026-11-09T10:07:59.206Z",
+  "planSHA256": "9aaa0e53b43c040a4d04949693d3ef6ab4b086336fe953c3e04105400e4caaf7",
+  "sourceStableDuringRuntime": true,
+  "aggregateSHA256": "aeb2753881e1949a7b6827ef9ab411e49fdc90fd6645e0a966583df0f51716dc",
+  "files": [
+    {
+      "path": "backend/pkg/contracts/module.go",
+      "sha256": "54855f519b669c10d72281ba37c604858414312e973bc5b8eee356aa5222c9dd"
+    },
+    {
+      "path": "backend/pkg/contracts/module_test.go",
+      "sha256": "9196c89e8253e402b8ffed48cf791628de64b5b64cfeda8ad1ffa27dbb711a03"
+    },
+    {
+      "path": "backend/pkg/contracts/module_required_test.go",
+      "sha256": "73633fba4aec9ab74d04d29e621bbef546f53b4e0567fb4a2a50929146df8caa"
+    },
+    {
+      "path": "backend/internal/scaffold/contract.go",
+      "sha256": "fb014dea83e2b72efc27c991df87a1c60c2e13e3fc60555ba6a7725d0a5d75de"
+    },
+    {
+      "path": "backend/internal/scaffold/types.go",
+      "sha256": "e0eb644f17ec89eda55101870578bef9acfe92c2d03296f523e9c3ff897d6095"
+    },
+    {
+      "path": "backend/internal/scaffold/workspace_test.go",
+      "sha256": "dcb06e8956416e40c54424248599be2452d16f6d8c63ff627c5c213fe85cb59f"
+    },
+    {
+      "path": "frontend/src/modules/lowcode/generator/schema.ts",
+      "sha256": "9c65497bf78774b00b548575844c47214ac50ed258059a8e76def99fd7049a1f"
+    },
+    {
+      "path": "frontend/src/modules/lowcode/generator/backendGenerator.ts",
+      "sha256": "0da86ebcaf0dc4c8a0ccf0181c10cd6dbd2c46de62eaf87c281df61f4fcb0783"
+    },
+    {
+      "path": "frontend/src/modules/lowcode/generator/exporter.ts",
+      "sha256": "f4c58690e4447ea97a61307078335638219e69437219c21702d423d0ca21282b"
+    },
+    {
+      "path": "frontend/src/modules/lowcode/generator/pages/ModuleWizard.tsx",
+      "sha256": "5d847baac42b7a6639ed3dd7e4fd99bf7fd0d42ac7f8b4d52eb24596fd115b48"
+    },
+    {
+      "path": "frontend/src/modules/lowcode/generator/frontendGenerator.ts",
+      "sha256": "25a99df4831c4881f68e7b113f4046a4befd4528d0d1fa166fd5786aea752c89"
+    },
+    {
+      "path": "frontend/src/modules/lowcode/generator/typeMapping.ts",
+      "sha256": "fc73d0e55959dfe5923883940cee52d6e6ecc1e8a45dc6a4dfa87683d1cbaec3"
+    },
+    {
+      "path": "frontend/scripts/export-generated-module.mjs",
+      "sha256": "2cb28672bd6ffc5983a737bddad37717d0293fbb12170524135a21f1417ab768"
+    },
+    {
+      "path": "frontend/tests/generator/generator-quality-contract.test.ts",
+      "sha256": "2d705a81ea128ca35a62e2aeb7a37a2dce4a95c66879244d55926ce2f0d4bb75"
+    },
+    {
+      "path": "frontend/tests/generator/fixtures/tenantv2-flat.json",
+      "sha256": "ccca8dcb218d533e663631c2b7e51c43f6109ce5350000981174b3079285493c"
+    },
+    {
+      "path": "frontend/tests/generator/fixtures/legacyv1-flat.json",
+      "sha256": "72cb239ed08826b3648ce1db87cc6e8e591cac88d5015123bcfdb24e11419e2e"
+    },
+    {
+      "path": "scripts/testing/verify-tenant-generated-runtime.mjs",
+      "sha256": "cc31cb7606fb37f157f3976930fecd3f1a2a560529dc4bcc054e77d423a3c933"
+    },
+    {
+      "path": "backend/pkg/contracts/business_tenant_groups.go",
+      "sha256": "1708fa753d56bf79b76df8dbeec7208b35a2ff44b1ca3300f9640d0ca2a96e6a"
+    },
+    {
+      "path": "backend/pkg/contracts/businessauth/businessauth.go",
+      "sha256": "1ac1cc33dbaa21910a4a3dedaf168b0aa2e022ca0b9d339ae82690f26c9d6ade"
+    },
+    {
+      "path": "backend/internal/middleware/business_tenant_context.go",
+      "sha256": "f7b19e42ee68ee3c297c844c2b742a2bb0e3afc71f251c75bc134141dd387ba6"
+    },
+    {
+      "path": "backend/internal/middleware/business_token_middleware.go",
+      "sha256": "539a5ddcf7dc52d5ef870a2186b01ff289e1a9a8bfdf45c3eec1770d02bd4848"
+    },
+    {
+      "path": "backend/internal/middleware/business_authorization.go",
+      "sha256": "261afa640740845215149a0e1195d17f37c758d0987284e04ca9602f943fa3de"
+    },
+    {
+      "path": "backend/pkg/database/business_policy.go",
+      "sha256": "fdafd8c8cf27099e971cec0f8ed89527f79e92bed0c3766bc88fa46671d2f8d8"
+    }
+  ]
+}

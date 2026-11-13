@@ -1,0 +1,63 @@
+{
+  "role": "Generator",
+  "parentStatus": "OPEN",
+  "selfApproval": false,
+  "ownedSourceHashStable": true,
+  "artifacts": [
+    {
+      "name": "resume-o4-telemetry-baseline-hashes.json",
+      "bytes": 808,
+      "sha256": "aeabae40486946ffe3aa2e237f4ac7eaf6ad64d38e85edf0238d8561972b8a9f"
+    },
+    {
+      "name": "resume-o4-telemetry-checks.json",
+      "bytes": 2418,
+      "sha256": "ec12613db0f885e91c5756dc599fee05604aea2d35be9226b64dff1183c9af4d"
+    },
+    {
+      "name": "resume-o4-telemetry-green.txt",
+      "bytes": 5450,
+      "sha256": "fa13e6a1c21f52a2e78788b13a47f3a94e83b0bdeee1a1b0b374b48f1cb3bd43"
+    },
+    {
+      "name": "resume-o4-telemetry-handoff.md",
+      "bytes": 11930,
+      "sha256": "202c759b1bb78a5e82e4178294176a381838335bdf76aef96ec434b835833d30"
+    },
+    {
+      "name": "resume-o4-telemetry-privacy-receipt.json",
+      "bytes": 6312,
+      "sha256": "e4332c2c2efa8ce96bd90c3b234662ec355110ed03c4a3e30bc3e745956991e9"
+    },
+    {
+      "name": "resume-o4-telemetry-red-test-hash.json",
+      "bytes": 220,
+      "sha256": "3ff4ffc8a09da9d4646829959bc99cedd778c19b86b1d409d98751d3a285697f"
+    },
+    {
+      "name": "resume-o4-telemetry-red.txt",
+      "bytes": 34561,
+      "sha256": "58708ab8ed046787850f95afee19edca31e9da078c4452c6d65e50734f4539e8"
+    },
+    {
+      "name": "resume-o4-telemetry-scoped-race.jsonl",
+      "bytes": 199606,
+      "sha256": "44f727d0991a29db5317d065174d708baef1a5124f0b79fb693200726bc9ddfb"
+    },
+    {
+      "name": "resume-o4-telemetry-source-hashes.json",
+      "bytes": 717,
+      "sha256": "e8dd3ff852c647a6c0a5305501ca41ce7d7a08f470590d6ec5068444e56fa720"
+    },
+    {
+      "name": "resume-o4-telemetry-verification-after-hashes.json",
+      "bytes": 89066,
+      "sha256": "0f783cb927aef44b7b1b0ab0c60a6f7707637b336a271679d7b6b305b6ce011d"
+    },
+    {
+      "name": "resume-o4-telemetry-verification-before-hashes.json",
+      "bytes": 89025,
+      "sha256": "a807a67c479673aec2f1d38452df55c95678d25b0e7444927f63a2446b881092"
+    }
+  ]
+}
