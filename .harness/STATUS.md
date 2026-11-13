@@ -12,7 +12,7 @@
 
 本提交树活跃manifest目录为空；完成档案共 **256个任务 /262个evidence目录**，见 [ARCHIVE.md](./ARCHIVE.md)。独立在途PR/工作区任务以各自范围跟踪，归档不代表所有产品验收已完成。
 
-大型归档触发的CI smoke范围解析E2BIG已定位；最小条件修复及19项回归经独立CODE/ARCH批准，沿用已有治理分类和运行态门禁。最终修复提交仍由正常hosted门禁与合并判定，不以源审批代替。[CI证据与审查](./archive/2026-11/evidence/2026-11-13-docs-archive-closeout/review.md)。
+大型归档触发的CI smoke范围解析E2BIG与活跃目录为空后的状态词汇测试失败已定位。最小条件修复及19项回归经独立CODE/ARCH批准；状态测试同时校验活跃与月度归档manifest，完整脚本测试210/210通过、零跳过，非法状态检查保留。最终修复提交仍由正常hosted门禁与合并判定，不以源审批代替。[CI证据与审查](./archive/2026-11/evidence/2026-11-13-docs-archive-closeout/review.md)。
 
 ## 保留事项
 

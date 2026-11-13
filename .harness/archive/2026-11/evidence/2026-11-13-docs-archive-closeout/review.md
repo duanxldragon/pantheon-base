@@ -13,7 +13,9 @@ Original18 task/evidence pairs and publication identity retain their independent
   "basis": [
     "documentation-review.md",
     "ci-code-review.md",
-    "ci-architect-review.md"
+    "ci-architect-review.md",
+    "status-code-review.md",
+    "status-architect-review.md"
   ],
   "sourceHashes": [
     {
@@ -23,13 +25,18 @@ Original18 task/evidence pairs and publication identity retain their independent
     {
       "path": "tests/scripts/quality-workflow.test.mjs",
       "sha256": "93fd0bd2b731c8ac4755ddd96e60b14c26024aed62d10cbc19c4a9b804f8eb0d"
+    },
+    {
+      "path": "tests/scripts/task-manifest-status.test.mjs",
+      "sha256": "4e10cf9dc3f2d131df3c967b2b251d9553f86863daa9528f3d4b6123e8a827ed"
     }
   ],
   "structuralReview": {
     "affectedSubgraph": [
       "README -> docs index -> STATUS -> monthly task/evidence archive",
       "dorny all_count/governance_only_count -> resolver condition",
-      "all_files -> CHANGED_FILES_JSON -> existing smoke resolver -> existing runtime guards"
+      "all_files -> CHANGED_FILES_JSON -> existing smoke resolver -> existing runtime guards",
+      "live/archive inventory -> existing manifest schema -> canonical-status regression"
     ],
     "checks": ["cycle", "hub", "call-depth", "sensitive-flow"],
     "findings": []
@@ -46,3 +53,7 @@ Original18 task/evidence pairs and publication identity retain their independent
   }
 }
 ```
+
+## Archive-only Status Test Review
+
+Fresh independent CODE APPROVE and ARCH APPROVE/CLEAR cover the test SHA256 4e10cf9dc3f2d131df3c967b2b251d9553f86863daa9528f3d4b6123e8a827ed. Reports are retained in status-code-review.md and status-architect-review.md. CODE independently ran the targeted suite5/5 zero skips and verified failed/passed full-suite log hashes; both reviewers validated all256 archived manifests with no live manifests. Root full suite210/210 zero skips and11 static gates passed. Original documentation and CI source reviews retain their exact scopes. Required hosted replay and merge remain the delivery condition.

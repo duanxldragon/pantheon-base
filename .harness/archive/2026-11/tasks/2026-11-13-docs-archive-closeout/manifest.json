@@ -20,7 +20,8 @@
       "Append publication facts to v0.18.8 release notes",
       "GitHub repository description",
       "Ordinary Markdown hrefs in current contracts/designs/runbooks and retained task docs point to physical archived files; frozen release-note links receive append-only archive addenda.",
-      "Minimal CI repair: skip redundant smoke-module resolver for already-classified governance-only changes, avoiding Linux E2BIG on archived path lists. Mixed source changes retain resolver and all existing runtime gates."
+      "Minimal CI repair: skip redundant smoke-module resolver for already-classified governance-only changes, avoiding Linux E2BIG on archived path lists. Mixed source changes retain resolver and all existing runtime gates.",
+      "Archive-aware canonical status regression scans live and monthly archived manifests; retains the nonempty inventory assertion and rejects illegal archived statuses."
     ],
     "out": [
       "Product code, UI, gate policy, dependencies, VERSION, immutable tags/assets",
@@ -92,7 +93,8 @@
       "docs/runbooks/TENANT_MIGRATION_RUNBOOK.md",
       "docs/TENANT_INITIALIZATION_GUIDE.md",
       ".github/workflows/quality.yml",
-      "tests/scripts/quality-workflow.test.mjs"
+      "tests/scripts/quality-workflow.test.mjs",
+      "tests/scripts/task-manifest-status.test.mjs"
     ],
     "doNotTouch": [
       "backend/",
@@ -105,7 +107,7 @@
     ]
   },
   "executionRoles": {
-    "implementerPosture": "Dispatcher edits documentation and performs reversible git mv only.",
+    "implementerPosture": "Dispatcher edits documentation, bounded CI configuration and test-only regressions; application code and production contracts unchanged.",
     "reviewerPosture": [
       "Independent non-author code reviewer checks publication identity, archive byte preservation, current/historical separation and residual scope.",
       "Fresh independent CODE and ARCH review of quality.yml guard and meaningful large-archive/mixed-change regression"
@@ -123,7 +125,8 @@
       "npm run check:harness-evidence",
       "npm run check:harness-review",
       "npm run check:harness-runtime-evidence",
-      "npm run check:duplication"
+      "npm run check:duplication",
+      "npm run test:scripts"
     ],
     "runtimeEvidence": []
   },
@@ -152,8 +155,8 @@
       ".harness/ARCHIVE.md"
     ]
   },
-  "reviewStatus": "Independent documentation CODE approved; fresh CI CODE approved / ARCH approved CLEAR",
-  "verificationStatus": "11 static gates and19 CI regressions passed; documentation delivery PR511 merged",
+  "reviewStatus": "Independent documentation CODE approved; CI CODE/ARCH approved; archive-only status test fresh CODE APPROVE and ARCH APPROVE/CLEAR",
+  "verificationStatus": "11 static gates and19 CI regressions passed; full script suite210/210 zero skips after archive-only status repair; exact PR hosted replay pending",
   "structuralScope": {
     "affectedSubgraph": [
       "README -> docs index -> STATUS -> monthly task/evidence archive",
@@ -187,6 +190,10 @@
       {
         "path": "tests/scripts/quality-workflow.test.mjs",
         "sha256": "93fd0bd2b731c8ac4755ddd96e60b14c26024aed62d10cbc19c4a9b804f8eb0d"
+      },
+      {
+        "path": "tests/scripts/task-manifest-status.test.mjs",
+        "sha256": "4e10cf9dc3f2d131df3c967b2b251d9553f86863daa9528f3d4b6123e8a827ed"
       }
     ]
   }

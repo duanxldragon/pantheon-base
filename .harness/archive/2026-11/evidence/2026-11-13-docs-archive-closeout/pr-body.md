@@ -1,12 +1,12 @@
 ## 变更摘要
 
-大型归档使 CI 的 smoke 范围解析环境变量超过 Linux 进程启动限制。沿用已有治理分类，只让含源码变更的范围执行该解析；原运行态与必过门禁判定保留。红回归证明原 guard 会执行无必要步骤，修复后19项 workflow/resolver 验证通过。新增 CI 范围已获 CODE APPROVE 与 ARCH APPROVE/CLEAR。
+大型归档使 CI 的 smoke 范围解析环境变量超过 Linux 进程启动限制，全部完成任务归档后状态测试的活跃目录也变为空。沿用已有治理分类，只让含源码变更的范围执行该解析；原运行态与必过门禁判定保留。红回归证明原 guard 会执行无必要步骤，修复后19项 workflow/resolver 验证通过。状态测试现同时验证活跃和月度归档 manifest，保留非空断言与非法状态拒绝；完整 test:scripts 通过210/210，零跳过。原 guard 与新增状态测试均获独立 CODE/ARCH批准。
 
 Pantheon Base 入口文档仍停留在 v0.18.8 准备阶段，本次对齐已发布提交及不可变资产，更新双语 README 和 GitHub 描述，并此前18个完成任务已随 PR511交付；本 PR归档当前完成任务。历史评审与残余验收范围保留。
 
 - 改动层级: platform
-- 改动模块: documentation / harness archives / GitHub repository metadata
-- 目标问题: 入口仍显示发行待完成，完成任务滞留活跃目录
+- 改动模块: documentation / harness archives / GitHub repository metadata / CI guard and test regression
+- 目标问题: 入口显示发行待完成、完成任务滞留活跃目录；大型归档触发 E2BIG 和 live-only 状态测试失败
 - 预期影响: 对齐正式 v0.18.8、改善导航并保留可追溯完成档案
 
 ## Harness 链路
@@ -48,7 +48,7 @@ Pantheon Base 入口文档仍停留在 v0.18.8 准备阶段，本次对齐已发
 - [x] 11 项适用文档与治理检查最终通过，执行和 gzip/raw SHA-256 见 commands.json。
 - [x] 18 对目录完整性通过；1264 个原 tracked 文件与原 main 逐字节一致。库存 256 tasks / 262 evidence。
 - [x] GitHub 描述写入与 readback 完全一致。
-- [x] 独立非作者 review APPROVE 已保存；隔离提交的11项检查全部通过。
+- [x] 原独立 CODE/ARCH APPROVE 已保存；11项静态检查、19项 workflow/resolver 回归与完整210项脚本测试通过。
 - [ ] Exact PR hosted checks 将在交付前完成。
 
 ## 审核留痕
@@ -56,7 +56,7 @@ Pantheon Base 入口文档仍停留在 v0.18.8 准备阶段，本次对齐已发
 - Copilot review: automatic-policy; independent non-author review artifact also required
 - CodeQL 结果: source unchanged; published main alerts #100–108 fixed automatically, zero dismissals
 - GitHub checks 结果: pending exact PR hosted checks
-- Auto-merge: not-enabled; normal required checks govern merge
+- Auto-merge: enabled by existing repository automation; normal required checks govern merge
 - Duplication Gate 结果: local PASS
 - 是否高风险改动: yes; bounded quality.yml CI guard repair, independent CODE/ARCH approved
 - Residual risk / follow-up: Ops v0.18.8 upgrade, freeze signature, S3 provider, FR028 and separate production/product acceptance remain scoped separately

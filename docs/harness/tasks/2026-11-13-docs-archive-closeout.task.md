@@ -55,6 +55,8 @@ platform
 
 ### In
 
+- task-manifest-status.test.mjs 同时校验活跃与月度归档 manifest；保留非空断言、非法状态拒绝并补 archive-only 回归。
+
 - quality.yml 仅治理变更跳过原本无作用的 smoke 范围解析，避免大型路径列表环境变量 E2BIG；混合源码变更与必过运行态门禁保持原判定。
 
 - 归档后普通 Markdown href 指向物理地址；合同/设计/runbook/历史任务正文仅修 href，不改语义。冻结发行说明追加可点击归档链接。
@@ -88,6 +90,7 @@ platform
 ### Modify
 
 - .github/workflows/quality.yml 与现有 quality-workflow.test.mjs 大型归档/混合源码回归。
+- tests/scripts/task-manifest-status.test.mjs 的归档任务库存与状态词汇回归。
 
 - 受影响合同、设计、初始化指南、runbook 与历史任务正文的归档 href（见 markdown-link-migration.json）。
 
@@ -121,6 +124,7 @@ platform
 - npm run check:harness-review
 - npm run check:harness-runtime-evidence
 - npm run check:duplication
+- npm run test:scripts（完整 210 项；零跳过）
 - 目录聚合 SHA-256、canonical 引用解析、GitHub metadata readback 与 PR checks。
 
 ## Linkage

@@ -14,6 +14,14 @@ import {
 const TEST_DIR = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(TEST_DIR, '..', '..');
 
+function listAllTaskManifestPaths(root) {
+  const archived = fs
+    .globSync('.harness/archive/????-??/tasks/*/manifest.json', { cwd: root })
+    .map((entry) => entry.replaceAll('\\', '/'))
+    .filter((entry) => /^\.harness\/archive\/\d{4}-\d{2}\/tasks\//.test(entry));
+  return [...listTaskManifestPaths(root), ...archived];
+}
+
 function baseManifest(overrides = {}) {
   return {
     taskId: 'sample-task',
@@ -53,7 +61,7 @@ test('treats status as optional so inherited repos without it stay legal', () =>
 });
 
 test('every committed manifest uses the canonical vocabulary', () => {
-  const manifests = listTaskManifestPaths(REPO_ROOT);
+  const manifests = listAllTaskManifestPaths(REPO_ROOT);
   assert.ok(manifests.length > 0, 'expected at least one task manifest');
   for (const manifestPath of manifests) {
     const { payload } = readTaskManifest(REPO_ROOT, manifestPath);
@@ -64,6 +72,33 @@ test('every committed manifest uses the canonical vocabulary', () => {
       TASK_MANIFEST_STATUSES.has(payload.status.trim()),
       `${manifestPath}: status "${payload.status}" is not canonical`,
     );
+  }
+});
+
+test('archive-only inventory remains nonempty and rejects illegal statuses', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'task-status-archive-'));
+  const manifestPath = '.harness/archive/2026-11/tasks/sample-task/manifest.json';
+  try {
+    fs.mkdirSync(path.dirname(path.join(root, manifestPath)), { recursive: true });
+    fs.writeFileSync(
+      path.join(root, manifestPath),
+      JSON.stringify(baseManifest({ status: 'completed' })),
+    );
+    assert.deepEqual(listTaskManifestPaths(root), []);
+    const manifests = listAllTaskManifestPaths(root);
+    assert.deepEqual(manifests, [manifestPath]);
+    assert.equal(readTaskManifest(root, manifests[0]).payload.status, 'completed');
+
+    fs.writeFileSync(
+      path.join(root, manifestPath),
+      JSON.stringify(baseManifest({ status: 'done' })),
+    );
+    assert.throws(
+      () => readTaskManifest(root, manifests[0]),
+      /taskManifest\.status must be one of/,
+    );
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
   }
 });
 

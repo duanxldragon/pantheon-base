@@ -46,14 +46,18 @@ none; documentation only, no UI behavior or visual-polish claim.
 
 Implementation and independent review approved. All11 applicable checks passed again in the isolated exact tree; PR hosted delivery pending. Concurrent Ops menu task documents were excluded from the isolated commit without editing the other session workspace.
 
-
 ## CI Continuation — PR #511
 
 Code Quality Gates run43429346051 / Change Scope job131898623824 / Resolve touched smoke modules failed before starting /usr/bin/bash: Argument list too long. The full archive path JSON exceeds Linux single-env-string limits. Existing governance-only classification already excludes runtime smoke gates, so the resolver has no useful output for this scope. Its existing event condition now additionally requires unequal all/governance counts. Mixed source changes still resolve.
 
 Red regression failed on the original guard; final quality-workflow and resolver suites pass19/19. actionlint passes. No exemption, required-check changes or runtime gate weakening. Two independent CODE/ARCH approvals and exact updated PR hosted checks required. Original documentation review scope remains unchanged.
 
-
 ## Completed Documentation Delivery and CI Preparation
 
 PR #511 merged at b310dc8eaf7c846f1b5e59529b6508e976ba422a (2026-11-13T13:00:17Z). The substantive documentation/GitHub description/archive task is delivered. Bounded CI repair source and19 regression checks are independently CODE/ARCH approved; archive this task with its evidence under the same monthly convention. This makes19 newly archived task/evidence pairs (18 previous tasks plus this closeout), total256 tasks /262 evidence. Final repair PR hosted replay remains required and is not claimed by this preparation record.
+
+## Archive-only Status Validation — PR #512
+
+The first PR512 Unit Tests job failed because the canonical-status regression only enumerated live manifests; this commit tree has no live manifests. Actual failed hosted log and hashes are retained in unit-test-hosted-failure.json/log.gz, and local failure/pass in commands.json entries70/71. The regression now validates both live and monthly archived manifests with the existing schema reader. The nonempty assertion and illegal-status rejection remain. Full test:scripts passes210/210 with zero skipped tests, including an archive-only fixture and illegal archived done. Production helpers and original18 archive packages are unchanged. New test source requires fresh CODE/ARCH approval and hosted replay.
+
+Fresh status-test independent CODE APPROVE and ARCH APPROVE/CLEAR recorded in status-code-review.md/status-architect-review.md, bound to SHA256 4e10cf9dc3f2d131df3c967b2b251d9553f86863daa9528f3d4b6123e8a827ed. Both inspected256 archived manifests, and CODE independently ran5/5 targeted tests with zero skips. All11 static gates passed again after the bounded scope/evidence update. Final hosted receipts are retained separately after publication to avoid claiming a future run in committed evidence.
