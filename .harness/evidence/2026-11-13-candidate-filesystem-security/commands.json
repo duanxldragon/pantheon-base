@@ -416,14 +416,14 @@
     }
   ],
   "graphChecks": {
-    "usedCodeGraph": false,
     "affectedSubgraph": [
       "candidate input path -> file opening/reading -> sealed source/archive",
       "descriptor path -> validated descriptor -> consumer candidate"
     ],
-    "checks": [],
+    "checks": ["cycle", "hub", "call-depth", "sensitive-flow"],
+    "usedCodeGraph": false,
     "findings": [],
-    "notes": "Writer records pending structural/security review; source implementation owned by separate executor."
+    "notes": "Manual source/import/call-body review bound to source tree 93b617c283b20866f3b209047e931246dbf9b009 and candidate-af7b5e4ba7e5b086df902b3190c5daf9f0cbc757ae0fe6d91208a329ed6e7a61. All five reviewed source hashes were rechecked unchanged. No computed CodeGraph result is claimed.\n\ncycle: PASS for the affected dependency structure. Producer imports descriptor; descriptor imports only Node crypto/fs/path; tests import both without reverse production dependencies. The helper adds a symbol on an existing module edge. Smoke/package changes add no runtime import edges. Existing recursive source visit remains deliberate and unchanged. Evidence: build-candidate-artifact.mjs:6, candidate-descriptor.mjs:1, candidate-artifact.test.mjs:7, build-candidate-artifact.mjs:35.\n\nhub: PASS with an intentional hub identified. withCandidateFiles centralizes filesystem policy at six production invocation sites: source capture, saved pair, early archive validation, CLI inventory, descriptor read, and executable verification. Domain-specific pins/schema/stage checks remain in synchronous callers. Evidence: candidate-descriptor.mjs:100; build-candidate-artifact.mjs:37,123,140,179; candidate-descriptor.mjs:235,317.\n\ncall-depth: PASS. The executable verification chain adds one named helper frame and one synchronous callback frame compared with the previous descriptor-read chain. No recursive reader/producer call or new unbounded traversal is introduced. Existing source traversal remains recursive; bounded file reading is iterative. Smoke retains its existing retry/evaluate chain. Evidence: candidate-descriptor.mjs:100,233,314; build-candidate-artifact.mjs:27; system-pages-helpers.ts:750.\n\nsensitive-flow: PASS under the documented observed-namespace boundary. Untrusted paths enter open-first fd validation; identity/type/link/size checks precede allocation and reading. Bounded reads, exact EOF, retained paired/triple handles, final observations, digest/schema/capability/size checks and exclusive fixture recreation preserve the trust boundary. Cleanup remains nonrecursive with ownership checks. Separate path syscalls and handle closure before rename provide no atomic namespace-locking guarantee. Evidence: candidate-descriptor.mjs:117,135,142,147,314; build-candidate-artifact.mjs:123,149,154,179; candidate-artifact.test.mjs:51."
   },
   "sessionEconomics": {
     "responseMode": "terse",

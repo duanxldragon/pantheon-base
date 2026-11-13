@@ -77,7 +77,7 @@ platform
 - Affected Subgraph: candidate input/descriptor path -> validated file operations -> sealed candidate -> consumer reconstruction.
 - Boundary Crossings: local filesystem -> trusted artifact identity; Base producer -> Ops consumer.
 - Risk Nodes: file replacement, symlink races, immutable output writes and fixture reads.
-- Graph Focus: three named files and immutable producer/consumer contract; manual boundary diff review and hosted CodeQL.
+- Graph Focus: cycle, hub, call-depth and sensitive-flow checks through actual manual source/import/call-body review; no CodeGraph result claimed. Hosted CodeQL remains a separate gate.
 
 ## Expected Files
 

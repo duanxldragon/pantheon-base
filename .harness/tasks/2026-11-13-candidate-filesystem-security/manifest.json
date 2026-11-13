@@ -135,8 +135,10 @@
       "Immutable artifact write and fixture operations"
     ],
     "graphFocus": [
-      "Three named candidate files; retain existing signatures and immutable contract",
-      "package.json test:foundation-release -> existing CI ci.yml command -> candidate race and Linux leaf-symlink tests"
+      "cycle-check",
+      "hub-check",
+      "call-depth",
+      "sensitive-input-flow"
     ]
   },
   "executionRoles": {
