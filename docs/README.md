@@ -2,6 +2,8 @@
 
 当前 VERSION 为 `0.18.8`，包含已验证的依赖升级与 11 月 7 日交付收尾；见 [v0.18.8 发行说明](./release-notes/RELEASE_NOTES_v0.18.8.md) 和 [准备检查点证据](../.harness/evidence/2026-11-13-v0188-release-preparation/summary.md)。正式发行身份、提交和四个不可变资产以 [GitHub Release](https://github.com/duanxldragon/pantheon-base/releases/tag/pantheon-base-v0.18.8) 为准。前一版本 v0.18.7 在 `3203624e55438866edb951bd74e671eab38d2f16` 发布并通过 [Ops #183](https://github.com/duanxldragon/pantheon-ops/pull/183) 完成正式消费；见 [v0.18.7 交付证据](../.harness/evidence/2026-11-12-v0187-release-ops-consumption/summary.md)。
 
+v0.18.8 准备已通过 PR #509 合并；最终 main 的 Smoke Sanity 暴露 empty 节点脱离 DOM 时的 helper 等待参数缺陷，原准备任务的续办已完成。实际 helper 五场景浏览器证明、最终 candidate 兼容构建及五源码独立安全/CODE/ARCH 审批通过；最终完整树确认、合并与 hosted 门禁仍待完成；见 [2026-11-13 续办证据](../.harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/summary.md)。此前 candidate 和审批保留历史范围，正式发行仍需最终提交门禁与资产验证。
+
 ## Historical checkpoints
 
 Official `pantheon-base-v0.18.6` is published at5553bc0e after exact Release Gate; Ops official consumption passed and merged[PR178](https://github.com/duanxldragon/pantheon-ops/pull/178). Three repositories verified main-only; final factual documentation closeout is independently approved; current administrative CI/merge/main-only recheck remain required. Original12/40 remain accepted; unwaived residuals retained. See [evidence](../.harness/evidence/2026-11-07-v0186-release-ops-consumption/summary.md).

@@ -5,7 +5,7 @@ import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import test from 'node:test';
 import { buildCandidateArtifact } from './build-candidate-artifact.mjs';
-import { aggregateSha256, assertCandidatePath, assertInventory, CAPABILITY_EXPORTS, readCandidateDescriptor, sha256, validateCandidateDescriptor, verifyCandidateArchive, verifyCandidateExecutable } from './candidate-descriptor.mjs';
+import { aggregateSha256, assertCandidatePath, assertInventory, CAPABILITY_EXPORTS, LIMITS, readCandidateDescriptor, sha256, validateCandidateDescriptor, verifyCandidateArchive, verifyCandidateExecutable } from './candidate-descriptor.mjs';
 
 function fixture(t) {
   const temporary = fs.mkdtempSync(path.join(os.tmpdir(), 'pantheon-candidate-test-'));
@@ -29,6 +29,152 @@ function fixture(t) {
   const options = { root, baseCommit: git('rev-parse', 'HEAD'), sourcePaths: ['backend', 'frontend', 'docs'], sharedPaths: { backend: ['backend'], frontend: ['frontend/src'], docs: ['docs'] }, evidenceIds: ['fixture-source-verification'], reviewIds: ['fixture-review-reference'], capabilities: ['permission-route-registration-v1'], outputRoot: path.join(temporary, 'sealed') };
   return { temporary, root, write, api, options, build: (extra = {}) => buildCandidateArtifact({ ...options, ...extra }) };
 }
+
+function executableFixture(t) {
+  const f = fixture(t); const result = f.build();
+  const executablePath = path.join(f.temporary, 'fixture-executable');
+  const executable = Buffer.from('synthetic executable bytes, never launched');
+  fs.writeFileSync(executablePath, executable);
+  const receipt = { schemaVersion: 1, kind: 'pantheon-candidate-build', candidateIdentity: result.descriptor.candidateIdentity, descriptorSha256: result.descriptorSha256, aggregateSha256: result.descriptor.aggregateSha256, capabilities: result.descriptor.capabilities, executable: { bytes: executable.length, sha256: sha256(executable) }, evidenceIds: ['fixture-build'], reviewIds: ['fixture-build-review'] };
+  const buildReceiptPath = path.join(f.temporary, 'build-receipt.json');
+  const receiptBytes = Buffer.from(JSON.stringify(receipt)); fs.writeFileSync(buildReceiptPath, receiptBytes);
+  const options = { descriptorPath: result.descriptorPath, expectedDescriptorSha256: result.descriptorSha256, buildReceiptPath, expectedBuildReceiptSha256: sha256(receiptBytes), executablePath, expectedExecutableSha256: sha256(executable) };
+  return { ...f, result, receipt, options };
+}
+
+function readFixtureFile(file, encoding) {
+  const fd = fs.openSync(file, fs.constants.O_RDONLY);
+  try { return fs.readFileSync(fd, encoding); }
+  finally { fs.closeSync(fd); }
+}
+
+function recreateFixtureFile(file, bytes) {
+  const fd = fs.openSync(file, fs.constants.O_WRONLY | fs.constants.O_CREAT | fs.constants.O_EXCL);
+  try { fs.writeFileSync(fd, bytes); }
+  finally { fs.closeSync(fd); }
+}
+
+test('pinned descriptor, receipt and executable refuse byte-identical pathname swaps after opening and during reading', async (t) => {
+  for (const field of ['descriptorPath', 'buildReceiptPath', 'executablePath']) for (const phase of ['open', 'read']) await t.test(`${field}/${phase}`, (t) => {
+    const f = executableFixture(t); const target = f.options[field];
+    const bytes = fs.readFileSync(target); const retained = path.join(f.temporary, 'retained-file');
+    const originalOpen = fs.openSync; const originalRead = fs.readSync;
+    let targetFD; let fired = false;
+    const replace = () => { fired = true; fs.renameSync(target, retained); fs.writeFileSync(target, bytes); };
+    t.mock.method(fs, 'openSync', function (file, ...args) {
+      const fd = originalOpen.call(this, file, ...args);
+      if (!fired && file === target) { targetFD = fd; if (phase === 'open') replace(); }
+      return fd;
+    });
+    t.mock.method(fs, 'readSync', function (fd, ...args) {
+      const count = originalRead.call(this, fd, ...args);
+      if (!fired && phase === 'read' && fd === targetFD && count > 0) replace();
+      return count;
+    });
+    try { assert.throws(() => verifyCandidateExecutable(f.options), /changed|identity/u); }
+    finally { t.mock.restoreAll(); }
+    assert.equal(fired, true, 'actual fd boundary attacked');
+    assert.deepEqual(fs.readFileSync(retained), bytes, 'renamed original is preserved');
+  });
+});
+
+test('pinned descriptor, receipt and executable refuse hard links and oversized files before reading', async (t) => {
+  for (const field of ['descriptorPath', 'buildReceiptPath', 'executablePath']) for (const mode of ['hardlink', 'oversize']) await t.test(`${field}/${mode}`, (t) => {
+    const f = executableFixture(t); const target = f.options[field];
+    if (mode === 'hardlink') fs.linkSync(target, path.join(f.temporary, 'alias'));
+    else fs.truncateSync(target, (field === 'executablePath' ? LIMITS.archiveBytes : LIMITS.descriptorBytes) + 1);
+    const originalOpen = fs.openSync; const originalRead = fs.readSync; let targetFD; let reads = 0;
+    t.mock.method(fs, 'openSync', function (file, ...args) {
+      const fd = originalOpen.call(this, file, ...args); if (file === target) targetFD = fd; return fd;
+    });
+    t.mock.method(fs, 'readSync', function (fd, ...args) { if (fd === targetFD) reads++; return originalRead.call(this, fd, ...args); });
+    try { assert.throws(() => verifyCandidateExecutable(f.options), /hard links|size|limit/u); }
+    finally { t.mock.restoreAll(); }
+    assert.equal(reads, 0, 'unsupported target is rejected before any content read');
+  });
+});
+
+test('pinned descriptor, receipt and executable refuse growth during a bounded read', async (t) => {
+  for (const field of ['descriptorPath', 'buildReceiptPath', 'executablePath']) await t.test(field, (t) => {
+    const f = executableFixture(t); const target = f.options[field];
+    const originalOpen = fs.openSync; const originalRead = fs.readSync; let targetFD; let fired = false;
+    t.mock.method(fs, 'openSync', function (file, ...args) { const fd = originalOpen.call(this, file, ...args); if (file === target) targetFD = fd; return fd; });
+    t.mock.method(fs, 'readSync', function (fd, ...args) {
+      const count = originalRead.call(this, fd, ...args);
+      if (!fired && fd === targetFD && count > 0) { fs.appendFileSync(target, '\n'); fired = true; }
+      return count;
+    });
+    try { assert.throws(() => verifyCandidateExecutable(f.options), /changed|size/u); }
+    finally { t.mock.restoreAll(); }
+    assert.equal(fired, true, 'real read window attacked');
+  });
+});
+
+test('pinned verification refuses a byte-identical ancestor replaced by a junction during executable reading', (t) => {
+  const f = executableFixture(t); const parent = path.dirname(f.result.descriptorPath);
+  const descriptorID = fs.lstatSync(f.options.descriptorPath, { bigint: true }).ino;
+  const retained = path.join(f.temporary, 'retained-directory');
+  const originalOpen = fs.openSync; const originalRead = fs.readSync; let targetFD; let fired = false;
+  t.mock.method(fs, 'openSync', function (file, ...args) { const fd = originalOpen.call(this, file, ...args); if (file === f.options.executablePath) targetFD = fd; return fd; });
+  t.mock.method(fs, 'readSync', function (fd, ...args) {
+    const count = originalRead.call(this, fd, ...args);
+    if (!fired && fd === targetFD && count > 0) {
+      // Windows can reject renaming a directory with an open child; move the
+      // original child out, rename the directory, then restore the same inode.
+      const retainedDescriptor = path.join(f.temporary, 'retained-descriptor');
+      fs.renameSync(f.options.descriptorPath, retainedDescriptor);
+      fs.renameSync(parent, retained);
+      fs.renameSync(retainedDescriptor, path.join(retained, 'candidate-descriptor.json'));
+      fs.symlinkSync(retained, parent, 'junction'); fired = true;
+    }
+    return count;
+  });
+  try { assert.throws(() => verifyCandidateExecutable(f.options), /ancestor identity changed|real directories/u); }
+  finally { t.mock.restoreAll(); }
+  assert.equal(fired, true);
+  assert.equal(fs.lstatSync(parent).isSymbolicLink(), true, 'foreign junction survives refusal');
+  assert.equal(fs.lstatSync(f.options.descriptorPath, { bigint: true }).ino, descriptorID, 'original descriptor inode survives the ancestor swap');
+});
+
+test('pinned descriptor, receipt and executable refuse leaf symlinks with matching approved content', async (t) => {
+  for (const field of ['descriptorPath', 'buildReceiptPath', 'executablePath']) await t.test(field, (t) => {
+    const f = executableFixture(t); const link = path.join(f.temporary, 'leaf-link');
+    try { fs.symlinkSync(f.options[field], link, 'file'); }
+    catch (error) {
+      if (process.platform !== 'win32' || !['EPERM', 'EACCES'].includes(error.code)) throw error;
+      t.skip('Windows account cannot create leaf symlinks; Linux CI executes this case'); return;
+    }
+    assert.throws(() => verifyCandidateExecutable({ ...f.options, [field]: link }), /ELOOP|real directories/u);
+    assert.equal(fs.lstatSync(link).isSymbolicLink(), true);
+  });
+});
+
+test('pinned descriptor, receipt and executable refuse junction ancestors with matching approved content', async (t) => {
+  for (const field of ['descriptorPath', 'buildReceiptPath', 'executablePath']) await t.test(field, (t) => {
+    const f = executableFixture(t); const redirected = path.join(f.temporary, 'redirected');
+    fs.symlinkSync(path.dirname(f.options[field]), redirected, 'junction');
+    const target = path.join(redirected, path.basename(f.options[field]));
+    assert.throws(() => verifyCandidateExecutable({ ...f.options, [field]: target }), /real directories/u);
+    assert.equal(fs.lstatSync(redirected).isSymbolicLink(), true);
+  });
+});
+
+test('pinned verification attempts every handle close and preserves the primary validation failure', async (t) => {
+  for (const invalidPin of [false, true]) await t.test(invalidPin ? 'validation failure' : 'close failure', (t) => {
+    const f = executableFixture(t); const originalClose = fs.closeSync; const closed = [];
+    const closeFailure = new Error('injected first handle close failure');
+    t.mock.method(fs, 'closeSync', function (fd) {
+      const result = originalClose.call(this, fd); closed.push(fd);
+      if (closed.length === 1) throw closeFailure;
+      return result;
+    });
+    try {
+      const options = invalidPin ? { ...f.options, expectedBuildReceiptSha256: '0'.repeat(64) } : f.options;
+      assert.throws(() => verifyCandidateExecutable(options), invalidPin ? /receipt digest mismatch/u : error => error === closeFailure);
+    } finally { t.mock.restoreAll(); }
+    assert.equal(new Set(closed).size, 3, 'all three distinct handles are closed');
+  });
+});
 
 test('seals exact dirty/untracked fixture bytes with detached descriptor and genuine provenance', (t) => {
   const f = fixture(t); const result = f.build();
@@ -114,7 +260,7 @@ test('exported producer preserves directory replacements and original write/veri
   for (const phase of ['write', 'verification']) for (const directory of ['stage', 'ancestor', 'nested']) await t.test(`${phase}/${directory}`, (t) => {
     const f = fixture(t);
     const originalWrite = fs.writeFileSync;
-    const originalRead = fs.readFileSync;
+    const originalOpen = fs.openSync;
     const retained = path.join(f.temporary, 'retained-original');
     const parent = path.join(f.temporary, 'output-parent');
     const outputRoot = path.join(parent, 'sealed');
@@ -143,9 +289,11 @@ test('exported producer preserves directory replacements and original write/veri
       if (isArchive(file)) replace(file);
       return result;
     });
-    else t.mock.method(fs, 'readFileSync', function (file, ...args) {
-      if (isArchive(file)) replace(file);
-      return originalRead.call(this, file, ...args);
+    else t.mock.method(fs, 'openSync', function (file, ...args) {
+      // The early verification read now opens a handle explicitly. Inject at
+      // that boundary before Windows can lock an open child in the directory.
+      if (isArchive(file) && typeof args[0] === 'number' && (args[0] & 3) === fs.constants.O_RDONLY) replace(file);
+      return originalOpen.call(this, file, ...args);
     });
     try {
       assert.throws(() => f.build({ outputRoot }), (error) => {
@@ -393,14 +541,15 @@ function sealSourceState(root) {
   return ['', ...fs.readdirSync(root, { recursive: true }).sort()].map((relative) => {
     const absolute = path.join(root, relative);
     const stat = fs.lstatSync(absolute, { bigint: true });
-    return { relative, stamp: [stat.dev, stat.ino, stat.size, stat.mtimeNs, stat.ctimeNs, stat.mode, stat.nlink], digest: stat.isFile() ? sha256(fs.readFileSync(absolute)) : null };
+    return { relative, stamp: [stat.dev, stat.ino, stat.size, stat.mtimeNs, stat.ctimeNs, stat.mode, stat.nlink], digest: stat.isFile() ? sha256(readFixtureFile(absolute)) : null };
   });
 }
 
 test('exported producer refuses changed saved bytes in the final seal window with stable sources/directories', async (t) => {
   for (const [kind, mode] of [['descriptor', 'newline after write'], ['archive', 'append after early validation'], ['descriptor', 'same-size replacement'], ['archive', 'same-size replacement']]) await t.test(`${kind}/${mode}`, (t) => {
     const f = fixture(t); const sourceState = sealSourceState(f.root);
-    const originalWrite = fs.writeFileSync; const originalRead = fs.readFileSync; const originalExists = fs.existsSync;
+    const originalWrite = fs.writeFileSync; const originalOpen = fs.openSync; const originalRead = fs.readSync; const originalExists = fs.existsSync;
+    const opened = new Map();
     const saved = new Map();
     let stage; let earlyArchiveRead = false; let finalWindow = false; let fired = false; let directoryIDs;
     const ids = () => [stage, path.dirname(stage)].map((directory) => {
@@ -425,13 +574,14 @@ test('exported producer refuses changed saved bytes in the final seal window wit
       }
       return result;
     });
-    t.mock.method(fs, 'readFileSync', function (file, ...args) {
-      const bytes = originalRead.call(this, file, ...args);
-      if (saved.has(file) && file.endsWith('.tar')) {
-        assert.equal(sha256(bytes), sha256(saved.get(file)), 'early archive read is still valid');
+    t.mock.method(fs, 'openSync', function (file, ...args) { const fd = originalOpen.call(this, file, ...args); opened.set(fd, file); return fd; });
+    t.mock.method(fs, 'readSync', function (fd, ...args) {
+      const count = originalRead.call(this, fd, ...args); const file = opened.get(fd);
+      if (!finalWindow && saved.has(file) && file.endsWith('.tar') && count > 0 && args[1] + count === args[0].length) {
+        assert.equal(sha256(args[0]), sha256(saved.get(file)), 'early archive read is still valid');
         earlyArchiveRead = true;
       }
-      return bytes;
+      return count;
     });
     t.mock.method(fs, 'existsSync', function (file) {
       if (!finalWindow && stage && file === f.options.outputRoot) {
@@ -458,7 +608,7 @@ test('exported producer refuses changed saved bytes in the final seal window wit
 test('exported producer refuses byte-identical file rename/recreate during its final saved-file read', async (t) => {
   for (const kind of ['descriptor', 'archive']) await t.test(kind, (t) => {
     const f = fixture(t); const sourceState = sealSourceState(f.root);
-    const originalWrite = fs.writeFileSync; const originalRead = fs.readFileSync; const originalExists = fs.existsSync;
+    const originalWrite = fs.writeFileSync; const originalExists = fs.existsSync;
     const originalOpen = fs.openSync; const originalReadSync = fs.readSync;
     const retained = path.join(f.temporary, 'retained-original-file');
     let stage; let target; let targetFD; let expected; let earlyArchiveRead = false; let finalWindow = false; let fired = false; let directoryIDs;
@@ -470,11 +620,6 @@ test('exported producer refuses byte-identical file rename/recreate during its f
       }
       return result;
     });
-    t.mock.method(fs, 'readFileSync', function (file, ...args) {
-      const bytes = originalRead.call(this, file, ...args);
-      if (typeof file === 'string' && file.endsWith('.tar') && path.dirname(file) === stage) earlyArchiveRead = true;
-      return bytes;
-    });
     t.mock.method(fs, 'existsSync', function (file) {
       if (!finalWindow && stage && file === f.options.outputRoot) {
         finalWindow = true; assert.equal(earlyArchiveRead, true);
@@ -483,6 +628,7 @@ test('exported producer refuses byte-identical file rename/recreate during its f
     });
     t.mock.method(fs, 'openSync', function (file, ...args) {
       const fd = originalOpen.call(this, file, ...args);
+      if (!finalWindow && typeof file === 'string' && file.endsWith('.tar') && path.dirname(file) === stage) earlyArchiveRead = true;
       if (finalWindow && file === target) targetFD = fd;
       return fd;
     });
@@ -493,10 +639,10 @@ test('exported producer refuses byte-identical file rename/recreate during its f
           const stat = fs.lstatSync(directory, { bigint: true }); return [stat.dev, stat.ino];
         });
         const originalID = fs.lstatSync(target, { bigint: true }).ino;
-        fs.renameSync(target, retained); originalWrite(target, expected);
+        fs.renameSync(target, retained); recreateFixtureFile(target, expected);
         fired = true;
         assert.notEqual(fs.lstatSync(target, { bigint: true }).ino, originalID, 'known path now names a different regular file');
-        assert.deepEqual(fs.readFileSync(target), expected, 'replacement preserves exact bytes and size');
+        assert.deepEqual(readFixtureFile(target), expected, 'replacement preserves exact bytes and size');
         assert.deepEqual([stage, path.dirname(stage)].map((directory) => {
           const stat = fs.lstatSync(directory, { bigint: true }); return [stat.dev, stat.ino];
         }), directoryIDs, 'original stage and parent instances remain stable');
@@ -512,7 +658,7 @@ test('exported producer refuses byte-identical file rename/recreate during its f
     assert.deepEqual([parentStat.dev, parentStat.ino], directoryIDs[1]);
     assert.ok(failure, 'producer must refuse a saved pathname replacement');
     assert.match(failure.message, /Candidate saved file\/path changed while reading/);
-    assert.deepEqual(fs.readFileSync(retained), expected, 'renamed original survives non-recursive cleanup');
+    assert.deepEqual(readFixtureFile(retained), expected, 'renamed original survives non-recursive cleanup');
     assert.equal(fs.existsSync(f.options.outputRoot), false);
     assert.equal(fs.existsSync(stage), false);
   });

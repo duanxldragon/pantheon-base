@@ -1,0 +1,70 @@
+{
+  "taskId": "2026-11-13-v0188-release-preparation",
+  "candidate": {
+    "candidateIdentity": "candidate-bb028a3e87ff932bde67a833694014166fad84aad7f957343131eaffcfdda1d6",
+    "artifact": {
+      "assetName": "candidate-bb028a3e87ff932bde67a833694014166fad84aad7f957343131eaffcfdda1d6.tar",
+      "sha256": "4ed6398917fea0ac26fdbbbb16dbbc832d9beb6f203d453aa1d1f463544a072a"
+    },
+    "descriptorSha256": "3fc7cd245c52df263be136a6e3e0132b2d635600487fb232d0d19e577b3038d8",
+    "baseCommit": "ae2fa81d9903d63b4bec8f01d61082f48a999e2f",
+    "selectedSourceFileCount": 1176,
+    "officialConsumption": false,
+    "reviewStatus": "assigned-required; pending independent exact-source and exact-descriptor review",
+    "evidenceIds": [
+      "2026-11-13-v0188-release-preparation",
+      "2026-11-13-candidate-filesystem-security"
+    ],
+    "reviewIds": [
+      "2026-11-13-final-code-review-required",
+      "2026-11-13-final-architecture-review-required"
+    ]
+  },
+  "retainedArtifacts": [
+    {
+      "file": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/provisional-bb028-candidate-seal.json.gz",
+      "sha256": "87eed0389e487b0876c34f47ff78a6e6d0bbe79cb780f72444f88af1fae35365",
+      "rawSha256": "36072c34d126466a8bfa0ab13b66c37ca6c7ef2ccd4e059ca25284ef12acab7f",
+      "source": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\cd509\\candidate-seal.json",
+      "scope": "Provisional seal before package test wiring; superseded for final release acceptance"
+    },
+    {
+      "file": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/provisional-bb028-prior-candidate-leaf-deltas.json.gz",
+      "sha256": "12ed5288b12f70dd52a829c8eccee29e52fde4bf825272aa146632107daf1058",
+      "rawSha256": "98e4f3d2c4b14c4230dd66ab5f8e0f5bd5f4adeab3655ed9be849803fe061af7",
+      "source": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\cd509\\prior-candidate-leaf-deltas.json",
+      "scope": "Provisional seal before package test wiring; superseded for final release acceptance"
+    },
+    {
+      "file": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/provisional-bb028-producer-command.json.gz",
+      "sha256": "b13b00b21eb7a987f0be91ba0a538c81e6cef4d891b7b33495d1a7d0266badb2",
+      "rawSha256": "cc67dd986a11cd4deaabe732e23c835d6ccdeb1b75f565237aa1dd7b460df5a5",
+      "source": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\cd509\\producer-command.json",
+      "scope": "Provisional seal before package test wiring; superseded for final release acceptance"
+    },
+    {
+      "file": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/provisional-bb028-producer.log.gz",
+      "sha256": "c06afbf33f03b6147417493d96bdc6d29511233a106f375828b2ee258231b2e6",
+      "rawSha256": "24afa6ef5f6598c4d1d18d6152dc052733a4276141740b0c7c9320816e59a6d0",
+      "source": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\cd509\\producer.log",
+      "scope": "Provisional seal before package test wiring; superseded for final release acceptance"
+    },
+    {
+      "file": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/provisional-bb028-producer-attempt001-command.json.gz",
+      "sha256": "55ce8bb137f69e506de1f0460924f781e1d564baea1f5582e8994aac3039741a",
+      "rawSha256": "103c564bb12bbfcfdc4ad3e80a9afc899f7ad2633ea18dff75fa3afef720f570",
+      "source": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\cd509\\producer-attempt001-command.json",
+      "scope": "Provisional seal before package test wiring; superseded for final release acceptance"
+    },
+    {
+      "file": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/provisional-bb028-producer-attempt001.log.gz",
+      "sha256": "007030f0654c7ae03154e29533d0d886eac188ae096ad3ac6ecfdd78dca8e55c",
+      "rawSha256": "e0675625d00b1dd4b43cad41f6631679b209789b7f05b0ddbd2a281c490ed3e9",
+      "source": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\cd509\\producer-attempt001.log",
+      "scope": "Provisional seal before package test wiring; superseded for final release acceptance"
+    }
+  ],
+  "status": "Provisional producer seal PASS before package wiring; final reseal/builds required",
+  "historicalAttempt001": "Correctly refused a concurrent candidate test rewrite; diagnostic preserved, not represented as source defect",
+  "requiredFinalBinding": "Five candidate input leaf deltas, 1171 unchanged inputs, final sealed candidate and standard consumer builds after package wiring; root final clean-main binding remains downstream"
+}

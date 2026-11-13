@@ -1,5 +1,13 @@
 # Verification Summary: 2026-11-13-v0188-release-preparation
 
+## Current continuation — 2026-11-13
+
+Task reopened for the bounded L1 smoke-empty-readiness repair under the existing L2 release-preparation parent. Hosted Smoke Sanity on merged main ae2fa81d failed after three transient empty-node detachments; the sanitized diagnosis binds run 43377206553/job 131728309093. The executor delivered the one-expression timeout correction and a five-case actual-helper browser proof; old detachment rejects after30.046s, corrected recovers after2.171s, valid empty/populated pass and unknown empty remains rejected. Current exact five-source independent approvals are retained. Separate L2 task 2026-11-13-candidate-filesystem-security owns nine high CodeQL filesystem-race alerts. Source-bound candidate and wired foundation tests pass locally; source security/CODE/ARCH approvals pass; hosted closure remains downstream. Because this helper belongs to the 1176 candidate inputs, candidate43be57 is retained as a historical compatibility PASS; the final candidate has now been sealed and its standard consumer builds pass.
+
+The dated supplement is [smoke-empty-readiness/summary.md](./smoke-empty-readiness/summary.md). Everything below records the previous preparation checkpoint and its source limits; earlier approval and CI passes do not certify the new helper or candidate. All nine draft governance commands passed across the initial/corrected runs; original status-schema errors and nested-run git EPERM logs are retained. Actual merge/main-only cleanup/exact-main CI/Release Gate/publication remain downstream.
+
+## Historical preparation checkpoint — 2026-11-13
+
 ## Scope
 
 Platform version/governance preparation. Dependency PR #501 merged at 5beb3aa24af4dc1b72c6ac53fb6153d4d58e1558, #502 at 1cc4d6fb320113865eac8226af4f6f499b74f455 and #503 at bbd8a5e29b7658fb16c5741c3ffa6f6d7459dd8b. PR #502's corrected head 44188eff passed all final hosted checks. Ops PR #183 merged at fc3fa867630580f7bcf1d40082a77f6b2548ac56 after official v0.18.7 source/asset/rebuild/full validation and successful GitHub Actions. No new application-code or contract change belongs to this preparation.
@@ -54,3 +62,17 @@ Six imported JSON receipts originally use CRLF, which Git normalizes to LF in th
 ## Smoke correction receipt
 
 Claude executed the four bounded canonical CSSOM matcher changes at 44188eff on PR502 parent e4312f60. Native verification proves old assertion failure, corrected success, nine negative values rejected, geometry equality in four directions, zero transpile errors and passing targeted lint. Evidence is in smoke-css/. Independent CODE and ARCH source reviews approve this exact delta. Hosted Smoke Sanity and PR Smoke Modules then passed at the same head; all 29 final checks are terminal, with 27 SUCCESS, 2 conditional SKIPPED and zero unsuccessful. PR #502 merged on 2026-11-13T05:06:08Z as 1cc4d6fb320113865eac8226af4f6f499b74f455. Writer directly revalidated the GitHub result, retained in pr502-merged.json.gz with the command and compressed/raw SHA256 in commands.json. These PR-head gates are not the final preparation or exact-main release gate.
+
+## Security/wiring continuation — 2026-11-13
+
+The separate security evidence maps all nine actual alert sinks and retains source/runtime receipts. package.json now selects the candidate regressions through the unchanged hosted foundation command:125 nodes/122 pass/0 fail/3 Windows capability skips. The bb028 provisional seal preceded this fifth input change and remains historical; final five-source candidate reseal/builds are required. Original candidate43be57, provisional bb028 and initial producer/CI failures remain preserved. No official publication or alert closure is claimed.
+
+## Final target seal — 2026-11-13
+
+Final target candidate-af7b5e4ba7e5b086df902b3190c5daf9f0cbc757ae0fe6d91208a329ed6e7a61 is sealed after package wiring:1176 stable inputs, 5 changed/1171 unchanged leaves, descriptor fa1d30d65ee38ecf067d2fbaa17bce3b345696efb986da7a182891313014927f, tar 69e67550b3c49b729586e7258faaea64c9f76b90895c75d89037fd8ba5026151. Original hashes and proposed-tree binding are retained; standard consumer builds and source CODE-security/ARCH approvals pass; final whole-tree confirmation and hosted delivery remain pending. Proposed source93b617 is not a final clean-main release binding.
+
+## Source/preparation closeout — 2026-11-13
+
+Source/preparation is complete and independently approved for normal required-check merge. Five-source tree 93b617c283b20866f3b209047e931246dbf9b009 and final candidateaf7b5e4b have SOURCE/CODE-security APPROVE and ARCH APPROVE/CLEAR. Standard consumer readonly CGO backend build (effective Go1.26.10, GOTOOLCHAIN=auto) and fresh Node24.22.3 npm ci/lint/type-check/build all pass. Before/after1176 Base/snapshot leaves,963 Ops leaves and2115 assembled leaves remain stable; assembled aggregate e242a4b78ce2c990a6245021383279fca0a31b97c9f97b7c6b3f2a42cb194562. Shared856/856 leaves match, zero exemptions;164 business skips and2 derived migrations are disclosed. Four adapter pins and official v0.18.7 lock remain unchanged; the adapter projection has2 tracked and2 untracked module changes. This proves compatibility only. Final whole-tree confirmation, actual merge/main-only cleanup, clean-main/remote-SHA1176-input binding, Linux leaf-symlink cases, hosted CodeQL automatic alert closure, exact-main CI/Release Gate and immutable release/assets remain downstream. Live task inventory is18 completed/0 in-progress.
+
+Retained original reports: .harness/evidence/2026-11-13-candidate-filesystem-security/source-review-artifacts.json. Final build: .harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/final-consumer-build-receipt.json. Historical84-file approvals and failures remain scoped to their original checkpoints. FR028 deferred, S3 unwaived, maintenance freeze unsigned and separate Ops product acceptance remain explicit.

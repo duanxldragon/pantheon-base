@@ -95,6 +95,67 @@ export function assertRealPath(absolute, { directory = false, missing = false } 
   return resolved;
 }
 
+// Open first, then validate/read the actual handles. Path observations detect
+// replacements; they do not provide atomic namespace locking on any platform.
+export function withCandidateFiles(files, inspect) {
+  const opened = [];
+  const ancestors = new Map();
+  let failed = false;
+  const same = (actual, expected) => ['dev', 'ino', 'size', 'mtimeNs', 'ctimeNs', 'mode', 'nlink'].every((key) => actual[key] === expected[key]);
+  const assertObserved = ({ fd, absolute, stat, label }) => {
+    assertRealPath(absolute);
+    if (!same(fs.fstatSync(fd, { bigint: true }), stat) || !same(fs.lstatSync(absolute, { bigint: true }), stat)) throw new Error(`${label} file/path changed while reading`);
+    for (const [directory, expected] of ancestors) {
+      const current = fs.lstatSync(directory, { bigint: true });
+      if (!current.isDirectory() || current.isSymbolicLink() || current.dev !== expected.dev || current.ino !== expected.ino) throw new Error(`${label} ancestor identity changed while reading`);
+    }
+  };
+  try {
+    for (const { path: file, maxBytes, expectedBytes, label = 'Candidate' } of files) {
+      if (!Number.isSafeInteger(maxBytes) || maxBytes < 0) throw new Error('Invalid candidate read limit');
+      const absolute = path.resolve(file);
+      const fd = fs.openSync(absolute, fs.constants.O_RDONLY | (fs.constants.O_NOFOLLOW ?? 0) | (fs.constants.O_NONBLOCK ?? 0));
+      const entry = { fd, absolute, label }; opened.push(entry);
+      const stat = fs.fstatSync(fd, { bigint: true }); entry.stat = stat;
+      if (!stat.isFile() || stat.nlink !== 1n || stat.dev < 0n || stat.ino <= 0n) throw new Error(`${label} must be a regular file without hard links and with available identity`);
+      if (stat.size < 0n || stat.size > BigInt(maxBytes) || (expectedBytes !== undefined && stat.size !== BigInt(expectedBytes))) throw new Error(`${label} file shape/size mismatch or size exceeds limit`);
+      assertRealPath(absolute);
+      for (let directory = path.dirname(absolute); ; directory = path.dirname(directory)) {
+        const current = fs.lstatSync(directory, { bigint: true });
+        if (!current.isDirectory() || current.isSymbolicLink() || current.dev < 0n || current.ino <= 0n) throw new Error(`${label} ancestor identity unavailable`);
+        const expected = ancestors.get(directory);
+        if (expected && (current.dev !== expected.dev || current.ino !== expected.ino)) throw new Error(`${label} ancestor identity changed while opening`);
+        ancestors.set(directory, current);
+        if (directory === path.dirname(directory)) break;
+      }
+      assertObserved(entry);
+    }
+    for (const entry of opened) {
+      assertObserved(entry);
+      const bytes = Buffer.alloc(Number(entry.stat.size));
+      let offset = 0;
+      while (offset < bytes.length) {
+        const count = fs.readSync(entry.fd, bytes, offset, Math.min(bytes.length - offset, 64 * 1024), offset);
+        if (count === 0) throw new Error(`${entry.label} file size changed: short read`);
+        offset += count;
+      }
+      if (fs.readSync(entry.fd, Buffer.alloc(1), 0, 1, offset) !== 0) throw new Error(`${entry.label} file size changed while reading`);
+      entry.bytes = bytes;
+      assertObserved(entry);
+    }
+    const result = inspect(opened);
+    for (const entry of opened) assertObserved(entry);
+    return result;
+  } catch (error) { failed = true; throw error; }
+  finally {
+    let closeError;
+    for (const { fd } of opened) {
+      try { fs.closeSync(fd); } catch (error) { closeError ??= error; }
+    }
+    if (!failed && closeError) throw closeError;
+  }
+}
+
 export function assertInventory(files) {
   if (!Array.isArray(files) || !files.length || files.length > LIMITS.files) throw new Error('Invalid candidate file count');
   const seen = new Set();
@@ -171,9 +232,10 @@ export function validateCandidateDescriptor(descriptor) {
 
 export function readCandidateDescriptor(descriptorPath, expectedDescriptorSha256) {
   if (!digest.test(expectedDescriptorSha256)) throw new Error('Pinned descriptor SHA256 is required');
-  assertRealPath(descriptorPath);
-  if (fs.statSync(descriptorPath).size > LIMITS.descriptorBytes) throw new Error('Candidate descriptor size exceeds limit');
-  const bytes = fs.readFileSync(descriptorPath);
+  return withCandidateFiles([{ path: descriptorPath, maxBytes: LIMITS.descriptorBytes, label: 'Candidate descriptor' }], ([{ bytes }]) => parseCandidateDescriptor(bytes, expectedDescriptorSha256));
+}
+
+function parseCandidateDescriptor(bytes, expectedDescriptorSha256) {
   if (sha256(bytes) !== expectedDescriptorSha256) throw new Error('Candidate descriptor digest mismatch');
   return validateCandidateDescriptor(JSON.parse(bytes.toString('utf8')));
 }
@@ -250,16 +312,19 @@ export function verifyCandidateArchive(archive, descriptor) {
 }
 
 export function verifyCandidateExecutable({ descriptorPath, expectedDescriptorSha256, buildReceiptPath, expectedBuildReceiptSha256, executablePath, expectedExecutableSha256 }) {
-  const descriptor = readCandidateDescriptor(descriptorPath, expectedDescriptorSha256);
+  if (!digest.test(expectedDescriptorSha256)) throw new Error('Pinned descriptor SHA256 is required');
   if (!digest.test(expectedBuildReceiptSha256) || !digest.test(expectedExecutableSha256)) throw new Error('Pinned build/executable digests are required');
-  assertRealPath(buildReceiptPath); assertRealPath(executablePath);
-  if (fs.statSync(buildReceiptPath).size > LIMITS.descriptorBytes || fs.statSync(executablePath).size > LIMITS.archiveBytes) throw new Error('Candidate build/executable size exceeds limit');
-  const bytes = fs.readFileSync(buildReceiptPath);
-  if (bytes.length > LIMITS.descriptorBytes || sha256(bytes) !== expectedBuildReceiptSha256) throw new Error('Candidate build receipt digest mismatch');
-  const receipt = JSON.parse(bytes.toString('utf8'));
-  if (Object.keys(receipt).sort().join(',') !== 'aggregateSha256,candidateIdentity,capabilities,descriptorSha256,evidenceIds,executable,kind,reviewIds,schemaVersion' || receipt.schemaVersion !== 1 || receipt.kind !== 'pantheon-candidate-build' || receipt.candidateIdentity !== descriptor.candidateIdentity || receipt.descriptorSha256 !== expectedDescriptorSha256 || receipt.aggregateSha256 !== descriptor.aggregateSha256 || JSON.stringify(receipt.capabilities) !== JSON.stringify(descriptor.capabilities)) throw new Error('Candidate build identity/capability mismatch');
-  ids(receipt.evidenceIds, 'build evidence IDs'); ids(receipt.reviewIds, 'build review IDs');
-  const executable = fs.readFileSync(executablePath);
-  if (receipt.executable?.sha256 !== expectedExecutableSha256 || sha256(executable) !== expectedExecutableSha256 || receipt.executable.bytes !== executable.length) throw new Error('Candidate executable hash/size mismatch');
-  return receipt;
+  return withCandidateFiles([
+    { path: descriptorPath, maxBytes: LIMITS.descriptorBytes, label: 'Candidate descriptor' },
+    { path: buildReceiptPath, maxBytes: LIMITS.descriptorBytes, label: 'Candidate build receipt' },
+    { path: executablePath, maxBytes: LIMITS.archiveBytes, label: 'Candidate executable' },
+  ], ([{ bytes: descriptorBytes }, { bytes }, { bytes: executable }]) => {
+    const descriptor = parseCandidateDescriptor(descriptorBytes, expectedDescriptorSha256);
+    if (sha256(bytes) !== expectedBuildReceiptSha256) throw new Error('Candidate build receipt digest mismatch');
+    const receipt = JSON.parse(bytes.toString('utf8'));
+    if (Object.keys(receipt).sort().join(',') !== 'aggregateSha256,candidateIdentity,capabilities,descriptorSha256,evidenceIds,executable,kind,reviewIds,schemaVersion' || receipt.schemaVersion !== 1 || receipt.kind !== 'pantheon-candidate-build' || receipt.candidateIdentity !== descriptor.candidateIdentity || receipt.descriptorSha256 !== expectedDescriptorSha256 || receipt.aggregateSha256 !== descriptor.aggregateSha256 || JSON.stringify(receipt.capabilities) !== JSON.stringify(descriptor.capabilities)) throw new Error('Candidate build identity/capability mismatch');
+    ids(receipt.evidenceIds, 'build evidence IDs'); ids(receipt.reviewIds, 'build review IDs');
+    if (receipt.executable?.sha256 !== expectedExecutableSha256 || sha256(executable) !== expectedExecutableSha256 || receipt.executable.bytes !== executable.length) throw new Error('Candidate executable hash/size mismatch');
+    return receipt;
+  });
 }

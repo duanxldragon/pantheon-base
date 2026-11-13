@@ -1,0 +1,805 @@
+{
+  "taskId": "2026-11-13-candidate-filesystem-security",
+  "repo": "pantheon-base",
+  "agent": {
+    "tool": "codex",
+    "adapter": "Writer L2 security packet; separate executor owns source"
+  },
+  "commands": [
+    {
+      "command": "npm run check:docs-frontmatter",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\.wt-base-smoke-readiness",
+      "status": "passed",
+      "exitCode": 0,
+      "durationMs": 750,
+      "startedAt": "2026-11-13T06:53:08.489801+00:00",
+      "finishedAt": "2026-11-13T06:53:09.247356+00:00",
+      "log": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/governance-check-docs-frontmatter.log.gz",
+      "sha256": "d1724ae58d45a67e1c0b1c94bc5fd4d79796fd441c0a81bab282627ff1531dd5",
+      "rawSha256": "ca13b29ede28c9a39d6eef5963271a0ed6d50082d8d61d23dcf6331b045ab7af",
+      "notes": "Draft governance checks cover both preparation and new security packets; schema success does not imply independent source approval. Source executor work is concurrent, so these results do not bind the final frozen tree."
+    },
+    {
+      "command": "npm run check:task-packet-template",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\.wt-base-smoke-readiness",
+      "status": "passed",
+      "exitCode": 0,
+      "durationMs": 531,
+      "startedAt": "2026-11-13T06:53:08.489801+00:00",
+      "finishedAt": "2026-11-13T06:53:09.022371+00:00",
+      "log": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/governance-check-task-packet-template.log.gz",
+      "sha256": "6d503e9ad1a2097bc1b1637fc8ab7b7231f5d6640ccf7f77739a366a39917962",
+      "rawSha256": "c906367e2b043848d360d0c2a68d087d528861349348bf101a37c09439d98fc7",
+      "notes": "Draft governance checks cover both preparation and new security packets; schema success does not imply independent source approval. Source executor work is concurrent, so these results do not bind the final frozen tree."
+    },
+    {
+      "command": "npm run check:task-packet",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\.wt-base-smoke-readiness",
+      "status": "failed",
+      "exitCode": 1,
+      "durationMs": 797,
+      "startedAt": "2026-11-13T06:53:08.490800+00:00",
+      "finishedAt": "2026-11-13T06:53:09.289636+00:00",
+      "log": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/governance-check-task-packet.log.gz",
+      "sha256": "4eb7910989dca8950900f0da805c27dacf7f80cc9e0ad27d92f4c4e5566a648a",
+      "rawSha256": "46acb1093390e1b97f7973a2e834ec461995b3754a1d0574c2b0fd4ce83caf2e",
+      "notes": "Draft governance checks cover both preparation and new security packets; schema success does not imply independent source approval. Source executor work is concurrent, so these results do not bind the final frozen tree."
+    },
+    {
+      "command": "npm run check:harness-evidence",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\.wt-base-smoke-readiness",
+      "status": "failed",
+      "exitCode": 1,
+      "durationMs": 875,
+      "startedAt": "2026-11-13T06:53:08.490800+00:00",
+      "finishedAt": "2026-11-13T06:53:09.376871+00:00",
+      "log": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/governance-check-harness-evidence.log.gz",
+      "sha256": "47ac7a091f3ac9bcde40fa71283715b5baba2520a854d6d3c184c600b24e0a46",
+      "rawSha256": "b4325575aec49df78e05b90122dc261a3f83d4bb231917fa7ffd6c551b62fa78",
+      "notes": "Draft governance checks cover both preparation and new security packets; schema success does not imply independent source approval. Source executor work is concurrent, so these results do not bind the final frozen tree."
+    },
+    {
+      "command": "npm run check:harness-review",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\.wt-base-smoke-readiness",
+      "status": "failed",
+      "exitCode": 1,
+      "durationMs": 797,
+      "startedAt": "2026-11-13T06:53:08.491805+00:00",
+      "finishedAt": "2026-11-13T06:53:09.293642+00:00",
+      "log": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/governance-check-harness-review.log.gz",
+      "sha256": "688e2fcdb6d56700769c4d68474962dc8f8d5e64c8eb66d718256922337dc7fe",
+      "rawSha256": "6b9e4e8715c0f62b73fc1ed15d4ef1cb6d3c229da431de0fa20cb67999a6536f",
+      "notes": "Draft governance checks cover both preparation and new security packets; schema success does not imply independent source approval. Source executor work is concurrent, so these results do not bind the final frozen tree."
+    },
+    {
+      "command": "npm run check:harness-docs",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\.wt-base-smoke-readiness",
+      "status": "passed",
+      "exitCode": 0,
+      "durationMs": 516,
+      "startedAt": "2026-11-13T06:53:09.022371+00:00",
+      "finishedAt": "2026-11-13T06:53:09.539657+00:00",
+      "log": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/governance-check-harness-docs.log.gz",
+      "sha256": "a4a55b83efeb77443c020450e25a03f4ba4459306d2dd1b5cceaa56dc556bb00",
+      "rawSha256": "aff38ef831fbdaa9304137101838cff74335ea77c6b19a3eb5400fa047a464b6",
+      "notes": "Draft governance checks cover both preparation and new security packets; schema success does not imply independent source approval. Source executor work is concurrent, so these results do not bind the final frozen tree."
+    },
+    {
+      "command": "npm run check:harness-encoding",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\.wt-base-smoke-readiness",
+      "status": "failed",
+      "exitCode": 1,
+      "durationMs": 391,
+      "startedAt": "2026-11-13T06:53:09.247356+00:00",
+      "finishedAt": "2026-11-13T06:53:09.641201+00:00",
+      "log": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/governance-check-harness-encoding.log.gz",
+      "sha256": "0b5d284647a3067233891ccbce3732073b30c40c488e7c1aace586bb069d1a4d",
+      "rawSha256": "3b443452ad68e6bab813299d87f4b05dd75ab6a5c2f809402a450d9006bec2fc",
+      "notes": "Draft governance checks cover both preparation and new security packets; schema success does not imply independent source approval. Source executor work is concurrent, so these results do not bind the final frozen tree."
+    },
+    {
+      "command": "npm run check:harness-inventory",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\.wt-base-smoke-readiness",
+      "status": "passed",
+      "exitCode": 0,
+      "durationMs": 406,
+      "startedAt": "2026-11-13T06:53:09.289636+00:00",
+      "finishedAt": "2026-11-13T06:53:09.699686+00:00",
+      "log": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/governance-check-harness-inventory.log.gz",
+      "sha256": "2b53fdbb858cc71051a8a6a5b98ad9938394ae7c68aa4f88fa72bf86b4241945",
+      "rawSha256": "dbf43926f0c41a7c788b9c9cb48f7677e9ddafdcf3a9cdfc0480874099f1bf4a",
+      "notes": "Draft governance checks cover both preparation and new security packets; schema success does not imply independent source approval. Source executor work is concurrent, so these results do not bind the final frozen tree."
+    },
+    {
+      "command": "npm run check:structure",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\.wt-base-smoke-readiness",
+      "status": "failed",
+      "exitCode": 1,
+      "durationMs": 391,
+      "startedAt": "2026-11-13T06:53:09.293642+00:00",
+      "finishedAt": "2026-11-13T06:53:09.685118+00:00",
+      "log": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/governance-check-structure.log.gz",
+      "sha256": "ba578768c4b52e6862c3dcfcc38b24e403da632a43a5936a768f03421bb0f95d",
+      "rawSha256": "cd5b4662577eb7a9a0f1a763cc2fa4c24bfa8d492f5727f6cd459f2c95f46152",
+      "notes": "Draft governance checks cover both preparation and new security packets; schema success does not imply independent source approval. Source executor work is concurrent, so these results do not bind the final frozen tree."
+    },
+    {
+      "command": "npm run check:task-packet",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\.wt-base-smoke-readiness",
+      "status": "passed",
+      "exitCode": 0,
+      "durationMs": 1302,
+      "log": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/governance-check-task-packet-corrected-draft.log.gz",
+      "sha256": "f4a6ebe4844f4418d2d35ab190b759a2591980fa24e96809d13e109b31f5ac50",
+      "rawSha256": "a4e27b7712d186f92c2290fa6e4d78acdfe65fbea2c3f0293a2f98eba615d622",
+      "notes": "Direct PowerShell invocation. Earlier draft schema failures corrected by using canonical in-progress task status; earlier Python nested-run git EPERM is environment-only. Prior failed logs retained. Current approval remains pending; these checks do not bind a final frozen source."
+    },
+    {
+      "command": "npm run check:harness-evidence",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\.wt-base-smoke-readiness",
+      "status": "passed",
+      "exitCode": 0,
+      "durationMs": 1452,
+      "log": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/governance-check-harness-evidence-corrected-draft.log.gz",
+      "sha256": "5528730d2a47245eeda9f45187b2b849bc9512453f1118fbff2cd6bb0ec89434",
+      "rawSha256": "be4d54ce734b522125a35a8fba91faf4c721726b9dffcdb9ee310eb562a90ff0",
+      "notes": "Direct PowerShell invocation. Earlier draft schema failures corrected by using canonical in-progress task status; earlier Python nested-run git EPERM is environment-only. Prior failed logs retained. Current approval remains pending; these checks do not bind a final frozen source."
+    },
+    {
+      "command": "npm run check:harness-review",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\.wt-base-smoke-readiness",
+      "status": "passed",
+      "exitCode": 0,
+      "durationMs": 1293,
+      "log": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/governance-check-harness-review-corrected-draft.log.gz",
+      "sha256": "e028492d2f70d10882a5164189ed510b35bb41cae9057a5aa5ccc18ced04d4f0",
+      "rawSha256": "3fe8e667ad53b7d58b8655c1ddc5873952e0a8bf2b8c0f7e6377a598cb739f1b",
+      "notes": "Direct PowerShell invocation. Earlier draft schema failures corrected by using canonical in-progress task status; earlier Python nested-run git EPERM is environment-only. Prior failed logs retained. Current approval remains pending; these checks do not bind a final frozen source."
+    },
+    {
+      "command": "npm run check:harness-encoding",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\.wt-base-smoke-readiness",
+      "status": "passed",
+      "exitCode": 0,
+      "durationMs": 1610,
+      "log": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/governance-check-harness-encoding-corrected-draft.log.gz",
+      "sha256": "c06eeb85a9f6cd8566f83c19996beb1c8012fc298af2a241a73847b0cecc8bc0",
+      "rawSha256": "852fda3f9cf5384866839535e646bcda8b49cde1a5956cee0977771ab4293f3d",
+      "notes": "Direct PowerShell invocation. Earlier draft schema failures corrected by using canonical in-progress task status; earlier Python nested-run git EPERM is environment-only. Prior failed logs retained. Current approval remains pending; these checks do not bind a final frozen source."
+    },
+    {
+      "command": "npm run check:structure",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\.wt-base-smoke-readiness",
+      "status": "passed",
+      "exitCode": 0,
+      "durationMs": 1048,
+      "log": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/governance-check-structure-corrected-draft.log.gz",
+      "sha256": "71f8717612e0385eb9bf3e4abbd66ffe576361c376e417d7fc4fa220d36c7c30",
+      "rawSha256": "a3bb4290905efbb22ea09f178d4192ef94233ba6f00f42fce8679eacccd8cc35",
+      "notes": "Direct PowerShell invocation. Earlier draft schema failures corrected by using canonical in-progress task status; earlier Python nested-run git EPERM is environment-only. Prior failed logs retained. Current approval remains pending; these checks do not bind a final frozen source."
+    },
+    {
+      "command": "npm run check:task-packet",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\.wt-base-smoke-readiness",
+      "status": "passed",
+      "exitCode": 0,
+      "log": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/governance-check-task-packet-proof-imported-draft.log.gz",
+      "sha256": "f4a6ebe4844f4418d2d35ab190b759a2591980fa24e96809d13e109b31f5ac50",
+      "rawSha256": "a4e27b7712d186f92c2290fa6e4d78acdfe65fbea2c3f0293a2f98eba615d622",
+      "notes": "Direct PowerShell final draft check after smoke proof import and current-readout reconciliation; independent approval, security proof and candidate still pending. Actual tool exit zero."
+    },
+    {
+      "command": "npm run check:harness-evidence",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\.wt-base-smoke-readiness",
+      "status": "passed",
+      "exitCode": 0,
+      "log": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/governance-check-harness-evidence-proof-imported-draft.log.gz",
+      "sha256": "5528730d2a47245eeda9f45187b2b849bc9512453f1118fbff2cd6bb0ec89434",
+      "rawSha256": "be4d54ce734b522125a35a8fba91faf4c721726b9dffcdb9ee310eb562a90ff0",
+      "notes": "Direct PowerShell final draft check after smoke proof import and current-readout reconciliation; independent approval, security proof and candidate still pending. Actual tool exit zero."
+    },
+    {
+      "command": "npm run check:harness-review",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\.wt-base-smoke-readiness",
+      "status": "passed",
+      "exitCode": 0,
+      "log": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/governance-check-harness-review-proof-imported-draft.log.gz",
+      "sha256": "e028492d2f70d10882a5164189ed510b35bb41cae9057a5aa5ccc18ced04d4f0",
+      "rawSha256": "3fe8e667ad53b7d58b8655c1ddc5873952e0a8bf2b8c0f7e6377a598cb739f1b",
+      "notes": "Direct PowerShell final draft check after smoke proof import and current-readout reconciliation; independent approval, security proof and candidate still pending. Actual tool exit zero."
+    },
+    {
+      "command": "npm run check:harness-docs",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\.wt-base-smoke-readiness",
+      "status": "passed",
+      "exitCode": 0,
+      "log": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/governance-check-harness-docs-proof-imported-draft.log.gz",
+      "sha256": "c654550181e1d9e742728cc390835d69bffbd4159236be82e9a8bd8edb6a2729",
+      "rawSha256": "d8e6ad7f1b15451eb8df6f7941b2f1b57d2701468fa6364c70f7b1db72b1b89d",
+      "notes": "Direct PowerShell final draft check after smoke proof import and current-readout reconciliation; independent approval, security proof and candidate still pending. Actual tool exit zero."
+    },
+    {
+      "command": "node --test --test-name-pattern=\"pinned descriptor|pinned verification\" scripts/foundation-release/candidate-artifact.test.mjs",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\.wt-base-smoke-readiness",
+      "status": "failed",
+      "log": ".harness/evidence/2026-11-13-candidate-filesystem-security/tdd-red.txt.gz",
+      "sha256": "4ab7578a3a2fb1b4a18fe565ea18d075152feaa545af199717e5848633b85c38",
+      "rawSha256": "f1eb440bcd6aa0bd679a6779a70a5691e3b2529e9c72d90c151095f1469a790a",
+      "notes": "Historical initial regression: 19 nodes / 3 pass / 16 failed including parents; retained, not superseded as a success."
+    },
+    {
+      "command": "node --test scripts/foundation-release/candidate-artifact.test.mjs",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\.wt-base-smoke-readiness",
+      "status": "passed",
+      "log": ".harness/evidence/2026-11-13-candidate-filesystem-security/candidate-tests.txt.gz",
+      "sha256": "6f9d98f912d576ad0037db46137127553896fc0e0a775be3087b970d94e516b7",
+      "rawSha256": "12c4339d1f43a08a784b7c65c403f243b7d60384f024e085aa8055f57a2431dd",
+      "exitCode": 0,
+      "durationMs": 26083.3671,
+      "notes": "Source-bound executor run on Node24.22.3: 68 nodes / 65 pass / 0 fail / 3 Windows leaf-symlink capability skips. Corrected source hashes are security-source-evidence.json; full Linux execution remains hosted requirement."
+    },
+    {
+      "command": "npm run test:foundation-release",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\.wt-base-smoke-readiness",
+      "status": "passed",
+      "exitCode": 0,
+      "notes": "Historical pre-package-wiring root receipt functions.exec chunk20a1be: existing foundation57/57 pass. It did not include scripts/foundation-release/candidate-artifact.test.mjs; later wired run is separate."
+    },
+    {
+      "command": "npm run test:foundation-release",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\.wt-base-smoke-readiness",
+      "status": "passed",
+      "log": ".harness/evidence/2026-11-13-candidate-filesystem-security/wired-foundation-tests.txt.gz",
+      "sha256": "73bb0198a2580a91cb5b2ad427a48a5c4e551e6c191979f775e64b2f315eae57",
+      "rawSha256": "eeb086d7b187dd09c8d3ac878c5a72e3eb57e325fd29fd36a393e65f39d8ff03",
+      "exitCode": 0,
+      "durationMs": 30057.2725,
+      "notes": "Authoritative root toolchunk642df0/session57189: combined125 nodes / 122 pass / 0 fail / 3 Windows leaf-symlink capability skips; package SHA256 aeacce2b72366bc648943d7860355efecab431d28e0d9dacc573bb7bea260a3c, five-source tree 93b617c283b20866f3b209047e931246dbf9b009"
+    },
+    {
+      "command": "node --check scripts/foundation-release/build-candidate-artifact.mjs",
+      "exitCode": 0,
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\.wt-base-smoke-readiness",
+      "status": "passed",
+      "notes": "Executor exact-source syntax diagnostic; source hashes retained in security-source-evidence.json."
+    },
+    {
+      "command": "node --check scripts/foundation-release/candidate-descriptor.mjs",
+      "exitCode": 0,
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\.wt-base-smoke-readiness",
+      "status": "passed",
+      "notes": "Executor exact-source syntax diagnostic; source hashes retained in security-source-evidence.json."
+    },
+    {
+      "command": "node --check scripts/foundation-release/candidate-artifact.test.mjs",
+      "exitCode": 0,
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\.wt-base-smoke-readiness",
+      "status": "passed",
+      "notes": "Executor exact-source syntax diagnostic; source hashes retained in security-source-evidence.json."
+    },
+    {
+      "command": "npm run check:security-patterns",
+      "exitCode": 0,
+      "newViolations": 0,
+      "acceptedBaseline": 46,
+      "toolReceipt": "functions.exec chunk3a78b9",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\.wt-base-smoke-readiness",
+      "status": "passed",
+      "notes": "Executor ran existing security pattern checker; zero new violations, accepted46 baseline. No CodeQL or security-diff-scan execution is inferred."
+    },
+    {
+      "command": "npm run check:docs-frontmatter",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\.wt-base-smoke-readiness",
+      "status": "passed",
+      "exitCode": 0,
+      "log": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/closure-check-docs-frontmatter.log.gz",
+      "sha256": "b9291a353563beefbbe689314cba45db6765680a518f8fb64dc180d0ec841823",
+      "rawSha256": "7d2dcbb91a67a2bcfed3dd4bac4db9262852b15faf37a43ca6ad16a5af6cf058",
+      "startedAt": "2026-11-13T07:49:56.454Z",
+      "finishedAt": "2026-11-13T07:50:00.795Z",
+      "chunk_id": "681c7e",
+      "notes": "Actual direct PowerShell check after source approvals, final consumer builds and completed/Archived source-preparation stamps. Schema and documentation success is separate from external final whole-tree confirmation and hosted merge/release gates. Historical warnings retained."
+    },
+    {
+      "command": "npm run check:task-packet-template",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\.wt-base-smoke-readiness",
+      "status": "passed",
+      "exitCode": 0,
+      "log": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/closure-check-task-packet-template.log.gz",
+      "sha256": "6e6ce6ead51d22f62545c39f775011fe3cacfd09edf691a8c68687465343db6c",
+      "rawSha256": "3adf394a58969f2ff6c463b3288b461879ea88400a554f7716649302e17f905f",
+      "startedAt": "2026-11-13T07:49:56.496Z",
+      "finishedAt": "2026-11-13T07:50:00.586Z",
+      "chunk_id": "95796a",
+      "notes": "Actual direct PowerShell check after source approvals, final consumer builds and completed/Archived source-preparation stamps. Schema and documentation success is separate from external final whole-tree confirmation and hosted merge/release gates. Historical warnings retained."
+    },
+    {
+      "command": "npm run check:task-packet",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\.wt-base-smoke-readiness",
+      "status": "passed",
+      "exitCode": 0,
+      "log": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/closure-check-task-packet.log.gz",
+      "sha256": "f4a6ebe4844f4418d2d35ab190b759a2591980fa24e96809d13e109b31f5ac50",
+      "rawSha256": "a4e27b7712d186f92c2290fa6e4d78acdfe65fbea2c3f0293a2f98eba615d622",
+      "startedAt": "2026-11-13T07:49:56.496Z",
+      "finishedAt": "2026-11-13T07:50:00.962Z",
+      "chunk_id": "041687",
+      "notes": "Actual direct PowerShell check after source approvals, final consumer builds and completed/Archived source-preparation stamps. Schema and documentation success is separate from external final whole-tree confirmation and hosted merge/release gates. Historical warnings retained."
+    },
+    {
+      "command": "npm run check:harness-evidence",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\.wt-base-smoke-readiness",
+      "status": "passed",
+      "exitCode": 0,
+      "log": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/closure-check-harness-evidence.log.gz",
+      "sha256": "5528730d2a47245eeda9f45187b2b849bc9512453f1118fbff2cd6bb0ec89434",
+      "rawSha256": "be4d54ce734b522125a35a8fba91faf4c721726b9dffcdb9ee310eb562a90ff0",
+      "startedAt": "2026-11-13T07:49:56.496Z",
+      "finishedAt": "2026-11-13T07:50:00.780Z",
+      "chunk_id": "d643fe",
+      "notes": "Actual direct PowerShell check after source approvals, final consumer builds and completed/Archived source-preparation stamps. Schema and documentation success is separate from external final whole-tree confirmation and hosted merge/release gates. Historical warnings retained."
+    },
+    {
+      "command": "npm run check:harness-review",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\.wt-base-smoke-readiness",
+      "status": "passed",
+      "exitCode": 0,
+      "log": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/closure-check-harness-review.log.gz",
+      "sha256": "e028492d2f70d10882a5164189ed510b35bb41cae9057a5aa5ccc18ced04d4f0",
+      "rawSha256": "3fe8e667ad53b7d58b8655c1ddc5873952e0a8bf2b8c0f7e6377a598cb739f1b",
+      "startedAt": "2026-11-13T07:49:56.496Z",
+      "finishedAt": "2026-11-13T07:50:00.646Z",
+      "chunk_id": "241a07",
+      "notes": "Actual direct PowerShell check after source approvals, final consumer builds and completed/Archived source-preparation stamps. Schema and documentation success is separate from external final whole-tree confirmation and hosted merge/release gates. Historical warnings retained."
+    },
+    {
+      "command": "npm run check:harness-docs",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\.wt-base-smoke-readiness",
+      "status": "passed",
+      "exitCode": 0,
+      "log": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/closure-check-harness-docs.log.gz",
+      "sha256": "c654550181e1d9e742728cc390835d69bffbd4159236be82e9a8bd8edb6a2729",
+      "rawSha256": "d8e6ad7f1b15451eb8df6f7941b2f1b57d2701468fa6364c70f7b1db72b1b89d",
+      "startedAt": "2026-11-13T07:49:56.496Z",
+      "finishedAt": "2026-11-13T07:50:00.584Z",
+      "chunk_id": "361bfb",
+      "notes": "Actual direct PowerShell check after source approvals, final consumer builds and completed/Archived source-preparation stamps. Schema and documentation success is separate from external final whole-tree confirmation and hosted merge/release gates. Historical warnings retained."
+    },
+    {
+      "command": "npm run check:harness-encoding",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\.wt-base-smoke-readiness",
+      "status": "passed",
+      "exitCode": 0,
+      "log": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/closure-check-harness-encoding.log.gz",
+      "sha256": "c06eeb85a9f6cd8566f83c19996beb1c8012fc298af2a241a73847b0cecc8bc0",
+      "rawSha256": "852fda3f9cf5384866839535e646bcda8b49cde1a5956cee0977771ab4293f3d",
+      "startedAt": "2026-11-13T07:49:56.496Z",
+      "finishedAt": "2026-11-13T07:50:01.182Z",
+      "chunk_id": "5017ef",
+      "notes": "Actual direct PowerShell check after source approvals, final consumer builds and completed/Archived source-preparation stamps. Schema and documentation success is separate from external final whole-tree confirmation and hosted merge/release gates. Historical warnings retained."
+    },
+    {
+      "command": "npm run check:harness-inventory",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\.wt-base-smoke-readiness",
+      "status": "passed",
+      "exitCode": 0,
+      "log": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/closure-check-harness-inventory.log.gz",
+      "sha256": "e1160c67189e988b8516b06a8c43b8fe353f6ee4a36abaad8ff453ddcb4f8c8d",
+      "rawSha256": "d1caba25eea042d2284099796b5e6905a216198e41b147fe4f4c4347b25d6bb1",
+      "startedAt": "2026-11-13T07:49:56.496Z",
+      "finishedAt": "2026-11-13T07:50:00.511Z",
+      "chunk_id": "2b6c97",
+      "notes": "Actual direct PowerShell check after source approvals, final consumer builds and completed/Archived source-preparation stamps. Schema and documentation success is separate from external final whole-tree confirmation and hosted merge/release gates. Historical warnings retained."
+    },
+    {
+      "command": "npm run check:structure",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\.wt-base-smoke-readiness",
+      "status": "passed",
+      "exitCode": 0,
+      "log": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/closure-check-structure.log.gz",
+      "sha256": "71f8717612e0385eb9bf3e4abbd66ffe576361c376e417d7fc4fa220d36c7c30",
+      "rawSha256": "a3bb4290905efbb22ea09f178d4192ef94233ba6f00f42fce8679eacccd8cc35",
+      "startedAt": "2026-11-13T07:49:56.496Z",
+      "finishedAt": "2026-11-13T07:50:00.654Z",
+      "chunk_id": "66d6d9",
+      "notes": "Actual direct PowerShell check after source approvals, final consumer builds and completed/Archived source-preparation stamps. Schema and documentation success is separate from external final whole-tree confirmation and hosted merge/release gates. Historical warnings retained."
+    },
+    {
+      "command": "node scripts/check-pr-governance.mjs --body-file .harness/evidence/2026-11-13-v0188-release-preparation/pr-body.md",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\.wt-base-smoke-readiness",
+      "status": "passed",
+      "exitCode": 0,
+      "log": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/closure-pr-governance.log.gz",
+      "sha256": "d53ee6265b1ac5e387a86de8b58b857e3d843fd124c0c666aa9f9dac0a596949",
+      "rawSha256": "c963333f5a1b77d2c4b9e5c7d81033259a0793ed8be16ff4835b1d5ea1ea0bfc",
+      "notes": "Actual direct PowerShell check after source approvals, final consumer builds and completed/Archived source-preparation stamps. Schema and documentation success is separate from external final whole-tree confirmation and hosted merge/release gates. Historical warnings retained."
+    }
+  ],
+  "graphChecks": {
+    "affectedSubgraph": [
+      "candidate input path -> file opening/reading -> sealed source/archive",
+      "descriptor path -> validated descriptor -> consumer candidate"
+    ],
+    "checks": ["cycle", "hub", "call-depth", "sensitive-flow"],
+    "usedCodeGraph": false,
+    "findings": [],
+    "notes": "Manual source/import/call-body review bound to source tree 93b617c283b20866f3b209047e931246dbf9b009 and candidate-af7b5e4ba7e5b086df902b3190c5daf9f0cbc757ae0fe6d91208a329ed6e7a61. All five reviewed source hashes were rechecked unchanged. No computed CodeGraph result is claimed.\n\ncycle: PASS for the affected dependency structure. Producer imports descriptor; descriptor imports only Node crypto/fs/path; tests import both without reverse production dependencies. The helper adds a symbol on an existing module edge. Smoke/package changes add no runtime import edges. Existing recursive source visit remains deliberate and unchanged. Evidence: build-candidate-artifact.mjs:6, candidate-descriptor.mjs:1, candidate-artifact.test.mjs:7, build-candidate-artifact.mjs:35.\n\nhub: PASS with an intentional hub identified. withCandidateFiles centralizes filesystem policy at six production invocation sites: source capture, saved pair, early archive validation, CLI inventory, descriptor read, and executable verification. Domain-specific pins/schema/stage checks remain in synchronous callers. Evidence: candidate-descriptor.mjs:100; build-candidate-artifact.mjs:37,123,140,179; candidate-descriptor.mjs:235,317.\n\ncall-depth: PASS. The executable verification chain adds one named helper frame and one synchronous callback frame compared with the previous descriptor-read chain. No recursive reader/producer call or new unbounded traversal is introduced. Existing source traversal remains recursive; bounded file reading is iterative. Smoke retains its existing retry/evaluate chain. Evidence: candidate-descriptor.mjs:100,233,314; build-candidate-artifact.mjs:27; system-pages-helpers.ts:750.\n\nsensitive-flow: PASS under the documented observed-namespace boundary. Untrusted paths enter open-first fd validation; identity/type/link/size checks precede allocation and reading. Bounded reads, exact EOF, retained paired/triple handles, final observations, digest/schema/capability/size checks and exclusive fixture recreation preserve the trust boundary. Cleanup remains nonrecursive with ownership checks. Separate path syscalls and handle closure before rename provide no atomic namespace-locking guarantee. Evidence: candidate-descriptor.mjs:117,135,142,147,314; build-candidate-artifact.mjs:123,149,154,179; candidate-artifact.test.mjs:51."
+  },
+  "sessionEconomics": {
+    "responseMode": "terse",
+    "costSensitivity": "medium",
+    "notes": "Bounded task; no invented cost/token figures."
+  },
+  "runtimeSensitive": true,
+  "runtimeGap": "Candidate/source regressions, wired combined suite, independent five-source CODE-security/ARCH approvals and final standard consumer builds passed. Final whole-tree confirmation, clean merged-main byte binding, exact-main hosted CI/CodeQL automatic alert closure, Linux leaf-symlink execution and official publication/assets remain pending. security-diff-scan/CodeQL CLI/LSP tools unavailable; manual review and real compiler/AST diagnostics are separately reported.",
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-11-13-candidate-filesystem-security/manifest.json",
+    "taskDoc": "docs/harness/tasks/2026-11-13-candidate-filesystem-security.task.md",
+    "evidenceDir": ".harness/evidence/2026-11-13-candidate-filesystem-security/",
+    "reviewFile": ".harness/evidence/2026-11-13-candidate-filesystem-security/review.md",
+    "summaryFile": ".harness/evidence/2026-11-13-candidate-filesystem-security/summary.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".harness/tasks/2026-11-13-candidate-filesystem-security/manifest.json"
+    ]
+  },
+  "knownGaps": [
+    "Native historical four-source COMMENT reflects missing required LSP; current five-source approvals are separately retained and do not claim an unavailable tool result.",
+    "Final whole-tree confirmation, clean merged-main 1176-input byte binding, exact-main CI/Release Gate and official publication/asset verification remain pending.",
+    "Hosted same-rule CodeQL and automatic nine-alert closure pending.",
+    "Three Windows leaf-symlink capability skips need existing Linux CI execution.",
+    "security-diff-scan and CodeQL CLI unavailable; official query is reference only, not executed."
+  ],
+  "alertBaseline": "32c71bf123c511d455b22d5af11051fa5c977b81b66047234b0615a23631e80c",
+  "parentCommit": "ae2fa81d9903d63b4bec8f01d61082f48a999e2f",
+  "governanceDraftChecks": {
+    "receipt": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/governance-checks.json",
+    "phase": "pending draft",
+    "sourceLimitation": "Source executor changes are concurrent; final freeze requires root revalidation."
+  },
+  "sourceVerification": {
+    "sourceHashes": [
+      {
+        "file": "scripts/foundation-release/build-candidate-artifact.mjs",
+        "sha256": "6196730755893349e7d42088c0e4a03ebd2064cac3924d52e8f456d7b501dc9e"
+      },
+      {
+        "file": "scripts/foundation-release/candidate-descriptor.mjs",
+        "sha256": "2cd4c0e7b61b5b920c9c5e0e070a0a292621dc5397624c4c92d7a0468c0b594c"
+      },
+      {
+        "file": "scripts/foundation-release/candidate-artifact.test.mjs",
+        "sha256": "341fb61709eed19b24feaa65778b1548bbc7738d0edc4159c0c1f118cbe44ff3"
+      }
+    ],
+    "packageSha256": "aeacce2b72366bc648943d7860355efecab431d28e0d9dacc573bb7bea260a3c",
+    "fiveSourceTree": "93b617c283b20866f3b209047e931246dbf9b009",
+    "preWiringSourceTree": "e5933880b5fc4f7b7a419c0b8b36e5490f2acddb",
+    "manualReview": ".harness/evidence/2026-11-13-candidate-filesystem-security/security-source-evidence.json",
+    "alertMap": ".harness/evidence/2026-11-13-candidate-filesystem-security/security-alerts-remediation-map.json",
+    "wiredReceipt": ".harness/evidence/2026-11-13-candidate-filesystem-security/wired-foundation-tests-receipt.json",
+    "retainedArtifacts": [
+      {
+        "file": ".harness/evidence/2026-11-13-candidate-filesystem-security/security-source-evidence.json.gz",
+        "sha256": "3c31f3696e098e1086cb2b538a34c4ec664f2b847f5003b28db1e13c0dd1f3cd",
+        "rawSha256": "35adb6407f2401a8bfa7f9ca1d97621fa29231beee0622bbf05d51b6618b0641",
+        "source": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\sec509\\security-source-evidence.json",
+        "role": "source-bound executor/runtime evidence"
+      },
+      {
+        "file": ".harness/evidence/2026-11-13-candidate-filesystem-security/source-diff.patch.gz",
+        "sha256": "dd29d2d6e09486a27065fbb2c659bbcfd3caaa666bbee44a2a690fbd6bf01847",
+        "rawSha256": "f57cb9e60c5274bc4d451949e5831a57baf3f23aa077944d5915ac5240cf9ee5",
+        "source": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\sec509\\source-diff.patch",
+        "role": "source-bound executor/runtime evidence"
+      },
+      {
+        "file": ".harness/evidence/2026-11-13-candidate-filesystem-security/candidate-tests.txt.gz",
+        "sha256": "6f9d98f912d576ad0037db46137127553896fc0e0a775be3087b970d94e516b7",
+        "rawSha256": "12c4339d1f43a08a784b7c65c403f243b7d60384f024e085aa8055f57a2431dd",
+        "source": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\sec509\\candidate-tests.txt",
+        "role": "source-bound executor/runtime evidence"
+      },
+      {
+        "file": ".harness/evidence/2026-11-13-candidate-filesystem-security/wired-foundation-tests.txt.gz",
+        "sha256": "73bb0198a2580a91cb5b2ad427a48a5c4e551e6c191979f775e64b2f315eae57",
+        "rawSha256": "eeb086d7b187dd09c8d3ac878c5a72e3eb57e325fd29fd36a393e65f39d8ff03",
+        "source": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\sec509\\wired-foundation-tests.txt",
+        "role": "source-bound executor/runtime evidence"
+      },
+      {
+        "file": ".harness/evidence/2026-11-13-candidate-filesystem-security/tdd-red.txt.gz",
+        "sha256": "4ab7578a3a2fb1b4a18fe565ea18d075152feaa545af199717e5848633b85c38",
+        "rawSha256": "f1eb440bcd6aa0bd679a6779a70a5691e3b2529e9c72d90c151095f1469a790a",
+        "source": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\sec509\\tdd-red.txt",
+        "role": "historical initial failing regression"
+      },
+      {
+        "file": ".harness/evidence/2026-11-13-candidate-filesystem-security/tdd-green.txt.gz",
+        "sha256": "c787df688d510830bfcd50d310b1249b8f6e2f88b4eb5d0b0ba25425377ee6a4",
+        "rawSha256": "05b10ec2d360e6ba86919542a58f499f38bc73fe9480a91696456b42ad99cbda",
+        "source": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\sec509\\tdd-green.txt",
+        "role": "source-bound executor/runtime evidence"
+      },
+      {
+        "file": ".harness/evidence/2026-11-13-candidate-filesystem-security/focused-tests.txt.gz",
+        "sha256": "976fe57df6af84d7f5026aaec4d7107e8d2c314aa1fa9df14e47916da3c2008c",
+        "rawSha256": "653fa2e1c2f3d52ae3ca4c566715972dc5c13849a8d1bda18b7cc54b0792dbdb",
+        "source": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\sec509\\focused-tests.txt",
+        "role": "source-bound executor/runtime evidence"
+      },
+      {
+        "file": ".harness/evidence/2026-11-13-candidate-filesystem-security/FileSystemRace-codeql-2.27.4.ql.gz",
+        "sha256": "eaca724511886dca7d3c2be625d01b4443526cbf30c73e8e8d780d2e7de172eb",
+        "rawSha256": "6bd3beed90bf9ab935edf9d7cc37e78c4ba78aaea3545cdc7bdc5a90cba6512e",
+        "source": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\sec509\\FileSystemRace-codeql-2.27.4.ql",
+        "role": "official same-version query reference; not executed"
+      }
+    ]
+  },
+  "historicalSourceReview": {
+    "file": ".harness/evidence/2026-11-13-candidate-filesystem-security/historical-four-source-code-review.md.gz",
+    "sha256": "661238f821e6ba27cca94617829e0f6bc2b5898df006567925efada52a96daea",
+    "rawPreservedAs": ".harness/evidence/2026-11-13-candidate-filesystem-security/historical-four-source-code-review.md.gz",
+    "compressedSha256": "661238f821e6ba27cca94617829e0f6bc2b5898df006567925efada52a96daea",
+    "reviewer": "/root/final_security_code_review",
+    "verdict": "COMMENT",
+    "sourceFindings": 0,
+    "reviewedSourceTree": "e5933880b5fc4f7b7a419c0b8b36e5490f2acddb",
+    "parentCommit": "ae2fa81d9903d63b4bec8f01d61082f48a999e2f",
+    "scopeLimit": "Historical four-source review before package wiring; not fifth-source or final combined-tree approval.",
+    "toolGap": "Mandatory lsp_diagnostics unavailable; real syntax/AST/strict type/runtime checks are separate evidence.",
+    "rawSha256": "69efd17160e805b228f8d5842b6e0aa6de669094aca6eaac69436fd500cc8ef0",
+    "readingCopy": ".harness/evidence/2026-11-13-candidate-filesystem-security/historical-four-source-code-review.md",
+    "readingCopySha256": "300d6523539256cd83e0a15c68b04ba56f4b177922a36b7e603c941246440c60"
+  },
+  "sourcePreparationApproval": {
+    "sourceTree": "93b617c283b20866f3b209047e931246dbf9b009",
+    "candidateIdentity": "candidate-af7b5e4ba7e5b086df902b3190c5daf9f0cbc757ae0fe6d91208a329ed6e7a61",
+    "reports": [
+      {
+        "file": ".harness/evidence/2026-11-13-candidate-filesystem-security/source-architecture-review.md.gz",
+        "sha256": "677c05e70d47f2572d4e93848aded79ce33b493e5897c79bd9586caa324ce7a1",
+        "rawSha256": "558fb6310752e34c979781f684d6c2007a3075d8f664a271ae5cf504f82bfd67",
+        "source": "D:\\workspace\\go\\pantheon-platform\\.wt-base-smoke-readiness\\.harness\\evidence\\2026-11-13-candidate-filesystem-security\\source-architecture-review.md",
+        "readingCopy": ".harness/evidence/2026-11-13-candidate-filesystem-security/source-architecture-review.md",
+        "reviewer": "/root/final_security_arch_review",
+        "verdict": "ARCH APPROVE/CLEAR",
+        "sourceTree": "93b617c283b20866f3b209047e931246dbf9b009",
+        "scope": "Original independent report; ordinary Markdown reading copy may be formatted. Current five-source approvals do not approve final whole governance tree.",
+        "readingCopySha256": "e53175bc22d46c0db5aafb6e8f8f595241ae1073916938e8d25eb748f24ee754"
+      },
+      {
+        "file": ".harness/evidence/2026-11-13-candidate-filesystem-security/source-code-security-review.md.gz",
+        "sha256": "853e702072ee83174403ed05a5095587821ab4336904a69b2762be0b713edc53",
+        "rawSha256": "3d23d972130b41fc178416b6beb556c8741be63f2d15b7302321b3db61ff3c1f",
+        "source": "D:\\workspace\\go\\pantheon-platform\\.wt-base-smoke-readiness\\.harness\\evidence\\2026-11-13-candidate-filesystem-security\\source-code-security-review.md",
+        "readingCopy": ".harness/evidence/2026-11-13-candidate-filesystem-security/source-code-security-review.md",
+        "reviewer": "/root/final_delivery_verifier",
+        "verdict": "SOURCE/CODE-security APPROVE",
+        "sourceTree": "93b617c283b20866f3b209047e931246dbf9b009",
+        "scope": "Original independent report; ordinary Markdown reading copy may be formatted. Current five-source approvals do not approve final whole governance tree.",
+        "readingCopySha256": "f192b4cf81645e7311641051281f9189f411d83919b8125cb1b833ad50877905"
+      }
+    ],
+    "buildReceipt": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/final-consumer-build-receipt.json",
+    "scope": "Source and release preparation ready for normal required-check merge; final whole-tree confirmation and downstream hosted/publication conditions remain open."
+  },
+  "finalConsumerBuild": {
+    "taskId": "2026-11-13-v0188-release-preparation",
+    "result": "PASS",
+    "candidate": {
+      "candidateIdentity": "candidate-af7b5e4ba7e5b086df902b3190c5daf9f0cbc757ae0fe6d91208a329ed6e7a61",
+      "artifact": {
+        "assetName": "candidate-af7b5e4ba7e5b086df902b3190c5daf9f0cbc757ae0fe6d91208a329ed6e7a61.tar",
+        "sha256": "69e67550b3c49b729586e7258faaea64c9f76b90895c75d89037fd8ba5026151"
+      },
+      "descriptorSha256": "fa1d30d65ee38ecf067d2fbaa17bce3b345696efb986da7a182891313014927f",
+      "baseCommit": "ae2fa81d9903d63b4bec8f01d61082f48a999e2f",
+      "selectedSourceFileCount": 1176,
+      "proposedSourceTree": "93b617c283b20866f3b209047e931246dbf9b009",
+      "officialConsumption": false,
+      "reviewStatus": "assigned-required; pending independent exact-source and exact-descriptor review",
+      "evidenceIds": [
+        "2026-11-13-v0188-release-preparation",
+        "2026-11-13-candidate-filesystem-security"
+      ],
+      "reviewIds": [
+        "2026-11-13-final-code-review-required",
+        "2026-11-13-final-architecture-review-required"
+      ]
+    },
+    "sourceTree": "93b617c283b20866f3b209047e931246dbf9b009",
+    "originalBuildReceipt": {
+      "file": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/final-build-receipt.json.gz",
+      "sha256": "7e00bca64dc35df9fa12406dc277131b61008e3cc8c90512b23468d1ab601f66",
+      "rawSha256": "028596c6a36ec4919233105866c3cf804584e409a150375b599029313e12d9f6",
+      "source": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\cd509\\final-build-receipt.json"
+    },
+    "retainedArtifacts": [
+      {
+        "file": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/final-build-receipt.json.gz",
+        "sha256": "7e00bca64dc35df9fa12406dc277131b61008e3cc8c90512b23468d1ab601f66",
+        "rawSha256": "028596c6a36ec4919233105866c3cf804584e409a150375b599029313e12d9f6",
+        "source": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\cd509\\final-build-receipt.json"
+      },
+      {
+        "file": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/candidate-assembly-final-receipt.json.gz",
+        "sha256": "6ed037a6315ede6371d3804ffb12075a5cf40e3cdb33a1ab4438b6333eeb68f5",
+        "rawSha256": "44bc4dd76acb1a3785ab73b13812e70ec934e7d17bf2b9799be537ac62c8c854",
+        "source": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\cd509\\candidate-assembly-final-receipt.json"
+      },
+      {
+        "file": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/business-overlay-report-final.json.gz",
+        "sha256": "5779534acf6a791c12973fd4c870b72399bc5f555b9760d614b31996f6e8485c",
+        "rawSha256": "8a623abad165bb3611d1ad0f6a8e37410bee41a0c03879ac0c8adfd8b85d18bf",
+        "source": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\cd509\\business-overlay-report-final.json"
+      },
+      {
+        "file": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/consumer-assembly-final-command.json.gz",
+        "sha256": "b8cd85c25f0ba93c5e76eda552faf2fa40c3b406474f70437764161032886054",
+        "rawSha256": "f314e948017909aa789e659abe6ced12ce1d8e8252a8931560db0e7d7fd12325",
+        "source": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\cd509\\consumer-assembly-final-command.json"
+      },
+      {
+        "file": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/consumer-assembly-final.log.gz",
+        "sha256": "ab38bcbd000ae39fa249b261cc3bd75577a5c7e5cbf0ff2d7d37a0b28705dd20",
+        "rawSha256": "86c9f1fb3d9b4b13d4ca7fd3f961acb45dc8182366ce7ce682c4439e687f6dab",
+        "source": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\cd509\\consumer-assembly-final.log"
+      },
+      {
+        "file": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/backend-build-commands.json.gz",
+        "sha256": "d0e64d63b921a787466c646c93fa71fa988f2f9e916ccb9f7e64d3c15cdbd46f",
+        "rawSha256": "b9235d874962c12d7979d7d8d8d65c05a6091ec970153b627c12aff809cea025",
+        "source": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\cd509\\backend-build-commands.json"
+      },
+      {
+        "file": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/frontend-build-commands.json.gz",
+        "sha256": "e76ff89748c014ed3581faf7515469333f22652d858944069c589c312497000c",
+        "rawSha256": "02889024d7a8c71ce94ae4ccb7fc004c50e477357b441d1715a18c6f77265998",
+        "source": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\cd509\\frontend-build-commands.json"
+      },
+      {
+        "file": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/source-before-build.json.gz",
+        "sha256": "5dd4f574c9a2031ca2157cebfc41fafcdcff7c989943b492ee427a859e8e5ea1",
+        "rawSha256": "f7845a2a75d935e7d32e6ddf341d652f334e85a1bf5ad9e6983ab77c48225242",
+        "source": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\cd509\\source-before-build.json"
+      },
+      {
+        "file": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/source-after-build.json.gz",
+        "sha256": "8d23ebccd001d6540d5fb11e6fe7cde8dc12580db9086c6f8a519d56de3e6474",
+        "rawSha256": "58d51260a279fe42c7ba9c075fdee3397a61b1ce93125554851f9027e4696a6e",
+        "source": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\cd509\\source-after-build.json"
+      },
+      {
+        "file": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/effective-go-toolchain-receipt.json.gz",
+        "sha256": "8d3d4f1762c26915cc3c9119aadd3c11a78e66238899da5fa6a6d1b6234fde6c",
+        "rawSha256": "467575816d2e7822cc4a9572e0f818596c218317a6284ff68f8183aa317df801",
+        "source": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\cd509\\effective-go-toolchain-receipt.json"
+      },
+      {
+        "file": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/supported-node-runtime.json.gz",
+        "sha256": "ac95e3eed80c6797f7f907206555ffc9302ee90b30ba679175b86f7e063bb559",
+        "rawSha256": "feaf261c40940fb9f7e8da412eecb4bb625d7db5b5f688030d4b529edf91201a",
+        "source": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\cd509\\supported-node-runtime.json"
+      },
+      {
+        "file": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/assembled-inventory-delta-receipt.json.gz",
+        "sha256": "92198d5a9de4b097b25d7b0fb8469dc6ea91b7414463efddb2c6a9848468356c",
+        "rawSha256": "e923174d8cb6fe5fa91959011203703019c12846518d8b2970997568b1e56002",
+        "source": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\cd509\\assembled-inventory-delta-receipt.json"
+      },
+      {
+        "file": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/retained-adapter-source-receipt.json.gz",
+        "sha256": "5df3fd515227079e28eb2725754bcbfab039ac6404fecd8e7b42e87d5ce040af",
+        "rawSha256": "5cf5ff4722ace8171fb2c03da9de12d9b090d37be044a3c7ec7cb3d0515128a2",
+        "source": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\cd509\\retained-adapter-source-receipt.json"
+      },
+      {
+        "file": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/candidate-go-build.log.gz",
+        "sha256": "46b50c321b39e89a491b6727a01628c34245605a30beb3e7414c5e01cff90e6e",
+        "rawSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "source": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\cd509\\candidate-go-build.log"
+      },
+      {
+        "file": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/candidate-npm-ci.log.gz",
+        "sha256": "69456139913063d2226861bd36abf82d0f10b66b10557c50c871b2eeafc0f705",
+        "rawSha256": "1f95acf9c045d0d7d498906fbd8860b5c82d33ee9d364eb9b5e9def97290ee95",
+        "source": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\cd509\\candidate-npm-ci.log"
+      },
+      {
+        "file": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/candidate-frontend-lint.log.gz",
+        "sha256": "674343ded37902564cd957a425e115a62511491b64a53f9cce3c5f77b6a6e2fe",
+        "rawSha256": "5f62e7cf7cdd69c014ca18d1c493431139fcbda108704552679bc84c360fd025",
+        "source": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\cd509\\candidate-frontend-lint.log"
+      },
+      {
+        "file": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/candidate-frontend-type-check.log.gz",
+        "sha256": "519e169135e24193036d0d13e0d109656e7023b9c3019f33f768c0fee1224a9a",
+        "rawSha256": "94d7e0ba308969aef5be19127663f1eb2c0b1e8d9e4f8781561cc44a964b7281",
+        "source": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\cd509\\candidate-frontend-type-check.log"
+      },
+      {
+        "file": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/candidate-frontend-build.log.gz",
+        "sha256": "f641dbdb4682f48df8f36da9b2e3eadc217704ae7bfb453a36a2a4cd08c5df65",
+        "rawSha256": "966a34c93ed03dfcf85cc299ddde8ee151fb7c8a8c9976821bd037bdae5e7c92",
+        "source": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\cd509\\candidate-frontend-build.log"
+      },
+      {
+        "file": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/compare-final-main.mjs.gz",
+        "sha256": "3f00868fd09a64987189f700f4223e91b949b6349e1d93eccc3198e4e6dbd01c",
+        "rawSha256": "8ee2b04351e4674ff3333a427e8439bc2f88af236abbe47eae2ff42c0bbeeb73",
+        "source": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\cd509\\compare-final-main.mjs"
+      }
+    ],
+    "commands": [
+      {
+        "command": "D:/Go/bin/go.exe build -buildvcs=false -mod=readonly ./...",
+        "cwd": "D:\\workspace\\go\\pantheon-platform\\.wt-ops-candidate188\\.tmp\\foundation-candidates\\candidate-af7b5e4ba7e5b086df902b3190c5daf9f0cbc757ae0fe6d91208a329ed6e7a61\\assembled\\backend",
+        "startedAt": "2026-11-13T07:27:52.3077943Z",
+        "finishedAt": "2026-11-13T07:28:40.4838718Z",
+        "exitCode": 0,
+        "log": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\cd509\\candidate-go-build.log",
+        "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "command": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\dependency-validation\\toolchain\\node-v24.22.3-win-x64\\node.exe D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\dependency-validation\\toolchain\\node-v24.22.3-win-x64\\node_modules\\npm\\bin\\npm-cli.js ci",
+        "cwd": "D:\\workspace\\go\\pantheon-platform\\.wt-ops-candidate188\\.tmp\\foundation-candidates\\candidate-af7b5e4ba7e5b086df902b3190c5daf9f0cbc757ae0fe6d91208a329ed6e7a61\\assembled\\frontend",
+        "startedAt": "2026-11-13T07:27:51.9542114Z",
+        "finishedAt": "2026-11-13T07:28:53.5109026Z",
+        "exitCode": 0,
+        "log": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\cd509\\candidate-npm-ci.log",
+        "logSha256": "1f95acf9c045d0d7d498906fbd8860b5c82d33ee9d364eb9b5e9def97290ee95"
+      },
+      {
+        "command": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\dependency-validation\\toolchain\\node-v24.22.3-win-x64\\node.exe D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\dependency-validation\\toolchain\\node-v24.22.3-win-x64\\node_modules\\npm\\bin\\npm-cli.js run lint",
+        "cwd": "D:\\workspace\\go\\pantheon-platform\\.wt-ops-candidate188\\.tmp\\foundation-candidates\\candidate-af7b5e4ba7e5b086df902b3190c5daf9f0cbc757ae0fe6d91208a329ed6e7a61\\assembled\\frontend",
+        "startedAt": "2026-11-13T07:28:53.7045237Z",
+        "finishedAt": "2026-11-13T07:30:06.7283239Z",
+        "exitCode": 0,
+        "log": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\cd509\\candidate-frontend-lint.log",
+        "logSha256": "5f62e7cf7cdd69c014ca18d1c493431139fcbda108704552679bc84c360fd025"
+      },
+      {
+        "command": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\dependency-validation\\toolchain\\node-v24.22.3-win-x64\\node.exe D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\dependency-validation\\toolchain\\node-v24.22.3-win-x64\\node_modules\\npm\\bin\\npm-cli.js run type-check",
+        "cwd": "D:\\workspace\\go\\pantheon-platform\\.wt-ops-candidate188\\.tmp\\foundation-candidates\\candidate-af7b5e4ba7e5b086df902b3190c5daf9f0cbc757ae0fe6d91208a329ed6e7a61\\assembled\\frontend",
+        "startedAt": "2026-11-13T07:30:06.7473936Z",
+        "finishedAt": "2026-11-13T07:30:53.1955824Z",
+        "exitCode": 0,
+        "log": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\cd509\\candidate-frontend-type-check.log",
+        "logSha256": "94d7e0ba308969aef5be19127663f1eb2c0b1e8d9e4f8781561cc44a964b7281"
+      },
+      {
+        "command": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\dependency-validation\\toolchain\\node-v24.22.3-win-x64\\node.exe D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\dependency-validation\\toolchain\\node-v24.22.3-win-x64\\node_modules\\npm\\bin\\npm-cli.js run build",
+        "cwd": "D:\\workspace\\go\\pantheon-platform\\.wt-ops-candidate188\\.tmp\\foundation-candidates\\candidate-af7b5e4ba7e5b086df902b3190c5daf9f0cbc757ae0fe6d91208a329ed6e7a61\\assembled\\frontend",
+        "startedAt": "2026-11-13T07:30:53.2169527Z",
+        "finishedAt": "2026-11-13T07:31:51.8990192Z",
+        "exitCode": 0,
+        "log": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\cd509\\candidate-frontend-build.log",
+        "logSha256": "966a34c93ed03dfcf85cc299ddde8ee151fb7c8a8c9976821bd037bdae5e7c92"
+      }
+    ],
+    "effectiveGo": "go1.26.10; GOTOOLCHAIN=auto; CGO_ENABLED=1; readonly build",
+    "node": "v24.22.3",
+    "sourceStable": true,
+    "baseAndSnapshotLeaves": 1176,
+    "opsSelectedLeaves": 963,
+    "assembledLeaves": 2115,
+    "assembledSha256": "e242a4b78ce2c990a6245021383279fca0a31b97c9f97b7c6b3f2a42cb194562",
+    "sharedDrift": "856/856 shared leaves identical, zero drift exemptions;164 declared business files skipped,2 derived migrations verified",
+    "adapterProjection": "Four standard Ops candidate adapter files match prior authoritative adapter pins; two tracked modifications and two untracked modules explicitly disclosed; no Ops business or application source, branch, PR, or lock change.",
+    "officialLockUnchanged": true,
+    "oldCandidateUnchanged": {
+      "identity": "candidate-43be57e28ef949b68b1d145fdd5fb0d82d03272950be37772a05b3fe10ae8ec4",
+      "descriptorSha256": "8e99ab6dd69fe675af508f06ebcb1faac4617b7845a8a91b2d1b42c72d0f5ee3",
+      "archiveSha256": "5f2d1862cc1b6aa1f37720ee36e4aea0843bf611139a0440b01cb2b30f31b1bc"
+    },
+    "officialConsumption": false,
+    "limitation": "Compatibility build only. Final whole-tree confirmation, actual required-check merge, clean-main/remote-SHA source binding, hosted Linux/CodeQL alert closure, exact-main CI/Release Gate, official release/assets and Ops acceptance remain downstream."
+  },
+  "closureGovernance": {
+    "receipt": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/closure-governance-checks.json",
+    "checksPassed": 10,
+    "scope": "source/preparation closeout; final external whole-tree and hosted delivery pending"
+  }
+}

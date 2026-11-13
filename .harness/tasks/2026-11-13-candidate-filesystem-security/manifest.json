@@ -1,0 +1,380 @@
+{
+  "taskId": "2026-11-13-candidate-filesystem-security",
+  "taskDoc": "docs/harness/tasks/2026-11-13-candidate-filesystem-security.task.md",
+  "title": "Harden foundation candidate file operations against filesystem races",
+  "goal": "Repair nine high-severity CodeQL js/file-system-race alerts in the candidate producer, descriptor and regression fixture; preserve immutable candidate and consumer contracts, then validate the exact source with tests and independent security review.",
+  "primaryLayer": "platform",
+  "status": "completed",
+  "priority": "P0",
+  "type": "bugfix",
+  "dependencies": [],
+  "scope": {
+    "in": [
+      "Nine open CodeQL js/file-system-race alerts #100–108 on main ae2fa81d",
+      "Descriptor and source file open/read/write validation within the three named files",
+      "Meaningful race/negative regressions and existing foundation release suite",
+      "Source-bound evidence and independent security/CODE/ARCH review; hosted CodeQL closure readback without dismissals",
+      "Minimal root package.json test:foundation-release expansion executes existing candidate suite through unchanged CI command"
+    ],
+    "out": [
+      "Application APIs, backend/, frontend/src/, schema, permissions and business behavior",
+      "New dependencies, suppression comments, CodeQL dismissal or gate weakening",
+      "Production data, credentials and deployment",
+      "Changing sealed candidate format, descriptor identity or official consumer lock semantics"
+    ]
+  },
+  "dependencyLayers": ["inheritance-sync"],
+  "contractAnchors": [
+    "docs/designs/FOUNDATION_RELEASE_MODEL.md",
+    "docs/designs/QUALITY_AND_SECURITY_STRATEGY.md",
+    "docs/harness/AI_QUALITY_GOVERNANCE.md",
+    "docs/harness/VERIFICATION_EVIDENCE_SPEC.md",
+    "docs/contracts/PLATFORM_CONTRACT.md"
+  ],
+  "expectedFiles": {
+    "create": [
+      ".harness/tasks/2026-11-13-candidate-filesystem-security/manifest.json",
+      "docs/harness/tasks/2026-11-13-candidate-filesystem-security.task.md",
+      ".harness/evidence/2026-11-13-candidate-filesystem-security/commands.json",
+      ".harness/evidence/2026-11-13-candidate-filesystem-security/summary.md",
+      ".harness/evidence/2026-11-13-candidate-filesystem-security/review.md",
+      ".harness/evidence/2026-11-13-candidate-filesystem-security/security-alerts-before.json",
+      ".harness/evidence/2026-11-13-candidate-filesystem-security/security-source-evidence.json.gz",
+      ".harness/evidence/2026-11-13-candidate-filesystem-security/source-diff.patch.gz",
+      ".harness/evidence/2026-11-13-candidate-filesystem-security/candidate-tests.txt.gz",
+      ".harness/evidence/2026-11-13-candidate-filesystem-security/wired-foundation-tests.txt.gz",
+      ".harness/evidence/2026-11-13-candidate-filesystem-security/tdd-red.txt.gz",
+      ".harness/evidence/2026-11-13-candidate-filesystem-security/tdd-green.txt.gz",
+      ".harness/evidence/2026-11-13-candidate-filesystem-security/focused-tests.txt.gz",
+      ".harness/evidence/2026-11-13-candidate-filesystem-security/FileSystemRace-codeql-2.27.4.ql.gz",
+      ".harness/evidence/2026-11-13-candidate-filesystem-security/security-source-evidence.json",
+      ".harness/evidence/2026-11-13-candidate-filesystem-security/security-alerts-remediation-map.json",
+      ".harness/evidence/2026-11-13-candidate-filesystem-security/wired-foundation-tests-receipt.json",
+      ".harness/evidence/2026-11-13-candidate-filesystem-security/historical-four-source-code-review.md",
+      ".harness/evidence/2026-11-13-candidate-filesystem-security/historical-four-source-code-review.md.gz",
+      ".harness/evidence/2026-11-13-candidate-filesystem-security/historical-four-source-code-review-receipt.json",
+      ".harness/evidence/2026-11-13-candidate-filesystem-security/source-review-artifacts.json",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/final-consumer-build-receipt.json",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/final-build-receipt.json.gz",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/candidate-assembly-final-receipt.json.gz",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/business-overlay-report-final.json.gz",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/consumer-assembly-final-command.json.gz",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/consumer-assembly-final.log.gz",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/backend-build-commands.json.gz",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/frontend-build-commands.json.gz",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/source-before-build.json.gz",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/source-after-build.json.gz",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/effective-go-toolchain-receipt.json.gz",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/supported-node-runtime.json.gz",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/assembled-inventory-delta-receipt.json.gz",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/retained-adapter-source-receipt.json.gz",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/candidate-go-build.log.gz",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/candidate-npm-ci.log.gz",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/candidate-frontend-lint.log.gz",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/candidate-frontend-type-check.log.gz",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/candidate-frontend-build.log.gz",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/compare-final-main.mjs.gz",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/prior-preparation-review.md.gz",
+      ".harness/evidence/2026-11-13-candidate-filesystem-security/source-architecture-review.md.gz",
+      ".harness/evidence/2026-11-13-candidate-filesystem-security/source-code-security-review.md.gz",
+      ".harness/evidence/2026-11-13-candidate-filesystem-security/claude-source-review-timeout.md.gz",
+      ".harness/evidence/2026-11-13-candidate-filesystem-security/source-architecture-review.md",
+      ".harness/evidence/2026-11-13-candidate-filesystem-security/source-code-security-review.md",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/closure-check-docs-frontmatter.log.gz",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/closure-check-task-packet-template.log.gz",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/closure-check-task-packet.log.gz",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/closure-check-harness-evidence.log.gz",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/closure-check-harness-review.log.gz",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/closure-check-harness-docs.log.gz",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/closure-check-harness-encoding.log.gz",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/closure-check-harness-inventory.log.gz",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/closure-check-structure.log.gz",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/closure-pr-governance.log.gz",
+      ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/closure-governance-checks.json"
+    ],
+    "modify": [
+      "scripts/foundation-release/build-candidate-artifact.mjs",
+      "scripts/foundation-release/candidate-descriptor.mjs",
+      "scripts/foundation-release/candidate-artifact.test.mjs",
+      "package.json"
+    ],
+    "doNotTouch": [
+      "backend/",
+      "frontend/",
+      ".github/workflows/",
+      "config/",
+      "Other scripts except the three named candidate files",
+      "Historical completed acceptance records and failed evidence",
+      "Official immutable assets and consumer lock"
+    ]
+  },
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "ci-workflow",
+    "portableFailureClass": "security-boundary-gap",
+    "ownerLayer": "foundation-source",
+    "ratchetDecision": "sensor-added",
+    "coverageDimensions": [
+      "behaviour",
+      "maintainability",
+      "architecture-fitness"
+    ]
+  },
+  "structuralScope": {
+    "affectedSubgraph": [
+      "candidate input path -> file opening/reading -> sealed source/archive",
+      "descriptor path -> validated descriptor -> consumer candidate"
+    ],
+    "boundaryCrossings": [
+      "Local filesystem -> trusted immutable candidate identity",
+      "Base producer -> Ops consumer"
+    ],
+    "riskNodes": [
+      "Source/descriptor path replacement and symlink races",
+      "Immutable artifact write and fixture operations"
+    ],
+    "graphFocus": [
+      "cycle-check",
+      "hub-check",
+      "call-depth",
+      "sensitive-input-flow"
+    ]
+  },
+  "executionRoles": {
+    "implementerPosture": "Security executor owns the three candidate files/runtime evidence; root owns package.json test command wiring; Writer owns L2 governance. No agent reverts concurrent edits.",
+    "reviewerPosture": [
+      "Independent security/CODE review of the exact source and race evidence",
+      "Independent ARCH review of immutable producer/consumer boundary"
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "node --test scripts/foundation-release/candidate-artifact.test.mjs",
+      "npm run test:foundation-release",
+      "npm run check:docs-frontmatter",
+      "npm run check:task-packet-template",
+      "npm run check:task-packet",
+      "npm run check:harness-evidence",
+      "npm run check:harness-review",
+      "npm run check:harness-docs",
+      "npm run check:harness-encoding",
+      "npm run check:harness-inventory",
+      "npm run check:structure",
+      "Manual security-boundary diff review; security-diff-scan tool unavailable",
+      "Hosted CodeQL js/file-system-race rescan and exact-main open-alert readback",
+      "New sealed candidate and standard readonly consumer backend/frontend compatibility builds coordinated by parent preparation"
+    ],
+    "runtimeEvidence": [
+      "Runnable adversarial filesystem regressions with actual results",
+      "Candidate source and descriptor byte/hash stability",
+      "Exact-source CodeQL closure and independent security approval",
+      "Root wired command125 nodes / 122 pass / 0 fail / 3 Windows leaf-symlink capability skips; unchanged existing Linux CI must run all cases"
+    ]
+  },
+  "runtimeSensitive": true,
+  "runtimeGap": "Source approvals and candidate builds pass. Final whole-tree confirmation, Linux leaf-symlink execution, exact-main hosted CodeQL/automatic alert closure, merge/main binding/CI/Release Gate and release remain downstream. security-diff-scan/CodeQL CLI/LSP unavailable; actual test/compiler/AST evidence remains separate.",
+  "acceptanceCriteria": [
+    "Named race paths reject mutation or operate safely without weakening existing candidate validation",
+    "Meaningful negative/race regressions and existing foundation release suite pass on the corrected source",
+    "Independent security/CODE and ARCH approval bind the same frozen tree",
+    "No alert dismissal, query suppression, workflow gate weakening or immutable/consumer-lock contract drift",
+    "Reviewed preparation is ready for the combined required-check PR; exact-main hosted CodeQL and alert closure remain downstream publication requirements"
+  ],
+  "implementationNotes": [
+    "Latest user instruction explicitly adds GitHub security issues to authorized release scope.",
+    "Minimum Complexity Rung: reuse installed Node filesystem APIs and existing validation/test fixtures; executor selects the narrow correction.",
+    "Use separate L2 task rather than stretching the prior smoke continuation scope.",
+    "Root coordinates combined PR, candidate reseal and exact-main closure; no commits/push/merge by Writer.",
+    "Root owns package.json test script expansion; no dependency, lockfile or workflow edit.",
+    "Historical native four-source review stays COMMENT due to unavailable LSP; current independent five-source SOURCE/CODE-security and ARCH approvals are retained separately."
+  ],
+  "risks": [
+    "Passing tests does not establish hosted CodeQL alert closure.",
+    "File descriptor and exclusive creation semantics must preserve cross-platform producer/consumer compatibility."
+  ],
+  "humanGates": [
+    "User authorized security fixes, normal merges, obsolete Base branch/worktree cleanup and v0.18.8 publication after successful CI; no new permission request. Production and gate-policy changes remain outside scope."
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-11-13-candidate-filesystem-security/manifest.json",
+    "taskDoc": "docs/harness/tasks/2026-11-13-candidate-filesystem-security.task.md",
+    "evidenceDir": ".harness/evidence/2026-11-13-candidate-filesystem-security/",
+    "reviewFile": ".harness/evidence/2026-11-13-candidate-filesystem-security/review.md",
+    "summaryFile": ".harness/evidence/2026-11-13-candidate-filesystem-security/summary.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".harness/tasks/2026-11-13-candidate-filesystem-security/manifest.json"
+    ]
+  },
+  "implementationStatus": "source-preparation-complete",
+  "reviewStatus": "approved",
+  "verificationStatus": "source-tests-helper-proof-consumer-builds-passed-hosted-delivery-pending",
+  "releasePreparationParent": ".harness/tasks/2026-11-13-v0188-release-preparation/manifest.json",
+  "alertBaseline": {
+    "sourceCommit": "ae2fa81d9903d63b4bec8f01d61082f48a999e2f",
+    "rule": "js/file-system-race",
+    "securitySeverity": "high",
+    "count": 9,
+    "numbers": [100, 101, 102, 103, 104, 105, 106, 107, 108],
+    "receipt": ".harness/evidence/2026-11-13-candidate-filesystem-security/security-alerts-before.json",
+    "dependabotOpen": 0,
+    "secretScanningOpen": 0,
+    "otherSecurityCountsSource": "Root coordinator API query; not independently re-queried by Writer"
+  },
+  "sourceVerification": {
+    "sourceHashes": [
+      {
+        "file": "scripts/foundation-release/build-candidate-artifact.mjs",
+        "sha256": "6196730755893349e7d42088c0e4a03ebd2064cac3924d52e8f456d7b501dc9e"
+      },
+      {
+        "file": "scripts/foundation-release/candidate-descriptor.mjs",
+        "sha256": "2cd4c0e7b61b5b920c9c5e0e070a0a292621dc5397624c4c92d7a0468c0b594c"
+      },
+      {
+        "file": "scripts/foundation-release/candidate-artifact.test.mjs",
+        "sha256": "341fb61709eed19b24feaa65778b1548bbc7738d0edc4159c0c1f118cbe44ff3"
+      }
+    ],
+    "packageSha256": "aeacce2b72366bc648943d7860355efecab431d28e0d9dacc573bb7bea260a3c",
+    "fiveSourceTree": "93b617c283b20866f3b209047e931246dbf9b009",
+    "preWiringSourceTree": "e5933880b5fc4f7b7a419c0b8b36e5490f2acddb",
+    "manualReview": ".harness/evidence/2026-11-13-candidate-filesystem-security/security-source-evidence.json",
+    "alertMap": ".harness/evidence/2026-11-13-candidate-filesystem-security/security-alerts-remediation-map.json",
+    "wiredReceipt": ".harness/evidence/2026-11-13-candidate-filesystem-security/wired-foundation-tests-receipt.json",
+    "retainedArtifacts": [
+      {
+        "file": ".harness/evidence/2026-11-13-candidate-filesystem-security/security-source-evidence.json.gz",
+        "sha256": "3c31f3696e098e1086cb2b538a34c4ec664f2b847f5003b28db1e13c0dd1f3cd",
+        "rawSha256": "35adb6407f2401a8bfa7f9ca1d97621fa29231beee0622bbf05d51b6618b0641",
+        "source": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\sec509\\security-source-evidence.json",
+        "role": "source-bound executor/runtime evidence"
+      },
+      {
+        "file": ".harness/evidence/2026-11-13-candidate-filesystem-security/source-diff.patch.gz",
+        "sha256": "dd29d2d6e09486a27065fbb2c659bbcfd3caaa666bbee44a2a690fbd6bf01847",
+        "rawSha256": "f57cb9e60c5274bc4d451949e5831a57baf3f23aa077944d5915ac5240cf9ee5",
+        "source": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\sec509\\source-diff.patch",
+        "role": "source-bound executor/runtime evidence"
+      },
+      {
+        "file": ".harness/evidence/2026-11-13-candidate-filesystem-security/candidate-tests.txt.gz",
+        "sha256": "6f9d98f912d576ad0037db46137127553896fc0e0a775be3087b970d94e516b7",
+        "rawSha256": "12c4339d1f43a08a784b7c65c403f243b7d60384f024e085aa8055f57a2431dd",
+        "source": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\sec509\\candidate-tests.txt",
+        "role": "source-bound executor/runtime evidence"
+      },
+      {
+        "file": ".harness/evidence/2026-11-13-candidate-filesystem-security/wired-foundation-tests.txt.gz",
+        "sha256": "73bb0198a2580a91cb5b2ad427a48a5c4e551e6c191979f775e64b2f315eae57",
+        "rawSha256": "eeb086d7b187dd09c8d3ac878c5a72e3eb57e325fd29fd36a393e65f39d8ff03",
+        "source": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\sec509\\wired-foundation-tests.txt",
+        "role": "source-bound executor/runtime evidence"
+      },
+      {
+        "file": ".harness/evidence/2026-11-13-candidate-filesystem-security/tdd-red.txt.gz",
+        "sha256": "4ab7578a3a2fb1b4a18fe565ea18d075152feaa545af199717e5848633b85c38",
+        "rawSha256": "f1eb440bcd6aa0bd679a6779a70a5691e3b2529e9c72d90c151095f1469a790a",
+        "source": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\sec509\\tdd-red.txt",
+        "role": "historical initial failing regression"
+      },
+      {
+        "file": ".harness/evidence/2026-11-13-candidate-filesystem-security/tdd-green.txt.gz",
+        "sha256": "c787df688d510830bfcd50d310b1249b8f6e2f88b4eb5d0b0ba25425377ee6a4",
+        "rawSha256": "05b10ec2d360e6ba86919542a58f499f38bc73fe9480a91696456b42ad99cbda",
+        "source": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\sec509\\tdd-green.txt",
+        "role": "source-bound executor/runtime evidence"
+      },
+      {
+        "file": ".harness/evidence/2026-11-13-candidate-filesystem-security/focused-tests.txt.gz",
+        "sha256": "976fe57df6af84d7f5026aaec4d7107e8d2c314aa1fa9df14e47916da3c2008c",
+        "rawSha256": "653fa2e1c2f3d52ae3ca4c566715972dc5c13849a8d1bda18b7cc54b0792dbdb",
+        "source": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\sec509\\focused-tests.txt",
+        "role": "source-bound executor/runtime evidence"
+      },
+      {
+        "file": ".harness/evidence/2026-11-13-candidate-filesystem-security/FileSystemRace-codeql-2.27.4.ql.gz",
+        "sha256": "eaca724511886dca7d3c2be625d01b4443526cbf30c73e8e8d780d2e7de172eb",
+        "rawSha256": "6bd3beed90bf9ab935edf9d7cc37e78c4ba78aaea3545cdc7bdc5a90cba6512e",
+        "source": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\sec509\\FileSystemRace-codeql-2.27.4.ql",
+        "role": "official same-version query reference; not executed"
+      }
+    ]
+  },
+  "ratchetEvidence": {
+    "decision": "sensor-added",
+    "scope": "Meaningful candidate filesystem regressions plus existing hosted foundation command now selects scripts/foundation-release/*.test.mjs",
+    "packageSha256": "aeacce2b72366bc648943d7860355efecab431d28e0d9dacc573bb7bea260a3c",
+    "workflowEdited": false
+  },
+  "historicalSourceReview": {
+    "file": ".harness/evidence/2026-11-13-candidate-filesystem-security/historical-four-source-code-review.md.gz",
+    "sha256": "661238f821e6ba27cca94617829e0f6bc2b5898df006567925efada52a96daea",
+    "rawPreservedAs": ".harness/evidence/2026-11-13-candidate-filesystem-security/historical-four-source-code-review.md.gz",
+    "compressedSha256": "661238f821e6ba27cca94617829e0f6bc2b5898df006567925efada52a96daea",
+    "reviewer": "/root/final_security_code_review",
+    "verdict": "COMMENT",
+    "sourceFindings": 0,
+    "reviewedSourceTree": "e5933880b5fc4f7b7a419c0b8b36e5490f2acddb",
+    "parentCommit": "ae2fa81d9903d63b4bec8f01d61082f48a999e2f",
+    "scopeLimit": "Historical four-source review before package wiring; not fifth-source or final combined-tree approval.",
+    "toolGap": "Mandatory lsp_diagnostics unavailable; real syntax/AST/strict type/runtime checks are separate evidence.",
+    "rawSha256": "69efd17160e805b228f8d5842b6e0aa6de669094aca6eaac69436fd500cc8ef0",
+    "readingCopy": ".harness/evidence/2026-11-13-candidate-filesystem-security/historical-four-source-code-review.md",
+    "readingCopySha256": "300d6523539256cd83e0a15c68b04ba56f4b177922a36b7e603c941246440c60"
+  },
+  "finalTargetCandidate": {
+    "candidateIdentity": "candidate-af7b5e4ba7e5b086df902b3190c5daf9f0cbc757ae0fe6d91208a329ed6e7a61",
+    "descriptorSha256": "fa1d30d65ee38ecf067d2fbaa17bce3b345696efb986da7a182891313014927f",
+    "artifactSha256": "69e67550b3c49b729586e7258faaea64c9f76b90895c75d89037fd8ba5026151",
+    "receipt": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/final-target-candidate-receipt.json",
+    "state": "sealed1176; standard consumer builds PASS; exact five-source CODE-security and ARCH approved",
+    "officialConsumption": false,
+    "buildReceipt": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/final-consumer-build-receipt.json",
+    "reviews": ".harness/evidence/2026-11-13-candidate-filesystem-security/source-review-artifacts.json"
+  },
+  "completedAt": "2026-11-13",
+  "sourcePreparationApproval": {
+    "sourceTree": "93b617c283b20866f3b209047e931246dbf9b009",
+    "candidateIdentity": "candidate-af7b5e4ba7e5b086df902b3190c5daf9f0cbc757ae0fe6d91208a329ed6e7a61",
+    "reports": [
+      {
+        "file": ".harness/evidence/2026-11-13-candidate-filesystem-security/source-architecture-review.md.gz",
+        "sha256": "677c05e70d47f2572d4e93848aded79ce33b493e5897c79bd9586caa324ce7a1",
+        "rawSha256": "558fb6310752e34c979781f684d6c2007a3075d8f664a271ae5cf504f82bfd67",
+        "source": "D:\\workspace\\go\\pantheon-platform\\.wt-base-smoke-readiness\\.harness\\evidence\\2026-11-13-candidate-filesystem-security\\source-architecture-review.md",
+        "readingCopy": ".harness/evidence/2026-11-13-candidate-filesystem-security/source-architecture-review.md",
+        "reviewer": "/root/final_security_arch_review",
+        "verdict": "ARCH APPROVE/CLEAR",
+        "sourceTree": "93b617c283b20866f3b209047e931246dbf9b009",
+        "scope": "Original independent report; ordinary Markdown reading copy may be formatted. Current five-source approvals do not approve final whole governance tree.",
+        "readingCopySha256": "e53175bc22d46c0db5aafb6e8f8f595241ae1073916938e8d25eb748f24ee754"
+      },
+      {
+        "file": ".harness/evidence/2026-11-13-candidate-filesystem-security/source-code-security-review.md.gz",
+        "sha256": "853e702072ee83174403ed05a5095587821ab4336904a69b2762be0b713edc53",
+        "rawSha256": "3d23d972130b41fc178416b6beb556c8741be63f2d15b7302321b3db61ff3c1f",
+        "source": "D:\\workspace\\go\\pantheon-platform\\.wt-base-smoke-readiness\\.harness\\evidence\\2026-11-13-candidate-filesystem-security\\source-code-security-review.md",
+        "readingCopy": ".harness/evidence/2026-11-13-candidate-filesystem-security/source-code-security-review.md",
+        "reviewer": "/root/final_delivery_verifier",
+        "verdict": "SOURCE/CODE-security APPROVE",
+        "sourceTree": "93b617c283b20866f3b209047e931246dbf9b009",
+        "scope": "Original independent report; ordinary Markdown reading copy may be formatted. Current five-source approvals do not approve final whole governance tree.",
+        "readingCopySha256": "f192b4cf81645e7311641051281f9189f411d83919b8125cb1b833ad50877905"
+      }
+    ],
+    "buildReceipt": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/final-consumer-build-receipt.json",
+    "scope": "Source and release preparation ready for normal required-check merge; final whole-tree confirmation and downstream hosted/publication conditions remain open."
+  },
+  "downstreamConditions": [
+    "Final whole documentation/evidence tree confirmation retained externally by root",
+    "Actual combined PR merge through all required checks",
+    "Base local/remote main-only and obsolete-worktree cleanup",
+    "Actual clean main/local HEAD equals remote SHA/all1176 candidate inputs match merged commit",
+    "Existing Linux CI executes three Windows-skipped leaf-symlink scenarios",
+    "Exact-main hosted CodeQL rescan and automatic closure of alerts100–108 without dismissals",
+    "Exact-main CI and Release Gate success",
+    "Immutable v0.18.8 release and four verified assets"
+  ]
+}

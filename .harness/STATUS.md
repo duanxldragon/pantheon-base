@@ -1,3 +1,11 @@
+# v0.18.8 source/preparation approved (2026-11-13)
+
+Source/preparation is complete and independently approved for normal required-check merge. Five-source tree 93b617c283b20866f3b209047e931246dbf9b009 and final candidateaf7b5e4b have SOURCE/CODE-security APPROVE and ARCH APPROVE/CLEAR. Standard consumer readonly CGO backend build (effective Go1.26.10, GOTOOLCHAIN=auto) and fresh Node24.22.3 npm ci/lint/type-check/build all pass. Before/after1176 Base/snapshot leaves,963 Ops leaves and2115 assembled leaves remain stable; assembled aggregate e242a4b78ce2c990a6245021383279fca0a31b97c9f97b7c6b3f2a42cb194562. Shared856/856 leaves match, zero exemptions;164 business skips and2 derived migrations are disclosed. Four adapter pins and official v0.18.7 lock remain unchanged; the adapter projection has2 tracked and2 untracked module changes. This proves compatibility only. Final whole-tree confirmation, actual merge/main-only cleanup, clean-main/remote-SHA1176-input binding, Linux leaf-symlink cases, hosted CodeQL automatic alert closure, exact-main CI/Release Gate and immutable release/assets remain downstream. Live task inventory is18 completed/0 in-progress.
+
+Evidence: .harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/summary.md and .harness/evidence/2026-11-13-candidate-filesystem-security/source-review-artifacts.json. Root separately confirmed remote Base main-only at ae2fa81d; final local/main/worktree closure remains downstream. FR028 deferred, S3 unwaived, freeze unsigned and separate Ops product acceptance remain explicit.
+
+## Historical preparation checkpoint
+
 # v0.18.8 preparation approved; official v0.18.7 published and consumed (2026-11-13)
 
 The November 4 review/November 7 original scope remains closed. PR #504 delivered the shared foundation continuation; official v0.18.7 is published at immutable 3203624e with four verified assets. Ops PR #183 merged at fc3fa867630580f7bcf1d40082a77f6b2548ac56 after source-bound official acquisition/rebuild/full validation and successful final GitHub Actions. The original v0.18.7 release/consumer task is complete.

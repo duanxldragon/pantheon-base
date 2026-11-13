@@ -1,0 +1,262 @@
+{
+  "taskId": "2026-11-13-v0188-release-preparation",
+  "phase": "2026-11-13-source-bound-smoke-empty-readiness",
+  "sourceCommit": "ae2fa81d9903d63b4bec8f01d61082f48a999e2f",
+  "sourceFile": "frontend/tests/smoke/system/system-pages-helpers.ts",
+  "sourceSha256": "0e2c20882e7fb20ad5884c64dc85388ca8acd2ecdab074e8887520dc19a59981",
+  "gitBlob": "9c04901c2bae7244264dc33f1fbaff896b7d7e67",
+  "executorOutcome": {
+    "kind": "result",
+    "outcome": "PASS",
+    "tests": 5,
+    "browserErrors": [],
+    "visualScope": "Rendered controlled regression fixtures only; no product UI change or polish claim",
+    "worktreeFileSHA256": "0e2c20882e7fb20ad5884c64dc85388ca8acd2ecdab074e8887520dc19a59981"
+  },
+  "records": [
+    {
+      "kind": "source",
+      "variant": "original",
+      "file": "D:\\workspace\\go\\pantheon-platform\\.wt-base-smoke-readiness\\frontend\\tests\\smoke\\system\\system-pages-helpers.ts",
+      "sourceSHA256": "cd48c97db3925e9a67f15e1209e7a7c3d440aac9ae4da7b4d71b863298baf79f",
+      "selectedSHA256": "11571dea0b9ee0a0587c048b4b8c514ce126a35db1e25e298039ca777787fe30",
+      "transpiledSHA256": "d10abcc33f289a9c07b947de1fec7321ca91d54a81b1da7efbfc3ce17a06a346",
+      "selectedLines": [37, 750]
+    },
+    {
+      "kind": "source",
+      "variant": "current",
+      "file": "D:\\workspace\\go\\pantheon-platform\\.wt-base-smoke-readiness\\frontend\\tests\\smoke\\system\\system-pages-helpers.ts",
+      "sourceSHA256": "0e2c20882e7fb20ad5884c64dc85388ca8acd2ecdab074e8887520dc19a59981",
+      "selectedSHA256": "c4eb59ddbaed2be19468a21a48b6c3c0689b0aa7125d2137360e465b0fb1789c",
+      "transpiledSHA256": "9a1fe21d7b33c3cda0e19408772ad41606ab9ed5a374961653fd1021d0c67728",
+      "selectedLines": [37, 750]
+    },
+    {
+      "kind": "diagnostics",
+      "eslint": "PASS (exact worktree file, exact repo rules)",
+      "typescript": "PASS (strict exact extracted helper, native Playwright types)",
+      "diffCheck": "PASS"
+    },
+    {
+      "kind": "environment",
+      "node": "v24.22.3",
+      "playwright": "1.65.0",
+      "typescript": "6.0.3",
+      "eslint": "10.14.0",
+      "browser": "158.0.8127.18",
+      "browserPath": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\dependency-validation\\browsers\\chromium_headless_shell-1254\\chrome-headless-shell-win64\\chrome-headless-shell.exe",
+      "sourceBase": "ae2fa81d9903d63b4bec8f01d61082f48a999e2f"
+    },
+    {
+      "kind": "test",
+      "name": "original-detachment",
+      "rejected": true,
+      "elapsedMs": 30046,
+      "calls": {
+        "attempts": 1,
+        "visibility": [true],
+        "evaluations": [
+          {
+            "argumentCount": 2,
+            "secondArgument": {
+              "timeout": 2000
+            },
+            "thirdArgument": null,
+            "start": 1794552588486,
+            "error": "locator.evaluate: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.arco-empty').first()\u001b[22m\n",
+            "elapsedMs": 30012
+          }
+        ],
+        "detachedAfterVisible": true
+      },
+      "error": "Timeout 30000ms exceeded while waiting on the predicate"
+    },
+    {
+      "kind": "test",
+      "name": "corrected-detachment",
+      "rejected": false,
+      "elapsedMs": 2171,
+      "calls": {
+        "attempts": 2,
+        "visibility": [true, false],
+        "evaluations": [
+          {
+            "argumentCount": 3,
+            "secondArgument": null,
+            "thirdArgument": {
+              "timeout": 2000
+            },
+            "start": 1794552618566,
+            "error": "locator.evaluate: Timeout 2000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.arco-empty').first()\u001b[22m\n",
+            "elapsedMs": 2015
+          }
+        ],
+        "detachedAfterVisible": true
+      },
+      "error": null
+    },
+    {
+      "kind": "test",
+      "name": "known-empty",
+      "rejected": false,
+      "elapsedMs": 43,
+      "error": null
+    },
+    {
+      "kind": "test",
+      "name": "populated-table",
+      "rejected": false,
+      "elapsedMs": 12,
+      "error": null
+    },
+    {
+      "kind": "test",
+      "name": "unknown-empty",
+      "rejected": true,
+      "elapsedMs": 2996,
+      "error": "expect(received).toBeTruthy()\n\nReceived: false\n\nCall Log:\n- Timeout 3000ms exceeded while waiting on the predicate"
+    },
+    {
+      "kind": "result",
+      "outcome": "PASS",
+      "tests": 5,
+      "browserErrors": [],
+      "visualScope": "Rendered controlled regression fixtures only; no product UI change or polish claim",
+      "worktreeFileSHA256": "0e2c20882e7fb20ad5884c64dc85388ca8acd2ecdab074e8887520dc19a59981"
+    }
+  ],
+  "retainedArtifacts": [
+    {
+      "file": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/results.json.gz",
+      "sha256": "aa428c45ee73444452c3b9ca5493e9ac904623d0f665fa8cbe8021a468d058dd",
+      "rawSha256": "885e51a7697f2a80c71e2ed9c7444e29b3b33c07494aa9b5cc9d416020fd1e33",
+      "source": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\sr509\\results.json",
+      "role": "final source-bound executor evidence"
+    },
+    {
+      "file": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/regression.cjs.gz",
+      "sha256": "664cb18c33303619162d7477856d6195aa8d887cff3574341ff44a01aafc2083",
+      "rawSha256": "7b0e00148867f6f7d4e69f6753e27e683c0d852e9c7d170720a5e3e578a45287",
+      "source": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\sr509\\regression.cjs",
+      "role": "final source-bound executor evidence"
+    },
+    {
+      "file": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/browser.txt.gz",
+      "sha256": "785dc9276fd0ffa15034e3c4add35677b36039b397f17de94bb45154b28df926",
+      "rawSha256": "8bd0a6817a1bb2e5606a6d5398d9076db780e7990f177cd92837e62100d8a2ef",
+      "source": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\sr509\\browser.txt",
+      "role": "final source-bound executor evidence"
+    },
+    {
+      "file": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/eslint.txt.gz",
+      "sha256": "b2dc26180441e762d19e0c8db2ef406200a260be8e8c7eb96e9bf27f5bf46841",
+      "rawSha256": "4c4e248ab33bc3c8951de0227650ff922a13cd052ebe5ef8c2f465e67c747cfc",
+      "source": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\sr509\\eslint.txt",
+      "role": "final source-bound executor evidence"
+    },
+    {
+      "file": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/typescript.txt.gz",
+      "sha256": "d82ac7dc1eedfc968cfc13f3470e2c0555379da90acccfbec35b78c7e1ecb5fe",
+      "rawSha256": "cd46bc0a2e02ed6353097b8fdac08ed66132c75c713812d05e7582b51053ed51",
+      "source": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\sr509\\typescript.txt",
+      "role": "final source-bound executor evidence"
+    },
+    {
+      "file": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/diff-check.txt.gz",
+      "sha256": "ca984a42429b9549a7630b9e076bbf88a202d44c9f52b981e487ddfba877a37f",
+      "rawSha256": "1f5cd697735fa644861eb50a891f15398612e5b85bd3ce43c22bd6d105dba103",
+      "source": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\sr509\\diff-check.txt",
+      "role": "final source-bound executor evidence"
+    },
+    {
+      "file": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/patch.diff.gz",
+      "sha256": "843b37a4911eb22596a8658e7558b8cc29c13c2957b092e6ce2585ef072cf828",
+      "rawSha256": "6ae144852897824b66905c7c7812b6cc67a36ede5262b0da7c97c5138495d181",
+      "source": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\sr509\\patch.diff",
+      "role": "final source-bound executor evidence"
+    },
+    {
+      "file": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/browser-attempt1.txt.gz",
+      "sha256": "68df9c2bf92cbe697bb9fc22c699777781c92e0b172ce3826cb2f4ffb24ead59",
+      "rawSha256": "6b4ba2585597694ecc4ffcd75e32133d9e128fdd2a39190c04ebdf3ab896f273",
+      "source": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\sr509\\browser-attempt1.txt",
+      "role": "diagnostic only"
+    },
+    {
+      "file": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/results-attempt1.json.gz",
+      "sha256": "f71f643f4f80ccd5edb758e3420e9c332dbed968f5103b2178f41a0a7ae46917",
+      "rawSha256": "1a41894d64627941e7934bbf066344178186dbdffc421e8a76bd82f6600d4491",
+      "source": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\sr509\\results-attempt1.json",
+      "role": "diagnostic only"
+    },
+    {
+      "file": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/diagnostics-setup.txt.gz",
+      "sha256": "071bba67711e7be2c3e4acb94b532e053a29bf6d8ab094df73e6d25733e3546d",
+      "rawSha256": "b1769472be9a12590952c443132c9679dc2f88e9819889b644200cdeb2125ccc",
+      "source": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\sr509\\diagnostics-setup.txt",
+      "role": "diagnostic only"
+    },
+    {
+      "file": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/original.ts.gz",
+      "sha256": "31565377b343be2cfacf8df84d97e5789c992f682a9a0fa97771e47c7b753996",
+      "rawSha256": "9c85fd2b3356e205af4f6fcc13a6f7db23f797ed63414c089c16c9bd4cbeeee7",
+      "source": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\sr509\\original.ts",
+      "role": "final source-bound executor evidence"
+    },
+    {
+      "file": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/current.ts.gz",
+      "sha256": "9a9aa285efe5bd269187e7fb103f171a16b3e5a808f4dfa16d833ab0a034cb4b",
+      "rawSha256": "393c7a6638b3e762ed5e91bb9a634f6816382de6bc15cf38a055a377d1041b25",
+      "source": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\sr509\\current.ts",
+      "role": "final source-bound executor evidence"
+    },
+    {
+      "file": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/original.cjs.gz",
+      "sha256": "aa1f7ae38078f896b00231ba8855b9c469a473dc6fd9e92f11b956b874cd9129",
+      "rawSha256": "d10abcc33f289a9c07b947de1fec7321ca91d54a81b1da7efbfc3ce17a06a346",
+      "source": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\sr509\\original.cjs",
+      "role": "final source-bound executor evidence"
+    },
+    {
+      "file": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/current.cjs.gz",
+      "sha256": "aba5451827c2feb6585aef937c0d36aa0f2bf50611e9134549b2616a75015273",
+      "rawSha256": "9a1fe21d7b33c3cda0e19408772ad41606ab9ed5a374961653fd1021d0c67728",
+      "source": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\sr509\\current.cjs",
+      "role": "final source-bound executor evidence"
+    },
+    {
+      "file": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/executor-summary.md.gz",
+      "sha256": "0c3c66d8fef72a03ec2b4784cf561e8adabdbeb0adbcc5000843e99b193d92e0",
+      "rawSha256": "4535a3aa8ed6b8a24d27e6c8bd9024feca6993bfb5c552ebe267f3f57ae7d04d",
+      "source": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\sr509\\summary.md",
+      "role": "final source-bound executor evidence"
+    },
+    {
+      "file": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/known-empty-desktop.png",
+      "sha256": "31ba7fca65d34f9c6826d23cb5c3c497c764c8057b66c287a6ed4efd12658280",
+      "source": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\sr509\\known-empty-desktop.png",
+      "role": "controlled fixture rendered evidence; executor inspected, no product polish claim"
+    },
+    {
+      "file": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/populated-table-mobile.png",
+      "sha256": "c419875f54616eb5643e73e04be6a704c069683cac2dc4cce21dfa39f605efeb",
+      "source": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\sr509\\populated-table-mobile.png",
+      "role": "controlled fixture rendered evidence; executor inspected, no product polish claim"
+    },
+    {
+      "file": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/ask-claude-readiness-20261113.md.gz",
+      "sha256": "1ee1364f199d1a262c938d3df7be4ca3e5cb3375940590471a7d3443c89b210c",
+      "rawSha256": "5a12962955365a9a252be0b34a5589087c6ee997c4293f23470901a97bc51a0a",
+      "source": "D:\\workspace\\go\\pantheon-platform\\audit-artifacts\\base-final-closeout-2026-11-13\\sr509\\.omx\\artifacts\\ask-claude-readiness-20261113.md",
+      "role": "actual external adapter execution"
+    }
+  ],
+  "portabilityLimit": "Captured regression.cjs computes workspace paths from its original sr509 location and depends on external installed toolchain/browser fixtures. Its gzip is source evidence, not a portable repo command.",
+  "diagnosticLimit": "First external harness setup attempt is preserved as diagnostic only, not a helper or product failure.",
+  "remainingGaps": [
+    "Refreshed consumer candidate and security source pending.",
+    "Independent current-source CODE/ARCH pending.",
+    "Hosted corrected-source Smoke Sanity and exact-main gates pending."
+  ]
+}

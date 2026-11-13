@@ -64,6 +64,7 @@ platform
 - Reviewed dependency updates from PR #501, #502 and #503
 - VERSION 0.18.8, release notes, changelog and current documentation/status indexes
 - Preparation evidence, independent review and candidate consumer build evidence
+- 2026-11-13 bounded L1 continuation: correct only the named smoke helper timeout option placement, retain sanitized diagnosis, prove actual-helper behavior and reseal/rebuild the final consumer candidate
 
 ### Out
 
@@ -84,6 +85,12 @@ platform
 
 ### Create
 
+- .harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/prior-preparation-review.md
+- .harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/smoke-trace-diagnosis.md
+- .harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/smoke-trace-diagnosis.json
+- .harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/summary.md
+- .harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/governance-checks.json
+
 - docs/harness/tasks/2026-11-13-v0188-release-preparation.task.md
 - .harness/tasks/2026-11-13-v0188-release-preparation/manifest.json
 - .harness/evidence/2026-11-13-v0188-release-preparation/commands.json
@@ -94,6 +101,14 @@ platform
 
 ### Modify
 
+- frontend/tests/smoke/system/system-pages-helpers.ts (only the Locator.evaluate timeout argument expression)
+- .harness/tasks/2026-11-13-v0188-release-preparation/manifest.json
+- docs/harness/tasks/2026-11-13-v0188-release-preparation.task.md
+- .harness/evidence/2026-11-13-v0188-release-preparation/commands.json
+- .harness/evidence/2026-11-13-v0188-release-preparation/summary.md
+- .harness/evidence/2026-11-13-v0188-release-preparation/review.md
+- .harness/evidence/2026-11-13-v0188-release-preparation/pr-body.md
+- docs/release-notes/RELEASE_NOTES_v0.18.8.md
 - VERSION
 - CHANGELOG.md
 - .harness/STATUS.md
@@ -116,6 +131,8 @@ platform
 - .github/workflows/
 - config/
 - Historical released notes and failed evidence
+- Other frontend/tests/smoke files; only the named helper timeout expression is authorized
+- Raw authenticated traces and backend logs must not enter tracked evidence
 
 ## Implementation Notes
 
@@ -136,11 +153,13 @@ platform
 
 ## Execution Roles
 
-- Implementer Posture: docs-only Writer/Dispatcher; separate dependency PR owners
+- Implementer Posture: Writer/Dispatcher owns governance; separate dependency PR owners and the bounded smoke helper executor own their code changes
 - Reviewer Posture: independent CODE/ARCH and mechanical checks
 
 ## Verification Plan
 
+- Actual corrected helper browser proof: detached empty recovers; persistent invalid empty fails; persistent valid empty passes
+- Refreshed sealed candidate and standard consumer readonly backend/frontend compatibility builds
 - npm run check:docs-frontmatter
 - npm run check:task-packet-template
 - npm run check:task-packet
@@ -194,14 +213,16 @@ The user has authorized GitHub merges, obsolete Base branch/worktree cleanup and
 - [x] Review completed
 - [x] Existing v0.18.7 official consumer task closed with validation and merge evidence
 - [x] Dependency PRs reviewed, verified and merged
-- [x] v0.18.8 candidate consumer backend/frontend builds passed
-- [x] Preparation independently approved and ready for normal required-check PR merge
+- [x] Refreshed v0.18.8 candidate consumer backend/frontend builds passed
+- [x] Continuation independently approved for source/preparation and ready for normal required-check PR merge
 
 This preparation task can close after candidate verification, its local checks and independent CODE/ARCH approval. The overall delivery remains open until the PR is actually merged, Base retains only main with no obsolete worktrees, exact-main hosted CI succeeds, and the new immutable release passes Release Gate and asset verification. The downstream delivery receipt binds the actual merged SHA; no follow-up documentation PR is required merely to record this task's own merge.
 
 ## Status
 
-Preparation task completed after candidate builds, successful local checks and independent CODE/ARCH approval of tree a9d8ba825b7b6f05e9dc14b70d995cc2cc0b73fe. This Archived packet retains its preparation checkpoint. Final-tree confirmation, actual PR checks/merge, main-only cleanup, clean-main/remote-SHA and candidate binding, exact-main hosted gates, Release Gate and immutable publication remain downstream conditions.
+Current task completed for the bounded 2026-11-13 smoke-empty-readiness source/preparation continuation. Actual-helper browser proof, refreshed candidate compatibility builds and independent five-source security/CODE/ARCH approvals pass. Final whole-tree confirmation, actual merge and hosted delivery remain downstream. The reopening and previous preparation-only completion below are historical checkpoints.
+
+Historical preparation task completed after candidate builds, successful local checks and independent CODE/ARCH approval of tree a9d8ba825b7b6f05e9dc14b70d995cc2cc0b73fe. This Archived packet retains its preparation checkpoint. Final-tree confirmation, actual PR checks/merge, main-only cleanup, clean-main/remote-SHA and candidate binding, exact-main hosted gates, Release Gate and immutable publication remain downstream conditions.
 
 ## Candidate consumer compatibility — 2026-11-13
 
@@ -218,3 +239,38 @@ Raw JSON preservation: six imported CRLF receipts are retained as sibling .json.
 ## Source-bound smoke correction — 2026-11-13
 
 Claude implemented the narrow PR #502 CSSOM assertion correction at 44188eff3e8618736b495043c6655a1538ce6857: four strict matchers accept only canonical flex-end/flow-end serialization. The real Chromium 158 probe rejects nine negative values and proves geometry equality in four flex directions; final source transpilation and targeted ESLint pass. Production CSS, visual thresholds and other assertions are unchanged. Independent CODE APPROVE and ARCH APPROVE/CLEAR cover that exact delta with zero findings. Hosted Smoke Sanity and PR Smoke Modules then passed at that head; PR #502 merged on 2026-11-13T05:06:08Z as 1cc4d6fb320113865eac8226af4f6f499b74f455. Local receipts, review reports and actual Claude execution output are in .harness/evidence/2026-11-13-v0188-release-preparation/smoke-css/; the hosted result and merge receipt are retained as pr502-merged.json.gz in the parent evidence directory.
+
+## Smoke empty readiness continuation — 2026-11-13
+
+This L1 test-helper repair reuses the existing L2 release-preparation parent after PR #509 merged. Main ae2fa81d9903d63b4bec8f01d61082f48a999e2f failed hosted Smoke Sanity (Code Quality Gates run 43377206553, job 131728309093). Three sanitized traces show a visible Arco empty node followed by an attached-element wait that exhausts the test timeout; each list response returns HTTP 200 with populated data. The helper passes the timeout as evaluation data instead of the third options argument. Diagnosis attributes the expression to PR #505 commit 2338d108a. The executor owns the single timeout argument correction and actual-helper adversarial browser proof; Writer owns this dated governance supplement. Final Full Smoke success is coordinator-provided context, not proof that Smoke Sanity passed.
+
+The previous candidate43be57 PASS and 84-file preparation CODE/ARCH approval remain historical. Because the helper is one of 1176 selected foundation inputs, final acceptance requires a new sealed candidate, standard consumer compatibility builds and source-bound independent CODE/ARCH. Independent five-source CODE-security/ARCH approvals are retained; the mechanical preparation verdict is approved, with final whole-tree confirmation and hosted delivery downstream.
+
+- Assumptions: the supplied trace diagnosis narrows the defect to the helper call; no broader application defect is established.
+- Minimum Viable Approach: one expression correction, existing retry assertion, existing release assembler and consumer verifier.
+- Structural Scope: system smoke route -> expectPageBodyReady -> Locator.evaluate -> existing toPass retry; base helper -> sealed foundation input -> consumer assembly.
+- Success Criteria: old detached-empty behavior fails the bounded reproducer; corrected actual helper recovers; persistent invalid empty still fails and valid empty passes; refreshed candidate builds and independent source review pass.
+- Evidence: .harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/summary.md. Retain sanitized diagnosis only; raw traces and backend logs contain ephemeral auth material and stay local-only.
+- Stop Condition: independently approved continuation ready for normal required-check PR submission. Actual PR merge, Base main-only/no obsolete worktrees, clean-main/remote-SHA input binding, exact-main hosted CI/Release Gate and immutable publication remain downstream to avoid requiring a task to record its own future merge.
+
+## Candidate filesystem security dependency — 2026-11-13
+
+Latest user authorization adds GitHub security remediation through separate L2 task [2026-11-13-candidate-filesystem-security](./2026-11-13-candidate-filesystem-security.task.md). Nine high CodeQL js/file-system-race alerts in three named candidate files require actual security regression evidence and independent approval. The security executor owns that source; this parent owns release candidate reseal/compatibility and final delivery. Neither the old candidate nor historical preparation approvals certify these changes.
+
+## Smoke browser evidence — 2026-11-13
+
+Five native browser scenarios pass their expected outcomes on exact helper SHA256 0e2c20882e7fb20ad5884c64dc85388ca8acd2ecdab074e8887520dc19a59981. See smoke-empty-readiness/browser-receipt.json and its retained raw artifacts. Old detachment fails after30.046s; corrected existing retry recovers after2.171s; known empty/populated pass and unknown persistent empty still rejects. Final refreshed candidate builds and independent source approvals pass.
+
+## Security source / test wiring handoff — 2026-11-13
+
+The security dependency records actual nine-alert remediation, candidate65/68 and wired foundation122/125 passes with3 Windows leaf-symlink capability skips. Root package-only test wiring is included in five-source tree 93b617c283b20866f3b209047e931246dbf9b009; existing CI must execute the Linux cases. The bb028 seal before that wiring is provisional and retained; final five-leaf-delta candidate and standard consumer builds pass. Independent source CODE-security/ARCH approvals pass; final whole-tree confirmation remains pending.
+
+## Final target candidate — 2026-11-13
+
+Final target candidate-af7b5e4ba7e5b086df902b3190c5daf9f0cbc757ae0fe6d91208a329ed6e7a61 is sealed after package wiring:1176 stable inputs, 5 changed/1171 unchanged leaves, descriptor fa1d30d65ee38ecf067d2fbaa17bce3b345696efb986da7a182891313014927f, tar 69e67550b3c49b729586e7258faaea64c9f76b90895c75d89037fd8ba5026151. Original hashes and proposed-tree binding are retained; standard consumer builds and source CODE-security/ARCH approvals pass; final whole-tree confirmation and hosted delivery remain pending. Proposed source93b617 is not a final clean-main release binding.
+
+## Source/preparation closeout — 2026-11-13
+
+Source/preparation is complete and independently approved for normal required-check merge. Five-source tree 93b617c283b20866f3b209047e931246dbf9b009 and final candidateaf7b5e4b have SOURCE/CODE-security APPROVE and ARCH APPROVE/CLEAR. Standard consumer readonly CGO backend build (effective Go1.26.10, GOTOOLCHAIN=auto) and fresh Node24.22.3 npm ci/lint/type-check/build all pass. Before/after1176 Base/snapshot leaves,963 Ops leaves and2115 assembled leaves remain stable; assembled aggregate e242a4b78ce2c990a6245021383279fca0a31b97c9f97b7c6b3f2a42cb194562. Shared856/856 leaves match, zero exemptions;164 business skips and2 derived migrations are disclosed. Four adapter pins and official v0.18.7 lock remain unchanged; the adapter projection has2 tracked and2 untracked module changes. This proves compatibility only. Final whole-tree confirmation, actual merge/main-only cleanup, clean-main/remote-SHA1176-input binding, Linux leaf-symlink cases, hosted CodeQL automatic alert closure, exact-main CI/Release Gate and immutable release/assets remain downstream. Live task inventory is18 completed/0 in-progress.
+
+Retained original reports: .harness/evidence/2026-11-13-candidate-filesystem-security/source-review-artifacts.json. Final build: .harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/final-consumer-build-receipt.json. Historical84-file approvals and failures remain scoped to their original checkpoints. FR028 deferred, S3 unwaived, maintenance freeze unsigned and separate Ops product acceptance remain explicit.

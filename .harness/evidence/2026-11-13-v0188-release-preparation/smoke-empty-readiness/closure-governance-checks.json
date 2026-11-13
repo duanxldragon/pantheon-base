@@ -1,0 +1,142 @@
+{
+  "taskId": "2026-11-13-v0188-release-preparation",
+  "phase": "source-preparation-closeout-before-external-whole-tree-review",
+  "commands": [
+    {
+      "command": "npm run check:docs-frontmatter",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\.wt-base-smoke-readiness",
+      "status": "passed",
+      "exitCode": 0,
+      "log": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/closure-check-docs-frontmatter.log.gz",
+      "sha256": "b9291a353563beefbbe689314cba45db6765680a518f8fb64dc180d0ec841823",
+      "rawSha256": "7d2dcbb91a67a2bcfed3dd4bac4db9262852b15faf37a43ca6ad16a5af6cf058",
+      "startedAt": "2026-11-13T07:49:56.454Z",
+      "finishedAt": "2026-11-13T07:50:00.795Z",
+      "chunk_id": "681c7e",
+      "notes": "Actual direct PowerShell check after source approvals, final consumer builds and completed/Archived source-preparation stamps. Schema and documentation success is separate from external final whole-tree confirmation and hosted merge/release gates. Historical warnings retained."
+    },
+    {
+      "command": "npm run check:task-packet-template",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\.wt-base-smoke-readiness",
+      "status": "passed",
+      "exitCode": 0,
+      "log": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/closure-check-task-packet-template.log.gz",
+      "sha256": "6e6ce6ead51d22f62545c39f775011fe3cacfd09edf691a8c68687465343db6c",
+      "rawSha256": "3adf394a58969f2ff6c463b3288b461879ea88400a554f7716649302e17f905f",
+      "startedAt": "2026-11-13T07:49:56.496Z",
+      "finishedAt": "2026-11-13T07:50:00.586Z",
+      "chunk_id": "95796a",
+      "notes": "Actual direct PowerShell check after source approvals, final consumer builds and completed/Archived source-preparation stamps. Schema and documentation success is separate from external final whole-tree confirmation and hosted merge/release gates. Historical warnings retained."
+    },
+    {
+      "command": "npm run check:task-packet",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\.wt-base-smoke-readiness",
+      "status": "passed",
+      "exitCode": 0,
+      "log": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/closure-check-task-packet.log.gz",
+      "sha256": "f4a6ebe4844f4418d2d35ab190b759a2591980fa24e96809d13e109b31f5ac50",
+      "rawSha256": "a4e27b7712d186f92c2290fa6e4d78acdfe65fbea2c3f0293a2f98eba615d622",
+      "startedAt": "2026-11-13T07:49:56.496Z",
+      "finishedAt": "2026-11-13T07:50:00.962Z",
+      "chunk_id": "041687",
+      "notes": "Actual direct PowerShell check after source approvals, final consumer builds and completed/Archived source-preparation stamps. Schema and documentation success is separate from external final whole-tree confirmation and hosted merge/release gates. Historical warnings retained."
+    },
+    {
+      "command": "npm run check:harness-evidence",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\.wt-base-smoke-readiness",
+      "status": "passed",
+      "exitCode": 0,
+      "log": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/closure-check-harness-evidence.log.gz",
+      "sha256": "5528730d2a47245eeda9f45187b2b849bc9512453f1118fbff2cd6bb0ec89434",
+      "rawSha256": "be4d54ce734b522125a35a8fba91faf4c721726b9dffcdb9ee310eb562a90ff0",
+      "startedAt": "2026-11-13T07:49:56.496Z",
+      "finishedAt": "2026-11-13T07:50:00.780Z",
+      "chunk_id": "d643fe",
+      "notes": "Actual direct PowerShell check after source approvals, final consumer builds and completed/Archived source-preparation stamps. Schema and documentation success is separate from external final whole-tree confirmation and hosted merge/release gates. Historical warnings retained."
+    },
+    {
+      "command": "npm run check:harness-review",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\.wt-base-smoke-readiness",
+      "status": "passed",
+      "exitCode": 0,
+      "log": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/closure-check-harness-review.log.gz",
+      "sha256": "e028492d2f70d10882a5164189ed510b35bb41cae9057a5aa5ccc18ced04d4f0",
+      "rawSha256": "3fe8e667ad53b7d58b8655c1ddc5873952e0a8bf2b8c0f7e6377a598cb739f1b",
+      "startedAt": "2026-11-13T07:49:56.496Z",
+      "finishedAt": "2026-11-13T07:50:00.646Z",
+      "chunk_id": "241a07",
+      "notes": "Actual direct PowerShell check after source approvals, final consumer builds and completed/Archived source-preparation stamps. Schema and documentation success is separate from external final whole-tree confirmation and hosted merge/release gates. Historical warnings retained."
+    },
+    {
+      "command": "npm run check:harness-docs",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\.wt-base-smoke-readiness",
+      "status": "passed",
+      "exitCode": 0,
+      "log": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/closure-check-harness-docs.log.gz",
+      "sha256": "c654550181e1d9e742728cc390835d69bffbd4159236be82e9a8bd8edb6a2729",
+      "rawSha256": "d8e6ad7f1b15451eb8df6f7941b2f1b57d2701468fa6364c70f7b1db72b1b89d",
+      "startedAt": "2026-11-13T07:49:56.496Z",
+      "finishedAt": "2026-11-13T07:50:00.584Z",
+      "chunk_id": "361bfb",
+      "notes": "Actual direct PowerShell check after source approvals, final consumer builds and completed/Archived source-preparation stamps. Schema and documentation success is separate from external final whole-tree confirmation and hosted merge/release gates. Historical warnings retained."
+    },
+    {
+      "command": "npm run check:harness-encoding",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\.wt-base-smoke-readiness",
+      "status": "passed",
+      "exitCode": 0,
+      "log": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/closure-check-harness-encoding.log.gz",
+      "sha256": "c06eeb85a9f6cd8566f83c19996beb1c8012fc298af2a241a73847b0cecc8bc0",
+      "rawSha256": "852fda3f9cf5384866839535e646bcda8b49cde1a5956cee0977771ab4293f3d",
+      "startedAt": "2026-11-13T07:49:56.496Z",
+      "finishedAt": "2026-11-13T07:50:01.182Z",
+      "chunk_id": "5017ef",
+      "notes": "Actual direct PowerShell check after source approvals, final consumer builds and completed/Archived source-preparation stamps. Schema and documentation success is separate from external final whole-tree confirmation and hosted merge/release gates. Historical warnings retained."
+    },
+    {
+      "command": "npm run check:harness-inventory",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\.wt-base-smoke-readiness",
+      "status": "passed",
+      "exitCode": 0,
+      "log": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/closure-check-harness-inventory.log.gz",
+      "sha256": "e1160c67189e988b8516b06a8c43b8fe353f6ee4a36abaad8ff453ddcb4f8c8d",
+      "rawSha256": "d1caba25eea042d2284099796b5e6905a216198e41b147fe4f4c4347b25d6bb1",
+      "startedAt": "2026-11-13T07:49:56.496Z",
+      "finishedAt": "2026-11-13T07:50:00.511Z",
+      "chunk_id": "2b6c97",
+      "notes": "Actual direct PowerShell check after source approvals, final consumer builds and completed/Archived source-preparation stamps. Schema and documentation success is separate from external final whole-tree confirmation and hosted merge/release gates. Historical warnings retained."
+    },
+    {
+      "command": "npm run check:structure",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\.wt-base-smoke-readiness",
+      "status": "passed",
+      "exitCode": 0,
+      "log": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/closure-check-structure.log.gz",
+      "sha256": "71f8717612e0385eb9bf3e4abbd66ffe576361c376e417d7fc4fa220d36c7c30",
+      "rawSha256": "a3bb4290905efbb22ea09f178d4192ef94233ba6f00f42fce8679eacccd8cc35",
+      "startedAt": "2026-11-13T07:49:56.496Z",
+      "finishedAt": "2026-11-13T07:50:00.654Z",
+      "chunk_id": "66d6d9",
+      "notes": "Actual direct PowerShell check after source approvals, final consumer builds and completed/Archived source-preparation stamps. Schema and documentation success is separate from external final whole-tree confirmation and hosted merge/release gates. Historical warnings retained."
+    },
+    {
+      "command": "node scripts/check-pr-governance.mjs --body-file .harness/evidence/2026-11-13-v0188-release-preparation/pr-body.md",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\.wt-base-smoke-readiness",
+      "status": "passed",
+      "exitCode": 0,
+      "log": ".harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/closure-pr-governance.log.gz",
+      "sha256": "d53ee6265b1ac5e387a86de8b58b857e3d843fd124c0c666aa9f9dac0a596949",
+      "rawSha256": "c963333f5a1b77d2c4b9e5c7d81033259a0793ed8be16ff4835b1d5ea1ea0bfc",
+      "notes": "Actual direct PowerShell check after source approvals, final consumer builds and completed/Archived source-preparation stamps. Schema and documentation success is separate from external final whole-tree confirmation and hosted merge/release gates. Historical warnings retained."
+    }
+  ],
+  "liveTaskInventory": {
+    "total": 18,
+    "completed": 18,
+    "inProgress": 0
+  },
+  "sourceTree": "93b617c283b20866f3b209047e931246dbf9b009",
+  "sourceHashesUnchanged": true,
+  "gitDiffCheck": "passed",
+  "fullTreeReview": "Root retains read-only final confirmations externally after freeze; whole-tree hash must not be embedded in its own files."
+}

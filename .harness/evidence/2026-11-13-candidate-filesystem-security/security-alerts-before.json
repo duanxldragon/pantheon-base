@@ -1,0 +1,325 @@
+{
+  "taskId": "2026-11-13-candidate-filesystem-security",
+  "source": "Root coordinator GitHub CodeQL open-alert API receipt",
+  "sourceReceiptSha256": "32c71bf123c511d455b22d5af11051fa5c977b81b66047234b0615a23631e80c",
+  "sourceCommit": "ae2fa81d9903d63b4bec8f01d61082f48a999e2f",
+  "queryScope": "Open alerts for pantheon-base main",
+  "projection": "Selected API fields retained; rule help/example text omitted. No auth data present.",
+  "alerts": [
+    {
+      "number": 108,
+      "state": "open",
+      "url": "https://github.com/duanxldragon/pantheon-base/security/code-scanning/108",
+      "createdAt": "2026-11-12T02:58:38Z",
+      "updatedAt": "2026-11-12T05:01:22Z",
+      "rule": "js/file-system-race",
+      "securitySeverity": "high",
+      "tool": {
+        "name": "CodeQL",
+        "guid": null,
+        "version": "2.27.4"
+      },
+      "instance": {
+        "ref": "refs/heads/main",
+        "analysis_key": ".github/workflows/security.yml:codeql-scan",
+        "environment": "{}",
+        "category": "/language:go,typescript",
+        "state": "open",
+        "commit_sha": "ae2fa81d9903d63b4bec8f01d61082f48a999e2f",
+        "message": {
+          "text": "The file may have changed since it was checked.\nThe file may have changed since it was checked."
+        },
+        "location": {
+          "path": "scripts/foundation-release/candidate-artifact.test.mjs",
+          "start_line": 499,
+          "end_line": 499,
+          "start_column": 26,
+          "end_column": 49
+        },
+        "classifications": []
+      },
+      "fixedAt": null,
+      "dismissedAt": null
+    },
+    {
+      "number": 107,
+      "state": "open",
+      "url": "https://github.com/duanxldragon/pantheon-base/security/code-scanning/107",
+      "createdAt": "2026-11-12T02:58:38Z",
+      "updatedAt": "2026-11-12T05:01:22Z",
+      "rule": "js/file-system-race",
+      "securitySeverity": "high",
+      "tool": {
+        "name": "CodeQL",
+        "guid": null,
+        "version": "2.27.4"
+      },
+      "instance": {
+        "ref": "refs/heads/main",
+        "analysis_key": ".github/workflows/security.yml:codeql-scan",
+        "environment": "{}",
+        "category": "/language:go,typescript",
+        "state": "open",
+        "commit_sha": "ae2fa81d9903d63b4bec8f01d61082f48a999e2f",
+        "message": {
+          "text": "The file may have changed since it was checked."
+        },
+        "location": {
+          "path": "scripts/foundation-release/candidate-artifact.test.mjs",
+          "start_line": 496,
+          "end_line": 496,
+          "start_column": 42,
+          "end_column": 73
+        },
+        "classifications": []
+      },
+      "fixedAt": null,
+      "dismissedAt": null
+    },
+    {
+      "number": 106,
+      "state": "open",
+      "url": "https://github.com/duanxldragon/pantheon-base/security/code-scanning/106",
+      "createdAt": "2026-11-12T02:58:38Z",
+      "updatedAt": "2026-11-12T05:01:22Z",
+      "rule": "js/file-system-race",
+      "securitySeverity": "high",
+      "tool": {
+        "name": "CodeQL",
+        "guid": null,
+        "version": "2.27.4"
+      },
+      "instance": {
+        "ref": "refs/heads/main",
+        "analysis_key": ".github/workflows/security.yml:codeql-scan",
+        "environment": "{}",
+        "category": "/language:go,typescript",
+        "state": "open",
+        "commit_sha": "ae2fa81d9903d63b4bec8f01d61082f48a999e2f",
+        "message": {
+          "text": "The file may have changed since it was checked."
+        },
+        "location": {
+          "path": "scripts/foundation-release/candidate-artifact.test.mjs",
+          "start_line": 396,
+          "end_line": 396,
+          "start_column": 146,
+          "end_column": 171
+        },
+        "classifications": []
+      },
+      "fixedAt": null,
+      "dismissedAt": null
+    },
+    {
+      "number": 105,
+      "state": "open",
+      "url": "https://github.com/duanxldragon/pantheon-base/security/code-scanning/105",
+      "createdAt": "2026-11-12T02:58:38Z",
+      "updatedAt": "2026-11-12T05:01:22Z",
+      "rule": "js/file-system-race",
+      "securitySeverity": "high",
+      "tool": {
+        "name": "CodeQL",
+        "guid": null,
+        "version": "2.27.4"
+      },
+      "instance": {
+        "ref": "refs/heads/main",
+        "analysis_key": ".github/workflows/security.yml:codeql-scan",
+        "environment": "{}",
+        "category": "/language:go,typescript",
+        "state": "open",
+        "commit_sha": "ae2fa81d9903d63b4bec8f01d61082f48a999e2f",
+        "message": {
+          "text": "The file may have changed since it was checked."
+        },
+        "location": {
+          "path": "scripts/foundation-release/candidate-descriptor.mjs",
+          "start_line": 262,
+          "end_line": 262,
+          "start_column": 22,
+          "end_column": 53
+        },
+        "classifications": []
+      },
+      "fixedAt": null,
+      "dismissedAt": null
+    },
+    {
+      "number": 104,
+      "state": "open",
+      "url": "https://github.com/duanxldragon/pantheon-base/security/code-scanning/104",
+      "createdAt": "2026-11-12T02:58:38Z",
+      "updatedAt": "2026-11-12T05:01:22Z",
+      "rule": "js/file-system-race",
+      "securitySeverity": "high",
+      "tool": {
+        "name": "CodeQL",
+        "guid": null,
+        "version": "2.27.4"
+      },
+      "instance": {
+        "ref": "refs/heads/main",
+        "analysis_key": ".github/workflows/security.yml:codeql-scan",
+        "environment": "{}",
+        "category": "/language:go,typescript",
+        "state": "open",
+        "commit_sha": "ae2fa81d9903d63b4bec8f01d61082f48a999e2f",
+        "message": {
+          "text": "The file may have changed since it was checked."
+        },
+        "location": {
+          "path": "scripts/foundation-release/candidate-descriptor.mjs",
+          "start_line": 257,
+          "end_line": 257,
+          "start_column": 17,
+          "end_column": 50
+        },
+        "classifications": []
+      },
+      "fixedAt": null,
+      "dismissedAt": null
+    },
+    {
+      "number": 103,
+      "state": "open",
+      "url": "https://github.com/duanxldragon/pantheon-base/security/code-scanning/103",
+      "createdAt": "2026-11-12T02:58:38Z",
+      "updatedAt": "2026-11-12T05:01:22Z",
+      "rule": "js/file-system-race",
+      "securitySeverity": "high",
+      "tool": {
+        "name": "CodeQL",
+        "guid": null,
+        "version": "2.27.4"
+      },
+      "instance": {
+        "ref": "refs/heads/main",
+        "analysis_key": ".github/workflows/security.yml:codeql-scan",
+        "environment": "{}",
+        "category": "/language:go,typescript",
+        "state": "open",
+        "commit_sha": "ae2fa81d9903d63b4bec8f01d61082f48a999e2f",
+        "message": {
+          "text": "The file may have changed since it was checked."
+        },
+        "location": {
+          "path": "scripts/foundation-release/candidate-descriptor.mjs",
+          "start_line": 176,
+          "end_line": 176,
+          "start_column": 17,
+          "end_column": 48
+        },
+        "classifications": []
+      },
+      "fixedAt": null,
+      "dismissedAt": null
+    },
+    {
+      "number": 102,
+      "state": "open",
+      "url": "https://github.com/duanxldragon/pantheon-base/security/code-scanning/102",
+      "createdAt": "2026-11-12T02:58:38Z",
+      "updatedAt": "2026-11-12T05:01:22Z",
+      "rule": "js/file-system-race",
+      "securitySeverity": "high",
+      "tool": {
+        "name": "CodeQL",
+        "guid": null,
+        "version": "2.27.4"
+      },
+      "instance": {
+        "ref": "refs/heads/main",
+        "analysis_key": ".github/workflows/security.yml:codeql-scan",
+        "environment": "{}",
+        "category": "/language:go,typescript",
+        "state": "open",
+        "commit_sha": "ae2fa81d9903d63b4bec8f01d61082f48a999e2f",
+        "message": {
+          "text": "The file may have changed since it was checked."
+        },
+        "location": {
+          "path": "scripts/foundation-release/build-candidate-artifact.mjs",
+          "start_line": 204,
+          "end_line": 204,
+          "start_column": 34,
+          "end_column": 68
+        },
+        "classifications": []
+      },
+      "fixedAt": null,
+      "dismissedAt": null
+    },
+    {
+      "number": 101,
+      "state": "open",
+      "url": "https://github.com/duanxldragon/pantheon-base/security/code-scanning/101",
+      "createdAt": "2026-11-12T02:58:38Z",
+      "updatedAt": "2026-11-12T05:01:22Z",
+      "rule": "js/file-system-race",
+      "securitySeverity": "high",
+      "tool": {
+        "name": "CodeQL",
+        "guid": null,
+        "version": "2.27.4"
+      },
+      "instance": {
+        "ref": "refs/heads/main",
+        "analysis_key": ".github/workflows/security.yml:codeql-scan",
+        "environment": "{}",
+        "category": "/language:go,typescript",
+        "state": "open",
+        "commit_sha": "ae2fa81d9903d63b4bec8f01d61082f48a999e2f",
+        "message": {
+          "text": "The file may have changed since it was checked."
+        },
+        "location": {
+          "path": "scripts/foundation-release/build-candidate-artifact.mjs",
+          "start_line": 137,
+          "end_line": 137,
+          "start_column": 20,
+          "end_column": 97
+        },
+        "classifications": []
+      },
+      "fixedAt": null,
+      "dismissedAt": null
+    },
+    {
+      "number": 100,
+      "state": "open",
+      "url": "https://github.com/duanxldragon/pantheon-base/security/code-scanning/100",
+      "createdAt": "2026-11-12T02:58:38Z",
+      "updatedAt": "2026-11-12T05:01:22Z",
+      "rule": "js/file-system-race",
+      "securitySeverity": "high",
+      "tool": {
+        "name": "CodeQL",
+        "guid": null,
+        "version": "2.27.4"
+      },
+      "instance": {
+        "ref": "refs/heads/main",
+        "analysis_key": ".github/workflows/security.yml:codeql-scan",
+        "environment": "{}",
+        "category": "/language:go,typescript",
+        "state": "open",
+        "commit_sha": "ae2fa81d9903d63b4bec8f01d61082f48a999e2f",
+        "message": {
+          "text": "The file may have changed since it was checked."
+        },
+        "location": {
+          "path": "scripts/foundation-release/build-candidate-artifact.mjs",
+          "start_line": 38,
+          "end_line": 38,
+          "start_column": 18,
+          "end_column": 95
+        },
+        "classifications": []
+      },
+      "fixedAt": null,
+      "dismissedAt": null
+    }
+  ]
+}
