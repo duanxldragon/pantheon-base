@@ -1,0 +1,134 @@
+[
+  {
+    "sha256": "2b043fbc30bafc00729ff55883795eabd76b1554de4854ef6f30f05fca838e21",
+    "path": "backend/cmd/server/business_startup_test.go"
+  },
+  {
+    "sha256": "f420438509293437abac5228c343b7d52af0e66b606a8b2ea9a3e14dcc606950",
+    "path": "backend/cmd/server/main.go"
+  },
+  {
+    "sha256": "5d9f181d83fb2e066bd9ace3ba6b607193e0006593d6ad2875907edc6dc0a141",
+    "path": "backend/internal/middleware/business_authorization_test.go"
+  },
+  {
+    "sha256": "261afa640740845215149a0e1195d17f37c758d0987284e04ca9602f943fa3de",
+    "path": "backend/internal/middleware/business_authorization.go"
+  },
+  {
+    "sha256": "59e1065607036b50d985757770d5ac20e9da209d6ce488c711c8024df6c015b3",
+    "path": "backend/internal/middleware/business_tenant_context_test.go"
+  },
+  {
+    "sha256": "f7b19e42ee68ee3c297c844c2b742a2bb0e3afc71f251c75bc134141dd387ba6",
+    "path": "backend/internal/middleware/business_tenant_context.go"
+  },
+  {
+    "sha256": "692566b29c96b9201b6bdf453067664a66e38571ced2f927e31e6baac08404dd",
+    "path": "backend/internal/middleware/business_token_middleware_test.go"
+  },
+  {
+    "sha256": "539a5ddcf7dc52d5ef870a2186b01ff289e1a9a8bfdf45c3eec1770d02bd4848",
+    "path": "backend/internal/middleware/business_token_middleware.go"
+  },
+  {
+    "sha256": "40a94c6155d14a86749c968698ebd2bc9b331d53a8f1cdb28badb757e36d9362",
+    "path": "backend/internal/middleware/operation_log_metadata_test.go"
+  },
+  {
+    "sha256": "ef8832372e98591d24d6dcd21d785bdc45d34280f0539cd915a8f76e457cdf5f",
+    "path": "backend/internal/middleware/operation_log_middleware_test.go"
+  },
+  {
+    "sha256": "8ff2f1a5a900d241987729a86a702b0258626e2d38c535f544bd56452aa66386",
+    "path": "backend/internal/middleware/operation_log_middleware.go"
+  },
+  {
+    "sha256": "3097421491c38b2540a6054b7eb7183624c512653e46d91a76f79c00a7914bfe",
+    "path": "backend/internal/middleware/operation_log_request_body_guard_test.go"
+  },
+  {
+    "sha256": "e91867e41f6c5541207f7796df3304743c44b375dbdc445a5a498e2f4606b0d4",
+    "path": "backend/internal/middleware/operation_log_tenant_test.go"
+  },
+  {
+    "sha256": "0ef0202b2ce13ae586f1e7487e4964e0c588a29d8c098c095985a74a9bc84caf",
+    "path": "backend/internal/middleware/request_context_business_test.go"
+  },
+  {
+    "sha256": "51fd75327a342f96208eb7bdfd87fa713ba17a279ff045ec1c89ae4d92b4e7ef",
+    "path": "backend/internal/middleware/request_context_middleware_test.go"
+  },
+  {
+    "sha256": "d72f7d1df950f1eb0239414dfc4e7896b7e8831913740f4ec1d84a344d47dd55",
+    "path": "backend/internal/middleware/request_context_middleware.go"
+  },
+  {
+    "sha256": "559b921339d693da162f006077f03ded44f0fe5b9f3390f286ec15d68629e037",
+    "path": "backend/modules/auth/login/business_authorization_test.go"
+  },
+  {
+    "sha256": "c3eca93387a5d73c9cc06a2dd1d1a13d32cd2a4f50c053c5d6b686c6a7585a37",
+    "path": "backend/modules/auth/login/business_authorization.go"
+  },
+  {
+    "sha256": "319e5aa2cf1758f90957029af5fd7140d624f1127d9966892e146d2cfdff418a",
+    "path": "backend/modules/auth/module.go"
+  },
+  {
+    "sha256": "b7662f4c505c352ec14cf1466ad65dd74a31d0b28d9e1569bde706f849304f2a",
+    "path": "backend/modules/system/system_modules.go"
+  },
+  {
+    "sha256": "429010a266121cd43fcd6925d56fd0888c2d3ff4f4517f439fd3dbbbfd73bfde",
+    "path": "backend/pkg/auditpolicy/policy_test.go"
+  },
+  {
+    "sha256": "beefa9757b2c11e3c60f93a94558259dd56071de6927bf96c59fafa7ddff06c3",
+    "path": "backend/pkg/auditpolicy/policy.go"
+  },
+  {
+    "sha256": "58a884e1e86efabf57803647e3dc08756d9cb025739dd4ffd4361d0126bd1858",
+    "path": "backend/pkg/common/http/response_business_test.go"
+  },
+  {
+    "sha256": "fda16b21c60b1c84fb734d033cdc531d7e3f19b631e9d7ae997f5cf9f25a8e28",
+    "path": "backend/pkg/common/http/response_test.go"
+  },
+  {
+    "sha256": "e29cca9bb940b22fec8d8dd0127d6b75604e92a411cf80ee0fdfdc898b3ef288",
+    "path": "backend/pkg/common/http/response.go"
+  },
+  {
+    "sha256": "b9c6ebfe98d87d974f3ccea448011b550d4f01f286b28ae9ef5752845d9d60b8",
+    "path": "backend/pkg/contracts/business_tenant_groups_test.go"
+  },
+  {
+    "sha256": "1708fa753d56bf79b76df8dbeec7208b35a2ff44b1ca3300f9640d0ca2a96e6a",
+    "path": "backend/pkg/contracts/business_tenant_groups.go"
+  },
+  {
+    "sha256": "e814cc620cb20ce21506b10b74c9ef7c8af0e449e5567a857939aa0c57ecb492",
+    "path": "backend/pkg/contracts/businessauth/businessauth_test.go"
+  },
+  {
+    "sha256": "1ac1cc33dbaa21910a4a3dedaf168b0aa2e022ca0b9d339ae82690f26c9d6ade",
+    "path": "backend/pkg/contracts/businessauth/businessauth.go"
+  },
+  {
+    "sha256": "b2c0eab1088073103e8477496ad81aa6577110d58e14387d655f0e11a78c595f",
+    "path": "backend/pkg/database/business_policy_test.go"
+  },
+  {
+    "sha256": "fdafd8c8cf27099e971cec0f8ed89527f79e92bed0c3766bc88fa46671d2f8d8",
+    "path": "backend/pkg/database/business_policy.go"
+  },
+  {
+    "sha256": "f4eb937f1adbdba6a618888e412402af4d7d6ce9e28fd07120ce5273aa445cfd",
+    "path": "backend/pkg/tenant/mode_reader_test.go"
+  },
+  {
+    "sha256": "df9baff9f808827070747384388064a9aa15757c18fd9131430aa91ebe580748",
+    "path": "backend/pkg/tenant/mode_reader.go"
+  }
+]

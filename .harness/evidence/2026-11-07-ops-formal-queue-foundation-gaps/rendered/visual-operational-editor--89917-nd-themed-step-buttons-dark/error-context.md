@@ -1,0 +1,1019 @@
+# Instructions
+
+- Following Playwright test failed.
+- Explain why, be concise, respect Playwright best practices.
+- Provide a snippet of code with the fix, if possible.
+
+# Test info
+
+- Name: visual\operational-editor.spec.ts >> shared condition editing and themed step buttons dark
+- Location: tests\visual\operational-editor.spec.ts:4:2
+
+# Error details
+
+```
+Error: expect(locator).toHaveValue(expected) failed
+
+Locator:  locator('.condition-builder').locator('input:not([readonly])').first()
+Expected: "edited-condition"
+Received: ""
+Timeout:  10000ms
+
+Call log:
+  - Expect "toHaveValue" locator('.condition-builder').locator('input:not([readonly])').first() with timeout 10000ms
+  - waiting for locator('.condition-builder').locator('input:not([readonly])').first()
+    23 × locator resolved to <input value="" tabindex="-1" aria-hidden="true" autocomplete="off" class="arco-select-view-input arco-select-hidden"/>
+       - unexpected value ""
+
+```
+
+# Page snapshot
+
+```yaml
+- main [ref=e3]:
+    - heading "运维工作台组件样例" [level=3] [ref=e4]
+    - generic [ref=e5]: 共享组件的视觉与交互覆盖页面。
+    - generic [ref=e6]:
+        - generic [ref=e7]:
+            - generic [ref=e8]: B1 固定表单操作
+            - generic [ref=e11]:
+                - generic [ref=e12]: 存在未保存修改
+                - generic [ref=e14]:
+                    - button "取消" [ref=e16] [cursor=pointer]
+                    - button "更多操作" [ref=e18] [cursor=pointer]
+                    - button "保存" [ref=e23] [cursor=pointer]
+        - generic [ref=e24]:
+            - generic [ref=e25]: B2 保存的表格视图
+            - generic [ref=e28]:
+                - button "表格视图" [ref=e30] [cursor=pointer]
+                - table [ref=e40]:
+                    - rowgroup [ref=e44]:
+                        - row [ref=e45]:
+                            - columnheader "名称" [ref=e46]
+                            - columnheader "状态" [ref=e48]
+                    - rowgroup [ref=e50]:
+                        - row [ref=e51]:
+                            - cell "示例甲" [ref=e52]
+                            - cell "就绪" [ref=e54]
+                        - row [ref=e56]:
+                            - cell "示例乙" [ref=e57]
+                            - cell "数据已过期" [ref=e59]
+        - region "任务日志" [ref=e61]:
+            - generic [ref=e62]:
+                - generic [ref=e63]: 任务日志
+                - generic [ref=e64]:
+                    - textbox "搜索" [ref=e68]
+                    - button "暂停" [ref=e72] [cursor=pointer]
+                    - switch "自动换行" [ref=e73] [cursor=pointer]
+            - generic [ref=e75]:
+                - generic [ref=e76]:
+                    - generic [ref=e77]:
+                        - generic [ref=e78]: "#481"
+                        - generic [ref=e79]: info
+                        - generic [ref=e80]: log-481-payload
+                    - generic [ref=e81]:
+                        - generic [ref=e82]: "#482"
+                        - generic [ref=e83]: info
+                        - generic [ref=e84]: log-482-payload
+                    - generic [ref=e85]:
+                        - generic [ref=e86]: "#483"
+                        - generic [ref=e87]: info
+                        - generic [ref=e88]: log-483-payload
+                    - generic [ref=e89]:
+                        - generic [ref=e90]: "#484"
+                        - generic [ref=e91]: info
+                        - generic [ref=e92]: log-484-payload
+                    - generic [ref=e93]:
+                        - generic [ref=e94]: "#485"
+                        - generic [ref=e95]: info
+                        - generic [ref=e96]: log-485-payload
+                    - generic [ref=e97]:
+                        - generic [ref=e98]: "#486"
+                        - generic [ref=e99]: info
+                        - generic [ref=e100]: log-486-payload
+                    - generic [ref=e101]:
+                        - generic [ref=e102]: "#487"
+                        - generic [ref=e103]: info
+                        - generic [ref=e104]: log-487-payload
+                    - generic [ref=e105]:
+                        - generic [ref=e106]: "#488"
+                        - generic [ref=e107]: info
+                        - generic [ref=e108]: log-488-payload
+                    - generic [ref=e109]:
+                        - generic [ref=e110]: "#489"
+                        - generic [ref=e111]: info
+                        - generic [ref=e112]: log-489-payload
+                    - generic [ref=e113]:
+                        - generic [ref=e114]: "#490"
+                        - generic [ref=e115]: info
+                        - generic [ref=e116]: log-490-payload
+                    - generic [ref=e117]:
+                        - generic [ref=e118]: "#491"
+                        - generic [ref=e119]: info
+                        - generic [ref=e120]: log-491-payload
+                    - generic [ref=e121]:
+                        - generic [ref=e122]: "#492"
+                        - generic [ref=e123]: info
+                        - generic [ref=e124]: log-492-payload
+                    - generic [ref=e125]:
+                        - generic [ref=e126]: "#493"
+                        - generic [ref=e127]: info
+                        - generic [ref=e128]: log-493-payload
+                    - generic [ref=e129]:
+                        - generic [ref=e130]: "#494"
+                        - generic [ref=e131]: error
+                        - generic [ref=e132]: log-494-payload
+                    - generic [ref=e133]:
+                        - generic [ref=e134]: "#495"
+                        - generic [ref=e135]: info
+                        - generic [ref=e136]: log-495-payload
+                    - generic [ref=e137]:
+                        - generic [ref=e138]: "#496"
+                        - generic [ref=e139]: info
+                        - generic [ref=e140]: log-496-payload
+                    - generic [ref=e141]:
+                        - generic [ref=e142]: "#497"
+                        - generic [ref=e143]: info
+                        - generic [ref=e144]: log-497-payload
+                    - generic [ref=e145]:
+                        - generic [ref=e146]: "#498"
+                        - generic [ref=e147]: info
+                        - generic [ref=e148]: log-498-payload
+                    - generic [ref=e149]:
+                        - generic [ref=e150]: "#499"
+                        - generic [ref=e151]: info
+                        - generic [ref=e152]: log-499-payload
+                    - generic [ref=e153]:
+                        - generic [ref=e154]: "#500"
+                        - generic [ref=e155]: info
+                        - generic [ref=e156]: log-500-payload
+                    - generic [ref=e157]:
+                        - generic [ref=e158]: "#501"
+                        - generic [ref=e159]: info
+                        - generic [ref=e160]: log-501-payload
+                    - generic [ref=e161]:
+                        - generic [ref=e162]: "#502"
+                        - generic [ref=e163]: info
+                        - generic [ref=e164]: log-502-payload
+                    - generic [ref=e165]:
+                        - generic [ref=e166]: "#503"
+                        - generic [ref=e167]: info
+                        - generic [ref=e168]: log-503-payload
+                    - generic [ref=e169]:
+                        - generic [ref=e170]: "#504"
+                        - generic [ref=e171]: info
+                        - generic [ref=e172]: log-504-payload
+                    - generic [ref=e173]:
+                        - generic [ref=e174]: "#505"
+                        - generic [ref=e175]: info
+                        - generic [ref=e176]: log-505-payload
+                    - generic [ref=e177]:
+                        - generic [ref=e178]: "#506"
+                        - generic [ref=e179]: info
+                        - generic [ref=e180]: log-506-payload
+                    - generic [ref=e181]:
+                        - generic [ref=e182]: "#507"
+                        - generic [ref=e183]: info
+                        - generic [ref=e184]: log-507-payload
+                    - generic [ref=e185]:
+                        - generic [ref=e186]: "#508"
+                        - generic [ref=e187]: info
+                        - generic [ref=e188]: log-508-payload
+                    - generic [ref=e189]:
+                        - generic [ref=e190]: "#509"
+                        - generic [ref=e191]: info
+                        - generic [ref=e192]: log-509-payload
+                    - generic [ref=e193]:
+                        - generic [ref=e194]: "#510"
+                        - generic [ref=e195]: info
+                        - generic [ref=e196]: log-510-payload
+                    - generic [ref=e197]:
+                        - generic [ref=e198]: "#511"
+                        - generic [ref=e199]: error
+                        - generic [ref=e200]: log-511-payload
+                    - generic [ref=e201]:
+                        - generic [ref=e202]: "#512"
+                        - generic [ref=e203]: info
+                        - generic [ref=e204]: log-512-payload
+                    - generic [ref=e205]:
+                        - generic [ref=e206]: "#513"
+                        - generic [ref=e207]: info
+                        - generic [ref=e208]: log-513-payload
+                    - generic [ref=e209]:
+                        - generic [ref=e210]: "#514"
+                        - generic [ref=e211]: info
+                        - generic [ref=e212]: log-514-payload
+                    - generic [ref=e213]:
+                        - generic [ref=e214]: "#515"
+                        - generic [ref=e215]: info
+                        - generic [ref=e216]: log-515-payload
+                    - generic [ref=e217]:
+                        - generic [ref=e218]: "#516"
+                        - generic [ref=e219]: info
+                        - generic [ref=e220]: log-516-payload
+                    - generic [ref=e221]:
+                        - generic [ref=e222]: "#517"
+                        - generic [ref=e223]: info
+                        - generic [ref=e224]: log-517-payload
+                    - generic [ref=e225]:
+                        - generic [ref=e226]: "#518"
+                        - generic [ref=e227]: info
+                        - generic [ref=e228]: log-518-payload
+                    - generic [ref=e229]:
+                        - generic [ref=e230]: "#519"
+                        - generic [ref=e231]: info
+                        - generic [ref=e232]: log-519-payload
+                    - generic [ref=e233]:
+                        - generic [ref=e234]: "#520"
+                        - generic [ref=e235]: info
+                        - generic [ref=e236]: log-520-payload
+                    - generic [ref=e237]:
+                        - generic [ref=e238]: "#521"
+                        - generic [ref=e239]: info
+                        - generic [ref=e240]: log-521-payload
+                    - generic [ref=e241]:
+                        - generic [ref=e242]: "#522"
+                        - generic [ref=e243]: info
+                        - generic [ref=e244]: log-522-payload
+                    - generic [ref=e245]:
+                        - generic [ref=e246]: "#523"
+                        - generic [ref=e247]: info
+                        - generic [ref=e248]: log-523-payload
+                    - generic [ref=e249]:
+                        - generic [ref=e250]: "#524"
+                        - generic [ref=e251]: info
+                        - generic [ref=e252]: log-524-payload
+                    - generic [ref=e253]:
+                        - generic [ref=e254]: "#525"
+                        - generic [ref=e255]: info
+                        - generic [ref=e256]: log-525-payload
+                    - generic [ref=e257]:
+                        - generic [ref=e258]: "#526"
+                        - generic [ref=e259]: info
+                        - generic [ref=e260]: log-526-payload
+                    - generic [ref=e261]:
+                        - generic [ref=e262]: "#527"
+                        - generic [ref=e263]: info
+                        - generic [ref=e264]: log-527-payload
+                    - generic [ref=e265]:
+                        - generic [ref=e266]: "#528"
+                        - generic [ref=e267]: error
+                        - generic [ref=e268]: log-528-payload
+                    - generic [ref=e269]:
+                        - generic [ref=e270]: "#529"
+                        - generic [ref=e271]: info
+                        - generic [ref=e272]: log-529-payload
+                    - generic [ref=e273]:
+                        - generic [ref=e274]: "#530"
+                        - generic [ref=e275]: info
+                        - generic [ref=e276]: log-530-payload
+                    - generic [ref=e277]:
+                        - generic [ref=e278]: "#531"
+                        - generic [ref=e279]: info
+                        - generic [ref=e280]: log-531-payload
+                    - generic [ref=e281]:
+                        - generic [ref=e282]: "#532"
+                        - generic [ref=e283]: info
+                        - generic [ref=e284]: log-532-payload
+                    - generic [ref=e285]:
+                        - generic [ref=e286]: "#533"
+                        - generic [ref=e287]: info
+                        - generic [ref=e288]: log-533-payload
+                    - generic [ref=e289]:
+                        - generic [ref=e290]: "#534"
+                        - generic [ref=e291]: info
+                        - generic [ref=e292]: log-534-payload
+                    - generic [ref=e293]:
+                        - generic [ref=e294]: "#535"
+                        - generic [ref=e295]: info
+                        - generic [ref=e296]: log-535-payload
+                    - generic [ref=e297]:
+                        - generic [ref=e298]: "#536"
+                        - generic [ref=e299]: info
+                        - generic [ref=e300]: log-536-payload
+                    - generic [ref=e301]:
+                        - generic [ref=e302]: "#537"
+                        - generic [ref=e303]: info
+                        - generic [ref=e304]: log-537-payload
+                    - generic [ref=e305]:
+                        - generic [ref=e306]: "#538"
+                        - generic [ref=e307]: info
+                        - generic [ref=e308]: log-538-payload
+                    - generic [ref=e309]:
+                        - generic [ref=e310]: "#539"
+                        - generic [ref=e311]: info
+                        - generic [ref=e312]: log-539-payload
+                    - generic [ref=e313]:
+                        - generic [ref=e314]: "#540"
+                        - generic [ref=e315]: info
+                        - generic [ref=e316]: log-540-payload
+                    - generic [ref=e317]:
+                        - generic [ref=e318]: "#541"
+                        - generic [ref=e319]: info
+                        - generic [ref=e320]: log-541-payload
+                    - generic [ref=e321]:
+                        - generic [ref=e322]: "#542"
+                        - generic [ref=e323]: info
+                        - generic [ref=e324]: log-542-payload
+                    - generic [ref=e325]:
+                        - generic [ref=e326]: "#543"
+                        - generic [ref=e327]: info
+                        - generic [ref=e328]: log-543-payload
+                    - generic [ref=e329]:
+                        - generic [ref=e330]: "#544"
+                        - generic [ref=e331]: info
+                        - generic [ref=e332]: log-544-payload
+                    - generic [ref=e333]:
+                        - generic [ref=e334]: "#545"
+                        - generic [ref=e335]: error
+                        - generic [ref=e336]: log-545-payload
+                    - generic [ref=e337]:
+                        - generic [ref=e338]: "#546"
+                        - generic [ref=e339]: info
+                        - generic [ref=e340]: log-546-payload
+                    - generic [ref=e341]:
+                        - generic [ref=e342]: "#547"
+                        - generic [ref=e343]: info
+                        - generic [ref=e344]: log-547-payload
+                    - generic [ref=e345]:
+                        - generic [ref=e346]: "#548"
+                        - generic [ref=e347]: info
+                        - generic [ref=e348]: log-548-payload
+                    - generic [ref=e349]:
+                        - generic [ref=e350]: "#549"
+                        - generic [ref=e351]: info
+                        - generic [ref=e352]: log-549-payload
+                    - generic [ref=e353]:
+                        - generic [ref=e354]: "#550"
+                        - generic [ref=e355]: info
+                        - generic [ref=e356]: log-550-payload
+                    - generic [ref=e357]:
+                        - generic [ref=e358]: "#551"
+                        - generic [ref=e359]: info
+                        - generic [ref=e360]: log-551-payload
+                    - generic [ref=e361]:
+                        - generic [ref=e362]: "#552"
+                        - generic [ref=e363]: info
+                        - generic [ref=e364]: log-552-payload
+                    - generic [ref=e365]:
+                        - generic [ref=e366]: "#553"
+                        - generic [ref=e367]: info
+                        - generic [ref=e368]: log-553-payload
+                    - generic [ref=e369]:
+                        - generic [ref=e370]: "#554"
+                        - generic [ref=e371]: info
+                        - generic [ref=e372]: log-554-payload
+                    - generic [ref=e373]:
+                        - generic [ref=e374]: "#555"
+                        - generic [ref=e375]: info
+                        - generic [ref=e376]: log-555-payload
+                    - generic [ref=e377]:
+                        - generic [ref=e378]: "#556"
+                        - generic [ref=e379]: info
+                        - generic [ref=e380]: log-556-payload
+                    - generic [ref=e381]:
+                        - generic [ref=e382]: "#557"
+                        - generic [ref=e383]: info
+                        - generic [ref=e384]: log-557-payload
+                    - generic [ref=e385]:
+                        - generic [ref=e386]: "#558"
+                        - generic [ref=e387]: info
+                        - generic [ref=e388]: log-558-payload
+                    - generic [ref=e389]:
+                        - generic [ref=e390]: "#559"
+                        - generic [ref=e391]: info
+                        - generic [ref=e392]: log-559-payload
+                    - generic [ref=e393]:
+                        - generic [ref=e394]: "#560"
+                        - generic [ref=e395]: info
+                        - generic [ref=e396]: log-560-payload
+                    - generic [ref=e397]:
+                        - generic [ref=e398]: "#561"
+                        - generic [ref=e399]: info
+                        - generic [ref=e400]: log-561-payload
+                    - generic [ref=e401]:
+                        - generic [ref=e402]: "#562"
+                        - generic [ref=e403]: error
+                        - generic [ref=e404]: log-562-payload
+                    - generic [ref=e405]:
+                        - generic [ref=e406]: "#563"
+                        - generic [ref=e407]: info
+                        - generic [ref=e408]: log-563-payload
+                    - generic [ref=e409]:
+                        - generic [ref=e410]: "#564"
+                        - generic [ref=e411]: info
+                        - generic [ref=e412]: log-564-payload
+                    - generic [ref=e413]:
+                        - generic [ref=e414]: "#565"
+                        - generic [ref=e415]: info
+                        - generic [ref=e416]: log-565-payload
+                    - generic [ref=e417]:
+                        - generic [ref=e418]: "#566"
+                        - generic [ref=e419]: info
+                        - generic [ref=e420]: log-566-payload
+                    - generic [ref=e421]:
+                        - generic [ref=e422]: "#567"
+                        - generic [ref=e423]: info
+                        - generic [ref=e424]: log-567-payload
+                    - generic [ref=e425]:
+                        - generic [ref=e426]: "#568"
+                        - generic [ref=e427]: info
+                        - generic [ref=e428]: log-568-payload
+                    - generic [ref=e429]:
+                        - generic [ref=e430]: "#569"
+                        - generic [ref=e431]: info
+                        - generic [ref=e432]: log-569-payload
+                    - generic [ref=e433]:
+                        - generic [ref=e434]: "#570"
+                        - generic [ref=e435]: info
+                        - generic [ref=e436]: log-570-payload
+                    - generic [ref=e437]:
+                        - generic [ref=e438]: "#571"
+                        - generic [ref=e439]: info
+                        - generic [ref=e440]: log-571-payload
+                    - generic [ref=e441]:
+                        - generic [ref=e442]: "#572"
+                        - generic [ref=e443]: info
+                        - generic [ref=e444]: log-572-payload
+                    - generic [ref=e445]:
+                        - generic [ref=e446]: "#573"
+                        - generic [ref=e447]: info
+                        - generic [ref=e448]: log-573-payload
+                    - generic [ref=e449]:
+                        - generic [ref=e450]: "#574"
+                        - generic [ref=e451]: info
+                        - generic [ref=e452]: log-574-payload
+                    - generic [ref=e453]:
+                        - generic [ref=e454]: "#575"
+                        - generic [ref=e455]: info
+                        - generic [ref=e456]: log-575-payload
+                    - generic [ref=e457]:
+                        - generic [ref=e458]: "#576"
+                        - generic [ref=e459]: info
+                        - generic [ref=e460]: log-576-payload
+                    - generic [ref=e461]:
+                        - generic [ref=e462]: "#577"
+                        - generic [ref=e463]: info
+                        - generic [ref=e464]: log-577-payload
+                    - generic [ref=e465]:
+                        - generic [ref=e466]: "#578"
+                        - generic [ref=e467]: info
+                        - generic [ref=e468]: log-578-payload
+                    - generic [ref=e469]:
+                        - generic [ref=e470]: "#579"
+                        - generic [ref=e471]: error
+                        - generic [ref=e472]: log-579-payload
+                    - generic [ref=e473]:
+                        - generic [ref=e474]: "#580"
+                        - generic [ref=e475]: info
+                        - generic [ref=e476]: log-580-payload
+                    - generic [ref=e477]:
+                        - generic [ref=e478]: "#581"
+                        - generic [ref=e479]: info
+                        - generic [ref=e480]: log-581-payload
+                    - generic [ref=e481]:
+                        - generic [ref=e482]: "#582"
+                        - generic [ref=e483]: info
+                        - generic [ref=e484]: log-582-payload
+                    - generic [ref=e485]:
+                        - generic [ref=e486]: "#583"
+                        - generic [ref=e487]: info
+                        - generic [ref=e488]: log-583-payload
+                    - generic [ref=e489]:
+                        - generic [ref=e490]: "#584"
+                        - generic [ref=e491]: info
+                        - generic [ref=e492]: log-584-payload
+                    - generic [ref=e493]:
+                        - generic [ref=e494]: "#585"
+                        - generic [ref=e495]: info
+                        - generic [ref=e496]: log-585-payload
+                    - generic [ref=e497]:
+                        - generic [ref=e498]: "#586"
+                        - generic [ref=e499]: info
+                        - generic [ref=e500]: log-586-payload
+                    - generic [ref=e501]:
+                        - generic [ref=e502]: "#587"
+                        - generic [ref=e503]: info
+                        - generic [ref=e504]: log-587-payload
+                    - generic [ref=e505]:
+                        - generic [ref=e506]: "#588"
+                        - generic [ref=e507]: info
+                        - generic [ref=e508]: log-588-payload
+                    - generic [ref=e509]:
+                        - generic [ref=e510]: "#589"
+                        - generic [ref=e511]: info
+                        - generic [ref=e512]: log-589-payload
+                    - generic [ref=e513]:
+                        - generic [ref=e514]: "#590"
+                        - generic [ref=e515]: info
+                        - generic [ref=e516]: log-590-payload
+                    - generic [ref=e517]:
+                        - generic [ref=e518]: "#591"
+                        - generic [ref=e519]: info
+                        - generic [ref=e520]: log-591-payload
+                    - generic [ref=e521]:
+                        - generic [ref=e522]: "#592"
+                        - generic [ref=e523]: info
+                        - generic [ref=e524]: log-592-payload
+                    - generic [ref=e525]:
+                        - generic [ref=e526]: "#593"
+                        - generic [ref=e527]: info
+                        - generic [ref=e528]: log-593-payload
+                    - generic [ref=e529]:
+                        - generic [ref=e530]: "#594"
+                        - generic [ref=e531]: info
+                        - generic [ref=e532]: log-594-payload
+                    - generic [ref=e533]:
+                        - generic [ref=e534]: "#595"
+                        - generic [ref=e535]: info
+                        - generic [ref=e536]: log-595-payload
+                    - generic [ref=e537]:
+                        - generic [ref=e538]: "#596"
+                        - generic [ref=e539]: error
+                        - generic [ref=e540]: log-596-payload
+                    - generic [ref=e541]:
+                        - generic [ref=e542]: "#597"
+                        - generic [ref=e543]: info
+                        - generic [ref=e544]: log-597-payload
+                    - generic [ref=e545]:
+                        - generic [ref=e546]: "#598"
+                        - generic [ref=e547]: info
+                        - generic [ref=e548]: log-598-payload
+                    - generic [ref=e549]:
+                        - generic [ref=e550]: "#599"
+                        - generic [ref=e551]: info
+                        - generic [ref=e552]: log-599-payload
+                    - generic [ref=e553]:
+                        - generic [ref=e554]: "#600"
+                        - generic [ref=e555]: info
+                        - generic [ref=e556]: log-600-payload
+                - generic [ref=e557]: 显示 120 行
+        - region "变更对比" [ref=e558]:
+            - generic [ref=e559]:
+                - generic [ref=e560]: 变更对比
+                - button "显示未变更行" [ref=e561] [cursor=pointer]
+            - generic [ref=e562]:
+                - generic [ref=e563]:
+                    - generic [ref=e564]:
+                        - generic [ref=e565]: 修改
+                        - text: apiToken
+                    - generic "变更前" [ref=e567]: 已遮蔽
+                    - generic "变更后" [ref=e568]: 已遮蔽
+                - generic [ref=e569]:
+                    - generic [ref=e570]:
+                        - generic [ref=e571]: 修改
+                        - text: replicas
+                    - generic "变更前" [ref=e573]: "2"
+                    - generic "变更后" [ref=e574]: "3"
+        - region "条件" [ref=e575]:
+            - generic [ref=e576]:
+                - generic [ref=e577]: 条件
+                - button "添加条件" [ref=e578] [cursor=pointer]
+            - generic [ref=e580]:
+                - generic [ref=e581]:
+                    - combobox "条件" [ref=e583] [cursor=pointer]:
+                        - generic "并且" [ref=e584]:
+                            - generic [ref=e585]:
+                                - textbox [active] [aria-hidden]
+                                - generic [ref=e586]: 并且
+                    - button "添加条件" [ref=e592] [cursor=pointer]
+                    - button "新增" [ref=e594] [cursor=pointer]
+                - generic [ref=e596]:
+                    - combobox "名称" [ref=e597] [cursor=pointer]:
+                        - generic "status" [ref=e598]:
+                            - generic [ref=e599]:
+                                - textbox [aria-hidden]
+                                - generic [ref=e600]: status
+                    - combobox "操作" [ref=e605] [cursor=pointer]:
+                        - generic "等于" [ref=e606]:
+                            - generic [ref=e607]:
+                                - textbox [aria-hidden]
+                                - generic [ref=e608]: 等于
+                    - textbox "common.value" [ref=e613]: active
+                    - button "删除" [ref=e614] [cursor=pointer]
+        - region "执行上下文" [ref=e615]:
+            - generic [ref=e616]:
+                - generic [ref=e617]: 执行上下文
+                - textbox "搜索" [ref=e621]
+            - generic [ref=e625]:
+                - generic "可选" [ref=e626]:
+                    - generic [ref=e627]:
+                        - generic [ref=e628]:
+                            - text: candidate 1
+                            - generic [ref=e629]: 数据已过期
+                        - button "新增" [ref=e631] [cursor=pointer]
+                    - generic [ref=e632]:
+                        - generic [ref=e633]: candidate 2
+                        - button "新增" [ref=e634] [cursor=pointer]
+                    - generic [ref=e635]:
+                        - generic [ref=e636]: candidate 3
+                        - button "新增" [ref=e637] [cursor=pointer]
+                    - generic [ref=e638]:
+                        - generic [ref=e639]: candidate 4
+                        - button "新增" [ref=e640] [cursor=pointer]
+                    - generic [ref=e641]:
+                        - generic [ref=e642]: candidate 5
+                        - button "新增" [ref=e643] [cursor=pointer]
+                    - generic [ref=e644]:
+                        - generic [ref=e645]: candidate 6
+                        - button "新增" [ref=e646] [cursor=pointer]
+                    - generic [ref=e647]:
+                        - generic [ref=e648]: candidate 7
+                        - button "新增" [ref=e649] [cursor=pointer]
+                    - generic [ref=e650]:
+                        - generic [ref=e651]: candidate 8
+                        - button "新增" [ref=e652] [cursor=pointer]
+                    - generic [ref=e653]:
+                        - generic [ref=e654]: candidate 9
+                        - button "新增" [ref=e655] [cursor=pointer]
+                    - generic [ref=e656]:
+                        - generic [ref=e657]: candidate 10
+                        - button "新增" [ref=e658] [cursor=pointer]
+                    - generic [ref=e659]:
+                        - generic [ref=e660]: candidate 11
+                        - button "新增" [ref=e661] [cursor=pointer]
+                    - generic [ref=e662]:
+                        - generic [ref=e663]: candidate 12
+                        - button "新增" [ref=e664] [cursor=pointer]
+                    - generic [ref=e665]:
+                        - generic [ref=e666]: candidate 13
+                        - button "新增" [ref=e667] [cursor=pointer]
+                    - generic [ref=e668]:
+                        - generic [ref=e669]: candidate 14
+                        - button "新增" [ref=e670] [cursor=pointer]
+                    - generic [ref=e671]:
+                        - generic [ref=e672]: candidate 15
+                        - button "新增" [ref=e673] [cursor=pointer]
+                    - generic [ref=e674]:
+                        - generic [ref=e675]: candidate 16
+                        - button "新增" [ref=e676] [cursor=pointer]
+                    - generic [ref=e677]:
+                        - generic [ref=e678]: candidate 17
+                        - button "新增" [ref=e679] [cursor=pointer]
+                    - generic [ref=e680]:
+                        - generic [ref=e681]: candidate 18
+                        - button "新增" [ref=e682] [cursor=pointer]
+                    - generic [ref=e683]:
+                        - generic [ref=e684]: candidate 19
+                        - button "新增" [ref=e685] [cursor=pointer]
+                    - generic [ref=e686]:
+                        - generic [ref=e687]:
+                            - text: candidate 20
+                            - generic [ref=e688]: 数据已过期
+                        - button "新增" [ref=e690] [cursor=pointer]
+                    - generic [ref=e691]:
+                        - generic [ref=e692]: candidate 21
+                        - button "新增" [ref=e693] [cursor=pointer]
+                    - generic [ref=e694]:
+                        - generic [ref=e695]: candidate 22
+                        - button "新增" [ref=e696] [cursor=pointer]
+                    - generic [ref=e697]:
+                        - generic [ref=e698]: candidate 23
+                        - button "新增" [ref=e699] [cursor=pointer]
+                    - generic [ref=e700]:
+                        - generic [ref=e701]: candidate 24
+                        - button "新增" [ref=e702] [cursor=pointer]
+                    - generic [ref=e703]:
+                        - generic [ref=e704]: candidate 25
+                        - button "新增" [ref=e705] [cursor=pointer]
+                    - generic [ref=e706]:
+                        - generic [ref=e707]: candidate 26
+                        - button "新增" [ref=e708] [cursor=pointer]
+                    - generic [ref=e709]:
+                        - generic [ref=e710]: candidate 27
+                        - button "新增" [ref=e711] [cursor=pointer]
+                    - generic [ref=e712]:
+                        - generic [ref=e713]: candidate 28
+                        - button "新增" [ref=e714] [cursor=pointer]
+                    - generic [ref=e715]:
+                        - generic [ref=e716]: candidate 29
+                        - button "新增" [ref=e717] [cursor=pointer]
+                    - generic [ref=e718]:
+                        - generic [ref=e719]: candidate 30
+                        - button "新增" [ref=e720] [cursor=pointer]
+                    - generic [ref=e721]:
+                        - generic [ref=e722]: candidate 31
+                        - button "新增" [ref=e723] [cursor=pointer]
+                    - generic [ref=e724]:
+                        - generic [ref=e725]: candidate 32
+                        - button "新增" [ref=e726] [cursor=pointer]
+                    - generic [ref=e727]:
+                        - generic [ref=e728]: candidate 33
+                        - button "新增" [ref=e729] [cursor=pointer]
+                    - generic [ref=e730]:
+                        - generic [ref=e731]: candidate 34
+                        - button "新增" [ref=e732] [cursor=pointer]
+                    - generic [ref=e733]:
+                        - generic [ref=e734]: candidate 35
+                        - button "新增" [ref=e735] [cursor=pointer]
+                    - generic [ref=e736]:
+                        - generic [ref=e737]: candidate 36
+                        - button "新增" [ref=e738] [cursor=pointer]
+                    - generic [ref=e739]:
+                        - generic [ref=e740]: candidate 37
+                        - button "新增" [ref=e741] [cursor=pointer]
+                    - generic [ref=e742]:
+                        - generic [ref=e743]: candidate 38
+                        - button "新增" [ref=e744] [cursor=pointer]
+                    - generic [ref=e745]:
+                        - generic [ref=e746]:
+                            - text: candidate 39
+                            - generic [ref=e747]: 数据已过期
+                        - button "新增" [ref=e749] [cursor=pointer]
+                    - generic [ref=e750]:
+                        - generic [ref=e751]: candidate 40
+                        - button "新增" [ref=e752] [cursor=pointer]
+                    - generic [ref=e753]:
+                        - generic [ref=e754]: candidate 41
+                        - button "新增" [ref=e755] [cursor=pointer]
+                    - generic [ref=e756]:
+                        - generic [ref=e757]: candidate 42
+                        - button "新增" [ref=e758] [cursor=pointer]
+                    - generic [ref=e759]:
+                        - generic [ref=e760]: candidate 43
+                        - button "新增" [ref=e761] [cursor=pointer]
+                    - generic [ref=e762]:
+                        - generic [ref=e763]: candidate 44
+                        - button "新增" [ref=e764] [cursor=pointer]
+                    - generic [ref=e765]:
+                        - generic [ref=e766]: candidate 45
+                        - button "新增" [ref=e767] [cursor=pointer]
+                    - generic [ref=e768]:
+                        - generic [ref=e769]: candidate 46
+                        - button "新增" [ref=e770] [cursor=pointer]
+                    - generic [ref=e771]:
+                        - generic [ref=e772]: candidate 47
+                        - button "新增" [ref=e773] [cursor=pointer]
+                    - generic [ref=e774]:
+                        - generic [ref=e775]: candidate 48
+                        - button "新增" [ref=e776] [cursor=pointer]
+                    - generic [ref=e777]:
+                        - generic [ref=e778]: candidate 49
+                        - button "新增" [ref=e779] [cursor=pointer]
+                    - generic [ref=e780]:
+                        - generic [ref=e781]: candidate 50
+                        - button "新增" [ref=e782] [cursor=pointer]
+                    - generic [ref=e783]:
+                        - generic [ref=e784]: candidate 51
+                        - button "新增" [ref=e785] [cursor=pointer]
+                    - generic [ref=e786]:
+                        - generic [ref=e787]: candidate 52
+                        - button "新增" [ref=e788] [cursor=pointer]
+                    - generic [ref=e789]:
+                        - generic [ref=e790]: candidate 53
+                        - button "新增" [ref=e791] [cursor=pointer]
+                    - generic [ref=e792]:
+                        - generic [ref=e793]: candidate 54
+                        - button "新增" [ref=e794] [cursor=pointer]
+                    - generic [ref=e795]:
+                        - generic [ref=e796]: candidate 55
+                        - button "新增" [ref=e797] [cursor=pointer]
+                    - generic [ref=e798]:
+                        - generic [ref=e799]: candidate 56
+                        - button "新增" [ref=e800] [cursor=pointer]
+                    - generic [ref=e801]:
+                        - generic [ref=e802]: candidate 57
+                        - button "新增" [ref=e803] [cursor=pointer]
+                    - generic [ref=e804]:
+                        - generic [ref=e805]:
+                            - text: candidate 58
+                            - generic [ref=e806]: 数据已过期
+                        - button "新增" [ref=e808] [cursor=pointer]
+                    - generic [ref=e809]:
+                        - generic [ref=e810]: candidate 59
+                        - button "新增" [ref=e811] [cursor=pointer]
+                    - generic [ref=e812]:
+                        - generic [ref=e813]: candidate 60
+                        - button "新增" [ref=e814] [cursor=pointer]
+                    - generic [ref=e815]:
+                        - generic [ref=e816]: candidate 61
+                        - button "新增" [ref=e817] [cursor=pointer]
+                    - generic [ref=e818]:
+                        - generic [ref=e819]: candidate 62
+                        - button "新增" [ref=e820] [cursor=pointer]
+                    - generic [ref=e821]:
+                        - generic [ref=e822]: candidate 63
+                        - button "新增" [ref=e823] [cursor=pointer]
+                    - generic [ref=e824]:
+                        - generic [ref=e825]: candidate 64
+                        - button "新增" [ref=e826] [cursor=pointer]
+                    - generic [ref=e827]:
+                        - generic [ref=e828]: candidate 65
+                        - button "新增" [ref=e829] [cursor=pointer]
+                    - generic [ref=e830]:
+                        - generic [ref=e831]: candidate 66
+                        - button "新增" [ref=e832] [cursor=pointer]
+                    - generic [ref=e833]:
+                        - generic [ref=e834]: candidate 67
+                        - button "新增" [ref=e835] [cursor=pointer]
+                    - generic [ref=e836]:
+                        - generic [ref=e837]: candidate 68
+                        - button "新增" [ref=e838] [cursor=pointer]
+                    - generic [ref=e839]:
+                        - generic [ref=e840]: candidate 69
+                        - button "新增" [ref=e841] [cursor=pointer]
+                    - generic [ref=e842]:
+                        - generic [ref=e843]: candidate 70
+                        - button "新增" [ref=e844] [cursor=pointer]
+                    - generic [ref=e845]:
+                        - generic [ref=e846]: candidate 71
+                        - button "新增" [ref=e847] [cursor=pointer]
+                    - generic [ref=e848]:
+                        - generic [ref=e849]: candidate 72
+                        - button "新增" [ref=e850] [cursor=pointer]
+                    - generic [ref=e851]:
+                        - generic [ref=e852]: candidate 73
+                        - button "新增" [ref=e853] [cursor=pointer]
+                    - generic [ref=e854]:
+                        - generic [ref=e855]: candidate 74
+                        - button "新增" [ref=e856] [cursor=pointer]
+                    - generic [ref=e857]:
+                        - generic [ref=e858]: candidate 75
+                        - button "新增" [ref=e859] [cursor=pointer]
+                    - generic [ref=e860]:
+                        - generic [ref=e861]: candidate 76
+                        - button "新增" [ref=e862] [cursor=pointer]
+                    - generic [ref=e863]:
+                        - generic [ref=e864]:
+                            - text: candidate 77
+                            - generic [ref=e865]: 数据已过期
+                        - button "新增" [ref=e867] [cursor=pointer]
+                    - generic [ref=e868]:
+                        - generic [ref=e869]: candidate 78
+                        - button "新增" [ref=e870] [cursor=pointer]
+                    - generic [ref=e871]:
+                        - generic [ref=e872]: candidate 79
+                        - button "新增" [ref=e873] [cursor=pointer]
+                    - generic [ref=e874]:
+                        - generic [ref=e875]: candidate 80
+                        - button "新增" [ref=e876] [cursor=pointer]
+                - generic "已选择" [ref=e877]
+        - region "执行步骤" [ref=e878]:
+            - list [ref=e881]:
+                - listitem [ref=e882]:
+                    - button "跳转到步骤 1" [ref=e883] [cursor=pointer]:
+                        - generic [ref=e885]: step 1
+                        - generic [ref=e886]:
+                            - generic [ref=e887]: success
+                            - text: "尝试次数: 1"
+                - listitem [ref=e889]:
+                    - button "跳转到步骤 2" [ref=e890] [cursor=pointer]:
+                        - generic [ref=e892]: step 2
+                        - generic [ref=e893]:
+                            - generic [ref=e894]: success
+                            - text: "尝试次数: 1"
+                - listitem [ref=e896]:
+                    - button "跳转到步骤 3" [ref=e897] [cursor=pointer]:
+                        - generic [ref=e899]: step 3
+                        - generic [ref=e900]:
+                            - generic [ref=e901]: success
+                            - text: "尝试次数: 1"
+                - listitem [ref=e903]:
+                    - button "跳转到步骤 4" [ref=e904] [cursor=pointer]:
+                        - generic [ref=e906]: step 4
+                        - generic [ref=e907]:
+                            - generic [ref=e908]: success
+                            - text: "尝试次数: 1"
+                - listitem [ref=e910]:
+                    - button "跳转到步骤 5" [ref=e911] [cursor=pointer]:
+                        - generic [ref=e913]: step 5
+                        - generic [ref=e914]:
+                            - generic [ref=e915]: failed
+                            - text: "尝试次数: 1"
+                - listitem [ref=e917]:
+                    - button "跳转到步骤 6" [ref=e918] [cursor=pointer]:
+                        - generic [ref=e920]: step 6
+                        - generic [ref=e921]:
+                            - generic [ref=e922]: pending
+                            - text: "尝试次数: 1"
+                - listitem [ref=e924]:
+                    - button "跳转到步骤 7" [ref=e925] [cursor=pointer]:
+                        - generic [ref=e927]: step 7
+                        - generic [ref=e928]:
+                            - generic [ref=e929]: pending
+                            - text: "尝试次数: 1"
+                - listitem [ref=e931]:
+                    - button "跳转到步骤 8" [ref=e932] [cursor=pointer]:
+                        - generic [ref=e934]: step 8
+                        - generic [ref=e935]:
+                            - generic [ref=e936]: pending
+                            - text: "尝试次数: 1"
+                - listitem [ref=e938]:
+                    - button "跳转到步骤 9" [ref=e939] [cursor=pointer]:
+                        - generic [ref=e941]: step 9
+                        - generic [ref=e942]:
+                            - generic [ref=e943]: pending
+                            - text: "尝试次数: 1"
+                - listitem [ref=e945]:
+                    - button "跳转到步骤 10" [ref=e946] [cursor=pointer]:
+                        - generic [ref=e948]: step 10
+                        - generic [ref=e949]:
+                            - generic [ref=e950]: pending
+                            - text: "尝试次数: 1"
+                - listitem [ref=e952]:
+                    - button "跳转到步骤 11" [ref=e953] [cursor=pointer]:
+                        - generic [ref=e955]: step 11
+                        - generic [ref=e956]:
+                            - generic [ref=e957]: pending
+                            - text: "尝试次数: 1"
+                - listitem [ref=e959]:
+                    - button "跳转到步骤 12" [ref=e960] [cursor=pointer]:
+                        - generic [ref=e962]: step 12
+                        - generic [ref=e963]:
+                            - generic [ref=e964]: pending
+                            - text: "尝试次数: 1"
+                - listitem [ref=e966]:
+                    - button "跳转到步骤 13" [ref=e967] [cursor=pointer]:
+                        - generic [ref=e969]: step 13
+                        - generic [ref=e970]:
+                            - generic [ref=e971]: pending
+                            - text: "尝试次数: 1"
+                - listitem [ref=e973]:
+                    - button "跳转到步骤 14" [ref=e974] [cursor=pointer]:
+                        - generic [ref=e976]: step 14
+                        - generic [ref=e977]:
+                            - generic [ref=e978]: pending
+                            - text: "尝试次数: 1"
+                - listitem [ref=e980]:
+                    - button "跳转到步骤 15" [ref=e981] [cursor=pointer]:
+                        - generic [ref=e983]: step 15
+                        - generic [ref=e984]:
+                            - generic [ref=e985]: pending
+                            - text: "尝试次数: 1"
+                - listitem [ref=e987]:
+                    - button "跳转到步骤 16" [ref=e988] [cursor=pointer]:
+                        - generic [ref=e990]: step 16
+                        - generic [ref=e991]:
+                            - generic [ref=e992]: pending
+                            - text: "尝试次数: 1"
+                - listitem [ref=e994]:
+                    - button "跳转到步骤 17" [ref=e995] [cursor=pointer]:
+                        - generic [ref=e997]: step 17
+                        - generic [ref=e998]:
+                            - generic [ref=e999]: pending
+                            - text: "尝试次数: 1"
+                - listitem [ref=e1001]:
+                    - button "跳转到步骤 18" [ref=e1002] [cursor=pointer]:
+                        - generic [ref=e1004]: step 18
+                        - generic [ref=e1005]:
+                            - generic [ref=e1006]: pending
+                            - text: "尝试次数: 1"
+                - listitem [ref=e1008]:
+                    - button "跳转到步骤 19" [ref=e1009] [cursor=pointer]:
+                        - generic [ref=e1011]: step 19
+                        - generic [ref=e1012]:
+                            - generic [ref=e1013]: pending
+                            - text: "尝试次数: 1"
+                - listitem [ref=e1015]:
+                    - button "跳转到步骤 20" [ref=e1016] [cursor=pointer]:
+                        - generic [ref=e1018]: step 20
+                        - generic [ref=e1019]:
+                            - generic [ref=e1020]: pending
+                            - text: "尝试次数: 1"
+        - generic [ref=e1022]:
+            - generic [ref=e1023]: B4 工作台注册状态
+            - generic [ref=e1025]:
+                - generic [ref=e1026]: 加载中
+                - generic [ref=e1027]: 空状态
+                - generic [ref=e1028]: 错误
+                - generic [ref=e1029]: 无权限
+                - generic [ref=e1030]: 过期
+                - generic [ref=e1031]: 部分数据
+```
+
+# Test source
+
+```ts
+  1  | import { expect, test } from '@playwright/test';
+  2  | import { primeChineseLocale } from '../smoke/helpers/auth';
+  3  | for (const mode of ['light', 'dark'] as const) {
+  4  |  test(`shared condition editing and themed step buttons ${mode}`, async ({ page }, testInfo) => {
+  5  |   await primeChineseLocale(page);
+  6  |   await page.addInitScript((color) => localStorage.setItem('pantheon_color_mode', color), mode);
+  7  |   await page.goto('/__visual/operational-workbench?editor=1');
+  8  |   const editor = page.locator('.condition-builder');
+  9  |   await expect(editor).toBeVisible();
+  10 |   const inputs = editor.locator('input:not([readonly])');
+  11 |   await expect(inputs.first()).toBeEnabled();
+  12 |   await inputs.first().fill('edited-condition');
+> 13 |   await expect(inputs.first()).toHaveValue('edited-condition');
+     |                                ^ Error: expect(locator).toHaveValue(expected) failed
+  14 |   const initialRules = await editor.locator('input:not([readonly])').count();
+  15 |   await editor.getByRole('button', { name: '新增规则' }).first().click();
+  16 |   await expect(editor.locator('input:not([readonly])')).toHaveCount(initialRules + 1);
+  17 |   await editor.getByRole('button', { name: '删除', exact: true }).last().click();
+  18 |   await expect(editor.locator('input:not([readonly])')).toHaveCount(initialRules);
+  19 |   const steps = page.locator('.execution-step-rail');
+  20 |   await steps.getByRole('button').first().focus();
+  21 |   await expect(steps.getByRole('button').first()).toBeFocused();
+  22 |   expect(await steps.getByRole('button').first().evaluate((button) => getComputedStyle(button).backgroundColor)).not.toBe('rgb(255, 255, 255)');
+  23 |   for (const [viewport, width, height] of [['desktop', 1440, 900], ['mobile', 390, 844]] as const) {
+  24 |    await page.setViewportSize({ width, height });
+  25 |    await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(1);
+  26 |    await editor.screenshot({ path: testInfo.outputPath(`conditions-${mode}-${viewport}.png`) });
+  27 |    await steps.screenshot({ path: testInfo.outputPath(`steps-${mode}-${viewport}.png`) });
+  28 |   }
+  29 |  });
+  30 | }
+  31 |
+```

@@ -1,0 +1,175 @@
+{
+  "schemaVersion": 1,
+  "taskId": "2026-11-07-ops-formal-queue-foundation-gaps",
+  "tier": "L2",
+  "role": "scoped-base-generator",
+  "timestamp": "2026-11-10T02:03:34.129Z",
+  "parentTaskPacket": "docs/harness/tasks/2026-11-07-ops-formal-queue-foundation-gaps.task.md",
+  "parentPlan": ".harness/tasks/2026-11-07-ops-formal-queue-foundation-gaps/o4-tenant-implementation-plan.md",
+  "parentPlanRevision": 4,
+  "parentPlanSha256FromReview3": "9aaa0e53b43c040a4d04949693d3ef6ab4b086336fe953c3e04105400e4caaf7",
+  "reviewHandoff": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/resume-o4-prerequisite-review3-CODE-handoff.md",
+  "ownedSourcePaths": [
+    "scripts/foundation-release/build-candidate-artifact.mjs",
+    "scripts/foundation-release/candidate-artifact.test.mjs"
+  ],
+  "readOnlyHelperPath": "scripts/foundation-release/candidate-descriptor.mjs",
+  "environment": {
+    "node": "v24.14.0",
+    "platform": "win32",
+    "arch": "x64",
+    "O_NOFOLLOW": null
+  },
+  "sourceHashes": {
+    "scripts/foundation-release/build-candidate-artifact.mjs": {
+      "before": "9ba91562d0854701cc1eacc58e854fcc122af096721c3ec83fe914a171932352",
+      "beforeFinalGreen": "646e622f2eef3ae30d29aed50272d3f4665dd54d04c2fcb1ffb41777e554d6e3",
+      "afterFinalGreen": "646e622f2eef3ae30d29aed50272d3f4665dd54d04c2fcb1ffb41777e554d6e3",
+      "bytes": 13519
+    },
+    "scripts/foundation-release/candidate-artifact.test.mjs": {
+      "before": "1c5869e4c0f4670ccacf89333e9010607a0aca1c14cccf0eedb5926c2cea8a8f",
+      "beforeFinalGreen": "17301133892fe649d7fdd2ec25ed7e0a570c45b47f7a0842ed896b0723dd9b11",
+      "afterFinalGreen": "17301133892fe649d7fdd2ec25ed7e0a570c45b47f7a0842ed896b0723dd9b11",
+      "bytes": 31966
+    },
+    "scripts/foundation-release/candidate-descriptor.mjs": {
+      "before": "a9b242e4b6d787344f16357b6c7397ab4a7ffda633e21556138e240ccece71a6",
+      "beforeFinalGreen": "a9b242e4b6d787344f16357b6c7397ab4a7ffda633e21556138e240ccece71a6",
+      "afterFinalGreen": "a9b242e4b6d787344f16357b6c7397ab4a7ffda633e21556138e240ccece71a6",
+      "bytes": 15162
+    }
+  },
+  "preservedOriginalSource": {
+    "originalTestPrefixExact": true,
+    "helperExact": true,
+    "sourceCaptureExact": true,
+    "stageAssertionsExact": true,
+    "cleanupAndCLIExact": true
+  },
+  "originalTestPrefixBytes": 24281,
+  "baseline": {
+    "command": "node --test scripts/foundation-release/candidate-artifact.test.mjs",
+    "exitCode": 0,
+    "tests": 29,
+    "pass": 29,
+    "fail": 0,
+    "skipped": 0,
+    "log": "resume-o4-seal-integrity-baseline-tests.log"
+  },
+  "red": {
+    "command": "node --test --test-reporter=tap scripts/foundation-release/candidate-artifact.test.mjs",
+    "producerSha256": "9ba91562d0854701cc1eacc58e854fcc122af096721c3ec83fe914a171932352",
+    "testSha256": "17301133892fe649d7fdd2ec25ed7e0a570c45b47f7a0842ed896b0723dd9b11",
+    "exitCode": 1,
+    "tests": 37,
+    "pass": 29,
+    "fail": 8,
+    "skipped": 0,
+    "failedLeafCases": 6,
+    "failedParentContainers": 2,
+    "restoredProducerSha256": "646e622f2eef3ae30d29aed50272d3f4665dd54d04c2fcb1ffb41777e554d6e3",
+    "log": "resume-o4-seal-integrity-red-tests.log",
+    "method": "Temporarily restore captured original owned producer bytes for the normal named-file test run; retain unchanged final test bytes; restore repaired producer in finally after checking no intervening producer edit."
+  },
+  "green": {
+    "command": "node --test --test-reporter=tap scripts/foundation-release/candidate-artifact.test.mjs",
+    "producerSha256": "646e622f2eef3ae30d29aed50272d3f4665dd54d04c2fcb1ffb41777e554d6e3",
+    "testSha256": "17301133892fe649d7fdd2ec25ed7e0a570c45b47f7a0842ed896b0723dd9b11",
+    "exitCode": 0,
+    "tests": 37,
+    "pass": 37,
+    "fail": 0,
+    "skipped": 0,
+    "cancelled": 0,
+    "todo": 0,
+    "log": "resume-o4-seal-integrity-green-tests.log"
+  },
+  "checks": [
+    {
+      "command": "node --check scripts/foundation-release/build-candidate-artifact.mjs",
+      "exitCode": 0,
+      "output": ""
+    },
+    {
+      "command": "node --check scripts/foundation-release/candidate-artifact.test.mjs",
+      "exitCode": 0,
+      "output": ""
+    },
+    {
+      "command": "git diff --check -- scripts/foundation-release/build-candidate-artifact.mjs scripts/foundation-release/candidate-artifact.test.mjs",
+      "exitCode": 0,
+      "output": ""
+    }
+  ],
+  "baselineDiffChecks": [
+    {
+      "path": "scripts/foundation-release/build-candidate-artifact.mjs",
+      "beforeSha256": "9ba91562d0854701cc1eacc58e854fcc122af096721c3ec83fe914a171932352",
+      "command": "git diff --no-index --check -- <captured-baseline> <current-owned-file>",
+      "exitCode": 1,
+      "stdout": "",
+      "stderr": "",
+      "passed": true
+    },
+    {
+      "path": "scripts/foundation-release/candidate-artifact.test.mjs",
+      "beforeSha256": "1c5869e4c0f4670ccacf89333e9010607a0aca1c14cccf0eedb5926c2cea8a8f",
+      "command": "git diff --no-index --check -- <captured-baseline> <current-owned-file>",
+      "exitCode": 1,
+      "stdout": "",
+      "stderr": "",
+      "passed": true
+    }
+  ],
+  "baselineDiffCheckExitNote": "git diff --no-index reports exit 1 for differing files; both stdout/stderr are empty, with no whitespace diagnostics. Ordinary scoped git diff --check exits 0 but these producer files are already untracked, so captured-baseline checks and the actual delta are retained.",
+  "sourceDelta": "resume-o4-seal-integrity-source-delta.patch",
+  "regressions": [
+    {
+      "artifact": "descriptor",
+      "mutation": "append newline immediately after real descriptor write",
+      "result": "saved file exact-size refusal, no output"
+    },
+    {
+      "artifact": "archive",
+      "mutation": "append newline after early archive validation, at final output existence check",
+      "result": "saved file exact-size refusal, no output"
+    },
+    {
+      "artifact": "descriptor",
+      "mutation": "replace first byte at equal length before final preflight",
+      "result": "exact saved bytes/digest refusal, no output"
+    },
+    {
+      "artifact": "archive",
+      "mutation": "replace first byte at equal length after early archive validation",
+      "result": "exact saved bytes/digest refusal, no output"
+    },
+    {
+      "artifact": "descriptor",
+      "mutation": "rename original open file outside stage and recreate byte-identical regular file at same name after real final fd read",
+      "result": "after-read fd/path stamp refusal, no output; original renamed file survives"
+    },
+    {
+      "artifact": "archive",
+      "mutation": "rename original open file outside stage and recreate byte-identical regular file at same name after real final fd read",
+      "result": "after-read fd/path stamp refusal, no output; original renamed file survives"
+    }
+  ],
+  "runtimeEvidence": "Actual exported producer invoked by named-file Node tests on disposable OS-temporary fixture repositories. All six new GREEN cases exercise the final window, preserve source bytes/stamps and stage/parent dev/ino identities, refuse producer success, and leave no candidate output.",
+  "diagnosticGaps": {
+    "lsp": "No LSP diagnostic tool exposed",
+    "typecheck": "Standalone JavaScript syntax and behavior evidence only; no JS type-safety claim",
+    "crossPlatform": "Fresh execution is Windows x64 only; O_NOFOLLOW is unavailable here, so fallback lstat/fstat/path/directory checks were exercised"
+  },
+  "scopeLimit": "Only the review3 handoff and three named source files were read for source context; frozen 69-path review was not repeated. No Base/Ops product source, ledger, lock, credentials, remote, repository commit, release, model or config changes were made.",
+  "limitations": [
+    "No atomic namespace-lock guarantee; checks and rename remain separate syscalls.",
+    "Original non-recursive cleanup and primary-cause handling remain byte-identical; preservation after partial cleanup does not promise rollback."
+  ],
+  "independentCODE": "pending-root-rerun",
+  "independentARCH": "pending-root-rerun",
+  "selfApproval": false,
+  "publicationApproval": false,
+  "stop": "Scoped producer repair and fresh named-file verification complete; return these stabilized bytes to root for independent bounded CODE/ARCH review."
+}

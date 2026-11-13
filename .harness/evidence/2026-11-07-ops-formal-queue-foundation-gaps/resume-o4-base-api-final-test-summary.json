@@ -1,0 +1,20 @@
+{
+  "packagesPassing": [
+    "github.com/duanxldragon/pantheon-base/backend/pkg/tenant",
+    "github.com/duanxldragon/pantheon-base/backend/pkg/contracts/businessauth",
+    "github.com/duanxldragon/pantheon-base/backend/pkg/contracts",
+    "github.com/duanxldragon/pantheon-base/backend/pkg/auditpolicy",
+    "github.com/duanxldragon/pantheon-base/backend/pkg/database",
+    "github.com/duanxldragon/pantheon-base/backend/pkg/common/http",
+    "github.com/duanxldragon/pantheon-base/backend/internal/middleware",
+    "github.com/duanxldragon/pantheon-base/backend/modules/auth/login",
+    "github.com/duanxldragon/pantheon-base/backend/modules/system",
+    "github.com/duanxldragon/pantheon-base/backend/cmd/server"
+  ],
+  "passingTestAndSubtestEvents": 100,
+  "failEvents": 0,
+  "packageWithoutTests": [
+    "github.com/duanxldragon/pantheon-base/backend/modules/auth"
+  ],
+  "skippedTests": 0
+}

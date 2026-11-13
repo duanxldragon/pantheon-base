@@ -1,0 +1,118 @@
+{
+  "sourceCommit": "135730fd6f63ad73cf40f6e4b321fdd9f69ea932",
+  "links": [
+    {
+      "file": "docs/designs/TENANT_RESOURCE_SCOPE_MATRIX.md",
+      "target": "../../.harness/archive/2026-09/tasks/2026-09-10-tenant-contract-design/task.md",
+      "state": "canonical-immutable-link",
+      "url": "https://github.com/duanxldragon/pantheon-base/blob/135730fd6f63ad73cf40f6e4b321fdd9f69ea932/.harness/archive/2026-09/tasks/2026-09-10-tenant-contract-design/task.md"
+    },
+    {
+      "file": "docs/release-notes/RELEASE_NOTES_v0.18.3.md",
+      "target": "../../.harness/evidence/2026-11-05-base-freeze-release/summary.md",
+      "state": "canonical-immutable-link",
+      "url": "https://github.com/duanxldragon/pantheon-base/blob/135730fd6f63ad73cf40f6e4b321fdd9f69ea932/.harness/evidence/2026-11-05-base-freeze-release/summary.md"
+    },
+    {
+      "file": "docs/release-notes/RELEASE_NOTES_v0.18.3.md",
+      "target": "../../.harness/evidence/2026-11-05-base-freeze-release/functionality-matrix.md",
+      "state": "canonical-immutable-link",
+      "url": "https://github.com/duanxldragon/pantheon-base/blob/135730fd6f63ad73cf40f6e4b321fdd9f69ea932/.harness/evidence/2026-11-05-base-freeze-release/functionality-matrix.md"
+    },
+    {
+      "file": "docs/release-notes/RELEASE_NOTES_v0.18.3.md",
+      "target": "../../.harness/evidence/2026-11-05-base-freeze-release/hosted-validation.json",
+      "state": "canonical-immutable-link",
+      "url": "https://github.com/duanxldragon/pantheon-base/blob/135730fd6f63ad73cf40f6e4b321fdd9f69ea932/.harness/evidence/2026-11-05-base-freeze-release/hosted-validation.json"
+    },
+    {
+      "file": "docs/reviews/ENTERPRISE_RELEASE_READINESS_REVIEW_2026-10-07.md",
+      "target": "../../.github/workflows/release-gate.yml#L205",
+      "state": "canonical-immutable-link",
+      "url": "https://github.com/duanxldragon/pantheon-base/blob/135730fd6f63ad73cf40f6e4b321fdd9f69ea932/.github/workflows/release-gate.yml#L205"
+    },
+    {
+      "file": "docs/reviews/ENTERPRISE_RELEASE_READINESS_REVIEW_2026-10-07.md",
+      "target": "../harness/tasks/2026-10-07-release-readiness-remediation.task.md",
+      "state": "canonical-immutable-link",
+      "url": "https://github.com/duanxldragon/pantheon-base/blob/135730fd6f63ad73cf40f6e4b321fdd9f69ea932/docs/harness/tasks/2026-10-07-release-readiness-remediation.task.md"
+    },
+    {
+      "file": "docs/reviews/PANTHEON_BASE_FINAL_ACCEPTANCE_REVIEW_2026-10-21.md",
+      "target": "../../.harness/evidence/2026-10-22-release-and-residual-closeout/summary.md",
+      "state": "canonical-immutable-archive-link",
+      "url": "https://github.com/duanxldragon/pantheon-base/blob/135730fd6f63ad73cf40f6e4b321fdd9f69ea932/.harness/archive/2026-10/evidence/2026-10-22-release-and-residual-closeout/summary.md"
+    },
+    {
+      "file": "docs/reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-11-04_FULL.md",
+      "target": "../../.harness/evidence/2026-11-05-base-freeze-release/audit-screenshots/login-desktop.png",
+      "state": "canonical-immutable-link",
+      "url": "https://github.com/duanxldragon/pantheon-base/blob/135730fd6f63ad73cf40f6e4b321fdd9f69ea932/.harness/evidence/2026-11-05-base-freeze-release/audit-screenshots/login-desktop.png"
+    },
+    {
+      "file": "docs/reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-11-04_FULL.md",
+      "target": "../../.harness/evidence/2026-11-05-base-freeze-release/audit-screenshots/login-mobile.png",
+      "state": "canonical-immutable-link",
+      "url": "https://github.com/duanxldragon/pantheon-base/blob/135730fd6f63ad73cf40f6e4b321fdd9f69ea932/.harness/evidence/2026-11-05-base-freeze-release/audit-screenshots/login-mobile.png"
+    },
+    {
+      "file": "docs/reviews/PANTHEON_BASE_ISSUES_AND_REMEDIATION_2026-10-21.md",
+      "target": "../../.harness/evidence/2026-10-22-release-and-residual-closeout/summary.md",
+      "state": "canonical-immutable-archive-link",
+      "url": "https://github.com/duanxldragon/pantheon-base/blob/135730fd6f63ad73cf40f6e4b321fdd9f69ea932/.harness/archive/2026-10/evidence/2026-10-22-release-and-residual-closeout/summary.md"
+    },
+    {
+      "file": "docs/reviews/PANTHEON_BASE_MAINTENANCE_FREEZE_DECLARATION.md",
+      "target": "../harness/tasks/2026-11-05-base-freeze-release.task.md",
+      "state": "canonical-immutable-link",
+      "url": "https://github.com/duanxldragon/pantheon-base/blob/135730fd6f63ad73cf40f6e4b321fdd9f69ea932/docs/harness/tasks/2026-11-05-base-freeze-release.task.md"
+    },
+    {
+      "file": "docs/reviews/PANTHEON_BASE_MAINTENANCE_FREEZE_DECLARATION.md",
+      "target": "../../.harness/evidence/2026-11-05-base-freeze-release/summary.md",
+      "state": "canonical-immutable-link",
+      "url": "https://github.com/duanxldragon/pantheon-base/blob/135730fd6f63ad73cf40f6e4b321fdd9f69ea932/.harness/evidence/2026-11-05-base-freeze-release/summary.md"
+    },
+    {
+      "file": "docs/reviews/PANTHEON_BASE_TEST_AND_ACCEPTANCE_REPORT_2026-10-21.md",
+      "target": "../../.harness/evidence/2026-10-22-release-and-residual-closeout/summary.md",
+      "state": "canonical-immutable-archive-link",
+      "url": "https://github.com/duanxldragon/pantheon-base/blob/135730fd6f63ad73cf40f6e4b321fdd9f69ea932/.harness/archive/2026-10/evidence/2026-10-22-release-and-residual-closeout/summary.md"
+    },
+    {
+      "file": "docs/reviews/TENANT_MULTI_MEMBERSHIP_DECISION_2026-10-27.md",
+      "target": "../harness/tasks/2026-10-27-tenant-completeness-remediation.task.md",
+      "state": "canonical-immutable-link",
+      "url": "https://github.com/duanxldragon/pantheon-base/blob/135730fd6f63ad73cf40f6e4b321fdd9f69ea932/docs/harness/tasks/2026-10-27-tenant-completeness-remediation.task.md"
+    },
+    {
+      "file": "docs/reviews/TENANT_PLAN_LADDER_DECISION_2026-10-28.md",
+      "target": "../harness/tasks/2026-10-27-tenant-completeness-remediation.task.md",
+      "state": "canonical-immutable-link",
+      "url": "https://github.com/duanxldragon/pantheon-base/blob/135730fd6f63ad73cf40f6e4b321fdd9f69ea932/docs/harness/tasks/2026-10-27-tenant-completeness-remediation.task.md"
+    },
+    {
+      "file": "docs/runbooks/TENANT_MIGRATION_RUNBOOK.md",
+      "target": "../../.harness/archive/2026-09/evidence/2026-09-10-tenant-migration-runbook/rehearsal-log.md",
+      "state": "canonical-immutable-link",
+      "url": "https://github.com/duanxldragon/pantheon-base/blob/135730fd6f63ad73cf40f6e4b321fdd9f69ea932/.harness/archive/2026-09/evidence/2026-09-10-tenant-migration-runbook/rehearsal-log.md"
+    },
+    {
+      "file": "docs/runbooks/TENANT_MIGRATION_RUNBOOK.md",
+      "target": "../../.harness/archive/2026-09/evidence/2026-09-10-tenant-migration-runbook/rehearsal-log.md",
+      "state": "duplicate-already-repaired"
+    },
+    {
+      "file": "docs/TENANT_INITIALIZATION_GUIDE.md",
+      "target": "../.harness/evidence/2026-11-05-base-freeze-release/functionality-matrix.md",
+      "state": "canonical-immutable-link",
+      "url": "https://github.com/duanxldragon/pantheon-base/blob/135730fd6f63ad73cf40f6e4b321fdd9f69ea932/.harness/evidence/2026-11-05-base-freeze-release/functionality-matrix.md"
+    },
+    {
+      "file": "docs/testing-quick-start.md",
+      "target": "../.github/workflows/smoke-core.yml",
+      "state": "canonical-immutable-link",
+      "url": "https://github.com/duanxldragon/pantheon-base/blob/135730fd6f63ad73cf40f6e4b321fdd9f69ea932/.github/workflows/smoke-core.yml"
+    }
+  ]
+}

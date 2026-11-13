@@ -1,0 +1,43 @@
+
+> @duanxldragon/pantheon-base-ui@0.11.2 test:unit
+> vitest run tests/unit/components/operational/conditionEditing.test.tsx
+
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - `__dirname` (vitest.config.ts:10:25). Use `import.meta.dirname` instead
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+ RUN  v5.0.5 D:/workspace/go/pantheon-platform/pantheon-base/frontend
+
+ ❯ tests/unit/components/operational/conditionEditing.test.tsx (7 tests | 1 failed) 352ms
+   ❯ controlled condition editing (7)
+     × does not retrigger parent state updates for equivalent inline field options 68ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/components/operational/conditionEditing.test.tsx > controlled condition editing > does not retrigger parent state updates for equivalent inline field options
+Error: Repeated equivalent validation updates
+ ❯ onValidationChange tests/unit/components/operational/conditionEditing.test.tsx:20:49
+     18|    return <><ConditionBuilder title="conditions" value={ast} fields={[…
+     19|     validation(ids);
+     20|     if (validation.mock.calls.length > 3) throw new Error('Repeated eq…
+       |                                                 ^
+     21|     setInvalid(ids);
+     22|    }} /><span data-testid="invalid-count">{invalid.length}</span></>;
+ ❯ src/components/operational/ConditionBuilder.tsx:101:27
+ ❯ Object.react_stack_bottom_frame node_modules/react-dom/cjs/react-dom-client.development.js:28656:20
+ ❯ runWithFiberInDEV node_modules/react-dom/cjs/react-dom-client.development.js:1048:13
+ ❯ commitHookEffectListMount node_modules/react-dom/cjs/react-dom-client.development.js:13748:29
+ ❯ commitHookPassiveMountEffects node_modules/react-dom/cjs/react-dom-client.development.js:13835:11
+ ❯ commitPassiveMountOnFiber node_modules/react-dom/cjs/react-dom-client.development.js:16906:13
+ ❯ recursivelyTraversePassiveMountEffects node_modules/react-dom/cjs/react-dom-client.development.js:16851:13
+ ❯ commitPassiveMountOnFiber node_modules/react-dom/cjs/react-dom-client.development.js:16898:11
+ ❯ recursivelyTraversePassiveMountEffects node_modules/react-dom/cjs/react-dom-client.development.js:16851:13
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 6 passed (7)
+   Start at  23:33:51
+   Duration  2.73s (import 47%, environment 36%, tests 14%, transform 3%, worker 1%)
+

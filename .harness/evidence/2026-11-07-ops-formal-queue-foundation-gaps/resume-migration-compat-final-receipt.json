@@ -1,0 +1,6 @@
+{
+  "command": "go test -count=1 -v -timeout 5m ./pkg/database -run ^TestMigrationBootstrapRetainsCleanAndAbsentState$",
+  "startedUtc": "2026-11-09T08:58:40.0801162Z",
+  "finishedUtc": "2026-11-09T08:58:56.4117480Z",
+  "exitCode": 0
+}

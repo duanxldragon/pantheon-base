@@ -1,0 +1,194 @@
+{
+  "testSkipCount": 0,
+  "raceExitCode": 0,
+  "focusedPassCount": 37,
+  "sourceManifest": "resume-token-source-hashes-after.json",
+  "authoritativeGreenLog": "resume-token-race.jsonl",
+  "cases": [
+    {
+      "Package": "github.com/duanxldragon/pantheon-base/backend/pkg/authtoken",
+      "Test": "TestRefreshSessionActivityRejectsMissingAfterRead/deleted",
+      "Elapsed": 0.06
+    },
+    {
+      "Package": "github.com/duanxldragon/pantheon-base/backend/pkg/authtoken",
+      "Test": "TestRefreshSessionActivityRejectsMissingAfterRead/expired",
+      "Elapsed": 0.02
+    },
+    {
+      "Package": "github.com/duanxldragon/pantheon-base/backend/pkg/authtoken",
+      "Test": "TestRefreshSessionActivityRejectsMissingAfterRead",
+      "Elapsed": 0.08
+    },
+    {
+      "Package": "github.com/duanxldragon/pantheon-base/backend/pkg/authtoken",
+      "Test": "TestRefreshSessionActivityRejectsPersistentOrInvalidPayload/persistent",
+      "Elapsed": 0.01
+    },
+    {
+      "Package": "github.com/duanxldragon/pantheon-base/backend/pkg/authtoken",
+      "Test": "TestRefreshSessionActivityRejectsPersistentOrInvalidPayload/malformed",
+      "Elapsed": 0.01
+    },
+    {
+      "Package": "github.com/duanxldragon/pantheon-base/backend/pkg/authtoken",
+      "Test": "TestRefreshSessionActivityRejectsPersistentOrInvalidPayload/null",
+      "Elapsed": 0.01
+    },
+    {
+      "Package": "github.com/duanxldragon/pantheon-base/backend/pkg/authtoken",
+      "Test": "TestRefreshSessionActivityRejectsPersistentOrInvalidPayload",
+      "Elapsed": 0.04
+    },
+    {
+      "Package": "github.com/duanxldragon/pantheon-base/backend/pkg/authtoken",
+      "Test": "TestRefreshSessionActivityRejectsDifferentIdentity/user",
+      "Elapsed": 0.01
+    },
+    {
+      "Package": "github.com/duanxldragon/pantheon-base/backend/pkg/authtoken",
+      "Test": "TestRefreshSessionActivityRejectsDifferentIdentity/large-user",
+      "Elapsed": 0.01
+    },
+    {
+      "Package": "github.com/duanxldragon/pantheon-base/backend/pkg/authtoken",
+      "Test": "TestRefreshSessionActivityRejectsDifferentIdentity/session",
+      "Elapsed": 0.01
+    },
+    {
+      "Package": "github.com/duanxldragon/pantheon-base/backend/pkg/authtoken",
+      "Test": "TestRefreshSessionActivityRejectsDifferentIdentity/username",
+      "Elapsed": 0.01
+    },
+    {
+      "Package": "github.com/duanxldragon/pantheon-base/backend/pkg/authtoken",
+      "Test": "TestRefreshSessionActivityRejectsDifferentIdentity/tenant",
+      "Elapsed": 0.01
+    },
+    {
+      "Package": "github.com/duanxldragon/pantheon-base/backend/pkg/authtoken",
+      "Test": "TestRefreshSessionActivityRejectsDifferentIdentity/large-tenant",
+      "Elapsed": 0.01
+    },
+    {
+      "Package": "github.com/duanxldragon/pantheon-base/backend/pkg/authtoken",
+      "Test": "TestRefreshSessionActivityRejectsDifferentIdentity/roles",
+      "Elapsed": 0.01
+    },
+    {
+      "Package": "github.com/duanxldragon/pantheon-base/backend/pkg/authtoken",
+      "Test": "TestRefreshSessionActivityRejectsDifferentIdentity/role-order",
+      "Elapsed": 0.01
+    },
+    {
+      "Package": "github.com/duanxldragon/pantheon-base/backend/pkg/authtoken",
+      "Test": "TestRefreshSessionActivityRejectsDifferentIdentity",
+      "Elapsed": 0.11
+    },
+    {
+      "Package": "github.com/duanxldragon/pantheon-base/backend/pkg/authtoken",
+      "Test": "TestRefreshSessionActivityPreservesMillisecondExpiration/0",
+      "Elapsed": 0.02
+    },
+    {
+      "Package": "github.com/duanxldragon/pantheon-base/backend/pkg/authtoken",
+      "Test": "TestRefreshSessionActivityPreservesMillisecondExpiration/7",
+      "Elapsed": 0.02
+    },
+    {
+      "Package": "github.com/duanxldragon/pantheon-base/backend/pkg/authtoken",
+      "Test": "TestRefreshSessionActivityPreservesMillisecondExpiration/9007199254740993",
+      "Elapsed": 0.01
+    },
+    {
+      "Package": "github.com/duanxldragon/pantheon-base/backend/pkg/authtoken",
+      "Test": "TestRefreshSessionActivityPreservesMillisecondExpiration",
+      "Elapsed": 0.05
+    },
+    {
+      "Package": "github.com/duanxldragon/pantheon-base/backend/pkg/authtoken",
+      "Test": "TestRefreshSessionActivityRejectsNilAndStoreErrors/nil-store",
+      "Elapsed": 0.01
+    },
+    {
+      "Package": "github.com/duanxldragon/pantheon-base/backend/pkg/authtoken",
+      "Test": "TestRefreshSessionActivityRejectsNilAndStoreErrors/nil-data",
+      "Elapsed": 0.02
+    },
+    {
+      "Package": "github.com/duanxldragon/pantheon-base/backend/pkg/authtoken",
+      "Test": "TestRefreshSessionActivityRejectsNilAndStoreErrors/nil-context",
+      "Elapsed": 0.01
+    },
+    {
+      "Package": "github.com/duanxldragon/pantheon-base/backend/pkg/authtoken",
+      "Test": "TestRefreshSessionActivityRejectsNilAndStoreErrors/canceled",
+      "Elapsed": 0.01
+    },
+    {
+      "Package": "github.com/duanxldragon/pantheon-base/backend/pkg/authtoken",
+      "Test": "TestRefreshSessionActivityRejectsNilAndStoreErrors/closed-store",
+      "Elapsed": 0.01
+    },
+    {
+      "Package": "github.com/duanxldragon/pantheon-base/backend/pkg/authtoken",
+      "Test": "TestRefreshSessionActivityRejectsNilAndStoreErrors/wrong-type",
+      "Elapsed": 0.01
+    },
+    {
+      "Package": "github.com/duanxldragon/pantheon-base/backend/pkg/authtoken",
+      "Test": "TestRefreshSessionActivityRejectsNilAndStoreErrors",
+      "Elapsed": 0.08
+    },
+    {
+      "Package": "github.com/duanxldragon/pantheon-base/backend/pkg/authtoken",
+      "Test": "TestRefreshSessionActivityAtomicReadWriteInterleaving/deleted",
+      "Elapsed": 0.02
+    },
+    {
+      "Package": "github.com/duanxldragon/pantheon-base/backend/pkg/authtoken",
+      "Test": "TestRefreshSessionActivityAtomicReadWriteInterleaving/expired",
+      "Elapsed": 0.02
+    },
+    {
+      "Package": "github.com/duanxldragon/pantheon-base/backend/pkg/authtoken",
+      "Test": "TestRefreshSessionActivityAtomicReadWriteInterleaving/persistent",
+      "Elapsed": 0.02
+    },
+    {
+      "Package": "github.com/duanxldragon/pantheon-base/backend/pkg/authtoken",
+      "Test": "TestRefreshSessionActivityAtomicReadWriteInterleaving/replaced",
+      "Elapsed": 0.02
+    },
+    {
+      "Package": "github.com/duanxldragon/pantheon-base/backend/pkg/authtoken",
+      "Test": "TestRefreshSessionActivityAtomicReadWriteInterleaving/canceled",
+      "Elapsed": 0.02
+    },
+    {
+      "Package": "github.com/duanxldragon/pantheon-base/backend/pkg/authtoken",
+      "Test": "TestRefreshSessionActivityAtomicReadWriteInterleaving/store-error",
+      "Elapsed": 0.02
+    },
+    {
+      "Package": "github.com/duanxldragon/pantheon-base/backend/pkg/authtoken",
+      "Test": "TestRefreshSessionActivityAtomicReadWriteInterleaving",
+      "Elapsed": 0.12
+    },
+    {
+      "Package": "github.com/duanxldragon/pantheon-base/backend/internal/middleware",
+      "Test": "TestLegacyTokenActivityCannotResurrectBeforeFreshValidation/deleted",
+      "Elapsed": 0.01
+    },
+    {
+      "Package": "github.com/duanxldragon/pantheon-base/backend/internal/middleware",
+      "Test": "TestLegacyTokenActivityCannotResurrectBeforeFreshValidation/expired",
+      "Elapsed": 0.01
+    },
+    {
+      "Package": "github.com/duanxldragon/pantheon-base/backend/internal/middleware",
+      "Test": "TestLegacyTokenActivityCannotResurrectBeforeFreshValidation",
+      "Elapsed": 0.02
+    }
+  ]
+}

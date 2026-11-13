@@ -1,0 +1,6 @@
+{
+  "command": "go test -count=1 -v -timeout 5m ./pkg/database -run ^(TestDirtyMigrationBootstrapPreservesRecordedState|TestMigrationBootstrap.*|TestMigrationStateReadFailureClosesSafely|TestRunMigrationsRejectsDirtyCurrentSchemaVersion)$",
+  "startedUtc": "2026-11-09T08:55:28.5749183Z",
+  "finishedUtc": "2026-11-09T08:57:56.4513885Z",
+  "exitCode": 1
+}

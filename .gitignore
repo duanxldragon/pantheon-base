@@ -84,3 +84,29 @@ frontend/tmp-icon-audit.js
 backend/cmd/server/uploads/
 backend/uploads/
 uploads/
+
+# Local acceptance inputs, evidence copies and caches stay untracked (mirrors pantheon-ops).
+.local/
+
+# Evidence captures that copy source trees or carry raw runtime logs stay on disk
+# but out of git. Generated fixture workspaces hold copies of backend/ and
+# frontend/ source, which the structure contract forbids outside their real
+# directories (REPOSITORY_LAYOUT §2.1), and raw race logs embed fixture
+# credentials that SonarCloud flags as leaked bcrypt hashes. Keep the run
+# receipts (receipt.json, summary.md, checkpoint.md); drop the trees and logs.
+.harness/evidence/**/workspace/
+.harness/evidence/**/resume-o4-generator-exports/
+.harness/evidence/**/full-race.txt
+# This raw race log replays a bcrypt fixture hash; SonarCloud reports it as a
+# BLOCKER leaked-password vulnerability on every new-code analysis.
+.harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/resume-token-race.jsonl
+# Source-hash manifests are `"path": "<sha256>"` maps. They are regenerable from
+# the tree they describe, and gitleaks' generic-api-key rule reads every 64-char
+# hex digest as a leaked credential, so 116 false positives came from four of
+# these files. The verdict they support is already recorded in receipt.json /
+# result.json next to them.
+.harness/evidence/**/continue-current-*/hashes-before.json
+.harness/evidence/**/continue-current-*/hashes-after.json
+
+# Local agent tool artifacts
+.omx/

@@ -1,0 +1,215 @@
+{
+  "taskId": "2026-11-07-ops-formal-queue-foundation-gaps",
+  "parentTaskPacket": "docs/harness/tasks/2026-11-07-ops-formal-queue-foundation-gaps.task.md",
+  "role": "Generator adapter",
+  "layer": "platform",
+  "qualityProfile": "ui-runtime",
+  "tier": "L2 inherited parent packet",
+  "scope": [
+    "frontend/src/components/operational/ConditionBuilder.tsx",
+    "frontend/src/components/operational/ExecutionStepRail.tsx",
+    "frontend/tests/unit/components/operational/conditionEditing.test.tsx"
+  ],
+  "sourceHashes": [
+    {
+      "path": "frontend/src/components/operational/ConditionBuilder.tsx",
+      "sha256": "0a95dec0e094a05f370cef86896e36105244ea93f7467d5d3d31fc8e37e118ed"
+    },
+    {
+      "path": "frontend/src/components/operational/ExecutionStepRail.tsx",
+      "sha256": "3d3c72dd0d3921806b34ac590b5401cbd229feff3662c028be3cfa0b0476d6fd"
+    },
+    {
+      "path": "frontend/tests/unit/components/operational/conditionEditing.test.tsx",
+      "sha256": "6f6a06b06bd2b647f502de1f6bc2d4bd94cdc9b8a7604f4710b7a8ce23768763"
+    }
+  ],
+  "checks": [
+    {
+      "result": "7 failed / 7 passed; fresh object and array guards failed; real React element, accessible title and metric node regressions failed",
+      "log": "resume-editor-red.log",
+      "command": "npm run test:unit -- tests/unit/components/operational/conditionEditing.test.tsx",
+      "phase": "red before component fix",
+      "exitCode": 1
+    },
+    {
+      "result": "23 passed / 1 failed; test queried title child ID instead of labelled wrapper; corrected only test assertion",
+      "log": "resume-editor-green-attempt-1.log",
+      "command": "npm run test:unit -- tests/unit/components/operational",
+      "phase": "first green attempt",
+      "exitCode": 1
+    },
+    {
+      "result": "2 files / 24 tests passed",
+      "log": "resume-editor-green.log",
+      "command": "npm run test:unit -- tests/unit/components/operational",
+      "phase": "final green",
+      "exitCode": 0
+    },
+    {
+      "result": "full frontend lint clean",
+      "command": "npm run lint",
+      "log": "resume-editor-lint.log",
+      "exitCode": 0
+    },
+    {
+      "result": "tsc -b passed",
+      "command": "npm run type-check",
+      "log": "resume-editor-typecheck.log",
+      "exitCode": 0
+    },
+    {
+      "result": "prebuild contracts + tsc -b + vite build passed",
+      "command": "npm run build",
+      "log": "resume-editor-build.log",
+      "exitCode": 0
+    },
+    {
+      "result": "2 tests passed; existing self-starting playwright.visual.config.ts; 8 original PNG captures; no shared fixture/test changes",
+      "environment": {
+        "PANTHEON_WEB_BASE_URL": "http://127.0.0.1:5173",
+        "PANTHEON_EXTERNAL_WEB_SERVER": "0"
+      },
+      "command": "npm run test:visual -- tests/visual/operational-editor.spec.ts --output ../.harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/resume-editor-visual",
+      "log": "resume-editor-visual.log",
+      "exitCode": 0
+    },
+    {
+      "result": "no whitespace errors",
+      "command": "git diff --check -- frontend/src/components/operational/ConditionBuilder.tsx frontend/src/components/operational/ExecutionStepRail.tsx frontend/tests/unit/components/operational/conditionEditing.test.tsx",
+      "log": "resume-editor-diffcheck.log",
+      "exitCode": 0
+    }
+  ],
+  "visualEvidence": {
+    "directory": "resume-editor-visual",
+    "review": "All 8 PNGs inspected via original screenshots and a labelled top-crop contact sheet; originals retained",
+    "themes": [
+      "light",
+      "dark"
+    ],
+    "states": [
+      "ready controlled edit",
+      "rule add/remove",
+      "first rail button focus",
+      "mobile horizontal overflow <= 1px"
+    ],
+    "contactSheet": "resume-editor-visual-contact.png",
+    "route": "http://127.0.0.1:5173/__visual/operational-workbench?editor=1",
+    "viewports": [
+      "1440x900",
+      "390x844"
+    ]
+  },
+  "findings": [
+    "Desktop condition screenshots are 688x4710 with a large blank area beneath the editor; observed layout issue outside owned CSS/fixture scope.",
+    "Mobile rail captures are 358x467 and show the first four steps plus part of the fifth; offscreen steps and scrolling are unverified.",
+    "Visual server reports ECONNREFUSED 127.0.0.1:8080 for /api/v1/system/setting/public; no clean browser-console or live-backend claim."
+  ],
+  "gaps": [
+    "Actual JSX condition values, JSX rail titles and metric labels have DOM/unit regression evidence only; current immutable visual fixture uses ordinary values/labels.",
+    "No rendered loading/empty/error/forbidden/stale/partial/submitting matrix.",
+    "No 200% zoom, long localized labels, reduced-motion, full keyboard navigation or screen-reader runtime acceptance.",
+    "No remote Ops runtime, consumer rebuild, foundation lock replacement or release/publication verification in this slice.",
+    "Independent CODE/ARCH review and final human visual/function acceptance are root-owned and pending."
+  ],
+  "rootHandoff": [
+    "Update existing design documentation if needed to describe JSX rule values as unsupported-label presentation without a provider editor, while other unserializable default input values retain the existing empty-string behavior.",
+    "Review resume-editor-change.diff against resume-editor-before source captures; unrelated pre-existing edits were preserved."
+  ],
+  "status": "Scoped repair and requested local checks complete; independent root review pending; no whole P0 or release approval",
+  "artifactHashes": [
+    {
+      "path": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/resume-editor-before-ConditionBuilder.tsx.txt",
+      "sha256": "365aad5a579c7b3013eb23dddc8e0deb33e4cbd92127ea3fac54531fbe3d240c"
+    },
+    {
+      "path": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/resume-editor-before-conditionEditing.test.tsx.txt",
+      "sha256": "80ee988dc4b85e1b9e72ed21afb4d8ff7f290a788502f8cb27963f95fbc98e59"
+    },
+    {
+      "path": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/resume-editor-before-ExecutionStepRail.tsx.txt",
+      "sha256": "110a79743e886bac2b2a214440f13026f0c97d1d0c2834f5b391970afcdc49c5"
+    },
+    {
+      "path": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/resume-editor-before-hashes.json",
+      "sha256": "c8b133d016a815a8d266d69f7ac02928788e0a14a5c9fa4cbe43205b753bdca2"
+    },
+    {
+      "path": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/resume-editor-build.log",
+      "sha256": "9cf48696316f1d2b1cbc14e1f2f67306178781e71b9e38ed1fd7c9ce48d89ccc"
+    },
+    {
+      "path": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/resume-editor-change.diff",
+      "sha256": "50dbfb62d6136a89b9a643faa48b02a2dac80090068e9e4d9d089c3e6151c112"
+    },
+    {
+      "path": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/resume-editor-diffcheck.log",
+      "sha256": "ff2766802109a2d69b058b13c94a1b07f48ffdc6bd5cd617b3014d8df92eb45c"
+    },
+    {
+      "path": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/resume-editor-green-attempt-1.log",
+      "sha256": "59f9745199aad9b1e0c36118bec76e7bddc6ecc964b9319be7ada8b416360e94"
+    },
+    {
+      "path": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/resume-editor-green.log",
+      "sha256": "a1d5e201326d5a3db4763284ec5e97f36f2f39da12b6bd739c0688e54bb8b523"
+    },
+    {
+      "path": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/resume-editor-lint.log",
+      "sha256": "5573769dfde20a39a82b798e1485c7dc9e73775f9248f78580fbd6ce0095171c"
+    },
+    {
+      "path": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/resume-editor-red.log",
+      "sha256": "fe72b39576f4fdef515ad406ec0d1682fff35e82f7827d6d25f6348c2be1ce9d"
+    },
+    {
+      "path": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/resume-editor-typecheck.log",
+      "sha256": "b882e2cd3008c71ddb8f8982d4cb8b0f90965faca34f64db887357b835951b18"
+    },
+    {
+      "path": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/resume-editor-visual-contact.png",
+      "sha256": "48adf4cef9cb830eedeb88f6a62945eaeab5721f8ff1fb676ffa3f2512fcdf20"
+    },
+    {
+      "path": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/resume-editor-visual.log",
+      "sha256": "31e965a1d25695443c9c43c7e84783b074a54d83d5451a22b2d8ea9c29f2a800"
+    },
+    {
+      "path": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/resume-editor-visual/.last-run.json",
+      "sha256": "91d1c43004802cd49950d78eb11c8fa7d05da8ffffe219a8b13b2f561bc00903"
+    },
+    {
+      "path": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/resume-editor-visual/operational-editor-shared--23123-nd-themed-step-buttons-dark-desktop-light/conditions-dark-desktop.png",
+      "sha256": "a168aabe0ab59b353e4ccabdc9c0d73ef308cbb59b42e09483693a2d20f0a77c"
+    },
+    {
+      "path": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/resume-editor-visual/operational-editor-shared--23123-nd-themed-step-buttons-dark-desktop-light/conditions-dark-mobile.png",
+      "sha256": "bf9bc36d78693432dc9252cdb3d64df58f82a34583520d0f05ef1bdfc239a23f"
+    },
+    {
+      "path": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/resume-editor-visual/operational-editor-shared--23123-nd-themed-step-buttons-dark-desktop-light/steps-dark-desktop.png",
+      "sha256": "34453424ba30c97b03dae8dfa96f70fdc8a414507bd9a700fc86f88593f94ef3"
+    },
+    {
+      "path": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/resume-editor-visual/operational-editor-shared--23123-nd-themed-step-buttons-dark-desktop-light/steps-dark-mobile.png",
+      "sha256": "4d245c6e4e2b7f16c69af0aad80face8b16c59e0da3f0e2f5e0f99e737d32a61"
+    },
+    {
+      "path": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/resume-editor-visual/operational-editor-shared--b3956-d-themed-step-buttons-light-desktop-light/conditions-light-desktop.png",
+      "sha256": "7142e0a83a4de9f261c5c9676a75331b258116a0b292310e7bccf0126e88d760"
+    },
+    {
+      "path": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/resume-editor-visual/operational-editor-shared--b3956-d-themed-step-buttons-light-desktop-light/conditions-light-mobile.png",
+      "sha256": "5533854b3390d858254b79dbd9f77067e847262da667058f1d2f1be14c26fe59"
+    },
+    {
+      "path": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/resume-editor-visual/operational-editor-shared--b3956-d-themed-step-buttons-light-desktop-light/steps-light-desktop.png",
+      "sha256": "2c154335627023b9ea82698faaa79b83282a7ff7cda004aa8d63e8399531ed02"
+    },
+    {
+      "path": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/resume-editor-visual/operational-editor-shared--b3956-d-themed-step-buttons-light-desktop-light/steps-light-mobile.png",
+      "sha256": "1650491b24bde421f797588491950e45382fdfed95d6a6c4478a9c403b83665e"
+    }
+  ]
+}

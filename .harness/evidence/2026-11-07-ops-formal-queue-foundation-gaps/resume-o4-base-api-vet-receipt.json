@@ -1,0 +1,5 @@
+{
+  "exit": 0,
+  "command": "go vet ./pkg/tenant ./pkg/contracts/... ./pkg/auditpolicy ./pkg/database ./pkg/common/http ./internal/middleware ./modules/auth/... ./modules/system ./cmd/server",
+  "seconds": 2.5233747
+}

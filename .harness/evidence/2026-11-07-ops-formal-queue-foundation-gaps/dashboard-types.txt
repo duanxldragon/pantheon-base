@@ -1,0 +1,10 @@
+src/modules/platform/widgets.tsx(93,14): error TS2339: Property 'dataSource' does not exist on type 'DashboardWidgetDefinition'.
+  Property 'dataSource' does not exist on type 'DashboardQuickActionWidget'.
+src/modules/platform/widgets.tsx(93,43): error TS2339: Property 'dataSource' does not exist on type 'DashboardWidgetDefinition'.
+  Property 'dataSource' does not exist on type 'DashboardQuickActionWidget'.
+src/modules/platform/widgets.tsx(94,31): error TS2339: Property 'dataSource' does not exist on type 'DashboardWidgetDefinition'.
+  Property 'dataSource' does not exist on type 'DashboardQuickActionWidget'.
+src/modules/platform/widgets.tsx(94,63): error TS2339: Property 'dataSource' does not exist on type 'DashboardWidgetDefinition'.
+  Property 'dataSource' does not exist on type 'DashboardQuickActionWidget'.
+src/modules/platform/widgets.tsx(94,101): error TS2339: Property 'dataSource' does not exist on type 'DashboardWidgetDefinition'.
+  Property 'dataSource' does not exist on type 'DashboardQuickActionWidget'.

@@ -1,0 +1,84 @@
+
+Running 2 tests using 1 worker
+
+(node:22304) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  x  1 tests\visual\operational-editor.spec.ts:4:2 › shared condition editing and themed step buttons light (12.0s)
+(node:15500) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  x  2 tests\visual\operational-editor.spec.ts:4:2 › shared condition editing and themed step buttons dark (11.5s)
+
+
+  1) tests\visual\operational-editor.spec.ts:4:2 › shared condition editing and themed step buttons light 
+
+    Error: expect(locator).toHaveValue(expected) failed
+
+    Locator:  locator('.condition-builder').locator('input:not([readonly])').first()
+    Expected: "edited-condition"
+    Received: ""
+    Timeout:  10000ms
+
+    Call log:
+      - Expect "toHaveValue" locator('.condition-builder').locator('input:not([readonly])').first() with timeout 10000ms
+      - waiting for locator('.condition-builder').locator('input:not([readonly])').first()
+        23 × locator resolved to <input value="" tabindex="-1" aria-hidden="true" autocomplete="off" class="arco-select-view-input arco-select-hidden"/>
+           - unexpected value ""
+
+
+      11 |   await expect(inputs.first()).toBeEnabled();
+      12 |   await inputs.first().fill('edited-condition');
+    > 13 |   await expect(inputs.first()).toHaveValue('edited-condition');
+         |                                ^
+      14 |   const initialRules = await editor.locator('input:not([readonly])').count();
+      15 |   await editor.getByRole('button', { name: '新增规则' }).first().click();
+      16 |   await expect(editor.locator('input:not([readonly])')).toHaveCount(initialRules + 1);
+        at D:\workspace\go\pantheon-platform\pantheon-base\frontend\tests\visual\operational-editor.spec.ts:13:32
+
+    Error Context: ..\.harness\evidence\2026-11-07-ops-formal-queue-foundation-gaps\rendered\visual-operational-editor--665d8-d-themed-step-buttons-light\error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ..\.harness\evidence\2026-11-07-ops-formal-queue-foundation-gaps\rendered\visual-operational-editor--665d8-d-themed-step-buttons-light\trace.zip
+    Usage:
+
+        npx playwright show-trace ..\.harness\evidence\2026-11-07-ops-formal-queue-foundation-gaps\rendered\visual-operational-editor--665d8-d-themed-step-buttons-light\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2) tests\visual\operational-editor.spec.ts:4:2 › shared condition editing and themed step buttons dark 
+
+    Error: expect(locator).toHaveValue(expected) failed
+
+    Locator:  locator('.condition-builder').locator('input:not([readonly])').first()
+    Expected: "edited-condition"
+    Received: ""
+    Timeout:  10000ms
+
+    Call log:
+      - Expect "toHaveValue" locator('.condition-builder').locator('input:not([readonly])').first() with timeout 10000ms
+      - waiting for locator('.condition-builder').locator('input:not([readonly])').first()
+        23 × locator resolved to <input value="" tabindex="-1" aria-hidden="true" autocomplete="off" class="arco-select-view-input arco-select-hidden"/>
+           - unexpected value ""
+
+
+      11 |   await expect(inputs.first()).toBeEnabled();
+      12 |   await inputs.first().fill('edited-condition');
+    > 13 |   await expect(inputs.first()).toHaveValue('edited-condition');
+         |                                ^
+      14 |   const initialRules = await editor.locator('input:not([readonly])').count();
+      15 |   await editor.getByRole('button', { name: '新增规则' }).first().click();
+      16 |   await expect(editor.locator('input:not([readonly])')).toHaveCount(initialRules + 1);
+        at D:\workspace\go\pantheon-platform\pantheon-base\frontend\tests\visual\operational-editor.spec.ts:13:32
+
+    Error Context: ..\.harness\evidence\2026-11-07-ops-formal-queue-foundation-gaps\rendered\visual-operational-editor--89917-nd-themed-step-buttons-dark\error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ..\.harness\evidence\2026-11-07-ops-formal-queue-foundation-gaps\rendered\visual-operational-editor--89917-nd-themed-step-buttons-dark\trace.zip
+    Usage:
+
+        npx playwright show-trace ..\.harness\evidence\2026-11-07-ops-formal-queue-foundation-gaps\rendered\visual-operational-editor--89917-nd-themed-step-buttons-dark\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2 failed
+    tests\visual\operational-editor.spec.ts:4:2 › shared condition editing and themed step buttons light 
+    tests\visual\operational-editor.spec.ts:4:2 › shared condition editing and themed step buttons dark 

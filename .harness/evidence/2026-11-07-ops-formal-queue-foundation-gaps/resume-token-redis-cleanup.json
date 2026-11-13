@@ -1,0 +1,5 @@
+{
+  "exitCode": 0,
+  "ownedPid": 4852,
+  "command": "redis-cli -h 127.0.0.1 -p 16389 SHUTDOWN NOSAVE"
+}

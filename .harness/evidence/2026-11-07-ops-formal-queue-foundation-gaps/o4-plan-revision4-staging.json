@@ -1,0 +1,8 @@
+{
+  "revision": 4,
+  "beforeSha256": "aaa4544cc80ae351b9fd499cd8e8d644f5e0413877708e273b493427d41399c0",
+  "afterSha256": "9aaa0e53b43c040a4d04949693d3ef6ab4b086336fe953c3e04105400e4caaf7",
+  "v3Preserved": true,
+  "change": "atomic shared legacy activity writer prerequisite closes cross-route token resurrection",
+  "status": "independent CODE/ARCH delta review required; tenant execution remains pending"
+}

@@ -1,0 +1,8 @@
+{
+  "parentTask": "2026-11-07-ops-formal-queue-foundation-gaps",
+  "opsReceipt": "pantheon-ops/.harness/evidence/2026-11-07-ops-planned-task-closeout/verification/continuation-20261111-assembly-success/receipt.json",
+  "opsReceiptSHA256": "9f4577ab8f12221ecd0036dc19d89f7a2851ef9c7cd0db7712f36f6528fc697d",
+  "P0ParentsClosed": 0,
+  "officialConsumption": false,
+  "officialLockChanged": false
+}

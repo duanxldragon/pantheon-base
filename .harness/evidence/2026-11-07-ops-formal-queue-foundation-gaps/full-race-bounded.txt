@@ -1,0 +1,53 @@
+ok  	github.com/duanxldragon/pantheon-base/backend/cmd/server	1.137s
+ok  	github.com/duanxldragon/pantheon-base/backend/cmd/tenantmatrixdb	1.067s
+?   	github.com/duanxldragon/pantheon-base/backend/cmd/tenantmigration	[no test files]
+ok  	github.com/duanxldragon/pantheon-base/backend/cmd/tenantsizing	1.100s
+ok  	github.com/duanxldragon/pantheon-base/backend/internal/middleware	3.631s
+ok  	github.com/duanxldragon/pantheon-base/backend/internal/scaffold	1.216s
+?   	github.com/duanxldragon/pantheon-base/backend/modules/auth	[no test files]
+ok  	github.com/duanxldragon/pantheon-base/backend/modules/auth/login	137.548s
+ok  	github.com/duanxldragon/pantheon-base/backend/modules/auth/mfa	1.095s
+ok  	github.com/duanxldragon/pantheon-base/backend/modules/auth/security	9.593s
+ok  	github.com/duanxldragon/pantheon-base/backend/modules/auth/session	4.715s
+ok  	github.com/duanxldragon/pantheon-base/backend/modules/business	1.477s
+?   	github.com/duanxldragon/pantheon-base/backend/modules/lowcode	[no test files]
+ok  	github.com/duanxldragon/pantheon-base/backend/modules/lowcode/dynamicmodule	7.339s
+ok  	github.com/duanxldragon/pantheon-base/backend/modules/lowcode/generator	1.175s
+ok  	github.com/duanxldragon/pantheon-base/backend/modules/platform	2.574s
+ok  	github.com/duanxldragon/pantheon-base/backend/modules/system	2.739s
+ok  	github.com/duanxldragon/pantheon-base/backend/modules/system/audit	5.703s
+ok  	github.com/duanxldragon/pantheon-base/backend/modules/system/config/dict	3.445s
+ok  	github.com/duanxldragon/pantheon-base/backend/modules/system/config/setting	4.189s
+ok  	github.com/duanxldragon/pantheon-base/backend/modules/system/i18n	68.624s
+ok  	github.com/duanxldragon/pantheon-base/backend/modules/system/iam	1.922s
+ok  	github.com/duanxldragon/pantheon-base/backend/modules/system/iam/menu	2.258s
+ok  	github.com/duanxldragon/pantheon-base/backend/modules/system/iam/permission	8.262s
+ok  	github.com/duanxldragon/pantheon-base/backend/modules/system/iam/role	13.213s
+ok  	github.com/duanxldragon/pantheon-base/backend/modules/system/iam/tenant	45.138s
+ok  	github.com/duanxldragon/pantheon-base/backend/modules/system/iam/user	64.124s
+ok  	github.com/duanxldragon/pantheon-base/backend/modules/system/org/dept	3.311s
+ok  	github.com/duanxldragon/pantheon-base/backend/modules/system/org/post	3.549s
+ok  	github.com/duanxldragon/pantheon-base/backend/pkg/authsession	1.050s
+ok  	github.com/duanxldragon/pantheon-base/backend/pkg/authtoken	1.047s
+ok  	github.com/duanxldragon/pantheon-base/backend/pkg/capability	1.068s
+ok  	github.com/duanxldragon/pantheon-base/backend/pkg/common	1.073s
+ok  	github.com/duanxldragon/pantheon-base/backend/pkg/common/http	1.057s
+ok  	github.com/duanxldragon/pantheon-base/backend/pkg/common/security	1.066s
+ok  	github.com/duanxldragon/pantheon-base/backend/pkg/contracts	1.085s
+?   	github.com/duanxldragon/pantheon-base/backend/pkg/contracts/authuser	[no test files]
+ok  	github.com/duanxldragon/pantheon-base/backend/pkg/database	37.715s
+ok  	github.com/duanxldragon/pantheon-base/backend/pkg/impexp	1.536s
+ok  	github.com/duanxldragon/pantheon-base/backend/pkg/logging	1.073s
+ok  	github.com/duanxldragon/pantheon-base/backend/pkg/maintenance	1.057s
+ok  	github.com/duanxldragon/pantheon-base/backend/pkg/metrics	1.067s
+ok  	github.com/duanxldragon/pantheon-base/backend/pkg/permissionroutes	1.044s
+ok  	github.com/duanxldragon/pantheon-base/backend/pkg/platformprefs	1.043s
+ok  	github.com/duanxldragon/pantheon-base/backend/pkg/ratelimit	1.071s
+ok  	github.com/duanxldragon/pantheon-base/backend/pkg/rbacbind	1.253s
+ok  	github.com/duanxldragon/pantheon-base/backend/pkg/security/ssrf	1.480s
+ok  	github.com/duanxldragon/pantheon-base/backend/pkg/telemetry	1.078s
+ok  	github.com/duanxldragon/pantheon-base/backend/pkg/tenant	3.002s
+ok  	github.com/duanxldragon/pantheon-base/backend/pkg/testmysql	1.164s
+ok  	github.com/duanxldragon/pantheon-base/backend/pkg/testredis	2.880s
+ok  	github.com/duanxldragon/pantheon-base/backend/pkg/upload	1.638s
+?   	github.com/duanxldragon/pantheon-base/backend/pkg/version	[no test files]

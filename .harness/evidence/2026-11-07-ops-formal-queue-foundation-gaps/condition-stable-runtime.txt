@@ -1,0 +1,9 @@
+
+Running 2 tests using 1 worker
+
+(node:16968) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 1 [desktop-light] › tests\visual\operational-editor.spec.ts:4:2 › shared condition editing and themed step buttons light (2.9s)
+  ok 2 [desktop-light] › tests\visual\operational-editor.spec.ts:4:2 › shared condition editing and themed step buttons dark (2.8s)
+
+  2 passed (6.8s)
