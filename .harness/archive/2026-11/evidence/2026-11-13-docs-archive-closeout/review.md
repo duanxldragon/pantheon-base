@@ -18,7 +18,8 @@ Original18 task/evidence pairs and publication identity retain their independent
     "status-architect-review.md",
     "readme-ownership-code-review.md",
     "readme-ownership-code-delta-review.md",
-    "readme-ownership-architect-review.md"
+    "readme-ownership-architect-review.md",
+    "menu-core-code-review.md"
   ],
   "sourceHashes": [
     {
@@ -65,6 +66,16 @@ Original18 task/evidence pairs and publication identity retain their independent
     },
     "priorBlockedCheckpoint": "readme-ownership-architect-review-before-label-fix.md",
     "evidenceGap": "Original other-Ops before/after diff snapshots were not persisted; current snapshot/helper validated and producer comparison recorded, without claiming independent historical replay."
+  },
+  "menuCoreFollowup": {
+    "verdict": "approved",
+    "source": "frontend/tests/smoke-core/system-menu-permission.spec.ts",
+    "sha256": "a393f477a54e7a5bf846c89c3c44532204610bc07ecf41210de128fa1d7076fb",
+    "reviewer": "/root/docs_archive_review",
+    "scope": "test-only menu title prefix and retained failure evidence",
+    "conditions": "Exact branch Core Smoke and required PR checks must pass before merge",
+    "originalCoreSmokeResult": "failure despite existing report-only workflow success",
+    "typeScriptDiagnostics": "independent smoke-file syntactic0/semantic0"
   }
 }
 ```
@@ -76,3 +87,7 @@ Fresh independent CODE APPROVE and ARCH APPROVE/CLEAR cover the test SHA256 4e10
 ## README and Ops Ownership Followup
 
 Independent CODE APPROVE and ARCH APPROVE/CLEAR cover the bounded documentation followup. ARCH found three remaining parenthetical Base ownership labels; those labels were corrected and both CODE delta/ARCH verified the final Ops task doc hash. Original reports and blocked checkpoint remain dated evidence; current approval uses the delta and final ARCH artifacts. All11 applicable Base static gates have final passes; historical frontmatter failures remain. Ops checks pass with four disclosed cross-repository anchor warnings and independently verified physical paths. The original other-Ops before/after snapshots were not retained, so only the actual producer assertion and current snapshot/helper are certified. Hosted replay and merge remain required.
+
+## Core Smoke selector CODE review
+
+Independent CODE APPROVE with0findings binds the single test source hash in menu-core-code-review.md. It directly checks syntax and semantics of the smoke file, preserves original failure and existing conditional skips, and retains exact branch runtime smoke plus PRchecks as delivery conditions.

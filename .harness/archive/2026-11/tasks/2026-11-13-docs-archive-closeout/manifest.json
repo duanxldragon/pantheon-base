@@ -213,6 +213,20 @@
         ".harness/archive/2026-11/evidence/2026-11-13-docs-archive-closeout/readme-history-migration.json",
         ".harness/archive/2026-11/evidence/2026-11-13-docs-archive-closeout/pr-body-readme-followup.md"
       ]
+    },
+    {
+      "date": "2026-11-13",
+      "request": "Continue authorized CI closeout after README followup hosted regression",
+      "scope": [
+        "frontend/tests/smoke-core/system-menu-permission.spec.ts",
+        "Append-only parent evidence and review"
+      ],
+      "risk": "standard test-only selector correction; no product, policy, dependency or immutable release change",
+      "status": "Independent CODE approved; exact branch hosted Core Smoke and PRchecks required",
+      "evidenceFiles": [
+        ".harness/archive/2026-11/evidence/2026-11-13-docs-archive-closeout/menu-core-ellipsis.md",
+        ".harness/archive/2026-11/evidence/2026-11-13-docs-archive-closeout/menu-core-local-validation.json"
+      ]
     }
   ]
 }

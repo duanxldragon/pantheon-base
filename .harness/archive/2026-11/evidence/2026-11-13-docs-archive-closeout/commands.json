@@ -1002,6 +1002,19 @@
       "log": ".harness/archive/2026-11/evidence/2026-11-13-docs-archive-closeout/check-harness-review-99.log.gz",
       "sha256": "8a8dfc01d497c4b777d0de00dcf452937c0b57e8fbcf86ee6ac3d796977e649c",
       "rawSha256": "b094157f0e659073eede4301bdc8ad0aa480a5906b5294eabb588d61111fb170"
+    },
+    {
+      "command": "npm run test:smoke:core",
+      "cwd": "GitHub Actions / frontend",
+      "exitCode": 1,
+      "status": "failed",
+      "durationMs": 124000,
+      "log": ".harness/evidence/2026-11-13-docs-archive-closeout/menu-core-original-failure.log.gz",
+      "sha256": "67fd5f9fc3f29da6aeaaff1d055b1e4d2176b644cb67fbc8f7d059075905e594",
+      "rawSha256": "4e28bb95e93f278e0b62f0a00c83f5ffb710eeb1b1676bbff2278db532685a6b",
+      "githubRun": 43447261398,
+      "githubJob": 131959863845,
+      "scope": "Original failing Core Smoke; report-only workflow success does not override job failure."
     }
   ],
   "graphChecks": {

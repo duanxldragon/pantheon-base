@@ -162,3 +162,7 @@ platform
 沿用本父任务证据，新增 ops-task-migration.json/readme-history-migration.json 与独立文档评审；旧 CI 与原18组档案审批范围保持。此追加是标准文档收口：frontmatter、task template/packet、文档链接/库存、编码/结构、evidence/review 与 duplication 验证；标准非作者 review 和正常 hosted checks 后合并。
 
 v0.18.8 已包含实质整改。对 tag 到 main 的 backend/frontend/schema/VERSION/CHANGELOG/foundation-release 工具差异检查为空；新增仅文档/归档、quality.yml 条件与测试回归。版本规则允许后续文档/修复补丁，但不要求每次文档维护立即再发版；此轮不新增版本或不可变资产。Ops任务仍planned，业务验收独立。
+
+## Core Smoke test-only followup — 2026-11-13
+
+继续原授权CI收口：PR513合并后的报告项Core Smoke在创建菜单用例因标题省略而误报，原失败证据保留。此次L1范围仅frontend/tests/smoke-core/system-menu-permission.spec.ts的可见文本前缀定位及父任务追加证据；完整titleKey过滤、原有动作/成功提示/行断言/策略不变，产品源码、UI、依赖、VERSION和Ops业务工作均Out。最小验证：捕获CI标题浏览器回放、前端lint/type-check/build、文档治理、独立非作者review、exact分支Core Smoke和PR门禁，正常合并后同步main。

@@ -1,0 +1,48 @@
+{
+  "recordedAt": "2026-11-13T15:12:57.292Z",
+  "source": "frontend/tests/smoke-core/system-menu-permission.spec.ts",
+  "originalSourceSha256": "43708941d4db9dd7fa6149ce87575350788023d3f4342a50e05651dc06b63da6",
+  "fixedSourceSha256": "a393f477a54e7a5bf846c89c3c44532204610bc07ecf41210de128fa1d7076fb",
+  "originalRun": 43447261398,
+  "originalTest": "can create a menu item",
+  "originalResult": "26 passed, 1 failed, 3 existing conditional generated-fixture skips; both attempts failed on absent smoke_core substring",
+  "localChecks": [
+    {
+      "command": "npm run lint",
+      "exitCode": 0
+    },
+    {
+      "command": "npm run type-check",
+      "exitCode": 0
+    },
+    {
+      "command": "npm run build",
+      "exitCode": 0,
+      "details": "All existing prebuild contracts passed; build passed."
+    },
+    {
+      "command": "node frontend/node_modules/@playwright/test/cli.js test --config releases/doc-closeout-20261113/menu-matcher-replay.config.ts",
+      "exitCode": 0,
+      "details": "1 passed; captured CI title produces zero old matches and one correct fixed match, full search input retained."
+    }
+  ],
+  "proofSource": "Actual local command PTY completion session78628 and replay tool result; this JSON summarizes results, not a saved complete raw local transcript.",
+  "toolchain": "Node24.22.3; existing audited frontend dependencies with identical package-lock git blob6eb25ea73602c65b5a16c335a470ea10a47dba49",
+  "runtimeGap": "No local backend was running; focused backend-free browser replay passed; exact branch hosted Core Smoke required before merge.",
+  "visualEvidence": "Original CI 1280x720 screenshot and both error-context snapshots show the created filtered row; no product UI change.",
+  "independentCodeReview": {
+    "verdict": "APPROVE",
+    "findings": 0,
+    "sourceSha256": "a393f477a54e7a5bf846c89c3c44532204610bc07ecf41210de128fa1d7076fb",
+    "directTypeScriptDiagnostics": {
+      "syntactic": 0,
+      "semantic": 0
+    }
+  },
+  "initialToolingFailure": {
+    "command": "npm run lint",
+    "exitCode": 1,
+    "reason": "Main frontend/node_modules was an empty directory; eslint unavailable",
+    "recovery": "Reused audited installed dependency directory after confirming identical package-lock blob; lint/type-check/build then passed"
+  }
+}
