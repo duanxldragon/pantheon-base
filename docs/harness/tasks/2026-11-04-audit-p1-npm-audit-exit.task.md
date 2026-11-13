@@ -16,11 +16,11 @@ updated_at: 2026-11-06
 
 Actual workflow shell red/green regressions retained; strict release security gate succeeded; report-only PR policy unchanged.
 
-[闭环矩阵、证据与残余事项](../../../.harness/evidence/2026-11-05-base-freeze-release/closeout.md)。下文执行说明包含历史记录；本节是当前状态。
+[闭环矩阵、证据与残余事项](../../../.harness/archive/2026-11/evidence/2026-11-05-base-freeze-release/closeout.md)。下文执行说明包含历史记录；本节是当前状态。
 
 ## Goal
 
-npm 漏洞扫描非零结果传递到门禁。详细计划和验收见 [整改计划](../../../.harness/tasks/2026-11-04-global-audit-remediation/plan.md)。
+npm 漏洞扫描非零结果传递到门禁。详细计划和验收见 [整改计划](../../../.harness/archive/2026-11/tasks/2026-11-04-global-audit-remediation/plan.md)。
 
 ## Priority
 

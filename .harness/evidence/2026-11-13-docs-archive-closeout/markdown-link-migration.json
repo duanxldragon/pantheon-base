@@ -1,0 +1,223 @@
+{
+  "taskId": "2026-11-13-docs-archive-closeout",
+  "files": 18,
+  "links": 27,
+  "migrations": [
+    {
+      "file": "docs/contracts/TENANT_CONTRACT_V1.en.md",
+      "frozen": false,
+      "changes": [
+        {
+          "from": "../../.harness/tasks/2026-11-07-ops-formal-queue-foundation-gaps/o4-tenant-implementation-plan.md",
+          "to": "../../.harness/archive/2026-11/tasks/2026-11-07-ops-formal-queue-foundation-gaps/o4-tenant-implementation-plan.md"
+        }
+      ]
+    },
+    {
+      "file": "docs/contracts/TENANT_CONTRACT_V1.md",
+      "frozen": false,
+      "changes": [
+        {
+          "from": "../../.harness/tasks/2026-11-07-ops-formal-queue-foundation-gaps/o4-tenant-implementation-plan.md",
+          "to": "../../.harness/archive/2026-11/tasks/2026-11-07-ops-formal-queue-foundation-gaps/o4-tenant-implementation-plan.md"
+        }
+      ]
+    },
+    {
+      "file": "docs/designs/LOWCODE_GENERATOR_GUIDE.en.md",
+      "frozen": false,
+      "changes": [
+        {
+          "from": "../../.harness/tasks/2026-11-07-ops-formal-queue-foundation-gaps/o4-tenant-implementation-plan.md",
+          "to": "../../.harness/archive/2026-11/tasks/2026-11-07-ops-formal-queue-foundation-gaps/o4-tenant-implementation-plan.md"
+        }
+      ]
+    },
+    {
+      "file": "docs/designs/LOWCODE_GENERATOR_GUIDE.md",
+      "frozen": false,
+      "changes": [
+        {
+          "from": "../../.harness/tasks/2026-11-07-ops-formal-queue-foundation-gaps/o4-tenant-implementation-plan.md",
+          "to": "../../.harness/archive/2026-11/tasks/2026-11-07-ops-formal-queue-foundation-gaps/o4-tenant-implementation-plan.md"
+        }
+      ]
+    },
+    {
+      "file": "docs/harness/tasks/2026-11-04-audit-p1-npm-audit-exit.task.md",
+      "frozen": false,
+      "changes": [
+        {
+          "from": "../../../.harness/evidence/2026-11-05-base-freeze-release/closeout.md",
+          "to": "../../../.harness/archive/2026-11/evidence/2026-11-05-base-freeze-release/closeout.md"
+        },
+        {
+          "from": "../../../.harness/tasks/2026-11-04-global-audit-remediation/plan.md",
+          "to": "../../../.harness/archive/2026-11/tasks/2026-11-04-global-audit-remediation/plan.md"
+        }
+      ]
+    },
+    {
+      "file": "docs/harness/tasks/2026-11-04-audit-p1-refresh-rotation.task.md",
+      "frozen": false,
+      "changes": [
+        {
+          "from": "../../../.harness/evidence/2026-11-05-base-freeze-release/closeout.md",
+          "to": "../../../.harness/archive/2026-11/evidence/2026-11-05-base-freeze-release/closeout.md"
+        },
+        {
+          "from": "../../../.harness/tasks/2026-11-04-global-audit-remediation/plan.md",
+          "to": "../../../.harness/archive/2026-11/tasks/2026-11-04-global-audit-remediation/plan.md"
+        }
+      ]
+    },
+    {
+      "file": "docs/harness/tasks/2026-11-04-audit-p1-ssrf-dial-binding.task.md",
+      "frozen": false,
+      "changes": [
+        {
+          "from": "../../../.harness/tasks/2026-11-04-global-audit-remediation/plan.md",
+          "to": "../../../.harness/archive/2026-11/tasks/2026-11-04-global-audit-remediation/plan.md"
+        }
+      ]
+    },
+    {
+      "file": "docs/harness/tasks/2026-11-04-audit-p2-agent-stop-points.task.md",
+      "frozen": false,
+      "changes": [
+        {
+          "from": "../../../.harness/evidence/2026-11-05-base-freeze-release/closeout.md",
+          "to": "../../../.harness/archive/2026-11/evidence/2026-11-05-base-freeze-release/closeout.md"
+        },
+        {
+          "from": "../../../.harness/tasks/2026-11-04-global-audit-remediation/plan.md",
+          "to": "../../../.harness/archive/2026-11/tasks/2026-11-04-global-audit-remediation/plan.md"
+        }
+      ]
+    },
+    {
+      "file": "docs/harness/tasks/2026-11-04-audit-p2-authoritative-docs.task.md",
+      "frozen": false,
+      "changes": [
+        {
+          "from": "../../../.harness/evidence/2026-11-05-base-freeze-release/closeout.md",
+          "to": "../../../.harness/archive/2026-11/evidence/2026-11-05-base-freeze-release/closeout.md"
+        },
+        {
+          "from": "../../../.harness/tasks/2026-11-04-global-audit-remediation/plan.md",
+          "to": "../../../.harness/archive/2026-11/tasks/2026-11-04-global-audit-remediation/plan.md"
+        }
+      ]
+    },
+    {
+      "file": "docs/harness/tasks/2026-11-04-audit-p2-freeze-validation.task.md",
+      "frozen": false,
+      "changes": [
+        {
+          "from": "../../../.harness/evidence/2026-11-05-base-freeze-release/closeout.md",
+          "to": "../../../.harness/archive/2026-11/evidence/2026-11-05-base-freeze-release/closeout.md"
+        },
+        {
+          "from": "../../../.harness/tasks/2026-11-04-global-audit-remediation/plan.md",
+          "to": "../../../.harness/archive/2026-11/tasks/2026-11-04-global-audit-remediation/plan.md"
+        }
+      ]
+    },
+    {
+      "file": "docs/harness/tasks/2026-11-04-audit-p2-ops-db-test-followup.task.md",
+      "frozen": false,
+      "changes": [
+        {
+          "from": "../../../.harness/evidence/2026-11-05-base-freeze-release/closeout.md",
+          "to": "../../../.harness/archive/2026-11/evidence/2026-11-05-base-freeze-release/closeout.md"
+        }
+      ]
+    },
+    {
+      "file": "docs/harness/tasks/2026-11-04-audit-p2-release-policy.task.md",
+      "frozen": false,
+      "changes": [
+        {
+          "from": "../../../.harness/evidence/2026-11-05-base-freeze-release/closeout.md",
+          "to": "../../../.harness/archive/2026-11/evidence/2026-11-05-base-freeze-release/closeout.md"
+        },
+        {
+          "from": "../../../.harness/tasks/2026-11-04-global-audit-remediation/plan.md",
+          "to": "../../../.harness/archive/2026-11/tasks/2026-11-04-global-audit-remediation/plan.md"
+        }
+      ]
+    },
+    {
+      "file": "docs/harness/tasks/2026-11-04-audit-p3-ci-cost-review.task.md",
+      "frozen": false,
+      "changes": [
+        {
+          "from": "../../../.harness/evidence/2026-11-05-base-freeze-release/closeout.md",
+          "to": "../../../.harness/archive/2026-11/evidence/2026-11-05-base-freeze-release/closeout.md"
+        },
+        {
+          "from": "../../../.harness/tasks/2026-11-04-global-audit-remediation/plan.md",
+          "to": "../../../.harness/archive/2026-11/tasks/2026-11-04-global-audit-remediation/plan.md"
+        }
+      ]
+    },
+    {
+      "file": "docs/harness/tasks/2026-11-04-audit-p3-consumer-seams.task.md",
+      "frozen": false,
+      "changes": [
+        {
+          "from": "../../../.harness/tasks/2026-11-04-global-audit-remediation/plan.md",
+          "to": "../../../.harness/archive/2026-11/tasks/2026-11-04-global-audit-remediation/plan.md"
+        }
+      ]
+    },
+    {
+      "file": "docs/harness/tasks/2026-11-04-global-audit-remediation.task.md",
+      "frozen": false,
+      "changes": [
+        {
+          "from": "../../../.harness/evidence/2026-11-05-base-freeze-release/closeout.md",
+          "to": "../../../.harness/archive/2026-11/evidence/2026-11-05-base-freeze-release/closeout.md"
+        },
+        {
+          "from": "../../../.harness/tasks/2026-11-04-global-audit-remediation/plan.md",
+          "to": "../../../.harness/archive/2026-11/tasks/2026-11-04-global-audit-remediation/plan.md"
+        }
+      ]
+    },
+    {
+      "file": "docs/release-notes/RELEASE_NOTES_v0.18.8.md",
+      "frozen": true,
+      "changes": [
+        {
+          "from": "../../.harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/summary.md",
+          "to": "../../.harness/archive/2026-11/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/summary.md"
+        },
+        {
+          "from": "../../.harness/evidence/2026-11-13-v0188-release-preparation/summary.md",
+          "to": "../../.harness/archive/2026-11/evidence/2026-11-13-v0188-release-preparation/summary.md"
+        }
+      ]
+    },
+    {
+      "file": "docs/runbooks/TENANT_MIGRATION_RUNBOOK.md",
+      "frozen": false,
+      "changes": [
+        {
+          "from": "../../.harness/tasks/2026-11-07-ops-formal-queue-foundation-gaps/o4-tenant-implementation-plan.md",
+          "to": "../../.harness/archive/2026-11/tasks/2026-11-07-ops-formal-queue-foundation-gaps/o4-tenant-implementation-plan.md"
+        }
+      ]
+    },
+    {
+      "file": "docs/TENANT_INITIALIZATION_GUIDE.md",
+      "frozen": false,
+      "changes": [
+        {
+          "from": "../.harness/tasks/2026-11-07-ops-formal-queue-foundation-gaps/o4-tenant-implementation-plan.md",
+          "to": "../.harness/archive/2026-11/tasks/2026-11-07-ops-formal-queue-foundation-gaps/o4-tenant-implementation-plan.md"
+        }
+      ]
+    }
+  ]
+}

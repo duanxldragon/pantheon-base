@@ -1,0 +1,1095 @@
+{
+  "taskId": "2026-11-13-docs-archive-closeout",
+  "archivedTasks": 18,
+  "items": [
+    {
+      "taskId": "2026-11-04-archive-governance-scope-repair",
+      "status": "completed",
+      "completion": {
+        "basis": "Existing completed manifest and same-task summary/review; original checkpoints retained."
+      },
+      "directories": [
+        {
+          "from": ".harness/tasks/2026-11-04-archive-governance-scope-repair",
+          "to": ".harness/archive/2026-11/tasks/2026-11-04-archive-governance-scope-repair",
+          "before": {
+            "files": 1,
+            "bytes": 7116,
+            "sha256": "7e6502efb266182cdb7728b19063bb04d1beabe97f9b5bbe102f5ad84072b918"
+          },
+          "after": {
+            "files": 1,
+            "bytes": 7116,
+            "sha256": "7e6502efb266182cdb7728b19063bb04d1beabe97f9b5bbe102f5ad84072b918"
+          },
+          "identical": true,
+          "tracked": {
+            "files": 1,
+            "sha256": "7e6502efb266182cdb7728b19063bb04d1beabe97f9b5bbe102f5ad84072b918",
+            "originalHead": "34428814a9efc997fd93d4434406a53df6460323",
+            "identical": true
+          }
+        },
+        {
+          "from": ".harness/evidence/2026-11-04-archive-governance-scope-repair",
+          "to": ".harness/archive/2026-11/evidence/2026-11-04-archive-governance-scope-repair",
+          "before": {
+            "files": 3,
+            "bytes": 22781,
+            "sha256": "cb8a550d96b50c9b3d522e714d72ddc336e1497ff521b7e06352858133f353d5"
+          },
+          "after": {
+            "files": 3,
+            "bytes": 22781,
+            "sha256": "cb8a550d96b50c9b3d522e714d72ddc336e1497ff521b7e06352858133f353d5"
+          },
+          "identical": true,
+          "tracked": {
+            "files": 3,
+            "sha256": "cb8a550d96b50c9b3d522e714d72ddc336e1497ff521b7e06352858133f353d5",
+            "originalHead": "34428814a9efc997fd93d4434406a53df6460323",
+            "identical": true
+          }
+        }
+      ]
+    },
+    {
+      "taskId": "2026-11-04-audit-p1-npm-audit-exit",
+      "status": "completed",
+      "completion": {
+        "recordedAt": "2026-11-07T02:36:54.349Z",
+        "deliveryStatus": "evidence-reconciled",
+        "status": "closed-after-independent-approval",
+        "matrix": ".harness/evidence/2026-11-05-base-freeze-release/closeout-matrix.json",
+        "residualRegister": ".harness/evidence/2026-11-05-base-freeze-release/closeout-residuals.json",
+        "reviewAvailability": ".harness/evidence/2026-11-05-base-freeze-release/closeout-review-availability.json",
+        "priorState": {
+          "status": "in-progress",
+          "implementationStatus": "applied",
+          "reviewStatus": "blocked",
+          "verificationStatus": "passed",
+          "runtimeGap": "No runtime behaviour changed; bounded documentation/policy review only."
+        },
+        "note": "2026-11-07: original task scope independently approved by CODE APPROVE / ARCH CLEAR on the exact seven-task plan. Current Base1890/0/1, 47 packages, FE218 and immutable Full Smoke/Release Gate passed. Official v0.18.5 published/acquired/rebuilt; remaining five consumer/programme tasks stay open. S3 remains unverified without waiver; maintenance freeze unsigned; CI optimization remains a decision/measurement follow-up.",
+        "historicalNote": "Actual workflow shell red/green regressions retained; strict release security gate succeeded; report-only PR policy unchanged.",
+        "currentReview": ".harness/evidence/2026-11-05-base-freeze-release/resume9-seven-task-applied.json"
+      },
+      "directories": [
+        {
+          "from": ".harness/tasks/2026-11-04-audit-p1-npm-audit-exit",
+          "to": ".harness/archive/2026-11/tasks/2026-11-04-audit-p1-npm-audit-exit",
+          "before": {
+            "files": 1,
+            "bytes": 6150,
+            "sha256": "047ab1236549c2c5adf9d81ea25dd296436c68c66d56d0a16ca74552622ecc1f"
+          },
+          "after": {
+            "files": 1,
+            "bytes": 6150,
+            "sha256": "047ab1236549c2c5adf9d81ea25dd296436c68c66d56d0a16ca74552622ecc1f"
+          },
+          "identical": true,
+          "tracked": {
+            "files": 1,
+            "sha256": "047ab1236549c2c5adf9d81ea25dd296436c68c66d56d0a16ca74552622ecc1f",
+            "originalHead": "34428814a9efc997fd93d4434406a53df6460323",
+            "identical": true
+          }
+        },
+        {
+          "from": ".harness/evidence/2026-11-04-audit-p1-npm-audit-exit",
+          "to": ".harness/archive/2026-11/evidence/2026-11-04-audit-p1-npm-audit-exit",
+          "before": {
+            "files": 3,
+            "bytes": 10636,
+            "sha256": "ee5bc85f224ca597815a62e5e09d69d5ed4e32237724c54058dfb5033e923a4b"
+          },
+          "after": {
+            "files": 3,
+            "bytes": 10636,
+            "sha256": "ee5bc85f224ca597815a62e5e09d69d5ed4e32237724c54058dfb5033e923a4b"
+          },
+          "identical": true,
+          "tracked": {
+            "files": 3,
+            "sha256": "ee5bc85f224ca597815a62e5e09d69d5ed4e32237724c54058dfb5033e923a4b",
+            "originalHead": "34428814a9efc997fd93d4434406a53df6460323",
+            "identical": true
+          }
+        }
+      ]
+    },
+    {
+      "taskId": "2026-11-04-audit-p1-refresh-rotation",
+      "status": "completed",
+      "completion": {
+        "recordedAt": "2026-11-07T02:36:54.351Z",
+        "deliveryStatus": "evidence-reconciled",
+        "status": "closed-after-independent-approval",
+        "matrix": ".harness/evidence/2026-11-05-base-freeze-release/closeout-matrix.json",
+        "residualRegister": ".harness/evidence/2026-11-05-base-freeze-release/closeout-residuals.json",
+        "reviewAvailability": ".harness/evidence/2026-11-05-base-freeze-release/closeout-review-availability.json",
+        "priorState": {
+          "status": "in-progress",
+          "implementationStatus": "applied",
+          "reviewStatus": "blocked",
+          "verificationStatus": "passed",
+          "runtimeGap": "Controlled local tests/builds collected; live external integration, browser smoke and release validation remain unverified."
+        },
+        "note": "2026-11-07: original task scope independently approved by CODE APPROVE / ARCH CLEAR on the exact seven-task plan. Current Base1890/0/1, 47 packages, FE218 and immutable Full Smoke/Release Gate passed. Official v0.18.5 published/acquired/rebuilt; remaining five consumer/programme tasks stay open. S3 remains unverified without waiver; maintenance freeze unsigned; CI optimization remains a decision/measurement follow-up.",
+        "historicalNote": "Original MySQL/Redis concurrency and storage-failure regressions plus later full race and Tenant V1/runtime evidence; no new auth change.",
+        "currentReview": ".harness/evidence/2026-11-05-base-freeze-release/resume9-seven-task-applied.json"
+      },
+      "directories": [
+        {
+          "from": ".harness/tasks/2026-11-04-audit-p1-refresh-rotation",
+          "to": ".harness/archive/2026-11/tasks/2026-11-04-audit-p1-refresh-rotation",
+          "before": {
+            "files": 1,
+            "bytes": 6965,
+            "sha256": "a7f28f711368e48cfba1aaca68d8e0c5a163bbca215621c349244a7de3405e06"
+          },
+          "after": {
+            "files": 1,
+            "bytes": 6965,
+            "sha256": "a7f28f711368e48cfba1aaca68d8e0c5a163bbca215621c349244a7de3405e06"
+          },
+          "identical": true,
+          "tracked": {
+            "files": 1,
+            "sha256": "a7f28f711368e48cfba1aaca68d8e0c5a163bbca215621c349244a7de3405e06",
+            "originalHead": "34428814a9efc997fd93d4434406a53df6460323",
+            "identical": true
+          }
+        },
+        {
+          "from": ".harness/evidence/2026-11-04-audit-p1-refresh-rotation",
+          "to": ".harness/archive/2026-11/evidence/2026-11-04-audit-p1-refresh-rotation",
+          "before": {
+            "files": 3,
+            "bytes": 12184,
+            "sha256": "37484fdcb73ff012b6422e20d50e13887fb448d696a08535380cf54c484d360a"
+          },
+          "after": {
+            "files": 3,
+            "bytes": 12184,
+            "sha256": "37484fdcb73ff012b6422e20d50e13887fb448d696a08535380cf54c484d360a"
+          },
+          "identical": true,
+          "tracked": {
+            "files": 3,
+            "sha256": "37484fdcb73ff012b6422e20d50e13887fb448d696a08535380cf54c484d360a",
+            "originalHead": "34428814a9efc997fd93d4434406a53df6460323",
+            "identical": true
+          }
+        }
+      ]
+    },
+    {
+      "taskId": "2026-11-04-audit-p1-ssrf-dial-binding",
+      "status": "completed",
+      "completion": {
+        "historicalState": {
+          "runtimeGap": "Controlled local tests/builds collected; live external integration, browser smoke and release validation remain unverified."
+        },
+        "recordedAt": "2026-11-07T03:32:24.143Z",
+        "status": "closed-after-final-independent-approval",
+        "note": "2026-11-07: exact original scope approved by fresh independent CODE APPROVE / ARCH CLEAR on the final five-task plan. Official Base v0.18.5 at1da0834b; Base1890/0/1 and47packages, FE218, immutable Full Smoke/Release Gate passed. Official Ops PR177 merged at92c1efcfc4f754a7f0a4e9f181f446f4a2ddcfc2 after required hosted gates including Smoke Sanity; full readonly CGO consumer race2170/0/1,64packages, no source overlay or module mutation; FE218/scripts59/migration32clean/four standard generator smoke passed. Original unchanged SSRF public-API attack replay now records2 DNS lookups / loopbacknotreached; original deliberate attack-failure panic is preserved as a nonzero result, not called a green test. All40 original criteria and all source/contract boundaries preserved. S3 provider skip/no waiver, maintenance freeze unsigned, OpsQA002 and extra host-import runtime table gaps, network policy/CI measurements/baselines/production operations remain explicit separate residuals.",
+        "currentReview": ".harness/evidence/2026-11-05-base-freeze-release/resume11-five-task-applied.json"
+      },
+      "directories": [
+        {
+          "from": ".harness/tasks/2026-11-04-audit-p1-ssrf-dial-binding",
+          "to": ".harness/archive/2026-11/tasks/2026-11-04-audit-p1-ssrf-dial-binding",
+          "before": {
+            "files": 1,
+            "bytes": 6291,
+            "sha256": "a3cc53bddf48c08e86bdd62b9fc2cf6c9b86a4b3ba520bb7b2cf760421fb1bc4"
+          },
+          "after": {
+            "files": 1,
+            "bytes": 6291,
+            "sha256": "a3cc53bddf48c08e86bdd62b9fc2cf6c9b86a4b3ba520bb7b2cf760421fb1bc4"
+          },
+          "identical": true,
+          "tracked": {
+            "files": 1,
+            "sha256": "a3cc53bddf48c08e86bdd62b9fc2cf6c9b86a4b3ba520bb7b2cf760421fb1bc4",
+            "originalHead": "34428814a9efc997fd93d4434406a53df6460323",
+            "identical": true
+          }
+        },
+        {
+          "from": ".harness/evidence/2026-11-04-audit-p1-ssrf-dial-binding",
+          "to": ".harness/archive/2026-11/evidence/2026-11-04-audit-p1-ssrf-dial-binding",
+          "before": {
+            "files": 3,
+            "bytes": 10752,
+            "sha256": "42f4f32d0649849cf5bb04541c3302422c94ab53ce02c53e5f3c65136787102c"
+          },
+          "after": {
+            "files": 3,
+            "bytes": 10752,
+            "sha256": "42f4f32d0649849cf5bb04541c3302422c94ab53ce02c53e5f3c65136787102c"
+          },
+          "identical": true,
+          "tracked": {
+            "files": 3,
+            "sha256": "42f4f32d0649849cf5bb04541c3302422c94ab53ce02c53e5f3c65136787102c",
+            "originalHead": "34428814a9efc997fd93d4434406a53df6460323",
+            "identical": true
+          }
+        }
+      ]
+    },
+    {
+      "taskId": "2026-11-04-audit-p2-agent-stop-points",
+      "status": "completed",
+      "completion": {
+        "recordedAt": "2026-11-07T02:36:54.352Z",
+        "deliveryStatus": "evidence-reconciled",
+        "status": "closed-after-independent-approval",
+        "matrix": ".harness/evidence/2026-11-05-base-freeze-release/closeout-matrix.json",
+        "residualRegister": ".harness/evidence/2026-11-05-base-freeze-release/closeout-residuals.json",
+        "reviewAvailability": ".harness/evidence/2026-11-05-base-freeze-release/closeout-review-availability.json",
+        "priorState": {
+          "status": "in-progress",
+          "implementationStatus": "applied",
+          "reviewStatus": "blocked",
+          "verificationStatus": "passed",
+          "runtimeGap": "No runtime behaviour changed; bounded documentation/policy review only."
+        },
+        "note": "2026-11-07: original task scope independently approved by CODE APPROVE / ARCH CLEAR on the exact seven-task plan. Current Base1890/0/1, 47 packages, FE218 and immutable Full Smoke/Release Gate passed. Official v0.18.5 published/acquired/rebuilt; remaining five consumer/programme tasks stay open. S3 remains unverified without waiver; maintenance freeze unsigned; CI optimization remains a decision/measurement follow-up.",
+        "historicalNote": "Chinese/English workflow documents implement three maintainer touchpoints; production/gate-change limits retained.",
+        "currentReview": ".harness/evidence/2026-11-05-base-freeze-release/resume9-seven-task-applied.json"
+      },
+      "directories": [
+        {
+          "from": ".harness/tasks/2026-11-04-audit-p2-agent-stop-points",
+          "to": ".harness/archive/2026-11/tasks/2026-11-04-audit-p2-agent-stop-points",
+          "before": {
+            "files": 1,
+            "bytes": 6157,
+            "sha256": "abc127c12dcee6daa4e5862432407030e65a1cb981776411a007c263126bbc00"
+          },
+          "after": {
+            "files": 1,
+            "bytes": 6157,
+            "sha256": "abc127c12dcee6daa4e5862432407030e65a1cb981776411a007c263126bbc00"
+          },
+          "identical": true,
+          "tracked": {
+            "files": 1,
+            "sha256": "abc127c12dcee6daa4e5862432407030e65a1cb981776411a007c263126bbc00",
+            "originalHead": "34428814a9efc997fd93d4434406a53df6460323",
+            "identical": true
+          }
+        },
+        {
+          "from": ".harness/evidence/2026-11-04-audit-p2-agent-stop-points",
+          "to": ".harness/archive/2026-11/evidence/2026-11-04-audit-p2-agent-stop-points",
+          "before": {
+            "files": 3,
+            "bytes": 11018,
+            "sha256": "2f10a1a6f224d4b4ff3ad07e683d35c359999628ced71c3e649b58c273df62f1"
+          },
+          "after": {
+            "files": 3,
+            "bytes": 11018,
+            "sha256": "2f10a1a6f224d4b4ff3ad07e683d35c359999628ced71c3e649b58c273df62f1"
+          },
+          "identical": true,
+          "tracked": {
+            "files": 3,
+            "sha256": "2f10a1a6f224d4b4ff3ad07e683d35c359999628ced71c3e649b58c273df62f1",
+            "originalHead": "34428814a9efc997fd93d4434406a53df6460323",
+            "identical": true
+          }
+        }
+      ]
+    },
+    {
+      "taskId": "2026-11-04-audit-p2-authoritative-docs",
+      "status": "completed",
+      "completion": {
+        "recordedAt": "2026-11-07T02:36:54.353Z",
+        "deliveryStatus": "evidence-reconciled",
+        "status": "closed-after-independent-approval",
+        "matrix": ".harness/evidence/2026-11-05-base-freeze-release/closeout-matrix.json",
+        "residualRegister": ".harness/evidence/2026-11-05-base-freeze-release/closeout-residuals.json",
+        "reviewAvailability": ".harness/evidence/2026-11-05-base-freeze-release/closeout-review-availability.json",
+        "priorState": {
+          "status": "in-progress",
+          "implementationStatus": "applied",
+          "reviewStatus": "blocked",
+          "verificationStatus": "passed",
+          "runtimeGap": "No runtime behaviour changed; bounded documentation/policy review only."
+        },
+        "note": "2026-11-07: original task scope independently approved by CODE APPROVE / ARCH CLEAR on the exact seven-task plan. Current Base1890/0/1, 47 packages, FE218 and immutable Full Smoke/Release Gate passed. Official v0.18.5 published/acquired/rebuilt; remaining five consumer/programme tasks stay open. S3 remains unverified without waiver; maintenance freeze unsigned; CI optimization remains a decision/measurement follow-up.",
+        "historicalNote": "Bounded original doc corrections and original asset baseline preserved; latest index release/consumer facts corrected in this closeout.",
+        "currentReview": ".harness/evidence/2026-11-05-base-freeze-release/resume9-seven-task-applied.json"
+      },
+      "directories": [
+        {
+          "from": ".harness/tasks/2026-11-04-audit-p2-authoritative-docs",
+          "to": ".harness/archive/2026-11/tasks/2026-11-04-audit-p2-authoritative-docs",
+          "before": {
+            "files": 1,
+            "bytes": 8963,
+            "sha256": "5a6dda31b175d7310d66c6baf82b06d63c296754cbeb4dd37eac19ec786bcf80"
+          },
+          "after": {
+            "files": 1,
+            "bytes": 8963,
+            "sha256": "5a6dda31b175d7310d66c6baf82b06d63c296754cbeb4dd37eac19ec786bcf80"
+          },
+          "identical": true,
+          "tracked": {
+            "files": 1,
+            "sha256": "5a6dda31b175d7310d66c6baf82b06d63c296754cbeb4dd37eac19ec786bcf80",
+            "originalHead": "34428814a9efc997fd93d4434406a53df6460323",
+            "identical": true
+          }
+        },
+        {
+          "from": ".harness/evidence/2026-11-04-audit-p2-authoritative-docs",
+          "to": ".harness/archive/2026-11/evidence/2026-11-04-audit-p2-authoritative-docs",
+          "before": {
+            "files": 3,
+            "bytes": 11127,
+            "sha256": "ad511d71aefe18b61d11db45d1ead7c3e978f9cec865b25f7eaf05c694a1a5c5"
+          },
+          "after": {
+            "files": 3,
+            "bytes": 11127,
+            "sha256": "ad511d71aefe18b61d11db45d1ead7c3e978f9cec865b25f7eaf05c694a1a5c5"
+          },
+          "identical": true,
+          "tracked": {
+            "files": 3,
+            "sha256": "ad511d71aefe18b61d11db45d1ead7c3e978f9cec865b25f7eaf05c694a1a5c5",
+            "originalHead": "34428814a9efc997fd93d4434406a53df6460323",
+            "identical": true
+          }
+        }
+      ]
+    },
+    {
+      "taskId": "2026-11-04-audit-p2-freeze-validation",
+      "status": "completed",
+      "completion": {
+        "recordedAt": "2026-11-07T02:36:54.354Z",
+        "deliveryStatus": "evidence-reconciled",
+        "status": "closed-after-independent-approval",
+        "matrix": ".harness/evidence/2026-11-05-base-freeze-release/closeout-matrix.json",
+        "residualRegister": ".harness/evidence/2026-11-05-base-freeze-release/closeout-residuals.json",
+        "reviewAvailability": ".harness/evidence/2026-11-05-base-freeze-release/closeout-review-availability.json",
+        "priorState": {
+          "status": "in-progress",
+          "implementationStatus": "applied",
+          "reviewStatus": "blocked",
+          "verificationStatus": "passed",
+          "runtimeGap": "Controlled local tests/builds collected; live external integration, browser smoke and release validation remain unverified."
+        },
+        "note": "2026-11-07: original task scope independently approved by CODE APPROVE / ARCH CLEAR on the exact seven-task plan. Current Base1890/0/1, 47 packages, FE218 and immutable Full Smoke/Release Gate passed. Official v0.18.5 published/acquired/rebuilt; remaining five consumer/programme tasks stay open. S3 remains unverified without waiver; maintenance freeze unsigned; CI optimization remains a decision/measurement follow-up.",
+        "historicalNote": "Immutable release plus hosted full smoke/release gate; full local Go race 1889 pass/0 fail/1 S3 provider skip, frontend 218 pass; no freeze signature.",
+        "currentReview": ".harness/evidence/2026-11-05-base-freeze-release/resume9-seven-task-applied.json"
+      },
+      "directories": [
+        {
+          "from": ".harness/tasks/2026-11-04-audit-p2-freeze-validation",
+          "to": ".harness/archive/2026-11/tasks/2026-11-04-audit-p2-freeze-validation",
+          "before": {
+            "files": 1,
+            "bytes": 7055,
+            "sha256": "8c4cbf82a5746d80441468cd5c5899ec21a2a8079ff242b5211af3111e98e57a"
+          },
+          "after": {
+            "files": 1,
+            "bytes": 7055,
+            "sha256": "8c4cbf82a5746d80441468cd5c5899ec21a2a8079ff242b5211af3111e98e57a"
+          },
+          "identical": true,
+          "tracked": {
+            "files": 1,
+            "sha256": "8c4cbf82a5746d80441468cd5c5899ec21a2a8079ff242b5211af3111e98e57a",
+            "originalHead": "34428814a9efc997fd93d4434406a53df6460323",
+            "identical": true
+          }
+        },
+        {
+          "from": ".harness/evidence/2026-11-04-audit-p2-freeze-validation",
+          "to": ".harness/archive/2026-11/evidence/2026-11-04-audit-p2-freeze-validation",
+          "before": {
+            "files": 3,
+            "bytes": 16891,
+            "sha256": "8440a4b4cad112ab4f1fbc04741a262277953508dc7a81d42cdb56d4e2317088"
+          },
+          "after": {
+            "files": 3,
+            "bytes": 16891,
+            "sha256": "8440a4b4cad112ab4f1fbc04741a262277953508dc7a81d42cdb56d4e2317088"
+          },
+          "identical": true,
+          "tracked": {
+            "files": 3,
+            "sha256": "8440a4b4cad112ab4f1fbc04741a262277953508dc7a81d42cdb56d4e2317088",
+            "originalHead": "34428814a9efc997fd93d4434406a53df6460323",
+            "identical": true
+          }
+        }
+      ]
+    },
+    {
+      "taskId": "2026-11-04-audit-p2-ops-db-test-followup",
+      "status": "completed",
+      "completion": {
+        "historicalState": {
+          "runtimeGap": "真实DB失败已复现，代码/fixture业务意图责任尚未完成裁定；下游验收未关闭。"
+        },
+        "recordedAt": "2026-11-07T03:32:24.154Z",
+        "status": "closed-after-final-independent-approval",
+        "note": "2026-11-07: exact original scope approved by fresh independent CODE APPROVE / ARCH CLEAR on the final five-task plan. Official Base v0.18.5 at1da0834b; Base1890/0/1 and47packages, FE218, immutable Full Smoke/Release Gate passed. Official Ops PR177 merged at92c1efcfc4f754a7f0a4e9f181f446f4a2ddcfc2 after required hosted gates including Smoke Sanity; full readonly CGO consumer race2170/0/1,64packages, no source overlay or module mutation; FE218/scripts59/migration32clean/four standard generator smoke passed. Original unchanged SSRF public-API attack replay now records2 DNS lookups / loopbacknotreached; original deliberate attack-failure panic is preserved as a nonzero result, not called a green test. All40 original criteria and all source/contract boundaries preserved. S3 provider skip/no waiver, maintenance freeze unsigned, OpsQA002 and extra host-import runtime table gaps, network policy/CI measurements/baselines/production operations remain explicit separate residuals.",
+        "currentReview": ".harness/evidence/2026-11-05-base-freeze-release/resume11-five-task-applied.json"
+      },
+      "directories": [
+        {
+          "from": ".harness/tasks/2026-11-04-audit-p2-ops-db-test-followup",
+          "to": ".harness/archive/2026-11/tasks/2026-11-04-audit-p2-ops-db-test-followup",
+          "before": {
+            "files": 1,
+            "bytes": 7079,
+            "sha256": "3a2ebbd01fbdaff6fcd11b918cd587bdf6e8a66d5b0b126d732865736a867bef"
+          },
+          "after": {
+            "files": 1,
+            "bytes": 7079,
+            "sha256": "3a2ebbd01fbdaff6fcd11b918cd587bdf6e8a66d5b0b126d732865736a867bef"
+          },
+          "identical": true,
+          "tracked": {
+            "files": 1,
+            "sha256": "3a2ebbd01fbdaff6fcd11b918cd587bdf6e8a66d5b0b126d732865736a867bef",
+            "originalHead": "34428814a9efc997fd93d4434406a53df6460323",
+            "identical": true
+          }
+        },
+        {
+          "from": ".harness/evidence/2026-11-04-audit-p2-ops-db-test-followup",
+          "to": ".harness/archive/2026-11/evidence/2026-11-04-audit-p2-ops-db-test-followup",
+          "before": {
+            "files": 7,
+            "bytes": 46436,
+            "sha256": "517f3da18c4703ff747cb8d874dd6cb2d18d009ef7f82402fbc4d12b04a5d122"
+          },
+          "after": {
+            "files": 7,
+            "bytes": 46436,
+            "sha256": "517f3da18c4703ff747cb8d874dd6cb2d18d009ef7f82402fbc4d12b04a5d122"
+          },
+          "identical": true,
+          "tracked": {
+            "files": 7,
+            "sha256": "517f3da18c4703ff747cb8d874dd6cb2d18d009ef7f82402fbc4d12b04a5d122",
+            "originalHead": "34428814a9efc997fd93d4434406a53df6460323",
+            "identical": true
+          }
+        }
+      ]
+    },
+    {
+      "taskId": "2026-11-04-audit-p2-release-policy",
+      "status": "completed",
+      "completion": {
+        "recordedAt": "2026-11-07T02:36:54.354Z",
+        "deliveryStatus": "evidence-reconciled",
+        "status": "closed-after-independent-approval",
+        "matrix": ".harness/evidence/2026-11-05-base-freeze-release/closeout-matrix.json",
+        "residualRegister": ".harness/evidence/2026-11-05-base-freeze-release/closeout-residuals.json",
+        "reviewAvailability": ".harness/evidence/2026-11-05-base-freeze-release/closeout-review-availability.json",
+        "priorState": {
+          "status": "in-progress",
+          "implementationStatus": "applied",
+          "reviewStatus": "blocked",
+          "verificationStatus": "passed",
+          "runtimeGap": "No runtime behaviour changed; bounded documentation/policy review only."
+        },
+        "note": "2026-11-07: original task scope independently approved by CODE APPROVE / ARCH CLEAR on the exact seven-task plan. Current Base1890/0/1, 47 packages, FE218 and immutable Full Smoke/Release Gate passed. Official v0.18.5 published/acquired/rebuilt; remaining five consumer/programme tasks stay open. S3 remains unverified without waiver; maintenance freeze unsigned; CI optimization remains a decision/measurement follow-up.",
+        "historicalNote": "Sonar zero-open release exception documented without reducing thresholds; actual release gate succeeded.",
+        "currentReview": ".harness/evidence/2026-11-05-base-freeze-release/resume9-seven-task-applied.json"
+      },
+      "directories": [
+        {
+          "from": ".harness/tasks/2026-11-04-audit-p2-release-policy",
+          "to": ".harness/archive/2026-11/tasks/2026-11-04-audit-p2-release-policy",
+          "before": {
+            "files": 1,
+            "bytes": 6123,
+            "sha256": "1407edc51f3e668ed6ed69296520db623873b91ea54d946272abfe960d9657b2"
+          },
+          "after": {
+            "files": 1,
+            "bytes": 6123,
+            "sha256": "1407edc51f3e668ed6ed69296520db623873b91ea54d946272abfe960d9657b2"
+          },
+          "identical": true,
+          "tracked": {
+            "files": 1,
+            "sha256": "1407edc51f3e668ed6ed69296520db623873b91ea54d946272abfe960d9657b2",
+            "originalHead": "34428814a9efc997fd93d4434406a53df6460323",
+            "identical": true
+          }
+        },
+        {
+          "from": ".harness/evidence/2026-11-04-audit-p2-release-policy",
+          "to": ".harness/archive/2026-11/evidence/2026-11-04-audit-p2-release-policy",
+          "before": {
+            "files": 3,
+            "bytes": 10960,
+            "sha256": "77d025c4aeec063aaa55c352dc9c4cd7a8d9835e1e41f67f450ee83a077c8399"
+          },
+          "after": {
+            "files": 3,
+            "bytes": 10960,
+            "sha256": "77d025c4aeec063aaa55c352dc9c4cd7a8d9835e1e41f67f450ee83a077c8399"
+          },
+          "identical": true,
+          "tracked": {
+            "files": 3,
+            "sha256": "77d025c4aeec063aaa55c352dc9c4cd7a8d9835e1e41f67f450ee83a077c8399",
+            "originalHead": "34428814a9efc997fd93d4434406a53df6460323",
+            "identical": true
+          }
+        }
+      ]
+    },
+    {
+      "taskId": "2026-11-04-audit-p3-ci-cost-review",
+      "status": "completed",
+      "completion": {
+        "recordedAt": "2026-11-07T02:36:54.355Z",
+        "deliveryStatus": "evidence-reconciled",
+        "status": "closed-after-independent-approval",
+        "matrix": ".harness/evidence/2026-11-05-base-freeze-release/closeout-matrix.json",
+        "residualRegister": ".harness/evidence/2026-11-05-base-freeze-release/closeout-residuals.json",
+        "reviewAvailability": ".harness/evidence/2026-11-05-base-freeze-release/closeout-review-availability.json",
+        "priorState": {
+          "status": "in-progress",
+          "implementationStatus": "deferred-optimization",
+          "reviewStatus": "blocked",
+          "verificationStatus": "passed",
+          "runtimeGap": "No runtime behaviour changed; bounded documentation/policy review only."
+        },
+        "note": "2026-11-07: original task scope independently approved by CODE APPROVE / ARCH CLEAR on the exact seven-task plan. Current Base1890/0/1, 47 packages, FE218 and immutable Full Smoke/Release Gate passed. Official v0.18.5 published/acquired/rebuilt; remaining five consumer/programme tasks stay open. S3 remains unverified without waiver; maintenance freeze unsigned; CI optimization remains a decision/measurement follow-up.",
+        "historicalNote": "Decision delivered: preserve coverage/race and existing jobs; defer optimization until actual timing/value evidence. Optimization itself excluded.",
+        "currentReview": ".harness/evidence/2026-11-05-base-freeze-release/resume9-seven-task-applied.json"
+      },
+      "directories": [
+        {
+          "from": ".harness/tasks/2026-11-04-audit-p3-ci-cost-review",
+          "to": ".harness/archive/2026-11/tasks/2026-11-04-audit-p3-ci-cost-review",
+          "before": {
+            "files": 1,
+            "bytes": 5895,
+            "sha256": "a3534904f342ae9be5f5527fbfa238331a7cd5e4f10760608a33310bcb58eb9e"
+          },
+          "after": {
+            "files": 1,
+            "bytes": 5895,
+            "sha256": "a3534904f342ae9be5f5527fbfa238331a7cd5e4f10760608a33310bcb58eb9e"
+          },
+          "identical": true,
+          "tracked": {
+            "files": 1,
+            "sha256": "a3534904f342ae9be5f5527fbfa238331a7cd5e4f10760608a33310bcb58eb9e",
+            "originalHead": "34428814a9efc997fd93d4434406a53df6460323",
+            "identical": true
+          }
+        },
+        {
+          "from": ".harness/evidence/2026-11-04-audit-p3-ci-cost-review",
+          "to": ".harness/archive/2026-11/evidence/2026-11-04-audit-p3-ci-cost-review",
+          "before": {
+            "files": 3,
+            "bytes": 10836,
+            "sha256": "d78ac0ecc3a7db2f0a94c25e1449e41ad53ce8ad2b0eaa06444d80dc9213b4a5"
+          },
+          "after": {
+            "files": 3,
+            "bytes": 10836,
+            "sha256": "d78ac0ecc3a7db2f0a94c25e1449e41ad53ce8ad2b0eaa06444d80dc9213b4a5"
+          },
+          "identical": true,
+          "tracked": {
+            "files": 3,
+            "sha256": "d78ac0ecc3a7db2f0a94c25e1449e41ad53ce8ad2b0eaa06444d80dc9213b4a5",
+            "originalHead": "34428814a9efc997fd93d4434406a53df6460323",
+            "identical": true
+          }
+        }
+      ]
+    },
+    {
+      "taskId": "2026-11-04-audit-p3-consumer-seams",
+      "status": "completed",
+      "completion": {
+        "historicalState": {
+          "runtimeGap": "No runtime behaviour changed; bounded documentation/policy review only."
+        },
+        "recordedAt": "2026-11-07T03:32:24.162Z",
+        "status": "closed-after-final-independent-approval",
+        "note": "2026-11-07: exact original scope approved by fresh independent CODE APPROVE / ARCH CLEAR on the final five-task plan. Official Base v0.18.5 at1da0834b; Base1890/0/1 and47packages, FE218, immutable Full Smoke/Release Gate passed. Official Ops PR177 merged at92c1efcfc4f754a7f0a4e9f181f446f4a2ddcfc2 after required hosted gates including Smoke Sanity; full readonly CGO consumer race2170/0/1,64packages, no source overlay or module mutation; FE218/scripts59/migration32clean/four standard generator smoke passed. Original unchanged SSRF public-API attack replay now records2 DNS lookups / loopbacknotreached; original deliberate attack-failure panic is preserved as a nonzero result, not called a green test. All40 original criteria and all source/contract boundaries preserved. S3 provider skip/no waiver, maintenance freeze unsigned, OpsQA002 and extra host-import runtime table gaps, network policy/CI measurements/baselines/production operations remain explicit separate residuals.",
+        "currentReview": ".harness/evidence/2026-11-05-base-freeze-release/resume11-five-task-applied.json"
+      },
+      "directories": [
+        {
+          "from": ".harness/tasks/2026-11-04-audit-p3-consumer-seams",
+          "to": ".harness/archive/2026-11/tasks/2026-11-04-audit-p3-consumer-seams",
+          "before": {
+            "files": 1,
+            "bytes": 6364,
+            "sha256": "4f9a726a890cf4aacb761308c04b5ab173d670e5f6969950e6f513b8008bcac9"
+          },
+          "after": {
+            "files": 1,
+            "bytes": 6364,
+            "sha256": "4f9a726a890cf4aacb761308c04b5ab173d670e5f6969950e6f513b8008bcac9"
+          },
+          "identical": true,
+          "tracked": {
+            "files": 1,
+            "sha256": "4f9a726a890cf4aacb761308c04b5ab173d670e5f6969950e6f513b8008bcac9",
+            "originalHead": "34428814a9efc997fd93d4434406a53df6460323",
+            "identical": true
+          }
+        },
+        {
+          "from": ".harness/evidence/2026-11-04-audit-p3-consumer-seams",
+          "to": ".harness/archive/2026-11/evidence/2026-11-04-audit-p3-consumer-seams",
+          "before": {
+            "files": 3,
+            "bytes": 15999,
+            "sha256": "1e95e9e914ebc266c82ae385481e71711e0ca310e4208e5b2f663772c2bd97f3"
+          },
+          "after": {
+            "files": 3,
+            "bytes": 15999,
+            "sha256": "1e95e9e914ebc266c82ae385481e71711e0ca310e4208e5b2f663772c2bd97f3"
+          },
+          "identical": true,
+          "tracked": {
+            "files": 3,
+            "sha256": "1e95e9e914ebc266c82ae385481e71711e0ca310e4208e5b2f663772c2bd97f3",
+            "originalHead": "34428814a9efc997fd93d4434406a53df6460323",
+            "identical": true
+          }
+        }
+      ]
+    },
+    {
+      "taskId": "2026-11-04-global-audit-remediation",
+      "status": "completed",
+      "completion": {
+        "historicalState": {
+          "runtimeGap": "Downstream real-DB suite is red at 4 business packages (12 failure nodes / 9 top-level tests), identically reproduced at Ops HEAD; PB-010 intent/fixture triage pending. No approved release commit, external required CI/Sonar result or maintenance-freeze acceptance. Foundation release and Ops lock upgrade deferred; local synthetic candidate is not a release. Browser full/core smoke and live external integration were not run; no UI code was modified and no visual-polish claim is made. S3 and OIDC external-provider validation depend on provisioned services. Actual remote dependency vulnerability status is not established by mock npm tests."
+        },
+        "recordedAt": "2026-11-07T03:32:24.167Z",
+        "status": "closed-after-final-independent-approval",
+        "note": "2026-11-07: exact original scope approved by fresh independent CODE APPROVE / ARCH CLEAR on the final five-task plan. Official Base v0.18.5 at1da0834b; Base1890/0/1 and47packages, FE218, immutable Full Smoke/Release Gate passed. Official Ops PR177 merged at92c1efcfc4f754a7f0a4e9f181f446f4a2ddcfc2 after required hosted gates including Smoke Sanity; full readonly CGO consumer race2170/0/1,64packages, no source overlay or module mutation; FE218/scripts59/migration32clean/four standard generator smoke passed. Original unchanged SSRF public-API attack replay now records2 DNS lookups / loopbacknotreached; original deliberate attack-failure panic is preserved as a nonzero result, not called a green test. All40 original criteria and all source/contract boundaries preserved. S3 provider skip/no waiver, maintenance freeze unsigned, OpsQA002 and extra host-import runtime table gaps, network policy/CI measurements/baselines/production operations remain explicit separate residuals.",
+        "currentReview": ".harness/evidence/2026-11-05-base-freeze-release/resume11-five-task-applied.json"
+      },
+      "directories": [
+        {
+          "from": ".harness/tasks/2026-11-04-global-audit-remediation",
+          "to": ".harness/archive/2026-11/tasks/2026-11-04-global-audit-remediation",
+          "before": {
+            "files": 2,
+            "bytes": 23077,
+            "sha256": "f84c832096c065652cfabcc23912ff300425aa81a3b6138cad931e192206dea4"
+          },
+          "after": {
+            "files": 2,
+            "bytes": 23077,
+            "sha256": "f84c832096c065652cfabcc23912ff300425aa81a3b6138cad931e192206dea4"
+          },
+          "identical": true,
+          "tracked": {
+            "files": 2,
+            "sha256": "f84c832096c065652cfabcc23912ff300425aa81a3b6138cad931e192206dea4",
+            "originalHead": "34428814a9efc997fd93d4434406a53df6460323",
+            "identical": true
+          }
+        },
+        {
+          "from": ".harness/evidence/2026-11-04-global-audit-remediation",
+          "to": ".harness/archive/2026-11/evidence/2026-11-04-global-audit-remediation",
+          "before": {
+            "files": 8,
+            "bytes": 58875,
+            "sha256": "5691f0f9c0e2a7f85432ef8615124e084dac852437b65cd2394511053d97f8ba"
+          },
+          "after": {
+            "files": 8,
+            "bytes": 58875,
+            "sha256": "5691f0f9c0e2a7f85432ef8615124e084dac852437b65cd2394511053d97f8ba"
+          },
+          "identical": true,
+          "tracked": {
+            "files": 8,
+            "sha256": "5691f0f9c0e2a7f85432ef8615124e084dac852437b65cd2394511053d97f8ba",
+            "originalHead": "34428814a9efc997fd93d4434406a53df6460323",
+            "identical": true
+          }
+        }
+      ]
+    },
+    {
+      "taskId": "2026-11-05-base-freeze-release",
+      "status": "completed",
+      "completion": {
+        "historicalState": {
+          "runtimeGap": "New minimatch candidate is not installed/locked/validated; sandbox network EACCES blocks GitHub/npm/review adapters. v0.18.4 release and official Ops final reconstruction/race/smoke/CI/merge remain pending. Historical real-S3 provider gap persists."
+        },
+        "recordedAt": "2026-11-07T03:32:24.174Z",
+        "status": "closed-after-final-independent-approval",
+        "note": "2026-11-07: exact original scope approved by fresh independent CODE APPROVE / ARCH CLEAR on the final five-task plan. Official Base v0.18.5 at1da0834b; Base1890/0/1 and47packages, FE218, immutable Full Smoke/Release Gate passed. Official Ops PR177 merged at92c1efcfc4f754a7f0a4e9f181f446f4a2ddcfc2 after required hosted gates including Smoke Sanity; full readonly CGO consumer race2170/0/1,64packages, no source overlay or module mutation; FE218/scripts59/migration32clean/four standard generator smoke passed. Original unchanged SSRF public-API attack replay now records2 DNS lookups / loopbacknotreached; original deliberate attack-failure panic is preserved as a nonzero result, not called a green test. All40 original criteria and all source/contract boundaries preserved. S3 provider skip/no waiver, maintenance freeze unsigned, OpsQA002 and extra host-import runtime table gaps, network policy/CI measurements/baselines/production operations remain explicit separate residuals.",
+        "currentReview": ".harness/evidence/2026-11-05-base-freeze-release/resume11-five-task-applied.json"
+      },
+      "directories": [
+        {
+          "from": ".harness/tasks/2026-11-05-base-freeze-release",
+          "to": ".harness/archive/2026-11/tasks/2026-11-05-base-freeze-release",
+          "before": {
+            "files": 2,
+            "bytes": 23099,
+            "sha256": "f8c203ce3dbb7893f1d7bbf2af4af37110e0cc392dfc2592b7a4f60617af22a1"
+          },
+          "after": {
+            "files": 2,
+            "bytes": 23099,
+            "sha256": "f8c203ce3dbb7893f1d7bbf2af4af37110e0cc392dfc2592b7a4f60617af22a1"
+          },
+          "identical": true,
+          "tracked": {
+            "files": 2,
+            "sha256": "f8c203ce3dbb7893f1d7bbf2af4af37110e0cc392dfc2592b7a4f60617af22a1",
+            "originalHead": "34428814a9efc997fd93d4434406a53df6460323",
+            "identical": true
+          }
+        },
+        {
+          "from": ".harness/evidence/2026-11-05-base-freeze-release",
+          "to": ".harness/archive/2026-11/evidence/2026-11-05-base-freeze-release",
+          "before": {
+            "files": 570,
+            "bytes": 91467241,
+            "sha256": "8b2dc094676a37094c9ab19297189dad8e1acf23d609aca91afe4dee180ea486"
+          },
+          "after": {
+            "files": 570,
+            "bytes": 91467241,
+            "sha256": "8b2dc094676a37094c9ab19297189dad8e1acf23d609aca91afe4dee180ea486"
+          },
+          "identical": true,
+          "tracked": {
+            "files": 468,
+            "sha256": "e68f48f0ae5078746e46adc46e5ac6dc584ae8297909d7158e4f668f2f78a033",
+            "originalHead": "34428814a9efc997fd93d4434406a53df6460323",
+            "identical": true
+          }
+        }
+      ]
+    },
+    {
+      "taskId": "2026-11-07-ops-formal-queue-foundation-gaps",
+      "status": "completed",
+      "completion": {
+        "recordedAt": "2026-11-13",
+        "supersedes": "Historical residual statements about unavailable whole-scope review and absent Base publication; original checkpoints remain unchanged.",
+        "baseScope": "completed",
+        "baseMergedPR": 504,
+        "independentReview": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps/review.md",
+        "officialRelease": "pantheon-base-v0.18.7",
+        "baseCommit": "3203624e55438866edb951bd74e671eab38d2f16",
+        "officialReleaseEvidence": ".harness/evidence/2026-11-12-v0187-release-ops-consumption/summary.md",
+        "consumerPR": 183,
+        "consumerHead": "4404cfde5394557626967dc40669c30a0adba4e2",
+        "consumerStatus": "official acquisition/rebuild/validation and merge completed",
+        "remaining": [
+          "Final maintainer functional/visual acceptance not performed",
+          "Separate Ops product acceptance open",
+          "Real S3 provider unwaived; maintenance freeze unsigned",
+          "FR028 explicitly deferred"
+        ],
+        "consumerMergeCommit": "fc3fa867630580f7bcf1d40082a77f6b2548ac56",
+        "consumerMergedAt": "2026-11-13T04:44:42Z"
+      },
+      "directories": [
+        {
+          "from": ".harness/tasks/2026-11-07-ops-formal-queue-foundation-gaps",
+          "to": ".harness/archive/2026-11/tasks/2026-11-07-ops-formal-queue-foundation-gaps",
+          "before": {
+            "files": 8,
+            "bytes": 375492,
+            "sha256": "508bc5ad24816aa771f20a3b35125735a0d74b804e3175734b1e609678594c98"
+          },
+          "after": {
+            "files": 8,
+            "bytes": 375492,
+            "sha256": "508bc5ad24816aa771f20a3b35125735a0d74b804e3175734b1e609678594c98"
+          },
+          "identical": true,
+          "tracked": {
+            "files": 8,
+            "sha256": "508bc5ad24816aa771f20a3b35125735a0d74b804e3175734b1e609678594c98",
+            "originalHead": "34428814a9efc997fd93d4434406a53df6460323",
+            "identical": true
+          }
+        },
+        {
+          "from": ".harness/evidence/2026-11-07-ops-formal-queue-foundation-gaps",
+          "to": ".harness/archive/2026-11/evidence/2026-11-07-ops-formal-queue-foundation-gaps",
+          "before": {
+            "files": 852,
+            "bytes": 19371585,
+            "sha256": "50d4c4730e8a7607e44ee70f0bec26af7c3448131d8af7870b9cebf9ecc6e4c4"
+          },
+          "after": {
+            "files": 852,
+            "bytes": 19371585,
+            "sha256": "50d4c4730e8a7607e44ee70f0bec26af7c3448131d8af7870b9cebf9ecc6e4c4"
+          },
+          "identical": true,
+          "tracked": {
+            "files": 414,
+            "sha256": "e1e5d1e5c1a48465d65112a2dd3f252d60715e1068777a3942003b75d378fde7",
+            "originalHead": "34428814a9efc997fd93d4434406a53df6460323",
+            "identical": true
+          }
+        }
+      ]
+    },
+    {
+      "taskId": "2026-11-07-v0186-release-ops-consumption",
+      "status": "completed",
+      "completion": {
+        "recordedAt": "2026-11-07T07:25:50.865Z",
+        "verifiedDelivery": ".harness/evidence/2026-11-07-v0186-release-ops-consumption/verified-delivery-facts.json",
+        "sourceTagImmutable": true,
+        "substantiveMainOnlyEvidence": ".harness/evidence/2026-11-07-v0186-release-ops-consumption/verified-main-only.json",
+        "finalAdministration": "Metadata-only PR must pass its own normal required checks, merge, and final clean main-only recheck before session completion"
+      },
+      "directories": [
+        {
+          "from": ".harness/tasks/2026-11-07-v0186-release-ops-consumption",
+          "to": ".harness/archive/2026-11/tasks/2026-11-07-v0186-release-ops-consumption",
+          "before": {
+            "files": 1,
+            "bytes": 10344,
+            "sha256": "d4e7a438cc1a6063928f16c72dc03ea0688c998b914497b061d88118f1170ba3"
+          },
+          "after": {
+            "files": 1,
+            "bytes": 10344,
+            "sha256": "d4e7a438cc1a6063928f16c72dc03ea0688c998b914497b061d88118f1170ba3"
+          },
+          "identical": true,
+          "tracked": {
+            "files": 1,
+            "sha256": "d4e7a438cc1a6063928f16c72dc03ea0688c998b914497b061d88118f1170ba3",
+            "originalHead": "34428814a9efc997fd93d4434406a53df6460323",
+            "identical": true
+          }
+        },
+        {
+          "from": ".harness/evidence/2026-11-07-v0186-release-ops-consumption",
+          "to": ".harness/archive/2026-11/evidence/2026-11-07-v0186-release-ops-consumption",
+          "before": {
+            "files": 102,
+            "bytes": 364853,
+            "sha256": "a428ee3536b7254159f5124ad0de169647619b1fd36a3295fe70e9e8823d413a"
+          },
+          "after": {
+            "files": 102,
+            "bytes": 364853,
+            "sha256": "a428ee3536b7254159f5124ad0de169647619b1fd36a3295fe70e9e8823d413a"
+          },
+          "identical": true,
+          "tracked": {
+            "files": 102,
+            "sha256": "a428ee3536b7254159f5124ad0de169647619b1fd36a3295fe70e9e8823d413a",
+            "originalHead": "34428814a9efc997fd93d4434406a53df6460323",
+            "identical": true
+          }
+        }
+      ]
+    },
+    {
+      "taskId": "2026-11-12-v0187-release-ops-consumption",
+      "status": "completed",
+      "completion": {
+        "recordedAt": "2026-11-13",
+        "baseRelease": "pantheon-base-v0.18.7",
+        "baseCommit": "3203624e55438866edb951bd74e671eab38d2f16",
+        "releaseGateRun": 43194854386,
+        "consumerPR": 183,
+        "consumerHead": "4404cfde5394557626967dc40669c30a0adba4e2",
+        "consumerEvidence": "https://github.com/duanxldragon/pantheon-ops/blob/4404cfde5394557626967dc40669c30a0adba4e2/.harness/evidence/2026-11-13-base-v0187-consumption/summary.md",
+        "state": "completed by official consumer validation and merge",
+        "consumerMergeCommit": "fc3fa867630580f7bcf1d40082a77f6b2548ac56",
+        "consumerMergedAt": "2026-11-13T04:44:42Z"
+      },
+      "directories": [
+        {
+          "from": ".harness/tasks/2026-11-12-v0187-release-ops-consumption",
+          "to": ".harness/archive/2026-11/tasks/2026-11-12-v0187-release-ops-consumption",
+          "before": {
+            "files": 1,
+            "bytes": 9185,
+            "sha256": "06bbe70a4d0e5294946c8c69bf92bd59c1d924f4fdab9f91946f52ed75560d72"
+          },
+          "after": {
+            "files": 1,
+            "bytes": 9185,
+            "sha256": "06bbe70a4d0e5294946c8c69bf92bd59c1d924f4fdab9f91946f52ed75560d72"
+          },
+          "identical": true,
+          "tracked": {
+            "files": 1,
+            "sha256": "06bbe70a4d0e5294946c8c69bf92bd59c1d924f4fdab9f91946f52ed75560d72",
+            "originalHead": "34428814a9efc997fd93d4434406a53df6460323",
+            "identical": true
+          }
+        },
+        {
+          "from": ".harness/evidence/2026-11-12-v0187-release-ops-consumption",
+          "to": ".harness/archive/2026-11/evidence/2026-11-12-v0187-release-ops-consumption",
+          "before": {
+            "files": 26,
+            "bytes": 50595,
+            "sha256": "86b28a25ef43f2fbb118b4b66053df236f922617be7deec0dd58216385f97536"
+          },
+          "after": {
+            "files": 26,
+            "bytes": 50595,
+            "sha256": "86b28a25ef43f2fbb118b4b66053df236f922617be7deec0dd58216385f97536"
+          },
+          "identical": true,
+          "tracked": {
+            "files": 26,
+            "sha256": "86b28a25ef43f2fbb118b4b66053df236f922617be7deec0dd58216385f97536",
+            "originalHead": "34428814a9efc997fd93d4434406a53df6460323",
+            "identical": true
+          }
+        }
+      ]
+    },
+    {
+      "taskId": "2026-11-13-candidate-filesystem-security",
+      "status": "completed",
+      "completion": {
+        "reviewStatus": "approved",
+        "basis": "Existing completed manifest and same-task summary/review; original checkpoints retained."
+      },
+      "directories": [
+        {
+          "from": ".harness/tasks/2026-11-13-candidate-filesystem-security",
+          "to": ".harness/archive/2026-11/tasks/2026-11-13-candidate-filesystem-security",
+          "before": {
+            "files": 1,
+            "bytes": 25551,
+            "sha256": "4e092b49e41ad80f5fdfaa9429eb39e93e4da95589e754b234bb409bf646dfda"
+          },
+          "after": {
+            "files": 1,
+            "bytes": 25551,
+            "sha256": "4e092b49e41ad80f5fdfaa9429eb39e93e4da95589e754b234bb409bf646dfda"
+          },
+          "identical": true,
+          "tracked": {
+            "files": 1,
+            "sha256": "4e092b49e41ad80f5fdfaa9429eb39e93e4da95589e754b234bb409bf646dfda",
+            "originalHead": "34428814a9efc997fd93d4434406a53df6460323",
+            "identical": true
+          }
+        },
+        {
+          "from": ".harness/evidence/2026-11-13-candidate-filesystem-security",
+          "to": ".harness/archive/2026-11/evidence/2026-11-13-candidate-filesystem-security",
+          "before": {
+            "files": 24,
+            "bytes": 166997,
+            "sha256": "b941a347d4b89029f250c734635169b131902d75e30c4054b65aa5f2b3f62681"
+          },
+          "after": {
+            "files": 24,
+            "bytes": 166997,
+            "sha256": "b941a347d4b89029f250c734635169b131902d75e30c4054b65aa5f2b3f62681"
+          },
+          "identical": true,
+          "tracked": {
+            "files": 24,
+            "sha256": "b941a347d4b89029f250c734635169b131902d75e30c4054b65aa5f2b3f62681",
+            "originalHead": "34428814a9efc997fd93d4434406a53df6460323",
+            "identical": true
+          }
+        }
+      ]
+    },
+    {
+      "taskId": "2026-11-13-v0188-release-preparation",
+      "status": "completed",
+      "completion": {
+        "reviewStatus": "approved",
+        "basis": "Existing completed manifest and same-task summary/review; original checkpoints retained."
+      },
+      "directories": [
+        {
+          "from": ".harness/tasks/2026-11-13-v0188-release-preparation",
+          "to": ".harness/archive/2026-11/tasks/2026-11-13-v0188-release-preparation",
+          "before": {
+            "files": 1,
+            "bytes": 55210,
+            "sha256": "c0b52a6d25c8b99f295b5dac8234e1e5736fcabeb23e9bc9afc6362da51aa727"
+          },
+          "after": {
+            "files": 1,
+            "bytes": 55210,
+            "sha256": "c0b52a6d25c8b99f295b5dac8234e1e5736fcabeb23e9bc9afc6362da51aa727"
+          },
+          "identical": true,
+          "tracked": {
+            "files": 1,
+            "sha256": "c0b52a6d25c8b99f295b5dac8234e1e5736fcabeb23e9bc9afc6362da51aa727",
+            "originalHead": "34428814a9efc997fd93d4434406a53df6460323",
+            "identical": true
+          }
+        },
+        {
+          "from": ".harness/evidence/2026-11-13-v0188-release-preparation",
+          "to": ".harness/archive/2026-11/evidence/2026-11-13-v0188-release-preparation",
+          "before": {
+            "files": 158,
+            "bytes": 2275325,
+            "sha256": "0058fe0a7b95eb6f44edc6292ff8721d6c62410b124a5f24bc9865d766e4f63d"
+          },
+          "after": {
+            "files": 158,
+            "bytes": 2275325,
+            "sha256": "0058fe0a7b95eb6f44edc6292ff8721d6c62410b124a5f24bc9865d766e4f63d"
+          },
+          "identical": true,
+          "tracked": {
+            "files": 158,
+            "sha256": "0058fe0a7b95eb6f44edc6292ff8721d6c62410b124a5f24bc9865d766e4f63d",
+            "originalHead": "34428814a9efc997fd93d4434406a53df6460323",
+            "identical": true
+          }
+        }
+      ]
+    }
+  ],
+  "trackedFiles": 1264,
+  "localFiles": 1804,
+  "localOnlyNote": "Local digest includes previously ignored files kept with their directories. Only originally tracked files enter the PR; all tracked bytes match the original main commit."
+}

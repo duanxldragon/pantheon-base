@@ -1,23 +1,29 @@
-# Pantheon Platform
+# Pantheon Base
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 English version: [README.en.md](./README.en.md)
 
-Pantheon Platform 是一个面向企业后台的模块化单体底座，沉淀认证、IAM、组织、配置、审计、多语言、动态菜单，以及受控低代码生成与模块治理能力。项目目标不是只提供登录和 CRUD 壳，而是提供一套可持续演进、系统域与业务域解耦、AI 友好的后台平台基础设施。
+Pantheon Base 是一个面向企业后台的模块化单体底座，沉淀认证、IAM、组织、配置、审计、多语言、动态菜单，以及受控低代码生成与模块治理能力。项目目标不是只提供登录和 CRUD 壳，而是提供一套可持续演进、系统域与业务域解耦、AI 友好的后台平台基础设施。
 
 ## 版本
 
-| 项 | 值 |
-| --- | --- |
-| 当前版本 | 以仓库根 [`VERSION`](./VERSION) 为准（本文件不抄写具体版本号，避免"正文手抄 + 无人复核"造成的漂移） |
-| 发布说明 | [docs/release-notes/README.md](./docs/release-notes/README.md) — 逐版本索引；变更全量记录见 [CHANGELOG.md](./CHANGELOG.md) |
-| Shell/Harness 基线版本 | `1.4.0`（见 [SHELL_VERSION.json](./SHELL_VERSION.json)） |
-| 部署文档 | [docs/DEPLOYMENT_GUIDE.md](./docs/DEPLOYMENT_GUIDE.md)（MySQL 8、Redis 7、迁移 + runtime seed、健康检查、遥测、备份恢复与 schema-aware 回滚） |
-| **任务状态** | [.harness/STATUS.md](./.harness/STATUS.md) — 当前任务状态总览 |
-| **归档记录** | [.harness/ARCHIVE.md](./.harness/ARCHIVE.md) — 已完成任务归档索引 |
+| 项                     | 值                                                                                                                                            |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| 当前版本               | 以仓库根 [`VERSION`](./VERSION) 为准（本文件不抄写具体版本号，避免"正文手抄 + 无人复核"造成的漂移）                                           |
+| 发布说明               | [docs/release-notes/README.md](./docs/release-notes/README.md) — 逐版本索引；变更全量记录见 [CHANGELOG.md](./CHANGELOG.md)                    |
+| Shell/Harness 基线版本 | 以 [SHELL_VERSION.json](./SHELL_VERSION.json) 为准                                                                                            |
+| 部署文档               | [docs/DEPLOYMENT_GUIDE.md](./docs/DEPLOYMENT_GUIDE.md)（MySQL 8、Redis 7、迁移 + runtime seed、健康检查、遥测、备份恢复与 schema-aware 回滚） |
+| **任务状态**           | [.harness/STATUS.md](./.harness/STATUS.md) — 当前任务状态总览                                                                                 |
+| **归档记录**           | [.harness/ARCHIVE.md](./.harness/ARCHIVE.md) — 已完成任务归档索引                                                                             |
 
 交付状态说明：本仓库是 foundation 的**唯一源码来源**，下游消费者（如 `pantheon-ops`）以源码副本方式消费，通过 `foundation-release.lock.json` 锁定版本、`npm run rebuild:from-base` 重建。当前版本号、该版本的改动内容与是否已发布，只看两处：[`VERSION`](./VERSION) 与 [发布说明索引](./docs/release-notes/README.md)（逐版本 `RELEASE_NOTES_vX.Y.Z.md`，随 release 冻结、只追加不回改）。本文件不再抄写具体版本的改动明细——历史教训是"正文手抄 + 无人复核"必然滞后于 `VERSION`。
+
+## 项目与交付入口
+
+- [文档索引](./docs/README.md)：合同、设计、开发、验收与运维。
+- [GitHub 正式发行](https://github.com/duanxldragon/pantheon-base/releases/latest)：已发布 tag 与不可变 foundation 资产。
+- [当前任务状态](./.harness/STATUS.md)与[完成任务归档](./.harness/ARCHIVE.md)：当前交付证据及保留事项。
 
 ## 项目定位
 
@@ -51,7 +57,7 @@ Pantheon Platform 是一个面向企业后台的模块化单体底座，沉淀�
 ```text
 backend/
   cmd/server/              # 后端启动入口
-  modules/lowcode/         # system/lowcode：generator / dynamicmodule 后端实现
+  modules/lowcode/         # platform.lowcode：generator / dynamicmodule 后端实现
   modules/auth/            # system/auth：认证、会话、安全中心
   modules/platform/        # platform：工作台聚合数据
   modules/system/          # system/*：IAM、组织、配置、审计等底座能力
@@ -203,10 +209,12 @@ npm run release:foundation:publish -- --release-version pantheon-base-v<X.Y.Z> -
 > 本节数字（Go 版本、CVE 数、用例数）都是 **2026-09-22 当轮读数**，此后未随代码复核；作为历史记录保留，不作为当前状态声明。
 
 已完成两轮整改共 12 个任务：
+
 - **命名与边界整改** (6/6): auth 模块解耦、边界门禁、生成器治理、文档整理
 - **企业级整改** (6/6): 会话撤销闭环、租户隔离、导出分页、后台维护器、Redis fail-fast
 
 关键成果（当日口径）：
+
 - 当轮把 Go 基线抬到 1.26.6 并修复 7 个 stdlib CVE；此后基线继续抬升，**当前值看 `backend/go.mod`**（本文件不抄写具体补丁版本）
 - 统一导出上限 10,000 行，会话列表 SQL 分页 + 索引优化
 - 保留操作移出读路径，后台维护器 (`pkg/maintenance`) 统一调度
@@ -217,7 +225,7 @@ npm run release:foundation:publish -- --release-version pantheon-base-v<X.Y.Z> -
 
 ## 权限模型摘要
 
-Pantheon Platform 将权限拆成四层：
+Pantheon Base 将权限拆成四层：
 
 1. **导航授权**：是否能在侧边栏看到菜单，存储在 `system_role_menu`。
 2. **页面授权**：是否能进入页面路由，来源于菜单元数据 `pagePerm`。

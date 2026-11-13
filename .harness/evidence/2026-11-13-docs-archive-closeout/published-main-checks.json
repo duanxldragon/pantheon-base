@@ -1,0 +1,250 @@
+{
+  "head": "34428814a9efc997fd93d4434406a53df6460323",
+  "checks": [
+    {
+      "name": "Cleanup Stale Branches",
+      "head": "34428814a9efc997fd93d4434406a53df6460323",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/duanxldragon/pantheon-base/actions/runs/43413202458/job/131844547832"
+    },
+    {
+      "name": "Release Gate Summary",
+      "head": "34428814a9efc997fd93d4434406a53df6460323",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/duanxldragon/pantheon-base/actions/runs/43404784209/job/131824062810"
+    },
+    {
+      "name": "SonarCloud Gate",
+      "head": "34428814a9efc997fd93d4434406a53df6460323",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/duanxldragon/pantheon-base/actions/runs/43404784209/job/131824011159"
+    },
+    {
+      "name": "Quality Gates",
+      "head": "34428814a9efc997fd93d4434406a53df6460323",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/duanxldragon/pantheon-base/actions/runs/43404784141/job/131823213830"
+    },
+    {
+      "name": "PR Smoke Modules",
+      "head": "34428814a9efc997fd93d4434406a53df6460323",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/duanxldragon/pantheon-base/actions/runs/43404784141/job/131818303883"
+    },
+    {
+      "name": "Smoke Sanity",
+      "head": "34428814a9efc997fd93d4434406a53df6460323",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/duanxldragon/pantheon-base/actions/runs/43404784141/job/131818303880"
+    },
+    {
+      "name": "CI Summary",
+      "head": "34428814a9efc997fd93d4434406a53df6460323",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/duanxldragon/pantheon-base/actions/runs/43404784096/job/131817766077"
+    },
+    {
+      "name": "Coverage Gate",
+      "head": "34428814a9efc997fd93d4434406a53df6460323",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/duanxldragon/pantheon-base/actions/runs/43404784096/job/131817607125"
+    },
+    {
+      "name": "Security Gates",
+      "head": "34428814a9efc997fd93d4434406a53df6460323",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/duanxldragon/pantheon-base/actions/runs/43404784066/job/131817499216"
+    },
+    {
+      "name": "SonarCloud Code Analysis",
+      "head": "34428814a9efc997fd93d4434406a53df6460323",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/duanxldragon/pantheon-base/runs/131816907049"
+    },
+    {
+      "name": "PR Smoke Core (Optional)",
+      "head": "34428814a9efc997fd93d4434406a53df6460323",
+      "status": "completed",
+      "conclusion": "skipped",
+      "url": "https://github.com/duanxldragon/pantheon-base/actions/runs/43404784141/job/131816416870"
+    },
+    {
+      "name": "Frontend Contract",
+      "head": "34428814a9efc997fd93d4434406a53df6460323",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/duanxldragon/pantheon-base/actions/runs/43404784141/job/131816415545"
+    },
+    {
+      "name": "Go Lint",
+      "head": "34428814a9efc997fd93d4434406a53df6460323",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/duanxldragon/pantheon-base/actions/runs/43404784141/job/131816415393"
+    },
+    {
+      "name": "Backend Tests",
+      "head": "34428814a9efc997fd93d4434406a53df6460323",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/duanxldragon/pantheon-base/actions/runs/43404784141/job/131816415300"
+    },
+    {
+      "name": "Open PRs",
+      "head": "34428814a9efc997fd93d4434406a53df6460323",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/duanxldragon/pantheon-base/actions/runs/43404784209/job/131816359330"
+    },
+    {
+      "name": "Candidate Checks",
+      "head": "34428814a9efc997fd93d4434406a53df6460323",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/duanxldragon/pantheon-base/actions/runs/43404784209/job/131816359263"
+    },
+    {
+      "name": "CodeQL Alerts",
+      "head": "34428814a9efc997fd93d4434406a53df6460323",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/duanxldragon/pantheon-base/actions/runs/43404784209/job/131816359206"
+    },
+    {
+      "name": "Frontend Unit Tests",
+      "head": "34428814a9efc997fd93d4434406a53df6460323",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/duanxldragon/pantheon-base/actions/runs/43404784096/job/131816359144"
+    },
+    {
+      "name": "Bench Perf Smoke (advisory)",
+      "head": "34428814a9efc997fd93d4434406a53df6460323",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/duanxldragon/pantheon-base/actions/runs/43404784096/job/131816359104"
+    },
+    {
+      "name": "Go Lint",
+      "head": "34428814a9efc997fd93d4434406a53df6460323",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/duanxldragon/pantheon-base/actions/runs/43404784096/job/131816359087"
+    },
+    {
+      "name": "Unit Tests",
+      "head": "34428814a9efc997fd93d4434406a53df6460323",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/duanxldragon/pantheon-base/actions/runs/43404784096/job/131816359081"
+    },
+    {
+      "name": "Fast Checks",
+      "head": "34428814a9efc997fd93d4434406a53df6460323",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/duanxldragon/pantheon-base/actions/runs/43404784096/job/131816359076"
+    },
+    {
+      "name": "Docs Governance",
+      "head": "34428814a9efc997fd93d4434406a53df6460323",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/duanxldragon/pantheon-base/actions/runs/43404784141/job/131816358876"
+    },
+    {
+      "name": "Dependabot Alerts",
+      "head": "34428814a9efc997fd93d4434406a53df6460323",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/duanxldragon/pantheon-base/actions/runs/43404784209/job/131816358853"
+    },
+    {
+      "name": "Change Scope",
+      "head": "34428814a9efc997fd93d4434406a53df6460323",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/duanxldragon/pantheon-base/actions/runs/43404784141/job/131816358843"
+    },
+    {
+      "name": "Boundary Gate",
+      "head": "34428814a9efc997fd93d4434406a53df6460323",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/duanxldragon/pantheon-base/actions/runs/43404784096/job/131816358685"
+    },
+    {
+      "name": "Secret Scan",
+      "head": "34428814a9efc997fd93d4434406a53df6460323",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/duanxldragon/pantheon-base/actions/runs/43404784066/job/131816358674"
+    },
+    {
+      "name": "Workflow Security",
+      "head": "34428814a9efc997fd93d4434406a53df6460323",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/duanxldragon/pantheon-base/actions/runs/43404784066/job/131816358628"
+    },
+    {
+      "name": "Duplication Gate",
+      "head": "34428814a9efc997fd93d4434406a53df6460323",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/duanxldragon/pantheon-base/actions/runs/43404784141/job/131816358534"
+    },
+    {
+      "name": "Dependency Vulnerabilities",
+      "head": "34428814a9efc997fd93d4434406a53df6460323",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/duanxldragon/pantheon-base/actions/runs/43404784066/job/131816358502"
+    },
+    {
+      "name": "CodeQL Security",
+      "head": "34428814a9efc997fd93d4434406a53df6460323",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/duanxldragon/pantheon-base/actions/runs/43404784066/job/131816358302"
+    },
+    {
+      "name": "Actionlint",
+      "head": "34428814a9efc997fd93d4434406a53df6460323",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/duanxldragon/pantheon-base/actions/runs/43404784034/job/131816358220"
+    },
+    {
+      "name": "Full Smoke",
+      "head": "34428814a9efc997fd93d4434406a53df6460323",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/duanxldragon/pantheon-base/actions/runs/43404784029/job/131816358204"
+    },
+    {
+      "name": "Tenant Smoke (multi-mode)",
+      "head": "34428814a9efc997fd93d4434406a53df6460323",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/duanxldragon/pantheon-base/actions/runs/43404783978/job/131816357974"
+    },
+    {
+      "name": "Core Smoke",
+      "head": "34428814a9efc997fd93d4434406a53df6460323",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/duanxldragon/pantheon-base/actions/runs/43404783978/job/131816357790"
+    }
+  ]
+}

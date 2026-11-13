@@ -1,26 +1,12 @@
 # Pantheon Base 文档索引
 
-当前 VERSION 为 `0.18.8`，包含已验证的依赖升级与 11 月 7 日交付收尾；见 [v0.18.8 发行说明](./release-notes/RELEASE_NOTES_v0.18.8.md) 和 [准备检查点证据](../.harness/evidence/2026-11-13-v0188-release-preparation/summary.md)。正式发行身份、提交和四个不可变资产以 [GitHub Release](https://github.com/duanxldragon/pantheon-base/releases/tag/pantheon-base-v0.18.8) 为准。前一版本 v0.18.7 在 `3203624e55438866edb951bd74e671eab38d2f16` 发布并通过 [Ops #183](https://github.com/duanxldragon/pantheon-ops/pull/183) 完成正式消费；见 [v0.18.7 交付证据](../.harness/evidence/2026-11-12-v0187-release-ops-consumption/summary.md)。
-
-v0.18.8 准备已通过 PR #509 合并；最终 main 的 Smoke Sanity 暴露 empty 节点脱离 DOM 时的 helper 等待参数缺陷，原准备任务的续办已完成。实际 helper 五场景浏览器证明、最终 candidate 兼容构建及五源码独立安全/CODE/ARCH 审批通过；最终完整树确认、合并与 hosted 门禁仍待完成；见 [2026-11-13 续办证据](../.harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/summary.md)。此前 candidate 和审批保留历史范围，正式发行仍需最终提交门禁与资产验证。
-
-## Historical checkpoints
-
-Official `pantheon-base-v0.18.6` is published at5553bc0e after exact Release Gate; Ops official consumption passed and merged[PR178](https://github.com/duanxldragon/pantheon-ops/pull/178). Three repositories verified main-only; final factual documentation closeout is independently approved; current administrative CI/merge/main-only recheck remain required. Original12/40 remain accepted; unwaived residuals retained. See [evidence](../.harness/evidence/2026-11-07-v0186-release-ops-consumption/summary.md).
-
-当前（2026-11-07）：原12项任务的40条验收标准均保留并获独立 CODE/ARCH 批准。七项已通过PR497合并；最后五项治理收口待本PR门禁。Base v0.18.5正式发布，Ops PR177正式消费已合并；完整无overlay race、前端、脚本、迁移和四套标准smoke通过。冻结未签，S3无豁免，业务/策略残余明确。 See [evidence](../.harness/evidence/2026-11-05-base-freeze-release/resume11-five-task-applied.json).
-
-### Historical checkpoints
-
-当前（2026-11-07）：七个原任务已获独立 CODE/ARCH 批准并关闭；五个消费/总交付任务仍开放。Base v0.18.5 已正式发布，四资产已验证并重建 Ops，完整消费 race/runtime/CI 收口继续进行。冻结未签，S3 无豁免。 See [证据](../.harness/evidence/2026-11-05-base-freeze-release/resume9-seven-task-applied.json).
-
-### Historical delivery checkpoint
-
-当前功能收尾与发行：[任务拆解](./harness/tasks/2026-11-05-base-freeze-release.task.md) · [逐项闭环核对](../.harness/evidence/2026-11-05-base-freeze-release/closeout.md)。Base v0.18.4 已正式发布，Ops PR #171 已合并并锁定消费，租户 V1 保留。12 个任务的交付证据已对齐，最终关闭等待独立审查；S3 provider、维护冻结签署等残余项明确保留。
-
-当前全局审计基线：[完整审计](./reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-11-04_FULL.md) 与 [全量资产矩阵](./reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-11-04_ASSETS.md)。整改现态：[Harness整改计划](../.harness/tasks/2026-11-04-global-audit-remediation/plan.md)。旧同日报告保留历史，整改完成不等于已签署维护冻结。
-
 English version: [README.en.md](./README.en.md)
+
+当前正式发行 **v0.18.8** 已于 2026-11-13 发布，tag `pantheon-base-v0.18.8` 绑定提交 `34428814a9efc997fd93d4434406a53df6460323`。[发行说明](./release-notes/RELEASE_NOTES_v0.18.8.md) · [GitHub Release 与四个不可变资产](https://github.com/duanxldragon/pantheon-base/releases/tag/pantheon-base-v0.18.8) · [正式发行证据](../.harness/evidence/2026-11-13-docs-archive-closeout/publication-summary.json)。PR #510 已合并；最终提交的 CI、Quality、Security、Smoke、Release Gate 和资产验证均通过，Linux foundation 测试 125/125、零跳过；CodeQL #100–108 自动关闭，零 dismissals。
+
+Ops 已通过 [PR #183](https://github.com/duanxldragon/pantheon-ops/pull/183) 正式消费 v0.18.7；**v0.18.8 的正式消费升级另行跟踪**。维护冻结未签署、真实 S3 provider 验证未豁免、FR028 延期，生产迁移/旧认证退役与独立业务验收继续保留，见[当前状态](../.harness/STATUS.md)。
+
+已完成任务及执行证据进入[月度归档索引](../.harness/ARCHIVE.md)；旧状态检查点见[历史快照](../.harness/archive/2026-11/STATUS-before-doc-closeout.md)。当前审计对照基线：[完整审计](./reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-11-04_FULL.md)和[全量资产矩阵](./reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-11-04_ASSETS.md)，已完成整改计划保留在[归档](../.harness/archive/2026-11/tasks/2026-11-04-global-audit-remediation/plan.md)。整改完成不代表维护冻结已签署。
 
 本文是 `docs/` 的统一入口。
 

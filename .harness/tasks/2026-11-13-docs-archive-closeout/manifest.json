@@ -1,0 +1,152 @@
+{
+  "taskId": "2026-11-13-docs-archive-closeout",
+  "taskDoc": "docs/harness/tasks/2026-11-13-docs-archive-closeout.task.md",
+  "title": "Refresh Pantheon Base documentation and archive completed tasks",
+  "repo": "pantheon-base",
+  "primaryLayer": "platform",
+  "dependencyLayers": [
+    "platform"
+  ],
+  "status": "in-progress",
+  "priority": "P2",
+  "type": "docs-archive-closeout",
+  "created_at": "2026-11-13",
+  "goal": "Align bilingual entry documentation and GitHub description with published v0.18.8; archive evidence-backed completed tasks without changing historical verdicts or residual acceptance.",
+  "scope": {
+    "in": [
+      "Bilingual root READMEs and docs/release indexes",
+      "Current .harness/STATUS.md and ARCHIVE.md, historical status snapshot",
+      "18 completed task/evidence directory moves with byte-integrity receipts",
+      "Append publication facts to v0.18.8 release notes",
+      "GitHub repository description",
+      "Ordinary Markdown hrefs in current contracts/designs/runbooks and retained task docs point to physical archived files; frozen release-note links receive append-only archive addenda."
+    ],
+    "out": [
+      "Product code, UI, workflows, gates, dependencies, VERSION, immutable tags/assets",
+      "Ops repository and consumer lock",
+      "Unfinished production, freeze, S3, FR028 and product acceptance",
+      "Legacy documents without completion evidence"
+    ]
+  },
+  "contractAnchors": [
+    "docs/contracts/DOCUMENT_GOVERNANCE_CONTRACT.md",
+    "docs/harness/VERIFICATION_EVIDENCE_SPEC.md",
+    "docs/harness/REVIEW_LOOP_SPEC.md",
+    ".harness/ARCHIVE.md"
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "ci-workflow",
+    "portableFailureClass": "harness-governance",
+    "ownerLayer": "foundation-source",
+    "ratchetDecision": "guide-updated",
+    "coverageDimensions": [
+      "maintainability",
+      "method-health",
+      "architecture-fitness"
+    ]
+  },
+  "workspaceContext": {
+    "targetRepository": "pantheon-base",
+    "repositoryRole": "foundation-source",
+    "contextSyncExpectation": "not-required",
+    "releaseRequirement": "none"
+  },
+  "expectedFiles": {
+    "create": [
+      "docs/harness/tasks/2026-11-13-docs-archive-closeout.task.md",
+      ".harness/tasks/2026-11-13-docs-archive-closeout/manifest.json",
+      ".harness/evidence/2026-11-13-docs-archive-closeout/commands.json",
+      ".harness/evidence/2026-11-13-docs-archive-closeout/summary.md",
+      ".harness/evidence/2026-11-13-docs-archive-closeout/review.md",
+      ".harness/evidence/2026-11-13-docs-archive-closeout/pr-body.md",
+      ".harness/archive/2026-11/STATUS-before-doc-closeout.md"
+    ],
+    "modify": [
+      "README.md",
+      "README.en.md",
+      "docs/README.md",
+      "docs/README.en.md",
+      "docs/release-notes/README.md",
+      "docs/release-notes/README.en.md",
+      "docs/release-notes/RELEASE_NOTES_v0.18.8.md",
+      ".harness/STATUS.md",
+      ".harness/ARCHIVE.md",
+      "docs/contracts/TENANT_CONTRACT_V1.en.md",
+      "docs/contracts/TENANT_CONTRACT_V1.md",
+      "docs/designs/LOWCODE_GENERATOR_GUIDE.en.md",
+      "docs/designs/LOWCODE_GENERATOR_GUIDE.md",
+      "docs/harness/tasks/2026-11-04-audit-p1-npm-audit-exit.task.md",
+      "docs/harness/tasks/2026-11-04-audit-p1-refresh-rotation.task.md",
+      "docs/harness/tasks/2026-11-04-audit-p1-ssrf-dial-binding.task.md",
+      "docs/harness/tasks/2026-11-04-audit-p2-agent-stop-points.task.md",
+      "docs/harness/tasks/2026-11-04-audit-p2-authoritative-docs.task.md",
+      "docs/harness/tasks/2026-11-04-audit-p2-freeze-validation.task.md",
+      "docs/harness/tasks/2026-11-04-audit-p2-ops-db-test-followup.task.md",
+      "docs/harness/tasks/2026-11-04-audit-p2-release-policy.task.md",
+      "docs/harness/tasks/2026-11-04-audit-p3-ci-cost-review.task.md",
+      "docs/harness/tasks/2026-11-04-audit-p3-consumer-seams.task.md",
+      "docs/harness/tasks/2026-11-04-global-audit-remediation.task.md",
+      "docs/runbooks/TENANT_MIGRATION_RUNBOOK.md",
+      "docs/TENANT_INITIALIZATION_GUIDE.md"
+    ],
+    "doNotTouch": [
+      "backend/",
+      "frontend/",
+      "scripts/",
+      ".github/",
+      "VERSION",
+      "CHANGELOG.md",
+      "pantheon-ops/"
+    ]
+  },
+  "executionRoles": {
+    "implementerPosture": "Dispatcher edits documentation and performs reversible git mv only.",
+    "reviewerPosture": [
+      "Independent non-author code reviewer checks publication identity, archive byte preservation, current/historical separation and residual scope."
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "npm run check:docs-frontmatter",
+      "npm run check:task-packet-template",
+      "npm run check:task-packet",
+      "npm run check:harness-docs",
+      "npm run check:harness-inventory",
+      "npm run check:harness-encoding",
+      "npm run check:structure",
+      "npm run check:harness-evidence",
+      "npm run check:harness-review",
+      "npm run check:harness-runtime-evidence",
+      "npm run check:duplication"
+    ],
+    "runtimeEvidence": []
+  },
+  "runtimeSensitive": false,
+  "runtimeGap": "Documentation and repository metadata only; no application runtime or visual behavior changed.",
+  "acceptanceCriteria": [
+    "Bilingual entry pages identify Pantheon Base and published v0.18.8 using exact release evidence",
+    "18 completed task/evidence pairs archived byte-for-byte and canonical links resolve",
+    "Current status and archive counts agree with filesystem; unfinished residuals explicit",
+    "GitHub description readback matches intended text",
+    "Appropriate governance checks and independent review pass; normal PR delivery"
+  ],
+  "humanGates": [
+    "User authorized documentation, repository description and completed-work archiving. Standard independent review and required GitHub checks apply; no gate waiver."
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-11-13-docs-archive-closeout/manifest.json",
+    "taskDoc": "docs/harness/tasks/2026-11-13-docs-archive-closeout.task.md",
+    "evidenceDir": ".harness/evidence/2026-11-13-docs-archive-closeout/",
+    "reviewFile": ".harness/evidence/2026-11-13-docs-archive-closeout/review.md",
+    "summaryFile": ".harness/evidence/2026-11-13-docs-archive-closeout/summary.md",
+    "changeRef": "none",
+    "planRefs": [
+      "docs/harness/tasks/2026-11-13-docs-archive-closeout.task.md",
+      ".harness/ARCHIVE.md"
+    ]
+  },
+  "reviewStatus": "approved",
+  "verificationStatus": "11-isolated-local-gates-passed"
+}

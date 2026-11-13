@@ -16,11 +16,11 @@ updated_at: 2026-11-06
 
 Decision delivered: preserve coverage/race and existing jobs; defer optimization until actual timing/value evidence. Optimization itself excluded.
 
-[闭环矩阵、证据与残余事项](../../../.harness/evidence/2026-11-05-base-freeze-release/closeout.md)。下文执行说明包含历史记录；本节是当前状态。
+[闭环矩阵、证据与残余事项](../../../.harness/archive/2026-11/evidence/2026-11-05-base-freeze-release/closeout.md)。下文执行说明包含历史记录；本节是当前状态。
 
 ## Goal
 
-按实际价值裁定 CI 重复与 dormant 机制。详细计划和验收见 [整改计划](../../../.harness/tasks/2026-11-04-global-audit-remediation/plan.md)。
+按实际价值裁定 CI 重复与 dormant 机制。详细计划和验收见 [整改计划](../../../.harness/archive/2026-11/tasks/2026-11-04-global-audit-remediation/plan.md)。
 
 ## Priority
 

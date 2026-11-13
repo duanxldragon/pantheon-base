@@ -1,0 +1,56 @@
+{
+  "assets": [
+    {
+      "url": "https://github.com/duanxldragon/pantheon-base/releases/download/pantheon-base-v0.18.8/foundation-release-pantheon-base-v0.18.8.tgz",
+      "remoteDigestMatches": true,
+      "sha256": "da20d44efe6edc1f7546c1f388ace98844bbe7fc945e6f509f99e2e34faec355",
+      "name": "foundation-release-pantheon-base-v0.18.8.tgz",
+      "bytes": 43682493
+    },
+    {
+      "url": "https://github.com/duanxldragon/pantheon-base/releases/download/pantheon-base-v0.18.8/foundation-release-pantheon-base-v0.18.8.tgz.sha256",
+      "remoteDigestMatches": true,
+      "sha256": "9409f39777c8bc2c5afaab13ce1acf493c01e9450096f1bc13cff48a9df45a5d",
+      "name": "foundation-release-pantheon-base-v0.18.8.tgz.sha256",
+      "bytes": 111
+    },
+    {
+      "url": "https://github.com/duanxldragon/pantheon-base/releases/download/pantheon-base-v0.18.8/repo.tar",
+      "remoteDigestMatches": true,
+      "sha256": "ba3b7b1b462ab39f0bc74158ea0e0c6afc2ef5c94be4149b5338849d47e6a646",
+      "name": "repo.tar",
+      "bytes": 73144320
+    },
+    {
+      "url": "https://github.com/duanxldragon/pantheon-base/releases/download/pantheon-base-v0.18.8/repo.tar.sha256",
+      "remoteDigestMatches": true,
+      "sha256": "1f127f508813150ca47972840b9217aaa6c0cc15b197a2f866f5d242041391cf",
+      "name": "repo.tar.sha256",
+      "bytes": 75
+    }
+  ],
+  "publishedAt": "2026-11-13T12:08:32Z",
+  "opsOfficialUpgrade": "deferred to separate consumer task",
+  "linuxFoundationTests": {
+    "failed": 0,
+    "skipped": 0,
+    "passed": 125,
+    "tests": 125
+  },
+  "pr": "https://github.com/duanxldragon/pantheon-base/pull/510",
+  "candidateMatchesMergedMain": true,
+  "completedAt": "2026-11-13T12:11:01.7723648+00:00",
+  "releaseUrl": "https://github.com/duanxldragon/pantheon-base/releases/tag/pantheon-base-v0.18.8",
+  "codeql": {
+    "dismissals": 0,
+    "alerts100To108": "fixed automatically",
+    "openAlerts": 0
+  },
+  "mainClean": true,
+  "assetVerification": "https://github.com/duanxldragon/pantheon-base/actions/runs/43422675437",
+  "reviewedTree": "2951dd80c4df1c1f5b9be636a28887aadb4e4772",
+  "commit": "34428814a9efc997fd93d4434406a53df6460323",
+  "candidateLeaves": 1176,
+  "release": "pantheon-base-v0.18.8",
+  "releaseGate": "https://github.com/duanxldragon/pantheon-base/actions/runs/43404784209"
+}
