@@ -1,23 +1,29 @@
-# Pantheon Platform
+# Pantheon Base
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 Chinese version: [README.md](./README.md)
 
-Pantheon Platform is an enterprise backoffice foundation built as a modular monolith. It consolidates authentication, IAM, organization, configuration, audit, i18n, dynamic menus, and a controlled low-code generation and module-governance workflow into a reusable admin platform baseline.
+Pantheon Base is an enterprise backoffice foundation built as a modular monolith. It consolidates authentication, IAM, organization, configuration, audit, i18n, dynamic menus, and a controlled low-code generation and module-governance workflow into a reusable admin platform baseline.
 
 The project is not intended to be just a login shell plus CRUD scaffolding. Its goal is to provide AI-friendly, sustainably evolving platform infrastructure with clear separation between system domains and business domains.
 
 ## Version
 
-| Item | Value |
-| --- | --- |
-| Current version | Take it from [`VERSION`](./VERSION) at the repo root (this file does not restate a release number, because a hand-copied number is a number nobody re-checks) |
-| Release notes | [docs/release-notes/README.md](./docs/release-notes/README.md) — per-version index; full change log in [CHANGELOG.md](./CHANGELOG.md) |
-| Shell/Harness baseline | `1.4.0` (see [SHELL_VERSION.json](./SHELL_VERSION.json)) |
-| Deployment guide | [docs/DEPLOYMENT_GUIDE.md](./docs/DEPLOYMENT_GUIDE.md) (MySQL 8, Redis 7, migrations + runtime seed, health checks, telemetry, backup/restore, and schema-aware rollback) |
+| Item                   | Value                                                                                                                                                                     |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Current version        | Take it from [`VERSION`](./VERSION) at the repo root (this file does not restate a release number, because a hand-copied number is a number nobody re-checks)             |
+| Release notes          | [docs/release-notes/README.md](./docs/release-notes/README.md) — per-version index; full change log in [CHANGELOG.md](./CHANGELOG.md)                                     |
+| Shell/Harness baseline | Take it from [SHELL_VERSION.json](./SHELL_VERSION.json)                                                                                                                   |
+| Deployment guide       | [docs/DEPLOYMENT_GUIDE.md](./docs/DEPLOYMENT_GUIDE.md) (MySQL 8, Redis 7, migrations + runtime seed, health checks, telemetry, backup/restore, and schema-aware rollback) |
 
 Delivery status: this repository is the single source of the foundation. Consumers (for example `pantheon-ops`) take it as a source copy, pinned through `foundation-release.lock.json` and rebuilt with `npm run rebuild:from-base`. The current version, what changed in it, and whether it is published live in exactly two places: [`VERSION`](./VERSION) and the [release-notes index](./docs/release-notes/README.md) (`RELEASE_NOTES_vX.Y.Z.md` per release, frozen with the release, append-only). This file no longer restates a per-release change list - the lesson from the previous wording is that a hand-copied summary always drifts behind `VERSION`.
+
+## Project and Delivery Links
+
+- [Documentation index](./docs/README.en.md): contracts, design, development and operations.
+- [Official GitHub Releases](https://github.com/duanxldragon/pantheon-base/releases/latest): published tags and immutable foundation assets.
+- [Current task status](./.harness/STATUS.md) and [completed-task archive](./.harness/ARCHIVE.md): current delivery evidence and retained residuals.
 
 ## Positioning
 
@@ -48,7 +54,7 @@ Delivery status: this repository is the single source of the foundation. Consume
 
 ```text
 backend/                  # Go backend entrypoint, modules, shared packages
-backend/modules/lowcode/   # system/lowcode backend implementation for generator / dynamicmodule
+backend/modules/lowcode/   # platform.lowcode backend implementation for generator / dynamicmodule
 frontend/                 # React shell, page modules, smoke tests, frontend scripts
 frontend/src/modules/lowcode/ # low-code generator and dynamic-module UI
 docs/                     # contracts, designs, acceptance docs, retained history

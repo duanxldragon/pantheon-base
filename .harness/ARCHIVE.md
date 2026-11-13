@@ -1,26 +1,29 @@
 # 任务归档索引
 
-**最后更新**: 2026-11-04
+**最后更新**: 2026-11-13
+
+当前状态见 [STATUS.md](./STATUS.md)。下方 dated 轮次保留历史统计与当时阻塞，不代表当前库存。
 
 ## 归档说明
 
 已完成的任务按月归档到 `archive/{YYYY-MM}/` 目录，包含 `tasks/` 和 `evidence/` 两部分。
 
 归档任务保留完整的：
+
 - 任务定义文档 (task.md, manifest.json)
 - 执行证据 (summary.md, review.md, commands.json)
 - 相关产物和附件
 
 ## 归档统计
 
-| 月份 | 任务数 | Evidence 数 | 关键轮次 |
-|------|--------|-------------|----------|
-| 2026-07 | 26 | 31 | V1.0 冻结与发布、Sonar 清零轮、安全审计 |
-| 2026-08 | 23 | 23 | Foundation Release 体系建立、v0.10.x 系列发布 |
-| 2026-09 | 72 | 70 | 命名与边界整改、企业级整改、治理收口、租户核心 |
-| 2026-10 | 107 | 110 | 租户交付、v0.14.0–v0.18.2 发布、代码简化 S1–S4、传感器与工作流缺陷收口、SQL 字面量收敛与消费仓 runtime-acceptance 闭环、2026-10-31 审计整改归档 |
-| 2026-11 | 9 | 9 | 2026-11-01 维护者前置条件与 AutoMigrate 边界；2026-11-03 审计整改包（未提交产品改动，不是已合并）；2026-11-04 FE-01b 与 DB-01 注释收口 |
-| **合计** | **237** | **243** | - |
+| 月份     | 任务数  | Evidence 数 | 关键轮次                                                                                                                                                                    |
+| -------- | ------- | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-07  | 26      | 31          | V1.0 冻结与发布、Sonar 清零轮、安全审计                                                                                                                                     |
+| 2026-08  | 23      | 23          | Foundation Release 体系建立、v0.10.x 系列发布                                                                                                                               |
+| 2026-09  | 72      | 70          | 命名与边界整改、企业级整改、治理收口、租户核心                                                                                                                              |
+| 2026-10  | 107     | 110         | 租户交付、v0.14.0–v0.18.2 发布、代码简化 S1–S4、传感器与工作流缺陷收口、SQL 字面量收敛与消费仓 runtime-acceptance 闭环、2026-10-31 审计整改归档                             |
+| 2026-11  | 27      | 27          | 2026-11-01 维护者前置条件与 AutoMigrate 边界；2026-11-03 审计整改包（未提交产品改动，不是已合并）；2026-11-04 审计整改；v0.18.4–v0.18.8 发行/消费、candidate 安全与文档收口 |
+| **合计** | **255** | **261**     | -                                                                                                                                                                           |
 
 统计口径：`archive/<YYYY-MM>/tasks/` 与 `archive/<YYYY-MM>/evidence/` 下的目录数。
 月份取任务 ID 的 `YYYY-MM` 前缀，因此个别跨月任务按其开工月份归档。
@@ -65,6 +68,7 @@
 ### 关键任务
 
 #### 命名与边界整改轮 (Wave 0-2, 6 个任务)
+
 - naming-boundary-canonical-standard
 - document-layout-inventory / document-relocation-and-archive
 - layer-boundary-gate (auth 解耦，`pkg/contracts/authuser` 端口)
@@ -72,25 +76,31 @@
 - frontend-style-naming-alignment
 
 #### 企业级整改轮 (Wave 0-2, 6 个任务)
+
 **Wave 0 - 安全边界 (P0)**:
+
 - session-revocation-closure (统一撤销三路生效)
 - tenant-public-settings-scope (租户隔离)
 - upload-authorization-and-import-resources
 
 **Wave 1 - 生产规模 (P1)**:
+
 - export-and-session-pagination (10k 上限 + SQL 分页)
 - request-path-maintenance (后台维护器 `pkg/maintenance`)
 
 **Wave 2 - 门禁 (P1/P2)**:
+
 - production-redis-and-security-gates (Redis fail-fast + govulncheck)
 
 #### 治理收口系列
+
 - governance-residual-closeout (fix-report 手工项关闭)
 - dormant-governance-tests-and-status-vocabulary (tests/scripts 激活)
 - fix-report-residual-closeout (生成器标记残余)
 - ci-triage-338-fallout, legacy-packet-migration-and-config-integrity
 
 #### 其他完成任务
+
 - Core Smoke Tests 修复 (merged-packet-closeout, smoke-core-tenant-ci-gap)
 - 设计对齐 (frontend-design-alignment-phase2)
 - 性能基线 (bench-perf-smoke-summary-path, ci-bench-perf-smoke)
@@ -165,6 +175,7 @@ cp -r .harness/archive/2026-07/evidence/2026-07-21-v1-release-readiness .harness
 #### 新增归档任务 (2026-09-25)
 
 **9月1-7日** (11个):
+
 - 2026-09-01-release-docs-reconciliation
 - 2026-09-01-release-gate-sonar-cleanup
 - 2026-09-01-sonar-duplication-reduction
@@ -178,6 +189,7 @@ cp -r .harness/archive/2026-07/evidence/2026-07-21-v1-release-readiness .harness
 - 2026-09-07-core-smoke-followup
 
 **9月8日 P0/P1/P2** (15个):
+
 - 2026-09-08-p0-csp-hsts-implementation
 - 2026-09-08-p0-license-declaration
 - 2026-09-08-p0-security-gates-enforcement
@@ -195,6 +207,7 @@ cp -r .harness/archive/2026-07/evidence/2026-07-21-v1-release-readiness .harness
 - 2026-09-08-p2-test-coverage-phase3
 
 **9月9-10日** (14个):
+
 - 2026-09-09-oidc-deps-ci-repair
 - 2026-09-10-i18n-s3649-zero
 - 2026-09-10-release-gate-repair
@@ -211,16 +224,19 @@ cp -r .harness/archive/2026-07/evidence/2026-07-21-v1-release-readiness .harness
 - 2026-09-10-tenant-verification-and-gray
 
 **其他归档到9月** (3个):
+
 - maintenance-test-stability-2026-09-02
 - sonarcloud-s4666
 - test-suite-optimization
 
 **归档到7月** (1个):
+
 - ui-fix-20260727
 
 ### 总结性文档清理
 
 移动 16 个 .md 文件到 `docs/history/2026-09/tasks-summaries/`:
+
 - 2026-09-08-FINAL-SESSION-SUMMARY.md
 - 2026-09-08-P1-COMPLETION-SUMMARY.md
 - 2026-09-08-P1-FINAL-SUMMARY.md
@@ -257,10 +273,10 @@ cp -r .harness/archive/2026-07/evidence/2026-07-21-v1-release-readiness .harness
 
 ### 本轮归档明细
 
-| 月份 | 任务 | 证据 |
-|------|------|------|
-| 2026-09 | 5 | 4 |
-| 2026-10 | 82 | 85（82 任务 + 3 孤儿） |
+| 月份    | 任务 | 证据                   |
+| ------- | ---- | ---------------------- |
+| 2026-09 | 5    | 4                      |
+| 2026-10 | 82   | 85（82 任务 + 3 孤儿） |
 
 - 移动方式：`git mv`，保留全部历史；按月落到 `archive/<YYYY-MM>/{tasks,evidence}/<task-id>/`。
 - `2026-09-29-ops-ssrf-protection-integration` 没有独立证据目录，其证据留在
@@ -295,14 +311,14 @@ cp -r .harness/archive/2026-07/evidence/2026-07-21-v1-release-readiness .harness
 **新增归档**: 6 个 `completed` 任务（全部属 2026-10 月）。`.harness/tasks/` 现在只剩
 `2026-10-29-v0180-simplification-release` 一个 `in-progress` manifest。
 
-| task-id | 收口依据 |
-|---------|----------|
-| `2026-10-27-codebase-simplification-program` | 13 个波次全部合并，程序清单收口 |
-| `2026-10-29-harness-task-archive` | 上一轮 87 个任务的 `git mv` 归档与档案回退门禁 |
-| `2026-10-29-simplification-program-closeout` | 简化程序收尾评审与 residual risk 记录 |
-| `2026-10-29-v0181-restore-request-guard` | PR #469 → v0.18.1 发布，消费者构建恢复 |
-| `2026-10-30-menu-contract-inline-const` | PR #471（`03e13d48`）+ 记录 PR #472 |
-| `2026-10-30-workflow-sonar-githubactions` | PR #473（`c1f0b1dd`），main Release Gate 回到 0 |
+| task-id                                      | 收口依据                                        |
+| -------------------------------------------- | ----------------------------------------------- |
+| `2026-10-27-codebase-simplification-program` | 13 个波次全部合并，程序清单收口                 |
+| `2026-10-29-harness-task-archive`            | 上一轮 87 个任务的 `git mv` 归档与档案回退门禁  |
+| `2026-10-29-simplification-program-closeout` | 简化程序收尾评审与 residual risk 记录           |
+| `2026-10-29-v0181-restore-request-guard`     | PR #469 → v0.18.1 发布，消费者构建恢复          |
+| `2026-10-30-menu-contract-inline-const`      | PR #471（`03e13d48`）+ 记录 PR #472             |
+| `2026-10-30-workflow-sonar-githubactions`    | PR #473（`c1f0b1dd`），main Release Gate 回到 0 |
 
 - 移动方式：`git mv`。manifest 落到 `archive/2026-10/tasks/<task-id>/`，证据落到
   `archive/2026-10/evidence/<task-id>/`（含
@@ -321,8 +337,8 @@ cp -r .harness/archive/2026-07/evidence/2026-07-21-v1-release-readiness .harness
 
 上一轮（`2026-10-30-workflow-sonar-githubactions`）之后的第七个归档对象：
 
-| task-id | 收口依据 |
-|---------|----------|
+| task-id                                    | 收口依据                                                                                                                                           |
+| ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `2026-10-31-archive-closure-pr-governance` | PR #474 squash 到 `05ee0ec1`；main 七个作业全 success，`SonarCloud Gate` 读数 `Unprocessed SonarCloud issues: 0`，独立 API 复核 total 0 且 gate OK |
 
 - 这一轮是**自我指涉**的：被归档的任务修的正是「PR 治理传感器不认识月度归档路径」这条缺陷，
@@ -340,10 +356,10 @@ cp -r .harness/archive/2026-07/evidence/2026-07-21-v1-release-readiness .harness
 同一天内的第八、第九个归档对象（均为 `completed`，`git mv` 到 `archive/2026-10/{tasks,evidence}/`，
 任务包正文仍留在 `docs/harness/tasks/` 并把 frontmatter 改为 `status: Archived`）：
 
-| task-id | 收口依据 |
-|---------|----------|
-| `2026-10-31-base-menu-filter-sql-literal-convergence` | PR #477 squash 到 main `e17eaaa1`；底座该文件自锁定点起零变化，消费者 `check:shared-drift` 由 `FAIL 1 modified` 变 `OK 812 identical / 10 allowlisted / 0 modified`，ops 侧 `430a9f0c` 的同形修复已随之收敛 |
-| `2026-10-29-v0180-simplification-release` | `pantheon-base-v0.18.0` 与 `pantheon-base-v0.18.1` 两个 tag 均已发布、各带 4 个 release 资产；`VERSION` = 0.18.1；最后一项「消费仓 runtime-acceptance」由 ops PR #164（`4e69224f`）关闭并由 #165（`9afabc2a`）在 ops main 复核，因此该 manifest 的 completionChecklist 全部为已完成事实 |
+| task-id                                               | 收口依据                                                                                                                                                                                                                                                                                |
+| ----------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `2026-10-31-base-menu-filter-sql-literal-convergence` | PR #477 squash 到 main `e17eaaa1`；底座该文件自锁定点起零变化，消费者 `check:shared-drift` 由 `FAIL 1 modified` 变 `OK 812 identical / 10 allowlisted / 0 modified`，ops 侧 `430a9f0c` 的同形修复已随之收敛                                                                             |
+| `2026-10-29-v0180-simplification-release`             | `pantheon-base-v0.18.0` 与 `pantheon-base-v0.18.1` 两个 tag 均已发布、各带 4 个 release 资产；`VERSION` = 0.18.1；最后一项「消费仓 runtime-acceptance」由 ops PR #164（`4e69224f`）关闭并由 #165（`9afabc2a`）在 ops main 复核，因此该 manifest 的 completionChecklist 全部为已完成事实 |
 
 - 两条都是**由读数关闭**而非由叙述关闭：前者的判据是 drift 比对器在两侧仓库的同一份文件上给出
   0 modified，后者的判据是 tag/资产计数与消费者 main 的落地提交。
@@ -361,3 +377,32 @@ cp -r .harness/archive/2026-07/evidence/2026-07-21-v1-release-readiness .harness
 - 统计口径不变；`2026-10` 由 89/92 增至 91/94，合计由 210/216 增至 212/218。
 - 仍未动的两项遗留（沿用上一轮的显式延期，不扩面）：`.harness/evidence/2026-09-10-tenant-verification-and-gray/`
   的重复产物归属，以及两份无任务归属的散落 PR 正文。
+
+## 2026-11-13 文档与完成任务归档
+
+本轮归档 **18 个 completed 任务及 18 个 evidence 目录**，全部属于 2026-11。manifest 与 evidence 用 git mv 整目录迁移，前后文件数、大小与聚合 SHA-256 一致；原评审、gzip/raw 哈希和 canonical linkage 不改写。任务正文继续留在 docs/harness/tasks，按原 frontmatter Archived/历史格式保留。
+
+[完整性及逐任务关闭依据](./evidence/2026-11-13-docs-archive-closeout/archive-receipt.json) · [旧状态快照](./archive/2026-11/STATUS-before-doc-closeout.md) · [本轮任务](../docs/harness/tasks/2026-11-13-docs-archive-closeout.task.md)。本轮自身仍在活跃树，随 PR 验证与独立评审收口后另行归档。
+
+| 任务                                                                                                                             | 完成依据                                                                       |
+| -------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| [2026-11-04-archive-governance-scope-repair](./archive/2026-11/tasks/2026-11-04-archive-governance-scope-repair/manifest.json)   | completed manifest；同包 summary/review 与 completion/currentDelivery 后续记录 |
+| [2026-11-04-audit-p1-npm-audit-exit](./archive/2026-11/tasks/2026-11-04-audit-p1-npm-audit-exit/manifest.json)                   | completed manifest；同包 summary/review 与 completion/currentDelivery 后续记录 |
+| [2026-11-04-audit-p1-refresh-rotation](./archive/2026-11/tasks/2026-11-04-audit-p1-refresh-rotation/manifest.json)               | completed manifest；同包 summary/review 与 completion/currentDelivery 后续记录 |
+| [2026-11-04-audit-p1-ssrf-dial-binding](./archive/2026-11/tasks/2026-11-04-audit-p1-ssrf-dial-binding/manifest.json)             | completed manifest；同包 summary/review 与 completion/currentDelivery 后续记录 |
+| [2026-11-04-audit-p2-agent-stop-points](./archive/2026-11/tasks/2026-11-04-audit-p2-agent-stop-points/manifest.json)             | completed manifest；同包 summary/review 与 completion/currentDelivery 后续记录 |
+| [2026-11-04-audit-p2-authoritative-docs](./archive/2026-11/tasks/2026-11-04-audit-p2-authoritative-docs/manifest.json)           | completed manifest；同包 summary/review 与 completion/currentDelivery 后续记录 |
+| [2026-11-04-audit-p2-freeze-validation](./archive/2026-11/tasks/2026-11-04-audit-p2-freeze-validation/manifest.json)             | completed manifest；同包 summary/review 与 completion/currentDelivery 后续记录 |
+| [2026-11-04-audit-p2-ops-db-test-followup](./archive/2026-11/tasks/2026-11-04-audit-p2-ops-db-test-followup/manifest.json)       | completed manifest；同包 summary/review 与 completion/currentDelivery 后续记录 |
+| [2026-11-04-audit-p2-release-policy](./archive/2026-11/tasks/2026-11-04-audit-p2-release-policy/manifest.json)                   | completed manifest；同包 summary/review 与 completion/currentDelivery 后续记录 |
+| [2026-11-04-audit-p3-ci-cost-review](./archive/2026-11/tasks/2026-11-04-audit-p3-ci-cost-review/manifest.json)                   | completed manifest；同包 summary/review 与 completion/currentDelivery 后续记录 |
+| [2026-11-04-audit-p3-consumer-seams](./archive/2026-11/tasks/2026-11-04-audit-p3-consumer-seams/manifest.json)                   | completed manifest；同包 summary/review 与 completion/currentDelivery 后续记录 |
+| [2026-11-04-global-audit-remediation](./archive/2026-11/tasks/2026-11-04-global-audit-remediation/manifest.json)                 | completed manifest；同包 summary/review 与 completion/currentDelivery 后续记录 |
+| [2026-11-05-base-freeze-release](./archive/2026-11/tasks/2026-11-05-base-freeze-release/manifest.json)                           | completed manifest；同包 summary/review 与 completion/currentDelivery 后续记录 |
+| [2026-11-07-ops-formal-queue-foundation-gaps](./archive/2026-11/tasks/2026-11-07-ops-formal-queue-foundation-gaps/manifest.json) | completed manifest；同包 summary/review 与 completion/currentDelivery 后续记录 |
+| [2026-11-07-v0186-release-ops-consumption](./archive/2026-11/tasks/2026-11-07-v0186-release-ops-consumption/manifest.json)       | completed manifest；同包 summary/review 与 completion/currentDelivery 后续记录 |
+| [2026-11-12-v0187-release-ops-consumption](./archive/2026-11/tasks/2026-11-12-v0187-release-ops-consumption/manifest.json)       | completed manifest；同包 summary/review 与 completion/currentDelivery 后续记录 |
+| [2026-11-13-candidate-filesystem-security](./archive/2026-11/tasks/2026-11-13-candidate-filesystem-security/manifest.json)       | completed manifest；同包 summary/review 与 completion/currentDelivery 后续记录 |
+| [2026-11-13-v0188-release-preparation](./archive/2026-11/tasks/2026-11-13-v0188-release-preparation/manifest.json)               | completed manifest；同包 summary/review 与 completion/currentDelivery 后续记录 |
+
+当前月度库存为 **255 个任务 / 261 个 evidence 目录**。Ops 官方消费 v0.18.7 已完成；v0.18.8 消费延期。冻结未签、真实 S3 未豁免、FR028 延期及独立 Ops/生产验收不因归档而关闭。早期 blocked 评审保留原 verdict，后续认可只在其原范围内使用。

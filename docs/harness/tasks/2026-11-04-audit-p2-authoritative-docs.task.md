@@ -16,11 +16,11 @@ updated_at: 2026-11-06
 
 Bounded original doc corrections and original asset baseline preserved; latest index release/consumer facts corrected in this closeout.
 
-[闭环矩阵、证据与残余事项](../../../.harness/evidence/2026-11-05-base-freeze-release/closeout.md)。下文执行说明包含历史记录；本节是当前状态。
+[闭环矩阵、证据与残余事项](../../../.harness/archive/2026-11/evidence/2026-11-05-base-freeze-release/closeout.md)。下文执行说明包含历史记录；本节是当前状态。
 
 ## Goal
 
-修正已确认权威文档漂移与失效链接。详细计划和验收见 [整改计划](../../../.harness/tasks/2026-11-04-global-audit-remediation/plan.md)。
+修正已确认权威文档漂移与失效链接。详细计划和验收见 [整改计划](../../../.harness/archive/2026-11/tasks/2026-11-04-global-audit-remediation/plan.md)。
 
 ## Priority
 

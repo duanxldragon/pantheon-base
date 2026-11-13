@@ -1,26 +1,12 @@
 # Pantheon Base Documentation Index
 
-VERSION `0.18.8` contains the verified dependency updates and November 7 delivery closeout; see [v0.18.8 release notes](./release-notes/RELEASE_NOTES_v0.18.8.md) and [preparation checkpoint evidence](../.harness/evidence/2026-11-13-v0188-release-preparation/summary.md). The [GitHub Release](https://github.com/duanxldragon/pantheon-base/releases/tag/pantheon-base-v0.18.8) establishes official publication, its commit and four immutable assets. Predecessor v0.18.7 was published at `3203624e55438866edb951bd74e671eab38d2f16` and officially consumed through [Ops #183](https://github.com/duanxldragon/pantheon-ops/pull/183); see [v0.18.7 delivery evidence](../.harness/evidence/2026-11-12-v0187-release-ops-consumption/summary.md).
-
-Preparation merged through PR #509; final-main Smoke Sanity exposed a helper timeout argument defect when an empty node detaches. The preparation continuation is complete. Actual-helper five-case browser proof, final sealed-candidate builds and independent five-source security/CODE/ARCH approvals pass; final whole-tree confirmation, merge and hosted gates remain pending; see the [2026-11-13 continuation evidence](../.harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/summary.md). Earlier candidate and approvals retain their historical scope; publication still requires final-commit gates and asset verification.
-
-## Historical checkpoints
-
-Official `pantheon-base-v0.18.6` is published at5553bc0e after exact Release Gate; Ops official consumption passed and merged[PR178](https://github.com/duanxldragon/pantheon-ops/pull/178). Three repositories verified main-only; final factual documentation closeout is independently approved; current administrative CI/merge/main-only recheck remain required. Original12/40 remain accepted; unwaived residuals retained. See [evidence](../.harness/evidence/2026-11-07-v0186-release-ops-consumption/summary.md).
-
-Current (2026-11-07): all40 original criteria for12 tasks retained and independently approved. Seven closures merged throughPR497; final five governance projection awaits its own PR gates. Official Base v0.18.5 released and OpsPR177 consumption merged. Full no-overlay race/frontend/scripts/migration/four standard smoke passed. Freeze unsigned, S3 unwaived; business/policy residuals explicit. See [evidence](../.harness/evidence/2026-11-05-base-freeze-release/resume11-five-task-applied.json).
-
-### Historical checkpoints
-
-Current (2026-11-07): seven original tasks independently approved and closed; five consumer/programme tasks remain open. Base v0.18.5 published; four assets verified and Ops rebuilt. Full consumer race/runtime/CI closeout is in progress. Maintenance freeze unsigned; S3 unwaived. See [evidence](../.harness/evidence/2026-11-05-base-freeze-release/resume9-seven-task-applied.json).
-
-### Historical delivery checkpoint
-
-Current functionality/release closeout: [task](./harness/tasks/2026-11-05-base-freeze-release.task.md) · [criterion and evidence reconciliation](../.harness/evidence/2026-11-05-base-freeze-release/closeout.md). Base v0.18.4 is officially published; Ops PR #171 is merged and the canonical root lock pins that release. Tenant V1 is retained. Delivery evidence for twelve tasks is reconciled; final closure awaits independent review. Real S3 provider validation, maintenance-freeze signing and other explicit residuals remain open.
-
-Current global-audit baseline: [FULL audit](./reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-11-04_FULL.md), with [all document assets](./reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-11-04_ASSETS.md). Remediation state: [harness plan](../.harness/tasks/2026-11-04-global-audit-remediation/plan.md). The older same-date report remains historical; implementation does not itself declare a maintenance freeze.
-
 Chinese version: [README.md](./README.md)
+
+Official **v0.18.8** was published on 2026-11-13. Tag `pantheon-base-v0.18.8` binds commit `34428814a9efc997fd93d4434406a53df6460323`. [Release notes](./release-notes/RELEASE_NOTES_v0.18.8.md) · [GitHub Release and four immutable assets](https://github.com/duanxldragon/pantheon-base/releases/tag/pantheon-base-v0.18.8) · [Publication evidence](../.harness/evidence/2026-11-13-docs-archive-closeout/publication-summary.json). PR #510 is merged. Exact-commit CI, Quality, Security, Smoke, Release Gate and asset verification passed; Linux foundation tests passed 125/125 with no skips. CodeQL #100–108 closed automatically with zero dismissals.
+
+Ops officially consumes v0.18.7 through [PR #183](https://github.com/duanxldragon/pantheon-ops/pull/183); **official v0.18.8 adoption is deferred to a separate consumer task**. Maintenance freeze remains unsigned, real S3 provider coverage unwaived, and FR028 deferred. Production migrations, legacy-auth retirement and separate product acceptance remain independently scoped; see [current status](../.harness/STATUS.md).
+
+Completed tasks and evidence are retained in the [monthly archive](../.harness/ARCHIVE.md); previous status checkpoints remain in the [historical snapshot](../.harness/archive/2026-11/STATUS-before-doc-closeout.md). The [FULL audit](./reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-11-04_FULL.md) and [asset matrix](./reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-11-04_ASSETS.md) remain audit baselines; the completed [remediation plan](../.harness/archive/2026-11/tasks/2026-11-04-global-audit-remediation/plan.md) is archived. Remediation completion does not certify a maintenance freeze.
 
 This file is the unified entry point for `pantheon-base/docs/`.
 

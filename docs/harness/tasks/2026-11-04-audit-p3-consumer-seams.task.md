@@ -16,7 +16,7 @@ updated_at: 2026-11-04
 
 ## Goal
 
-保留现有消费接缝并完成本地 Ops 重建验证。详细计划和验收见 [整改计划](../../../.harness/tasks/2026-11-04-global-audit-remediation/plan.md)。
+保留现有消费接缝并完成本地 Ops 重建验证。详细计划和验收见 [整改计划](../../../.harness/archive/2026-11/tasks/2026-11-04-global-audit-remediation/plan.md)。
 
 ## Priority
 

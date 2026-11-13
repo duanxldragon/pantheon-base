@@ -16,7 +16,7 @@ updated_at: 2026-11-04
 
 ## Goal
 
-SSRF DNS 校验与实际拨号绑定。详细计划和验收见 [整改计划](../../../.harness/tasks/2026-11-04-global-audit-remediation/plan.md)。
+SSRF DNS 校验与实际拨号绑定。详细计划和验收见 [整改计划](../../../.harness/archive/2026-11/tasks/2026-11-04-global-audit-remediation/plan.md)。
 
 ## Priority
 

@@ -19,3 +19,16 @@ Current security validation: all nine CodeQL js/file-system-race alert paths hav
 ## Explicit residuals
 
 FR028 oversized audit storage is deferred. Real S3 provider coverage remains unwaived; maintenance freeze is unsigned. Production migration, scheduled legacy-auth retirement and separate Ops CMDB/O2/O3/O4/D2 product acceptance remain independently tracked.
+
+## Publication addendum — 2026-11-13
+
+Published at `2026-11-13T12:08:32Z`; immutable tag `pantheon-base-v0.18.8` binds `34428814a9efc997fd93d4434406a53df6460323` after [PR #510](https://github.com/duanxldragon/pantheon-base/pull/510) merged. All exact-main CI/Quality/Security/Smoke checks and [Release Gate](https://github.com/duanxldragon/pantheon-base/actions/runs/43404784209) passed. Four uploaded asset sizes and SHA-256 digests matched local output; [Foundation Release Verify](https://github.com/duanxldragon/pantheon-base/actions/runs/43422675437) passed. Linux foundation tests: **125 passed, 0 failed, 0 skipped**. CodeQL alerts #100–108 closed automatically, with zero open alerts and no dismissals at publication.
+
+[Publication receipt](../../.harness/evidence/2026-11-13-docs-archive-closeout/publication-summary.json) and [exact-main check receipt](../../.harness/evidence/2026-11-13-docs-archive-closeout/published-main-checks.json) retain the final evidence. Earlier preparation statements above describe their original checkpoint; this addendum records the subsequent publication. Ops official consumption remains v0.18.7 through PR #183; v0.18.8 adoption is separately deferred. Maintenance freeze unsigned, real S3 provider unwaived, FR028 deferred, and separate production/product acceptance remain explicit.
+
+## Archived evidence links — 2026-11-13
+
+Completed task/evidence directories were moved into the monthly archive after publication. Historical links above retain their original spelling; use these physical archive links on GitHub:
+
+- [Archived publication checkpoint 1](../../.harness/archive/2026-11/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/summary.md) (original path: `../../.harness/evidence/2026-11-13-v0188-release-preparation/smoke-empty-readiness/summary.md`).
+- [Archived publication checkpoint 2](../../.harness/archive/2026-11/evidence/2026-11-13-v0188-release-preparation/summary.md) (original path: `../../.harness/evidence/2026-11-13-v0188-release-preparation/summary.md`).

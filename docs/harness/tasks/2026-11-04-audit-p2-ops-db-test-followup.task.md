@@ -20,7 +20,7 @@ updated_at: 2026-11-06
 
 Nine top-level failures classified; Ops isolated fixes and real DB 278/0/0 followed by official reconstruction/full race and merged PR171; host migration is now Ops000032, after Base000031.
 
-[闭环矩阵、证据与残余事项](../../../.harness/evidence/2026-11-05-base-freeze-release/closeout.md)。下文执行说明包含历史记录；本节是当前状态。
+[闭环矩阵、证据与残余事项](../../../.harness/archive/2026-11/evidence/2026-11-05-base-freeze-release/closeout.md)。下文执行说明包含历史记录；本节是当前状态。
 
 ## Goal
 
