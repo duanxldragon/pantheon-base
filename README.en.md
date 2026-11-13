@@ -166,6 +166,8 @@ This repository keeps GitHub-native merge gates only:
 SonarCloud is not a required `main` merge check, but the foundation release gate still requires `SonarCloud Code Analysis`.
 Code quality is gated by GitHub required checks, CodeQL, branch protection, and optional Copilot review. This section describes gate **definitions** only: it keeps no "last verified" date and no pass/fail snapshot, because a snapshot written here cannot be re-checked against the code and always drifts. Whether the checks currently pass is whatever the latest `main` run of the required checks reports (see [`.github/workflows/ci.yml`](./.github/workflows/ci.yml) and the repository Actions page). The `main` ruleset is expected to require `Quality Gates`; treat `Security Gates` and conversation resolution as pending verification against the ruleset itself, not against this sentence.
 
+For remediation and acceptance progress, see [Current Status](./.harness/STATUS.md). Completed tasks and historical checkpoints are listed in the [Archive Index](./.harness/ARCHIVE.md).
+
 ## Document Entry
 
 - [DESIGN.md](./DESIGN.md): top-level architecture and domain boundaries

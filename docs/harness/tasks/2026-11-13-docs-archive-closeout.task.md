@@ -154,3 +154,11 @@ platform
 - [x] Verification run or exception recorded
 - [x] Evidence saved or summarized
 - [x] Review completed
+
+## README and Task Ownership Followup — 2026-11-13
+
+用户明确要求 Ops 任务归 Ops。本轮仅将 planned 菜单改造的三份任务文件迁入 pantheon-ops，转移暂存并修正仓库归属、共享 Base 合同引用和本地验证命令；不执行其业务实现，不修改 Ops 原有工作区改动。README 的 September22 完成宣告与读数移入 docs/archive/baselines/ENTERPRISE_REMEDIATION_2026-09-22.md，双语首页保留当前状态与归档索引入口。
+
+沿用本父任务证据，新增 ops-task-migration.json/readme-history-migration.json 与独立文档评审；旧 CI 与原18组档案审批范围保持。此追加是标准文档收口：frontmatter、task template/packet、文档链接/库存、编码/结构、evidence/review 与 duplication 验证；标准非作者 review 和正常 hosted checks 后合并。
+
+v0.18.8 已包含实质整改。对 tag 到 main 的 backend/frontend/schema/VERSION/CHANGELOG/foundation-release 工具差异检查为空；新增仅文档/归档、quality.yml 条件与测试回归。版本规则允许后续文档/修复补丁，但不要求每次文档维护立即再发版；此轮不新增版本或不可变资产。Ops任务仍planned，业务验收独立。

@@ -1,0 +1,72 @@
+{
+  "taskId": "2026-11-13-ops-business-menu-ia-refactor",
+  "from": "pantheon-base",
+  "to": "pantheon-ops",
+  "files": [
+    {
+      "path": "docs/harness/tasks/2026-11-13-ops-business-menu-ia-refactor.task.md",
+      "sha256": "e52d051b17a3374da8dd28ab69ee08d047b39ca603a8e62e35f4e86d58d4039c",
+      "blob": "cabe781b7a13d742377c53cbd8d5f97eefcc061c",
+      "afterSha256": "fcad914a7b5aaa9d8c067b12a165977808fd4f1e93d2f83dda3ab6725021e2ef"
+    },
+    {
+      "path": ".harness/tasks/2026-11-13-ops-business-menu-ia-refactor/manifest.json",
+      "sha256": "a39d6e9ac70c357319db6ea42d91bf2932f20030e0d13cc609cf135d6495b4d8",
+      "blob": "73cd9f89b14a2f8c031d606dfed2e59f5525fb0a",
+      "afterSha256": "9c88ba2cbe92a5c8075c917a5536c0d513a77a955b028eb7792dc3c1d532e79c"
+    },
+    {
+      "path": ".harness/tasks/2026-11-13-ops-business-menu-ia-refactor/plan.md",
+      "sha256": "14e496e334f0a9dc07676bfba5b2925711c091a19fff5a931fd0eb3059c71350",
+      "blob": "33346ad17b312d00d21623ba8c9b9af21ca85731",
+      "afterSha256": "7c6fbe87027a9545a3856e603dfeffa21be01291c6e2ecf067f5888a09d66ef2"
+    }
+  ],
+  "otherOpsTrackedDiffPreserved": true,
+  "stageTransferred": true,
+  "taskStatus": "planned",
+  "productImplementation": "not-started by this migration",
+  "validation": [
+    {
+      "command": "node scripts/frontmatter-check.mjs",
+      "cwd": "pantheon-ops",
+      "exitCode": 0,
+      "result": "463 docs checked, 302 frontmatter; passed"
+    },
+    {
+      "command": "node scripts/check-task-packet-template.mjs",
+      "cwd": "pantheon-ops",
+      "exitCode": 0,
+      "result": "passed"
+    },
+    {
+      "command": "node scripts/harness/check-task-packet.mjs docs/harness/tasks/2026-11-13-ops-business-menu-ia-refactor.task.md",
+      "cwd": "pantheon-ops",
+      "exitCode": 0,
+      "result": "1 file,0 errors,4 cross-repository contract anchor warnings"
+    },
+    {
+      "command": "Node readTaskManifest plus fs.existsSync contractAnchors/planRefs validation",
+      "cwd": "pantheon-ops",
+      "exitCode": 0,
+      "result": "repo pantheon-ops, status planned; all physical Base contract and local plan paths exist"
+    }
+  ],
+  "preservationEvidence": {
+    "producerSource": "releases/doc-closeout-20261113/move-ops-task.mjs",
+    "producerSourceSha256": "c0fa593e33959c289b179fd4b5244d95ca72145f4b25939fa697c5a95038519a",
+    "actualComparison": "Producer held original git diff --binary HEAD in memory and compared byte-for-byte after moving three files, before staging them in Ops; assertion succeeded.",
+    "limitation": "Original before/after diff snapshots were not persisted, so historical byte comparison cannot be independently rerun from receipts alone.",
+    "currentSnapshot": "Local ignored releases/doc-closeout-20261113/ops-other-tracked-diff-current.raw excludes the three newly migrated files; it is a current reconstruction, not a saved historical before snapshot.",
+    "currentSnapshotSha256": "abd80e790001eb768113e3305bece852f9835d745a58bcecc471c8bba5e5edd7"
+  },
+  "followups": [
+    {
+      "reason": "ARCH review found three Create-list parenthetical repository names still pointing to Base",
+      "path": "docs/harness/tasks/2026-11-13-ops-business-menu-ia-refactor.task.md",
+      "priorReviewedSha256": "ce0c725dbe0ad2bf440aa31b8b25040297e9b7a4ae94c8d79f7cf8451be630c1",
+      "afterSha256": "fcad914a7b5aaa9d8c067b12a165977808fd4f1e93d2f83dda3ab6725021e2ef",
+      "change": "Only three parenthetical names changed to pantheon-ops; shared Base contracts and planned status retained."
+    }
+  ]
+}
