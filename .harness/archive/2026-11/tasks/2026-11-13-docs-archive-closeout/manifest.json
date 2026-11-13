@@ -7,7 +7,7 @@
   "dependencyLayers": [
     "platform"
   ],
-  "status": "in-progress",
+  "status": "completed",
   "priority": "P2",
   "type": "docs-archive-closeout",
   "created_at": "2026-11-13",
@@ -19,10 +19,11 @@
       "18 completed task/evidence directory moves with byte-integrity receipts",
       "Append publication facts to v0.18.8 release notes",
       "GitHub repository description",
-      "Ordinary Markdown hrefs in current contracts/designs/runbooks and retained task docs point to physical archived files; frozen release-note links receive append-only archive addenda."
+      "Ordinary Markdown hrefs in current contracts/designs/runbooks and retained task docs point to physical archived files; frozen release-note links receive append-only archive addenda.",
+      "Minimal CI repair: skip redundant smoke-module resolver for already-classified governance-only changes, avoiding Linux E2BIG on archived path lists. Mixed source changes retain resolver and all existing runtime gates."
     ],
     "out": [
-      "Product code, UI, workflows, gates, dependencies, VERSION, immutable tags/assets",
+      "Product code, UI, gate policy, dependencies, VERSION, immutable tags/assets",
       "Ops repository and consumer lock",
       "Unfinished production, freeze, S3, FR028 and product acceptance",
       "Legacy documents without completion evidence"
@@ -89,22 +90,25 @@
       "docs/harness/tasks/2026-11-04-audit-p3-consumer-seams.task.md",
       "docs/harness/tasks/2026-11-04-global-audit-remediation.task.md",
       "docs/runbooks/TENANT_MIGRATION_RUNBOOK.md",
-      "docs/TENANT_INITIALIZATION_GUIDE.md"
+      "docs/TENANT_INITIALIZATION_GUIDE.md",
+      ".github/workflows/quality.yml",
+      "tests/scripts/quality-workflow.test.mjs"
     ],
     "doNotTouch": [
       "backend/",
       "frontend/",
       "scripts/",
-      ".github/",
       "VERSION",
       "CHANGELOG.md",
-      "pantheon-ops/"
+      "pantheon-ops/",
+      ".github/workflows/ other than quality.yml"
     ]
   },
   "executionRoles": {
     "implementerPosture": "Dispatcher edits documentation and performs reversible git mv only.",
     "reviewerPosture": [
-      "Independent non-author code reviewer checks publication identity, archive byte preservation, current/historical separation and residual scope."
+      "Independent non-author code reviewer checks publication identity, archive byte preservation, current/historical separation and residual scope.",
+      "Fresh independent CODE and ARCH review of quality.yml guard and meaningful large-archive/mixed-change regression"
     ]
   },
   "verificationPlan": {
@@ -133,7 +137,8 @@
     "Appropriate governance checks and independent review pass; normal PR delivery"
   ],
   "humanGates": [
-    "User authorized documentation, repository description and completed-work archiving. Standard independent review and required GitHub checks apply; no gate waiver."
+    "User authorized documentation, repository description and completed-work archiving. Standard independent review and required GitHub checks apply; no gate waiver.",
+    "CI continuation follows existing governance-only runtime classification; no gate waiver/required-check changes. Two independent reviewers required."
   ],
   "linkage": {
     "taskManifest": ".harness/tasks/2026-11-13-docs-archive-closeout/manifest.json",
@@ -147,6 +152,42 @@
       ".harness/ARCHIVE.md"
     ]
   },
-  "reviewStatus": "approved",
-  "verificationStatus": "11-isolated-local-gates-passed"
+  "reviewStatus": "Independent documentation CODE approved; fresh CI CODE approved / ARCH approved CLEAR",
+  "verificationStatus": "11 static gates and19 CI regressions passed; documentation delivery PR511 merged",
+  "structuralScope": {
+    "affectedSubgraph": [
+      "README -> docs index -> STATUS -> monthly task/evidence archive",
+      "dorny all_count/governance_only_count -> resolver condition",
+      "all_files -> CHANGED_FILES_JSON -> existing smoke resolver -> existing runtime guards"
+    ],
+    "boundaryCrossings": [
+      "GitHub scope outputs -> runner process environment"
+    ],
+    "riskNodes": [
+      "Oversized archive path JSON; silent runtime gate loss"
+    ],
+    "graphFocus": [
+      "cycle",
+      "hub",
+      "call-depth",
+      "sensitive-flow"
+    ]
+  },
+  "completion": {
+    "recordedAt": "2026-11-13",
+    "documentationPR": 511,
+    "documentationMerge": "b310dc8eaf7c846f1b5e59529b6508e976ba422a",
+    "scope": "Documentation/GitHub metadata/archive implementation delivered; bounded CI repair preparation independently approved and verified",
+    "hostedContinuation": "Final CI repair PR hosted checks and merge remain delivery requirements; no success inferred from source approval",
+    "sourceHashes": [
+      {
+        "path": ".github/workflows/quality.yml",
+        "sha256": "b8a76bfeec907dd63b043ff59e2564f3c20491e3116bf600f391138d0848089d"
+      },
+      {
+        "path": "tests/scripts/quality-workflow.test.mjs",
+        "sha256": "93fd0bd2b731c8ac4755ddd96e60b14c26024aed62d10cbc19c4a9b804f8eb0d"
+      }
+    ]
+  }
 }

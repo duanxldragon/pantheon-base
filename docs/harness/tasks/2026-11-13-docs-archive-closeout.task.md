@@ -2,7 +2,7 @@
 title: Pantheon Base 文档与完成任务归档收口
 doc_type: Remediation
 layer: platform
-status: Draft
+status: Archived
 updated_at: 2026-11-13
 linked_contracts:
   - docs/contracts/DOCUMENT_GOVERNANCE_CONTRACT.md
@@ -12,7 +12,7 @@ linked_contracts:
 
 ## Goal
 
-对齐已发布 v0.18.8 的双语入口、GitHub 描述和完成任务档案；保留原始检查点与未完成验收。交付 L1，复用已有归档解析和校验器。
+对齐已发布 v0.18.8 的双语入口、GitHub 描述和完成任务档案；保留原始检查点与未完成验收。原文档范围 L1；PR #511 暴露 Linux E2BIG 后加入最小 CI 修复，升到 L2。复用既有治理分类，两个独立评审。
 
 ## Primary Layer
 
@@ -55,6 +55,8 @@ platform
 
 ### In
 
+- quality.yml 仅治理变更跳过原本无作用的 smoke 范围解析，避免大型路径列表环境变量 E2BIG；混合源码变更与必过运行态门禁保持原判定。
+
 - 归档后普通 Markdown href 指向物理地址；合同/设计/runbook/历史任务正文仅修 href，不改语义。冻结发行说明追加可点击归档链接。
 
 - 双语 README、docs 与发行索引、当前状态、GitHub 仓库描述。
@@ -63,13 +65,13 @@ platform
 
 ### Out
 
-- 产品代码、UI、workflow、门禁策略、依赖、VERSION 和不可变资产。
+- 产品代码、UI、除 quality.yml 精确条件外的 workflow、门禁策略、依赖、VERSION 和不可变资产。
 - Ops 消费升级、冻结签署、S3 豁免、FR028、生产迁移与独立业务验收。
 - 没有 manifest/完成证据的旧正文、重复证据与散落 PR 正文。
 
 ## Structural Scope
 
-- Affected Subgraph: README -> docs index -> STATUS -> archive manifest/evidence
+- Affected Subgraph: README -> docs index -> STATUS -> archive manifest/evidence; scope counts -> smoke resolver condition -> existing runtime guards
 - Boundary Crossings: documentation to existing archive-aware resolver; no implementation changes
 - Risk Nodes: historical pending statements, moved evidence links, overclaimed consumer acceptance
 - Graph Focus: sensitive-flow
@@ -85,6 +87,8 @@ platform
 
 ### Modify
 
+- .github/workflows/quality.yml 与现有 quality-workflow.test.mjs 大型归档/混合源码回归。
+
 - 受影响合同、设计、初始化指南、runbook 与历史任务正文的归档 href（见 markdown-link-migration.json）。
 
 - README.md / README.en.md / docs/README.md / docs/README.en.md
@@ -93,7 +97,7 @@ platform
 
 ### Do Not Touch
 
-- backend/ / frontend/ / scripts/ / .github/ / VERSION / CHANGELOG.md / Ops
+- backend/ / frontend/ / scripts/ / 其他 workflow / VERSION / CHANGELOG.md / Ops
 
 ## Implementation Notes
 
@@ -137,7 +141,7 @@ platform
 
 ## Human Gates
 
-用户已授权更新文档、GitHub 描述和完成任务归档；一位非作者评审与正常必过 CI。策略豁免、冻结/生产操作和 Ops 验收仍独立。
+用户已授权更新文档、GitHub 描述和完成任务归档；新增 CI 范围需两位非作者 CODE/ARCH 评审与正常必过 CI。策略豁免、冻结/生产操作和 Ops 验收仍独立。
 
 ## Completion Checklist
 

@@ -2,7 +2,7 @@
 
 Chinese version: [README.md](./README.md)
 
-Official **v0.18.8** was published on 2026-11-13. Tag `pantheon-base-v0.18.8` binds commit `34428814a9efc997fd93d4434406a53df6460323`. [Release notes](./release-notes/RELEASE_NOTES_v0.18.8.md) · [GitHub Release and four immutable assets](https://github.com/duanxldragon/pantheon-base/releases/tag/pantheon-base-v0.18.8) · [Publication evidence](../.harness/evidence/2026-11-13-docs-archive-closeout/publication-summary.json). PR #510 is merged. Exact-commit CI, Quality, Security, Smoke, Release Gate and asset verification passed; Linux foundation tests passed 125/125 with no skips. CodeQL #100–108 closed automatically with zero dismissals.
+Official **v0.18.8** was published on 2026-11-13. Tag `pantheon-base-v0.18.8` binds commit `34428814a9efc997fd93d4434406a53df6460323`. [Release notes](./release-notes/RELEASE_NOTES_v0.18.8.md) · [GitHub Release and four immutable assets](https://github.com/duanxldragon/pantheon-base/releases/tag/pantheon-base-v0.18.8) · [Publication evidence](../.harness/archive/2026-11/evidence/2026-11-13-docs-archive-closeout/publication-summary.json). PR #510 is merged. Exact-commit CI, Quality, Security, Smoke, Release Gate and asset verification passed; Linux foundation tests passed 125/125 with no skips. CodeQL #100–108 closed automatically with zero dismissals.
 
 Ops officially consumes v0.18.7 through [PR #183](https://github.com/duanxldragon/pantheon-ops/pull/183); **official v0.18.8 adoption is deferred to a separate consumer task**. Maintenance freeze remains unsigned, real S3 provider coverage unwaived, and FR028 deferred. Production migrations, legacy-auth retirement and separate product acceptance remain independently scoped; see [current status](../.harness/STATUS.md).
 

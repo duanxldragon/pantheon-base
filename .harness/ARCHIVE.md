@@ -22,8 +22,8 @@
 | 2026-08  | 23      | 23          | Foundation Release 体系建立、v0.10.x 系列发布                                                                                                                               |
 | 2026-09  | 72      | 70          | 命名与边界整改、企业级整改、治理收口、租户核心                                                                                                                              |
 | 2026-10  | 107     | 110         | 租户交付、v0.14.0–v0.18.2 发布、代码简化 S1–S4、传感器与工作流缺陷收口、SQL 字面量收敛与消费仓 runtime-acceptance 闭环、2026-10-31 审计整改归档                             |
-| 2026-11  | 27      | 27          | 2026-11-01 维护者前置条件与 AutoMigrate 边界；2026-11-03 审计整改包（未提交产品改动，不是已合并）；2026-11-04 审计整改；v0.18.4–v0.18.8 发行/消费、candidate 安全与文档收口 |
-| **合计** | **255** | **261**     | -                                                                                                                                                                           |
+| 2026-11  | 28      | 28          | 2026-11-01 维护者前置条件与 AutoMigrate 边界；2026-11-03 审计整改包（未提交产品改动，不是已合并）；2026-11-04 审计整改；v0.18.4–v0.18.8 发行/消费、candidate 安全与文档收口 |
+| **合计** | **256** | **262**     | -                                                                                                                                                                           |
 
 统计口径：`archive/<YYYY-MM>/tasks/` 与 `archive/<YYYY-MM>/evidence/` 下的目录数。
 月份取任务 ID 的 `YYYY-MM` 前缀，因此个别跨月任务按其开工月份归档。
@@ -382,7 +382,7 @@ cp -r .harness/archive/2026-07/evidence/2026-07-21-v1-release-readiness .harness
 
 本轮归档 **18 个 completed 任务及 18 个 evidence 目录**，全部属于 2026-11。manifest 与 evidence 用 git mv 整目录迁移，前后文件数、大小与聚合 SHA-256 一致；原评审、gzip/raw 哈希和 canonical linkage 不改写。任务正文继续留在 docs/harness/tasks，按原 frontmatter Archived/历史格式保留。
 
-[完整性及逐任务关闭依据](./evidence/2026-11-13-docs-archive-closeout/archive-receipt.json) · [旧状态快照](./archive/2026-11/STATUS-before-doc-closeout.md) · [本轮任务](../docs/harness/tasks/2026-11-13-docs-archive-closeout.task.md)。本轮自身仍在活跃树，随 PR 验证与独立评审收口后另行归档。
+[完整性及逐任务关闭依据](./archive/2026-11/evidence/2026-11-13-docs-archive-closeout/archive-receipt.json) · [旧状态快照](./archive/2026-11/STATUS-before-doc-closeout.md) · [本轮任务](../docs/harness/tasks/2026-11-13-docs-archive-closeout.task.md)。本轮自身已随 PR511文档交付与独立CI准备验收关闭，并按相同约定归档。
 
 | 任务                                                                                                                             | 完成依据                                                                       |
 | -------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
@@ -405,4 +405,8 @@ cp -r .harness/archive/2026-07/evidence/2026-07-21-v1-release-readiness .harness
 | [2026-11-13-candidate-filesystem-security](./archive/2026-11/tasks/2026-11-13-candidate-filesystem-security/manifest.json)       | completed manifest；同包 summary/review 与 completion/currentDelivery 后续记录 |
 | [2026-11-13-v0188-release-preparation](./archive/2026-11/tasks/2026-11-13-v0188-release-preparation/manifest.json)               | completed manifest；同包 summary/review 与 completion/currentDelivery 后续记录 |
 
-当前月度库存为 **255 个任务 / 261 个 evidence 目录**。Ops 官方消费 v0.18.7 已完成；v0.18.8 消费延期。冻结未签、真实 S3 未豁免、FR028 延期及独立 Ops/生产验收不因归档而关闭。早期 blocked 评审保留原 verdict，后续认可只在其原范围内使用。
+当前月度库存为 **256 个任务 / 262 个 evidence 目录**。Ops 官方消费 v0.18.7 已完成；v0.18.8 消费延期。冻结未签、真实 S3 未豁免、FR028 延期及独立 Ops/生产验收不因归档而关闭。早期 blocked 评审保留原 verdict，后续认可只在其原范围内使用。
+
+### 本次收口任务归档
+
+[2026-11-13-docs-archive-closeout](./archive/2026-11/tasks/2026-11-13-docs-archive-closeout/manifest.json) 的文档/GitHub 描述/前18任务归档已由 PR511交付；新增CI条件与回归经 CODE/ARCH独立批准。任务与证据按月迁移，至此本轮共 **19个 task/evidence 对**。正式CI修复头仍须正常hosted检查与合并，源审批不替代该条件。
