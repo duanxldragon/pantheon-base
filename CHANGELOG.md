@@ -6,6 +6,12 @@ Pantheon Base 方法追踪记录。方法论本体位于 `pantheon-harness`。
 
 ---
 
+## [pantheon-base-v0.18.9] — 2026-11-16 (OpenTelemetry security patch)
+
+- Upgrade `go.opentelemetry.io/otel`/`otel/sdk`/`otel/trace` (+ `otel/metric`, otlp exporters) v1.45.0 → v1.47.0, closing GHSA-q7gw-24fr-5p69 (`AttributeValueLengthLimit` bypass, CVSS 5.3) via base PR #519; `go mod tidy` prunes unreferenced stale deps (`coreos/go-oidc`, `golang.org/x/oauth2`, `go-jose/go-jose`).
+- Includes CI governance archive hardening, README history archive / Ops task ownership correction, and Core Smoke assertion fixes merged since v0.18.8 (#511–#514).
+- No API, schema/migration, permission, menu or i18n contract changes; no DB migration required.
+
 ## [pantheon-base-v0.18.8] — 2026-11-13 (preparation)
 
 - Integrate the reviewed root Playwright 1.65.0 update (#501), frontend dependency update (#502) and consistently pinned CodeQL v4.39.3 init/analyze actions (#503). PR #502 merged at 1cc4d6fb after its strict CSSOM compatibility correction passed independent CODE/ARCH review and all final hosted gates, including Smoke Sanity and PR Smoke Modules.

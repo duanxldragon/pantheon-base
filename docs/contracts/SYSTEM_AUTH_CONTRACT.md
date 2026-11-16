@@ -312,3 +312,11 @@ HTTP refresh 在变更数据库会话或签发新 pair 前，通过 `authtoken.C
 消费后如数据库/签发失败或响应不确定，不恢复旧 token，客户端可能需要重新登录。多标签页并发与重试可能收到未授权响应，这是单次消费的安全取舍。反向索引由正常签发替换或吊销清理；消费不能删除较新的索引。吊销、改密、membership gate 与 Cookie 响应策略仍须回归。
 
 刷新与租户切换对会话行采用条件更新：会话仍未撤销、未到期，且读取时的 refresh JTI/tenant 未改变才允许写入。过期读不能覆盖期间完成的撤销、轮换或租户切换；冲突按未授权失败处理。DB 与 Redis 跨存储仍非事务，后续失败不恢复旧刷新令牌。
+
+## 持久业务任务实时授权候选（2026-11-14）
+
+可选 `businessauth.JobAuthorizationReader` 由 auth owner 实现，通过 `contracts.RegisteredBusinessJobAuthorizationReader` 在业务模块 Init 装配。既有会话 `Reader` 与登录/注销合同不变。该接口只接受业务服务从可信任务记录读取的 numeric owner 与已登记业务 action，不能将 HTTP body 中的 actor ID 当作身份；不能持久化 access token、session、角色列表或创建时的数据范围。
+
+持久计划保留跨注销和冷重启语义，每次 dispatch/worker 执行前重新读取所有者状态、角色、权限键、Casbin 策略与 DataScope。所有者已禁用/删除、权限撤销、存储错误、取消或模式变化均返回不透明 `permission.denied`。首版仅支持当前 `compat`、资源 tenant0 与平台所有者 tenant0；不因此声明业务任务多租户隔离。返回的 DataScope 只是当前授权结果，业务仍必须在外部 I/O 前重新验证源文件及稳定目标的当前归属/版本；这是不同的检查，不能互相替代。
+
+此节是已授权实现候选；正式发行、Ops 消费、独立整体评审和最终业务验收仍由[任务](../harness/tasks/2026-11-14-ops-completion-contracts.task.md)跟踪，不把本地新增接口当作已发布底座能力。
