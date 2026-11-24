@@ -420,56 +420,6 @@ border/background，避免交互态被高特异性规则压掉）。机械门禁
 9. 已完成设计锚点：SSO / OAuth2 / OIDC 与登录风控后续边界。
 10. 更正（审计 AUD-004）：「真实多租户」不再是预留项——`compat` / `multi` 双模已交付并有租户 smoke（§3.4、合同 V1）。仍按边界预留的是 SSO provider 与登录风控自动化（判据见 §3.3），并且业务域在 V1 内保持单租户语义（合同 §2.6，依赖同批恢复的 W2 合同新增）。后续演进项只剩：更多业务模块 smoke 覆盖有权限/无权限数据集。
 
-## 10. 文档使用顺序
+## 10. 按任务获取上下文
 
-开始任何设计或开发前，建议按以下顺序理解项目：
-
-1. `DESIGN.md`
-2. `AGENTS.md`
-3. `docs/README.md`
-4. `docs/contracts/DOCUMENT_GOVERNANCE_CONTRACT.md`
-5. `docs/contracts/DOCUMENT_METADATA_AND_STATUS.md`
-6. `docs/contracts/PLATFORM_CONTRACT.md`
-7. `docs/contracts/SYSTEM_AUTH_CONTRACT.md`
-8. `docs/contracts/SYSTEM_IAM_CONTRACT.md`
-9. `docs/contracts/SYSTEM_ORG_CONTRACT.md`
-10. `docs/contracts/SYSTEM_CONFIG_CONTRACT.md`
-11. `docs/designs/BACKEND.md`
-12. `docs/designs/FRONTEND.md`
-13. `docs/designs/FRONTEND_UI_SPEC.md`
-14. `docs/frontend/COMPONENT_STYLING_GUIDE.md` (组件样式规范)
-15. `docs/frontend/UI_PATTERN_LIBRARY.md` (UI 模式库)
-16. `docs/frontend/DESIGN_ENGINEERING_GUIDE.md` (设计工程指南)
-17. `docs/designs/PLATFORM_DASHBOARD_DESIGN.md`
-18. `docs/designs/AUTH_MODULE_DESIGN.md`
-19. `docs/designs/MODULE_CONTRACT.md`
-20. `docs/designs/BUSINESS_MODULE_TEMPLATE.md`
-21. `docs/designs/PERMISSION_MODEL.md`
-22. `docs/designs/ERROR_CODE_AND_I18N.md`
-23. `docs/designs/FRONTEND_PAGE_TEMPLATES.md`
-24. `docs/designs/FRONTEND_COMPONENT_PLAN.md`
-25. `docs/designs/SECURITY_CENTER_DESIGN.md`
-26. `docs/designs/DICT_AND_SETTING_DESIGN.md`
-27. `docs/designs/TENANT_READY_SINGLE_TENANT_DESIGN.md`
-28. `docs/designs/BUSINESS_MODELING_REVIEW_CHECKLIST.md`
-29. `docs/designs/LOWCODE_GENERATOR_GUIDE.md`
-30. `docs/designs/DYNAMIC_MODULE_GOVERNANCE_DESIGN.md`
-31. `docs/designs/GENERATOR_MODULE_DESIGN.md`
-32. `docs/designs/I18N_MODULE_DESIGN.md`
-33. `docs/designs/UPLOAD_AND_STORAGE_DESIGN.md`
-34. `docs/designs/SYSTEM_ORG_DESIGN.md`
-35. `docs/designs/BUSINESS_DICT_INTEGRATION_GUIDE.md`
-36. `docs/designs/NAVIGATION_IA_STRATEGY.md`
-37. `docs/designs/PERMISSION_WORKBENCH_GOVERNANCE_DESIGN.md`
-38. `docs/designs/SECURITY_POLICY_ROADMAP.md`
-39. `docs/designs/SSO_OIDC_DESIGN.md`
-40. `docs/designs/P2_SCALE_ROADMAP.md`
-41. `docs/designs/DATABASE.md`
-42. `docs/designs/WORKFLOW.md`
-43. `docs/acceptances/ACCEPTANCE_CHECKLIST.md`
-44. `docs/acceptances/SYSTEM_CONFIG_GOVERNANCE_ACCEPTANCE.md`
-45. `docs/acceptances/BUSINESS_MODULE_ACCEPTANCE_MATRIX.md`
-46. `docs/frontend/COMPONENT_STYLING_GUIDE.md` - 组件样式规范（BEM 命名、Token 使用、状态实现）
-47. `docs/frontend/UI_PATTERN_LIBRARY.md` - UI 模式库（12 类常用模式 + 完整代码模板）
-48. `docs/frontend/DESIGN_ENGINEERING_GUIDE.md` - 设计工程指南（设计协作流程、Token 映射、调试技巧）
-49. `docs/frontend/TOKEN_MIGRATION_GUIDE.md` - Token 迁移指南（迁移规则、机械门禁、FAQ）
+先读 [AGENTS.md](./AGENTS.md)、[当前状态](./.harness/STATUS.md)和任务，再用 [docs/README.md](./docs/README.md) 的任务路由选择对应合同、设计与验收。本文提供总体边界；架构/UI 任务读取相关章节，普通局部工作不必加载全部规范。先 summary/review，只有需要定位具体证据时才读原始日志。

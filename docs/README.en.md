@@ -2,11 +2,9 @@
 
 Chinese version: [README.md](./README.md)
 
-Official **v0.18.8** was published on 2026-11-13. Tag `pantheon-base-v0.18.8` binds commit `34428814a9efc997fd93d4434406a53df6460323`. [Release notes](./release-notes/RELEASE_NOTES_v0.18.8.md) · [GitHub Release and four immutable assets](https://github.com/duanxldragon/pantheon-base/releases/tag/pantheon-base-v0.18.8) · [Publication evidence](../.harness/archive/2026-11/evidence/2026-11-13-docs-archive-closeout/publication-summary.json). PR #510 is merged. Exact-commit CI, Quality, Security, Smoke, Release Gate and asset verification passed; Linux foundation tests passed 125/125 with no skips. CodeQL #100–108 closed automatically with zero dismissals.
+Current facts: [status](../.harness/STATUS.md), [task index](../.harness/TASK_INDEX.md), [product VERSION](../VERSION) and [official Releases](https://github.com/duanxldragon/pantheon-base/releases/latest). Consumer adoption is defined by its foundation-release.lock.json. The November 13 publication/adoption checkpoint remains in the [original status snapshot](../.harness/archive/2026-11/STATUS-before-workflow-improvement-20261124.md); it is not a latest-version declaration.
 
-Ops officially consumes v0.18.7 through [PR #183](https://github.com/duanxldragon/pantheon-ops/pull/183); **official v0.18.8 adoption is deferred to a separate consumer task**. Maintenance freeze remains unsigned, real S3 provider coverage unwaived, and FR028 deferred. Production migrations, legacy-auth retirement and separate product acceptance remain independently scoped; see [current status](../.harness/STATUS.md).
-
-Completed tasks and evidence are retained in the [monthly archive](../.harness/ARCHIVE.md); previous status checkpoints remain in the [historical snapshot](../.harness/archive/2026-11/STATUS-before-doc-closeout.md). The [FULL audit](./reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-11-04_FULL.md) and [asset matrix](./reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-11-04_ASSETS.md) remain audit baselines; the completed [remediation plan](../.harness/archive/2026-11/tasks/2026-11-04-global-audit-remediation/plan.md) is archived. Remediation completion does not certify a maintenance freeze.
+History is retained in the [monthly archive](../.harness/ARCHIVE.md). The [FULL audit](./reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-11-04_FULL.md) and [asset matrix](./reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-11-04_ASSETS.md) provide context; maintenance freeze, provider coverage and independent product acceptance remain separately scoped.
 
 This file is the unified entry point for `pantheon-base/docs/`.
 
@@ -24,21 +22,7 @@ Its purpose is not to dump all historical material on the front page. It should 
 
 ## Recommended Reading Order
 
-For Chinese-first onboarding, read:
-
-1. [README.md](./README.md)
-2. [../DESIGN.md](../DESIGN.md)
-3. [../AGENTS.md](../AGENTS.md)
-4. [harness/PANTHEON_BASE_DELIVERY_WORKFLOW.md](./harness/PANTHEON_BASE_DELIVERY_WORKFLOW.md)
-5. [harness/AI_QUALITY_GOVERNANCE.md](./harness/AI_QUALITY_GOVERNANCE.md)
-6. [contracts/DOCUMENT_GOVERNANCE_CONTRACT.md](./contracts/DOCUMENT_GOVERNANCE_CONTRACT.md)
-7. [contracts/PLATFORM_CONTRACT.md](./contracts/PLATFORM_CONTRACT.md)
-8. [designs/REPOSITORY_LAYOUT.en.md](./designs/REPOSITORY_LAYOUT.en.md)
-9. [designs/BACKEND.md](./designs/BACKEND.md)
-10. [designs/FRONTEND.md](./designs/FRONTEND.md)
-11. [acceptances/ACCEPTANCE_CHECKLIST.md](./acceptances/ACCEPTANCE_CHECKLIST.md)
-12. [acceptances/AGENT_EXECUTION_CHECKLIST.md](./acceptances/AGENT_EXECUTION_CHECKLIST.md)
-13. [designs/README.md](./designs/README.md)
+Start with [AGENTS](../AGENTS.md), [current status](../.harness/STATUS.md) and [task index](../.harness/TASK_INDEX.md). Use the Chinese index's task routes to select matching contracts/designs/acceptances. Read relevant DESIGN sections for architecture/UI, and delivery governance for L2 or workflow changes. This index is not a mandatory whole-project reading list.
 
 ## Active Document Groups
 
