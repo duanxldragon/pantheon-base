@@ -1,0 +1,71 @@
+{
+  "taskId": "2026-11-19-archive-formatter-protection",
+  "repo": "pantheon-base",
+  "agent": {
+    "tool": "codex",
+    "adapter": "Primary scoped config implementer; independent native code-reviewer and architect"
+  },
+  "commands": [
+    {
+      "command": "node --test tests/scripts/harness-archive-formatting.test.mjs",
+      "cwd": ".",
+      "status": "passed",
+      "exitCode": 0,
+      "evidence": ".harness/evidence/2026-11-19-archive-formatter-protection/formatter-regression.json",
+      "notes": "Two regressions; explicit Prettier writes and real lint-staged worktree/index checks including an unprotected negative witness."
+    },
+    {
+      "command": "node .local/manual-preview-20261116/verify-archive-formatter-protection-20261119.mjs",
+      "cwd": "../pantheon-ops",
+      "status": "passed",
+      "exitCode": 0,
+      "evidence": "../pantheon-ops/.harness/evidence/2026-11-17-ops-history-audit/continuation-history-formatter-20261119-recovered-nine.json",
+      "notes": "All nine recovered originals remain byte-identical under the Base ignore in an isolated fixture; current Ops originals and official lock unchanged."
+    },
+    {
+      "command": "node scripts/harness/check-evidence.mjs --json --strict .harness/evidence/2026-11-19-archive-formatter-protection/commands.json",
+      "cwd": ".",
+      "status": "failed",
+      "exitCode": 1,
+      "evidence": ".harness/evidence/2026-11-19-archive-formatter-protection/governance-before-review.json",
+      "notes": "Interim check before review.md existed; missing linkage file now supplied by independent review synthesis. Final check is recorded separately."
+    }
+  ],
+  "knownGaps": [
+    "Base fix is local source, not an official foundation publication; Ops remains on v0.18.9 without default archive protection until formal consumption.",
+    "Existing Ops task/evidence/review/link governance debt and all ten original business-package acceptances remain open.",
+    "Two historic archive EOF whitespace findings are preserved with original bytes; no archive formatting waiver or rewrite.",
+    "Native reviewer LSP/AST tools unavailable; COMMENT retained. Git EOL conversion and non-default formatter/tool writes are outside the fixture evidence."
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-11-19-archive-formatter-protection/manifest.json",
+    "taskDoc": "docs/harness/tasks/2026-11-19-archive-formatter-protection.task.md",
+    "evidenceDir": ".harness/evidence/2026-11-19-archive-formatter-protection/",
+    "reviewFile": ".harness/evidence/2026-11-19-archive-formatter-protection/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".harness/tasks/2026-11-19-archive-formatter-protection/plan.md"
+    ]
+  },
+  "recordedAtUTC": "2026-11-19 00:41:14 UTC",
+  "wholeProjectAccepted": false,
+  "downstreamAdopted": false,
+  "independentReview": {
+    "codeRecommendation": "COMMENT",
+    "architectureStatus": "CLEAR",
+    "recordedAtUTC": "2026-11-19T00:47:51.965Z",
+    "sourceSHA256": {
+      ".prettierignore": "e0a85208aee1dc01824062f70edb81292c45f2dbe2262f43e85ca836a23bbc56",
+      "tests/scripts/harness-archive-formatting.test.mjs": "bef79f37e48d092ea0220c2039db54117ca7c6becfc08d4303fe235718658593",
+      "docs/harness/PANTHEON_BASE_DELIVERY_WORKFLOW.md": "2093742454e269fa47384a85f1e04f2848ddf014db5ae1c70f24bddaccbe0e3e",
+      "docs/harness/PANTHEON_BASE_DELIVERY_WORKFLOW.en.md": "4ee90eb25e8281e0f4150666debcb5976a5bab0f6719d32fb540b9912d597f59",
+      "docs/harness/tasks/2026-11-19-archive-formatter-protection.task.md": "8e8cb27733743e309b76212507d23da0821f432031d7b716f897980bb8077cd0",
+      ".harness/tasks/2026-11-19-archive-formatter-protection/manifest.json": "77b757e244d9ebd19d628e0d4cfabdbac3532f8c4c8d1fae8a8da2fa5aeb7289",
+      ".harness/tasks/2026-11-19-archive-formatter-protection/plan.md": "6dc1124ea2e5ccfeeab04947ab8739c7c297bb56045a6a8bb1fdfbc909853e1b",
+      ".harness/evidence/2026-11-19-archive-formatter-protection/formatter-regression.json": "62b1f412efb0b3dcdefa708adc893788960672d72b107388ac732019345bb50b",
+      ".harness/evidence/2026-11-19-archive-formatter-protection/formatter-regression.log": "0e336c231133b3f5afefd89f591069b7f744818c07154cc7d557e40c30ec613d"
+    },
+    "codeReport": ".harness/evidence/2026-11-19-archive-formatter-protection/code-review.md",
+    "architectureReport": ".harness/evidence/2026-11-19-archive-formatter-protection/architecture-review.md"
+  }
+}
