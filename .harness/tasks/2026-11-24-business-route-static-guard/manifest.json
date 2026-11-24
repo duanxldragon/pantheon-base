@@ -2,6 +2,7 @@
   "schemaVersion": 1,
   "taskId": "2026-11-24-business-route-static-guard",
   "title": "Isolate static and parameter business routes in authorization",
+  "goal": "Business authorization must distinguish static and parameter route segments so detail grants cannot authorise static sibling routes, while explicit wildcard grants keep working.",
   "status": "in-progress",
   "deliveryTier": "L2",
   "primaryLayer": "platform",
