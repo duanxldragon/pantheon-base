@@ -2,7 +2,7 @@
 title: Workflow context and verification improvements
 doc_type: Remediation
 layer: platform
-status: Active
+status: Archived
 updated_at: 2026-11-24
 linked_contracts:
   - docs/contracts/DOCUMENT_GOVERNANCE_CONTRACT.md

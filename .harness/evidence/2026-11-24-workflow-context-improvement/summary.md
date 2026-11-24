@@ -23,3 +23,10 @@ Harness 行为测试 16/16；Base 最终行为/工作流测试 19/19；Ops 工�
 Harness PR #13 已合并；PR 与 main CI 均通过。consumer 明确采用合并提交 `51fc783dc793b75ae91bdb936ba1418e2e95a354`，七份 policy 哈希不变。新的 helper/checker 修订仍未打正式发行 tag。
 
 Base 已核对 v1.4→v1.5 的 shell 合同与现有落地资产，按 upgrade.md 更新 shell 本地采用 metadata（adoptedAt），method-health strict 零 finding 通过。产品 VERSION/发行与 Ops foundation lock 未改。OpenSpec skeleton 仍是既有 advisory warning。原状态 snapshot 使用路径级 Git -text 保留原始字节。
+
+## Hosted 收口（2026-11-24）
+
+- Harness PR #13 合并为 `51fc783dc793b75ae91bdb936ba1418e2e95a354`；main「Harness Method Health」success。
+- Base PR #526 合并为 `768c37088f705357779b0a0cfedab789aeaa5394`；必过门禁 Quality Gates / Security Gates / Unit Tests / CI Summary / SonarCloud Code Analysis 全 SUCCESS，PR Smoke Modules SUCCESS；可选 Draft PR Handler 与 PR Smoke Core (Optional) 按条件 skipped。
+- Ops PR #209 合并为 `60bfdf98ce2a47a89873c9592a574417f8bdcfda`；必过 Docs Governance / Backend Tests SUCCESS（Frontend Contract 按条件 skipped）；非必需 Automate Solo PR（缺 RELEASE_GATE_TOKEN）与 Vercel preview 是既有外部红灯，未豁免、未降级、未用 solo-override。
+- 本任务 manifest 置 completed、task doc 置 Archived、`TASK_INDEX` 按 manifest 重渲染。正式发行、消费重建与产品验收仍是独立后续。
