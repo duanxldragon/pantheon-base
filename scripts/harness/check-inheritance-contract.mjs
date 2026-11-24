@@ -3,6 +3,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
+import { fileURLToPath } from 'node:url';
 
 const DEFAULT_ROOT = process.cwd();
 
@@ -136,9 +137,39 @@ function checkProjectInheritanceVersion(root, findings) {
       reason: 'Base version must be an explicit tag or commit hash',
     });
   }
+  const lockPath = 'pantheon-ops/foundation-release.lock.json';
+  if (!requireFile(root, lockPath, findings)) return;
+  try {
+    const lock = JSON.parse(readText(root, lockPath));
+    if (shortVersion !== lock.releaseVersion || fullVersion !== lock.baseCommit) {
+      findings.push({ file: repoPath, reason: 'Base version/commit must match foundation-release.lock.json' });
+    }
+  } catch (error) {
+    findings.push({ file: lockPath, reason: `invalid foundation lock: ${error.message}` });
+  }
 }
 
-function scanInheritance(root) {
+function checkWorkspaceCommands(root, findings) {
+  const packagePath = 'pantheon-ops/package.json';
+  if (!requireFile(root, packagePath, findings)) return;
+  let scripts;
+  try { scripts = JSON.parse(readText(root, packagePath)).scripts ?? {}; }
+  catch (error) {
+    findings.push({ file: packagePath, reason: `invalid package.json: ${error.message}` });
+    return;
+  }
+  for (const file of ['docs/WORKSPACE_INHERITANCE.md', 'docs/WORKSPACE_INHERITANCE.zh.md']) {
+    if (!fs.existsSync(path.join(root, file))) continue;
+    const commands = new Set([...readText(root, file).matchAll(/\bnpm run ([\w:-]+)/g)].map((match) => match[1]));
+    for (const command of commands) {
+      if (typeof scripts[command] !== 'string' || !scripts[command].trim()) {
+        findings.push({ file, reason: `documented Ops command does not exist: npm run ${command}` });
+      }
+    }
+  }
+}
+
+export function scanInheritance(root) {
   const findings = [];
   const warnings = [];
 
@@ -151,6 +182,7 @@ function scanInheritance(root) {
     findings,
   );
   checkProjectInheritanceVersion(root, findings);
+  checkWorkspaceCommands(root, findings);
   checkMarkers(root, '.github/pull_request_template.md', REQUIRED_PR_MARKERS, findings);
 
   const opsAgentsPath = path.join(root, 'pantheon-ops', 'AGENTS.md');
@@ -221,4 +253,4 @@ function main() {
   return options.strict && result.findings.length > 0 ? 1 : 0;
 }
 
-process.exitCode = main();
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) process.exitCode = main();

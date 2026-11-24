@@ -18,6 +18,6 @@ This repository has a project-local CodeGraph MCP config in `.mcp.json`.
 
 ## Implementation Approach
 
-`AGENTS.md` governs execution roles. Planners and dispatchers must not directly modify business code under `backend/` or `frontend/src/`. After plan approval, a Generator adapter performs implementation; the coordinator may directly update only governance documents, project configuration, and entry rules as defined there.
+Consume [capability-adaptive delivery](../pantheon-harness/patterns/capability-adaptive-delivery.md) under `AGENTS.md`. Claude Code may plan, implement, verify, and repair authorized work in the primary session. Roles do not require a Codex subprocess. Planning-only/review-only assignments remain read-only; high-risk work retains independent review or an explicit review gap and acceptance gate. Preserve the current model, reasoning effort, provider, settings, and sandbox. Historical model-tier tables are not a command to override this session's selection.
 
-External tools or agents may assist with complex work only within those role boundaries, with their handoffs recorded in the task packet and evidence artifacts.
+Delegate only self-contained, authorized branches or independent review, with ownership, budget, stop condition, and evidence. Before work and at closeout run `node ../pantheon-harness/scripts/harness/check-method-consumption.mjs --root . --source ../pantheon-harness`; never refresh the receipt automatically.

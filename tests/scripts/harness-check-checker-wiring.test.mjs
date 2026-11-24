@@ -5,6 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
+import { evaluate } from '../../scripts/harness/check-checker-wiring.mjs';
 
 const checkerPath = fileURLToPath(new URL('../../scripts/harness/check-checker-wiring.mjs', import.meta.url));
 
@@ -44,6 +45,7 @@ function run(root) {
     const stdout = execFileSync(process.execPath, [checkerPath, '--root', root], {
       encoding: 'utf8',
       stdio: ['ignore', 'pipe', 'pipe'],
+      windowsHide: true,
     });
     return { code: 0, output: stdout };
   } catch (error) {
@@ -88,10 +90,76 @@ test('reports machine-readable JSON for evidence capture', () => {
 
   const stdout = execFileSync(process.execPath, [checkerPath, '--root', root, '--json'], {
     encoding: 'utf8',
+    windowsHide: true,
   });
   const report = JSON.parse(stdout);
 
   assert.equal(report.total, 4);
   assert.equal(report.wired, 3);
   assert.deepEqual(report.unwired, []);
+});
+
+test('metadata, workflow names and standalone comments do not create wiring', () => {
+  const root = makeRoot();
+  fs.writeFileSync(path.join(root, 'package.json'), JSON.stringify({
+    description: 'scripts/harness/check-unwired.mjs',
+    scripts: { 'check:wired': 'node scripts/harness/check-wired.mjs' },
+  }));
+  fs.writeFileSync(path.join(root, '.github/workflows/quality.yml'),
+    '# scripts/harness/check-unwired.mjs\njobs:\n  docs:\n    name: scripts/harness/check-unwired.mjs\n    steps:\n      - run: |\n          # scripts/harness/check-unwired.mjs\n          node scripts/harness/check-in-workflow.mjs\n');
+  const result = evaluate(root).find((item) => item.name === 'check-unwired.mjs');
+  assert.equal(result.status, 'unwired');
+});
+
+test('npm indirection distinguishes CI references from manual-only tools', () => {
+  const root = makeRoot();
+  fs.writeFileSync(path.join(root, 'package.json'), JSON.stringify({ scripts: {
+    'check:wired': 'node scripts/harness/check-wired.mjs',
+    'check:manual': 'node scripts/harness/check-unwired.mjs',
+    verify: 'npm run check:wired && npm run verify',
+  } }));
+  fs.writeFileSync(path.join(root, '.github/workflows/quality.yml'),
+    'jobs:\n  docs:\n    steps:\n      - run: npm run verify\n');
+  const results = evaluate(root);
+  assert.equal(results.find((item) => item.name === 'check-wired.mjs').invocation, 'ci-reference');
+  assert.equal(results.find((item) => item.name === 'check-unwired.mjs').invocation, 'manual-only');
+});
+
+test('inline comments, echo data and another script argument cannot fabricate an invocation', (t) => {
+  const root = makeRoot();
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  for (const command of [
+    'echo ok # scripts/harness/check-unwired.mjs',
+    'echo scripts/harness/check-unwired.mjs',
+    'echo "node scripts/harness/check-unwired.mjs"',
+    'node other.mjs scripts/harness/check-unwired.mjs',
+    'node -e "console.log(\'scripts/harness/check-unwired.mjs\')"',
+  ]) {
+    writePackageJson(root, command);
+    fs.writeFileSync(path.join(root, '.github/workflows/quality.yml'), `jobs:\n  docs:\n    steps:\n      - run: ${command}\n`);
+    assert.equal(evaluate(root).find((item) => item.name === 'check-unwired.mjs').status, 'unwired', command);
+  }
+});
+
+test('commented npm aliases stay manual while quoted hashes preserve actual command separators', (t) => {
+  const root = makeRoot();
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  writePackageJson(root, 'node scripts/harness/check-unwired.mjs');
+  const workflow = path.join(root, '.github/workflows/quality.yml');
+  fs.writeFileSync(workflow, 'jobs:\n  docs:\n    steps:\n      - run: echo ready # npm run check:wired\n');
+  assert.equal(evaluate(root).find((item) => item.name === 'check-unwired.mjs').invocation, 'manual-only');
+  fs.writeFileSync(workflow, 'jobs:\n  docs:\n    steps:\n      - run: | # npm run missing\n          echo "# quoted hash" && node "./scripts/harness/check-unwired.mjs" # explanation\n');
+  assert.equal(evaluate(root).find((item) => item.name === 'check-unwired.mjs').invocation, 'ci-reference');
+});
+
+test('folded YAML joins command lines before inspection and fails visibly on unsupported folding', (t) => {
+  const root = makeRoot();
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  const workflow = path.join(root, '.github/workflows/quality.yml');
+  fs.writeFileSync(workflow, 'jobs:\n  docs:\n    steps:\n      - run: >\n          echo\n          node scripts/harness/check-unwired.mjs\n        name: folded echo\n');
+  assert.equal(evaluate(root).find((item) => item.name === 'check-unwired.mjs').status, 'unwired');
+  fs.writeFileSync(workflow, 'jobs:\n  docs:\n    steps:\n      - run: >-\n          node\n          scripts/harness/check-unwired.mjs\n');
+  assert.equal(evaluate(root).find((item) => item.name === 'check-unwired.mjs').invocation, 'ci-reference');
+  fs.writeFileSync(workflow, 'jobs:\n  docs:\n    steps:\n      - run: >\n          echo\n\n          node scripts/harness/check-unwired.mjs\n');
+  assert.throws(() => evaluate(root), /Complex folded run/);
 });

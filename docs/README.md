@@ -2,11 +2,9 @@
 
 English version: [README.en.md](./README.en.md)
 
-当前正式发行 **v0.18.8** 已于 2026-11-13 发布，tag `pantheon-base-v0.18.8` 绑定提交 `34428814a9efc997fd93d4434406a53df6460323`。[发行说明](./release-notes/RELEASE_NOTES_v0.18.8.md) · [GitHub Release 与四个不可变资产](https://github.com/duanxldragon/pantheon-base/releases/tag/pantheon-base-v0.18.8) · [正式发行证据](../.harness/archive/2026-11/evidence/2026-11-13-docs-archive-closeout/publication-summary.json)。PR #510 已合并；最终提交的 CI、Quality、Security、Smoke、Release Gate 和资产验证均通过，Linux foundation 测试 125/125、零跳过；CodeQL #100–108 自动关闭，零 dismissals。
+当前事实入口：[当前状态](../.harness/STATUS.md) · [任务索引](../.harness/TASK_INDEX.md) · [产品 VERSION](../VERSION) · [官方 Releases](https://github.com/duanxldragon/pantheon-base/releases/latest)。消费版本以业务仓库 foundation-release.lock.json 为准；11/13 的发行/消费说明保留在[原状态快照](../.harness/archive/2026-11/STATUS-before-workflow-improvement-20261124.md)，不作为最新版本声明。
 
-Ops 已通过 [PR #183](https://github.com/duanxldragon/pantheon-ops/pull/183) 正式消费 v0.18.7；**v0.18.8 的正式消费升级另行跟踪**。维护冻结未签署、真实 S3 provider 验证未豁免、FR028 延期，生产迁移/旧认证退役与独立业务验收继续保留，见[当前状态](../.harness/STATUS.md)。
-
-已完成任务及执行证据进入[月度归档索引](../.harness/ARCHIVE.md)；旧状态检查点见[历史快照](../.harness/archive/2026-11/STATUS-before-doc-closeout.md)。当前审计对照基线：[完整审计](./reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-11-04_FULL.md)和[全量资产矩阵](./reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-11-04_ASSETS.md)，已完成整改计划保留在[归档](../.harness/archive/2026-11/tasks/2026-11-04-global-audit-remediation/plan.md)。整改完成不代表维护冻结已签署。
+历史任务与执行证据见[月度归档](../.harness/ARCHIVE.md)；审计背景可查[完整审计](./reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-11-04_FULL.md)和[资产矩阵](./reviews/PANTHEON_BASE_GLOBAL_AUDIT_2026-11-04_ASSETS.md)。维护冻结、真实 provider、生产迁移和独立业务验收仍按当前状态保留。
 
 本文是 `docs/` 的统一入口。
 
@@ -34,15 +32,10 @@ Ops 已通过 [PR #183](https://github.com/duanxldragon/pantheon-ops/pull/183) �
 
 ### 2.0 首次进入
 
-1. [项目总体设计](../DESIGN.md)
-2. [AI Agent 行为准则](../AGENTS.md)
-3. [Pantheon Base 多 Agent 交付流程](./harness/PANTHEON_BASE_DELIVERY_WORKFLOW.md)
-4. [AI 质量治理策略](./harness/AI_QUALITY_GOVERNANCE.md)
-5. [文档合同化治理方案](./contracts/DOCUMENT_GOVERNANCE_CONTRACT.md)
-6. [designs/ 目录入口（中文优先）](./designs/README.md)
-7. [仓库目录布局](./designs/REPOSITORY_LAYOUT.md)
-8. [设计与实现验收清单](./acceptances/ACCEPTANCE_CHECKLIST.md)
-9. [Pantheon Base Agent 执行清单](./acceptances/AGENT_EXECUTION_CHECKLIST.md)
+1. [AI Agent 行为准则](../AGENTS.md)、[当前状态](../.harness/STATUS.md)和[任务索引](../.harness/TASK_INDEX.md)。
+2. 使用下方任务路由选择对应合同、设计和验收。
+3. 架构/UI 决策补读 [DESIGN](../DESIGN.md) 对应章节；L2 或交付流程问题补读 [交付流程](./harness/PANTHEON_BASE_DELIVERY_WORKFLOW.md)、[质量治理](./harness/AI_QUALITY_GOVERNANCE.md)和[执行清单](./acceptances/AGENT_EXECUTION_CHECKLIST.md)。
+4. 文件放置或文档生命周期问题查 [布局](./designs/REPOSITORY_LAYOUT.md)与[文档治理合同](./contracts/DOCUMENT_GOVERNANCE_CONTRACT.md)。
 
 ### 2.1 按任务补读
 
