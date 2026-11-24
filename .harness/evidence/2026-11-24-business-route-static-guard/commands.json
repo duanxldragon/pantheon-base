@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "taskId": "2026-11-24-business-route-static-guard",
+  "repo": "pantheon-base",
+  "evidenceState": "exercised",
+  "agent": {
+    "tool": "claude-code",
+    "adapter": "windows"
+  },
+  "candidate": {
+    "worktree": "fix/business-route-static-guard",
+    "baseCommit": "6316f9b7",
+    "foundation": "pantheon-base-v0.18.9"
+  },
+  "commands": [
+    {
+      "command": "go build -buildvcs=false ./...",
+      "cwd": "backend",
+      "status": "passed",
+      "notes": "Whole backend builds with the dedicated business model and reused predicate."
+    },
+    {
+      "command": "go test -count=1 -buildvcs=false ./pkg/permissionroutes/ ./pkg/database/",
+      "cwd": "backend",
+      "status": "passed",
+      "notes": "Matcher table and in-memory Casbin regression pass; MySQL-only regression skips without DSN."
+    },
+    {
+      "command": "PANTHEON_TEST_DSN=<redacted root@127.0.0.1:33321> PANTHEON_TEST_DSN_REQUIRED=true go test -count=1 -buildvcs=false ./pkg/database/ -run TestBusinessPolicy",
+      "cwd": "backend",
+      "status": "passed",
+      "durationMs": 539,
+      "notes": "Real MySQL isolated databases: detail grant denies export route and still authorises its own route."
+    },
+    {
+      "command": "PANTHEON_TEST_DSN=<redacted root@127.0.0.1:33321> PANTHEON_TEST_DSN_REQUIRED=true go test -count=1 -buildvcs=false ./modules/system/iam/permission/ ./modules/system/iam/role/ ./modules/system/iam/tenant/ ./internal/middleware/ ./modules/auth/login/ ./pkg/database/ ./pkg/permissionroutes/",
+      "cwd": "backend",
+      "status": "passed",
+      "durationMs": 763000,
+      "notes": "permission 32.971s, role 55.671s, tenant 160.405s, middleware 11.520s, login 239.463s, database 262.637s, permissionroutes 0.131s; all ok with MySQL required."
+    },
+    {
+      "command": "gofmt -w backend/pkg/permissionroutes/cover.go backend/pkg/permissionroutes/cover_test.go backend/pkg/database/business_policy.go backend/pkg/database/business_policy_test.go backend/modules/system/iam/permission/permission_workbench.go backend/modules/system/iam/role/role_policy_sync.go",
+      "cwd": ".",
+      "status": "passed"
+    }
+  ],
+  "knownGaps": [
+    "Independent reviewer unavailable in this session; self-review recorded with explicit gap.",
+    "No official foundation release was cut and pantheon-ops still consumes v0.18.9.",
+    "Ops detail route registration and runtime tenant-isolation verification remain downstream work.",
+    "Windows CGO/TSan race run was not executed in this worktree."
+  ],
+  "linkage": {
+    "taskPacket": "docs/harness/tasks/2026-11-24-business-route-static-guard.task.md",
+    "taskManifest": ".harness/tasks/2026-11-24-business-route-static-guard/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-11-24-business-route-static-guard/",
+    "reviewFile": ".harness/evidence/2026-11-24-business-route-static-guard/review.md",
+    "changeRef": "none",
+    "planRefs": [".harness/tasks/2026-11-24-business-route-static-guard/plan.md"]
+  }
+}
