@@ -2,7 +2,13 @@
 
 English quick guide: [AGENTS.en.md](./AGENTS.en.md)
 
-你是 Pantheon Base 项目的执行专家。先读 `../pantheon-harness/patterns/README.md`、`../pantheon-harness/patterns/method-playbook.md`、`../pantheon-harness/patterns/execution-guardrails.md`、`../pantheon-harness/patterns/context-engineering-protocol.md`，再读 `DESIGN.md`、`AGENTS.md`、`docs/README.md`、`docs/harness/PANTHEON_BASE_DELIVERY_WORKFLOW.md`、`docs/harness/AI_QUALITY_GOVERNANCE.md`、`docs/acceptances/AGENT_EXECUTION_CHECKLIST.md`，然后按任务补读对应合同/设计/验收；更细的入口和历史材料都由 `docs/README.md` 负责索引。
+先读本入口和 [当前状态](.harness/STATUS.md)，由 [任务索引](.harness/TASK_INDEX.md) 定位已有任务；再从 [docs/README.md](docs/README.md) 按任务选择合同、设计和验收。架构/UI 决策补读 `DESIGN.md` 对应章节；方法变更补读相关 harness policy，L2 交付补读交付流程与质量治理。避免为普通局部任务加载整套手册。
+
+## 方法消费
+
+先读 [能力适配交付规则](../pantheon-harness/patterns/capability-adaptive-delivery.md)。默认由当前主 agent 在同一上下文完成规划、实现、验证和修复；角色表示职责，不绑定 Claude/Codex 或独立进程。只读规划/评审任务保持只读。高风险 L2 保留独立评审或显式 review gap 与验收 gate，不因模型增强降档。保留当前模型与授权配置，只有实际可用且获准的能力才能使用。
+
+开工和收口运行 `node ../pantheon-harness/scripts/harness/check-method-consumption.mjs --root . --source ../pantheon-harness`。`.harness/method-consumption.json` 固定本地消费的方法版本与规则哈希；验证时不得自动刷新。
 
 ## 必守规则
 
@@ -16,12 +22,19 @@ English quick guide: [AGENTS.en.md](./AGENTS.en.md)
 - 改动接口、路由、权限、i18n、菜单、数据库、导入导出、seed 或 smoke 范围时，同步更新测试、脚本、fixture、门禁或截图基线。
 - `L1/L2` 任务默认先声明实现者视角、评审视角、最小 evidence 和 human gate；`L2` 必须带 task packet 或父 task packet 引用。
 - 多 agent 工作默认由当前协调 agent 调度，但方法按角色定义：Planner/Dispatcher 负责规划、上下文整理和 review 路由；Generator 负责探索、实现和修复；Reviewer/Evaluator 负责审查和证据判断；人只负责目标、范围、风险接受和关键 gate 决策，不需要手动在工具间搬运上下文。
-- **Planner/Dispatcher 角色默认不直接修改 `backend/` 和 `frontend/src/` 下的业务代码**。计划批准后，实现交给 Generator adapter 执行。具体工具不改变角色边界；Planner/Dispatcher 只直接修改治理文档（`docs/harness/`、`.harness/`）、项目配置（`.gitignore`、CI workflows）和入口规则文件（`CLAUDE.md`、`AGENTS.md`、`DESIGN.md`）。
+- 当前主 agent 可以在已授权任务中先承担 Planner/Dispatcher，再承担 Generator 实现范围内代码；明确分配的 planning-only / review-only 任务不自行转为实现。需要独立审查时用实际可用的 reviewer，委派写任务先声明文件所有权和集成者，保留其他人的改动。
 - 涉及 PR 收口、GitHub comments 收敛或 GitHub Actions 红灯时，优先看 `.agents/skills/` 下的 `repo-verify`、`repo-pr-gate`、`gh-address-comments`、`repo-ci-triage`、`gh-fix-ci`。
 - **合并门禁 `Quality Gates` 是必过检查，但 `solo-override` label 是「人类维护者专属」逃生舱**：贴上该 label 会让所有门禁降级为 advisory（含 docs-governance 的 PR-body harness ceremony），仅供维护者本人在门禁误挡开发流程时手动使用。**Agent（Planner/Generator/Reviewer）严禁给自己的 PR 贴 `solo-override`**；agent PR 必须把门禁跑绿或修好门禁本身，除非维护者明确指示。真实质量信号（build/test/lint/security）始终运行并可见。
 - 触碰 UI 时先用 `impeccable`，并提供渲染证据或说明未产出证据的原因。
 - 登录、权限、菜单路由、导入导出、lowcode、动态模块、异步链路和外部集成等 runtime-sensitive 改动，除测试外还要给 runtime evidence 或显式 runtime gap。
 - 用户说“烟测保留数据”时使用 preserve 入口或 `PANTHEON_SMOKE_PRESERVE_FIXTURES=1`；说“清理烟测数据”时执行对应 cleanup。
+
+## 当前事实与恢复
+
+- 产品版本看 `VERSION`，正式发行看官方 release/发行证据；日期检查点只代表原候选。
+- 任务状态以 manifest 为准；进度写目标任务 summary，首页只保留当前重点与 gap。manifest 更新后运行 `node ../pantheon-harness/scripts/harness/render-task-index.mjs --root . --write`；此 helper 当前为 Harness Unreleased，CI 的固定 policy 快照不代表其已发行。
+- receipt 的 `sourceCommit` 固定 CI 方法来源。更新方法先审查，再显式选择 commit；不可验证时记录 gap，不自动改 pin。
+- 迭代阶段跑受影响包/反例，验收阶段按 `.agents/skills/repo-verify/SKILL.md` 执行最终集合；同候选已有通过证据可复用，相关源码/配置变化须重跑。
 
 ## 工作方式
 

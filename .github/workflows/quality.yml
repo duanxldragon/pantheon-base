@@ -104,24 +104,43 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+    defaults:
+      run:
+        working-directory: pantheon-base
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
-
-      - name: Checkout Pantheon Harness
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-        with:
-          repository: duanxldragon/pantheon-harness
-          path: pantheon-harness
-          persist-credentials: false
+          path: pantheon-base
 
       - name: Setup Node
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
         with:
           node-version: ${{ env.NODE_VERSION }}
           package-manager-cache: false
+
+      - name: Resolve method source commit
+        id: method-source
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const receipt = JSON.parse(fs.readFileSync('.harness/method-consumption.json', 'utf8'));
+          if (!/^[0-9a-f]{40}$/.test(receipt.sourceCommit)) throw new Error('A reviewed full sourceCommit is required');
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, `commit=${receipt.sourceCommit}\n`);
+          NODE
+
+      - name: Checkout pinned Pantheon Harness
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          repository: duanxldragon/pantheon-harness
+          ref: ${{ steps.method-source.outputs.commit }}
+          path: pantheon-harness
+          persist-credentials: false
+
+      - name: Verify method consumption
+        run: node ../pantheon-harness/scripts/harness/check-method-consumption.mjs --root . --source ../pantheon-harness
 
       - name: Install root dependencies
         run: npm ci --ignore-scripts

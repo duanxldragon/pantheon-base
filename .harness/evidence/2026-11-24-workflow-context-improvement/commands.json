@@ -1,0 +1,479 @@
+{
+  "taskId": "2026-11-24-workflow-context-improvement",
+  "repo": "pantheon-base",
+  "agent": {
+    "tool": "codex",
+    "adapter": "primary implementer; native code-reviewer and architect"
+  },
+  "commands": [
+    {
+      "command": "node --test tests/scripts/harness-check-checker-wiring.test.mjs tests/scripts/harness-inheritance-command-drift.test.mjs tests/scripts/workflow-method-consumption.test.mjs tests/scripts/quality-workflow.test.mjs",
+      "cwd": "D:/workspace/go/pantheon-platform/pantheon-base",
+      "status": "passed",
+      "exitCode": 0,
+      "durationMs": 841,
+      "log": ".harness/evidence/2026-11-24-workflow-context-improvement/base-behavior.log",
+      "sha256": "b7a8e0f8af5eb75a1a35363af27bfc63a335be010b9fa550135eb8ac050210b0",
+      "notes": "base-behavior"
+    },
+    {
+      "command": "node scripts/harness/check-inheritance-contract.mjs --root .. --strict",
+      "cwd": "D:/workspace/go/pantheon-platform/pantheon-base",
+      "status": "failed",
+      "exitCode": 1,
+      "durationMs": 96,
+      "log": ".harness/evidence/2026-11-24-workflow-context-improvement/inheritance.log",
+      "sha256": "e890af7da2c8674ff2f768184898e64ab74586abf1d78ba3e88630e6bc8f548c",
+      "notes": "inheritance"
+    },
+    {
+      "command": "node ../pantheon-harness/scripts/harness/check-method-consumption.mjs --root . --source ../pantheon-harness",
+      "cwd": "D:/workspace/go/pantheon-platform/pantheon-base",
+      "status": "passed",
+      "exitCode": 0,
+      "durationMs": 598,
+      "log": ".harness/evidence/2026-11-24-workflow-context-improvement/base-consumption.log",
+      "sha256": "508acb9fb6b4e36ad7d46ee7618a5918c9f5fe6170bbe04bde4aeb79e4a0f36c",
+      "notes": "base-consumption"
+    },
+    {
+      "command": "node --test tests/scripts/harness-check-checker-wiring.test.mjs tests/scripts/harness-inheritance-command-drift.test.mjs tests/scripts/workflow-method-consumption.test.mjs tests/scripts/quality-workflow.test.mjs",
+      "cwd": "D:/workspace/go/pantheon-platform/pantheon-base",
+      "status": "passed",
+      "exitCode": 0,
+      "durationMs": 666,
+      "log": ".harness/evidence/2026-11-24-workflow-context-improvement/base-behavior-final.log",
+      "sha256": "bcbe79d5c6e47e9eb827f5b885ffde240f271673d2918e30dd690254e556d282",
+      "notes": "base-behavior-final"
+    },
+    {
+      "command": "node ../pantheon-harness/scripts/harness/render-task-index.mjs --root . --check",
+      "cwd": "D:/workspace/go/pantheon-platform/pantheon-base",
+      "status": "passed",
+      "exitCode": 0,
+      "durationMs": 127,
+      "log": ".harness/evidence/2026-11-24-workflow-context-improvement/base-task-index.log",
+      "sha256": "a6bd9a3a002dee6db2ad2b4119dea34c6d1fe528ac1d97eb15e146d4a875a00d",
+      "notes": "base-task-index"
+    },
+    {
+      "command": "node scripts/harness/check-checker-wiring.mjs --json",
+      "cwd": "D:/workspace/go/pantheon-platform/pantheon-base",
+      "status": "passed",
+      "exitCode": 0,
+      "durationMs": 148,
+      "log": ".harness/evidence/2026-11-24-workflow-context-improvement/base-wiring.log",
+      "sha256": "46549c5e9cb1803222eca95bc167181850d17c34470ead4b67d721775c90e6df",
+      "notes": "base-wiring"
+    },
+    {
+      "command": "node scripts/harness/check-inheritance-contract.mjs --root .. --strict",
+      "cwd": "D:/workspace/go/pantheon-platform/pantheon-base",
+      "status": "passed",
+      "exitCode": 0,
+      "durationMs": 96,
+      "log": ".harness/evidence/2026-11-24-workflow-context-improvement/inheritance-final.log",
+      "sha256": "756ed677d732719ceffcabcfc01b8419f4654cd8fc1220d319d24b596fe5b7aa",
+      "notes": "inheritance-final"
+    },
+    {
+      "command": "node scripts/harness/check-doc-links.mjs --strict",
+      "cwd": "D:/workspace/go/pantheon-platform/pantheon-base",
+      "status": "passed",
+      "exitCode": 0,
+      "durationMs": 567,
+      "log": ".harness/evidence/2026-11-24-workflow-context-improvement/base-links.log",
+      "sha256": "43a090fa0377612e518dd5aa6f1d364a4660296a864cb4f86f0de21037988e59",
+      "notes": "base-links"
+    },
+    {
+      "command": "node scripts/check-task-packet-template.mjs",
+      "cwd": "D:/workspace/go/pantheon-platform/pantheon-base",
+      "status": "passed",
+      "exitCode": 0,
+      "durationMs": 89,
+      "log": ".harness/evidence/2026-11-24-workflow-context-improvement/base-template.log",
+      "sha256": "d271a88d26509be89f112d4c6343eb5c6f70a9e0904f0a8ffca023d324d6cad3",
+      "notes": "base-template"
+    },
+    {
+      "command": "node scripts/frontmatter-check.mjs",
+      "cwd": "D:/workspace/go/pantheon-platform/pantheon-base",
+      "status": "passed",
+      "exitCode": 0,
+      "durationMs": 477,
+      "log": ".harness/evidence/2026-11-24-workflow-context-improvement/base-frontmatter.log",
+      "sha256": "602359fff069b8c54cca9765854494831dd9d1a94bd9751f9a23674e36e6d4ee",
+      "notes": "base-frontmatter"
+    },
+    {
+      "command": "node scripts/harness/check-encoding.mjs --strict",
+      "cwd": "D:/workspace/go/pantheon-platform/pantheon-base",
+      "status": "passed",
+      "exitCode": 0,
+      "durationMs": 2098,
+      "log": ".harness/evidence/2026-11-24-workflow-context-improvement/base-encoding.log",
+      "sha256": "38317c599842ba3279420a1c9e13fdfef3195f337366d106ab988b9d0af1d263",
+      "notes": "base-encoding"
+    },
+    {
+      "command": "node --test tests/scripts/harness-check-checker-wiring.test.mjs tests/scripts/harness-inheritance-command-drift.test.mjs tests/scripts/workflow-method-consumption.test.mjs tests/scripts/quality-workflow.test.mjs",
+      "cwd": "D:/workspace/go/pantheon-platform/pantheon-base",
+      "status": "passed",
+      "exitCode": 0,
+      "durationMs": 784,
+      "log": ".harness/evidence/2026-11-24-workflow-context-improvement/base-behavior-final-2.log",
+      "sha256": "c130505e2346e42ed2d20bbdbe26de8dde0be614916956a02b08ec0548e2e209",
+      "notes": "base-behavior-final-2"
+    },
+    {
+      "command": "node scripts/harness/check-checker-wiring.mjs --json",
+      "cwd": "D:/workspace/go/pantheon-platform/pantheon-base",
+      "status": "passed",
+      "exitCode": 0,
+      "durationMs": 152,
+      "log": ".harness/evidence/2026-11-24-workflow-context-improvement/base-wiring-final.log",
+      "sha256": "a247e7f67a4979f005ac15b2a8c0f3a1219903eca284d0cd7e8911925be32869",
+      "notes": "base-wiring-final"
+    },
+    {
+      "command": "node --test tests/scripts/harness-check-checker-wiring.test.mjs tests/scripts/harness-inheritance-command-drift.test.mjs tests/scripts/workflow-method-consumption.test.mjs tests/scripts/quality-workflow.test.mjs",
+      "cwd": "D:/workspace/go/pantheon-platform/.local/workflow-improvement-20261124/submission/pantheon-base",
+      "status": "passed",
+      "exitCode": 0,
+      "durationMs": 1196,
+      "log": ".harness/evidence/2026-11-24-workflow-context-improvement/submission-base-tests.log",
+      "sha256": "9745e6bb09edc7a726007d1b056fa02a83fc96de9f6f3076248a8c47d74338c8",
+      "notes": "submission-base-tests"
+    },
+    {
+      "command": "node ../pantheon-harness/scripts/harness/check-method-consumption.mjs --root . --source ../pantheon-harness",
+      "cwd": "D:/workspace/go/pantheon-platform/.local/workflow-improvement-20261124/submission/pantheon-base",
+      "status": "passed",
+      "exitCode": 0,
+      "durationMs": 578,
+      "log": ".harness/evidence/2026-11-24-workflow-context-improvement/submission-base-consumption.log",
+      "sha256": "16adef8bb88edf589c4a7e3c22226001a46984737e498dca957b593955c35401",
+      "notes": "submission-base-consumption"
+    },
+    {
+      "command": "node scripts/harness/check-doc-links.mjs --strict",
+      "cwd": "D:/workspace/go/pantheon-platform/.local/workflow-improvement-20261124/submission/pantheon-base",
+      "status": "passed",
+      "exitCode": 0,
+      "durationMs": 401,
+      "log": ".harness/evidence/2026-11-24-workflow-context-improvement/submission-base-links.log",
+      "sha256": "85bfea2c727045e608c47e3d85080b6564b86fe3d68d029a9aff6c1b5c849eef",
+      "notes": "submission-base-links"
+    },
+    {
+      "command": "node scripts/check-pr-governance.mjs --event D:\\workspace\\go\\pantheon-platform\\.local\\workflow-improvement-20261124\\pantheon-base-pr-event.json",
+      "cwd": "D:/workspace/go/pantheon-platform/.local/workflow-improvement-20261124/submission/pantheon-base",
+      "status": "passed",
+      "exitCode": 0,
+      "durationMs": 143,
+      "log": ".harness/evidence/2026-11-24-workflow-context-improvement/submission-pantheon-base-gate-0.log",
+      "sha256": "9df51cf2cce76e8406c6d926b4f32180d53ec6919faf350693a92f6e022e6b4d",
+      "notes": "submission-pantheon-base-gate-0"
+    },
+    {
+      "command": "node scripts/frontmatter-check.mjs",
+      "cwd": "D:/workspace/go/pantheon-platform/.local/workflow-improvement-20261124/submission/pantheon-base",
+      "status": "passed",
+      "exitCode": 0,
+      "durationMs": 834,
+      "log": ".harness/evidence/2026-11-24-workflow-context-improvement/submission-pantheon-base-gate-1.log",
+      "sha256": "87af9fe8c4e97e05965100681827399550be236d00091899d8e499911742cdf9",
+      "notes": "submission-pantheon-base-gate-1"
+    },
+    {
+      "command": "node scripts/frontmatter-check.mjs --report-legacy",
+      "cwd": "D:/workspace/go/pantheon-platform/.local/workflow-improvement-20261124/submission/pantheon-base",
+      "status": "passed",
+      "exitCode": 0,
+      "durationMs": 1150,
+      "log": ".harness/evidence/2026-11-24-workflow-context-improvement/submission-pantheon-base-gate-2.log",
+      "sha256": "3a4fcd6d40a106b2e84fe7106a224ed6e0991541baa08b14f237a0be7acf6518",
+      "notes": "submission-pantheon-base-gate-2"
+    },
+    {
+      "command": "node scripts/check-pr-governance.mjs",
+      "cwd": "D:/workspace/go/pantheon-platform/.local/workflow-improvement-20261124/submission/pantheon-base",
+      "status": "passed",
+      "exitCode": 0,
+      "durationMs": 172,
+      "log": ".harness/evidence/2026-11-24-workflow-context-improvement/submission-pantheon-base-gate-3.log",
+      "sha256": "c20c906d079e09d01d56e2f80f97f133536f6cdca6bd1453bc6ea25d500cb58d",
+      "notes": "submission-pantheon-base-gate-3"
+    },
+    {
+      "command": "node scripts/harness/check-checker-wiring.mjs --root .",
+      "cwd": "D:/workspace/go/pantheon-platform/.local/workflow-improvement-20261124/submission/pantheon-base",
+      "status": "passed",
+      "exitCode": 0,
+      "durationMs": 327,
+      "log": ".harness/evidence/2026-11-24-workflow-context-improvement/submission-pantheon-base-gate-4.log",
+      "sha256": "7a1905ffc17d8cc495c3d7df4e080827b4825b4f09f2a60386e5ba78143ec1ee",
+      "notes": "submission-pantheon-base-gate-4"
+    },
+    {
+      "command": "node scripts/harness/check-method-health.mjs --root . --strict",
+      "cwd": "D:/workspace/go/pantheon-platform/.local/workflow-improvement-20261124/submission/pantheon-base",
+      "status": "failed",
+      "exitCode": 1,
+      "durationMs": 238,
+      "log": ".harness/evidence/2026-11-24-workflow-context-improvement/submission-pantheon-base-gate-5.log",
+      "sha256": "c2d03dc0e7c35ee020afe775e9dbc108d9c726f3d0d66403d0ce0ddb9a85c361",
+      "notes": "submission-pantheon-base-gate-5"
+    },
+    {
+      "command": "node scripts/harness/check-adoption.mjs --root . --strict",
+      "cwd": "D:/workspace/go/pantheon-platform/.local/workflow-improvement-20261124/submission/pantheon-base",
+      "status": "passed",
+      "exitCode": 0,
+      "durationMs": 1772,
+      "log": ".harness/evidence/2026-11-24-workflow-context-improvement/submission-pantheon-base-gate-6.log",
+      "sha256": "865ad2de5774e10e99bb6dd39f23fe1f82bf1c5e6fc8b81ae55723adb69ec906",
+      "notes": "submission-pantheon-base-gate-6"
+    },
+    {
+      "command": "node scripts/harness/check-template-health.mjs --root . --strict",
+      "cwd": "D:/workspace/go/pantheon-platform/.local/workflow-improvement-20261124/submission/pantheon-base",
+      "status": "passed",
+      "exitCode": 0,
+      "durationMs": 163,
+      "log": ".harness/evidence/2026-11-24-workflow-context-improvement/submission-pantheon-base-gate-7.log",
+      "sha256": "64df29c0bf50247d6ef2198ae7079dca6eb516ceb2557bbd9d63c2cd51dbaaaf",
+      "notes": "submission-pantheon-base-gate-7"
+    },
+    {
+      "command": "node scripts/harness/check-doc-links.mjs --root . --strict",
+      "cwd": "D:/workspace/go/pantheon-platform/.local/workflow-improvement-20261124/submission/pantheon-base",
+      "status": "passed",
+      "exitCode": 0,
+      "durationMs": 704,
+      "log": ".harness/evidence/2026-11-24-workflow-context-improvement/submission-pantheon-base-gate-8.log",
+      "sha256": "9090bf19012b79ab686e24012f7778ef13de31b1ae20f804327c67b0cfe275ea",
+      "notes": "submission-pantheon-base-gate-8"
+    },
+    {
+      "command": "node scripts/harness/check-doc-inventory.mjs --root . --strict",
+      "cwd": "D:/workspace/go/pantheon-platform/.local/workflow-improvement-20261124/submission/pantheon-base",
+      "status": "passed",
+      "exitCode": 0,
+      "durationMs": 211,
+      "log": ".harness/evidence/2026-11-24-workflow-context-improvement/submission-pantheon-base-gate-9.log",
+      "sha256": "f5b0e81e2728212b2c5af8b55bc1e470e0fe8e545ede477e6b9eb8f69b52b4c1",
+      "notes": "submission-pantheon-base-gate-9"
+    },
+    {
+      "command": "node scripts/harness/check-sync-drift.mjs --root . --strict",
+      "cwd": "D:/workspace/go/pantheon-platform/.local/workflow-improvement-20261124/submission/pantheon-base",
+      "status": "passed",
+      "exitCode": 0,
+      "durationMs": 168,
+      "log": ".harness/evidence/2026-11-24-workflow-context-improvement/submission-pantheon-base-gate-10.log",
+      "sha256": "65938ff3affe61c177bb9a28748aed3b5dd3f16873bffff3f4f14ebaa895f474",
+      "notes": "submission-pantheon-base-gate-10"
+    },
+    {
+      "command": "node scripts/harness/check-encoding.mjs --root . --strict",
+      "cwd": "D:/workspace/go/pantheon-platform/.local/workflow-improvement-20261124/submission/pantheon-base",
+      "status": "passed",
+      "exitCode": 0,
+      "durationMs": 2622,
+      "log": ".harness/evidence/2026-11-24-workflow-context-improvement/submission-pantheon-base-gate-11.log",
+      "sha256": "d723ccc13c0b594385e9661ee699d792b31e126ee0059af81846f20530dd8200",
+      "notes": "submission-pantheon-base-gate-11"
+    },
+    {
+      "command": "node scripts/harness/check-ui-quality-gate.mjs --root . --strict",
+      "cwd": "D:/workspace/go/pantheon-platform/.local/workflow-improvement-20261124/submission/pantheon-base",
+      "status": "passed",
+      "exitCode": 0,
+      "durationMs": 109,
+      "log": ".harness/evidence/2026-11-24-workflow-context-improvement/submission-pantheon-base-gate-12.log",
+      "sha256": "e4e8363ac0378bf431be85a6bee80d1a147fc40004a9e7ecef46c62dbde62ab5",
+      "notes": "submission-pantheon-base-gate-12"
+    },
+    {
+      "command": "node scripts/harness/check-visual-evidence.mjs --root . --strict",
+      "cwd": "D:/workspace/go/pantheon-platform/.local/workflow-improvement-20261124/submission/pantheon-base",
+      "status": "passed",
+      "exitCode": 0,
+      "durationMs": 162,
+      "log": ".harness/evidence/2026-11-24-workflow-context-improvement/submission-pantheon-base-gate-13.log",
+      "sha256": "59505a5e9e3584c39cb37964fce6b10810e6fb858a012388e10ebb928ad63829",
+      "notes": "submission-pantheon-base-gate-13"
+    },
+    {
+      "command": "node scripts/harness/check-structure-contract.mjs --root . --strict",
+      "cwd": "D:/workspace/go/pantheon-platform/.local/workflow-improvement-20261124/submission/pantheon-base",
+      "status": "passed",
+      "exitCode": 0,
+      "durationMs": 322,
+      "log": ".harness/evidence/2026-11-24-workflow-context-improvement/submission-pantheon-base-gate-14.log",
+      "sha256": "46e2d246dbad53c7a01ab84d020f173b999a1c1dcb80455eb6c0546ef0f73443",
+      "notes": "submission-pantheon-base-gate-14"
+    },
+    {
+      "command": "node scripts/harness/check-evidence.mjs --root . --strict",
+      "cwd": "D:/workspace/go/pantheon-platform/.local/workflow-improvement-20261124/submission/pantheon-base",
+      "status": "failed",
+      "exitCode": 1,
+      "durationMs": 1121,
+      "log": ".harness/evidence/2026-11-24-workflow-context-improvement/submission-pantheon-base-gate-15.log",
+      "sha256": "1629d635e07e54d9b9342544643708144b3c6e039596e52632aa7a1014bf8ec5",
+      "notes": "submission-pantheon-base-gate-15"
+    },
+    {
+      "command": "node scripts/harness/check-review.mjs --root . --strict",
+      "cwd": "D:/workspace/go/pantheon-platform/.local/workflow-improvement-20261124/submission/pantheon-base",
+      "status": "failed",
+      "exitCode": 1,
+      "durationMs": 851,
+      "log": ".harness/evidence/2026-11-24-workflow-context-improvement/submission-pantheon-base-gate-16.log",
+      "sha256": "58bde13f070302e46e86ffedffafc23e76f908edc18d341b88e682b8365a4333",
+      "notes": "submission-pantheon-base-gate-16"
+    },
+    {
+      "command": "node scripts/harness/check-runtime-evidence.mjs --root . --strict",
+      "cwd": "D:/workspace/go/pantheon-platform/.local/workflow-improvement-20261124/submission/pantheon-base",
+      "status": "passed",
+      "exitCode": 0,
+      "durationMs": 449,
+      "log": ".harness/evidence/2026-11-24-workflow-context-improvement/submission-pantheon-base-gate-17.log",
+      "sha256": "ce45bb4af6d6539a6b41c0b743589451ec1d5d1fdc9ae94a2bf086acc0b08751",
+      "notes": "submission-pantheon-base-gate-17"
+    },
+    {
+      "command": "node scripts/harness/check-graph-review.mjs --root . --strict",
+      "cwd": "D:/workspace/go/pantheon-platform/.local/workflow-improvement-20261124/submission/pantheon-base",
+      "status": "passed",
+      "exitCode": 0,
+      "durationMs": 134,
+      "log": ".harness/evidence/2026-11-24-workflow-context-improvement/submission-pantheon-base-gate-18.log",
+      "sha256": "e7201ab19880ebd3e8750bbafac3318e6a1ef69a80d441c5f26a88b2dfd39a46",
+      "notes": "submission-pantheon-base-gate-18"
+    },
+    {
+      "command": "node scripts/harness/check-audit-coverage.mjs --root . --strict",
+      "cwd": "D:/workspace/go/pantheon-platform/.local/workflow-improvement-20261124/submission/pantheon-base",
+      "status": "passed",
+      "exitCode": 0,
+      "durationMs": 106,
+      "log": ".harness/evidence/2026-11-24-workflow-context-improvement/submission-pantheon-base-gate-19.log",
+      "sha256": "2b66bac2f4e119d0da74cb37fae29ecb6572ab775b7237252860bc24c9b05ac6",
+      "notes": "submission-pantheon-base-gate-19"
+    },
+    {
+      "command": "node scripts/harness/check-feature-ledger.mjs --root . --strict",
+      "cwd": "D:/workspace/go/pantheon-platform/.local/workflow-improvement-20261124/submission/pantheon-base",
+      "status": "passed",
+      "exitCode": 0,
+      "durationMs": 93,
+      "log": ".harness/evidence/2026-11-24-workflow-context-improvement/submission-pantheon-base-gate-20.log",
+      "sha256": "1963ba5377535c275fce03bc5a91f3c9e7d995464b7a75c4ed7c72147cf007f0",
+      "notes": "submission-pantheon-base-gate-20"
+    },
+    {
+      "command": "node scripts/harness/check-permission-contract.mjs --root . --strict",
+      "cwd": "D:/workspace/go/pantheon-platform/.local/workflow-improvement-20261124/submission/pantheon-base",
+      "status": "passed",
+      "exitCode": 0,
+      "durationMs": 116,
+      "log": ".harness/evidence/2026-11-24-workflow-context-improvement/submission-pantheon-base-gate-21.log",
+      "sha256": "8cea9a41b8dc9cf199549e8e32e57f5e05939c9704a8c4555125bb976c41693f",
+      "notes": "submission-pantheon-base-gate-21"
+    },
+    {
+      "command": "node scripts/check-task-packet-template.mjs",
+      "cwd": "D:/workspace/go/pantheon-platform/.local/workflow-improvement-20261124/submission/pantheon-base",
+      "status": "passed",
+      "exitCode": 0,
+      "durationMs": 90,
+      "log": ".harness/evidence/2026-11-24-workflow-context-improvement/submission-pantheon-base-gate-22.log",
+      "sha256": "89929ced304118a34233467cf237fe35b541a3813a3cf1d6ee3d0dff1159f8a5",
+      "notes": "submission-pantheon-base-gate-22"
+    },
+    {
+      "command": "node scripts/harness/check-task-packet.mjs --root .",
+      "cwd": "D:/workspace/go/pantheon-platform/.local/workflow-improvement-20261124/submission/pantheon-base",
+      "status": "failed",
+      "exitCode": 1,
+      "durationMs": 1025,
+      "log": ".harness/evidence/2026-11-24-workflow-context-improvement/submission-pantheon-base-gate-23.log",
+      "sha256": "38f0be85e12555b333e31da0c78545c34b25b535a0896e0482a2236826d5e921",
+      "notes": "submission-pantheon-base-gate-23"
+    },
+    {
+      "command": "node scripts/harness/check-method-health.mjs --root . --strict --json",
+      "cwd": "D:/workspace/go/pantheon-platform/.local/workflow-improvement-20261124/submission/pantheon-base",
+      "status": "passed",
+      "exitCode": 0,
+      "durationMs": 110,
+      "log": ".harness/evidence/2026-11-24-workflow-context-improvement/base-shell-adoption-health.log",
+      "sha256": "20fa426b427b5b8850d1b8b531bfbbf41c6c13d010015a0028fe35e9bfd82fbb",
+      "notes": "base-shell-adoption-health"
+    },
+    {
+      "command": "node scripts/harness/check-task-packet.mjs --root .",
+      "cwd": "D:/workspace/go/pantheon-platform/.local/workflow-improvement-20261124/submission/pantheon-base",
+      "status": "passed",
+      "exitCode": 0,
+      "durationMs": 1274,
+      "log": ".harness/evidence/2026-11-24-workflow-context-improvement/base-final-task-packet.log",
+      "sha256": "66b81018dd28dfd6d0d091fbee9dfc4cea3a25096024dfb8579ad426984f9590",
+      "notes": "base-final-task-packet"
+    },
+    {
+      "command": "node scripts/harness/check-evidence.mjs --root . --strict",
+      "cwd": "D:/workspace/go/pantheon-platform/.local/workflow-improvement-20261124/submission/pantheon-base",
+      "status": "passed",
+      "exitCode": 0,
+      "durationMs": 1520,
+      "log": ".harness/evidence/2026-11-24-workflow-context-improvement/base-final-evidence.log",
+      "sha256": "bf238d7469870f57d2fd9e39cd035dbe732f086d85b318ca462e3ba5a1e6cd70",
+      "notes": "base-final-evidence"
+    },
+    {
+      "command": "node scripts/harness/check-review.mjs --root . --strict",
+      "cwd": "D:/workspace/go/pantheon-platform/.local/workflow-improvement-20261124/submission/pantheon-base",
+      "status": "passed",
+      "exitCode": 0,
+      "durationMs": 910,
+      "log": ".harness/evidence/2026-11-24-workflow-context-improvement/base-final-review.log",
+      "sha256": "c97e99bea8addcade93d6f0468ba90099e7f521ca48a0a7b8a536be53fee8a17",
+      "notes": "base-final-review"
+    }
+  ],
+  "knownGaps": [
+    "Hosted GitHub CI and final maintainer acceptance were not run.",
+    "New Harness helpers/checker revisions are Unreleased; Base shared sensor publication and downstream foundation rebuild remain deferred.",
+    "No product Go race, runtime or visual acceptance was claimed; product behavior was outside scope.",
+    "CodeGraph/LSP/AST tools were unavailable; scoped syntax, behavioral, contract and documentation checks were used.",
+    "Token/cost metrics and workflow speedup remain unknown; file sizes are observations only."
+  ],
+  "browserEvidence": [],
+  "runtimeSensitive": false,
+  "linkage": {
+    "taskPacket": "docs/harness/tasks/2026-11-24-workflow-context-improvement.task.md",
+    "reviewFile": ".harness/evidence/2026-11-24-workflow-context-improvement/review.md",
+    "changeRef": "none",
+    "planRefs": [],
+    "evidenceDir": ".harness/evidence/2026-11-24-workflow-context-improvement/",
+    "taskManifest": ".harness/tasks/2026-11-24-workflow-context-improvement/manifest.json"
+  },
+  "completedAt": "2026-11-24T02:31:35.459Z",
+  "graphChecks": {
+    "usedCodeGraph": false,
+    "affectedSubgraph": [
+      "canonical method -> active consumer entries/receipt -> CI checkout/check; manifests -> task index -> current status"
+    ],
+    "checks": [
+      "sensitive-flow"
+    ],
+    "findings": [],
+    "notes": "Independent source/contract and ownership review. CodeGraph unavailable; no index certification."
+  }
+}
