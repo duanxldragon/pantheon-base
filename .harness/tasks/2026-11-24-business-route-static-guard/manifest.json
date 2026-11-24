@@ -1,0 +1,66 @@
+{
+  "schemaVersion": 1,
+  "taskId": "2026-11-24-business-route-static-guard",
+  "title": "Isolate static and parameter business routes in authorization",
+  "status": "in-progress",
+  "deliveryTier": "L2",
+  "primaryLayer": "platform",
+  "runtimeSensitive": true,
+  "taskDoc": "docs/harness/tasks/2026-11-24-business-route-static-guard.task.md",
+  "qualityProfiles": [
+    "auth-security",
+    "architecture-fitness"
+  ],
+  "scope": {
+    "in": [
+      "Structural route/policy predicate in permissionroutes",
+      "Dedicated business Casbin matcher over route templates",
+      "Coverage and role policy sync reuse the predicate",
+      "Unit, in-memory Casbin and real-MySQL regressions"
+    ],
+    "out": [
+      "System-domain Casbin matcher changes",
+      "Official foundation release and Ops lock consumption",
+      "Ops detail-route registration",
+      "UI, menu, i18n and seed changes"
+    ]
+  },
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-11-24-business-route-static-guard/manifest.json",
+    "taskDoc": "docs/harness/tasks/2026-11-24-business-route-static-guard.task.md",
+    "evidenceDir": ".harness/evidence/2026-11-24-business-route-static-guard/",
+    "reviewFile": ".harness/evidence/2026-11-24-business-route-static-guard/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".harness/tasks/2026-11-24-business-route-static-guard/plan.md"
+    ]
+  },
+  "acceptanceCriteria": [
+    "Detail policy must not authorise a same-method static sibling route",
+    "Static policy must not authorise a parameter route",
+    "Trailing wildcard policy keeps granting covered routes",
+    "Real MySQL stored-policy regression passes",
+    "Build and affected suites pass with required MySQL",
+    "Foundation release and downstream consumption remain explicit gaps"
+  ],
+  "verificationPlan": {
+    "commands": [
+      "go test ./pkg/permissionroutes/ ./pkg/database/ with required MySQL",
+      "go test affected IAM, middleware and auth packages with required MySQL",
+      "go build ./..."
+    ],
+    "runtimeEvidence": [
+      "Real MySQL detail/export sibling denial matrix"
+    ]
+  },
+  "executionRoles": {
+    "implementerPosture": "Primary Claude Code session owns scoped code and tests.",
+    "reviewerPosture": [
+      "Self-review with explicit independent-review gap: Codex unavailable in this session"
+    ]
+  },
+  "humanGates": [
+    "Official foundation release requires maintainer decision",
+    "Ops lock consumption after release"
+  ]
+}
