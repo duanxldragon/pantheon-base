@@ -1,0 +1,76 @@
+{
+  "taskId": "2026-11-14-ops-completion-contracts",
+  "repo": "pantheon-base",
+  "agent": {
+    "tool": "other",
+    "adapter": "windows"
+  },
+  "candidate": {
+    "head": "6ffee550",
+    "branch": "chore/prepare-v0.18.9",
+    "worktree": "uncommitted",
+    "note": "Implementation files were produced 2026-11-14/15 and re-verified on 2026-11-24 before landing; no source change was made in this re-verification."
+  },
+  "commands": [
+    {
+      "command": "go test -count=1 ./pkg/contracts/businessauth ./pkg/contracts ./modules/auth/login",
+      "cwd": "backend",
+      "status": "passed",
+      "exitCode": 0,
+      "notes": "Without a DSN the packages report ok, but the real-MySQL matrix subtests SKIP ('mysql test dsn is not configured'). Recorded to justify running the DSN-bound form below."
+    },
+    {
+      "command": "CGO_ENABLED=1 go test -race -p=1 -count=1 ./pkg/contracts/businessauth ./pkg/contracts ./modules/auth/login",
+      "cwd": "backend",
+      "status": "passed",
+      "exitCode": 0,
+      "notes": "PANTHEON_TEST_DSN_REQUIRED=true with an isolated real MySQL DSN: all three packages ok under -race (auth/login 230.278s, exercising the capability, fresh-scope, owner/role/key/policy revocation, unregistered action, unavailable-store and cancellation matrix)."
+    },
+    {
+      "command": "go vet ./pkg/contracts/businessauth ./pkg/contracts ./modules/auth/login",
+      "cwd": "backend",
+      "status": "passed",
+      "exitCode": 0,
+      "notes": "Clean."
+    },
+    {
+      "command": "go build ./...",
+      "cwd": "backend",
+      "status": "passed",
+      "exitCode": 0,
+      "notes": "Whole backend builds with the new contracts and auth adapter in place."
+    },
+    {
+      "command": "go test -race -count=1 -run TestBusinessJobAuthorization -v ./modules/auth/login",
+      "cwd": "backend",
+      "status": "passed",
+      "exitCode": 0,
+      "notes": "Cross-check that the revocation matrix is genuinely DSN-gated: without PANTHEON_TEST_DSN every subtest reports SKIP, so a skip is never mistaken for a pass."
+    }
+  ],
+  "historicalEvidence": [
+    {
+      "file": "red-capability.log",
+      "date": "2026-11-14",
+      "notes": "Failed-before witness: the auth-owned reader had no durable job authorization capability (ErrBusinessProviders)."
+    },
+    {
+      "file": "green-job-auth.log",
+      "date": "2026-11-14",
+      "notes": "Green -json run of the three packages against isolated real MySQL: capability availability, fresh scope without session, current-owner revocation matrix, unregistered/ambiguous action rejection, unavailable-store and cancellation denials."
+    }
+  ],
+  "knownGaps": [
+    "Independent review is still open; .harness/evidence/.../review.md is a coordinator verification record, not the independent gate.",
+    "Official foundation publication and downstream Ops consumption have not been performed.",
+    "The historical green log carries the TSan/TSan-infra allocation note from the original run; the 2026-11-24 re-run above is a clean -race pass on the current tree."
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-11-14-ops-completion-contracts/manifest.json",
+    "taskPacket": "docs/harness/tasks/2026-11-14-ops-completion-contracts.task.md",
+    "evidenceDir": ".harness/evidence/2026-11-14-ops-completion-contracts/",
+    "reviewFile": ".harness/evidence/2026-11-14-ops-completion-contracts/review.md",
+    "changeRef": "none",
+    "planRefs": []
+  }
+}

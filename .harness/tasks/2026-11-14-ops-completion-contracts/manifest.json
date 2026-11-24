@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "taskId": "2026-11-14-ops-completion-contracts",
+  "title": "Authorize durable business jobs from current owner permissions",
+  "goal": "Provide the optional auth-owned live authorization port needed by durable Ops FileDist jobs, without persisting sessions or copying system authorization into business code.",
+  "status": "in-progress",
+  "deliveryTier": "L2",
+  "primaryLayer": "system/auth",
+  "runtimeSensitive": true,
+  "taskDoc": "docs/harness/tasks/2026-11-14-ops-completion-contracts.task.md",
+  "qualityProfiles": ["runtime-quality", "architecture-fitness"],
+  "scope": {
+    "in": ["Optional auth-owned durable job authorization; compat tenant0; fresh owner, role, permission and scope"],
+    "out": ["Session changes", "Multi-tenant jobs", "Production", "Publication", "Ops shared overrides"]
+  },
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-11-14-ops-completion-contracts/manifest.json",
+    "taskDoc": "docs/harness/tasks/2026-11-14-ops-completion-contracts.task.md",
+    "evidenceDir": ".harness/evidence/2026-11-14-ops-completion-contracts/",
+    "reviewFile": ".harness/evidence/2026-11-14-ops-completion-contracts/review.md",
+    "changeRef": "none",
+    "planRefs": ["../pantheon-ops/.harness/tasks/2026-11-14-ops-latest-foundation-and-plans/current-execution-plan.md"]
+  },
+  "acceptanceCriteria": [
+    "Fresh live compat tenant0 grants with nonnil DataScope and registered business action",
+    "Owner/role/key/policy revocation and storage/mode uncertainty deny opaquely",
+    "Logout and cold restart do not require a stored token",
+    "Targeted real MySQL CGO race and independent review",
+    "Official publication and downstream consumption remain explicit until performed"
+  ],
+  "verificationPlan": {
+    "commands": ["CGO_ENABLED=1 go test -race -p=1 -mod=readonly ./pkg/contracts/businessauth ./pkg/contracts ./modules/auth/login", "go vet ./pkg/contracts/businessauth ./pkg/contracts ./modules/auth/login"],
+    "runtimeEvidence": ["isolated MySQL current-owner/key/policy/scope regression matrix"]
+  },
+  "executionRoles": {
+    "implementerPosture": "Base Generator owns scoped public auth port and tests.",
+    "reviewerPosture": ["Independent review routed by coordinator before official release"]
+  },
+  "humanGates": ["Official publication decision and separate final product/production acceptance"],
+  "workspaceContext": {"targetRepository": "pantheon-base", "repositoryRole": "foundation", "contextSyncExpectation": "required", "releaseRequirement": "foundation-release"}
+}
