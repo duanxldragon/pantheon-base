@@ -1,0 +1,5 @@
+{
+  "exitCode": 0,
+  "stdout": "{\n  \"mode\": \"strict\",\n  \"fileCount\": 1,\n  \"errorCount\": 0,\n  \"results\": [\n    {\n      \"file\": \".harness/evidence/2026-11-17-business-runtime-settings/review.md\",\n      \"errors\": [],\n      \"warnings\": []\n    }\n  ]\n}\n",
+  "stderr": ""
+}

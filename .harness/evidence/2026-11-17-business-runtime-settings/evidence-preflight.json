@@ -1,0 +1,5 @@
+{
+  "exitCode": 1,
+  "stdout": "{\n  \"mode\": \"strict\",\n  \"fileCount\": 1,\n  \"errorCount\": 2,\n  \"warningCount\": 0,\n  \"historicalErrorCount\": 0,\n  \"currentSchemaFrom\": \"2026-10-26\",\n  \"results\": [\n    {\n      \"file\": \".harness/evidence/2026-11-17-business-runtime-settings/commands.json\",\n      \"errors\": [\n        \"taskManifest.goal must be a non-empty string.\",\n        \"root.linkage.reviewFile does not exist: .harness/evidence/2026-11-17-business-runtime-settings/review.md\"\n      ],\n      \"warnings\": [],\n      \"historicalErrors\": []\n    }\n  ]\n}\n",
+  "stderr": ""
+}

@@ -1,0 +1,5 @@
+{
+  "exitCode": 1,
+  "stdout": "",
+  "stderr": "\u001b[31;1mGet-NetTCPConnection: \u001b[0mD:\\workspace\\go\\pantheon-platform\\pantheon-ops\\.local\\manual-preview-20261116\\check-base-runtime-settings.ps1:6\u001b[0m\r\n\u001b[31;1m\u001b[0m\u001b[36;1mLine |\u001b[0m\r\n\u001b[31;1m\u001b[0m\u001b[36;1m\u001b[36;1m   6 | \u001b[0m �� ProcessId=@(\u001b[36;1mGet-NetTCPConnection -LocalPort 8080 -State Listen\u001b[0m | Sele ��\u001b[0m\r\n\u001b[31;1m\u001b[0m\u001b[36;1m\u001b[36;1m\u001b[0m\u001b[36;1m\u001b[0m\u001b[36;1m     | \u001b[31;1m               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\u001b[0m\r\n\u001b[31;1m\u001b[0m\u001b[36;1m\u001b[36;1m\u001b[0m\u001b[36;1m\u001b[0m\u001b[36;1m\u001b[31;1m\u001b[31;1m\u001b[36;1m     | \u001b[31;1m�ܾ����� \u001b[0m\r\n"
+}
