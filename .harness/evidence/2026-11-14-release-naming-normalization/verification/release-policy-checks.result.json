@@ -1,0 +1,36 @@
+{
+  "source": "preserved tool transcript; no checks rerun",
+  "commands": [
+    {
+      "command": "npm run check:docs-frontmatter",
+      "exitCode": 0,
+      "toolChunkId": "cf83f2",
+      "toolCallWallTimeSeconds": 1.3585822,
+      "docsChecked": 473,
+      "withFrontmatter": 351,
+      "withoutFrontmatterInformational": 122,
+      "olderThanReviewWindowInformational": 112
+    },
+    {
+      "command": "npm run check:task-packet-template",
+      "exitCode": 0,
+      "toolChunkId": "77a875",
+      "toolCallWallTimeSeconds": 0.9864681,
+      "stdout": "OK pantheon-base task-packet template is present and linked"
+    },
+    {
+      "command": "node --check scripts/foundation-release/publish-foundation-release.mjs",
+      "exitCode": 0,
+      "toolChunkId": "665048",
+      "toolCallWallTimeSeconds": 0.360814,
+      "stdout": ""
+    },
+    {
+      "command": "git diff --check -- scripts/foundation-release/publish-foundation-release.mjs tests/scripts/foundation-release/publish-foundation-release.test.mjs docs/VERSION_MANAGEMENT_GUIDE.md docs/designs/FOUNDATION_RELEASE_MODEL.md docs/designs/FOUNDATION_RELEASE_MODEL.en.md docs/release-notes/README.md docs/release-notes/README.en.md",
+      "exitCode": 0,
+      "toolChunkId": "edc316",
+      "toolCallWallTimeSeconds": 0.3739124,
+      "output": "warning: in the working copy of 'docs/VERSION_MANAGEMENT_GUIDE.md', CRLF will be replaced by LF the next time Git touches it"
+    }
+  ]
+}

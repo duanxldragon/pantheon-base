@@ -15,6 +15,7 @@ const moduleUrl = pathToFileURL(
 const {
   buildGitHubReleaseBody,
   buildGitHubReleaseTitle,
+  buildGitHubReleaseCreateArgs,
   validateReleaseAssetChecksum,
   validatePublishCandidate,
   validateReleaseBodySections,
@@ -46,10 +47,57 @@ test('buildGitHubReleaseBody combines release notes, upgrade notes, and consumer
   assert.match(body, /ops should review business overlays/);
 });
 
-test('buildGitHubReleaseTitle uses the short semver display title', () => {
-  assert.equal(buildGitHubReleaseTitle('base-v0.8.3'), 'v0.8.3');
-  assert.equal(buildGitHubReleaseTitle('pantheon-base-v0.8.3'), 'v0.8.3');
-  assert.equal(buildGitHubReleaseTitle('v0.8.3'), 'v0.8.3');
+test('buildGitHubReleaseTitle identifies the product and preserves canonical version identity', () => {
+  assert.equal(buildGitHubReleaseTitle('pantheon-base-v0.18.8'), 'Pantheon Base v0.18.8');
+  assert.equal(buildGitHubReleaseTitle('pantheon-base-v1.0.0'), 'Pantheon Base v1.0.0');
+  for (const stage of ['alpha', 'beta', 'rc']) {
+    assert.equal(
+      buildGitHubReleaseTitle(`pantheon-base-v0.19.0-${stage}.1`),
+      `Pantheon Base v0.19.0-${stage}.1`,
+    );
+  }
+});
+
+test('buildGitHubReleaseTitle rejects legacy and malformed tags instead of promoting them', () => {
+  for (const version of [
+    'base-v0.9.0',
+    'backend/v0.13.1',
+    'v1.0',
+    'v1.0.0',
+    'v0.18.8',
+    'other-product-v0.18.8',
+    'pantheon-base-v0.18',
+    'pantheon-base-v0.18.8-rc',
+    ' pantheon-base-v0.18.8 ',
+    '',
+    undefined,
+  ]) {
+    assert.throws(() => buildGitHubReleaseTitle(version), /release-version must match/);
+  }
+});
+
+test('release create arguments preserve notes and classify prereleases separately from stable releases', () => {
+  const options = {
+    repoFullName: 'duanxldragon/pantheon-base',
+    targetCommit: 'deadbeefdeadbeefdeadbeefdeadbeefdeadbeef',
+    notes: '## Release Notes\n\nline one\nline two',
+  };
+  const stable = buildGitHubReleaseCreateArgs({ ...options, releaseVersion: 'pantheon-base-v0.18.8' });
+  assert.equal(stable[stable.indexOf('--title') + 1], 'Pantheon Base v0.18.8');
+  assert.equal(stable[stable.indexOf('--notes') + 1], options.notes);
+  assert.equal(stable.includes('--prerelease'), false);
+  assert.equal(stable.includes('--latest=false'), false);
+
+  for (const stage of ['alpha', 'beta', 'rc']) {
+    const args = buildGitHubReleaseCreateArgs({
+      ...options,
+      releaseVersion: `pantheon-base-v0.19.0-${stage}.2`,
+    });
+    assert.equal(args[args.indexOf('--title') + 1], `Pantheon Base v0.19.0-${stage}.2`);
+    assert.equal(args[args.indexOf('--notes') + 1], options.notes);
+    assert.equal(args.includes('--prerelease'), true);
+    assert.equal(args.includes('--latest=false'), true);
+  }
 });
 
 test('release body title stripping keeps section content only', () => {

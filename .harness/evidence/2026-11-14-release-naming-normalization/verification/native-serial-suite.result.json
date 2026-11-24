@@ -1,0 +1,44 @@
+{
+  "command": "node --test --test-concurrency=1 tests/scripts/foundation-release/*.test.mjs scripts/foundation-release/*.test.mjs",
+  "exitCode": 0,
+  "toolChunkIds": [
+    "d64925",
+    "3bf8b0"
+  ],
+  "originalExecSessionId": 3732,
+  "durationMsReportedByNode": 31494.7294,
+  "tests": 127,
+  "passed": 124,
+  "failed": 0,
+  "skipped": 3,
+  "cancelled": 0,
+  "todo": 0,
+  "nativeRunner": true,
+  "testConcurrency": 1,
+  "adapterUsed": false,
+  "assertionsModifiedForRun": false,
+  "skips": [
+    {
+      "test": "descriptorPath",
+      "parent": "pinned descriptor, receipt and executable refuse leaf symlinks with matching approved content",
+      "reason": "Windows account cannot create leaf symlinks; Linux CI executes this case"
+    },
+    {
+      "test": "buildReceiptPath",
+      "parent": "pinned descriptor, receipt and executable refuse leaf symlinks with matching approved content",
+      "reason": "Windows account cannot create leaf symlinks; Linux CI executes this case"
+    },
+    {
+      "test": "executablePath",
+      "parent": "pinned descriptor, receipt and executable refuse leaf symlinks with matching approved content",
+      "reason": "Windows account cannot create leaf symlinks; Linux CI executes this case"
+    }
+  ],
+  "stdoutArtifact": "native-serial-suite.summary.stdout.txt",
+  "stdoutArtifactCoverage": "Exact Node summary excerpt copied from preserved tool transcript; not a full raw test log.",
+  "cwd": "D:/workspace/go/pantheon-platform/pantheon-base",
+  "source": "preserved functions.exec/exec_command or write_stdin tool response transcript",
+  "receiptCapturedAtUTC": "2026-11-14T01:25:11.327321+00:00",
+  "testsRerunToProduceReceipt": false,
+  "stdoutSHA256": "2318e951c6042a3491c287031a41e79cd7f377da8377f6cec28530005c450eff"
+}

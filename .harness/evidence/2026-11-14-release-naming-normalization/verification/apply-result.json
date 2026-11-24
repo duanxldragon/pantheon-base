@@ -1,0 +1,15 @@
+{
+  "result": "pass",
+  "updatedReleases": 53,
+  "legacyTags": [
+    "backend/v0.13.1",
+    "base-v0.9.0",
+    "base-v0.8.11"
+  ],
+  "latestTag": "pantheon-base-v0.18.8",
+  "latestTitle": "Pantheon Base v0.18.8",
+  "tagsUnchanged": true,
+  "assetsUnchanged": true,
+  "releaseStatesUnchanged": true,
+  "finalReadbacksVerified": true
+}

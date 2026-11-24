@@ -1,0 +1,28 @@
+{
+  "taskPacket": {
+    "chunk_id": "9617da",
+    "wall_time_seconds": 0.3403373,
+    "exit_code": 0,
+    "original_token_count": 63,
+    "output": "{\n  \"results\": [\n    {\n      \"file\": \"docs/harness/tasks/2026-11-14-release-naming-normalization.task.md\",\n      \"errors\": [],\n      \"warnings\": []\n    }\n  ],\n  \"errorCount\": 0,\n  \"warningCount\": 0,\n  \"legacySkippedCount\": 0,\n  \"legacyConfig\": null\n}\n"
+  },
+  "reviewSchema": {
+    "chunk_id": "4ca06c",
+    "wall_time_seconds": 0.355805,
+    "exit_code": 0,
+    "original_token_count": 55,
+    "output": "{\n  \"mode\": \"strict\",\n  \"fileCount\": 1,\n  \"errorCount\": 0,\n  \"results\": [\n    {\n      \"file\": \".harness/evidence/2026-11-14-release-naming-normalization/review.md\",\n      \"errors\": [],\n      \"warnings\": []\n    }\n  ]\n}\n"
+  },
+  "evidenceSchema": {
+    "toolChunkId": "581428",
+    "exitCode": 0,
+    "errorCount": 0,
+    "warningCount": 0,
+    "fileCount": 1,
+    "source": "Actual strict checker output after evidenceDir repair"
+  },
+  "sourceReviewVerdict": "blocked",
+  "scopeReviewVerdict": "COMMENT",
+  "remoteMetadataComplete": true,
+  "producerReviewGap": "mandatory lsp_diagnostics unavailable"
+}

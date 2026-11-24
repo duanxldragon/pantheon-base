@@ -1,0 +1,29 @@
+{
+  "command": "npm run test:foundation-release",
+  "expandedCommand": "node --test tests/scripts/foundation-release/*.test.mjs scripts/foundation-release/*.test.mjs",
+  "exitCode": 1,
+  "toolChunkIds": [
+    "77300c"
+  ],
+  "toolCallWallTimeSeconds": 0.8745048,
+  "durationMsReportedByNode": 24.5948,
+  "testsReportedByRunner": 7,
+  "passed": 0,
+  "failedWorkerStartups": 7,
+  "skipped": 0,
+  "failure": {
+    "message": "spawn EPERM",
+    "errno": -4048,
+    "code": "EPERM",
+    "syscall": "spawn"
+  },
+  "testAssertionsExecuted": false,
+  "stdoutArtifact": "native-default-suite-failure.summary.stdout.txt",
+  "stdoutArtifactCoverage": "Exact test-file failure list and Node summary excerpt copied from preserved tool transcript; stack traces were not persisted here.",
+  "separateFromSuccessfulSerializedRun": true,
+  "cwd": "D:/workspace/go/pantheon-platform/pantheon-base",
+  "source": "preserved functions.exec/exec_command or write_stdin tool response transcript",
+  "receiptCapturedAtUTC": "2026-11-14T01:25:11.327321+00:00",
+  "testsRerunToProduceReceipt": false,
+  "stdoutSHA256": "311493a2da0afe696021476e4405593220b229f95757834cb6eef35543788429"
+}

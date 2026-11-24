@@ -1,0 +1,63 @@
+{
+  "taskId": "2026-11-14-release-naming-normalization",
+  "repo": "pantheon-base",
+  "agent": {
+    "tool": "codex",
+    "adapter": "executor plus independent reviewer; root metadata integration"
+  },
+  "commands": [
+    {
+      "command": "node --test tests/scripts/foundation-release/publish-foundation-release.test.mjs",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\pantheon-base",
+      "exitCode": 0,
+      "status": "passed",
+      "notes": "See verification/focused-publisher.result.json; original transcript provenance and log coverage are explicit.",
+      "durationMs": 192
+    },
+    {
+      "command": "node --test --test-concurrency=1 tests/scripts/foundation-release/*.test.mjs scripts/foundation-release/*.test.mjs",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\pantheon-base",
+      "exitCode": 0,
+      "status": "passed",
+      "notes": "See verification/native-serial-suite.result.json; original transcript provenance and log coverage are explicit.",
+      "durationMs": 31495
+    },
+    {
+      "command": "npm run test:foundation-release",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\pantheon-base",
+      "exitCode": 1,
+      "status": "failed",
+      "notes": "See verification/native-default-suite-failure.result.json; original transcript provenance and log coverage are explicit.",
+      "durationMs": 25
+    },
+    {
+      "command": "python .tmp/release-normalization/normalize-releases.py --apply",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\pantheon-base",
+      "status": "passed",
+      "exitCode": 0,
+      "notes": "53 metadata readbacks, all55 tag refs and assets/states independently confirmed; no tag or asset mutation."
+    },
+    {
+      "command": "node scripts/harness/check-task-packet.mjs --root . --json docs/harness/tasks/2026-11-14-release-naming-normalization.task.md",
+      "cwd": "D:\\workspace\\go\\pantheon-platform\\pantheon-base",
+      "status": "passed",
+      "exitCode": 0,
+      "notes": "0 errors/0 warnings in actual scoped check; final check saved separately."
+    }
+  ],
+  "knownGaps": [
+    "Independent reviewer mandatory rule requires lsp_diagnostics on modified producer JS/test files. This tool is unavailable; required code-review approval remains blocked despite no source finding.",
+    "LSP diagnostics unavailable; COMMENT is not a whole-source APPROVE.",
+    "Three Windows leaf-symlink tests skipped; Linux CI executes them.",
+    "Publisher/doc changes are local working-tree edits; no commit, push, PR merge or new release occurred.",
+    "Stable publisher Latest automation is unchanged; current18.8 was explicitly fixed by metadata readback."
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-11-14-release-naming-normalization/manifest.json",
+    "evidence": ".harness/evidence/2026-11-14-release-naming-normalization/commands.json",
+    "reviewFile": ".harness/evidence/2026-11-14-release-naming-normalization/review.md",
+    "changeRef": "none",
+    "planRefs": [],
+    "evidenceDir": ".harness/evidence/2026-11-14-release-naming-normalization"
+  }
+}
