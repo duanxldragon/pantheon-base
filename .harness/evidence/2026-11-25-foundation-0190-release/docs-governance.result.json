@@ -1,0 +1,13 @@
+{
+  "name": "docs-governance",
+  "command": [
+    "D:/nodejs/node.exe",
+    "scripts/frontmatter-check.mjs"
+  ],
+  "cwd": ".",
+  "startedAt": "2026-11-25T05:14:00.145Z",
+  "durationMs": 791,
+  "exitCode": 0,
+  "signal": null,
+  "status": "passed"
+}

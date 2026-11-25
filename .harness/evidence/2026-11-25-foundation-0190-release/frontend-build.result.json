@@ -1,0 +1,15 @@
+{
+  "name": "frontend-build",
+  "command": [
+    "D:/nodejs/node.exe",
+    "D:/nodejs/node_modules/npm/bin/npm-cli.js",
+    "run",
+    "build"
+  ],
+  "cwd": "frontend",
+  "startedAt": "2026-11-25T04:52:35.112Z",
+  "durationMs": 22486,
+  "exitCode": 1,
+  "signal": null,
+  "status": "failed"
+}

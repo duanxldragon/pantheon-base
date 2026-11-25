@@ -1,0 +1,16 @@
+{
+  "name": "harness-scope-gates",
+  "command": [
+    "D:/nodejs/node.exe",
+    "scripts/harness/check-structure-contract.mjs",
+    "--root",
+    ".",
+    "--strict"
+  ],
+  "cwd": ".",
+  "startedAt": "2026-11-25T05:15:52.350Z",
+  "durationMs": 261,
+  "exitCode": 0,
+  "signal": null,
+  "status": "passed"
+}

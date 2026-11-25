@@ -1,0 +1,13 @@
+{
+  "name": "security-patterns",
+  "command": [
+    "D:/nodejs/node.exe",
+    "scripts/check-security-patterns.mjs"
+  ],
+  "cwd": ".",
+  "startedAt": "2026-11-25T05:14:01.721Z",
+  "durationMs": 18608,
+  "exitCode": 0,
+  "signal": null,
+  "status": "passed"
+}

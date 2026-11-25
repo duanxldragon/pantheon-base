@@ -1,0 +1,11 @@
+{
+  "job": {
+    "n": "task",
+    "cmd": "node scripts/harness/check-task-packet.mjs --json docs/harness/tasks/2026-11-19-archive-formatter-protection.task.md"
+  },
+  "chunk_id": "cd2600",
+  "wall_time_seconds": 0.0000316,
+  "exit_code": 1,
+  "original_token_count": 123,
+  "output": "{\n  \"results\": [\n    {\n      \"file\": \"docs/harness/tasks/2026-11-19-archive-formatter-protection.task.md\",\n      \"errors\": [\n        \"Invalid primary layer \\\"platform; shared repository engineering configuration, no product runtime changes.\\\". Expected one of: platform, system/auth, system/iam, system/org, system/config, business/*, app, inheritance-sync.\"\n      ],\n      \"warnings\": []\n    }\n  ],\n  \"errorCount\": 1,\n  \"warningCount\": 0,\n  \"legacySkippedCount\": 0,\n  \"legacyConfig\": null\n}\n"
+}

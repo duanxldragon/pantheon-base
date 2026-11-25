@@ -1,0 +1,930 @@
+diff --git a/backend/modules/system/config/setting/setting_seed.go b/backend/modules/system/config/setting/setting_seed.go
+index 06ceeceb..8a6ba4ff 100644
+--- a/backend/modules/system/config/setting/setting_seed.go
++++ b/backend/modules/system/config/setting/setting_seed.go
+@@ -2,6 +2,7 @@ package setting
+ 
+ import (
+ 	"github.com/duanxldragon/pantheon-base/backend/pkg/common"
++	"github.com/duanxldragon/pantheon-base/backend/pkg/contracts"
+ 	// Required for the go:embed seed_data.yaml directive below.
+ 	_ "embed"
+ 	"encoding/json"
+@@ -518,7 +519,7 @@ func validateSettingSeeds(seeds []defaultSettingSeed) error {
+ func defaultSettingValue(settingKey string) string {
+ 	seed, ok := defaultSettingSeedMap[settingKey]
+ 	if !ok {
+-		return ""
++		return contracts.BusinessSettingDefault(settingKey)
+ 	}
+ 	return seed.SettingValue
+ }
+diff --git a/backend/modules/system/system.go b/backend/modules/system/system.go
+index 638d831b..3c94ad0b 100644
+--- a/backend/modules/system/system.go
++++ b/backend/modules/system/system.go
+@@ -15,6 +15,15 @@ func InitSystemModule(r *gin.RouterGroup, db *gorm.DB) {
+ 	}
+ 
+ 	deps := newSystemModuleDependencies(db)
++	// Compiled business declarations must precede this required stage. Neither
++	// startup mode may expose routes after business configuration failure.
++	definitions := contracts.SealBusinessSettingSeeds()
++	if err := prepareBusinessRuntimeSettings(r, db, deps.settingSvc, definitions); err != nil {
++		panic(err)
++	}
++	if err := contracts.RegisterBusinessRuntimeSettingsProvider(deps.settingSvc); err != nil {
++		panic(err)
++	}
+ 	modules := make([]contracts.BackendModule, 0, 12)
+ 	modules = append(modules, initRefreshSyncModules(deps)...)
+ 	modules = append(modules, initIAMModules(deps)...)
+diff --git a/docs/contracts/SYSTEM_CONFIG_CONTRACT.en.md b/docs/contracts/SYSTEM_CONFIG_CONTRACT.en.md
+index 35a34d04..928138ac 100644
+--- a/docs/contracts/SYSTEM_CONFIG_CONTRACT.en.md
++++ b/docs/contracts/SYSTEM_CONFIG_CONTRACT.en.md
+@@ -3,7 +3,7 @@ title: system/config Contract
+ doc_type: Contract
+ layer: system/config
+ status: Active
+-updated_at: 2026-05-12
++updated_at: 2026-11-17
+ ---
+ 
+ # system/config Contract
+@@ -190,6 +190,16 @@ This contract depends on:
+ - all `system/config` design, assessment, remediation, and acceptance docs must link back to this contract
+ - future topic-specific subcontracts may be split under this contract, but must not bypass it
+ 
++### 7.6 Business runtime settings extension (Base-first)
++
++Declare defaults through public `pkg/contracts.RegisterBusinessSettings` before system initialization, using compiled package init or an explicit pre-system composition phase. Module names are `business.<name>`, and only exact registered keys under `<name>.*` are readable. System configuration namespaces are reserved. This port supports ordinary value types and only nonpublic, unencrypted settings; it is not a secret reader.
++
++System initialization freezes declarations and performs a deterministic transaction in a dedicated required stage. Failures prevent startup in both migration modes. The `(tenant_id, setting_key)` unique key handles concurrent insert-if-missing initialization; existing rows are reread and validated without overwriting operator values or adopting conflicts. Module, ValueType, GroupKey, IsPublic=0, IsEncrypted=0, and validity against the declared type must match. Install the single system provider only after commit; declarations and provider replacement are forbidden at runtime.
++
++Consumers obtain a per-request reader with `RegisteredBusinessRuntimeSettingsReader(module, ginContext)`. Trust comes from token→tenant resolution→authorization middleware; FromGin itself does not authenticate. The supplier copies tenancy and checks on each read that authoritative deployment mode equals the request snapshot. Compat reads tenant0 only; multi rejects missing/invalid context and reads only own override plus global. Both global and effective override metadata are revalidated. Unregistered/foreign/public/encrypted keys and uncertain storage or mode return errors, with no decryption or public exposure.
++
++Never put a request reader into a shared mutable service field. Consumers own parsing, bounds and error policy; supplier denial does not prove that a consumer denies its operation. Existing Ops CMDB Host fallback and compat business semantics remain. Official wiring requires separately validated foundation release consumption; supplier isolation tests do not establish Host tenant isolation. See `.harness/evidence/2026-11-17-business-runtime-settings/summary.md` for actual evidence. Publication, Ops consumption and whole-product gates remain open.
++
+ ## 8. Definition of Done
+ 
+ `system/config` should count as currently complete only when:
+diff --git a/docs/contracts/SYSTEM_CONFIG_CONTRACT.md b/docs/contracts/SYSTEM_CONFIG_CONTRACT.md
+index 5f1a9227..49e66eac 100644
+--- a/docs/contracts/SYSTEM_CONFIG_CONTRACT.md
++++ b/docs/contracts/SYSTEM_CONFIG_CONTRACT.md
+@@ -15,7 +15,7 @@ related_acceptances:
+   - docs/acceptances/ACCEPTANCE_CHECKLIST.md
+   - docs/acceptances/SYSTEM_CONFIG_GOVERNANCE_ACCEPTANCE.md
+   - docs/acceptances/PLATFORM_ACCEPTANCE_MATRIX_20260430_UI_MIGRATION.md
+-updated_at: 2026-05-12
++updated_at: 2026-11-17
+ ---
+ 
+ # system/config 合同文档
+@@ -222,6 +222,16 @@ Pantheon 当前的 `system/config` 已经不再只是“字典 + 设置页”。
+ - `system/config` 的设计、评估、整改、验收文档都必须回指本合同
+ - 后续允许在本合同之下继续拆专题子合同，但不得绕过本总合同
+ 
++### 7.6 业务运行配置扩展（Base-first）
++
++业务默认配置通过公共 `pkg/contracts.RegisterBusinessSettings` 在系统初始化之前声明（编译期 package init 或显式 pre-system 装配阶段）。模块名为 `business.<name>`，key 必须属于 `<name>.*` 且精确登记；禁止占用系统配置命名空间。仅支持普通类型的非公开、非加密配置；敏感配置不能经该入口读取。
++
++系统初始化冻结声明，在独立 required stage 中按确定顺序事务插入缺失的 tenant0 默认值；两种迁移模式下失败均阻止启动。复用 `(tenant_id, setting_key)` 唯一键处理并发启动，重新读取校验已有行，保留维护者值，不覆盖或接管冲突。Module、ValueType、GroupKey、IsPublic=0、IsEncrypted=0 及声明类型的有效值均须匹配。事务成功后才装配唯一系统供应端，运行期间禁止追加声明或替换供应端。
++
++业务用 `RegisteredBusinessRuntimeSettingsReader(module, ginContext)` 获取单请求 reader，依赖受信任 token→tenant resolution→authorization 链；FromGin 本身不验证身份。供应端复制租户上下文，每次读取要求当前 authoritative mode 等于请求快照模式；compat 只读 tenant0，multi 缺失或非法上下文拒绝，合法请求只读 own override 和 global。全局和有效 override 元数据均重新检查，未登记、跨模块、公开、加密或存储/模式不确定返回错误，不解密、不通过 public API 暴露配置。
++
++请求 reader 不得写入共享服务的可变字段。消费方负责解析、范围和错误策略；供应端拒绝不等于消费者操作拒绝。现有 Ops CMDB Host 的缺值回退与 compat 业务语义保留，正式接线须在新的 foundation release 验证消费时单独闭环，不能用供应端隔离测试宣称 Host 多租户已完成。实际证据见 `.harness/evidence/2026-11-17-business-runtime-settings/summary.md`；发布、Ops 消费与整体门禁尚开放。
++
+ ## 8. 完成定义
+ 
+ `system/config` 达到“当前已完成”至少应满足：
+
+diff --git a/backend/pkg/contracts/business_runtime_settings.go b/backend/pkg/contracts/business_runtime_settings.go
+new file mode 100644
+--- /dev/null
++++ b/backend/pkg/contracts/business_runtime_settings.go
+@@ -0,0 +1,148 @@
++package contracts
++
++import (
++	"errors"
++	"regexp"
++	"sort"
++	"strings"
++	"sync"
++
++	"github.com/gin-gonic/gin"
++)
++
++// ErrBusinessSettings reports an unavailable or invalid startup-owned capability.
++var ErrBusinessSettings = errors.New("business settings unavailable")
++
++// BusinessSettingSeed declares nonpublic, unencrypted module defaults. Register
++// during compiled startup before system initialization, never from a request.
++type BusinessSettingSeed struct {
++	Key       string
++	Value     string
++	ValueType string
++	GroupKey  string
++	Remark    string
++}
++
++type BusinessSettingDefinition struct {
++	BusinessSettingSeed
++	Module string
++}
++
++type BusinessRuntimeSettingsReader interface {
++	GetByKey(string) (string, error)
++}
++
++// BusinessRuntimeSettingsProvider is implemented and installed by system/config
++// only after its required default transaction commits. Gin tenancy must come
++// from trusted middleware; the provider owns mode and stored metadata checks.
++type BusinessRuntimeSettingsProvider interface {
++	BusinessReaderFor(*gin.Context, []BusinessSettingDefinition) (BusinessRuntimeSettingsReader, error)
++}
++
++type businessSettingsRegistry struct {
++	sync.RWMutex
++	modules  map[string][]BusinessSettingDefinition
++	sealed   bool
++	provider BusinessRuntimeSettingsProvider
++}
++
++var businessSettings = businessSettingsRegistry{modules: make(map[string][]BusinessSettingDefinition)}
++var businessSettingModuleName = regexp.MustCompile("^[a-z][a-z0-9_]{0,30}$")
++var businessSettingKeySuffix = regexp.MustCompile("^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)*$")
++
++func RegisterBusinessSettings(module string, seeds []BusinessSettingSeed) error {
++	return businessSettings.register(module, seeds)
++}
++
++func (r *businessSettingsRegistry) register(module string, seeds []BusinessSettingSeed) error {
++	namespace := strings.TrimPrefix(module, "business.")
++	if module != "business."+namespace || !businessSettingModuleName.MatchString(namespace) || len(seeds) == 0 {
++		return ErrBusinessSettings
++	}
++	switch namespace {
++	case "site", "platform", "system", "login", "audit", "upload", "mail", "sms", "i18n", "ui", "org", "iam", "auth", "setting", "dict", "notification", "security":
++		return ErrBusinessSettings
++	}
++	definitions := make([]BusinessSettingDefinition, 0, len(seeds))
++	seen := make(map[string]bool, len(seeds))
++	for _, seed := range seeds {
++		suffix := strings.TrimPrefix(seed.Key, namespace+".")
++		if seed.Key != namespace+"."+suffix || !businessSettingKeySuffix.MatchString(suffix) || len(seed.Key) > 128 || seen[seed.Key] || strings.TrimSpace(seed.GroupKey) == "" || len(seed.GroupKey) > 32 || seed.GroupKey != strings.TrimSpace(seed.GroupKey) || strings.TrimSpace(seed.Remark) == "" || len(seed.Remark) > 255 {
++			return ErrBusinessSettings
++		}
++		switch seed.ValueType {
++		case "string", "number", "boolean", "json":
++		default:
++			return ErrBusinessSettings
++		}
++		seen[seed.Key] = true
++		definitions = append(definitions, BusinessSettingDefinition{BusinessSettingSeed: seed, Module: module})
++	}
++	sort.Slice(definitions, func(i, j int) bool { return definitions[i].Key < definitions[j].Key })
++	r.Lock()
++	defer r.Unlock()
++	if r.sealed || r.modules[module] != nil {
++		return ErrBusinessSettings
++	}
++	r.modules[module] = definitions
++	return nil
++}
++
++// SealBusinessSettingSeeds freezes compiled declarations before system bootstrap.
++func SealBusinessSettingSeeds() []BusinessSettingDefinition { return businessSettings.seal() }
++func (r *businessSettingsRegistry) seal() []BusinessSettingDefinition {
++	r.Lock()
++	defer r.Unlock()
++	r.sealed = true
++	result := make([]BusinessSettingDefinition, 0)
++	for _, definitions := range r.modules {
++		result = append(result, definitions...)
++	}
++	sort.Slice(result, func(i, j int) bool { return result[i].Key < result[j].Key })
++	return result
++}
++
++func RegisterBusinessRuntimeSettingsProvider(provider BusinessRuntimeSettingsProvider) error {
++	return businessSettings.registerProvider(provider)
++}
++
++func (r *businessSettingsRegistry) registerProvider(provider BusinessRuntimeSettingsProvider) error {
++	r.Lock()
++	defer r.Unlock()
++	if !r.sealed || nilBusinessProvider(provider) || r.provider != nil {
++		return ErrBusinessSettings
++	}
++	r.provider = provider
++	return nil
++}
++
++// RegisteredBusinessRuntimeSettingsReader binds a reader to one request. Never
++// write this request reader into a shared mutable business service.
++func RegisteredBusinessRuntimeSettingsReader(module string, c *gin.Context) (BusinessRuntimeSettingsReader, error) {
++	return businessSettings.readerFor(module, c)
++}
++
++func (r *businessSettingsRegistry) readerFor(module string, c *gin.Context) (BusinessRuntimeSettingsReader, error) {
++	r.RLock()
++	definitions := append([]BusinessSettingDefinition(nil), r.modules[module]...)
++	provider := r.provider
++	ready := r.sealed && !nilBusinessProvider(provider)
++	r.RUnlock()
++	if !ready || len(definitions) == 0 {
++		return nil, ErrBusinessSettings
++	}
++	return provider.BusinessReaderFor(c, definitions)
++}
++
++func BusinessSettingDefault(key string) string {
++	businessSettings.RLock()
++	defer businessSettings.RUnlock()
++	for _, definitions := range businessSettings.modules {
++		for _, definition := range definitions {
++			if definition.Key == key {
++				return definition.Value
++			}
++		}
++	}
++	return ""
++}
+
+diff --git a/backend/pkg/contracts/business_runtime_settings_test.go b/backend/pkg/contracts/business_runtime_settings_test.go
+new file mode 100644
+--- /dev/null
++++ b/backend/pkg/contracts/business_runtime_settings_test.go
+@@ -0,0 +1,143 @@
++package contracts
++
++import (
++	"github.com/gin-gonic/gin"
++	"sync"
++	"testing"
++)
++
++type runtimeSettingsProviderStub struct {
++	calls int
++	keys  []BusinessSettingDefinition
++}
++
++func (p *runtimeSettingsProviderStub) BusinessReaderFor(_ *gin.Context, definitions []BusinessSettingDefinition) (BusinessRuntimeSettingsReader, error) {
++	p.calls++
++	p.keys = definitions
++	return runtimeSettingsReaderStub{}, nil
++}
++
++type runtimeSettingsReaderStub struct{}
++
++func (runtimeSettingsReaderStub) GetByKey(string) (string, error) { return "", nil }
++func runtimeSettingsSeeds() []BusinessSettingSeed {
++	return []BusinessSettingSeed{{Key: "cmdb.ssh.port", Value: "22", ValueType: "number", GroupKey: "cmdb", Remark: "SSH port"}, {Key: "cmdb.ssh.timeout", Value: "10", ValueType: "number", GroupKey: "cmdb", Remark: "SSH timeout"}}
++}
++func newRuntimeSettingsRegistry() *businessSettingsRegistry {
++	return &businessSettingsRegistry{modules: make(map[string][]BusinessSettingDefinition)}
++}
++
++func TestBusinessRuntimeSettingsDeclarationOwnership(t *testing.T) {
++	for _, namespace := range []string{"site", "platform", "system", "login", "audit", "upload", "mail", "sms", "i18n", "ui", "org", "iam", "auth", "setting", "dict", "notification", "security"} {
++		registry := newRuntimeSettingsRegistry()
++		seeds := []BusinessSettingSeed{{Key: namespace + ".custom", Value: "1", ValueType: "number", GroupKey: namespace, Remark: "reserved namespace probe"}}
++		if registry.register("business."+namespace, seeds) == nil || len(registry.modules) != 0 {
++			t.Fatalf("reserved namespace accepted or mutated registry: %s", namespace)
++		}
++	}
++
++	for _, module := range []string{"cmdb", "business.site", "business.platform", "business.system", "business.cmdb ", "business.a.b"} {
++		if newRuntimeSettingsRegistry().register(module, runtimeSettingsSeeds()) == nil {
++			t.Fatalf("invalid module accepted: %s", module)
++		}
++	}
++	for _, key := range []string{"login.password", "cmdb", "cmdb.ssh..port", "cmdb.ssh.port ", "cmdbx.ssh.port"} {
++		seeds := runtimeSettingsSeeds()
++		seeds[0].Key = key
++		r := newRuntimeSettingsRegistry()
++		if r.register("business.cmdb", seeds) == nil || len(r.modules) != 0 {
++			t.Fatalf("foreign or malformed key accepted: %s", key)
++		}
++	}
++	seeds := runtimeSettingsSeeds()
++	seeds[1].Key = seeds[0].Key
++	r := newRuntimeSettingsRegistry()
++	if r.register("business.cmdb", seeds) == nil || len(r.modules) != 0 {
++		t.Fatal("duplicate batch partially registered")
++	}
++	for _, field := range []string{"type", "group", "remark"} {
++		seeds := runtimeSettingsSeeds()
++		switch field {
++		case "type":
++			seeds[0].ValueType = "secret"
++		case "group":
++			seeds[0].GroupKey = ""
++		case "remark":
++			seeds[0].Remark = ""
++		}
++		if newRuntimeSettingsRegistry().register("business.cmdb", seeds) == nil {
++			t.Fatalf("invalid %s accepted", field)
++		}
++	}
++}
++
++func TestBusinessRuntimeSettingsFrozenCopiesAndProvider(t *testing.T) {
++	r := newRuntimeSettingsRegistry()
++	seeds := runtimeSettingsSeeds()
++	if err := r.register("business.cmdb", seeds); err != nil {
++		t.Fatal(err)
++	}
++	seeds[0].Value = "changed"
++	if r.register("business.cmdb", runtimeSettingsSeeds()) == nil {
++		t.Fatal("duplicate module accepted")
++	}
++	provider := &runtimeSettingsProviderStub{}
++	if r.registerProvider(provider) == nil {
++		t.Fatal("provider installed before seal")
++	}
++	snapshot := r.seal()
++	if snapshot[0].Value != "22" {
++		t.Fatal("caller seed mutation changed registry")
++	}
++	snapshot[0].Value = "tampered"
++	if r.seal()[0].Value != "22" {
++		t.Fatal("returned snapshot mutation changed registry")
++	}
++	if r.register("business.deploy", []BusinessSettingSeed{{Key: "deploy.limit", ValueType: "number", Value: "1", GroupKey: "deploy", Remark: "limit"}}) == nil {
++		t.Fatal("late registration accepted")
++	}
++	if _, err := r.readerFor("business.cmdb", nil); err == nil {
++		t.Fatal("reader available before provider")
++	}
++	var typedNil *runtimeSettingsProviderStub
++	if r.registerProvider(typedNil) == nil {
++		t.Fatal("typed nil provider accepted")
++	}
++	if err := r.registerProvider(provider); err != nil {
++		t.Fatal(err)
++	}
++	if r.registerProvider(provider) == nil {
++		t.Fatal("provider replacement accepted")
++	}
++	if _, err := r.readerFor("business.deploy", nil); err == nil || provider.calls != 0 {
++		t.Fatal("unknown module reached provider")
++	}
++	if _, err := r.readerFor("business.cmdb", nil); err != nil {
++		t.Fatal(err)
++	}
++	provider.keys[0].Value = "changed"
++	if r.seal()[0].Value != "22" {
++		t.Fatal("provider mutated registry")
++	}
++}
++
++func TestBusinessRuntimeSettingsConcurrentCollision(t *testing.T) {
++	r := newRuntimeSettingsRegistry()
++	var wg sync.WaitGroup
++	results := make(chan error, 8)
++	for i := 0; i < 8; i++ {
++		wg.Add(1)
++		go func() { defer wg.Done(); results <- r.register("business.cmdb", runtimeSettingsSeeds()) }()
++	}
++	wg.Wait()
++	close(results)
++	success := 0
++	for err := range results {
++		if err == nil {
++			success++
++		}
++	}
++	if success != 1 || len(r.seal()) != 2 {
++		t.Fatalf("collision not atomic: successes=%d", success)
++	}
++}
+
+diff --git a/backend/modules/system/config/setting/business_runtime_settings.go b/backend/modules/system/config/setting/business_runtime_settings.go
+new file mode 100644
+--- /dev/null
++++ b/backend/modules/system/config/setting/business_runtime_settings.go
+@@ -0,0 +1,161 @@
++package setting
++
++import (
++	"context"
++	"sort"
++	"strings"
++
++	"github.com/duanxldragon/pantheon-base/backend/pkg/contracts"
++	"github.com/duanxldragon/pantheon-base/backend/pkg/tenant"
++	"github.com/gin-gonic/gin"
++	"gorm.io/gorm"
++	"gorm.io/gorm/clause"
++)
++
++// BootstrapBusinessSettings prepares only declared business defaults. It is a
++// separate required stage, because the legacy system runner logs seed errors.
++func (s *SettingService) BootstrapBusinessSettings(definitions []contracts.BusinessSettingDefinition) error {
++	if s == nil || s.db == nil {
++		return contracts.ErrBusinessSettings
++	}
++	definitions = append([]contracts.BusinessSettingDefinition(nil), definitions...)
++	sort.Slice(definitions, func(i, j int) bool { return definitions[i].Key < definitions[j].Key })
++	for _, definition := range definitions {
++		root := strings.SplitN(definition.Key, ".", 2)[0]
++		for _, core := range settingSeeds() {
++			if strings.SplitN(core.SettingKey, ".", 2)[0] == root {
++				return contracts.ErrBusinessSettings
++			}
++		}
++	}
++	return s.db.Transaction(func(tx *gorm.DB) error {
++		for _, definition := range definitions {
++			value, err := validateAndNormalizeSettingValue(definition.Key, definition.ValueType, definition.Value)
++			if err != nil {
++				return contracts.ErrBusinessSettings
++			}
++			row := SystemSetting{SettingKey: definition.Key, SettingValue: value, ValueType: definition.ValueType, GroupKey: definition.GroupKey, Module: definition.Module, Remark: definition.Remark}
++			if err := tx.Clauses(clause.OnConflict{Columns: []clause.Column{{Name: "tenant_id"}, {Name: "setting_key"}}, DoNothing: true}).Create(&row).Error; err != nil {
++				return err
++			}
++			var stored SystemSetting
++			if err := tx.Where("tenant_id = 0 AND setting_key = ?", definition.Key).First(&stored).Error; err != nil {
++				return err
++			}
++			if !validBusinessSettingRow(stored, definition) {
++				return contracts.ErrBusinessSettings
++			}
++		}
++		return nil
++	})
++}
++
++// MigrateBusinessSettings is used only in the opt-in auto-migrate startup mode.
++func (s *SettingService) MigrateBusinessSettings(definitions []contracts.BusinessSettingDefinition) error {
++	if s == nil || s.db == nil {
++		return contracts.ErrBusinessSettings
++	}
++	if err := s.db.AutoMigrate(&SystemSetting{}); err != nil {
++		return err
++	}
++	return s.BootstrapBusinessSettings(definitions)
++}
++
++func validBusinessSettingRow(row SystemSetting, definition contracts.BusinessSettingDefinition) bool {
++	if row.SettingKey != definition.Key || row.Module != definition.Module || row.ValueType != definition.ValueType || row.GroupKey != definition.GroupKey || row.IsPublic != 0 || row.IsEncrypted != 0 {
++		return false
++	}
++	_, err := validateAndNormalizeSettingValue(definition.Key, definition.ValueType, row.SettingValue)
++	return err == nil
++}
++
++type businessRuntimeSettingReader struct {
++	db           *gorm.DB
++	ctx          context.Context
++	snapshot     *tenant.Context
++	expectedMode string
++	definitions  map[string]contracts.BusinessSettingDefinition
++}
++
++// BusinessReaderFor snapshots middleware tenancy. It never uses request body or
++// raw headers to invent a tenant; compiled callers must use the trusted chain.
++func (s *SettingService) BusinessReaderFor(c *gin.Context, definitions []contracts.BusinessSettingDefinition) (contracts.BusinessRuntimeSettingsReader, error) {
++	if s == nil || s.db == nil || c == nil || c.Request == nil || len(definitions) == 0 {
++		return nil, contracts.ErrBusinessSettings
++	}
++	reader := &businessRuntimeSettingReader{db: s.db, ctx: c.Request.Context(), expectedMode: tenant.ModeCompat, definitions: make(map[string]contracts.BusinessSettingDefinition, len(definitions))}
++	if bound := tenant.FromGin(c); bound != nil {
++		snapshot := *bound
++		if !validBusinessSettingContext(snapshot) {
++			return nil, contracts.ErrBusinessSettings
++		}
++		reader.snapshot = &snapshot
++		reader.expectedMode = snapshot.Mode
++	}
++	for _, definition := range definitions {
++		reader.definitions[definition.Key] = definition
++	}
++	if err := reader.checkMode(); err != nil {
++		return nil, err
++	}
++	return reader, nil
++}
++
++func validBusinessSettingContext(ctx tenant.Context) bool {
++	switch ctx.Mode {
++	case tenant.ModeCompat:
++		return ctx.TenantID == 0 && ctx.ResolvedBy == tenant.ResolvedByCompatFallback
++	case tenant.ModeMulti:
++		switch ctx.ResolvedBy {
++		case tenant.ResolvedByHeader:
++			return true
++		case tenant.ResolvedBySubject:
++			return ctx.TenantID > 0
++		case tenant.ResolvedByPlatformFallback:
++			return ctx.TenantID == 0
++		}
++	}
++	return false
++}
++
++func (r *businessRuntimeSettingReader) checkMode() error {
++	if err := r.ctx.Err(); err != nil {
++		return err
++	}
++	modeReader := tenant.NewStrictSettingModeReader(NewSettingService(r.db.WithContext(r.ctx)))
++	current, err := modeReader.ReadMode(r.ctx)
++	if err != nil || current != r.expectedMode {
++		return contracts.ErrBusinessSettings
++	}
++	if current == tenant.ModeMulti && r.snapshot == nil {
++		return contracts.ErrBusinessSettings
++	}
++	return nil
++}
++
++func (r *businessRuntimeSettingReader) GetByKey(key string) (string, error) {
++	definition, ok := r.definitions[key]
++	if !ok {
++		return "", contracts.ErrBusinessSettings
++	}
++	if err := r.checkMode(); err != nil {
++		return "", err
++	}
++	view := &SettingService{db: r.db.WithContext(r.ctx), Scoper: tenant.Scoper{TenantCtx: r.snapshot}}
++	var rows []SystemSetting
++	if err := view.tenantScope()(view.db).Where("setting_key = ?", key).Order("tenant_id asc").Find(&rows).Error; err != nil {
++		return "", contracts.ErrBusinessSettings
++	}
++	if len(rows) == 0 {
++		return "", contracts.ErrBusinessSettings
++	}
++	for _, row := range rows {
++		if !validBusinessSettingRow(row, definition) {
++			return "", contracts.ErrBusinessSettings
++		}
++	}
++	if err := r.ctx.Err(); err != nil {
++		return "", err
++	}
++	return rows[len(rows)-1].SettingValue, nil
++}
+
+diff --git a/backend/modules/system/config/setting/business_runtime_settings_test.go b/backend/modules/system/config/setting/business_runtime_settings_test.go
+new file mode 100644
+--- /dev/null
++++ b/backend/modules/system/config/setting/business_runtime_settings_test.go
+@@ -0,0 +1,267 @@
++package setting
++
++import (
++	"context"
++	"errors"
++	"net/http/httptest"
++	"sync"
++	"testing"
++
++	"github.com/duanxldragon/pantheon-base/backend/pkg/contracts"
++	"github.com/duanxldragon/pantheon-base/backend/pkg/tenant"
++	"github.com/duanxldragon/pantheon-base/backend/pkg/testmysql"
++	"github.com/gin-gonic/gin"
++)
++
++func businessSettingsDefinitions() []contracts.BusinessSettingDefinition {
++	return []contracts.BusinessSettingDefinition{
++		{BusinessSettingSeed: contracts.BusinessSettingSeed{Key: "cmdb.ssh.default_port", Value: "22", ValueType: "number", GroupKey: "cmdb", Remark: "SSH port"}, Module: "business.cmdb"},
++		{BusinessSettingSeed: contracts.BusinessSettingSeed{Key: "cmdb.ssh.collect_timeout", Value: "10", ValueType: "number", GroupKey: "cmdb", Remark: "SSH timeout"}, Module: "business.cmdb"},
++	}
++}
++func businessSettingFixture(t *testing.T, mode string) *SettingService {
++	t.Helper()
++	db := testmysql.Open(t)
++	if err := db.AutoMigrate(&SystemSetting{}); err != nil {
++		t.Fatal(err)
++	}
++	if err := db.Create(&SystemSetting{SettingKey: tenant.FeatureFlagSettingKey, SettingValue: mode, ValueType: "string", GroupKey: "platform", Module: "platform"}).Error; err != nil {
++		t.Fatal(err)
++	}
++	return NewSettingService(db)
++}
++func businessSettingsGin(t *testing.T, mode, subject string) *gin.Context {
++	t.Helper()
++	c, _ := gin.CreateTestContext(httptest.NewRecorder())
++	c.Request = httptest.NewRequest("GET", "/business", nil)
++	if mode != "" {
++		resolved, err := tenant.Resolve(tenant.ResolveInput{Mode: mode, SubjectTenantID: subject})
++		if err != nil {
++			t.Fatal(err)
++		}
++		c.Set(tenant.ContextKey, resolved)
++	}
++	return c
++}
++func seedBusinessOverride(t *testing.T, s *SettingService, id uint64, value string) {
++	t.Helper()
++	definition := businessSettingsDefinitions()[1]
++	if err := s.db.Create(&SystemSetting{TenantID: id, SettingKey: definition.Key, SettingValue: value, ValueType: definition.ValueType, GroupKey: definition.GroupKey, Module: definition.Module}).Error; err != nil {
++		t.Fatal(err)
++	}
++}
++
++func TestBusinessRuntimeSettingsDefaultsPreserveAndConcurrent(t *testing.T) {
++	s := businessSettingFixture(t, tenant.ModeCompat)
++	definitions := businessSettingsDefinitions()
++	results := make(chan error, 6)
++	var wg sync.WaitGroup
++	for i := 0; i < 6; i++ {
++		wg.Add(1)
++		go func() { defer wg.Done(); results <- s.BootstrapBusinessSettings(definitions) }()
++	}
++	wg.Wait()
++	close(results)
++	for err := range results {
++		if err != nil {
++			t.Fatal(err)
++		}
++	}
++	var count int64
++	if err := s.db.Model(&SystemSetting{}).Where("module = ?", "business.cmdb").Count(&count).Error; err != nil || count != 2 {
++		t.Fatalf("duplicate defaults: count=%d err=%v", count, err)
++	}
++	if err := s.db.Model(&SystemSetting{}).Where("setting_key = ?", definitions[0].Key).Update("setting_value", "2222").Error; err != nil {
++		t.Fatal(err)
++	}
++	if err := s.BootstrapBusinessSettings(definitions); err != nil {
++		t.Fatal(err)
++	}
++	reader, err := s.BusinessReaderFor(businessSettingsGin(t, "", ""), definitions)
++	if err != nil {
++		t.Fatal(err)
++	}
++	value, err := reader.GetByKey(definitions[0].Key)
++	if err != nil || value != "2222" {
++		t.Fatalf("operator value overwritten: %q %v", value, err)
++	}
++}
++
++func TestBusinessRuntimeSettingsBootstrapRollback(t *testing.T) {
++	for _, field := range []string{"module", "public", "encrypted", "type", "group", "value"} {
++		t.Run(field, func(t *testing.T) {
++			s := businessSettingFixture(t, tenant.ModeCompat)
++			definition := businessSettingsDefinitions()[0]
++			row := SystemSetting{SettingKey: definition.Key, SettingValue: "2222", ValueType: definition.ValueType, GroupKey: definition.GroupKey, Module: definition.Module}
++			switch field {
++			case "module":
++				row.Module = "system.auth"
++			case "public":
++				row.IsPublic = 1
++			case "encrypted":
++				row.IsEncrypted = 1
++			case "type":
++				row.ValueType = "string"
++			case "group":
++				row.GroupKey = "other"
++			case "value":
++				row.SettingValue = "invalid-number"
++			}
++			if err := s.db.Create(&row).Error; err != nil {
++				t.Fatal(err)
++			}
++			if err := s.BootstrapBusinessSettings(businessSettingsDefinitions()); err == nil {
++				t.Fatal("incompatible existing metadata accepted")
++			}
++			var count int64
++			if err := s.db.Model(&SystemSetting{}).Where("setting_key = ?", businessSettingsDefinitions()[1].Key).Count(&count).Error; err != nil || count != 0 {
++				t.Fatalf("partial defaults survived rollback: %d %v", count, err)
++			}
++			var current SystemSetting
++			if err := s.db.First(&current, row.ID).Error; err != nil {
++				t.Fatal(err)
++			}
++			if current.SettingValue != row.SettingValue || current.Module != row.Module || current.IsPublic != row.IsPublic || current.IsEncrypted != row.IsEncrypted {
++				t.Fatal("conflict row modified")
++			}
++		})
++	}
++}
++
++func TestBusinessRuntimeSettingsTenantIsolationAndSnapshot(t *testing.T) {
++	s := businessSettingFixture(t, tenant.ModeMulti)
++	definitions := businessSettingsDefinitions()
++	if err := s.BootstrapBusinessSettings(definitions); err != nil {
++		t.Fatal(err)
++	}
++	seedBusinessOverride(t, s, 101, "15")
++	seedBusinessOverride(t, s, 202, "20")
++	request101 := businessSettingsGin(t, tenant.ModeMulti, "101")
++	reader101, err := s.BusinessReaderFor(request101, definitions)
++	if err != nil {
++		t.Fatal(err)
++	}
++	tenant.FromGin(request101).TenantID = 202
++	definitions[1].Module = "tampered"
++	for _, check := range []struct {
++		reader contracts.BusinessRuntimeSettingsReader
++		want   string
++	}{{reader101, "15"}} {
++		got, err := check.reader.GetByKey("cmdb.ssh.collect_timeout")
++		if err != nil || got != check.want {
++			t.Fatalf("snapshot/tenant drift: %q %v", got, err)
++		}
++	}
++	for _, check := range []struct{ subject, want string }{{"202", "20"}, {"303", "10"}} {
++		reader, err := s.BusinessReaderFor(businessSettingsGin(t, tenant.ModeMulti, check.subject), businessSettingsDefinitions())
++		if err != nil {
++			t.Fatal(err)
++		}
++		got, err := reader.GetByKey("cmdb.ssh.collect_timeout")
++		if err != nil || got != check.want {
++			t.Fatalf("tenant %s: %q %v", check.subject, got, err)
++		}
++	}
++	if got, err := reader101.GetByKey("login.password"); err == nil || got != "" {
++		t.Fatal("foreign unregistered key exposed")
++	}
++	if _, err := s.BusinessReaderFor(businessSettingsGin(t, "", ""), businessSettingsDefinitions()); err == nil {
++		t.Fatal("missing multi context fell back global")
++	}
++}
++
++func TestBusinessRuntimeSettingsModeDriftAndCancellation(t *testing.T) {
++	for _, mode := range []string{tenant.ModeCompat, tenant.ModeMulti} {
++		t.Run(mode, func(t *testing.T) {
++			s := businessSettingFixture(t, mode)
++			if err := s.BootstrapBusinessSettings(businessSettingsDefinitions()); err != nil {
++				t.Fatal(err)
++			}
++			subject := ""
++			if mode == tenant.ModeMulti {
++				subject = "101"
++			}
++			c := businessSettingsGin(t, mode, subject)
++			ctx, cancel := context.WithCancel(c.Request.Context())
++			defer cancel()
++			c.Request = c.Request.WithContext(ctx)
++			reader, err := s.BusinessReaderFor(c, businessSettingsDefinitions())
++			if err != nil {
++				t.Fatal(err)
++			}
++			next := tenant.ModeMulti
++			if mode == tenant.ModeMulti {
++				next = tenant.ModeCompat
++			}
++			if err := s.db.Model(&SystemSetting{}).Where("setting_key = ?", tenant.FeatureFlagSettingKey).Update("setting_value", next).Error; err != nil {
++				t.Fatal(err)
++			}
++			if got, err := reader.GetByKey("cmdb.ssh.collect_timeout"); err == nil || got != "" {
++				t.Fatal("mode drift reinterpreted request")
++			}
++			cancel()
++			if _, err := reader.GetByKey("cmdb.ssh.collect_timeout"); !errors.Is(err, context.Canceled) {
++				t.Fatalf("cancellation ignored: %v", err)
++			}
++		})
++	}
++}
++
++func TestBusinessRuntimeSettingsRejectsMetadataTamper(t *testing.T) {
++	for _, field := range []string{"module", "public", "encrypted", "type", "group", "value", "global"} {
++		t.Run(field, func(t *testing.T) {
++			s := businessSettingFixture(t, tenant.ModeMulti)
++			definitions := businessSettingsDefinitions()
++			if err := s.BootstrapBusinessSettings(definitions); err != nil {
++				t.Fatal(err)
++			}
++			seedBusinessOverride(t, s, 101, "15")
++			reader, err := s.BusinessReaderFor(businessSettingsGin(t, tenant.ModeMulti, "101"), definitions)
++			if err != nil {
++				t.Fatal(err)
++			}
++			query := s.db.Model(&SystemSetting{}).Where("setting_key = ? AND tenant_id = ?", "cmdb.ssh.collect_timeout", 101)
++			changes := map[string]interface{}{}
++			switch field {
++			case "module":
++				changes["module"] = "business.deploy"
++			case "public":
++				changes["is_public"] = 1
++			case "encrypted":
++				changes["is_encrypted"] = 1
++			case "type":
++				changes["value_type"] = "string"
++			case "group":
++				changes["group_key"] = "foreign"
++			case "value":
++				changes["setting_value"] = "wrong"
++			case "global":
++				query = s.db.Model(&SystemSetting{}).Where("setting_key = ? AND tenant_id = 0", "cmdb.ssh.collect_timeout")
++				changes["is_public"] = 1
++			}
++			if err := query.Updates(changes).Error; err != nil {
++				t.Fatal(err)
++			}
++			if got, err := reader.GetByKey("cmdb.ssh.collect_timeout"); err == nil || got != "" {
++				t.Fatal("incompatible/secret value returned")
++			}
++		})
++	}
++}
++
++func TestBusinessRuntimeSettingsInvalidContextAndMode(t *testing.T) {
++	s := businessSettingFixture(t, tenant.ModeMulti)
++	for _, ctx := range []tenant.Context{{Mode: tenant.ModeMulti, TenantID: 0, ResolvedBy: tenant.ResolvedBySubject}, {Mode: tenant.ModeMulti, TenantID: 101, ResolvedBy: tenant.ResolvedByPlatformFallback}, {Mode: tenant.ModeCompat, TenantID: 101, ResolvedBy: tenant.ResolvedByCompatFallback}, {Mode: tenant.ModeMulti, TenantID: 101, ResolvedBy: "request-body"}} {
++		c := businessSettingsGin(t, "", "")
++		c.Set(tenant.ContextKey, &ctx)
++		if _, err := s.BusinessReaderFor(c, businessSettingsDefinitions()); err == nil {
++			t.Fatal("invalid provenance accepted")
++		}
++	}
++	if err := s.db.Model(&SystemSetting{}).Where("setting_key = ?", tenant.FeatureFlagSettingKey).Update("setting_value", "unknown").Error; err != nil {
++		t.Fatal(err)
++	}
++	if _, err := s.BusinessReaderFor(businessSettingsGin(t, tenant.ModeMulti, "101"), businessSettingsDefinitions()); err == nil {
++		t.Fatal("unknown mode accepted")
++	}
++}
+
+diff --git a/backend/modules/system/business_runtime_settings.go b/backend/modules/system/business_runtime_settings.go
+new file mode 100644
+--- /dev/null
++++ b/backend/modules/system/business_runtime_settings.go
+@@ -0,0 +1,19 @@
++package system
++
++import (
++	"github.com/duanxldragon/pantheon-base/backend/modules/system/config/setting"
++	"github.com/duanxldragon/pantheon-base/backend/pkg/contracts"
++	"github.com/gin-gonic/gin"
++	"gorm.io/gorm"
++)
++
++func prepareBusinessRuntimeSettings(r *gin.RouterGroup, db *gorm.DB, service *setting.SettingService, definitions []contracts.BusinessSettingDefinition) error {
++	if len(definitions) == 0 {
++		return nil
++	}
++	return contracts.RegisterRequiredBackendModules(r, db, contracts.FuncModule{
++		ModuleName:    "business-runtime-settings",
++		MigrateFunc:   func(_ *gorm.DB) error { return service.MigrateBusinessSettings(definitions) },
++		BootstrapFunc: func(_ *gorm.DB) error { return service.BootstrapBusinessSettings(definitions) },
++	})
++}
+
+diff --git a/backend/modules/system/business_runtime_settings_test.go b/backend/modules/system/business_runtime_settings_test.go
+new file mode 100644
+--- /dev/null
++++ b/backend/modules/system/business_runtime_settings_test.go
+@@ -0,0 +1,55 @@
++package system
++
++import (
++	"github.com/duanxldragon/pantheon-base/backend/modules/system/config/setting"
++	"github.com/duanxldragon/pantheon-base/backend/pkg/contracts"
++	"github.com/duanxldragon/pantheon-base/backend/pkg/testmysql"
++	"github.com/gin-gonic/gin"
++	"testing"
++)
++
++func TestBusinessRuntimeSettingsRequiredStartup(t *testing.T) {
++	for _, auto := range []string{"false", "true"} {
++		t.Run(auto, func(t *testing.T) {
++			t.Setenv("PANTHEON_AUTO_MIGRATE", auto)
++			db := testmysql.Open(t)
++			if err := db.AutoMigrate(&setting.SystemSetting{}); err != nil {
++				t.Fatal(err)
++			}
++			definitions := []contracts.BusinessSettingDefinition{{BusinessSettingSeed: contracts.BusinessSettingSeed{Key: "cmdb.ssh.port", Value: "22", ValueType: "number", GroupKey: "cmdb", Remark: "port"}, Module: "business.cmdb"}}
++			if err := db.Create(&setting.SystemSetting{SettingKey: definitions[0].Key, SettingValue: "2222", ValueType: "number", GroupKey: "cmdb", Module: "foreign"}).Error; err != nil {
++				t.Fatal(err)
++			}
++			r := gin.New()
++			if err := prepareBusinessRuntimeSettings(r.Group("/"), db, setting.NewSettingService(db), definitions); err == nil {
++				t.Fatal("required startup ignored configuration conflict")
++			}
++			if len(r.Routes()) != 0 {
++				t.Fatal("routes exposed on configuration failure")
++			}
++		})
++	}
++}
++func TestBusinessRuntimeSettingsStartupSchemaModes(t *testing.T) {
++	for _, auto := range []string{"false", "true"} {
++		t.Run(auto, func(t *testing.T) {
++			t.Setenv("PANTHEON_AUTO_MIGRATE", auto)
++			db := testmysql.Open(t)
++			definitions := []contracts.BusinessSettingDefinition{{BusinessSettingSeed: contracts.BusinessSettingSeed{Key: "cmdb.ssh.port", Value: "22", ValueType: "number", GroupKey: "cmdb", Remark: "port"}, Module: "business.cmdb"}}
++			err := prepareBusinessRuntimeSettings(gin.New().Group("/"), db, setting.NewSettingService(db), definitions)
++			if auto == "false" {
++				if err == nil || db.Migrator().HasTable(&setting.SystemSetting{}) {
++					t.Fatal("versioned mode silently created missing schema")
++				}
++				return
++			}
++			if err != nil {
++				t.Fatal(err)
++			}
++			var row setting.SystemSetting
++			if err := db.Where("setting_key = ?", definitions[0].Key).First(&row).Error; err != nil || row.SettingValue != "22" {
++				t.Fatalf("auto mode did not bootstrap: %v", err)
++			}
++		})
++	}
++}

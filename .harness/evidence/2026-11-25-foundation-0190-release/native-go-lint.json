@@ -1,0 +1,15 @@
+{
+  "command": "golangci-lint run --new-from-rev=605be5cdd81d912a0aca37d8fbe8c731d9021b7b ./...",
+  "cwd": "backend",
+  "toolVersion": "2.6.2 built with go1.26.5",
+  "status": "passed",
+  "exitCode": 0,
+  "output": "0 issues.\n",
+  "provenance": {
+    "execStartChunk": "80655a",
+    "sessionId": 83837,
+    "completionChunk": "9dc880",
+    "sandbox": "approved escalation"
+  },
+  "priorFailure": "hosted-go-lint.result.json records sandbox context-loading exit 5, not a code lint failure."
+}

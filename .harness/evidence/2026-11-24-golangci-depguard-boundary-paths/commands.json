@@ -1,0 +1,70 @@
+{
+  "taskId": "2026-11-24-golangci-depguard-boundary-paths",
+  "repo": "pantheon-base",
+  "agent": {
+    "tool": "other",
+    "adapter": "windows"
+  },
+  "candidate": {
+    "head": "6ffee550",
+    "branch": "chore/prepare-v0.18.9",
+    "worktree": "uncommitted",
+    "note": "Only backend/.golangci.yml and the new regression test are touched by this task; the pre-existing dirty tree belongs to other work."
+  },
+  "commands": [
+    {
+      "command": "node --test tests/scripts/golangci-depguard-paths.test.mjs",
+      "cwd": ".",
+      "status": "failed",
+      "exitCode": 1,
+      "notes": "Expected RED before the config fix: both assertions failed because every deny path used the bare 'pantheon-base/modules/...' prefix, which never matches 'github.com/duanxldragon/pantheon-base/backend/modules/...'."
+    },
+    {
+      "command": "golangci-lint run ./modules/business/zz_depguard_probe/...",
+      "cwd": "backend",
+      "status": "passed",
+      "exitCode": 0,
+      "notes": "Probe package importing modules/system/config/setting from under modules/business. With the stale config: 0 issues, i.e. the boundary rule was a silent no-op."
+    },
+    {
+      "command": "golangci-lint run ./modules/business/zz_depguard_probe/...",
+      "cwd": "backend",
+      "status": "failed",
+      "exitCode": 1,
+      "notes": "Expected RED after the config fix: 1 depguard issue, \"import '.../modules/system/config/setting' is not allowed from list 'business-boundary'\"."
+    },
+    {
+      "command": "node --test tests/scripts/golangci-depguard-paths.test.mjs",
+      "cwd": ".",
+      "status": "passed",
+      "exitCode": 0,
+      "notes": "GREEN after the config fix: 2/2 assertions pass; deny paths equal module path + /modules/{system,auth,platform}."
+    },
+    {
+      "command": "golangci-lint run ./modules/business/...",
+      "cwd": "backend",
+      "status": "passed",
+      "exitCode": 0,
+      "notes": "Whole business tree after the rule became effective: no depguard findings; only 2 pre-existing revive 'exported ... should have comment' findings in modules/business/business.go and retired_modules.go. Confirms no existing business->system import was hiding behind the broken rule."
+    },
+    {
+      "command": "golangci-lint config verify",
+      "cwd": "backend",
+      "status": "not-run",
+      "notes": "Environment gap: the command fetches https://golangci-lint.run/jsonschema/golangci.v2.6.jsonschema.json and this machine is offline, so schema verification could not run. Not a config error."
+    }
+  ],
+  "knownGaps": [
+    "Ops still carries the stale copy of backend/.golangci.yml; the fix reaches Ops only through a formal foundation release plus overlay rebuild. Not hand-edited downstream, by rule.",
+    "golangci-lint config verify needs network access; not executed on this offline machine.",
+    "No independent code/architecture review on this candidate; self-review only."
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-11-24-golangci-depguard-boundary-paths/manifest.json",
+    "taskPacket": "docs/harness/tasks/2026-11-24-golangci-depguard-boundary-paths.task.md",
+    "evidenceDir": ".harness/evidence/2026-11-24-golangci-depguard-boundary-paths/",
+    "reviewFile": ".harness/evidence/2026-11-24-golangci-depguard-boundary-paths/review.md",
+    "changeRef": "none",
+    "planRefs": []
+  }
+}

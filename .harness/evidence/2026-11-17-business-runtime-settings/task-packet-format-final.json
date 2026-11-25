@@ -1,0 +1,5 @@
+{
+  "exitCode": 0,
+  "stdout": "{\n  \"results\": [\n    {\n      \"file\": \"docs/harness/tasks/2026-11-17-business-runtime-settings.task.md\",\n      \"errors\": [],\n      \"warnings\": []\n    }\n  ],\n  \"errorCount\": 0,\n  \"warningCount\": 0,\n  \"legacySkippedCount\": 0,\n  \"legacyConfig\": null\n}\n",
+  "stderr": ""
+}

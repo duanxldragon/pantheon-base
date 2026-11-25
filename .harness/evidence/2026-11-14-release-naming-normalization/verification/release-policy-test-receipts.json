@@ -1,0 +1,15 @@
+{
+  "artifacts": {
+    "focused-publisher.stdout.txt": "94b483575d63a20739c6d456a1d4f4aa27b541934faf1a435d9e95436444bcb8",
+    "native-serial-suite.summary.stdout.txt": "2318e951c6042a3491c287031a41e79cd7f377da8377f6cec28530005c450eff",
+    "native-default-suite-failure.summary.stdout.txt": "311493a2da0afe696021476e4405593220b229f95757834cb6eef35543788429",
+    "focused-publisher.result.json": "bc00d1dd8c22638de150c2cf4a5e932226cdc6200a2e686acbd0f362c15623bc",
+    "native-serial-suite.result.json": "8ff7f31112444febb6c2d3e5776b9854cea9dbdbb36158fc606b02e09855434b",
+    "native-default-suite-failure.result.json": "0406ff26c519692c41b56e53db00e09bdb42e2f870b31101125225e54e677c84",
+    "release-policy-checks.result.json": "25cfc190e43db017c398e3a3bbbfa177e8b7ce2fdedc8d8875102bebe3800654",
+    "release-policy-source-sha256.json": "257c93931c4ac52fad263ffb7b25f7410d4bf8187e7738c4c6d514ba01288964"
+  },
+  "testsRerun": false,
+  "fullSerialRawLogCaptured": false,
+  "provenance": "Copied actual returned tool summaries and focused stdout; complete serial/default raw logs were not originally saved."
+}

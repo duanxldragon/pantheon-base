@@ -1,0 +1,81 @@
+{
+  "taskId": "2026-11-19-archive-formatter-protection",
+  "recordedAtUTC": "2026-11-19 00:49:41 UTC",
+  "passed": true,
+  "checks": [
+    {
+      "name": "frontmatter",
+      "command": "node scripts/frontmatter-check.mjs",
+      "cwd": "pantheon-base",
+      "exitCode": 0,
+      "stdout": "Frontmatter check passed. Checked 478 docs, 354 with frontmatter, 124 without (informational, not enforced).\nEnforced directories: docs/superpowers/specs/, docs/archive/examples/, docs/archive/baselines/, docs/archive/upgrade/ — 5 doc(s) must carry frontmatter.\nActive docs past the 90-day review window: 110 (informational, not enforced — see DOCUMENT_METADATA_AND_STATUS §6.5).\n",
+      "transcriptChunk": "6090a6"
+    },
+    {
+      "name": "template",
+      "command": "node scripts/check-task-packet-template.mjs",
+      "cwd": "pantheon-base",
+      "exitCode": 0,
+      "stdout": "OK pantheon-base task-packet template is present and linked\n",
+      "transcriptChunk": "21cc2e"
+    },
+    {
+      "name": "syntax",
+      "command": "node --check tests/scripts/harness-archive-formatting.test.mjs",
+      "cwd": "pantheon-base",
+      "exitCode": 0,
+      "stdout": "",
+      "transcriptChunk": "b3993d"
+    },
+    {
+      "name": "task",
+      "command": "node scripts/harness/check-task-packet.mjs --json docs/harness/tasks/2026-11-19-archive-formatter-protection.task.md",
+      "cwd": "pantheon-base",
+      "exitCode": 0,
+      "stdout": "{\n  \"results\": [\n    {\n      \"file\": \"docs/harness/tasks/2026-11-19-archive-formatter-protection.task.md\",\n      \"errors\": [],\n      \"warnings\": []\n    }\n  ],\n  \"errorCount\": 0,\n  \"warningCount\": 0,\n  \"legacySkippedCount\": 0,\n  \"legacyConfig\": null\n}\n",
+      "transcriptChunk": "adc74d"
+    },
+    {
+      "name": "evidence",
+      "command": "node scripts/harness/check-evidence.mjs --json --strict .harness/evidence/2026-11-19-archive-formatter-protection/commands.json",
+      "cwd": "pantheon-base",
+      "exitCode": 0,
+      "stdout": "{\n  \"mode\": \"strict\",\n  \"fileCount\": 1,\n  \"errorCount\": 0,\n  \"warningCount\": 0,\n  \"historicalErrorCount\": 0,\n  \"currentSchemaFrom\": \"2026-10-26\",\n  \"results\": [\n    {\n      \"file\": \".harness/evidence/2026-11-19-archive-formatter-protection/commands.json\",\n      \"errors\": [],\n      \"warnings\": [],\n      \"historicalErrors\": []\n    }\n  ]\n}\n",
+      "transcriptChunk": "54c743"
+    },
+    {
+      "name": "review",
+      "command": "node scripts/harness/check-review.mjs --json --strict .harness/evidence/2026-11-19-archive-formatter-protection/review.md",
+      "cwd": "pantheon-base",
+      "exitCode": 0,
+      "stdout": "{\n  \"mode\": \"strict\",\n  \"fileCount\": 1,\n  \"errorCount\": 0,\n  \"results\": [\n    {\n      \"file\": \".harness/evidence/2026-11-19-archive-formatter-protection/review.md\",\n      \"errors\": [],\n      \"warnings\": []\n    }\n  ]\n}\n",
+      "transcriptChunk": "68ba4c"
+    },
+    {
+      "name": "diff",
+      "command": "git diff --check -- .prettierignore tests/scripts/harness-archive-formatting.test.mjs docs/harness/PANTHEON_BASE_DELIVERY_WORKFLOW.md docs/harness/PANTHEON_BASE_DELIVERY_WORKFLOW.en.md docs/harness/tasks/2026-11-19-archive-formatter-protection.task.md .harness/tasks/2026-11-19-archive-formatter-protection .harness/evidence/2026-11-19-archive-formatter-protection .harness/STATUS.md",
+      "cwd": "pantheon-base",
+      "exitCode": 0,
+      "stdout": "",
+      "transcriptChunk": "9864bd"
+    }
+  ],
+  "structureCheck": {
+    "command": "node scripts/harness/check-structure-contract.mjs --root . --strict --json",
+    "cwd": "pantheon-base",
+    "exitCode": 0,
+    "scannedCount": 4623,
+    "findingCount": 0,
+    "transcriptChunk": "41bd27",
+    "boundary": "Run after the root configuration/task files were created and before later evidence-only closeout records."
+  },
+  "earlierFailures": [
+    "governance-before-review.json",
+    "task-packet-before-primary-layer-fix.json"
+  ],
+  "resolvedEarlierFailures": true,
+  "coreSourceChangedAfterReview": false,
+  "publicationCompleted": false,
+  "downstreamAdopted": false,
+  "wholeProjectAccepted": false
+}

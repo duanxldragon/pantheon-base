@@ -1,0 +1,84 @@
+{
+  "taskId": "2026-11-17-business-runtime-settings",
+  "repo": "pantheon-base",
+  "runtimeLogs": [
+    ".harness/evidence/2026-11-17-business-runtime-settings/runtime-settings-race.log",
+    ".harness/evidence/2026-11-17-business-runtime-settings/runtime-settings-packages-race.log",
+    ".harness/evidence/2026-11-17-business-runtime-settings/runtime-settings-reserved-namespace-final.log"
+  ],
+  "agent": {
+    "tool": "codex",
+    "adapter": "Primary Base Generator; independent native code-reviewer and architect"
+  },
+  "commands": [
+    {
+      "command": "Native hidden required-MySQL verification helper in sandbox",
+      "cwd": "../pantheon-ops",
+      "status": "failed",
+      "notes": "Sandbox denied local TCP service query; no Go tests began. sandbox-first-check.json retained."
+    },
+    {
+      "command": "gofmt -w scoped settings files",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Scoped formatting only; unrelated changes preserved."
+    },
+    {
+      "command": "CGO_ENABLED=1 go test -race -p=1 -mod=readonly -v ./pkg/contracts ./modules/system/config/setting ./modules/system -run TestBusinessRuntimeSettings -count=1",
+      "cwd": "backend",
+      "status": "passed",
+      "notes": "Required isolated MySQL, mingw GCC; contracts1.120s/setting3.009s/system1.516s. runtime-settings-race.log before final site fix."
+    },
+    {
+      "command": "CGO_ENABLED=1 go test -race -p=1 -mod=readonly ./pkg/contracts ./modules/system/config/setting ./modules/system -count=1",
+      "cwd": "backend",
+      "status": "passed",
+      "notes": "Complete related package regression contracts1.194s/setting10.723s/system4.553s. runtime-settings-packages-race.log before final site fix; not whole repository race."
+    },
+    {
+      "command": "go vet ./pkg/contracts ./modules/system/config/setting ./modules/system",
+      "cwd": "backend",
+      "status": "passed",
+      "notes": "runtime-settings-vet.log; before final site namespace fix."
+    },
+    {
+      "command": "CGO_ENABLED=1 go test -race -p=1 -mod=readonly -v ./pkg/contracts ./modules/system/config/setting ./modules/system -run TestBusinessRuntimeSettingsDeclarationOwnership -count=1",
+      "cwd": "backend",
+      "status": "passed",
+      "notes": "After site fix: actual matching-key17 reserved namespace rejects passed in contracts1.101s. setting/system compiled with race instrumentation but explicitly [no tests to run], not counted as repeated regression. runtime-settings-reserved-namespace-final.log."
+    },
+    {
+      "command": "go vet ./pkg/contracts ./modules/system/config/setting ./modules/system",
+      "cwd": "backend",
+      "status": "passed",
+      "notes": "Final source after namespace fix; actual exec_command chunk915fff exit0 and empty stdout. runtime-settings-vet-final.status.json and exact zero-byte log saved from captured output; not a fictitious rerun."
+    },
+    {
+      "command": "node scripts/harness/check-task-packet.mjs --json scoped task",
+      "cwd": ".",
+      "status": "failed",
+      "notes": "Initial scoped preflight found missing manifest.goal; corrected. task-packet-preflight.json retained."
+    },
+    {
+      "command": "node scripts/harness/check-evidence.mjs --json --strict scoped commands.json",
+      "cwd": ".",
+      "status": "failed",
+      "notes": "Initial missing manifest.goal and pending review file; evidence-preflight.json retained, no success substitution."
+    }
+  ],
+  "knownGaps": [
+    "Official foundation publication and Ops lock/wiring not performed",
+    "Component/required-stage tests do not prove complete authenticated business request flow or Host multi-tenancy",
+    "Whole Base release and Ops full race/final product gates remain open",
+    "Independent code lane COMMENT, architecture CLEAR; no LSP/AST in reviewer lane; merge/release approval not claimed"
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-11-17-business-runtime-settings/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-11-17-business-runtime-settings/",
+    "reviewFile": ".harness/evidence/2026-11-17-business-runtime-settings/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".harness/tasks/2026-11-17-business-runtime-settings/plan.md"
+    ]
+  }
+}

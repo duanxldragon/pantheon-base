@@ -1,0 +1,141 @@
+{
+  "taskId": "2026-11-14-release-naming-normalization",
+  "taskDoc": "docs/harness/tasks/2026-11-14-release-naming-normalization.task.md",
+  "title": "Normalize Foundation release names and retain legacy identities",
+  "repo": "pantheon-base",
+  "primaryLayer": "platform",
+  "dependencyLayers": [
+    "platform"
+  ],
+  "status": "in-progress",
+  "priority": "P2",
+  "type": "release-naming",
+  "created_at": "2026-11-14",
+  "goal": "Normalize GitHub release presentation and publisher rules while preserving immutable tags/assets and current18.8 Latest.",
+  "scope": {
+    "in": [
+      "Canonical Foundation publisher titles and valid prerelease metadata",
+      "Legacy naming policy in CN/EN model/index and version guide",
+      "53 existing GitHub release presentation names and3 legacy naming notes",
+      "Re-read current18.8 Latest and all tag/asset/state identities"
+    ],
+    "out": [
+      "Deleting or renumbering historical tags/releases/assets",
+      "Rewriting immutable18.8 content",
+      "Production mutation or new release publication"
+    ]
+  },
+  "contractAnchors": [
+    "docs/contracts/DOCUMENT_GOVERNANCE_CONTRACT.md",
+    "docs/harness/VERIFICATION_EVIDENCE_SPEC.md",
+    "docs/harness/REVIEW_LOOP_SPEC.md",
+    ".harness/ARCHIVE.md"
+  ],
+  "harnessProfile": {
+    "template": "admin-platform",
+    "overlay": "pantheon-base",
+    "qualityProfile": "ci-workflow",
+    "portableFailureClass": "static-sensor-gap",
+    "ownerLayer": "foundation-source",
+    "ratchetDecision": "guide-updated",
+    "coverageDimensions": [
+      "behaviour",
+      "maintainability",
+      "method-health"
+    ]
+  },
+  "workspaceContext": {
+    "targetRepository": "pantheon-base",
+    "repositoryRole": "foundation-source",
+    "contextSyncExpectation": "not-required",
+    "releaseRequirement": "none"
+  },
+  "expectedFiles": {
+    "create": [
+      "docs/harness/tasks/2026-11-14-release-naming-normalization.task.md",
+      ".harness/tasks/2026-11-14-release-naming-normalization/manifest.json",
+      ".harness/evidence/2026-11-14-release-naming-normalization/summary.md",
+      ".harness/evidence/2026-11-14-release-naming-normalization/commands.json",
+      ".harness/evidence/2026-11-14-release-naming-normalization/review.md"
+    ],
+    "modify": [
+      "scripts/foundation-release/publish-foundation-release.mjs",
+      "tests/scripts/foundation-release/publish-foundation-release.test.mjs",
+      "docs/VERSION_MANAGEMENT_GUIDE.md",
+      "docs/designs/FOUNDATION_RELEASE_MODEL.md",
+      "docs/designs/FOUNDATION_RELEASE_MODEL.en.md",
+      "docs/release-notes/README.md",
+      "docs/release-notes/README.en.md"
+    ],
+    "doNotTouch": [
+      "backend/",
+      "frontend/",
+      "VERSION",
+      "Published tags and assets"
+    ]
+  },
+  "executionRoles": {
+    "implementerPosture": "Executor owns producer code/docs; root owns remote metadata plan and evidence.",
+    "reviewerPosture": [
+      "Independent non-author reviewer checks implementation, plan and identity evidence."
+    ]
+  },
+  "verificationPlan": {
+    "commands": [
+      "node --test --test-concurrency=1 tests/scripts/foundation-release/*.test.mjs scripts/foundation-release/*.test.mjs",
+      "npm run check:docs-frontmatter",
+      "npm run check:task-packet-template",
+      "scoped task/evidence/review validation",
+      "GitHub release/tag/asset/state final readbacks"
+    ],
+    "runtimeEvidence": []
+  },
+  "runtimeSensitive": false,
+  "runtimeGap": "Producer tooling and metadata only; product source is unchanged.",
+  "acceptanceCriteria": [
+    "Canonical and legacy release presentation is unambiguous",
+    "Current18.8 remains stable Latest",
+    "All remote tags,asset identities,draft/prerelease and publication dates unchanged",
+    "Focused tests and governance pass with preserved runner/environment gaps",
+    "Independent scope review and evidence linkage recorded"
+  ],
+  "deliveryTier": "L2",
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-11-14-release-naming-normalization/manifest.json",
+    "taskDoc": "docs/harness/tasks/2026-11-14-release-naming-normalization.task.md",
+    "evidenceDir": ".harness/evidence/2026-11-14-release-naming-normalization/",
+    "reviewFile": ".harness/evidence/2026-11-14-release-naming-normalization/review.md",
+    "changeRef": "none",
+    "planRefs": []
+  },
+  "humanGates": [
+    "User authorized18.8 active installation and release-name normalization; no tag deletion or new publication."
+  ],
+  "structuralScope": {
+    "affectedSubgraph": [
+      "publisher title/create args -> GitHub release presentation"
+    ],
+    "boundaryCrossings": [
+      "base -> ops metadata"
+    ],
+    "riskNodes": [
+      "release metadata"
+    ],
+    "graphFocus": []
+  },
+  "reviewStatus": "blocked",
+  "verificationStatus": "passed-with-explicit-gaps",
+  "blockers": [
+    "Mandatory independent producer-code review requires lsp_diagnostics; the exposed tool set has no LSP diagnostic tool."
+  ],
+  "progress": {
+    "scope": "release presentation and local producer policy",
+    "remoteMetadataVerified": true,
+    "currentLatest": "pantheon-base-v0.18.8",
+    "tagsAndAssetsPreserved": true,
+    "producerChangesCommitted": false,
+    "newReleasePublished": false,
+    "opsActiveUpgradeComplete": false,
+    "producerReviewApproved": false
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "taskId": "2026-11-25-foundation-0190-release",
+  "title": "Submit and publish compatible Foundation v0.19.0",
+  "goal": "Integrate unpushed Base work, pass candidate verification and review, merge a PR, publish four immutable Foundation assets and synchronize a clean local main.",
+  "status": "in-progress",
+  "progress": {
+    "pr": "https://github.com/duanxldragon/pantheon-base/pull/528",
+    "ciRepairs": [
+      "Restore existing MySQL runtime log references and declared release-naming structural metadata",
+      "Document eleven exported Go symbols and retain equivalent regexp semantics",
+      "Native golangci-lint v2.6.2: zero new issues; contracts race regression passed"
+    ]
+  },
+  "deliveryTier": "L2",
+  "primaryLayer": "platform",
+  "runtimeSensitive": true,
+  "taskDoc": "docs/harness/tasks/2026-11-25-foundation-0190-release.task.md",
+  "qualityProfiles": ["auth-security", "architecture-fitness", "runtime-quality"],
+  "scope": {
+    "in": ["Existing unpushed shared capabilities and governance", "Candidate-bound verification and independent review", "Sonar repairs without waivers", "PR and immutable v0.19.0 release", "Task-owned branch cleanup and local synchronization"],
+    "out": ["Ops tree/lock adoption", "Production or provider acceptance", "Unrelated dependency updates", "Gate exceptions", "Other worktree deletion"]
+  },
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-11-25-foundation-0190-release/manifest.json",
+    "taskDoc": "docs/harness/tasks/2026-11-25-foundation-0190-release.task.md",
+    "evidenceDir": ".harness/evidence/2026-11-25-foundation-0190-release/",
+    "reviewFile": ".harness/evidence/2026-11-25-foundation-0190-release/review.md",
+    "changeRef": "none",
+    "planRefs": []
+  },
+  "acceptanceCriteria": [
+    "Local committed work preserved and latest main fixes retained",
+    "Mode transition during business settings read denies after deterministic red-green regression",
+    "Full local verification and two independent review perspectives pass",
+    "Task PR merged after all required checks and feedback resolved",
+    "Merged candidate passes exact-commit Full Smoke, Sonar and Release Gate",
+    "v0.19.0 release has four checksum-valid immutable assets and matching tag/latest identity",
+    "Active local main equals origin/main with clean tracked and untracked status"
+  ],
+  "verificationPlan": {
+    "commands": ["go test -race -p=1 -mod=readonly -count=1 ./...", "Frontend lint/type-check/build/unit tests", "Root and foundation-release tests", "Docs/task/evidence/method checks", "Security scans", "PR/main hosted CI and Full Smoke/Release Gate", "Canonical release cut/publish and remote asset verification"],
+    "runtimeEvidence": ["Isolated MySQL mode transition and live authorization tests", "Configured Redis race tests", "Exact-commit hosted Full Smoke"]
+  },
+  "executionRoles": {
+    "implementerPosture": "Primary agent integrates, repairs, validates and publishes authorized scope.",
+    "reviewerPosture": ["Independent native code-reviewer", "Independent native architect"]
+  },
+  "humanGates": ["Publication authorized by user in this session", "Gate exceptions require separate approval", "Downstream and production acceptance deferred"],
+  "workspaceContext": {"targetRepository": "pantheon-base", "repositoryRole": "foundation-source", "contextSyncExpectation": "deferred", "releaseRequirement": "foundation-release"}
+}

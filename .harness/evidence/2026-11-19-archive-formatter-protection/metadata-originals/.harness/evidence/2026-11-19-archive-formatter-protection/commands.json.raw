@@ -1,0 +1,45 @@
+{
+  "taskId": "2026-11-19-archive-formatter-protection",
+  "repo": "pantheon-base",
+  "agent": {
+    "tool": "codex",
+    "adapter": "Primary scoped config implementer; independent native code-reviewer and architect"
+  },
+  "commands": [
+    {
+      "command": "node --test tests/scripts/harness-archive-formatting.test.mjs",
+      "cwd": ".",
+      "status": "passed",
+      "exitCode": 0,
+      "evidence": ".harness/evidence/2026-11-19-archive-formatter-protection/formatter-regression.json",
+      "notes": "Two regressions; explicit Prettier writes and real lint-staged worktree/index checks including an unprotected negative witness."
+    },
+    {
+      "command": "node .local/manual-preview-20261116/verify-archive-formatter-protection-20261119.mjs",
+      "cwd": "../pantheon-ops",
+      "status": "passed",
+      "exitCode": 0,
+      "evidence": "../pantheon-ops/.harness/evidence/2026-11-17-ops-history-audit/continuation-history-formatter-20261119-recovered-nine.json",
+      "notes": "All nine recovered originals remain byte-identical under the Base ignore in an isolated fixture; current Ops originals and official lock unchanged."
+    }
+  ],
+  "knownGaps": [
+    "Base fix is local source, not an official foundation publication; Ops remains on v0.18.9 without default archive protection until formal consumption.",
+    "Independent review and scoped governance closeout pending.",
+    "Existing Ops task/evidence/review/link governance debt and all ten original business-package acceptances remain open.",
+    "Two historic archive EOF whitespace findings are preserved with original bytes; no archive formatting waiver or rewrite."
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-11-19-archive-formatter-protection/manifest.json",
+    "taskDoc": "docs/harness/tasks/2026-11-19-archive-formatter-protection.task.md",
+    "evidenceDir": ".harness/evidence/2026-11-19-archive-formatter-protection/",
+    "reviewFile": ".harness/evidence/2026-11-19-archive-formatter-protection/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".harness/tasks/2026-11-19-archive-formatter-protection/plan.md"
+    ]
+  },
+  "recordedAtUTC": "2026-11-19 00:41:14 UTC",
+  "wholeProjectAccepted": false,
+  "downstreamAdopted": false
+}

@@ -1,0 +1,45 @@
+{
+  "capturedAt": "2026-11-17T05:31:52.275Z",
+  "files": [
+    {
+      "path": "backend/pkg/contracts/business_runtime_settings.go",
+      "sha256": "1d4dffdb2197a523d665d1173e0276958df52e4671ae3b6506615d35c201305e"
+    },
+    {
+      "path": "backend/pkg/contracts/business_runtime_settings_test.go",
+      "sha256": "6537b2bfc64013b570512a4cd3f43c2c5b60a64438e7599badb49d3c171cbbf6"
+    },
+    {
+      "path": "backend/modules/system/config/setting/business_runtime_settings.go",
+      "sha256": "c696a4c8bdd8f7d6aa818c922a73f48df19cf81a172925ae54334c4ad0d3eb7b"
+    },
+    {
+      "path": "backend/modules/system/config/setting/business_runtime_settings_test.go",
+      "sha256": "4ad44eb38e37dfda399adcbee72af758b50ab2c2862596186fefa434e35d0317"
+    },
+    {
+      "path": "backend/modules/system/business_runtime_settings.go",
+      "sha256": "84c215443ac7439e6994075da45b92673e8ee6c9b07f52a64b2cd8def5aadaf9"
+    },
+    {
+      "path": "backend/modules/system/business_runtime_settings_test.go",
+      "sha256": "1507102e8d8e9053445969ad052e40510fc8c7658a7cb74ed7292e2f655a36bf"
+    },
+    {
+      "path": "backend/modules/system/system.go",
+      "sha256": "fa8836ac32bdbbeb63f29d48cb21aab23746d52ed9e3d281e107c86414c142e2"
+    },
+    {
+      "path": "backend/modules/system/config/setting/setting_seed.go",
+      "sha256": "f7886caa58b40e9b963454a4f4f3eb140de82bfe9db80f027112f00dc2ebcebe"
+    },
+    {
+      "path": "docs/contracts/SYSTEM_CONFIG_CONTRACT.md",
+      "sha256": "4f015281c33995e716728f2def3f1bb57857273482ec20be23f1f7f0fd3bbaeb"
+    },
+    {
+      "path": "docs/contracts/SYSTEM_CONFIG_CONTRACT.en.md",
+      "sha256": "75ca8518f3668ba610241089e85736a9d5e8339c364dd895580864dac249c317"
+    }
+  ]
+}

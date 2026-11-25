@@ -1,0 +1,17 @@
+{
+  "name": "foundation-tests",
+  "command": [
+    "D:/nodejs/node.exe",
+    "--test",
+    "--test-concurrency=1",
+    "--test-reporter=dot",
+    "tests/scripts/foundation-release/*.test.mjs",
+    "scripts/foundation-release/*.test.mjs"
+  ],
+  "cwd": ".",
+  "startedAt": "2026-11-25T04:53:17.413Z",
+  "durationMs": 47237,
+  "exitCode": 0,
+  "signal": null,
+  "status": "passed"
+}

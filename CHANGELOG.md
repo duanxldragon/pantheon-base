@@ -6,6 +6,14 @@ Pantheon Base 方法追踪记录。方法论本体位于 `pantheon-harness`。
 
 ---
 
+## [pantheon-base-v0.19.0] — 2026-11-25 (release candidate)
+
+- Add optional auth-owned current-owner durable-job authorization and declared business runtime settings with trusted request tenancy, metadata validation and fail-closed mode checks.
+- Repair a reviewed mode-transition window: recheck authoritative tenancy after querying settings; deterministic real-MySQL regression covers both transition directions.
+- Include main's static/parameter business route isolation, reviewed method provenance, archive formatter protection, depguard paths and normalized immutable release naming.
+- Adopt Go 1.26.11 for the existing net/http security fix; resolve hosted Sonar declarations without exclusions or waivers, preserving all SSRF rejection ranges and frontend runtime behavior.
+- Publication requires candidate-bound CI, two independent review perspectives, Full Smoke, Release Gate and four checksum-valid assets. Ops adoption, real S3/provider verification, maintenance freeze and production acceptance remain separate.
+
 ## [pantheon-base-v0.18.9] — 2026-11-16 (OpenTelemetry security patch)
 
 - Upgrade `go.opentelemetry.io/otel`/`otel/sdk`/`otel/trace` (+ `otel/metric`, otlp exporters) v1.45.0 → v1.47.0, closing GHSA-q7gw-24fr-5p69 (`AttributeValueLengthLimit` bypass, CVSS 5.3) via base PR #519; `go mod tidy` prunes unreferenced stale deps (`coreos/go-oidc`, `golang.org/x/oauth2`, `go-jose/go-jose`).

@@ -1,0 +1,14 @@
+{
+  "hashesRecordedAfterTests": true,
+  "preTestHashesCaptured": false,
+  "noAdditionalOwnedSourceEditsSinceTestsByExecutor": true,
+  "files": {
+    "scripts/foundation-release/publish-foundation-release.mjs": "1b72b2874f196262285336835de912c0823d22488b8048452869e534a102d2cc",
+    "tests/scripts/foundation-release/publish-foundation-release.test.mjs": "93bdb5707826a62dfb58bda2f2835bda673fdf9cfbe7e3c905128f2d1a316ac4",
+    "docs/VERSION_MANAGEMENT_GUIDE.md": "a635950f0471f7e21797465cb51ccdf84ad28063d2a047f08e50374365bced70",
+    "docs/designs/FOUNDATION_RELEASE_MODEL.md": "570a755bb7ad4156fb393d2dd0b5f8acbd9520ed39758010429f359427eb47ac",
+    "docs/designs/FOUNDATION_RELEASE_MODEL.en.md": "709e175fdcda54f52ed2995e58f1d43bbe4b8db39196b67e3dd3f35759691872",
+    "docs/release-notes/README.md": "90734a3490fa9a31e46e743fe48afdead2c5d403ea8e2a58d9f39cd61c1af827",
+    "docs/release-notes/README.en.md": "b9c0b7cc30cbefaad9ed35d5bc7ff1ce5814b2d0dfba24642f5119256fcc225c"
+  }
+}

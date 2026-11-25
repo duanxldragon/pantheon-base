@@ -5,8 +5,8 @@
 ## 当前版本与任务
 
 - 工作树产品版本：[VERSION](../VERSION)；正式发行看 [GitHub Releases](https://github.com/duanxldragon/pantheon-base/releases/latest) 与对应发行证据。11/13 的发行/消费结论属于历史候选。
-- 本地 workspace 另有 Ops completion contracts、release naming、business runtime settings、archive formatter protection 在途任务；仅存在于本地的 manifest 不随本 PR 提交，当前已跟踪任务见索引。
-- 底座产品实现由其他任务推进；验证须绑定实际候选，不能以旧发行测试代签。
+- 当前正在整合与发行 v0.19.0：持久任务实时授权、业务运行设置、发布命名、归档格式保护与边界检查修复；进度及候选验证见 [发行任务 evidence](./evidence/2026-11-25-foundation-0190-release/summary.md)。
+- 验证须绑定实际候选，不能以旧发行测试代签；正式发行以 GitHub Release 和四个不可变资产为准。
 - Ops 实际消费以其 foundation-release.lock.json 为准。共享产品修改仍需 Base 正式发行与 Ops 重建；方法 policy receipt 不改变该边界。
 
 ## 开放验收与后续

@@ -1,0 +1,13 @@
+{
+  "name": "task-template",
+  "command": [
+    "D:/nodejs/node.exe",
+    "scripts/check-task-packet-template.mjs"
+  ],
+  "cwd": ".",
+  "startedAt": "2026-11-25T05:14:01.012Z",
+  "durationMs": 81,
+  "exitCode": 0,
+  "signal": null,
+  "status": "passed"
+}

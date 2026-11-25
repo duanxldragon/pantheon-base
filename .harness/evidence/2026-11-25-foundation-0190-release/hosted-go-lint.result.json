@@ -1,0 +1,22 @@
+{
+  "name": "hosted-go-lint",
+  "command": [
+    "D:/Go/bin/golangci-lint.exe",
+    "run",
+    "--new-from-rev=605be5cdd81d912a0aca37d8fbe8c731d9021b7b",
+    "./..."
+  ],
+  "cwd": "backend",
+  "startedAt": "2026-11-25T05:30:31.306Z",
+  "durationMs": 2457,
+  "exitCode": 5,
+  "signal": null,
+  "status": "failed",
+  "fixture": {
+    "mysql": "isolated databases on 127.0.0.1:33321",
+    "redis": "127.0.0.1:26395",
+    "observabilityRedis": "127.0.0.1:26394",
+    "cgo": "1",
+    "toolchain": "D:/msys64/mingw64/bin"
+  }
+}

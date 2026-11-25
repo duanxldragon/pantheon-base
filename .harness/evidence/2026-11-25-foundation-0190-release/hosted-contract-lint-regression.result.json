@@ -1,0 +1,25 @@
+{
+  "name": "hosted-contract-lint-regression",
+  "command": [
+    "D:/Go/bin/go.exe",
+    "test",
+    "-race",
+    "-p=1",
+    "-mod=readonly",
+    "-count=1",
+    "./pkg/contracts"
+  ],
+  "cwd": "backend",
+  "startedAt": "2026-11-25T05:30:10.280Z",
+  "durationMs": 12196,
+  "exitCode": 0,
+  "signal": null,
+  "status": "passed",
+  "fixture": {
+    "mysql": "isolated databases on 127.0.0.1:33321",
+    "redis": "127.0.0.1:26395",
+    "observabilityRedis": "127.0.0.1:26394",
+    "cgo": "1",
+    "toolchain": "D:/msys64/mingw64/bin"
+  }
+}

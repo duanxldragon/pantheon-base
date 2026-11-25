@@ -1,0 +1,36 @@
+{
+  "results": [
+    {
+      "name": "base-docs",
+      "chunk_id": "6916cd",
+      "wall_time_seconds": 0.7412862,
+      "exit_code": 0,
+      "original_token_count": 97,
+      "output": "Frontmatter check passed. Checked 474 docs, 351 with frontmatter, 123 without (informational, not enforced).\nEnforced directories: docs/superpowers/specs/, docs/archive/examples/, docs/archive/baselines/, docs/archive/upgrade/ — 5 doc(s) must carry frontmatter.\nActive docs past the 90-day review window: 112 (informational, not enforced — see DOCUMENT_METADATA_AND_STATUS §6.5).\n"
+    },
+    {
+      "name": "base-packet",
+      "chunk_id": "a0e781",
+      "wall_time_seconds": 0.4435371,
+      "exit_code": 1,
+      "original_token_count": 104,
+      "output": "{\n  \"results\": [\n    {\n      \"file\": \"docs/harness/tasks/2026-11-14-release-naming-normalization.task.md\",\n      \"errors\": [\n        \"taskManifest.structuralScope.affectedSubgraph must be an array of strings.\\ntaskManifest.structuralScope.graphFocus must be an array of strings.\"\n      ],\n      \"warnings\": []\n    }\n  ],\n  \"errorCount\": 1,\n  \"warningCount\": 0,\n  \"legacySkippedCount\": 0,\n  \"legacyConfig\": null\n}\n"
+    },
+    {
+      "name": "base-evidence",
+      "chunk_id": "6f76b4",
+      "wall_time_seconds": 0.4629971,
+      "exit_code": 1,
+      "original_token_count": 108,
+      "output": "{\n  \"mode\": \"strict\",\n  \"fileCount\": 1,\n  \"errorCount\": 2,\n  \"warningCount\": 0,\n  \"historicalErrorCount\": 0,\n  \"currentSchemaFrom\": \"2026-10-26\",\n  \"results\": [\n    {\n      \"file\": \".harness/evidence/2026-11-14-release-naming-normalization/commands.json\",\n      \"errors\": [\n        \"root.knownGaps must be an array.\",\n        \"root.linkage must be an object.\"\n      ],\n      \"warnings\": [],\n      \"historicalErrors\": []\n    }\n  ]\n}\n"
+    },
+    {
+      "name": "base-review",
+      "chunk_id": "3974a5",
+      "wall_time_seconds": 0.4260754,
+      "exit_code": 1,
+      "original_token_count": 125,
+      "output": "{\n  \"mode\": \"strict\",\n  \"fileCount\": 1,\n  \"errorCount\": 2,\n  \"results\": [\n    {\n      \"file\": \".harness/evidence/2026-11-14-release-naming-normalization/review.md\",\n      \"errors\": [\n        \"root.verdict must be one of: approved, changes requested, blocked, approved with documented P2 follow-up.\",\n        \"taskManifest.structuralScope.affectedSubgraph must be an array of strings.\\ntaskManifest.structuralScope.graphFocus must be an array of strings.\"\n      ],\n      \"warnings\": []\n    }\n  ]\n}\n"
+    }
+  ]
+}

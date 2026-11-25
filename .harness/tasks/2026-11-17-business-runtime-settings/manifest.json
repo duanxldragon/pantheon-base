@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "taskId": "2026-11-17-business-runtime-settings",
+  "title": "Provide owned business runtime setting declarations and request-scoped reader",
+  "status": "in-progress",
+  "deliveryTier": "L2",
+  "primaryLayer": "system/config",
+  "runtimeSensitive": true,
+  "taskDoc": "docs/harness/tasks/2026-11-17-business-runtime-settings.task.md",
+  "qualityProfiles": [
+    "runtime-quality",
+    "architecture-fitness"
+  ],
+  "scope": {
+    "in": [
+      "Startup-owned nonpublic unencrypted business settings and system supplier",
+      "Required startup and tenant/metadata regressions"
+    ],
+    "out": [
+      "Official publication/production/Ops lock replacement",
+      "Business resource tenant migration",
+      "Unrelated existing edits"
+    ]
+  },
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-11-17-business-runtime-settings/manifest.json",
+    "taskDoc": "docs/harness/tasks/2026-11-17-business-runtime-settings.task.md",
+    "evidenceDir": ".harness/evidence/2026-11-17-business-runtime-settings/",
+    "reviewFile": ".harness/evidence/2026-11-17-business-runtime-settings/review.md",
+    "changeRef": "none",
+    "planRefs": [
+      ".harness/tasks/2026-11-17-business-runtime-settings/plan.md",
+      "../pantheon-ops/.harness/tasks/2026-07-17-cmdb-ssh-config-externalize/manifest.json"
+    ]
+  },
+  "acceptanceCriteria": [
+    "Deterministic startup declarations reject duplicate/foreign keys",
+    "Atomic defaults preserve operator values and reject incompatible metadata",
+    "Per-request trusted tenant snapshot and strict current mode, no secret read",
+    "Both startup modes stop on business settings preparation failures",
+    "Targeted required MySQL CGO race/vet and independent final review",
+    "Official release/downstream and whole-project gates explicit"
+  ],
+  "verificationPlan": {
+    "commands": [
+      "Windows CGO race scoped contracts/setting/system packages with required isolated MySQL",
+      "go vet scoped packages"
+    ],
+    "runtimeEvidence": [
+      "Real MySQL default/override/concurrent/bootstrap rollback matrix"
+    ]
+  },
+  "executionRoles": {
+    "implementerPosture": "Primary Codex as Base Generator owns scoped code and tests.",
+    "reviewerPosture": [
+      "Independent Architect design WATCH with acceptance conditions",
+      "Independent code-reviewer before closeout"
+    ]
+  },
+  "humanGates": [
+    "Official release and final product/production acceptance"
+  ],
+  "workspaceContext": {
+    "targetRepository": "pantheon-base",
+    "repositoryRole": "foundation-source",
+    "contextSyncExpectation": "required",
+    "releaseRequirement": "foundation-release"
+  },
+  "goal": "Provide startup-owned ordinary business configuration defaults and a request-bound system supplier without business imports of system repositories."
+}

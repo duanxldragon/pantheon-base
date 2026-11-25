@@ -1,0 +1,20 @@
+{
+  "command": "node --test tests/scripts/foundation-release/publish-foundation-release.test.mjs",
+  "exitCode": 0,
+  "toolChunkIds": [
+    "db90b0"
+  ],
+  "toolCallWallTimeSeconds": 0.5870761,
+  "durationMsReportedByNode": 191.86,
+  "tests": 11,
+  "passed": 11,
+  "failed": 0,
+  "skipped": 0,
+  "stdoutArtifact": "focused-publisher.stdout.txt",
+  "stdoutArtifactCoverage": "Complete returned test stdout copied from preserved tool transcript; no original on-disk log was captured.",
+  "cwd": "D:/workspace/go/pantheon-platform/pantheon-base",
+  "source": "preserved functions.exec/exec_command or write_stdin tool response transcript",
+  "receiptCapturedAtUTC": "2026-11-14T01:25:11.327321+00:00",
+  "testsRerunToProduceReceipt": false,
+  "stdoutSHA256": "94b483575d63a20739c6d456a1d4f4aa27b541934faf1a435d9e95436444bcb8"
+}

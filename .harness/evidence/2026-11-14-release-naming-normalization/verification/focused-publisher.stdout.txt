@@ -1,0 +1,19 @@
+✔ buildGitHubReleaseBody combines release notes, upgrade notes, and consumer impact (1.6601ms)
+✔ buildGitHubReleaseTitle identifies the product and preserves canonical version identity (0.9316ms)
+✔ buildGitHubReleaseTitle rejects legacy and malformed tags instead of promoting them (0.9036ms)
+✔ release create arguments preserve notes and classify prereleases separately from stable releases (0.4461ms)
+✔ release body title stripping keeps section content only (2.03ms)
+✔ validateReleaseBodySections rejects placeholder content (8.141ms)
+✔ validateReleaseBodySections accepts non-placeholder content (5.2804ms)
+✔ validatePublishCandidate binds the release tag to the manifest commit (0.4492ms)
+✔ validateReleaseGateCheckRuns fails closed unless the latest gate succeeded (39.7051ms)
+✔ GitHub release lookup only treats an explicit not-found response as absent (0.4383ms)
+✔ validateReleaseAssetChecksum rejects stale or malformed release checksums (4.6053ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 11
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 191.86

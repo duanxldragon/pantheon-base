@@ -1,0 +1,15 @@
+✖ scripts\foundation-release\candidate-artifact.test.mjs (11.0171ms)
+✖ tests\scripts\foundation-release\build-release-bundle.test.mjs (8.416ms)
+✖ tests\scripts\foundation-release\build-release-manifest.test.mjs (7.4487ms)
+✖ tests\scripts\foundation-release\check-release-assets.test.mjs (6.5585ms)
+✖ tests\scripts\foundation-release\check-release-secrets.test.mjs (5.727ms)
+✖ tests\scripts\foundation-release\cut-foundation-release.test.mjs (4.1686ms)
+✖ tests\scripts\foundation-release\publish-foundation-release.test.mjs (3.3212ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 0
+ℹ fail 7
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 24.5948

@@ -1,0 +1,5 @@
+{
+  "exitCode": 1,
+  "stdout": "{\n  \"results\": [\n    {\n      \"file\": \"docs/harness/tasks/2026-11-17-business-runtime-settings.task.md\",\n      \"errors\": [\n        \"taskManifest.goal must be a non-empty string.\"\n      ],\n      \"warnings\": [\n        \"Linked review file does not exist: .harness/evidence/2026-11-17-business-runtime-settings/review.md\"\n      ]\n    }\n  ],\n  \"errorCount\": 1,\n  \"warningCount\": 1,\n  \"legacySkippedCount\": 0,\n  \"legacyConfig\": null\n}\n",
+  "stderr": ""
+}

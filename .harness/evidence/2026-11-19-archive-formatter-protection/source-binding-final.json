@@ -1,0 +1,60 @@
+{
+  "taskId": "2026-11-19-archive-formatter-protection",
+  "recordedAtUTC": "2026-11-19T00:50:40.499Z",
+  "finalSources": [
+    {
+      "file": ".prettierignore",
+      "reviewedSHA256": "e0a85208aee1dc01824062f70edb81292c45f2dbe2262f43e85ca836a23bbc56",
+      "finalSHA256": "e0a85208aee1dc01824062f70edb81292c45f2dbe2262f43e85ca836a23bbc56"
+    },
+    {
+      "file": "tests/scripts/harness-archive-formatting.test.mjs",
+      "reviewedSHA256": "bef79f37e48d092ea0220c2039db54117ca7c6becfc08d4303fe235718658593",
+      "finalSHA256": "bef79f37e48d092ea0220c2039db54117ca7c6becfc08d4303fe235718658593"
+    },
+    {
+      "file": "docs/harness/PANTHEON_BASE_DELIVERY_WORKFLOW.md",
+      "reviewedSHA256": "2093742454e269fa47384a85f1e04f2848ddf014db5ae1c70f24bddaccbe0e3e",
+      "finalSHA256": "2093742454e269fa47384a85f1e04f2848ddf014db5ae1c70f24bddaccbe0e3e"
+    },
+    {
+      "file": "docs/harness/PANTHEON_BASE_DELIVERY_WORKFLOW.en.md",
+      "reviewedSHA256": "4ee90eb25e8281e0f4150666debcb5976a5bab0f6719d32fb540b9912d597f59",
+      "finalSHA256": "4ee90eb25e8281e0f4150666debcb5976a5bab0f6719d32fb540b9912d597f59"
+    },
+    {
+      "file": "docs/harness/tasks/2026-11-19-archive-formatter-protection.task.md",
+      "reviewedSHA256": "8e8cb27733743e309b76212507d23da0821f432031d7b716f897980bb8077cd0",
+      "finalSHA256": "d85c28a67827419598c10f162f60e384e04e9fde12f07e974782b7c4bf0434d1"
+    },
+    {
+      "file": ".harness/tasks/2026-11-19-archive-formatter-protection/manifest.json",
+      "reviewedSHA256": "77b757e244d9ebd19d628e0d4cfabdbac3532f8c4c8d1fae8a8da2fa5aeb7289",
+      "finalSHA256": "77b757e244d9ebd19d628e0d4cfabdbac3532f8c4c8d1fae8a8da2fa5aeb7289"
+    },
+    {
+      "file": ".harness/tasks/2026-11-19-archive-formatter-protection/plan.md",
+      "reviewedSHA256": "6dc1124ea2e5ccfeeab04947ab8739c7c297bb56045a6a8bb1fdfbc909853e1b",
+      "finalSHA256": "6dc1124ea2e5ccfeeab04947ab8739c7c297bb56045a6a8bb1fdfbc909853e1b"
+    },
+    {
+      "file": ".harness/evidence/2026-11-19-archive-formatter-protection/formatter-regression.json",
+      "reviewedSHA256": "62b1f412efb0b3dcdefa708adc893788960672d72b107388ac732019345bb50b",
+      "finalSHA256": "62b1f412efb0b3dcdefa708adc893788960672d72b107388ac732019345bb50b"
+    },
+    {
+      "file": ".harness/evidence/2026-11-19-archive-formatter-protection/formatter-regression.log",
+      "reviewedSHA256": "0e336c231133b3f5afefd89f591069b7f744818c07154cc7d557e40c30ec613d",
+      "finalSHA256": "0e336c231133b3f5afefd89f591069b7f744818c07154cc7d557e40c30ec613d"
+    }
+  ],
+  "metadataOnlyChanges": "Task checklist closed after independent reports; Primary Layer corrected to the exact platform enum and explanation kept in Dependency Layers. Reviewed original retained; formatter/test/rule files unchanged.",
+  "coreSourcesUnchanged": true,
+  "governance": {
+    "file": "D:\\workspace\\go\\pantheon-platform\\pantheon-base\\.harness\\evidence\\2026-11-19-archive-formatter-protection\\governance-final.json",
+    "sha256": "ca57f32b0cfdc357aa49c1ca2c87977fbed6c95080e51ea6599e0843e83710d3"
+  },
+  "codeRecommendation": "COMMENT",
+  "architectureStatus": "CLEAR",
+  "downstreamAdopted": false
+}

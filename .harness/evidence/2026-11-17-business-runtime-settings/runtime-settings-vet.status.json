@@ -1,0 +1,12 @@
+{
+  "command": "go vet ./pkg/contracts ./modules/system/config/setting ./modules/system",
+  "cwd": "backend",
+  "exitCode": 0,
+  "stdout": "",
+  "stderr": "",
+  "capturedFrom": "exec_command terminal result",
+  "chunkId": "580f8c",
+  "emptyLogSavedFromCapturedOutput": true,
+  "note": "PowerShell Tee-Object creates no file for empty output. This zero-byte log is the actual captured empty stdout, not a claim of another execution.",
+  "afterReservedNamespaceFix": false
+}

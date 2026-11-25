@@ -1,0 +1,15 @@
+{
+  "name": "frontend-unit-correct",
+  "command": [
+    "D:/nodejs/node.exe",
+    "D:/nodejs/node_modules/npm/bin/npm-cli.js",
+    "run",
+    "test:unit"
+  ],
+  "cwd": "frontend",
+  "startedAt": "2026-11-25T05:10:53.343Z",
+  "durationMs": 1156,
+  "exitCode": 1,
+  "signal": null,
+  "status": "failed"
+}

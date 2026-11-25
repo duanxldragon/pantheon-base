@@ -1,0 +1,17 @@
+{
+  "taskId": "2026-11-19-archive-formatter-protection",
+  "recordedAtUTC": "2026-11-19 00:41:14 UTC",
+  "command": "node --test tests/scripts/harness-archive-formatting.test.mjs",
+  "cwd": "pantheon-base",
+  "exitCode": 0,
+  "passed": true,
+  "testsPassed": 2,
+  "testsSkipped": 0,
+  "scope": [
+    "Explicit Prettier writes preserve four archive Markdown layouts and archive JSON",
+    "Normal lint-staged configuration: negative defect witness, protected worktree/index, active Markdown formatted"
+  ],
+  "outputFile": ".harness/evidence/2026-11-19-archive-formatter-protection/formatter-regression.log",
+  "downstreamAdopted": false,
+  "wholeProjectAccepted": false
+}

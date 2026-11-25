@@ -16,16 +16,28 @@ const PLACEHOLDER_RELEASE_TEXTS = new Set([
 ]);
 
 export function buildGitHubReleaseTitle(releaseVersion) {
-  const normalizedReleaseVersion = String(releaseVersion ?? '').trim();
-  if (!normalizedReleaseVersion) {
-    throw new Error('releaseVersion is required to build GitHub release title');
+  validateReleaseIdentity(releaseVersion);
+  return `Pantheon Base ${String(releaseVersion).slice('pantheon-base-'.length)}`;
+}
+
+export function buildGitHubReleaseCreateArgs({ releaseVersion, repoFullName, targetCommit, notes }) {
+  const args = [
+    'release',
+    'create',
+    releaseVersion,
+    '--repo',
+    repoFullName,
+    '--target',
+    targetCommit,
+    '--title',
+    buildGitHubReleaseTitle(releaseVersion),
+    '--notes',
+    notes,
+  ];
+  if (/-(?:alpha|beta|rc)\.\d+$/u.test(releaseVersion)) {
+    args.push('--prerelease', '--latest=false');
   }
-  const shortVersionMatch = normalizedReleaseVersion.match(/(?:^|-)v\d+\.\d+\.\d+(?:-(?:rc|beta|alpha)\.\d+)?$/u);
-  if (shortVersionMatch) {
-    const matched = shortVersionMatch[0];
-    return matched.startsWith('v') ? matched : matched.slice(1);
-  }
-  return normalizedReleaseVersion;
+  return args;
 }
 
 function printHelp() {
@@ -292,22 +304,10 @@ function checkGitHubReleaseExists(root, repoFullName, tagName) {
   }
 }
 
-function createGitHubRelease(root, repoFullName, tagName, releaseTitle, targetCommit, notes) {
+function createGitHubRelease(root, tagName, args) {
   runCommand(
     'gh',
-    [
-      'release',
-      'create',
-      tagName,
-      '--repo',
-      repoFullName,
-      '--target',
-      targetCommit,
-      '--title',
-      releaseTitle,
-      '--notes',
-      notes,
-    ],
+    args,
     `gh release create ${tagName}`,
     { cwd: root },
   );
@@ -368,6 +368,12 @@ export function publishFoundationRelease(options) {
     upgradeNotes,
     consumerImpact,
   });
+  const createReleaseArgs = buildGitHubReleaseCreateArgs({
+    releaseVersion: tagName,
+    repoFullName,
+    targetCommit,
+    notes: releaseBody,
+  });
   const tagExists = checkTagExists(root, tagName);
   const existingTagTarget = tagExists ? resolveTagTargetCommit(root, tagName) : null;
   if (tagExists && existingTagTarget !== targetCommit) {
@@ -403,18 +409,7 @@ export function publishFoundationRelease(options) {
     releaseTitle,
     repoFullName,
     targetCommit,
-    command: [
-      'gh',
-      'release',
-      'create',
-      tagName,
-      '--repo',
-      repoFullName,
-      '--target',
-      targetCommit,
-      '--title',
-      releaseTitle,
-    ],
+    command: ['gh', ...createReleaseArgs],
   });
   operations.push({
     type: 'upload-github-release-assets',
@@ -449,7 +444,7 @@ export function publishFoundationRelease(options) {
     pushTag(root, options.remote, tagName);
   }
 
-  createGitHubRelease(root, repoFullName, tagName, releaseTitle, targetCommit, releaseBody);
+  createGitHubRelease(root, tagName, createReleaseArgs);
   uploadGitHubReleaseAssets(root, repoFullName, tagName, assetPaths);
 
   return {

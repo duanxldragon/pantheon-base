@@ -1,0 +1,64 @@
+{
+  "schemaVersion": 1,
+  "taskId": "2026-11-24-golangci-depguard-boundary-paths",
+  "title": "depguard 边界规则包路径与实际 module 路径对齐",
+  "goal": "让 backend/.golangci.yml 的 business-boundary depguard 规则匹配真实 Go module 路径，并以回归测试防止再次退化为空转规则；为 Ops 通过 foundation release 消费该修复准备唯一来源。",
+  "status": "completed",
+  "deliveryTier": "L2",
+  "primaryLayer": "platform",
+  "runtimeSensitive": false,
+  "taskDoc": "docs/harness/tasks/2026-11-24-golangci-depguard-boundary-paths.task.md",
+  "scope": {
+    "in": [
+      "backend/.golangci.yml 三条 deny pkg 改为真实 module 前缀",
+      "新增 tests/scripts/golangci-depguard-paths.test.mjs 锁定 deny 路径与 backend/go.mod 一致并覆盖 system/auth/platform",
+      "用临时探针包证明规则修复前不生效、修复后生效，随后删除探针"
+    ],
+    "out": [
+      "scripts/harness/check-boundaries.mjs 规则与基线",
+      "业务代码、system 域实现、权限/菜单/i18n/schema/seed",
+      "Ops 侧 backend/.golangci.yml 消费（须经正式 foundation release 与重建）",
+      "正式发布、版本号、release 资产与下游 lock"
+    ]
+  },
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-11-24-golangci-depguard-boundary-paths/manifest.json",
+    "taskDoc": "docs/harness/tasks/2026-11-24-golangci-depguard-boundary-paths.task.md",
+    "evidenceDir": ".harness/evidence/2026-11-24-golangci-depguard-boundary-paths/",
+    "reviewFile": ".harness/evidence/2026-11-24-golangci-depguard-boundary-paths/review.md",
+    "changeRef": "none",
+    "planRefs": []
+  },
+  "verificationPlan": {
+    "commands": [
+      "node --test tests/scripts/golangci-depguard-paths.test.mjs",
+      "golangci-lint run ./modules/business/zz_depguard_probe/...",
+      "golangci-lint run ./modules/business/..."
+    ],
+    "commandWorkingDirectories": {
+      "node --test tests/scripts/golangci-depguard-paths.test.mjs": ".",
+      "golangci-lint run ./modules/business/zz_depguard_probe/...": "backend",
+      "golangci-lint run ./modules/business/...": "backend"
+    }
+  },
+  "executionRoles": {
+    "implementerPosture": "Primary agent owns the repository lint config, the regression test and the probe-based before/after proof.",
+    "reviewerPosture": [
+      "primary agent self-review",
+      "independent review not run on this candidate"
+    ]
+  },
+  "humanGates": [
+    "Formal foundation release publication, version bump, release assets and downstream lock update",
+    "Ops consumption verification after the new release"
+  ],
+  "workspaceContext": {
+    "targetRepository": "pantheon-base",
+    "repositoryRole": "foundation-source",
+    "contextSyncExpectation": "deferred",
+    "releaseRequirement": "foundation-release"
+  },
+  "parentTask": null,
+  "findingRefs": ["B-02"],
+  "sourceReview": "pantheon-gpt-综合审查最终报告-2026-11-24.md §3.2"
+}

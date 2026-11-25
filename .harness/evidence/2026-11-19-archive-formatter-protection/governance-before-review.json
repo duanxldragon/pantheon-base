@@ -1,0 +1,8 @@
+{
+  "boundary": "Interim scoped evidence check ran before independent review synthesis existed; its missing review-file failure is retained and will be followed by the final check.",
+  "chunk_id": "37dcc5",
+  "wall_time_seconds": 0.4123316,
+  "exit_code": 1,
+  "original_token_count": 116,
+  "output": "{\n  \"mode\": \"strict\",\n  \"fileCount\": 1,\n  \"errorCount\": 1,\n  \"warningCount\": 0,\n  \"historicalErrorCount\": 0,\n  \"currentSchemaFrom\": \"2026-10-26\",\n  \"results\": [\n    {\n      \"file\": \".harness/evidence/2026-11-19-archive-formatter-protection/commands.json\",\n      \"errors\": [\n        \"root.linkage.reviewFile does not exist: .harness/evidence/2026-11-19-archive-formatter-protection/review.md\"\n      ],\n      \"warnings\": [],\n      \"historicalErrors\": []\n    }\n  ]\n}\n"
+}

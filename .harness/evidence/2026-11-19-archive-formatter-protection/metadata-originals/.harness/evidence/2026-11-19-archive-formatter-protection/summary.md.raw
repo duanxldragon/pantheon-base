@@ -1,0 +1,23 @@
+# Evidence summary
+
+The Base source fix uses the standard root `.prettierignore` to preserve all
+historical task/evidence and preservation snapshots under `.harness/archive/`.
+Two isolated regression tests passed without skips: explicit Prettier writes
+preserve archived Markdown/JSON, and the normal lint-staged package configuration
+preserves archive worktree/index bytes while still formatting active Markdown.
+The same test first demonstrates the original defect without protection.
+
+A separate Ops fixture retained the exact original SHA for all nine recovered
+historical files. Current Ops originals and foundation lock remained unchanged.
+This is a source/fixture validation, not formal release consumption. Ops still
+uses v0.18.9 and remains unprotected by default until a formal Base upgrade.
+
+Independent review and scoped governance closeout are pending. Existing Ops
+whole-repository governance debt, the two original EOF whitespace findings and
+all ten business-package acceptances remain open. Product source did not change;
+no product test or new UI/production evidence is claimed.
+
+See [regression result](./formatter-regression.json), [commands](./commands.json),
+[task plan](../../tasks/2026-11-19-archive-formatter-protection/plan.md) and the
+[Ops nine-file fixture](../../../../pantheon-ops/.harness/evidence/2026-11-17-ops-history-audit/continuation-history-formatter-20261119-recovered-nine.json).
+
