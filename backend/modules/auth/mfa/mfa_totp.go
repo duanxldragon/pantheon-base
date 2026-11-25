@@ -45,7 +45,7 @@ func BuildTOTPURL(username, secret string) string {
 	return "otpauth://totp/" + label + "?" + values.Encode()
 }
 
-func ValidateTOTPCode(secret string, code string, now time.Time) bool {
+func ValidateTOTPCode(secret, code string, now time.Time) bool {
 	normalizedCode := strings.TrimSpace(code)
 	if len(normalizedCode) != totpDigits {
 		return false

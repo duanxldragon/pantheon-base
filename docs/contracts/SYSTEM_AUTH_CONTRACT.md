@@ -11,7 +11,7 @@ related_designs:
   - docs/designs/SSO_OIDC_DESIGN.md
 related_acceptances:
   - docs/acceptances/ACCEPTANCE_CHECKLIST.md
-updated_at: 2026-11-11
+updated_at: 2026-11-24
 ---
 
 # system/auth 合同文档
@@ -48,6 +48,14 @@ English version: [SYSTEM_AUTH_CONTRACT.en.md](./SYSTEM_AUTH_CONTRACT.en.md)
 `status != deleted` 即存在，包括 suspended / archived；租户 0 是隐含的平台 owner，但仍必须核对用户。
 actor 0、nil/cancelled context、nil DB、schema/query 错误均返回固定安全错误及空投影，不能被解释成删除。
 只有 nil error 时的 false 才能用于有界孤儿清理；该投影不提供请求鉴权或访问许可。
+
+### 业务路由授权的静态/参数路由隔离（2026-11-24）
+
+业务路由授权按注册的 route template 与策略路径做结构化比较，不再用实际请求路径交给 `keyMatch2`。
+`:param` 策略段只覆盖 `:param` 路由段：`GET /hosts/:id` 的详情授权不能覆盖 `GET /hosts/export`，
+`GET /hosts/export` 的导出授权也不能覆盖详情路由；尾部 `*` 策略段仍保留显式通配语义。
+权限工作台的覆盖判定与角色 API 策略同步复用同一判定，避免详情授权被误报为覆盖静态同级路由。
+系统域现有 Casbin 匹配语义不变。
 
 它锁定的是认证、会话、安全中心、登录日志和认证策略的职责边界，避免后续再次把 `auth`、`iam`、`org`、`config` 混成一个“大 system 安全杂物间”。
 

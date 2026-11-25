@@ -11,6 +11,7 @@ import (
 	"github.com/duanxldragon/pantheon-base/backend/pkg/tenant"
 	"github.com/duanxldragon/pantheon-base/backend/pkg/testmysql"
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 func businessSettingsDefinitions() []contracts.BusinessSettingDefinition {
@@ -202,6 +203,54 @@ func TestBusinessRuntimeSettingsModeDriftAndCancellation(t *testing.T) {
 			cancel()
 			if _, err := reader.GetByKey("cmdb.ssh.collect_timeout"); !errors.Is(err, context.Canceled) {
 				t.Fatalf("cancellation ignored: %v", err)
+			}
+		})
+	}
+}
+
+func TestBusinessRuntimeSettingsModeChangesDuringRead(t *testing.T) {
+	for _, mode := range []string{tenant.ModeCompat, tenant.ModeMulti} {
+		t.Run(mode, func(t *testing.T) {
+			s := businessSettingFixture(t, mode)
+			definitions := businessSettingsDefinitions()
+			if err := s.BootstrapBusinessSettings(definitions); err != nil {
+				t.Fatal(err)
+			}
+			subject, next := "", tenant.ModeMulti
+			if mode == tenant.ModeMulti {
+				subject, next = "101", tenant.ModeCompat
+				seedBusinessOverride(t, s, 101, "15")
+			}
+			reader, err := s.BusinessReaderFor(businessSettingsGin(t, mode, subject), definitions)
+			if err != nil {
+				t.Fatal(err)
+			}
+			flipped := false
+			var transitionErr error
+			const callback = "test:business-settings-mode-drift"
+			if err := s.db.Callback().Query().After("gorm:query").Register(callback, func(tx *gorm.DB) {
+				rows, ok := tx.Statement.Dest.(*[]SystemSetting)
+				if !ok || len(*rows) == 0 || (*rows)[0].SettingKey != definitions[1].Key || flipped {
+					return
+				}
+				flipped = true
+				transitionErr = s.db.Model(&SystemSetting{}).Where("setting_key = ?", tenant.FeatureFlagSettingKey).Update("setting_value", next).Error
+				if transitionErr != nil {
+					tx.AddError(transitionErr)
+				}
+			}); err != nil {
+				t.Fatal(err)
+			}
+			t.Cleanup(func() { s.db.Callback().Query().Remove(callback) })
+			got, err := reader.GetByKey(definitions[1].Key)
+			if !flipped {
+				t.Fatal("mode transition was not exercised during the settings query")
+			}
+			if transitionErr != nil {
+				t.Fatalf("mode transition failed: %v", transitionErr)
+			}
+			if !errors.Is(err, contracts.ErrBusinessSettings) || got != "" {
+				t.Fatalf("mode changed during query: returned %q with error %v", got, err)
 			}
 		})
 	}

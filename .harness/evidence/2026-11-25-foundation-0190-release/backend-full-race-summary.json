@@ -1,0 +1,16 @@
+{
+  "tests": {
+    "pass": 2284,
+    "packages_pass": 50,
+    "skip": 1
+  },
+  "failures": [],
+  "skips": [
+    {
+      "package": "github.com/duanxldragon/pantheon-base/backend/pkg/upload",
+      "test": "TestServiceStoreUsesRealS3WhenConfigured"
+    }
+  ],
+  "rawLogSHA256": "5125751b92049216592363e9b30c3801554622b339127b12bf17923555aafd0d",
+  "rawLogLocalPath": ".local/release-0190-20261125/backend-full-race.log"
+}

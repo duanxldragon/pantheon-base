@@ -12,6 +12,10 @@
     "architecture/methodology/solo-delivery-tiers.md": "e85af4caa95d8d331558a8cbd6db3cbcfa7004247489f190036f91cc101a82e9",
     "architecture/harness/review-loop-spec.md": "34117f83fb7c62981b6e1dac0caffba3188b34e4b9228aa18791f4fd6f9a7dbf"
   },
-  "entrypoints": ["AGENTS.md", "AGENTS.en.md", "CLAUDE.md"],
-  "sourceCommit": "3333391bae752cc098b39895b4cfde56292960de"
+  "entrypoints": [
+    "AGENTS.md",
+    "AGENTS.en.md",
+    "CLAUDE.md"
+  ],
+  "sourceCommit": "51fc783dc793b75ae91bdb936ba1418e2e95a354"
 }

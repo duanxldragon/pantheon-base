@@ -4,7 +4,7 @@ English version: [README.en.md](./README.en.md)
 
 本目录保存历次发布的 `RELEASE_NOTES_vX.Y.Z.md`，自 v0.13.1 起。发布说明随 foundation release 冻结：只追加新版本，不回改历史条目；变更全量记录见 [CHANGELOG.md](../../CHANGELOG.md)，发布流程见 [版本管理指南](../VERSION_MANAGEMENT_GUIDE.md)。
 
-VERSION `0.18.9`：[发行说明](./RELEASE_NOTES_v0.18.9.md) · [GitHub Release 与不可变资产](https://github.com/duanxldragon/pantheon-base/releases/tag/pantheon-base-v0.18.9)。历史 [v0.18.3 候选记录](./RELEASE_NOTES_v0.18.3.md) 保留当时状态，实际发行以不可变 tag 与 GitHub Release 为准。
+VERSION `0.19.0`：[发行说明](./RELEASE_NOTES_v0.19.0.md) · [GitHub Release 与不可变资产](https://github.com/duanxldragon/pantheon-base/releases/tag/pantheon-base-v0.18.9)。历史 [v0.18.3 候选记录](./RELEASE_NOTES_v0.18.3.md) 保留当时状态，实际发行以不可变 tag 与 GitHub Release 为准。
 
 最新正式发行见 [GitHub Releases](https://github.com/duanxldragon/pantheon-base/releases/latest)。准备记录中的状态只代表其原检查点，不替代正式发行或消费证据。
 
@@ -12,6 +12,7 @@ VERSION `0.18.9`：[发行说明](./RELEASE_NOTES_v0.18.9.md) · [GitHub Release
 
 | 版本    | 发布日期   | 发布说明                                                                                           |
 | ------- | ---------- | -------------------------------------------------------------------------------------------------- |
+| v0.19.0 | 2026-11-25 | [RELEASE_NOTES_v0.19.0.md](./RELEASE_NOTES_v0.19.0.md)                                             |
 | v0.18.9 | 2026-11-16 | [RELEASE_NOTES_v0.18.9.md](./RELEASE_NOTES_v0.18.9.md)                                             |
 | v0.18.8 | 2026-11-13 | [RELEASE_NOTES_v0.18.8.md](./RELEASE_NOTES_v0.18.8.md)                                             |
 | v0.18.7 | 2026-11-12 | [RELEASE_NOTES_v0.18.7.md](./RELEASE_NOTES_v0.18.7.md)                                             |

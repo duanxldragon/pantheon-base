@@ -154,7 +154,7 @@ func (r *businessRuntimeSettingReader) GetByKey(key string) (string, error) {
 			return "", contracts.ErrBusinessSettings
 		}
 	}
-	if err := r.ctx.Err(); err != nil {
+	if err := r.checkMode(); err != nil {
 		return "", err
 	}
 	return rows[len(rows)-1].SettingValue, nil

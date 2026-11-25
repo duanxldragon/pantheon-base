@@ -1,0 +1,15 @@
+{
+  "name": "review-gate",
+  "command": [
+    "D:/nodejs/node.exe",
+    "scripts/harness/check-review.mjs",
+    "--strict",
+    ".harness/evidence/2026-11-25-foundation-0190-release/review.md"
+  ],
+  "cwd": ".",
+  "startedAt": "2026-11-25T05:14:01.568Z",
+  "durationMs": 93,
+  "exitCode": 1,
+  "signal": null,
+  "status": "failed"
+}

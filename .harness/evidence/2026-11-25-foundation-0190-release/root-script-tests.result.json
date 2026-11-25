@@ -1,0 +1,16 @@
+{
+  "name": "root-script-tests",
+  "command": [
+    "D:/nodejs/node.exe",
+    "--test",
+    "--test-concurrency=1",
+    "--test-reporter=dot",
+    "tests/scripts/*.test.mjs"
+  ],
+  "cwd": ".",
+  "startedAt": "2026-11-25T04:53:18.348Z",
+  "durationMs": 33748,
+  "exitCode": 0,
+  "signal": null,
+  "status": "passed"
+}

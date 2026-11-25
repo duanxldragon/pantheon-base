@@ -1,0 +1,252 @@
+{
+  "schemaVersion": 1,
+  "taskId": "2026-11-25-foundation-0190-release",
+  "repo": "pantheon-base",
+  "evidenceState": "exercised",
+  "agent": {
+    "tool": "codex",
+    "adapter": "windows"
+  },
+  "candidate": {
+    "branch": "chore/release-foundation-0.19.0-20261125",
+    "originMain": "605be5cdd81d912a0aca37d8fbe8c731d9021b7b",
+    "sourceBindings": ".harness/evidence/2026-11-25-foundation-0190-release/source-bindings.json",
+    "releaseVersion": "pantheon-base-v0.19.0"
+  },
+  "commands": [
+    {
+      "command": "D:/Go/bin/go.exe test -race -p=1 -mod=readonly -count=1 -json ./...",
+      "cwd": "backend",
+      "status": "passed",
+      "exitCode": 0,
+      "durationMs": 1241735,
+      "artifact": ".harness/evidence/2026-11-25-foundation-0190-release/backend-full-race.result.json"
+    },
+    {
+      "command": "D:/nodejs/node.exe scripts/frontmatter-check.mjs",
+      "cwd": ".",
+      "status": "passed",
+      "exitCode": 0,
+      "durationMs": 791,
+      "artifact": ".harness/evidence/2026-11-25-foundation-0190-release/docs-governance.result.json"
+    },
+    {
+      "command": "D:/nodejs/node.exe scripts/harness/check-evidence.mjs --strict .harness/evidence/2026-11-25-foundation-0190-release/commands.json",
+      "cwd": ".",
+      "status": "passed",
+      "exitCode": 0,
+      "durationMs": 93,
+      "artifact": ".harness/evidence/2026-11-25-foundation-0190-release/evidence-gate.result.json"
+    },
+    {
+      "command": "D:/nodejs/node.exe --test --test-concurrency=1 --test-reporter=dot tests/scripts/foundation-release/*.test.mjs scripts/foundation-release/*.test.mjs",
+      "cwd": ".",
+      "status": "passed",
+      "exitCode": 0,
+      "durationMs": 47237,
+      "artifact": ".harness/evidence/2026-11-25-foundation-0190-release/foundation-tests.result.json"
+    },
+    {
+      "command": "D:/nodejs/node.exe D:/nodejs/node_modules/npm/bin/npm-cli.js run build",
+      "cwd": "frontend",
+      "status": "passed",
+      "exitCode": 0,
+      "durationMs": 27358,
+      "artifact": ".harness/evidence/2026-11-25-foundation-0190-release/frontend-build-elevated.result.json"
+    },
+    {
+      "command": "D:/nodejs/node.exe D:/nodejs/node_modules/npm/bin/npm-cli.js run build",
+      "cwd": "frontend",
+      "status": "failed",
+      "exitCode": 1,
+      "durationMs": 22486,
+      "artifact": ".harness/evidence/2026-11-25-foundation-0190-release/frontend-build.result.json"
+    },
+    {
+      "command": "D:/nodejs/node.exe D:/nodejs/node_modules/npm/bin/npm-cli.js run lint",
+      "cwd": "frontend",
+      "status": "passed",
+      "exitCode": 0,
+      "durationMs": 21474,
+      "artifact": ".harness/evidence/2026-11-25-foundation-0190-release/frontend-lint.result.json"
+    },
+    {
+      "command": "D:/nodejs/node.exe D:/nodejs/node_modules/npm/bin/npm-cli.js run test:unit",
+      "cwd": "frontend",
+      "status": "failed",
+      "exitCode": 1,
+      "durationMs": 1156,
+      "artifact": ".harness/evidence/2026-11-25-foundation-0190-release/frontend-unit-correct.result.json"
+    },
+    {
+      "command": "D:/nodejs/node.exe D:/nodejs/node_modules/npm/bin/npm-cli.js run test:unit",
+      "cwd": "frontend",
+      "status": "passed",
+      "exitCode": 0,
+      "durationMs": 23205,
+      "artifact": ".harness/evidence/2026-11-25-foundation-0190-release/frontend-unit-elevated.result.json"
+    },
+    {
+      "command": "D:/nodejs/node.exe D:/nodejs/node_modules/npm/bin/npm-cli.js run test -- --run",
+      "cwd": "frontend",
+      "status": "failed",
+      "exitCode": 1,
+      "durationMs": 378,
+      "artifact": ".harness/evidence/2026-11-25-foundation-0190-release/frontend-unit.result.json"
+    },
+    {
+      "command": "D:/nodejs/node.exe frontend/scripts/cleanup-generated-modules.mjs --check",
+      "cwd": ".",
+      "status": "passed",
+      "exitCode": 0,
+      "durationMs": 234,
+      "artifact": ".harness/evidence/2026-11-25-foundation-0190-release/generated-modules.result.json"
+    },
+    {
+      "command": "D:/Go/bin/go.exe run golang.org/x/vuln/cmd/govulncheck@latest ./...",
+      "cwd": "backend",
+      "status": "passed",
+      "exitCode": 0,
+      "durationMs": 78949,
+      "artifact": ".harness/evidence/2026-11-25-foundation-0190-release/govulncheck.result.json"
+    },
+    {
+      "command": "D:/nodejs/node.exe scripts/harness/check-structure-contract.mjs --root . --strict",
+      "cwd": ".",
+      "status": "passed",
+      "exitCode": 0,
+      "durationMs": 261,
+      "artifact": ".harness/evidence/2026-11-25-foundation-0190-release/harness-scope-gates.result.json"
+    },
+    {
+      "command": "D:/Go/bin/go.exe test -race -p=1 -mod=readonly -count=1 ./modules/system/config/setting ./pkg/security/ssrf -run TestBusinessRuntimeSettings|TestBlockedIPv6Prefixes|TestIsPrivateIP",
+      "cwd": "backend",
+      "status": "passed",
+      "exitCode": 0,
+      "durationMs": 12606,
+      "artifact": ".harness/evidence/2026-11-25-foundation-0190-release/mode-transition-and-ssrf-green.result.json"
+    },
+    {
+      "command": "D:/Go/bin/go.exe test -race -p=1 -mod=readonly -count=1 ./modules/system/config/setting -run TestBusinessRuntimeSettingsModeChangesDuringRead",
+      "cwd": "backend",
+      "status": "passed",
+      "exitCode": 0,
+      "durationMs": 18171,
+      "artifact": ".harness/evidence/2026-11-25-foundation-0190-release/mode-transition-final.result.json"
+    },
+    {
+      "command": "D:/Go/bin/go.exe test -race -p=1 -mod=readonly -count=1 ./modules/system/config/setting ./pkg/security/ssrf -run TestBusinessRuntimeSettings|TestBlockedIPv6Prefixes|TestIsPrivateIP",
+      "cwd": "backend",
+      "status": "failed",
+      "exitCode": 1,
+      "durationMs": 13925,
+      "artifact": ".harness/evidence/2026-11-25-foundation-0190-release/mode-transition-green.result.json"
+    },
+    {
+      "command": "D:/Go/bin/go.exe test -race -p=1 -mod=readonly -count=1 ./modules/system/config/setting -run TestBusinessRuntimeSettingsModeChangesDuringRead",
+      "cwd": "backend",
+      "status": "failed",
+      "exitCode": 1,
+      "durationMs": 15308,
+      "artifact": ".harness/evidence/2026-11-25-foundation-0190-release/mode-transition-red-valid-fixture.result.json"
+    },
+    {
+      "command": "D:/Go/bin/go.exe test -race -p=1 -mod=readonly -count=1 ./modules/system/config/setting -run TestBusinessRuntimeSettingsModeChangesDuringRead",
+      "cwd": "backend",
+      "status": "failed",
+      "exitCode": 1,
+      "durationMs": 13931,
+      "artifact": ".harness/evidence/2026-11-25-foundation-0190-release/mode-transition-red.result.json"
+    },
+    {
+      "command": "D:/Go/bin/go.exe test -race -p=1 -mod=readonly -count=1 ./modules/system/config/setting -run TestBusinessRuntimeSettingsModeChangesDuringRead",
+      "cwd": "backend",
+      "status": "failed",
+      "exitCode": 1,
+      "durationMs": 5780,
+      "artifact": ".harness/evidence/2026-11-25-foundation-0190-release/mode-transition-reproduced.result.json"
+    },
+    {
+      "command": "D:/nodejs/node.exe D:/nodejs/node_modules/npm/bin/npm-cli.js audit --registry=https://registry.npmjs.org --audit-level=high",
+      "cwd": "frontend",
+      "status": "passed",
+      "exitCode": 0,
+      "durationMs": 7358,
+      "artifact": ".harness/evidence/2026-11-25-foundation-0190-release/npm-audit-frontend.result.json"
+    },
+    {
+      "command": "D:/nodejs/node.exe D:/nodejs/node_modules/npm/bin/npm-cli.js audit --registry=https://registry.npmjs.org --audit-level=high",
+      "cwd": ".",
+      "status": "passed",
+      "exitCode": 0,
+      "durationMs": 5244,
+      "artifact": ".harness/evidence/2026-11-25-foundation-0190-release/npm-audit-root.result.json"
+    },
+    {
+      "command": "D:/nodejs/node.exe scripts/harness/check-review.mjs --strict .harness/evidence/2026-11-25-foundation-0190-release/review.md",
+      "cwd": ".",
+      "status": "passed",
+      "exitCode": 0,
+      "durationMs": 95,
+      "artifact": ".harness/evidence/2026-11-25-foundation-0190-release/review-gate-final.result.json"
+    },
+    {
+      "command": "D:/nodejs/node.exe scripts/harness/check-review.mjs --strict .harness/evidence/2026-11-25-foundation-0190-release/review.md",
+      "cwd": ".",
+      "status": "failed",
+      "exitCode": 1,
+      "durationMs": 93,
+      "artifact": ".harness/evidence/2026-11-25-foundation-0190-release/review-gate.result.json"
+    },
+    {
+      "command": "D:/nodejs/node.exe --test --test-concurrency=1 --test-reporter=dot tests/scripts/*.test.mjs",
+      "cwd": ".",
+      "status": "passed",
+      "exitCode": 0,
+      "durationMs": 33748,
+      "artifact": ".harness/evidence/2026-11-25-foundation-0190-release/root-script-tests.result.json"
+    },
+    {
+      "command": "D:/nodejs/node.exe scripts/check-security-patterns.mjs",
+      "cwd": ".",
+      "status": "passed",
+      "exitCode": 0,
+      "durationMs": 18608,
+      "artifact": ".harness/evidence/2026-11-25-foundation-0190-release/security-patterns.result.json"
+    },
+    {
+      "command": "D:/nodejs/node.exe scripts/harness/check-task-packet.mjs docs/harness/tasks/2026-11-25-foundation-0190-release.task.md",
+      "cwd": ".",
+      "status": "passed",
+      "exitCode": 0,
+      "durationMs": 139,
+      "artifact": ".harness/evidence/2026-11-25-foundation-0190-release/task-packet.result.json"
+    },
+    {
+      "command": "D:/nodejs/node.exe scripts/check-task-packet-template.mjs",
+      "cwd": ".",
+      "status": "passed",
+      "exitCode": 0,
+      "durationMs": 81,
+      "artifact": ".harness/evidence/2026-11-25-foundation-0190-release/task-template.result.json"
+    },
+    {
+      "command": "node ../pantheon-harness/scripts/harness/check-method-consumption.mjs --root . --source ../pantheon-harness",
+      "cwd": ".",
+      "status": "passed",
+      "notes": "Reviewed source pin 51fc783d verified after source recovery; intake old local pin failure was not bypassed."
+    }
+  ],
+  "knownGaps": [
+    "Hosted exact-commit CI/Full Smoke/Release Gate and publication pending.",
+    "Ops adoption, real S3, maintenance freeze and production acceptance deferred.",
+    "Pre-existing unrelated Dependabot PRs remain separately owned."
+  ],
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-11-25-foundation-0190-release/manifest.json",
+    "evidenceDir": ".harness/evidence/2026-11-25-foundation-0190-release",
+    "reviewFile": ".harness/evidence/2026-11-25-foundation-0190-release/review.md",
+    "changeRef": "none",
+    "planRefs": []
+  }
+}

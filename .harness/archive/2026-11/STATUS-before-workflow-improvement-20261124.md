@@ -1,9 +1,3 @@
-# 2026-11-24 工作机制改进前的状态快照
-
-正文按当时工作树的字节原样保留（含 2026-11-19 归档保护检查点），本横幅是唯一新增内容。正文中的相对链接以 `.harness/` 为基准（如 `../VERSION`、`./archive/2026-11/...`），迁移到本目录后不再解析；当前入口请用 [STATUS.md](../../STATUS.md) 与 [TASK_INDEX.md](../../TASK_INDEX.md)。Historical wording and links are unchanged.
-
----
-
 # Pantheon Base 当前状态
 
 最后更新：2026-11-13。版本以 [VERSION](../VERSION) 为准，官方发行以 [GitHub Releases](https://github.com/duanxldragon/pantheon-base/releases/latest) 为准。

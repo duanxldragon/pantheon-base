@@ -711,7 +711,7 @@ func DetectOperationLogSourcePage(operURL string) string {
 	}
 }
 
-func DetectOperationLogFailureCategory(status int, errorMsg string, jsonResult string) string {
+func DetectOperationLogFailureCategory(status int, errorMsg, jsonResult string) string {
 	if status != common.OperationStatusFailure {
 		return ""
 	}

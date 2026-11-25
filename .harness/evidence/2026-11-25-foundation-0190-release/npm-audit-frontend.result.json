@@ -1,0 +1,16 @@
+{
+  "name": "npm-audit-frontend",
+  "command": [
+    "D:/nodejs/node.exe",
+    "D:/nodejs/node_modules/npm/bin/npm-cli.js",
+    "audit",
+    "--registry=https://registry.npmjs.org",
+    "--audit-level=high"
+  ],
+  "cwd": "frontend",
+  "startedAt": "2026-11-25T05:14:01.124Z",
+  "durationMs": 7358,
+  "exitCode": 0,
+  "signal": null,
+  "status": "passed"
+}

@@ -82,15 +82,15 @@ func saveCasbinPolicySection(tx *gorm.DB, ptypes model.AssertionMap) error {
 	return nil
 }
 
-func (a *GormCasbinAdapter) AddPolicy(_ string, ptype string, rule []string) error {
+func (a *GormCasbinAdapter) AddPolicy(_, ptype string, rule []string) error {
 	return a.db.Create(newCasbinRule(ptype, rule)).Error
 }
 
-func (a *GormCasbinAdapter) RemovePolicy(_ string, ptype string, rule []string) error {
+func (a *GormCasbinAdapter) RemovePolicy(_, ptype string, rule []string) error {
 	return a.db.Where(ruleFilter(ptype, rule)).Delete(&CasbinRule{}).Error
 }
 
-func (a *GormCasbinAdapter) RemoveFilteredPolicy(_ string, ptype string, fieldIndex int, fieldValues ...string) error {
+func (a *GormCasbinAdapter) RemoveFilteredPolicy(_, ptype string, fieldIndex int, fieldValues ...string) error {
 	query := a.db.Where("ptype = ?", ptype)
 	for offset, value := range fieldValues {
 		if value == "" {
