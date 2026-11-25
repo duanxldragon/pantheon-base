@@ -1,13 +1,18 @@
 ## 变更摘要
 
 - 改动层级: platform / system/auth / system/config / shared contracts
+- 改动模块: durable job authorization, owned runtime settings, release/governance, Sonar declarations
 - 目标问题: Unpushed Foundation capabilities and release blockers must reach an immutable, verified release.
+- 预期影响: Compatible optional business ports, fail-closed mode transitions, effective engineering checks and v0.19.0 release preparation.
 
 ## Harness 链路
 
 - Task ID: 2026-11-25-foundation-0190-release
+- Task Manifest: .harness/tasks/2026-11-25-foundation-0190-release/manifest.json
 - Evidence: .harness/evidence/2026-11-25-foundation-0190-release/commands.json
+- Verification evidence: .harness/evidence/2026-11-25-foundation-0190-release/summary.md
 - Review Artifact: .harness/evidence/2026-11-25-foundation-0190-release/review.md
+- OpenSpec change: none
 - Trivial change: no
 - Quality Profile: auth-security
 - Ratchet Decision: sensor-added
@@ -18,11 +23,17 @@
 > 保留本区块的英文 marker，供 `scripts/harness/check-adoption.mjs` 做机械检查。
 
 - task id: 2026-11-25-foundation-0190-release
+- task manifest: .harness/tasks/2026-11-25-foundation-0190-release/manifest.json
 - evidence: .harness/evidence/2026-11-25-foundation-0190-release/commands.json
+- boundaries: Auth owns fresh durable grants; config owns declarations/tenant reads; business consumers opt in through shared contracts.
 - backend response contract: No existing response shape changed
+- backend DTO contract: Private optional durable-job input contract
 - permission contract: Current-owner authorization and exact registered action; no session or cached fallback
+- audit coverage: Existing audit behavior retained; full configured backend verification
 - visual evidence: Type declarations only; no JSX/CSS/layout change. Full Smoke is required on the release commit.
+- inheritance contract: Official Foundation assets; Ops fetch/rebuild adoption deferred
 - base drift: Base-first; no shared source manually copied into Ops
+- Base/ops inheritance: New v0.19.0 release; Ops lock remains separately owned
 
 ## 边界说明
 
@@ -53,9 +64,13 @@
 
 - Copilot review: unavailable; two independent native source reviews recorded
 - CodeQL 结果: Hosted scan required before merge; current source reviewed
+- GitHub checks 结果: Pending new PR checks; merge only after all required gates pass
 - Auto-merge: not-enabled; user-authorized squash after gates and feedback closure
 - Duplication Gate 结果: Hosted result required before merge
+- 是否高风险改动: yes; auth/config shared contracts and release, independently reviewed
 - Residual risk / follow-up: Ops adoption, real S3, maintenance freeze and production acceptance deferred; unrelated Dependabot PRs retained
+
+## 检查清单
 
 - [ ] 已明确本次改动归属 `platform`、`system/auth`、`system/iam`、`system/org`、`system/config` 或 `business/*`
 - [ ] 未把认证、IAM、组织、配置等系统域职责混写

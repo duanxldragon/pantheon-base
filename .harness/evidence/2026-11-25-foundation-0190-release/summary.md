@@ -10,10 +10,9 @@ User authorized commit, PR, CI and release. Ops tree/lock adoption is a separate
 ## Current checkpoint
 
 Passed receipts: backend-full-race, docs-governance, evidence-gate, foundation-tests, frontend-build-elevated, frontend-lint, frontend-unit-elevated, generated-modules, govulncheck, harness-scope-gates, mode-transition-and-ssrf-green, mode-transition-final, npm-audit-frontend, npm-audit-root, review-gate-final, root-script-tests, security-patterns, task-packet, task-template.
-Two independent source reviews approve the repaired candidate. Full configured CGO race passed:
-2,284 tests passed, zero failures, 50 packages passed, and one explicit real-S3-provider skip.
-Frontend unit tests passed 240/240; lint/build, root/foundation tests and dependency checks passed.
-The full race log is retained locally with its SHA-256 in backend-full-race-summary.json.
+Two independent source reviews approve the repaired candidate. The completed full CGO race receipt
+and backend-full-race-summary.json record 2,284 tests passed, zero failures, 50 packages passed and
+one explicit unconfigured real-S3-provider skip. Frontend unit tests passed 240/240.
 
 ## Repair evidence
 
@@ -24,8 +23,6 @@ The full race log is retained locally with its SHA-256 in backend-full-race-summ
 - Frontend sandbox EPERM was retried through explicit escalation; runtime type changes produce no JSX/CSS changes.
 - Initial frontend test command used a missing script; corrected to test:unit, with real results retained.
 - Go declarations and IPv6 typed denylist retain the same parameter types and rejected ranges.
-- A broad working-directory credential scan saw the ignored local .env.test, which is not a
-  release source. The committed snapshot and both release asset shapes require separate scans.
 
 ## Next action
 
