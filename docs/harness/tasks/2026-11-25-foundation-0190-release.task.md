@@ -80,12 +80,16 @@ the official assets through their existing rebuild process.
   gates, independent reviews, PR/main CI, Full Smoke and Release Gate.
 - Publish and verify the four immutable assets, exact tag commit and GitHub Latest.
 - Clean the task branch and synchronize the active local main after merge.
+- Maintainer explicitly approved three precise historical SHA256 false-positive fingerprints
+  on 2026-11-25; preserve every scanner rule and complete history scanning. Future
+  source bindings separate path and checksum fields; synthetic credential counterexamples remain detected.
 
 ### Out
 
 - Ops lock/tree replacement, business implementation or downstream product acceptance.
 - Production operations, migration execution, S3-provider acceptance or maintenance-freeze signing.
-- Gate waivers, solo-override, scanner exclusions, overwritten historical tags or releases.
+- Gate waivers, solo-override, path/rule scanner exclusions, overwritten historical tags or releases.
+  Only the three explicitly approved historical SHA256 fingerprints are within scope.
 - Deletion of other tasks' worktrees or branches containing unintegrated work.
 - Unrelated Dependabot updates; report pre-existing PRs separately unless they block this release.
 

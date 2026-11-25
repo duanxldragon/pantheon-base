@@ -26,7 +26,16 @@ one explicit unconfigured real-S3-provider skip. Frontend unit tests passed 240/
 
 ## Next action
 
-PR #528 is open at https://github.com/duanxldragon/pantheon-base/pull/528.
+PR #528 merged after all checks passed: https://github.com/duanxldragon/pantheon-base/pull/528,
+main commit 96f01d564b0d1b6672a8d9986787ca2276471c0f. Local main was synchronized and clean.
+The main full-history Secret Scan then reported three generic API-key false positives
+from checksum-map filenames. Independent SHA256 recomputation matches each Git source blob.
+The maintainer explicitly approved the three precise historical fingerprints; existing
+fingerprints, all rules and full-history scan remain. Future entries separate path/sha256.
+Full-history scan passed with the proposed additions; three synthetic credentials remain
+detected at the same path/new commit, a different line and another path. The earlier local
+probe accidentally replaced existing ignore entries and failed with eleven old findings;
+the original entries were restored before the final passing scan and are preserved in the diff.
 SonarCloud PR analysis passed. Hosted Docs Governance found two missing runtimeLogs
 fields in otherwise existing evidence; references now name the original real-MySQL logs.
 The unchanged strict runtime-evidence checker reproduces the failure before this repair.

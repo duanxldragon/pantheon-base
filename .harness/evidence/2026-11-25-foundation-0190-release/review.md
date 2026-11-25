@@ -4,6 +4,13 @@ Source approved by two independent native reviewers after the settings-mode repa
 
 See [code review](./code-review.md) and [architecture review](./architecture-review.md).
 
+The architect reaffirmed CLEAR for the lint/evidence repair: comments and raw regexp
+preserve behavior; governance-final is 29/29 passed. The independent code-reviewer
+recomputed all three historical scanner values as SHA256 of their source bytes and
+approved the precise-fingerprint approach subject to maintainer approval, now received.
+See hash-adjudication.json and synthetic-secret-regression.json; no path/rule exemption
+or reduction in scanned history is introduced.
+
 Full candidate verification and publication remain mechanical completion conditions; this is not fabricated hosted approval.
 
 ## Machine Readable

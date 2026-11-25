@@ -19,6 +19,21 @@
   },
   "commands": [
     {
+      "command": "go run github.com/zricethezav/gitleaks/v8@v8.30.1 detect --source . --redact --report-format json --report-path <local report>",
+      "cwd": ".",
+      "status": "passed",
+      "exitCode": 0,
+      "artifact": ".harness/evidence/2026-11-25-foundation-0190-release/history-hash-scan-final.result.json",
+      "notes": "Complete history at main96f01d56 with original ignore entries plus exactly three maintainer-approved historical SHA256 findings. Earlier incorrect local baseline probe failed and is retained."
+    },
+    {
+      "command": "node .local/release-0190-20261125/probe-gitleaks.mjs",
+      "cwd": "..",
+      "status": "passed",
+      "artifact": ".harness/evidence/2026-11-25-foundation-0190-release/synthetic-secret-regression.json",
+      "notes": "Expected scanner exit1; all three synthetic credential counterexamples detected. Fixture Git repository is local-only and never pushed."
+    },
+    {
       "command": "golangci-lint run --new-from-rev=605be5cdd81d912a0aca37d8fbe8c731d9021b7b ./...",
       "cwd": "backend",
       "status": "passed",

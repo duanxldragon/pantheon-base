@@ -7,6 +7,7 @@
   "progress": {
     "pr": "https://github.com/duanxldragon/pantheon-base/pull/528",
     "ciRepairs": [
+      "Maintainer approved exactly three independently recomputed SHA256 false-positive fingerprints; full-history scan and all secret rules retained",
       "Restore existing MySQL runtime log references and declared release-naming structural metadata",
       "Document eleven exported Go symbols and retain equivalent regexp semantics",
       "Native golangci-lint v2.6.2: zero new issues; contracts race regression passed"

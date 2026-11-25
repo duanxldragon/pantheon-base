@@ -1,0 +1,22 @@
+{
+  "name": "history-hash-scan-adjudication",
+  "command": [
+    "D:/Go/bin/go.exe",
+    "run",
+    "github.com/zricethezav/gitleaks/v8@v8.30.1",
+    "detect",
+    "--source",
+    ".",
+    "--redact",
+    "--report-format",
+    "json",
+    "--report-path",
+    "../.local/release-0190-20261125/full-history-adjudicated.json"
+  ],
+  "cwd": ".",
+  "startedAt": "2026-11-25T05:53:53.933Z",
+  "durationMs": 34344,
+  "exitCode": 1,
+  "signal": null,
+  "status": "failed"
+}
