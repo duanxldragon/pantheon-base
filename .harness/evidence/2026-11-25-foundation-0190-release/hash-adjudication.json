@@ -1,0 +1,35 @@
+{
+  "commit": "96f01d564b0d1b6672a8d9986787ca2276471c0f",
+  "status": "verified",
+  "findings": [
+    {
+      "fingerprint": "96f01d564b0d1b6672a8d9986787ca2276471c0f:.harness/evidence/2026-11-25-foundation-0190-release/source-bindings.json:generic-api-key:45",
+      "sourcePath": "backend/pkg/authtoken/token.go",
+      "sha256": "0c2d91a5673c188a13a289b5a63d309d62ef254ed5cc1c792c40bbf552d55390",
+      "matchesGitBytes": true,
+      "classification": "source-file-checksum-false-positive"
+    },
+    {
+      "fingerprint": "96f01d564b0d1b6672a8d9986787ca2276471c0f:.harness/evidence/2026-11-25-foundation-0190-release/source-bindings.json:generic-api-key:46",
+      "sourcePath": "backend/pkg/authtoken/token_activity_test.go",
+      "sha256": "247f79486c2c93cc2bc3695e14eb7fe3e271cad17acc39f0cd3fd8378d403896",
+      "matchesGitBytes": true,
+      "classification": "source-file-checksum-false-positive"
+    },
+    {
+      "fingerprint": "96f01d564b0d1b6672a8d9986787ca2276471c0f:.harness/evidence/2026-11-25-foundation-0190-release/source-bindings.json:generic-api-key:65",
+      "sourcePath": "frontend/src/modules/lowcode/generator/api.ts",
+      "sha256": "0a3285944061534b1e389809e6960bc8eaa48c7f31ed3e072785b352df4017ea",
+      "matchesGitBytes": true,
+      "classification": "source-file-checksum-false-positive"
+    }
+  ],
+  "reviewer": "Independent native code-reviewer also recomputed all three digests",
+  "approval": "maintainer explicitly approved these three exact fingerprints in this session on 2026-11-25",
+  "unchangedControls": [
+    "Complete git history scan",
+    "All scanner rules",
+    "Existing historical fingerprints"
+  ],
+  "proposedChange": "Append only the three verified historical fingerprints; represent future source bindings as path/sha256 entries."
+}
