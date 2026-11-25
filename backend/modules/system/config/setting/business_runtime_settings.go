@@ -1,7 +1,7 @@
 package setting
 
 import (
-	"context"
+	"net/http"
 	"sort"
 	"strings"
 
@@ -71,7 +71,7 @@ func validBusinessSettingRow(row SystemSetting, definition contracts.BusinessSet
 
 type businessRuntimeSettingReader struct {
 	db           *gorm.DB
-	ctx          context.Context
+	req          *http.Request
 	snapshot     *tenant.Context
 	expectedMode string
 	definitions  map[string]contracts.BusinessSettingDefinition
@@ -83,7 +83,7 @@ func (s *SettingService) BusinessReaderFor(c *gin.Context, definitions []contrac
 	if s == nil || s.db == nil || c == nil || c.Request == nil || len(definitions) == 0 {
 		return nil, contracts.ErrBusinessSettings
 	}
-	reader := &businessRuntimeSettingReader{db: s.db, ctx: c.Request.Context(), expectedMode: tenant.ModeCompat, definitions: make(map[string]contracts.BusinessSettingDefinition, len(definitions))}
+	reader := &businessRuntimeSettingReader{db: s.db, req: c.Request, expectedMode: tenant.ModeCompat, definitions: make(map[string]contracts.BusinessSettingDefinition, len(definitions))}
 	if bound := tenant.FromGin(c); bound != nil {
 		snapshot := *bound
 		if !validBusinessSettingContext(snapshot) {
@@ -119,11 +119,11 @@ func validBusinessSettingContext(ctx tenant.Context) bool {
 }
 
 func (r *businessRuntimeSettingReader) checkMode() error {
-	if err := r.ctx.Err(); err != nil {
+	if err := r.req.Context().Err(); err != nil {
 		return err
 	}
-	modeReader := tenant.NewStrictSettingModeReader(NewSettingService(r.db.WithContext(r.ctx)))
-	current, err := modeReader.ReadMode(r.ctx)
+	modeReader := tenant.NewStrictSettingModeReader(NewSettingService(r.db.WithContext(r.req.Context())))
+	current, err := modeReader.ReadMode(r.req.Context())
 	if err != nil || current != r.expectedMode {
 		return contracts.ErrBusinessSettings
 	}
@@ -141,7 +141,7 @@ func (r *businessRuntimeSettingReader) GetByKey(key string) (string, error) {
 	if err := r.checkMode(); err != nil {
 		return "", err
 	}
-	view := &SettingService{db: r.db.WithContext(r.ctx), Scoper: tenant.Scoper{TenantCtx: r.snapshot}}
+	view := &SettingService{db: r.db.WithContext(r.req.Context()), Scoper: tenant.Scoper{TenantCtx: r.snapshot}}
 	var rows []SystemSetting
 	if err := view.tenantScope()(view.db).Where("setting_key = ?", key).Order("tenant_id asc").Find(&rows).Error; err != nil {
 		return "", contracts.ErrBusinessSettings
