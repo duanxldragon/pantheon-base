@@ -23,11 +23,13 @@ type BusinessSettingSeed struct {
 	Remark    string
 }
 
+// BusinessSettingDefinition associates a compiled setting seed with its owning module.
 type BusinessSettingDefinition struct {
 	BusinessSettingSeed
 	Module string
 }
 
+// BusinessRuntimeSettingsReader reads declared settings within one trusted request.
 type BusinessRuntimeSettingsReader interface {
 	GetByKey(string) (string, error)
 }
@@ -48,8 +50,9 @@ type businessSettingsRegistry struct {
 
 var businessSettings = businessSettingsRegistry{modules: make(map[string][]BusinessSettingDefinition)}
 var businessSettingModuleName = regexp.MustCompile("^[a-z][a-z0-9_]{0,30}$")
-var businessSettingKeySuffix = regexp.MustCompile("^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)*$")
+var businessSettingKeySuffix = regexp.MustCompile(`^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)*$`)
 
+// RegisterBusinessSettings registers validated module defaults before startup sealing.
 func RegisterBusinessSettings(module string, seeds []BusinessSettingSeed) error {
 	return businessSettings.register(module, seeds)
 }
@@ -102,6 +105,7 @@ func (r *businessSettingsRegistry) seal() []BusinessSettingDefinition {
 	return result
 }
 
+// RegisterBusinessRuntimeSettingsProvider installs the sole provider after declarations are sealed.
 func RegisterBusinessRuntimeSettingsProvider(provider BusinessRuntimeSettingsProvider) error {
 	return businessSettings.registerProvider(provider)
 }
@@ -134,6 +138,7 @@ func (r *businessSettingsRegistry) readerFor(module string, c *gin.Context) (Bus
 	return provider.BusinessReaderFor(c, definitions)
 }
 
+// BusinessSettingDefault returns a registered compiled default, or an empty string for an unknown key.
 func BusinessSettingDefault(key string) string {
 	businessSettings.RLock()
 	defer businessSettings.RUnlock()

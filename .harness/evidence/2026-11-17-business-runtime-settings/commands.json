@@ -1,6 +1,11 @@
 {
   "taskId": "2026-11-17-business-runtime-settings",
   "repo": "pantheon-base",
+  "runtimeLogs": [
+    ".harness/evidence/2026-11-17-business-runtime-settings/runtime-settings-race.log",
+    ".harness/evidence/2026-11-17-business-runtime-settings/runtime-settings-packages-race.log",
+    ".harness/evidence/2026-11-17-business-runtime-settings/runtime-settings-reserved-namespace-final.log"
+  ],
   "agent": {
     "tool": "codex",
     "adapter": "Primary Base Generator; independent native code-reviewer and architect"

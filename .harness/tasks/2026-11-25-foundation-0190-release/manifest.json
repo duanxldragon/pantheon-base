@@ -4,6 +4,14 @@
   "title": "Submit and publish compatible Foundation v0.19.0",
   "goal": "Integrate unpushed Base work, pass candidate verification and review, merge a PR, publish four immutable Foundation assets and synchronize a clean local main.",
   "status": "in-progress",
+  "progress": {
+    "pr": "https://github.com/duanxldragon/pantheon-base/pull/528",
+    "ciRepairs": [
+      "Restore existing MySQL runtime log references and declared release-naming structural metadata",
+      "Document eleven exported Go symbols and retain equivalent regexp semantics",
+      "Native golangci-lint v2.6.2: zero new issues; contracts race regression passed"
+    ]
+  },
   "deliveryTier": "L2",
   "primaryLayer": "platform",
   "runtimeSensitive": true,

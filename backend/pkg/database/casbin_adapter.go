@@ -82,14 +82,17 @@ func saveCasbinPolicySection(tx *gorm.DB, ptypes model.AssertionMap) error {
 	return nil
 }
 
+// AddPolicy persists one Casbin policy rule.
 func (a *GormCasbinAdapter) AddPolicy(_, ptype string, rule []string) error {
 	return a.db.Create(newCasbinRule(ptype, rule)).Error
 }
 
+// RemovePolicy deletes matching Casbin policy rules.
 func (a *GormCasbinAdapter) RemovePolicy(_, ptype string, rule []string) error {
 	return a.db.Where(ruleFilter(ptype, rule)).Delete(&CasbinRule{}).Error
 }
 
+// RemoveFilteredPolicy deletes rules matching nonempty fields starting at fieldIndex.
 func (a *GormCasbinAdapter) RemoveFilteredPolicy(_, ptype string, fieldIndex int, fieldValues ...string) error {
 	query := a.db.Where("ptype = ?", ptype)
 	for offset, value := range fieldValues {

@@ -1,6 +1,11 @@
 {
   "taskId": "2026-11-14-release-naming-normalization",
   "repo": "pantheon-base",
+  "graphChecks": {
+    "affectedSubgraph": ["publisher title/create args -> GitHub release presentation"],
+    "checks": [],
+    "notes": "Metadata matches the declared structural scope. No graph tool checks were planned or executed; the original LSP gap remains recorded."
+  },
   "agent": {
     "tool": "codex",
     "adapter": "executor plus independent reviewer; root metadata integration"

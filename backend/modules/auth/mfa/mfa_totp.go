@@ -45,6 +45,7 @@ func BuildTOTPURL(username, secret string) string {
 	return "otpauth://totp/" + label + "?" + values.Encode()
 }
 
+// ValidateTOTPCode checks a six-digit code within the allowed time-step skew.
 func ValidateTOTPCode(secret, code string, now time.Time) bool {
 	normalizedCode := strings.TrimSpace(code)
 	if len(normalizedCode) != totpDigits {

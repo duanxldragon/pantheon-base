@@ -3,6 +3,10 @@
   "taskId": "2026-11-25-foundation-0190-release",
   "repo": "pantheon-base",
   "evidenceState": "exercised",
+  "runtimeLogs": [
+    ".harness/evidence/2026-11-25-foundation-0190-release/mode-transition-final.log",
+    ".harness/evidence/2026-11-25-foundation-0190-release/mode-transition-and-ssrf-green.log"
+  ],
   "agent": {
     "tool": "codex",
     "adapter": "windows"
@@ -14,6 +18,27 @@
     "releaseVersion": "pantheon-base-v0.19.0"
   },
   "commands": [
+    {
+      "command": "golangci-lint run --new-from-rev=605be5cdd81d912a0aca37d8fbe8c731d9021b7b ./...",
+      "cwd": "backend",
+      "status": "passed",
+      "exitCode": 0,
+      "notes": "Native v2.6.2; sandbox context loading failed first, escalated actual exec chunk 9dc880 completed with 0 issues."
+    },
+    {
+      "command": "node .local/release-0190-20261125/governance-all.mjs governance-final",
+      "cwd": "..",
+      "status": "passed",
+      "notes": "Runs every npm check in Docs Governance with native hidden children; final exit/output in governance-final.json. Prior governance-all.json retained: adoption caught a missing task manifest update, now repaired."
+    },
+    {
+      "command": "go test -race -p=1 -mod=readonly -count=1 ./pkg/contracts",
+      "cwd": "backend",
+      "status": "passed",
+      "exitCode": 0,
+      "artifact": ".harness/evidence/2026-11-25-foundation-0190-release/hosted-contract-lint-regression.result.json",
+      "notes": "After the behavior-equivalent raw regexp and exported documentation fixes."
+    },
     {
       "command": "D:/Go/bin/go.exe test -race -p=1 -mod=readonly -count=1 -json ./...",
       "cwd": "backend",

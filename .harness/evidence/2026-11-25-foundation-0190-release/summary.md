@@ -26,8 +26,15 @@ one explicit unconfigured real-S3-provider skip. Frontend unit tests passed 240/
 
 ## Next action
 
-Finish local verification; validate task/evidence/governance; create the repository-wrapped PR;
-wait for required checks and feedback; merge, verify exact main and publish four immutable assets.
+PR #528 is open at https://github.com/duanxldragon/pantheon-base/pull/528.
+SonarCloud PR analysis passed. Hosted Docs Governance found two missing runtimeLogs
+fields in otherwise existing evidence; references now name the original real-MySQL logs.
+The unchanged strict runtime-evidence checker reproduces the failure before this repair.
+All Docs Governance npm checks now pass locally. Missing release-naming structural
+metadata is restored with no graph checks claimed and the original review gap retained.
+The 12 hosted lint findings are repaired by exported documentation and an equivalent
+raw regexp; native v2.6.2 reports zero issues outside the sandbox. Contracts race passes.
+Wait for current required checks and feedback; merge, verify exact main and publish four immutable assets.
 
 ## Explicit gaps
 

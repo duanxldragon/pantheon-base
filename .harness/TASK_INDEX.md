@@ -11,6 +11,6 @@ planned: 0 · in-progress: 6 · completed: 2 · abandoned: 0（当前树共 8 �
 | [Provide owned business runtime setting declarations and request-scoped reader](./tasks/2026-11-17-business-runtime-settings/manifest.json) | in-progress |        | [summary](./evidence/2026-11-17-business-runtime-settings/summary.md)    |
 | [Preserve historical archive bytes during default formatting](./tasks/2026-11-19-archive-formatter-protection/manifest.json)                | in-progress |        | [summary](./evidence/2026-11-19-archive-formatter-protection/summary.md) |
 | [Isolate static and parameter business routes in authorization](./tasks/2026-11-24-business-route-static-guard/manifest.json)               | in-progress |        | [summary](./evidence/2026-11-24-business-route-static-guard/summary.md)  |
-| [Submit and publish compatible Foundation v0.19.0](./tasks/2026-11-25-foundation-0190-release/manifest.json)                                | in-progress |        | 未提供 summary                                                           |
+| [Submit and publish compatible Foundation v0.19.0](./tasks/2026-11-25-foundation-0190-release/manifest.json)                                | in-progress |        | [summary](./evidence/2026-11-25-foundation-0190-release/summary.md)      |
 
 按目标任务读取 manifest、task packet 和最新 summary；历史入口为 [ARCHIVE](./ARCHIVE.md)。

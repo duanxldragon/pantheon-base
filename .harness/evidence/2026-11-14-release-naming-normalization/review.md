@@ -14,6 +14,13 @@ Independent reviewer verified all53 release name/body readbacks,55 tag ref objec
   "taskStatus": "in-progress",
   "reviewer": "independent code-reviewer",
   "readOnly": true,
+  "structuralReview": {
+    "affectedSubgraph": [
+      "publisher title/create args -> GitHub release presentation"
+    ],
+    "checks": [],
+    "notes": "Declared scope metadata restored for consistency only; no graph tool execution or change to the original blocked verdict is claimed."
+  },
   "sourceIssues": 0,
   "issuesBySeverity": {
     "CRITICAL": 0,

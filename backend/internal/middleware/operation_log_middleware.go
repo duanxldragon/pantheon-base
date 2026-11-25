@@ -711,6 +711,7 @@ func DetectOperationLogSourcePage(operURL string) string {
 	}
 }
 
+// DetectOperationLogFailureCategory classifies failed operations from their error and response text.
 func DetectOperationLogFailureCategory(status int, errorMsg, jsonResult string) string {
 	if status != common.OperationStatusFailure {
 		return ""
