@@ -28,6 +28,14 @@ func newRuntimeSettingsRegistry() *businessSettingsRegistry {
 }
 
 func TestBusinessRuntimeSettingsDeclarationOwnership(t *testing.T) {
+	assertReservedNamespacesRejected(t)
+	assertInvalidModulesRejected(t)
+	assertMalformedKeysRejected(t)
+	assertInvalidSeedFieldsRejected(t)
+}
+
+func assertReservedNamespacesRejected(t *testing.T) {
+	t.Helper()
 	for _, namespace := range []string{"site", "platform", "system", "login", "audit", "upload", "mail", "sms", "i18n", "ui", "org", "iam", "auth", "setting", "dict", "notification", "security"} {
 		registry := newRuntimeSettingsRegistry()
 		seeds := []BusinessSettingSeed{{Key: namespace + ".custom", Value: "1", ValueType: "number", GroupKey: namespace, Remark: "reserved namespace probe"}}
@@ -35,12 +43,19 @@ func TestBusinessRuntimeSettingsDeclarationOwnership(t *testing.T) {
 			t.Fatalf("reserved namespace accepted or mutated registry: %s", namespace)
 		}
 	}
+}
 
+func assertInvalidModulesRejected(t *testing.T) {
+	t.Helper()
 	for _, module := range []string{"cmdb", "business.site", "business.platform", "business.system", "business.cmdb ", "business.a.b"} {
 		if newRuntimeSettingsRegistry().register(module, runtimeSettingsSeeds()) == nil {
 			t.Fatalf("invalid module accepted: %s", module)
 		}
 	}
+}
+
+func assertMalformedKeysRejected(t *testing.T) {
+	t.Helper()
 	for _, key := range []string{"login.password", "cmdb", "cmdb.ssh..port", "cmdb.ssh.port ", "cmdbx.ssh.port"} {
 		seeds := runtimeSettingsSeeds()
 		seeds[0].Key = key
@@ -55,16 +70,18 @@ func TestBusinessRuntimeSettingsDeclarationOwnership(t *testing.T) {
 	if r.register("business.cmdb", seeds) == nil || len(r.modules) != 0 {
 		t.Fatal("duplicate batch partially registered")
 	}
-	for _, field := range []string{"type", "group", "remark"} {
+}
+
+func assertInvalidSeedFieldsRejected(t *testing.T) {
+	t.Helper()
+	mutations := map[string]func(*BusinessSettingSeed){
+		"type":   func(s *BusinessSettingSeed) { s.ValueType = "secret" },
+		"group":  func(s *BusinessSettingSeed) { s.GroupKey = "" },
+		"remark": func(s *BusinessSettingSeed) { s.Remark = "" },
+	}
+	for field, mutate := range mutations {
 		seeds := runtimeSettingsSeeds()
-		switch field {
-		case "type":
-			seeds[0].ValueType = "secret"
-		case "group":
-			seeds[0].GroupKey = ""
-		case "remark":
-			seeds[0].Remark = ""
-		}
+		mutate(&seeds[0])
 		if newRuntimeSettingsRegistry().register("business.cmdb", seeds) == nil {
 			t.Fatalf("invalid %s accepted", field)
 		}

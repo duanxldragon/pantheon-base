@@ -225,35 +225,43 @@ func TestBusinessRuntimeSettingsModeChangesDuringRead(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			flipped := false
-			var transitionErr error
-			const callback = "test:business-settings-mode-drift"
-			if err := s.db.Callback().Query().After("gorm:query").Register(callback, func(tx *gorm.DB) {
-				rows, ok := tx.Statement.Dest.(*[]SystemSetting)
-				if !ok || len(*rows) == 0 || (*rows)[0].SettingKey != definitions[1].Key || flipped {
-					return
-				}
-				flipped = true
-				transitionErr = s.db.Model(&SystemSetting{}).Where("setting_key = ?", tenant.FeatureFlagSettingKey).Update("setting_value", next).Error
-				if transitionErr != nil {
-					tx.AddError(transitionErr)
-				}
-			}); err != nil {
-				t.Fatal(err)
-			}
-			t.Cleanup(func() { s.db.Callback().Query().Remove(callback) })
+			flipped, transitionErr := flipModeDuringQuery(t, s, definitions[1].Key, next)
 			got, err := reader.GetByKey(definitions[1].Key)
-			if !flipped {
+			if !*flipped {
 				t.Fatal("mode transition was not exercised during the settings query")
 			}
-			if transitionErr != nil {
-				t.Fatalf("mode transition failed: %v", transitionErr)
+			if *transitionErr != nil {
+				t.Fatalf("mode transition failed: %v", *transitionErr)
 			}
 			if !errors.Is(err, contracts.ErrBusinessSettings) || got != "" {
 				t.Fatalf("mode changed during query: returned %q with error %v", got, err)
 			}
 		})
 	}
+}
+
+// flipModeDuringQuery flips the tenant mode once, inside the first settings
+// query for key, so a read can observe a mode change mid-flight.
+func flipModeDuringQuery(t *testing.T, s *SettingService, key, next string) (*bool, *error) {
+	t.Helper()
+	flipped := new(bool)
+	transitionErr := new(error)
+	const callback = "test:business-settings-mode-drift"
+	if err := s.db.Callback().Query().After("gorm:query").Register(callback, func(tx *gorm.DB) {
+		rows, ok := tx.Statement.Dest.(*[]SystemSetting)
+		if !ok || len(*rows) == 0 || (*rows)[0].SettingKey != key || *flipped {
+			return
+		}
+		*flipped = true
+		*transitionErr = s.db.Model(&SystemSetting{}).Where("setting_key = ?", tenant.FeatureFlagSettingKey).Update("setting_value", next).Error
+		if *transitionErr != nil {
+			tx.AddError(*transitionErr)
+		}
+	}); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { s.db.Callback().Query().Remove(callback) })
+	return flipped, transitionErr
 }
 
 func TestBusinessRuntimeSettingsRejectsMetadataTamper(t *testing.T) {
