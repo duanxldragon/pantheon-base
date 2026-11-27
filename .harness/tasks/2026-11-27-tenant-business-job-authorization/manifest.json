@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "taskId": "2026-11-27-tenant-business-job-authorization",
+  "title": "Authorize durable business jobs in multi-tenant mode",
+  "goal": "Refresh durable job grants inside the persisted tenant and publish a compatible Foundation release for Ops T14.",
+  "status": "in-progress",
+  "deliveryTier": "L2",
+  "primaryLayer": "system/auth",
+  "runtimeSensitive": true,
+  "taskDoc": "docs/harness/tasks/2026-11-27-tenant-business-job-authorization.task.md",
+  "qualityProfiles": ["auth-security", "runtime-quality"],
+  "scope": {
+    "in": ["Live tenant-bound durable job authorization", "Tenant isolation and revocation regression", "Official Foundation v0.19.1"],
+    "out": ["Ops provider behavior and production acceptance", "Session API and schema changes"]
+  },
+  "linkage": {
+    "taskManifest": ".harness/tasks/2026-11-27-tenant-business-job-authorization/manifest.json",
+    "taskDoc": "docs/harness/tasks/2026-11-27-tenant-business-job-authorization.task.md",
+    "evidenceDir": ".harness/evidence/2026-11-27-tenant-business-job-authorization/",
+    "reviewFile": ".harness/evidence/2026-11-27-tenant-business-job-authorization/review.md",
+    "changeRef": "none",
+    "planRefs": []
+  },
+  "acceptanceCriteria": [
+    "Compat authorizes tenant 0 jobs and multi authorizes only the job's active tenant and current owner grant",
+    "Real MySQL race regression covers tenant separation, restart, revocation and suspension",
+    "Independent reviews and required candidate-bound hosted checks pass",
+    "The official Foundation tag and four verified assets identify the same commit"
+  ],
+  "verificationPlan": {
+    "commands": ["Configured Windows CGO Go race tests", "Scoped Go lint, method, governance and security checks", "Hosted Full Smoke, Release Gate and asset validation"],
+    "runtimeEvidence": ["Isolated local MySQL and Redis", "System smoke on the merged candidate"]
+  },
+  "executionRoles": {
+    "implementerPosture": "Implement and verify the auth port, then publish the authorized Foundation release",
+    "reviewerPosture": ["Independent code review", "Independent contract and architecture review"]
+  },
+  "humanGates": ["Maintainer authorized the Base-first release and subsequent Ops rebuild", "Independent review and required checks before merge"],
+  "workspaceContext": {
+    "targetRepository": "pantheon-base",
+    "repositoryRole": "foundation-source",
+    "contextSyncExpectation": "required",
+    "releaseRequirement": "foundation-release"
+  }
+}
