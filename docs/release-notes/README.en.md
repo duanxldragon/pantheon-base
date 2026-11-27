@@ -4,9 +4,9 @@ Chinese version: [README.md](./README.md)
 
 This directory holds each release's `RELEASE_NOTES_vX.Y.Z.md`, starting at v0.13.1. Release notes are frozen with the foundation release: new versions are appended, historical entries are never edited. The full change history lives in [CHANGELOG.md](../../CHANGELOG.md); the release process is described in the [version management guide](../VERSION_MANAGEMENT_GUIDE.md).
 
-VERSION `0.19.1` has [candidate notes](./RELEASE_NOTES_v0.19.1.md). The historical [v0.18.3 candidate record](./RELEASE_NOTES_v0.18.3.md) retains its original checkpoint. Immutable tags and GitHub Releases establish publication.
+The table lists release notes by version. The latest published tag and its assets are available on [GitHub Releases](https://github.com/duanxldragon/pantheon-base/releases/latest).
 
-The latest official release is listed on [GitHub Releases](https://github.com/duanxldragon/pantheon-base/releases/latest). Status in retained preparation notes describes its original checkpoint and does not replace official publication or consumption evidence.
+Release preparation notes retain the status of their original checkpoints. [v0.18.3 candidate record](./RELEASE_NOTES_v0.18.3.md)
 
 Current Foundation tags use `pantheon-base-vX.Y.Z`, with display titles `Pantheon Base vX.Y.Z`. Historical `base-v*`, `backend/v*`, and bare `v*` identities remain unchanged and are labeled `Legacy`; their numbers are not compared or reassigned into the current sequence. Title cleanup does not edit the frozen release notes in this directory. See the [version management guide](../VERSION_MANAGEMENT_GUIDE.md).
 

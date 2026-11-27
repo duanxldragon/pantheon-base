@@ -5,7 +5,7 @@
 ## 当前版本与任务
 
 - 工作树产品版本：[VERSION](../VERSION)；正式发行看 [GitHub Releases](https://github.com/duanxldragon/pantheon-base/releases/latest) 与对应发行证据。11/13 的发行/消费结论属于历史候选。
-- 当前候选 v0.19.1 给持久业务任务增加多租户实时授权。Ops T14 通过正式 Foundation 发行消费。 [任务证据](./evidence/2026-11-27-tenant-business-job-authorization/summary.md)
+- v0.19.1 已正式发布，包含持久业务任务的多租户实时授权。Ops 已锁定该发行，T14 的文件分发集成由 Ops 任务跟踪。 [发行](https://github.com/duanxldragon/pantheon-base/releases/tag/pantheon-base-v0.19.1) · [Base 任务证据](./evidence/2026-11-27-tenant-business-job-authorization/summary.md) · [Ops 消费 PR](https://github.com/duanxldragon/pantheon-ops/pull/229)
 - 验证须绑定实际候选，不能以旧发行测试代签；正式发行以 GitHub Release 和四个不可变资产为准。
 - Ops 实际消费以其 foundation-release.lock.json 为准。共享产品修改仍需 Base 正式发行与 Ops 重建；方法 policy receipt 不改变该边界。
 

@@ -17,7 +17,7 @@ The project is not intended to be just a login shell plus CRUD scaffolding. Its 
 | Shell/Harness baseline | Take it from [SHELL_VERSION.json](./SHELL_VERSION.json)                                                                                                                   |
 | Deployment guide       | [docs/DEPLOYMENT_GUIDE.md](./docs/DEPLOYMENT_GUIDE.md) (MySQL 8, Redis 7, migrations + runtime seed, health checks, telemetry, backup/restore, and schema-aware rollback) |
 
-Delivery status: this repository is the single source of the foundation. Consumers (for example `pantheon-ops`) take it as a source copy, pinned through `foundation-release.lock.json` and rebuilt with `npm run rebuild:from-base`. The current version, what changed in it, and whether it is published live in exactly two places: [`VERSION`](./VERSION) and the [release-notes index](./docs/release-notes/README.md) (`RELEASE_NOTES_vX.Y.Z.md` per release, frozen with the release, append-only). This file no longer restates a per-release change list - the lesson from the previous wording is that a hand-copied summary always drifts behind `VERSION`.
+This repository is the source of the Foundation. Consumers such as `pantheon-ops` pin an official source snapshot in `foundation-release.lock.json` and rebuild with `npm run rebuild:from-base`. The repository version, changes by version, and published releases are recorded in [`VERSION`](./VERSION), the [release notes index](./docs/release-notes/README.en.md), and [GitHub Releases](https://github.com/duanxldragon/pantheon-base/releases/latest), respectively.
 
 ## Project and Delivery Links
 
