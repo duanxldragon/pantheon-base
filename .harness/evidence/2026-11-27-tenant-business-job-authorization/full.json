@@ -1,0 +1,45 @@
+{
+  "phase": "full",
+  "command": [
+    "go",
+    "test",
+    "-race",
+    "-mod=readonly",
+    "-count=1",
+    "-json",
+    "-p=2",
+    "-timeout",
+    "40m",
+    "./..."
+  ],
+  "cwd": "backend",
+  "startedAt": "2026-11-27T08:46:24.442072+08:00",
+  "finishedAt": "2026-11-27T09:03:34.649891+08:00",
+  "exitCode": 0,
+  "mysql": "127.0.0.1:3306",
+  "CGO_ENABLED": 1,
+  "schemaPrefix": "base_job_e8e29d56",
+  "developerSchemaBefore": [
+    41,
+    false
+  ],
+  "developerSchemaAfter": [
+    41,
+    false
+  ],
+  "remainingOwnedSchemas": [],
+  "redis": "127.0.0.1:26475",
+  "observabilityRedis": "127.0.0.1:26476",
+  "tests": {
+    "pass": 2289,
+    "skip": 1
+  },
+  "packages": {
+    "pass": 50,
+    "skip": 5
+  },
+  "failedTests": [],
+  "skips": [
+    "github.com/duanxldragon/pantheon-base/backend/pkg/upload:TestServiceStoreUsesRealS3WhenConfigured"
+  ]
+}

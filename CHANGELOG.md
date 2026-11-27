@@ -6,6 +6,11 @@ Pantheon Base 方法追踪记录。方法论本体位于 `pantheon-harness`。
 
 ---
 
+## [pantheon-base-v0.19.1] — 2026-11-27 (release candidate)
+
+- Extend the durable-job authorization reader to refresh the current owner's grant within the persisted resource tenant in multi mode.
+- Keep compat tenant 0 support. Cover tenant isolation, refreshed data scope after restart, membership revocation and tenant suspension against local MySQL.
+
 ## [pantheon-base-v0.19.0] — 2026-11-25 (release candidate)
 
 - Add optional auth-owned current-owner durable-job authorization and declared business runtime settings with trusted request tenancy, metadata validation and fail-closed mode checks.

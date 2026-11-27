@@ -1,0 +1,49 @@
+{
+  "phase": "red",
+  "command": [
+    "go",
+    "test",
+    "-race",
+    "-mod=readonly",
+    "-count=1",
+    "-json",
+    "-timeout",
+    "4m",
+    "./modules/auth/login",
+    "-run",
+    "^TestBusinessJobAuthorization"
+  ],
+  "startedAt": "2026-11-27T08:40:38.764696+08:00",
+  "finishedAt": "2026-11-27T08:41:03.661378+08:00",
+  "exitCode": 1,
+  "mysql": "127.0.0.1:3306",
+  "CGO_ENABLED": 1,
+  "schemaPrefix": "base_job_2f2b831b",
+  "developerSchemaBefore": [
+    41,
+    false
+  ],
+  "developerSchemaAfter": [
+    41,
+    false
+  ],
+  "remainingOwnedSchemas": [],
+  "redis": null,
+  "observabilityRedis": null,
+  "tests": {
+    "pass": 32,
+    "fail": 5
+  },
+  "packages": {
+    "fail": 1
+  },
+  "failedTests": [
+    "TestBusinessJobAuthorizationSupportsTenantJobs",
+    "TestBusinessJobAuthorizationRechecksTenantState/disabled-membership",
+    "TestBusinessJobAuthorizationRechecksTenantState/suspended-tenant",
+    "TestBusinessJobAuthorizationRechecksTenantState/compat-mode",
+    "TestBusinessJobAuthorizationRechecksTenantState"
+  ],
+  "skips": [],
+  "cwd": "backend"
+}

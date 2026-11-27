@@ -4,7 +4,7 @@ Chinese version: [README.md](./README.md)
 
 This directory holds each release's `RELEASE_NOTES_vX.Y.Z.md`, starting at v0.13.1. Release notes are frozen with the foundation release: new versions are appended, historical entries are never edited. The full change history lives in [CHANGELOG.md](../../CHANGELOG.md); the release process is described in the [version management guide](../VERSION_MANAGEMENT_GUIDE.md).
 
-VERSION `0.19.0`: [release notes](./RELEASE_NOTES_v0.19.0.md) · [GitHub Release and immutable assets](https://github.com/duanxldragon/pantheon-base/releases/tag/pantheon-base-v0.19.0). The historical [v0.18.3 candidate record](./RELEASE_NOTES_v0.18.3.md) retains its original checkpoint; immutable tags and GitHub Releases establish publication.
+VERSION `0.19.1` has [candidate notes](./RELEASE_NOTES_v0.19.1.md). The historical [v0.18.3 candidate record](./RELEASE_NOTES_v0.18.3.md) retains its original checkpoint. Immutable tags and GitHub Releases establish publication.
 
 The latest official release is listed on [GitHub Releases](https://github.com/duanxldragon/pantheon-base/releases/latest). Status in retained preparation notes describes its original checkpoint and does not replace official publication or consumption evidence.
 
@@ -12,6 +12,7 @@ Current Foundation tags use `pantheon-base-vX.Y.Z`, with display titles `Pantheo
 
 | Version | Release date | Release notes                                                                                      |
 | ------- | ------------ | -------------------------------------------------------------------------------------------------- |
+| v0.19.1 | 2026-11-27   | [RELEASE_NOTES_v0.19.1.md](./RELEASE_NOTES_v0.19.1.md)                                             |
 | v0.19.0 | 2026-11-25   | [RELEASE_NOTES_v0.19.0.md](./RELEASE_NOTES_v0.19.0.md)                                             |
 | v0.18.9 | 2026-11-16   | [RELEASE_NOTES_v0.18.9.md](./RELEASE_NOTES_v0.18.9.md)                                             |
 | v0.18.8 | 2026-11-13   | [RELEASE_NOTES_v0.18.8.md](./RELEASE_NOTES_v0.18.8.md)                                             |

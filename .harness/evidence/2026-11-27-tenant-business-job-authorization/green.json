@@ -1,0 +1,42 @@
+{
+  "phase": "green",
+  "command": [
+    "go",
+    "test",
+    "-race",
+    "-mod=readonly",
+    "-count=1",
+    "-json",
+    "-timeout",
+    "4m",
+    "./modules/auth/login",
+    "-run",
+    "^TestBusinessJobAuthorization"
+  ],
+  "startedAt": "2026-11-27T08:43:10.595629+08:00",
+  "finishedAt": "2026-11-27T08:43:39.181998+08:00",
+  "exitCode": 0,
+  "mysql": "127.0.0.1:3306",
+  "CGO_ENABLED": 1,
+  "schemaPrefix": "base_job_003bc158",
+  "developerSchemaBefore": [
+    41,
+    false
+  ],
+  "developerSchemaAfter": [
+    41,
+    false
+  ],
+  "remainingOwnedSchemas": [],
+  "redis": null,
+  "observabilityRedis": null,
+  "tests": {
+    "pass": 37
+  },
+  "packages": {
+    "pass": 1
+  },
+  "failedTests": [],
+  "skips": [],
+  "cwd": "backend"
+}
