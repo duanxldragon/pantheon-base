@@ -4,9 +4,9 @@ English version: [README.en.md](./README.en.md)
 
 本目录保存历次发布的 `RELEASE_NOTES_vX.Y.Z.md`，自 v0.13.1 起。发布说明随 foundation release 冻结：只追加新版本，不回改历史条目；变更全量记录见 [CHANGELOG.md](../../CHANGELOG.md)，发布流程见 [版本管理指南](../VERSION_MANAGEMENT_GUIDE.md)。
 
-VERSION `0.19.1` 的候选见 [发行说明](./RELEASE_NOTES_v0.19.1.md)。历史 [v0.18.3 候选记录](./RELEASE_NOTES_v0.18.3.md) 保留当时状态，实际发行以不可变 tag 与 GitHub Release 为准。
+下表列出各版本的发布说明。最新正式发行的标签和资产见 [GitHub Releases](https://github.com/duanxldragon/pantheon-base/releases/latest)。
 
-最新正式发行见 [GitHub Releases](https://github.com/duanxldragon/pantheon-base/releases/latest)。准备记录中的状态只代表其原检查点，不替代正式发行或消费证据。
+发布准备记录保留原检查点的状态。 [v0.18.3 候选记录](./RELEASE_NOTES_v0.18.3.md)
 
 当前 Foundation 标签统一为 `pantheon-base-vX.Y.Z`，展示标题为 `Pantheon Base vX.Y.Z`。历史 `base-v*`、`backend/v*`、裸 `v*` 保留原身份并标为 `Legacy`，其数字不与当前序列比较或重编号。标题整理不修改本目录已冻结的发布说明，详见 [版本管理指南](../VERSION_MANAGEMENT_GUIDE.md)。
 

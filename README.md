@@ -17,7 +17,7 @@ Pantheon Base 是一个面向企业后台的模块化单体底座，沉淀认证
 | **任务状态**           | [.harness/STATUS.md](./.harness/STATUS.md) — 当前任务状态总览                                                                                 |
 | **归档记录**           | [.harness/ARCHIVE.md](./.harness/ARCHIVE.md) — 已完成任务归档索引                                                                             |
 
-交付状态说明：本仓库是 foundation 的**唯一源码来源**，下游消费者（如 `pantheon-ops`）以源码副本方式消费，通过 `foundation-release.lock.json` 锁定版本、`npm run rebuild:from-base` 重建。当前版本号、该版本的改动内容与是否已发布，只看两处：[`VERSION`](./VERSION) 与 [发布说明索引](./docs/release-notes/README.md)（逐版本 `RELEASE_NOTES_vX.Y.Z.md`，随 release 冻结、只追加不回改）。本文件不再抄写具体版本的改动明细——历史教训是"正文手抄 + 无人复核"必然滞后于 `VERSION`。
+本仓库是 Foundation 的**唯一源码来源**。`pantheon-ops` 等消费者通过 `foundation-release.lock.json` 锁定正式源码快照，并用 `npm run rebuild:from-base` 重建。当前产品版本、逐版本变更和正式发行分别见 [`VERSION`](./VERSION)、[发布说明索引](./docs/release-notes/README.md)和 [GitHub Releases](https://github.com/duanxldragon/pantheon-base/releases/latest)。
 
 ## 项目与交付入口
 
